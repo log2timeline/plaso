@@ -29,6 +29,7 @@ class KnowledgeBase(object):
     self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
+    self._language = 'en-us'
     self._mount_path = None
     self._text_prepend = None
     self._time_zone = pytz.UTC
@@ -54,6 +55,11 @@ class KnowledgeBase(object):
       return ''
 
     return hostname_artifact.name or ''
+
+  @property
+  def language(self):
+    """str: language of the current session."""
+    return self.GetValue('language', default_value=self._language)
 
   @property
   def timezone(self):
@@ -454,6 +460,14 @@ class KnowledgeBase(object):
     session_identifier = session_identifier or self._active_session
 
     self._hostnames[session_identifier] = hostname
+
+  def SetLanguage(self, language):
+    """Sets the language.
+
+    Args:
+      language (str): language.
+    """
+    self._language = language
 
   def SetMountPath(self, mount_path):
     """Sets the text to prepend to the display name.
