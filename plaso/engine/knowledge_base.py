@@ -255,6 +255,10 @@ class KnowledgeBase(object):
         session_identifier, None)
 
     system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
+
+    system_configuration.language = self.GetValue(
+        'language', default_value=self._language)
+
     system_configuration.operating_system = self.GetValue('operating_system')
     system_configuration.operating_system_product = self.GetValue(
         'operating_system_product')
@@ -388,6 +392,8 @@ class KnowledgeBase(object):
     self._hostnames[session_identifier] = system_configuration.hostname
 
     self.SetValue('keyboard_layout', system_configuration.keyboard_layout)
+
+    self.SetValue('language', system_configuration.language)
 
     self.SetValue('operating_system', system_configuration.operating_system)
     self.SetValue(
