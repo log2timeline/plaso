@@ -463,6 +463,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     code_page (str): system code page.
     hostname (HostnameArtifact): hostname.
     keyboard_layout (str): keyboard layout.
+    language (str): system language.
     operating_system (str): operating system for example "MacOS" or "Windows".
     operating_system_product (str): operating system product for example
         "Windows XP".
@@ -473,11 +474,12 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """
   CONTAINER_TYPE = 'system_configuration'
 
-  def __init__(self, code_page=None, time_zone=None):
+  def __init__(self, code_page=None, language=None, time_zone=None):
     """Initializes a system configuration artifact.
 
     Args:
       code_page (Optional[str]): system code page.
+      language (Optional[str]): system language.
       time_zone (Optional[str]): system time zone.
     """
     super(SystemConfigurationArtifact, self).__init__()
@@ -485,6 +487,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.code_page = code_page
     self.hostname = None
     self.keyboard_layout = None
+    self.language = language
     self.operating_system = None
     self.operating_system_product = None
     self.operating_system_version = None
