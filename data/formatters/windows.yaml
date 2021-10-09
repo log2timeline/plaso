@@ -78,26 +78,25 @@ message:
 - '[Identifier: {task_identifier}]'
 short_message:
 - 'Task: {task_name}'
----                                                                                
-type: 'conditional'                                                                
-data_type: 'windows:diagnosis:eventtranscript'                                     
-message:                                                                           
-- 'full_event_name: {full_event_name}'                                             
-- 'logging_binary_name: {logging_binary_name}'                                     
-- 'friendly_logging_binary_name: {friendly_logging_binary_name}'                   
-- 'ver: {ver}'                                                                     
-- 'name: {name}'                                                                   
-- 'time: {time}'                                                                   
-- 'iKey: {ikey}'                                                                   
-- 'ext: {ext}'                                                                     
-- 'data: {data}'                                                                   
-- 'app_name: {app_name}'                                                           
-- 'app_version: {app_version}'                                                     
-- 'app_root_dir_path: {app_root_dir_path}'                                         
-- 'app_install_date: {app_install_date}'                                           
-short_message:                                                                     
-- 'full_event_name: {full_event_name}'                                             
-- 'logging_binary_name: {logging_binary_name}'
+---
+type: 'conditional'
+data_type: 'windows:diagnosis:eventtranscript'
+message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
+- '[{friendly_logging_binary_name}]'
+- 'version: {version}'
+- 'name: {name}'
+- 'time: {time}'
+- 'iKey: {ikey}'
+- 'extention: {extention}'
+- 'data: {data}'
+- 'Application name: {application_name}'
+- 'Application version: {application_version}'
+- 'Application root directory: {application_root_directory}'
+short_message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
 ---
 type: 'conditional'
 data_type: 'windows:distributed_link_tracking:creation'
