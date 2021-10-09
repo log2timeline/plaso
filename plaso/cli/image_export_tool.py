@@ -792,7 +792,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self.ScanSource(self._source_path)
+    try:
+      self.ScanSource(self._source_path)
+    except dfvfs_errors.UserAbort as exception:
+      raise errors.UserAbort(exception)
 
     self._output_writer.Write('Export started.\n')
 
