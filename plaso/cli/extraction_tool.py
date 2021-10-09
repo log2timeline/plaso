@@ -7,6 +7,7 @@ import pytz
 
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context as dfvfs_context
 
@@ -579,7 +580,10 @@ class ExtractionTool(
     """
     self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
-    self.ScanSource(self._source_path)
+    try:
+      self.ScanSource(self._source_path)
+    except dfvfs_errors.UserAbort as exception:
+      raise errors.UserAbort(exception)
 
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
