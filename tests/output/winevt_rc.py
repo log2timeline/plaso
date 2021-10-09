@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import winevt_rc
+from plaso.output import winevt_rc
 
 from tests import test_lib as shared_test_lib
 

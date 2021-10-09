@@ -5,7 +5,6 @@ import re
 import sqlite3
 
 
-# TODO: Move the generic sqlite3 code to a different spot e.g. lib/.
 class Sqlite3DatabaseFile(object):
   """Class that defines a sqlite3 database file."""
 
