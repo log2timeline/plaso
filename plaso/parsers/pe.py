@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 """A parser for Portable Executable (PE) files."""
 
+import os
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.helpers import data_slice as dfvfs_data_slice
 
+from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import dtfabric_helper
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
+from plaso.winnt import language_ids
 
 
 class PEEventData(events.EventData):
@@ -37,11 +41,14 @@ class PEEventData(events.EventData):
     self.section_names = None
 
 
-class PEParser(interface.FileObjectParser):
+class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parser for Portable Executable (PE) files."""
 
   NAME = 'pe'
   DATA_FORMAT = 'Portable Executable (PE) file'
+
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'pe_resources.yaml')
 
   _PE_DIRECTORIES = [
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT'],
@@ -49,13 +56,6 @@ class PEParser(interface.FileObjectParser):
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']]
-
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
-    format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'MZ', offset=0)
-    return format_specification
 
   def _GetPEType(self, pefile_object):
     """Retrieves the type of the PE file.
@@ -241,14 +241,18 @@ class PEParser(interface.FileObjectParser):
       pefile_object (pefile.PE): pefile object.
       event_data (PEEventData): event data.
     """
-    resource_entries = getattr(pefile_object, 'DIRECTORY_ENTRY_RESOURCE', None)
-    if not resource_entries:
+    resources = getattr(pefile_object, 'DIRECTORY_ENTRY_RESOURCE', None)
+    if not resources:
       return
 
     event_data.data_type = 'pe:resource:creation_time'
 
-    for resource_entry in resource_entries.entries:
-      timestamp = getattr(resource_entry.directory, 'TimeDateStamp', 0)
+    message_table_resource = None
+    for resource in resources.entries:
+      if resource.id == 11:
+        message_table_resource = resource
+
+      timestamp = getattr(resource.directory, 'TimeDateStamp', 0)
       if not timestamp:
         continue
 
@@ -256,6 +260,121 @@ class PEParser(interface.FileObjectParser):
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    if (not message_table_resource or not message_table_resource.directory or
+        not message_table_resource.directory.entries or
+        not message_table_resource.directory.entries[0].directory):
+      return
+
+    # Only extract message strings from EventLog message files.
+    message_file = parser_mediator.GetWindowsEventLogMessageFile()
+    if not message_file:
+      return
+
+    for entry in message_table_resource.directory.entries[0].directory.entries:
+      language_tag = language_ids.LANGUAGE_TAG_PER_LCID.get(entry.id, None)
+      if parser_mediator.language != language_tag:
+        continue
+
+      parser_mediator.AddWindowsEventLogMessageFile(message_file)
+
+      # TODO: use file offset?
+      offset = getattr(entry.data.struct, 'OffsetToData', None)
+      size = getattr(entry.data.struct, 'Size', None)
+      data = pefile_object.get_memory_mapped_image()[offset:offset + size]
+
+      self._ParseMessageTable(parser_mediator, message_file, entry.id, data)
+
+  def _ParseMessageTable(
+      self, parser_mediator, message_file, language_identifier, data):
+    """Parses a message table.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
+          message file.
+      language_identifier (int): language indentifier (LCID).
+      data (bytes): message table data.
+
+    Raises:
+      ParseError: when the message table cannot be parsed.
+    """
+    message_file_identifier = message_file.GetIdentifier()
+
+    message_table_header_map = self._GetDataTypeMap('message_table_header')
+    message_table_entry_map = self._GetDataTypeMap('message_table_entry')
+    message_table_string_map = self._GetDataTypeMap('message_table_string')
+
+    data_offset = 0
+
+    try:
+      message_table_header = self._ReadStructureFromByteStream(
+          data, data_offset, message_table_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to read message table header with error: {0!s}'.format(
+              exception))
+
+    data_offset += message_table_header_map.GetByteSize()
+
+    for entry_index in range(message_table_header.number_of_entries):
+      try:
+        message_table_entry = self._ReadStructureFromByteStream(
+            data[data_offset:], data_offset, message_table_entry_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to read message table entry: {0:d} at offset: {1:d} with '
+            'error: {2!s}').format(entry_index, data_offset, exception))
+
+      data_offset += message_table_entry_map.GetByteSize()
+
+      message_identifier = message_table_entry.first_message_identifier
+      string_offset = message_table_entry.first_string_offset
+      while message_identifier <= message_table_entry.last_message_identifier:
+        try:
+          message_table_string = self._ReadStructureFromByteStream(
+              data[string_offset:], string_offset, message_table_string_map)
+        except (ValueError, errors.ParseError) as exception:
+          raise errors.ParseError((
+              'Unable to read message table string: 0x{0:08x} at offset: {1:d} '
+              'with error: {2!s}').format(
+                  message_identifier, string_offset, exception))
+
+        if message_table_string.flags & 0x01:
+          string_encoding = 'utf-16-le'
+        else:
+          string_encoding = parser_mediator.codepage
+
+        try:
+          string = message_table_string.data.decode(string_encoding)
+        except UnicodeDecodeError:
+          raise errors.ParseError((
+              'Unable to decode {0:s} encoded message table string: 0x{1:08x} '
+              'at offset: {2:d} with error: {3!s}').format(
+                  string_encoding, message_identifier, string_offset,
+                  exception))
+
+        message_identifier += 1
+        string_offset += message_table_string.data_size
+
+        _, alignment_padding = divmod(string_offset, 4)
+        if alignment_padding > 0:
+          string_offset += 4 - alignment_padding
+
+        # TODO: convert string.
+        message_string = artifacts.WindowsEventLogMessageStringArtifact(
+            language_identifier=language_identifier,
+            message_identifier=message_identifier, string=string)
+        message_string.SetMessageFileIdentifier(message_file_identifier)
+        parser_mediator.AddWindowsEventLogMessageString(message_string)
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'MZ', offset=0)
+    return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Portable Executable (PE) file-like object.

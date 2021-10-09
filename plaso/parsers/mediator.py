@@ -6,11 +6,13 @@ import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.containers import artifacts
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.lib import errors
 from plaso.parsers import logger
+from plaso.winnt import language_ids
 
 
 class ParserMediator(object):
@@ -67,6 +69,7 @@ class ParserMediator(object):
     self._session = session
     self._storage_writer = None
     self._temporary_directory = temporary_directory
+    self._windows_event_log_providers_per_path = None
 
     self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
@@ -80,6 +83,11 @@ class ParserMediator(object):
   def codepage(self):
     """str: codepage."""
     return self._knowledge_base.codepage
+
+  @property
+  def language(self):
+    """str: language."""
+    return self._knowledge_base.language
 
   @property
   def number_of_produced_event_sources(self):
@@ -168,6 +176,24 @@ class ParserMediator(object):
 
     year, _, _ = date_time.GetDate()
     return year
+
+  def AddWindowsEventLogMessageFile(self, windows_eventlog_message_file):
+    """Adds a Windows EventLog message file.
+
+    Args:
+      windows_eventlog_message_file (WindowsEventLogMessageFileArtifact):
+          Windows EventLog message file.
+    """
+    self._storage_writer.AddAttributeContainer(windows_eventlog_message_file)
+
+  def AddWindowsEventLogMessageString(self, windows_eventlog_message_string):
+    """Adds a Windows EventLog message string.
+
+    Args:
+      windows_eventlog_message_string (WindowsEventLogMessageStringArtifact):
+          Windows EventLog message string.
+    """
+    self._storage_writer.AddAttributeContainer(windows_eventlog_message_string)
 
   def AppendToParserChain(self, plugin_or_parser):
     """Adds a parser or parser plugin to the parser chain.
@@ -320,7 +346,7 @@ class ParserMediator(object):
     """Retrieves the relative path of the current file entry.
 
     Returns:
-      str: relateive path of the current file entry or None if no current
+      str: relative path of the current file entry or None if no current
           file entry.
     """
     if self._file_entry is None:
@@ -337,11 +363,79 @@ class ParserMediator(object):
       path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      str: relateive path of the path specification.
+      str: relative path of the path specification.
     """
     mount_path = self._knowledge_base.GetMountPath()
     return path_helper.PathHelper.GetRelativePathForPathSpec(
         path_spec, mount_path=mount_path)
+
+  def GetWindowsEventLogMessageFile(self):
+    """Retrieves the Windows EventLog message file for a specific path.
+
+    Returns:
+      WindowsEventLogMessageFileArtifact: Windows EventLog message file or None
+          if no current file entry or no Windows EventLog message file was
+          found.
+    """
+    if self._windows_event_log_providers_per_path is None:
+      self._windows_event_log_providers_per_path = {}
+      environment_variables = self._knowledge_base.GetEnvironmentVariables()
+
+      for provider in self._knowledge_base.GetWindowsEventLogProviders():
+        for windows_path in provider.event_message_files or []:
+          path, _, filename = windows_path.rpartition('\\')
+
+          # If the EventLog message file path is just a filename it is stored
+          # in: "%SystemRoot%\System32"
+          if not path:
+            path = '%SystemRoot%\\System32'
+
+          path = path_helper.PathHelper.ExpandWindowsPath(
+              path, environment_variables)
+          path = path.lower()
+          filename = filename.lower()
+
+          # Use the path prefix as the key to handle language specific EventLog
+          # message files.
+          if path not in self._windows_event_log_providers_per_path:
+            self._windows_event_log_providers_per_path[path] = {}
+
+          # Note that multiple providers can share EventLog message files.
+          self._windows_event_log_providers_per_path[path][filename] = provider
+
+    message_file = None
+    if self._file_entry:
+      mount_path = self._knowledge_base.GetMountPath()
+      relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
+          self._file_entry.path_spec, mount_path=mount_path)
+      lookup_path = relative_path.lower()
+
+      path_segment_separator = path_helper.PathHelper.GetPathSegmentSeparator(
+          self._file_entry.path_spec)
+
+      lookup_path, _, lookup_filename = lookup_path.rpartition(
+          path_segment_separator)
+
+      # Language specific EventLog message file paths contain a language tag
+      # such as "en-US".
+      base_lookup_path, _, language_tag = lookup_path.rpartition(
+          path_segment_separator)
+      if language_tag in language_ids.LANGUAGE_IDENTIFIERS:
+        lookup_path = base_lookup_path
+      else:
+        language_tag = ''
+
+      providers_per_filename = self._windows_event_log_providers_per_path.get(
+          lookup_path, {})
+
+      for filename, provider in providers_per_filename.items():
+        mui_filename = '{0:s}.mui'.format(filename)
+        if lookup_filename in (filename, mui_filename):
+          message_file = artifacts.WindowsEventLogMessageFileArtifact(
+              path=relative_path)
+          break
+
+    return message_file
 
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""

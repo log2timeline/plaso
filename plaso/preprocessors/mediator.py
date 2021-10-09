@@ -77,14 +77,14 @@ class PreprocessMediator(object):
     self._knowledge_base.AddUserAccount(user_account)
 
   def AddWindowsEventLogProvider(self, windows_eventlog_provider):
-    """Adds a Windows Event Log provider.
+    """Adds a Windows EventLog provider.
 
     Args:
       windows_eventlog_provider (WindowsEventLogProviderArtifact): Windows
-          Event Log provider.
+          EventLog provider.
 
     Raises:
-      KeyError: if the Windows Event Log provider already exists.
+      KeyError: if the Windows EventLog provider already exists.
     """
     if self._storage_writer:
       system_configuration_identifier = (
