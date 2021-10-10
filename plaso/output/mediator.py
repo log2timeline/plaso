@@ -8,10 +8,10 @@ import pytz
 from plaso.engine import path_helper
 from plaso.formatters import default
 from plaso.formatters import manager as formatters_manager
-from plaso.formatters import winevt_rc
 from plaso.formatters import yaml_formatters_file
 from plaso.lib import definitions
 from plaso.output import logger
+from plaso.output import winevt_rc
 from plaso.winnt import language_ids
 
 
