@@ -133,7 +133,35 @@ class FakeStoreTest(test_lib.StorageTestCase):
 
     test_store.Close()
 
-  # TODO: add tests for GetAttributeContainers
+  def testGetAttributeContainers(self):
+    """Tests the GetAttributeContainers function."""
+    event_data_stream = events.EventDataStream()
+    event_data_stream.md5_hash = '8f0bf95a7959baad9666b21a7feed79d'
+
+    test_store = fake_store.FakeStore()
+    test_store.Open()
+
+    containers = list(test_store.GetAttributeContainers(
+        event_data_stream.CONTAINER_TYPE))
+    self.assertEqual(len(containers), 0)
+
+    test_store.AddAttributeContainer(event_data_stream)
+
+    containers = list(test_store.GetAttributeContainers(
+        event_data_stream.CONTAINER_TYPE))
+    self.assertEqual(len(containers), 1)
+
+    filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+    containers = list(test_store.GetAttributeContainers(
+        event_data_stream.CONTAINER_TYPE, filter_expression=filter_expression))
+    self.assertEqual(len(containers), 1)
+
+    filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+    containers = list(test_store.GetAttributeContainers(
+        event_data_stream.CONTAINER_TYPE, filter_expression=filter_expression))
+    self.assertEqual(len(containers), 0)
+
+    test_store.Close()
 
   def testGetNumberOfAttributeContainers(self):
     """Tests the GetNumberOfAttributeContainers function."""

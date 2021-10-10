@@ -241,6 +241,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testGetAttributeContainers(self):
     """Tests the GetAttributeContainers function."""
     event_data_stream = events.EventDataStream()
+    event_data_stream.md5_hash = '8f0bf95a7959baad9666b21a7feed79d'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       test_path = os.path.join(temp_directory, 'plaso.sqlite')
@@ -256,6 +257,18 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       containers = list(test_store.GetAttributeContainers(
           event_data_stream.CONTAINER_TYPE))
       self.assertEqual(len(containers), 1)
+
+      filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+      containers = list(test_store.GetAttributeContainers(
+          event_data_stream.CONTAINER_TYPE,
+          filter_expression=filter_expression))
+      self.assertEqual(len(containers), 1)
+
+      filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+      containers = list(test_store.GetAttributeContainers(
+          event_data_stream.CONTAINER_TYPE,
+          filter_expression=filter_expression))
+      self.assertEqual(len(containers), 0)
 
       with self.assertRaises(IOError):
         list(test_store.GetAttributeContainers('bogus'))

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite-based storage file."""
 
+import ast
 import collections
 import os
 import pathlib
@@ -13,6 +14,52 @@ from plaso.serializer import json_serializer
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage import logger
+
+
+def PythonAST2SQL(ast_node):
+  """Converts a Python AST to SQL.
+
+  Args:
+    ast_node (ast.Node): node of the Python AST.
+
+  Returns:
+    str: SQL statement that represents the node.
+
+  Raises:
+    TypeError: if the type of node is not supported.
+  """
+  if isinstance(ast_node, ast.Compare):
+    if len(ast_node.ops) != 1:
+      raise TypeError(ast_node)
+
+    if isinstance(ast_node.ops[0], ast.Eq):
+      operator = ' = '
+    elif isinstance(ast_node.ops[0], ast.NotEq):
+      operator = ' <> '
+    else:
+      raise TypeError(ast_node)
+
+    if len(ast_node.comparators) != 1:
+      raise TypeError(ast_node)
+
+    sql_left = PythonAST2SQL(ast_node.left)
+    sql_right = PythonAST2SQL(ast_node.comparators[0])
+
+    return operator.join([sql_left, sql_right])
+
+  if isinstance(ast_node, ast.Constant):
+    if isinstance(ast_node.value, str):
+      return '"{0:s}"'.format(ast_node.value)
+
+    return str(ast_node.value)
+
+  if isinstance(ast_node, ast.Name):
+    return ast_node.id
+
+  if isinstance(ast_node, ast.Str):
+    return '"{0:s}"'.format(ast_node.s)
+
+  raise TypeError(ast_node)
 
 
 class SQLiteStorageFile(interface.BaseStore):
@@ -306,7 +353,7 @@ class SQLiteStorageFile(interface.BaseStore):
     Args:
       container_type (str): attribute container type.
       column_names (Optional[list[str]]): names of the columns to retrieve.
-      filter_expression (Optional[str]): expression to filter results by.
+      filter_expression (Optional[str]): SQL expression to filter results by.
       order_by (Optional[str]): name of a column to order the results by.
 
     Yields:
@@ -913,11 +960,13 @@ class SQLiteStorageFile(interface.BaseStore):
     self._CacheAttributeContainerByIndex(container, index)
     return container
 
-  def GetAttributeContainers(self, container_type):
+  def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of stored attribute containers.
 
     Args:
       container_type (str): attribute container type.
+      filter_expression (Optional[str]): expression to filter the resulting
+          attribute containers by.
 
     Returns:
       generator(AttributeContainer): attribute container generator.
@@ -933,8 +982,14 @@ class SQLiteStorageFile(interface.BaseStore):
     else:
       column_names = ['_data']
 
+    sql_filter_expression = None
+    if filter_expression:
+      expression_ast = ast.parse(filter_expression, mode='eval')
+      sql_filter_expression = PythonAST2SQL(expression_ast.body)
+
     return self._GetAttributeContainersWithFilter(
-        container_type, column_names=column_names)
+        container_type, column_names=column_names,
+        filter_expression=sql_filter_expression)
 
   def GetEventTagByEventIdentifier(self, event_identifier):
     """Retrieves the event tag related to a specific event identifier.
