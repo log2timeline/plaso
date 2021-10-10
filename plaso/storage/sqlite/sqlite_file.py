@@ -28,6 +28,22 @@ def PythonAST2SQL(ast_node):
   Raises:
     TypeError: if the type of node is not supported.
   """
+  if isinstance(ast_node, ast.BoolOp):
+    if isinstance(ast_node.op, ast.And):
+      operand = ' AND '
+    elif isinstance(ast_node.op, ast.Or):
+      operand = ' OR '
+    else:
+      raise TypeError(ast_node)
+
+    if len(ast_node.values) != 2:
+      raise TypeError(ast_node)
+
+    sql_left = PythonAST2SQL(ast_node.values[0])
+    sql_right = PythonAST2SQL(ast_node.values[1])
+
+    return operand.join([sql_left, sql_right])
+
   if isinstance(ast_node, ast.Compare):
     if len(ast_node.ops) != 1:
       raise TypeError(ast_node)

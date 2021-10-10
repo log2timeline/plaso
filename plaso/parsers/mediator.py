@@ -383,15 +383,8 @@ class ParserMediator(object):
 
       for provider in self._knowledge_base.GetWindowsEventLogProviders():
         for windows_path in provider.event_message_files or []:
-          path, _, filename = windows_path.rpartition('\\')
-
-          # If the EventLog message file path is just a filename it is stored
-          # in: "%SystemRoot%\System32"
-          if not path:
-            path = '%SystemRoot%\\System32'
-
-          path = path_helper.PathHelper.ExpandWindowsPath(
-              path, environment_variables)
+          path, filename = path_helper.PathHelper.GetWindowsSystemPath(
+              windows_path, environment_variables)
           path = path.lower()
           filename = filename.lower()
 
@@ -431,8 +424,9 @@ class ParserMediator(object):
       for filename, provider in providers_per_filename.items():
         mui_filename = '{0:s}.mui'.format(filename)
         if lookup_filename in (filename, mui_filename):
+          windows_path = '\\'.join([lookup_path, filename])
           message_file = artifacts.WindowsEventLogMessageFileArtifact(
-              path=relative_path)
+              path=relative_path, windows_path=windows_path)
           break
 
     return message_file

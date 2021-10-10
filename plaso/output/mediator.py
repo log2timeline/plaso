@@ -12,6 +12,7 @@ from plaso.formatters import yaml_formatters_file
 from plaso.lib import definitions
 from plaso.output import logger
 from plaso.winnt import language_ids
+from plaso.output import winevt_rc
 
 
 class OutputMediator(object):
@@ -49,6 +50,7 @@ class OutputMediator(object):
     self._lcid = self.DEFAULT_LCID
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
+    self._storage_reader = None
     self._timezone = pytz.UTC
 
     self.data_location = data_location
@@ -64,11 +66,6 @@ class OutputMediator(object):
   def encoding(self):
     """str: preferred encoding."""
     return self._preferred_encoding
-
-  @property
-  def lcid(self):
-    """int: Windows Language Code Identifier (LCID)."""
-    return self._lcid
 
   @property
   def timezone(self):
@@ -314,6 +311,17 @@ class OutputMediator(object):
         user_sid, session_identifier=session_identifier)
     return username or default_username
 
+  def GetWinevtResourcesHelper(self):
+    """Retrieves a Windows EventLog resources helper.
+
+    Returns:
+      WinevtResourcesHelper: Windows EventLog resources helper.
+    """
+    environment_variables = self._knowledge_base.GetEnvironmentVariables()
+    return winevt_rc.WinevtResourcesHelper(
+        self._storage_reader, self.data_location, self._lcid,
+        environment_variables)
+
   def ReadMessageFormattersFromDirectory(self, path):
     """Reads message formatters from a directory.
 
@@ -362,6 +370,14 @@ class OutputMediator(object):
           language_identifier))
     self._language_identifier = language_identifier
     self._lcid = values[0]
+
+  def SetStorageReader(self, storage_reader):
+    """Sets the storage reader.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    self._storage_reader = storage_reader
 
   def SetTimezone(self, timezone):
     """Sets the timezone.

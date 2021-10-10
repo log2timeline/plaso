@@ -37,13 +37,33 @@ class WinevtResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows EventLog resources helper."""
 
+  # pylint: disable=protected-access
+
+  def testGetWinevtRcDatabaseMessageString(self):
+    """Tests the _GetWinevtRcDatabaseMessageString function."""
+    database_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(database_path)
+
+    test_helper = winevt_rc.WinevtResourcesHelper(
+        None, shared_test_lib.TEST_DATA_PATH, 0x00000409, {})
+
+    expected_message_string = (
+        'Your computer has detected that the IP address {0:s} for the Network '
+        'Card with network address {2:s} is already in use on the network. '
+        'Your computer will automatically attempt to obtain a different '
+        'address.')
+
+    message_string = test_helper._GetWinevtRcDatabaseMessageString(
+        'Microsoft-Windows-Dhcp-Client', 0xb00003ed)
+    self.assertEqual(message_string, expected_message_string)
+
   def testGetMessageString(self):
     """Tests the GetMessageString function."""
     database_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(database_path)
 
     test_helper = winevt_rc.WinevtResourcesHelper(
-        shared_test_lib.TEST_DATA_PATH)
+        None, shared_test_lib.TEST_DATA_PATH, 0x00000409, {})
 
     expected_message_string = (
         'Your computer has detected that the IP address {0:s} for the Network '
