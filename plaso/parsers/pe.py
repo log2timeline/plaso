@@ -396,7 +396,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           'Unable to read PE file with error: {0!s}'.format(exception))
 
     event_data = PEEventData()
-    event_data.imphash = pefile_object.get_imphash()
+    # Note that the result of get_imphash() is an empty string if there is no
+    # import hash.
+    event_data.imphash = pefile_object.get_imphash() or None
     event_data.pe_type = self._GetPEType(pefile_object)
     event_data.section_names = self._GetSectionNames(pefile_object)
 
