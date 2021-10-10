@@ -151,6 +151,29 @@ class AttributeContainer(object):
     """
     return self._session_identifier
 
+  def MatchesExpression(self, expression):
+    """Determines if an attribute container matches the expression.
+
+    Args:
+      expression (code|str): expression.
+
+    Returns:
+      bool: True if the attribute container matches the expression, False
+          otherwise.
+    """
+    result = not expression
+    if expression:
+      namespace = dict(self.GetAttributes())
+      # Make sure __builtins__ contains an empty dictionary.
+      namespace['__builtins__'] = {}
+
+      try:
+        result = eval(expression, namespace)  # pylint: disable=eval-used
+      except Exception:  # pylint: disable=broad-except
+        pass
+
+    return result
+
   def SetIdentifier(self, identifier):
     """Sets the identifier.
 

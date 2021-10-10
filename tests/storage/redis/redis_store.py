@@ -278,13 +278,30 @@ class RedisStoreTest(test_lib.StorageTestCase):
         task_identifier=task.identifier)
 
     try:
-      for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
-        test_store.AddAttributeContainer(event_data)
+      event_data_stream = events.EventDataStream()
+      event_data_stream.md5_hash = '8f0bf95a7959baad9666b21a7feed79d'
 
       containers = list(test_store.GetAttributeContainers(
-          test_store._CONTAINER_TYPE_EVENT_DATA))
-      self.assertEqual(len(containers), 4)
+          event_data_stream.CONTAINER_TYPE))
+      self.assertEqual(len(containers), 0)
+
+      test_store.AddAttributeContainer(event_data_stream)
+
+      containers = list(test_store.GetAttributeContainers(
+          event_data_stream.CONTAINER_TYPE))
+      self.assertEqual(len(containers), 1)
+
+      filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+      containers = list(test_store.GetAttributeContainers(
+          event_data_stream.CONTAINER_TYPE,
+          filter_expression=filter_expression))
+      self.assertEqual(len(containers), 1)
+
+      filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+      containers = list(test_store.GetAttributeContainers(
+          event_data_stream.CONTAINER_TYPE,
+         filter_expression=filter_expression))
+      self.assertEqual(len(containers), 0)
 
     finally:
       test_store.Close()

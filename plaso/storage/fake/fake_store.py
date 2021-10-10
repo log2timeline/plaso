@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Fake (in-memory only) store for testing."""
 
+import ast
 import collections
 import copy
 import itertools
@@ -154,17 +155,25 @@ class FakeStore(interface.BaseStore):
     return next(itertools.islice(
         containers.values(), index, number_of_containers))
 
-  def GetAttributeContainers(self, container_type):
+  def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of attribute containers.
 
     Args:
       container_type (str): attribute container type.
+      filter_expression (Optional[str]): expression to filter the resulting
+          attribute containers by.
 
-    Returns:
-      generator(AttributeContainers): attribute container generator.
+    Yield:
+      AttributeContainer: attribute container.
     """
-    containers = self._attribute_containers.get(container_type, {})
-    return iter(containers.values())
+    if filter_expression:
+      expression_ast = ast.parse(filter_expression, mode='eval')
+      filter_expression = compile(expression_ast, '<string>', mode='eval')
+
+    for attribute_container in self._attribute_containers.get(
+        container_type, {}).values():
+      if attribute_container.MatchesExpression(filter_expression):
+        yield attribute_container
 
   def GetEventTagByEventIdentifier(self, event_identifier):
     """Retrieves the event tag related to a specific event identifier.

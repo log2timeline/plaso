@@ -253,14 +253,16 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def GetAttributeContainers(self, container_type):
+  def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of attribute containers.
 
     Args:
       container_type (str): attribute container type.
+      filter_expression (Optional[str]): expression to filter the resulting
+          attribute containers by.
 
     Returns:
-      generator(AttributeContainers): attribute container generator.
+      generator(AttributeContainer): attribute container generator.
 
     Raises:
       IOError: when the store is closed.

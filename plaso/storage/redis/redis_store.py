@@ -325,12 +325,14 @@ class RedisStore(interface.BaseStore):
 
     return attribute_container
 
-  def GetAttributeContainers(self, container_type):
+  def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves attribute containers
 
     Args:
       container_type (str): container type attribute of the container being
           added.
+      filter_expression (Optional[str]): expression to filter the resulting
+          attribute containers by.
 
     Yields:
       AttributeContainer: attribute container.
@@ -351,7 +353,9 @@ class RedisStore(interface.BaseStore):
 
       self._UpdateAttributeContainerAfterDeserialize(attribute_container)
 
-      yield attribute_container
+      # TODO: map filter expression to Redis native filter.
+      if attribute_container.MatchesExpression(filter_expression):
+        yield attribute_container
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.

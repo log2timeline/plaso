@@ -154,6 +154,20 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertIsNone(session_identifier)
 
+  def testMatchesExpression(self):
+    """Tests the MatchesExpression function."""
+    attribute_container = interface.AttributeContainer()
+    attribute_container.name = 'value'
+
+    result = attribute_container.MatchesExpression('name == "value"')
+    self.assertTrue(result)
+
+    result = attribute_container.MatchesExpression('name == "bogus"')
+    self.assertFalse(result)
+
+    result = attribute_container.MatchesExpression('bogus')
+    self.assertFalse(result)
+
   def testSetIdentifier(self):
     """Tests the SetIdentifier function."""
     attribute_container = interface.AttributeContainer()
