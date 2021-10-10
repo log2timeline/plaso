@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Windows Event Log resources database reader."""
+"""Windows EventLog resources database reader."""
 
+import os
 import re
 import sqlite3
 
@@ -131,32 +132,8 @@ class Sqlite3DatabaseFile(object):
     return True
 
 
-class Sqlite3DatabaseReader(object):
-  """Class to represent a sqlite3 database reader."""
-
-  def __init__(self):
-    """Initializes the database reader object."""
-    super(Sqlite3DatabaseReader, self).__init__()
-    self._database_file = Sqlite3DatabaseFile()
-
-  def Close(self):
-    """Closes the database reader object."""
-    self._database_file.Close()
-
-  def Open(self, filename):
-    """Opens the database reader object.
-
-    Args:
-      filename (str): filename of the database.
-
-    Returns:
-      bool: True if successful.
-    """
-    return self._database_file.Open(filename, read_only=True)
-
-
-class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent a sqlite3 Event Log resources database reader."""
+class WinevtResourcesSqlite3DatabaseReader(object):
+  """Windows EventLog resources SQLite database reader."""
 
   # Message string specifiers that are considered white space.
   _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
@@ -168,18 +145,19 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
   _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
 
   def __init__(self):
-    """Initializes the database reader object."""
+    """Initializes a Windows EventLog resources SQLite database reader."""
     super(WinevtResourcesSqlite3DatabaseReader, self).__init__()
+    self._database_file = Sqlite3DatabaseFile()
     self._string_format = 'wrc'
 
   def _GetEventLogProviderKey(self, log_source):
-    """Retrieves the Event Log provider key.
+    """Retrieves the EventLog provider key.
 
     Args:
-      log_source (str): Event Log source.
+      log_source (str): EventLog source.
 
     Returns:
-      str: Event Log provider key or None if not available.
+      str: EventLog provider key or None if not available.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -240,7 +218,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message file keys.
 
     Args:
-      event_log_provider_key (int): Event Log provider key.
+      event_log_provider_key (int): EventLog provider key.
 
     Yields:
       int: message file key.
@@ -287,11 +265,15 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     return self._PLACE_HOLDER_SPECIFIER_RE.sub(
         _PlaceHolderSpecifierReplacer, message_string)
 
+  def Close(self):
+    """Closes the database reader object."""
+    self._database_file.Close()
+
   def GetMessage(self, log_source, lcid, message_identifier):
-    """Retrieves a specific message for a specific Event Log source.
+    """Retrieves a specific message for a specific EventLog source.
 
     Args:
-      log_source (str): Event Log source.
+      log_source (str): EventLog source.
       lcid (int): language code identifier (LCID).
       message_identifier (int): message identifier.
 
@@ -366,7 +348,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       RuntimeError: if the version or string format of the database
                     is not supported.
     """
-    if not super(WinevtResourcesSqlite3DatabaseReader, self).Open(filename):
+    if not self._database_file.Open(filename, read_only=True):
       return False
 
     version = self.GetMetadataAttribute('version')
@@ -383,3 +365,67 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     self._string_format = string_format
     return True
+
+
+class WinevtResourcesHelper(object):
+  """Windows EventLog resources helper."""
+
+  # LCID 0x0409 is en-US.
+  DEFAULT_LCID = 0x0409
+
+  _WINEVT_RC_DATABASE = 'winevt-rc.db'
+
+  def __init__(self, data_location, lcid=None):
+    """Initializes Windows EventLog resources helper.
+
+    Args:
+      data_location (str): data location.
+      lcid (Optional[int]): Windows Language Code Identifier (LCID).
+    """
+    super(WinevtResourcesHelper, self).__init__()
+    self._data_location = data_location
+    self._lcid = lcid or self.DEFAULT_LCID
+    self._windows_eventlog_providers = {}
+    self._winevt_database_reader = None
+
+  def _GetWinevtRcDatabaseReader(self):
+    """Opens the Windows Event Log resource database reader.
+
+    Returns:
+      WinevtResourcesSqlite3DatabaseReader: Windows Event Log resource
+          database reader or None.
+    """
+    if not self._winevt_database_reader and self._data_location:
+      database_path = os.path.join(
+          self._data_location, self._WINEVT_RC_DATABASE)
+      if not os.path.isfile(database_path):
+        return None
+
+      self._winevt_database_reader = WinevtResourcesSqlite3DatabaseReader()
+      if not self._winevt_database_reader.Open(database_path):
+        self._winevt_database_reader = None
+
+    return self._winevt_database_reader
+
+  def GetMessageString(self, log_source, message_identifier):
+    """Retrieves a specific Windows EventLog message string.
+
+    Args:
+      log_source (str): EventLog source, such as "Application Error".
+      message_identifier (int): message identifier.
+
+    Returns:
+      str: message string or None if not available.
+    """
+    database_reader = self._GetWinevtRcDatabaseReader()
+    if not database_reader:
+      return None
+
+    if self._lcid != self.DEFAULT_LCID:
+      message_string = database_reader.GetMessage(
+          log_source, self._lcid, message_identifier)
+      if message_string:
+        return message_string
+
+    return database_reader.GetMessage(
+        log_source, self.DEFAULT_LCID, message_identifier)

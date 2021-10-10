@@ -11,7 +11,6 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import yaml_formatters_file
 from plaso.lib import definitions
 from plaso.output import logger
-from plaso.output import winevt_rc
 from plaso.winnt import language_ids
 
 
@@ -24,8 +23,6 @@ class OutputMediator(object):
 
   DEFAULT_LANGUAGE_IDENTIFIER = 'en-US'
 
-  # TODO: add smarter language ID to LCID resolving e.g.
-  # 'en-US' falls back to 'en'.
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
@@ -53,7 +50,6 @@ class OutputMediator(object):
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._timezone = pytz.UTC
-    self._winevt_database_reader = None
 
     self.data_location = data_location
 
@@ -70,29 +66,14 @@ class OutputMediator(object):
     return self._preferred_encoding
 
   @property
+  def lcid(self):
+    """int: Windows Language Code Identifier (LCID)."""
+    return self._lcid
+
+  @property
   def timezone(self):
     """The timezone."""
     return self._timezone
-
-  def _GetWinevtRcDatabaseReader(self):
-    """Opens the Windows Event Log resource database reader.
-
-    Returns:
-      WinevtResourcesSqlite3DatabaseReader: Windows Event Log resource
-          database reader or None.
-    """
-    if not self._winevt_database_reader and self.data_location:
-      database_path = os.path.join(
-          self.data_location, self._WINEVT_RC_DATABASE)
-      if not os.path.isfile(database_path):
-        return None
-
-      self._winevt_database_reader = (
-          winevt_rc.WinevtResourcesSqlite3DatabaseReader())
-      if not self._winevt_database_reader.Open(database_path):
-        self._winevt_database_reader = None
-
-    return self._winevt_database_reader
 
   def _ReadMessageFormattersFile(self, path):
     """Reads a message formatters configuration file.
@@ -332,29 +313,6 @@ class OutputMediator(object):
     username = self._knowledge_base.GetUsernameByIdentifier(
         user_sid, session_identifier=session_identifier)
     return username or default_username
-
-  def GetWindowsEventMessage(self, log_source, message_identifier):
-    """Retrieves the message string for a specific Windows Event Log source.
-
-    Args:
-      log_source (str): Event Log source, such as "Application Error".
-      message_identifier (int): message identifier.
-
-    Returns:
-      str: message string or None if not available.
-    """
-    database_reader = self._GetWinevtRcDatabaseReader()
-    if not database_reader:
-      return None
-
-    if self._lcid != self.DEFAULT_LCID:
-      message_string = database_reader.GetMessage(
-          log_source, self._lcid, message_identifier)
-      if message_string:
-        return message_string
-
-    return database_reader.GetMessage(
-        log_source, self.DEFAULT_LCID, message_identifier)
 
   def ReadMessageFormattersFromDirectory(self, path):
     """Reads message formatters from a directory.
