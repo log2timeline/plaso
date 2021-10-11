@@ -532,10 +532,14 @@ data_type: 'windows:registry:timezone'
 message: '[{key_path}] {configuration}'
 short_message: '[{key_path}] {configuration}'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'windows:registry:typedurls'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
+message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_message:
+- '[{key_path}]'
+- 'Entries: {entries}'
 ---
 type: 'conditional'
 data_type: 'windows:registry:usb'
