@@ -414,3 +414,26 @@ class PathHelper(object):
         return os.path.sep
 
     return '/'
+
+  @classmethod
+  def GetWindowsSystemPath(cls, path, environment_variables):
+    """Retrieves a Windows system path.
+
+    Args:
+      path (str): Windows path with environment variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+
+    Returns:
+      tuple[str, str]: Windows system path and filename.
+    """
+    path, _, filename = path.rpartition('\\')
+
+    # If the path is just a filename assume the file is stored in:
+    # "%SystemRoot%\System32".
+    if not path:
+      path = '%SystemRoot%\\System32'
+
+    path = cls.ExpandWindowsPath(path, environment_variables)
+
+    return path, filename

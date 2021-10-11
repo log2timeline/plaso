@@ -37,16 +37,19 @@ class StorageReader(object):
     return self._store.GetAttributeContainerByIdentifier(
         container_type, identifier)
 
-  def GetAttributeContainers(self, container_type):
+  def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of attribute containers.
 
     Args:
       container_type (str): attribute container type.
+      filter_expression (Optional[str]): expression to filter the resulting
+          attribute containers by.
 
     Returns:
       generator(AttributeContainers): attribute container generator.
     """
-    return self._store.GetAttributeContainers(container_type)
+    return self._store.GetAttributeContainers(
+        container_type, filter_expression=filter_expression)
 
   def GetFormatVersion(self):
     """Retrieves the format version of the underlying storage file.

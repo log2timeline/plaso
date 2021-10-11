@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """Windows EventLog resources database reader."""
 
+import collections
 import os
 import re
 import sqlite3
+
+from plaso.containers import artifacts
+from plaso.engine import path_helper
 
 
 class Sqlite3DatabaseFile(object):
@@ -373,26 +377,68 @@ class WinevtResourcesHelper(object):
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
+  # The maximum number of cached message strings
+  _MAXIMUM_CACHED_MESSAGE_STRINGS = 32 * 1024
+
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
-  def __init__(self, data_location, lcid=None):
+  def __init__(
+      self, storage_reader, data_location, lcid, environment_variables):
     """Initializes Windows EventLog resources helper.
 
     Args:
-      data_location (str): data location.
-      lcid (Optional[int]): Windows Language Code Identifier (LCID).
+      storage_reader (StorageReader): storage reader.
+      data_location (str): data location of the winevt-rc database.
+      lcid (int): Windows Language Code Identifier (LCID).
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variable artifacts.
     """
     super(WinevtResourcesHelper, self).__init__()
     self._data_location = data_location
+    self._environment_variables = environment_variables or None
     self._lcid = lcid or self.DEFAULT_LCID
-    self._windows_eventlog_providers = {}
+    self._message_string_cache = collections.OrderedDict()
+    self._storage_reader = storage_reader
+    self._windows_eventlog_message_files = None
+    self._windows_eventlog_providers = None
     self._winevt_database_reader = None
 
-  def _GetWinevtRcDatabaseReader(self):
-    """Opens the Windows Event Log resource database reader.
+  def _CacheMessageString(self, log_source, message_identifier, message_string):
+    """Caches a specific message string.
+
+    Args:
+      log_source (str): EventLog source, such as "Application Error".
+      message_identifier (int): message identifier.
+      message_string (str): message string.
+    """
+    if len(self._message_string_cache) >= self._MAXIMUM_CACHED_MESSAGE_STRINGS:
+      self._message_string_cache.popitem(last=True)
+
+    lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+    self._message_string_cache[lookup_key] = message_string
+    self._message_string_cache.move_to_end(lookup_key, last=False)
+
+  def _GetCachedMessageString(self, log_source, message_identifier):
+    """Retrieves a specific cached message string.
+
+    Args:
+      log_source (str): EventLog source, such as "Application Error".
+      message_identifier (int): message identifier.
 
     Returns:
-      WinevtResourcesSqlite3DatabaseReader: Windows Event Log resource
+      str: message string or None if not available.
+    """
+    lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+    message_string = self._message_string_cache.get(lookup_key, None)
+    if message_string:
+      self._message_string_cache.move_to_end(lookup_key, last=False)
+    return message_string
+
+  def _GetWinevtRcDatabaseReader(self):
+    """Opens the Windows EventLog resource database reader.
+
+    Returns:
+      WinevtResourcesSqlite3DatabaseReader: Windows EventLog resource
           database reader or None.
     """
     if not self._winevt_database_reader and self._data_location:
@@ -407,8 +453,8 @@ class WinevtResourcesHelper(object):
 
     return self._winevt_database_reader
 
-  def GetMessageString(self, log_source, message_identifier):
-    """Retrieves a specific Windows EventLog message string.
+  def _GetWinevtRcDatabaseMessageString(self, log_source, message_identifier):
+    """Retrieves a specific Windows EventLog resource database message string.
 
     Args:
       log_source (str): EventLog source, such as "Application Error".
@@ -429,3 +475,111 @@ class WinevtResourcesHelper(object):
 
     return database_reader.GetMessage(
         log_source, self.DEFAULT_LCID, message_identifier)
+
+  def _ReadEnvironmentVariables(self, storage_reader):
+    """Reads the Windows EventLog message files.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    # TODO: read environment variables from storage reader.
+    _ = storage_reader
+    self._environment_variables = [artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
+
+  def _ReadWindowsEventLogMessageFiles(self, storage_reader):
+    """Reads the Windows EventLog message files.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    self._windows_eventlog_message_files = {}
+    for message_file in storage_reader.GetAttributeContainers(
+        'windows_eventlog_message_file'):
+      self._windows_eventlog_message_files[message_file.windows_path] = (
+          message_file.GetIdentifier())
+
+  def _ReadWindowsEventLogMessageString(
+      self, storage_reader, log_source, message_identifier):
+    """Reads an Windows EventLog message string.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+
+    Returns:
+      str: message string or None if not available.
+    """
+    if self._environment_variables is None:
+      self._ReadEnvironmentVariables(storage_reader)
+
+    if self._windows_eventlog_providers is None:
+      self._ReadWindowsEventLogProviders(storage_reader)
+
+    if self._windows_eventlog_message_files is None:
+      self._ReadWindowsEventLogMessageFiles(storage_reader)
+
+    provider = self._windows_eventlog_providers.get(log_source, None)
+    if not provider:
+      return None
+
+    for windows_path in provider.event_message_files or []:
+      path, filename = path_helper.PathHelper.GetWindowsSystemPath(
+          windows_path, self._environment_variables)
+      lookup_path = '\\'.join([path.lower(), filename.lower()])
+
+      message_file_identifier = self._windows_eventlog_message_files.get(
+          lookup_path, None)
+      if message_file_identifier:
+        message_file_identifier = message_file_identifier.CopyToString()
+        # TODO: filter message file
+        filter_expression = (
+            'language_identifier == {0:d} and '
+            'message_identifier == {1:d}').format(
+                self._lcid, message_identifier)
+
+        for message_string in storage_reader.GetAttributeContainers(
+            'windows_eventlog_message_string',
+            filter_expression=filter_expression):
+          identifier = message_string.GetMessageFileIdentifier()
+          identifier = identifier.CopyToString()
+          if identifier == message_file_identifier:
+            return message_string.string
+
+    return None
+
+  def _ReadWindowsEventLogProviders(self, storage_reader):
+    """Reads the Windows EventLog providers.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    self._windows_eventlog_providers = {}
+    for provider in storage_reader.GetAttributeContainers(
+        'windows_eventlog_provider'):
+      self._windows_eventlog_providers[provider.log_source] = provider
+
+  def GetMessageString(self, log_source, message_identifier):
+    """Retrieves a specific Windows EventLog message string.
+
+    Args:
+      log_source (str): EventLog source, such as "Application Error".
+      message_identifier (int): message identifier.
+
+    Returns:
+      str: message string or None if not available.
+    """
+    message_string = self._GetCachedMessageString(
+        log_source, message_identifier)
+    if not message_string:
+      if self._storage_reader:
+        message_string = self._ReadWindowsEventLogMessageString(
+            self._storage_reader, log_source, message_identifier)
+
+      else:
+        message_string = self._GetWinevtRcDatabaseMessageString(
+            log_source, message_identifier)
+
+      if message_string:
+        self._CacheMessageString(log_source, message_identifier, message_string)
+
+    return message_string

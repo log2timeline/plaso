@@ -13,7 +13,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.output import logger
-from plaso.output import winevt_rc
 
 
 class EventFormattingHelper(object):
@@ -63,8 +62,7 @@ class FieldFormattingHelper(object):
     self._event_tag_field_names = []
     self._output_mediator = output_mediator
     self._source_mappings = {}
-    self._winevt_resources_helper = winevt_rc.WinevtResourcesHelper(
-        output_mediator.data_location, lcid=output_mediator.lcid)
+    self._winevt_resources_helper = None
 
     for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items():
       if callback_name == '_FormatTag':
@@ -541,15 +539,19 @@ class FieldFormattingHelper(object):
     Returns:
       str: Windows Event Log message field or None if not available.
     """
+    if not self._winevt_resources_helper:
+      self._winevt_resources_helper = (
+          self._output_mediator.GetWinevtResourcesHelper())
+
     message_string = None
     source_name = getattr(event_data, 'source_name', None)
     message_identifier = getattr(event_data, 'message_identifier', None)
     if source_name and message_identifier:
-      windows_event_message = self._winevt_resources_helper.GetMessageString(
+      message_string_template = self._winevt_resources_helper.GetMessageString(
           source_name, message_identifier)
-      if windows_event_message:
+      if message_string_template:
         try:
-          message_string = windows_event_message.format(*event_data.strings)
+          message_string = message_string_template.format(*event_data.strings)
         except IndexError:
           # Unable to create the message string.
           # TODO: consider returning the unformatted message string.

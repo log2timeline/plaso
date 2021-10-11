@@ -22,7 +22,7 @@ class OutputModule(object):
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
+          modules and other components, such as storage and dfVFS.
     """
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
@@ -62,6 +62,14 @@ class OutputModule(object):
   def Open(self, **kwargs):  # pylint: disable=unused-argument
     """Opens the output."""
     return
+
+  def SetStorageReader(self, storage_reader):
+    """Sets the storage reader.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    self._output_mediator.SetStorageReader(storage_reader)
 
   def WriteEvent(self, event, event_data, event_data_stream, event_tag):
     """Writes the event to the output.

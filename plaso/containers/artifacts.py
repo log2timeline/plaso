@@ -585,20 +585,25 @@ class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
 
   Attributes:
     path (str): path.
+    windows_path (str): path as defined by the Windows EventLog provider.
   """
   CONTAINER_TYPE = 'windows_eventlog_message_file'
 
   SCHEMA = {
-      'path': 'str'}
+      'path': 'str',
+      'windows_path': 'str'}
 
-  def __init__(self, path=None):
+  def __init__(self, path=None, windows_path=None):
     """Initializes a Windows EventLog message file artifact.
 
     Args:
       path (Optional[str]): path.
+      windows_path (Optional[str]): path as defined by the Window EventLog
+          provider.
     """
     super(WindowsEventLogMessageFileArtifact, self).__init__()
     self.path = path
+    self.windows_path = windows_path
 
 
 class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):

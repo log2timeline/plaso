@@ -473,6 +473,8 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
+      self._output_module.SetStorageReader(storage_reader)
+
       # TODO: add single process output and formatting engine support.
       output_engine = (
           multi_output_engine.OutputAndFormattingMultiProcessEngine())
