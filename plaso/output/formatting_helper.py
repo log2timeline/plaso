@@ -550,12 +550,16 @@ class FieldFormattingHelper(object):
       message_string_template = self._winevt_resources_helper.GetMessageString(
           source_name, message_identifier)
       if message_string_template:
+        string_values = [string or '' for string in event_data.strings]
         try:
-          message_string = message_string_template.format(*event_data.strings)
-        except IndexError:
+          message_string = message_string_template.format(*string_values)
+        except (IndexError, TypeError) as exception:
+          logger.error((
+              'Unable to format message string: "{0:s}" and strings: "{1:s}" '
+              'with error: {2!s}').format(
+                  message_string_template, ', '.join(string_values), exception))
           # Unable to create the message string.
           # TODO: consider returning the unformatted message string.
-          pass
 
     return message_string
 

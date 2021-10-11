@@ -2,7 +2,6 @@
 """A parser for Portable Executable (PE) files."""
 
 import os
-import re
 
 import pefile
 
@@ -19,6 +18,7 @@ from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.winnt import language_ids
+from plaso.winnt import resource_files
 
 
 class PEEventData(events.EventData):
@@ -58,15 +58,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']]
-
-  # Message string specifiers that are considered white space.
-  _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
-  # Message string specifiers that expand to text.
-  _TEXT_SPECIFIER_RE = re.compile(r'%([ .!%nrt])')
-  # Curly brackets in a message string.
-  _CURLY_BRACKETS = re.compile(r'([\{\}])')
-  # Message string specifiers that expand to a variable place holder.
-  _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
 
   def _GetPEType(self, pefile_object):
     """Retrieves the type of the PE file.
@@ -372,7 +363,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if alignment_padding > 0:
           string_offset += 4 - alignment_padding
 
-        string = self._ReformatMessageString(string)
+        string = resource_files.FormatMessageStringInPEP3101(string)
 
         message_string = artifacts.WindowsEventLogMessageStringArtifact(
             language_identifier=language_identifier,
@@ -381,40 +372,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         parser_mediator.AddWindowsEventLogMessageString(message_string)
 
         message_identifier += 1
-
-  def _ReformatMessageString(self, message_string):
-    """Reformats the message string.
-
-    Args:
-      message_string (str): message string.
-
-    Returns:
-      str: message string in Python format() (PEP 3103) style or None
-          if not available.
-    """
-    def PlaceHolderSpecifierReplacer(match_object):
-      """Replaces message string place holders into Python format() style."""
-      expanded_groups = []
-      for group in match_object.groups():
-        try:
-          place_holder_number = int(group, 10) - 1
-          expanded_group = '{{{0:d}:s}}'.format(place_holder_number)
-        except ValueError:
-          expanded_group = group
-
-        expanded_groups.append(expanded_group)
-
-      return ''.join(expanded_groups)
-
-    if not message_string:
-      return None
-
-    message_string = message_string.rstrip('\0')
-    message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
-    message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
-    message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
-    return self._PLACE_HOLDER_SPECIFIER_RE.sub(
-        PlaceHolderSpecifierReplacer, message_string)
 
   @classmethod
   def GetFormatSpecification(cls):

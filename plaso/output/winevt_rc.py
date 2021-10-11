@@ -3,11 +3,11 @@
 
 import collections
 import os
-import re
 import sqlite3
 
 from plaso.containers import artifacts
 from plaso.engine import path_helper
+from plaso.winnt import resource_files
 
 
 class Sqlite3DatabaseFile(object):
@@ -139,15 +139,6 @@ class Sqlite3DatabaseFile(object):
 class WinevtResourcesSqlite3DatabaseReader(object):
   """Windows EventLog resources SQLite database reader."""
 
-  # Message string specifiers that are considered white space.
-  _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
-  # Message string specifiers that expand to text.
-  _TEXT_SPECIFIER_RE = re.compile(r'%([ .!%nrt])')
-  # Curly brackets in a message string.
-  _CURLY_BRACKETS = re.compile(r'([\{\}])')
-  # Message string specifiers that expand to a variable place holder.
-  _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
-
   def __init__(self):
     """Initializes a Windows EventLog resources SQLite database reader."""
     super(WinevtResourcesSqlite3DatabaseReader, self).__init__()
@@ -237,38 +228,6 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     for values in generator:
       yield values['message_file_key']
 
-  def _ReformatMessageString(self, message_string):
-    """Reformats the message string.
-
-    Args:
-      message_string (str): message string.
-
-    Returns:
-      str: message string in Python format() (PEP 3101) style.
-    """
-    def _PlaceHolderSpecifierReplacer(match_object):
-      """Replaces message string place holders into Python format() style."""
-      expanded_groups = []
-      for group in match_object.groups():
-        try:
-          place_holder_number = int(group, 10) - 1
-          expanded_group = '{{{0:d}:s}}'.format(place_holder_number)
-        except ValueError:
-          expanded_group = group
-
-        expanded_groups.append(expanded_group)
-
-      return ''.join(expanded_groups)
-
-    if not message_string:
-      return None
-
-    message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
-    message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
-    message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
-    return self._PLACE_HOLDER_SPECIFIER_RE.sub(
-        _PlaceHolderSpecifierReplacer, message_string)
-
   def Close(self):
     """Closes the database reader object."""
     self._database_file.Close()
@@ -292,7 +251,6 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     if not generator:
       return None
 
-    # TODO: cache a number of message strings.
     message_string = None
     for message_file_key in generator:
       message_string = self._GetMessage(
@@ -302,7 +260,8 @@ class WinevtResourcesSqlite3DatabaseReader(object):
         break
 
     if self._string_format == 'wrc':
-      message_string = self._ReformatMessageString(message_string)
+      message_string = resource_files.FormatMessageStringInPEP3101(
+          message_string)
 
     return message_string
 
@@ -350,7 +309,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
 
     Raises:
       RuntimeError: if the version or string format of the database
-                    is not supported.
+          is not supported.
     """
     if not self._database_file.Open(filename, read_only=True):
       return False
