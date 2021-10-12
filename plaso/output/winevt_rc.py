@@ -453,10 +453,11 @@ class WinevtResourcesHelper(object):
       storage_reader (StorageReader): storage reader.
     """
     self._windows_eventlog_message_files = {}
-    for message_file in storage_reader.GetAttributeContainers(
-        'windows_eventlog_message_file'):
-      self._windows_eventlog_message_files[message_file.windows_path] = (
-          message_file.GetIdentifier())
+    if storage_reader.HasAttributeContainers('windows_eventlog_message_file'):
+      for message_file in storage_reader.GetAttributeContainers(
+          'windows_eventlog_message_file'):
+        self._windows_eventlog_message_files[message_file.windows_path] = (
+            message_file.GetIdentifier())
 
   def _ReadWindowsEventLogMessageString(
       self, storage_reader, log_source, message_identifier):
@@ -479,6 +480,10 @@ class WinevtResourcesHelper(object):
 
     provider = self._windows_eventlog_providers.get(log_source, None)
     if not provider:
+      return None
+
+    if not storage_reader.HasAttributeContainers(
+        'windows_eventlog_message_string'):
       return None
 
     for windows_path in provider.event_message_files or []:
@@ -513,9 +518,10 @@ class WinevtResourcesHelper(object):
       storage_reader (StorageReader): storage reader.
     """
     self._windows_eventlog_providers = {}
-    for provider in storage_reader.GetAttributeContainers(
-        'windows_eventlog_provider'):
-      self._windows_eventlog_providers[provider.log_source] = provider
+    if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
+      for provider in storage_reader.GetAttributeContainers(
+          'windows_eventlog_provider'):
+        self._windows_eventlog_providers[provider.log_source] = provider
 
   def GetMessageString(self, log_source, message_identifier):
     """Retrieves a specific Windows EventLog message string.

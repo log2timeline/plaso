@@ -1135,7 +1135,14 @@ class SQLiteStorageFile(interface.BaseStore):
     Returns:
       bool: True if the store contains the specified type of attribute
           containers.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
+    if not container_type in self._CONTAINER_TYPES:
+      return False
+
     count = self.GetNumberOfAttributeContainers(container_type)
     return count > 0
 

@@ -455,8 +455,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           event_data_stream.CONTAINER_TYPE)
       self.assertTrue(result)
 
-      with self.assertRaises(ValueError):
-        test_store.HasAttributeContainers('bogus')
+      result = test_store.HasAttributeContainers('bogus')
+      self.assertFalse(result)
 
       test_store.Close()
 
