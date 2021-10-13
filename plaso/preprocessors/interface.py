@@ -193,7 +193,8 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       mediator (PreprocessMediator): mediates interactions between preprocess
           plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the Windows Registry value.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
@@ -266,7 +267,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       mediator (PreprocessMediator): mediates interactions between preprocess
           plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the Windows Registry value.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
