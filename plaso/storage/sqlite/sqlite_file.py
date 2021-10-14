@@ -1053,12 +1053,7 @@ class SQLiteStorageFile(interface.BaseStore):
     Raises:
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
-      ValueError: if an unsupported container type is provided.
     """
-    if not container_type in self._CONTAINER_TYPES:
-      raise ValueError('Attribute container type {0:s} is not supported'.format(
-          container_type))
-
     if not self._HasTable(container_type):
       return 0
 
@@ -1140,9 +1135,6 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    if not container_type in self._CONTAINER_TYPES:
-      return False
-
     count = self.GetNumberOfAttributeContainers(container_type)
     return count > 0
 

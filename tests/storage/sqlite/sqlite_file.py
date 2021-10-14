@@ -391,9 +391,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
           event_data_stream.CONTAINER_TYPE)
       self.assertEqual(number_of_containers, 1)
 
-      with self.assertRaises(ValueError):
-        test_store.GetNumberOfAttributeContainers('bogus')
-
       # Test for a supported container type that does not have a table
       # present in the storage file.
       query = 'DROP TABLE {0:s}'.format(event_data_stream.CONTAINER_TYPE)
