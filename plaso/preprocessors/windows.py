@@ -201,7 +201,8 @@ class WindowsAvailableTimeZonesPlugin(
       mediator (PreprocessMediator): mediates interactions between preprocess
           plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the Windows Registry value.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -304,11 +305,11 @@ class WindowsCodepagePlugin(
           'Unable to set codepage in knowledge base.')
 
 
-class WindowsEventLogProvidersPlugin(
+class WindowsEventLogPublishersPlugin(
     interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
-  """The Windows Event Log providers plugin."""
+  """The Windows Event Log publishers plugin."""
 
-  ARTIFACT_DEFINITION_NAME = 'WindowsEventLogProviders'
+  ARTIFACT_DEFINITION_NAME = 'WindowsEventLogPublishers'
 
   def _ParseKey(self, mediator, registry_key, value_name):
     """Parses a Windows Registry key for a preprocessing attribute.
@@ -317,7 +318,55 @@ class WindowsEventLogProvidersPlugin(
       mediator (PreprocessMediator): mediates interactions between preprocess
           plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the Windows Registry value.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    registry_value = registry_key.GetValueByName('')
+    if not registry_value:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'EventLog source missing for: {0:s}'.format(
+              registry_key.name))
+      return
+
+    log_source = registry_value.GetDataAsObject()
+
+    event_message_files = None
+    registry_value = registry_key.GetValueByName('MessageFile')
+    if registry_value:
+      event_message_files = registry_value.GetDataAsObject()
+      event_message_files = event_message_files.split(';')
+
+    windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
+        event_message_files=event_message_files, log_source=log_source)
+
+    try:
+      mediator.AddWindowsEventLogProvider(windows_event_log_provider)
+    except KeyError:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          ('Unable to set add Windows Event Log provider: {0:s} to '
+           'knowledge base.').format(log_source))
+
+
+class WindowsEventLogSourcesPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+  """The Windows Event Log sources plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsEventLogSources'
+
+  def _ParseKey(self, mediator, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -620,7 +669,8 @@ class WindowsUserAccountsPlugin(
       mediator (PreprocessMediator): mediates interactions between preprocess
           plugins and other components, such as storage and knowledge base.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the Windows Registry value.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -659,8 +709,8 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAllUsersProfileEnvironmentVariablePlugin,
     WindowsAllUsersAppProfileKnowledgeBasePlugin,
     WindowsAvailableTimeZonesPlugin,
-    WindowsCodepagePlugin, WindowsEventLogProvidersPlugin,
-    WindowsHostnamePlugin, WindowsLanguagePlugin,
+    WindowsCodepagePlugin, WindowsEventLogPublishersPlugin,
+    WindowsEventLogSourcesPlugin, WindowsHostnamePlugin, WindowsLanguagePlugin,
     WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,

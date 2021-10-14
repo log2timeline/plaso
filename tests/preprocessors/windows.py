@@ -233,6 +233,50 @@ class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(test_mediator.knowledge_base.codepage, 'cp1252')
 
 
+class WindowsEventLogPublishersPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows Event Log publishers plugin."""
+
+  def testParseValueData(self):
+    """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = windows.WindowsEventLogPublishersPlugin()
+    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    windows_eventlog_providers = (
+        test_mediator.knowledge_base.GetWindowsEventLogProviders())
+    self.assertEqual(len(windows_eventlog_providers), 438)
+
+
+class WindowsEventLogSourcesPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows Event Log sources plugin."""
+
+  def testParseValueData(self):
+    """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = windows.WindowsEventLogSourcesPlugin()
+    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    windows_eventlog_providers = (
+        test_mediator.knowledge_base.GetWindowsEventLogProviders())
+    self.assertEqual(len(windows_eventlog_providers), 400)
+
+
 class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows hostname plugin."""
 

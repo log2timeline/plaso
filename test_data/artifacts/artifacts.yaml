@@ -265,8 +265,17 @@ provides: [environ_windir]
 supported_os: [Windows]
 urls: ['http://environmentvariables.org/WinDir']
 ---
-name: WindowsEventLogProviders
-doc: Windows EventLog provider Registry keys.
+name: WindowsEventLogPublishers
+doc: Windows EventLog publishers (or providers) Registry keys.
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys: ['HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\WINEVT\Publishers\*']
+supported_os: [Windows]
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/EventLog-keys.html']
+---
+name: WindowsEventLogSources
+doc: Windows EventLog sources Registry keys.
 sources:
 - type: REGISTRY_KEY
   attributes:
