@@ -48,29 +48,24 @@ def Main():
     return False
 
   have_list_option = False
-
-  if tool.list_time_zones:
-    tool.ListTimeZones()
-    have_list_option = True
-
-  if tool.list_output_modules:
-    tool.ListOutputModules()
-    have_list_option = True
-
-  if tool.list_time_zones:
-    tool.ListTimeZones()
-    have_list_option = True
-
-  if tool.list_parsers_and_plugins:
-    tool.ListParsersAndPlugins()
-    have_list_option = True
-
   if tool.list_hashers:
     tool.ListHashers()
     have_list_option = True
 
   if tool.list_language_identifiers:
     tool.ListLanguageIdentifiers()
+    have_list_option = True
+
+  if tool.list_output_modules:
+    tool.ListOutputModules()
+    have_list_option = True
+
+  if tool.list_parsers_and_plugins:
+    tool.ListParsersAndPlugins()
+    have_list_option = True
+
+  if tool.list_time_zones:
+    tool.ListTimeZones()
     have_list_option = True
 
   if have_list_option:

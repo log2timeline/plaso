@@ -63,6 +63,8 @@ class ParserMediator(object):
     self._number_of_extraction_warnings = 0
     self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
+    self._preferred_codepage = None
+    self._preferred_language = None
     self._preferred_year = preferred_year
     self._process_information = None
     self._resolver_context = resolver_context
@@ -81,13 +83,17 @@ class ParserMediator(object):
 
   @property
   def codepage(self):
-    """str: codepage."""
-    return self._knowledge_base.codepage
+    """str: preferred codepage in lower case."""
+    if not self._preferred_codepage:
+      self._preferred_codepage = self._knowledge_base.codepage.lower()
+    return self._preferred_codepage
 
   @property
   def language(self):
-    """str: language."""
-    return self._knowledge_base.language
+    """str: preferred language tag in lower case."""
+    if not self._preferred_language:
+      self._preferred_language = self._knowledge_base.language.lower()
+    return self._preferred_language
 
   @property
   def number_of_produced_event_sources(self):

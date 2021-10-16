@@ -29,7 +29,7 @@ class KnowledgeBase(object):
     self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
-    self._language = 'en-us'
+    self._language = 'en-US'
     self._mount_path = None
     self._text_prepend = None
     self._time_zone = pytz.UTC
