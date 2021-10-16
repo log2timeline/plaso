@@ -89,6 +89,11 @@ class ParserMediator(object):
     return self._preferred_codepage
 
   @property
+  def extract_winevt_resources(self):
+    """bool: extract Windows EventLog resources."""
+    return self._session.extract_winevt_resources
+
+  @property
   def language(self):
     """str: preferred language tag in lower case."""
     if not self._preferred_language:

@@ -182,12 +182,13 @@ class BaseEngine(object):
       self._task_queue_profiler.Stop()
       self._task_queue_profiler = None
 
+  # pylint: disable=too-many-arguments
   @classmethod
   def CreateSession(
       cls, artifact_filter_names=None, command_line_arguments=None,
-      debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
-      preferred_language='en-US', preferred_time_zone=None,
-      preferred_year=None, text_prepend=None):
+      debug_mode=False, extract_winevt_resources=True, filter_file_path=None,
+      preferred_encoding='utf-8', preferred_language='en-US',
+      preferred_time_zone=None, preferred_year=None, text_prepend=None):
     """Creates a session attribute container.
 
     Args:
@@ -195,7 +196,9 @@ class BaseEngine(object):
           that are used for filtering file system and Windows Registry
           key paths.
       command_line_arguments (Optional[str]): the command line arguments.
-      debug_mode (bool): True if debug mode was enabled.
+      debug_mode (Option[bool]): True if debug mode was enabled.
+      extract_winevt_resources (Optional[bool]): True if Windows EventLog
+          resources should be extracted.
       filter_file_path (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_language (Optional[str]): preferred language.
@@ -211,6 +214,7 @@ class BaseEngine(object):
     session.artifact_filters = artifact_filter_names
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
+    session.extract_winevt_resources = extract_winevt_resources
     session.filter_file = filter_file_path
     session.preferred_encoding = preferred_encoding
     session.preferred_language = preferred_language

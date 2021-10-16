@@ -26,6 +26,8 @@ class Session(interface.AttributeContainer):
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
     event_labels_counter (collections.Counter): number of event tags per label.
+    extract_winevt_resources (bool): True if Windows EventLog resources should
+        be extracted.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -56,6 +58,7 @@ class Session(interface.AttributeContainer):
     self.completion_time = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    self.extract_winevt_resources = True
     self.event_labels_counter = collections.Counter()
     self.filter_file = None
     self.identifier = '{0:s}'.format(uuid.uuid4().hex)
@@ -117,6 +120,8 @@ class Session(interface.AttributeContainer):
     self.command_line_arguments = session_configuration.command_line_arguments
     self.debug_mode = session_configuration.debug_mode
     self.enabled_parser_names = session_configuration.enabled_parser_names
+    self.extract_winevt_resources = (
+        session_configuration.extract_winevt_resources)
     self.filter_file = session_configuration.filter_file
     self.parser_filter_expression = (
         session_configuration.parser_filter_expression)
@@ -147,6 +152,9 @@ class Session(interface.AttributeContainer):
         session_start, 'debug_mode', self.debug_mode)
     self.enabled_parser_names = getattr(
         session_start, 'enabled_parser_names', self.enabled_parser_names)
+    self.extract_winevt_resources = getattr(
+        session_start, 'extract_winevt_resources',
+        self.extract_winevt_resources)
     self.filter_file = getattr(
         session_start, 'filter_file', self.filter_file)
     self.parser_filter_expression = getattr(
@@ -187,6 +195,8 @@ class Session(interface.AttributeContainer):
     session_configuration.command_line_arguments = self.command_line_arguments
     session_configuration.debug_mode = self.debug_mode
     session_configuration.enabled_parser_names = self.enabled_parser_names
+    session_configuration.extract_winevt_resources = (
+        self.extract_winevt_resources)
     session_configuration.filter_file = self.filter_file
     session_configuration.identifier = self.identifier
     session_configuration.parser_filter_expression = (
@@ -280,6 +290,8 @@ class SessionConfiguration(interface.AttributeContainer):
     debug_mode (bool): True if debug mode was enabled.
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
+    extract_winevt_resources (bool): True if Windows EventLog resources should
+        be extracted.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -306,6 +318,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier
     self.parser_filter_expression = None

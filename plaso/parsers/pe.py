@@ -263,6 +263,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+    if not parser_mediator.extract_winevt_resources:
+      return
+
     if (not message_table_resource or not message_table_resource.directory or
         not message_table_resource.directory.entries or
         not message_table_resource.directory.entries[0].directory):

@@ -116,11 +116,15 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
-usage: extraction_tool_test.py [--language LANGUAGE] [-z TIME_ZONE]
+usage: extraction_tool_test.py [--language LANGUAGE]
+                               [--extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
+  --extract_winevt_resources, --extract-winevt-resources
+                        Extract Windows EventLog resources such as event
+                        message template strings.
   --language LANGUAGE   The preferred language identifier for Windows Event
                         Log message strings. Use "--language list" to see a
                         list of available language identifiers. Note that
