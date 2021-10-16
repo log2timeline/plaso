@@ -107,16 +107,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     return return_dict
 
-  def AddLegacyStorageOptions(self, argument_parser):
-    """Adds the legacy storage options to the argument group.
-
-    Args:
-      argument_parser (argparse.ArgumentParser): argparse argument parser.
-    """
-    argument_parser.add_argument(
-        'storage_file_legacy', metavar='PATH', nargs='?', type=str,
-        default=None, help='Path to a storage file.')
-
   def AddStorageOptions(self, argument_group):  # pylint: disable=arguments-renamed
     """Adds the storage options to the argument group.
 
@@ -145,8 +135,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-
-    self.AddLegacyStorageOptions(argument_parser)
 
     data_location_group = argument_parser.add_argument_group(
         'data location arguments')
@@ -321,29 +309,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._ParseLogFileOptions(options)
 
-    if (hasattr(options, 'storage_file_legacy') and
-        not getattr(options, self._SOURCE_OPTION, None)):
-      source_option = getattr(options, 'storage_file_legacy', None)
-      setattr(options, self._SOURCE_OPTION, source_option)
-      delattr(options, 'storage_file_legacy')
-
     self._ParseStorageMediaOptions(options)
 
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
 
-    storage_file_legacy = self.ParseStringOption(options, 'storage_file_legacy')
-    if storage_file_legacy and self._source_path:
-      self._PrintUserWarning((
-          'the storage file option has been deprecated you can now safely '
-          'omit it or use "--storage_file" instead.'))
-
-    if storage_file_legacy:
-      self._storage_file_path = storage_file_legacy
-    else:
-      self._storage_file_path = self.ParseStringOption(options, 'storage_file')
-      if not self._storage_file_path:
-        self._storage_file_path = self._GenerateStorageFileName()
+    self._storage_file_path = self.ParseStringOption(options, 'storage_file')
+    if not self._storage_file_path:
+      self._storage_file_path = self._GenerateStorageFileName()
 
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
