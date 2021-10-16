@@ -52,6 +52,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'event_identifier': 105,
         'event_level': 4,
         'message_identifier': 105,
+        'provider_identifier': '{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}',
         'record_number': 12049,
         'source_name': 'Microsoft-Windows-Eventlog',
         'strings': ['System', expected_string2]}

@@ -664,7 +664,9 @@ class WindowsEventLogProviderArtifact(
   Attributes:
     category_message_files (list[str]): filenames of the category message files.
     event_message_files (list[str]): filenames of the event message files.
-    log_source (str): Windows EventLog source.
+    identifier (str): identifier of the provider, contains a GUID.
+    log_source (str): name of the Windows EventLog source.
+    log_source_alias (str): alternate name of the Windows EventLog source.
     log_type (str): Windows EventLog type.
     parameter_message_files (list[str]): filenames of the parameter message
         files.
@@ -675,13 +677,16 @@ class WindowsEventLogProviderArtifact(
       '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
       'category_message_files': 'List[str]',
       'event_message_files': 'List[str]',
+      'identifier': 'str',
       'log_source': 'str',
+      'log_source_alias': 'str',
       'log_type': 'str',
       'parameter_message_files': 'List[str]'}
 
   def __init__(
       self, category_message_files=None, event_message_files=None,
-      log_source=None, log_type=None, parameter_message_files=None):
+      identifier=None, log_source=None, log_type=None,
+      parameter_message_files=None):
     """Initializes a Windows EventLog provider artifact.
 
     Args:
@@ -689,7 +694,8 @@ class WindowsEventLogProviderArtifact(
           message files.
       event_message_files (Optional[list[str]]): filenames of the event message
           files.
-      log_source (Optional[str]): Windows EventLog source.
+      identifier (Optional[str]): identifier of the provider, contains a GUID.
+      log_source (Optional[str]): name of the Windows EventLog source.
       log_type (Optional[str]): Windows EventLog type.
       parameter_message_files (Optional[list[str]]): filenames of the parameter
           message files.
@@ -697,7 +703,9 @@ class WindowsEventLogProviderArtifact(
     super(WindowsEventLogProviderArtifact, self).__init__()
     self.category_message_files = category_message_files
     self.event_message_files = event_message_files
+    self.identifier = identifier
     self.log_source = log_source
+    self.log_source_alias = None
     self.log_type = log_type
     self.parameter_message_files = parameter_message_files
 

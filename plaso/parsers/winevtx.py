@@ -24,6 +24,7 @@ class WinEvtxRecordEventData(events.EventData):
     message_identifier (int): event message identifier.
     offset (int): offset of the EVTX record relative to the start of the file,
         from which the event data was extracted.
+    provider_identifier (str): identifier of the EventLog provider.
     record_number (int): event record number.
     recovered (bool): True if the record was recovered.
     source_name (str): name of the event source.
@@ -42,6 +43,7 @@ class WinEvtxRecordEventData(events.EventData):
     self.event_level = None
     self.message_identifier = None
     self.offset = None
+    self.provider_identifier = None
     self.record_number = None
     self.recovered = None
     self.source_name = None
@@ -120,6 +122,9 @@ class WinEvtxParser(interface.FileObjectParser):
       event_data.message_identifier = event_identifier
       if event_identifier_qualifiers is not None:
         event_data.message_identifier |= event_identifier_qualifiers << 16
+
+    if evtx_record.provider_identifier:
+      event_data.provider_identifier = evtx_record.provider_identifier.lower()
 
     event_data.event_level = evtx_record.event_level
     event_data.source_name = evtx_record.source_name
