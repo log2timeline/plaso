@@ -32,6 +32,7 @@ class Session(interface.AttributeContainer):
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
     preferred_encoding (str): preferred encoding.
+    preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
     product_name (str): name of the product that created the session for
@@ -61,6 +62,7 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
     self.preferred_encoding = 'utf-8'
+    self.preferred_language = 'en-US'
     self.preferred_time_zone = 'UTC'
     self.preferred_year = None
     self.product_name = 'plaso'
@@ -119,6 +121,7 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = (
         session_configuration.parser_filter_expression)
     self.preferred_encoding = session_configuration.preferred_encoding
+    self.preferred_language = session_configuration.preferred_language
     self.preferred_time_zone = session_configuration.preferred_time_zone
     self.source_configurations = session_configuration.source_configurations
     self.text_prepend = session_configuration.text_prepend
@@ -151,6 +154,8 @@ class Session(interface.AttributeContainer):
         self.parser_filter_expression)
     self.preferred_encoding = getattr(
         session_start, 'preferred_encoding', self.preferred_encoding)
+    self.preferred_language = getattr(
+        session_start, 'preferred_language', self.preferred_language)
     self.preferred_time_zone = getattr(
         session_start, 'preferred_time_zone', self.preferred_time_zone)
 
@@ -187,6 +192,7 @@ class Session(interface.AttributeContainer):
     session_configuration.parser_filter_expression = (
         self.parser_filter_expression)
     session_configuration.preferred_encoding = self.preferred_encoding
+    session_configuration.preferred_language = self.preferred_language
     session_configuration.preferred_time_zone = self.preferred_time_zone
     session_configuration.source_configurations = self.source_configurations
     session_configuration.text_prepend = self.text_prepend
@@ -278,6 +284,7 @@ class SessionConfiguration(interface.AttributeContainer):
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
     preferred_encoding (str): preferred encoding.
+    preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
     source_configurations (list[SourceConfiguration]): configuration of sources
@@ -303,6 +310,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.identifier = identifier
     self.parser_filter_expression = None
     self.preferred_encoding = None
+    self.preferred_language = None
     self.preferred_time_zone = None
     self.preferred_year = None
     self.source_configurations = None

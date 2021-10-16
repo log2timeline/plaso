@@ -13,7 +13,6 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
-from plaso.winnt import language_ids
 
 
 # TODO: pass argument_parser instead of argument_group and add groups
@@ -313,16 +312,6 @@ class OutputModuleOptions(object):
             'supported by the output format. Output formats that support '
             'this are: dynamic and l2t_csv. Use "list" to see a list of '
             'available time zones.'))
-
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Identifier', 'Language'],
-        title='Language identifiers')
-    for language_id, value_list in sorted(
-        language_ids.LANGUAGE_IDENTIFIERS.items()):
-      table_view.AddRow([language_id, value_list[1]])
-    table_view.Write(self._output_writer)
 
   def ListOutputModules(self):
     """Lists the output modules."""

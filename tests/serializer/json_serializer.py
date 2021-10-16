@@ -334,6 +334,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'identifier': session.identifier,
         'parsers_counter': parsers_counter,
         'preferred_encoding': 'utf-8',
+        'preferred_language': 'en-US',
         'preferred_time_zone': 'UTC',
         'product_name': 'plaso',
         'product_version': plaso.__version__,

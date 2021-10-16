@@ -116,11 +116,17 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
-usage: extraction_tool_test.py [-z TIME_ZONE]
+usage: extraction_tool_test.py [--language LANGUAGE] [-z TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
+  --language LANGUAGE   The preferred language identifier for Windows Event
+                        Log message strings. Use "--language list" to see a
+                        list of available language identifiers. Note that
+                        formatting will fall back on en-US (LCID 0x0409) if
+                        the preferred language is not available in the
+                        database of message string templates.
   -z TIME_ZONE, --zone TIME_ZONE, --timezone TIME_ZONE
                         preferred time zone of extracted date and time values
                         that are stored without a time zone indicator. The
@@ -167,6 +173,23 @@ Test argument parser.
         filename='bar')
     self.assertRegex(storage_filename, expected_storage_filename)
 
+  def testParseExtractionOptions(self):
+    """Tests the _ParseExtractionOptions function."""
+    test_tool = extraction_tool.ExtractionTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseExtractionOptions(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'list'
+    test_tool._ParseExtractionOptions(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'CET'
+    test_tool._ParseExtractionOptions(options)
+    self.assertEqual(test_tool._preferred_time_zone, 'CET')
+
   def testParsePerformanceOptions(self):
     """Tests the _ParsePerformanceOptions function."""
     test_tool = extraction_tool.ExtractionTool()
@@ -183,26 +206,21 @@ Test argument parser.
 
     test_tool._ParseProcessingOptions(options)
 
-  def testParseTimeZoneOption(self):
-    """Tests the _ParseTimeZoneOption function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseTimeZoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'list'
-    test_tool._ParseTimeZoneOption(options)
-    self.assertIsNone(test_tool._preferred_time_zone)
-
-    options.timezone = 'CET'
-    test_tool._ParseTimeZoneOption(options)
-    self.assertEqual(test_tool._preferred_time_zone, 'CET')
-
   # TODO: add test for _PreprocessSources
   # TODO: add test for _ReadParserPresetsFromFile
   # TODO: add test for _SetExtractionPreferredTimeZone
+
+  def testAddExtractionOptions(self):
+    """Tests the AddExtractionOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog='extraction_tool_test.py', description='Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = extraction_tool.ExtractionTool()
+    test_tool.AddExtractionOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_TIME_ZONE_OPTION)
 
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
@@ -228,18 +246,6 @@ Test argument parser.
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
-
-  def testAddTimeZoneOption(self):
-    """Tests the AddTimeZoneOption function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='extraction_tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = extraction_tool.ExtractionTool()
-    test_tool.AddTimeZoneOption(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_TIME_ZONE_OPTION)
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""

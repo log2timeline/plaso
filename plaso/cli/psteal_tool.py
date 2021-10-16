@@ -43,8 +43,6 @@ class PstealTool(
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
     list_hashers (bool): True if the hashers should be listed.
-    list_language_identifiers (bool): True if information about the language
-        identifiers should be shown.
     list_output_modules (bool): True if information about the output modules
         should be shown.
     list_parsers_and_plugins (bool): True if the parsers and plugins should
@@ -96,14 +94,12 @@ class PstealTool(
     self._number_of_analysis_reports = 0
     self._output_format = None
     self._parsers_manager = parsers_manager.ParsersManager
-    self._preferred_language = 'en-US'
     self._preferred_year = None
     self._time_slice = None
     self._use_time_slicer = False
 
     self.dependencies_check = True
     self.list_hashers = False
-    self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
 
@@ -269,7 +265,7 @@ class PstealTool(
 
     self.AddStorageOptions(extraction_group)
     self.AddStorageMediaImageOptions(extraction_group)
-    self.AddTimeZoneOption(extraction_group)
+    self.AddExtractionOptions(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
@@ -291,9 +287,6 @@ class PstealTool(
         type=str, help='The source to process')
 
     output_group = argument_parser.add_argument_group('output arguments')
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_group, names=['language'])
 
     self.AddOutputOptions(output_group)
 
@@ -360,15 +353,13 @@ class PstealTool(
     # and output_time_zone options.
     self._ParseOutputOptions(options)
 
-    argument_helper_names = [
-        'artifact_definitions', 'hashers', 'language', 'parsers']
+    argument_helper_names = ['artifact_definitions', 'hashers', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self._ParseTimeZoneOption(options)
+    self._ParseExtractionOptions(options)
 
     self.list_hashers = self._hasher_names_string == 'list'
-    self.list_language_identifiers = self._preferred_language == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)

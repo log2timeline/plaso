@@ -46,6 +46,10 @@ def Main():
     tool.ListHashers()
     have_list_option = True
 
+  if tool.list_language_identifiers:
+    tool.ListLanguageIdentifiers()
+    have_list_option = True
+
   if tool.list_parsers_and_plugins:
     tool.ListParsersAndPlugins()
     have_list_option = True
