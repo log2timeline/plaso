@@ -292,6 +292,20 @@ class StorageWriter(object):
     if self._store:
       self._store.SetStorageProfiler(storage_profiler)
 
+  def UpdateAttributeContainer(self, container):
+    """Updates an existing attribute container.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._store.UpdateAttributeContainer(container)
+
   def WriteSessionCompletion(self, session):
     """Writes session completion information.
 

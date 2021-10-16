@@ -335,13 +335,17 @@ class WindowsEventLogPublishersPlugin(
     log_source = registry_value.GetDataAsObject()
 
     event_message_files = None
-    registry_value = registry_key.GetValueByName('MessageFile')
+    registry_value = registry_key.GetValueByName('MessageFileName')
     if registry_value:
       event_message_files = registry_value.GetDataAsObject()
-      event_message_files = event_message_files.split(';')
+      event_message_files = sorted(filter(None, [
+          path.strip().lower() for path in event_message_files.split(';')]))
+
+    provider_identifier = registry_key.name.lower()
 
     windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
-        event_message_files=event_message_files, log_source=log_source)
+        event_message_files=event_message_files, identifier=provider_identifier,
+        log_source=log_source)
 
     try:
       mediator.AddWindowsEventLogProvider(windows_event_log_provider)
@@ -375,19 +379,28 @@ class WindowsEventLogSourcesPlugin(
     registry_value = registry_key.GetValueByName('CategoryMessageFile')
     if registry_value:
       category_message_files = registry_value.GetDataAsObject()
-      category_message_files = category_message_files.split(';')
+      category_message_files = sorted(filter(None, [
+          path.strip().lower() for path in category_message_files.split(';')]))
 
     event_message_files = None
     registry_value = registry_key.GetValueByName('EventMessageFile')
     if registry_value:
       event_message_files = registry_value.GetDataAsObject()
-      event_message_files = event_message_files.split(';')
+      event_message_files = sorted(filter(None, [
+          path.strip().lower() for path in event_message_files.split(';')]))
 
     parameter_message_files = None
     registry_value = registry_key.GetValueByName('ParameterMessageFile')
     if registry_value:
       parameter_message_files = registry_value.GetDataAsObject()
-      parameter_message_files = parameter_message_files.split(';')
+      parameter_message_files = sorted(filter(None, [
+          path.strip().lower() for path in parameter_message_files.split(';')]))
+
+    provider_identifier = None
+    registry_value = registry_key.GetValueByName('ProviderGuid')
+    if registry_value:
+      provider_identifier = registry_value.GetDataAsObject()
+      provider_identifier = provider_identifier.lower()
 
     key_path_segments = registry_key.path.split('\\')
     log_source = key_path_segments[-1]
@@ -395,8 +408,9 @@ class WindowsEventLogSourcesPlugin(
 
     windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
         category_message_files=category_message_files,
-        event_message_files=event_message_files, log_source=log_source,
-        log_type=log_type, parameter_message_files=parameter_message_files)
+        event_message_files=event_message_files, identifier=provider_identifier,
+        log_source=log_source, log_type=log_type,
+        parameter_message_files=parameter_message_files)
 
     try:
       mediator.AddWindowsEventLogProvider(windows_event_log_provider)

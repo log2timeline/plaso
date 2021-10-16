@@ -7,6 +7,7 @@ import sqlite3
 
 from plaso.containers import artifacts
 from plaso.engine import path_helper
+from plaso.output import logger
 from plaso.winnt import resource_files
 
 
@@ -465,6 +466,8 @@ class WinevtResourcesHelper(object):
 
     Args:
       storage_reader (StorageReader): storage reader.
+      log_source (str): EventLog source, such as "Application Error".
+      message_identifier (int): message identifier.
 
     Returns:
       str: message string or None if not available.
@@ -478,7 +481,8 @@ class WinevtResourcesHelper(object):
     if self._windows_eventlog_message_files is None:
       self._ReadWindowsEventLogMessageFiles(storage_reader)
 
-    provider = self._windows_eventlog_providers.get(log_source, None)
+    provider = self._windows_eventlog_providers.get(
+        log_source.lower(), None)
     if not provider:
       return None
 
@@ -486,6 +490,7 @@ class WinevtResourcesHelper(object):
         'windows_eventlog_message_string'):
       return None
 
+    message_file_identifiers = []
     for windows_path in provider.event_message_files or []:
       path, filename = path_helper.PathHelper.GetWindowsSystemPath(
           windows_path, self._environment_variables)
@@ -495,19 +500,33 @@ class WinevtResourcesHelper(object):
           lookup_path, None)
       if message_file_identifier:
         message_file_identifier = message_file_identifier.CopyToString()
-        # TODO: filter message file
-        filter_expression = (
-            'language_identifier == {0:d} and '
-            'message_identifier == {1:d}').format(
-                self._lcid, message_identifier)
+        message_file_identifiers.append(message_file_identifier)
 
-        for message_string in storage_reader.GetAttributeContainers(
-            'windows_eventlog_message_string',
-            filter_expression=filter_expression):
-          identifier = message_string.GetMessageFileIdentifier()
-          identifier = identifier.CopyToString()
-          if identifier == message_file_identifier:
-            return message_string.string
+    message_strings = []
+    if message_file_identifiers:
+      filter_expression = (
+          'language_identifier == {0:d} and '
+          'message_identifier == {1:d}').format(
+              self._lcid, message_identifier)
+
+      # TODO: add message_file_identifiers to filter_expression
+      for message_string in storage_reader.GetAttributeContainers(
+          'windows_eventlog_message_string',
+          filter_expression=filter_expression):
+        identifier = message_string.GetMessageFileIdentifier()
+        identifier = identifier.CopyToString()
+        if identifier in message_file_identifiers:
+          message_strings.append(message_string)
+
+      if not message_strings:
+        logger.error(
+            'No match for message: 0x{0:08x} of source: {1:s}'.format(
+                message_identifier, log_source))
+
+    # TODO: add support for mappings in the WEVT_TEMPLATE PE/COFF resource
+
+    if message_strings:
+      return message_strings[0].string
 
     return None
 
@@ -521,7 +540,13 @@ class WinevtResourcesHelper(object):
     if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
       for provider in storage_reader.GetAttributeContainers(
           'windows_eventlog_provider'):
-        self._windows_eventlog_providers[provider.log_source] = provider
+
+        log_source = provider.log_source.lower()
+        self._windows_eventlog_providers[log_source] = provider
+
+        if provider.log_source_alias:
+          log_source = provider.log_source_alias.lower()
+          self._windows_eventlog_providers[log_source] = provider
 
   def GetMessageString(self, log_source, message_identifier):
     """Retrieves a specific Windows EventLog message string.

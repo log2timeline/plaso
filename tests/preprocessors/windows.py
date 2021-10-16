@@ -274,7 +274,7 @@ class WindowsEventLogSourcesPluginTest(
 
     windows_eventlog_providers = (
         test_mediator.knowledge_base.GetWindowsEventLogProviders())
-    self.assertEqual(len(windows_eventlog_providers), 400)
+    self.assertEqual(len(windows_eventlog_providers), 374)
 
 
 class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

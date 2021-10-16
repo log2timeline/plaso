@@ -350,6 +350,18 @@ class KnowledgeBase(object):
     identifier = identifier.lower()
     return self._values.get(identifier, default_value)
 
+  def GetWindowsEventLogProvider(self, log_source):
+    """Retrieves a Windows EventLog provider by log source.
+
+    Args:
+      log_source (str): EventLog source, such as "Application Error".
+
+    Returns:
+      WindowsEventLogProviderArtifact: Windows EventLog provider artifact or
+          None if not available.
+    """
+    return self._windows_eventlog_providers.get(log_source, None)
+
   def GetWindowsEventLogProviders(self):
     """Retrieves the Windows EventLog providers.
 
