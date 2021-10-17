@@ -6,9 +6,9 @@ import os
 from plaso.containers import artifacts
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
+from plaso.helpers.windows import languages
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
-from plaso.winnt import language_ids
 
 
 class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
@@ -477,7 +477,7 @@ class WindowsLanguagePlugin(
 
     try:
       lcid = int(value_data, 16)
-      language_tag = language_ids.LANGUAGE_TAG_PER_LCID.get(lcid, None)
+      language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(lcid)
     except ValueError:
       language_tag = None
 

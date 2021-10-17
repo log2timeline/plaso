@@ -9,9 +9,9 @@ from plaso.engine import path_helper
 from plaso.formatters import default
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import yaml_formatters_file
+from plaso.helpers.windows import languages
 from plaso.lib import definitions
 from plaso.output import logger
-from plaso.winnt import language_ids
 from plaso.output import winevt_rc
 
 
@@ -349,27 +349,28 @@ class OutputMediator(object):
     """
     self._ReadMessageFormattersFile(path)
 
-  def SetPreferredLanguageIdentifier(self, language_identifier):
+  def SetPreferredLanguageIdentifier(self, language_tag):
     """Sets the preferred language identifier.
 
     Args:
-      language_identifier (str): language identifier string such as "en-US"
-          for US English or "is-IS" for Icelandic.
+      language_tag (str): language tag such as "en-US" for US English or
+          "is-IS" for Icelandic.
 
     Raises:
-      KeyError: if the language identifier is not defined.
-      ValueError: if the language identifier is not a string type.
+      KeyError: if no LCID can be determined that corresponds with the language
+          tag.
+      ValueError: if the language tag is not a string type.
     """
-    if not isinstance(language_identifier, str):
-      raise ValueError('Language identifier is not a string.')
+    if not isinstance(language_tag, str):
+      raise ValueError('Language tag is not a string.')
 
-    values = language_ids.LANGUAGE_IDENTIFIERS.get(
-        language_identifier.lower(), None)
-    if not values:
-      raise KeyError('Language identifier: {0:s} is not defined.'.format(
-          language_identifier))
-    self._language_identifier = language_identifier
-    self._lcid = values[0]
+    self._lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(
+        language_tag)
+    if not self._lcid:
+      raise KeyError('No LCID found for language tag: {0:s}.'.format(
+          language_tag))
+
+    self._language_identifier = language_tag
 
   def SetStorageReader(self, storage_reader):
     """Sets the storage reader.

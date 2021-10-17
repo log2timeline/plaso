@@ -12,10 +12,10 @@ plaso.winnt.known\_folder\_ids module
    :undoc-members:
    :show-inheritance:
 
-plaso.winnt.language\_ids module
---------------------------------
+plaso.winnt.resource\_files module
+----------------------------------
 
-.. automodule:: plaso.winnt.language_ids
+.. automodule:: plaso.winnt.resource_files
    :members:
    :undoc-members:
    :show-inheritance:

@@ -148,6 +148,14 @@ plaso.output.tln module
    :undoc-members:
    :show-inheritance:
 
+plaso.output.winevt\_rc module
+------------------------------
+
+.. automodule:: plaso.output.winevt_rc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.output.xlsx module
 ------------------------
 

@@ -28,13 +28,13 @@ from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.single_process import extraction_engine as single_extraction_engine
 from plaso.filters import parser_filter
+from plaso.helpers import language_tags
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_process import extraction_engine as multi_extraction_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 from plaso.storage import factory as storage_factory
-from plaso.winnt import language_ids
 
 
 class ExtractionTool(
@@ -680,9 +680,9 @@ class ExtractionTool(
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Identifier', 'Language'],
         title='Language identifiers')
-    for language_id, value_list in sorted(
-        language_ids.LANGUAGE_IDENTIFIERS.items()):
-      table_view.AddRow([language_id, value_list[1]])
+    for language_tag, description in (
+        language_tags.LanguageTagHelper.GetLanguages()):
+      table_view.AddRow([language_tag, description])
     table_view.Write(self._output_writer)
 
   def ListParsersAndPlugins(self):

@@ -11,13 +11,13 @@ from dfvfs.helpers import data_slice as dfvfs_data_slice
 from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.helpers.windows import languages
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.winnt import language_ids
 from plaso.winnt import resource_files
 
 
@@ -274,8 +274,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       return
 
     for entry in message_table_resource.directory.entries[0].directory.entries:
-      language_tag = language_ids.LANGUAGE_TAG_PER_LCID.get(entry.id, None)
-      if parser_mediator.language != language_tag:
+      language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
+          entry.id)
+      if not language_tag or parser_mediator.language != language_tag:
         continue
 
       parser_mediator.AddWindowsEventLogMessageFile(message_file)
