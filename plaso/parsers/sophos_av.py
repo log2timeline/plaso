@@ -2,7 +2,7 @@
 """Sophos Anti-Virus log (SAV.txt) parser.
 
 References
-https://community.sophos.com/kb/en-us/110923
+  https://support.sophos.com/support/s/article/KB-000033745?language=en_US
 """
 
 import pyparsing

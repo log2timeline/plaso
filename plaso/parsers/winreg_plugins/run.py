@@ -26,11 +26,7 @@ class RunKeyEventData(events.EventData):
 
 
 class AutoRunsPlugin(interface.WindowsRegistryPlugin):
-  """Windows Registry plugin for parsing user specific auto runs.
-
-  Also see:
-    http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx
-  """
+  """Windows Registry plugin for parsing user specific auto runs."""
 
   NAME = 'windows_run'
   DATA_FORMAT = 'Run and run once Registry data'

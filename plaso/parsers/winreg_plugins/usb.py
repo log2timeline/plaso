@@ -37,7 +37,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
   """USB Windows Registry plugin for last connection time.
 
   Also see:
-    https://msdn.microsoft.com/en-us/library/windows/hardware/jj649944%28v=vs.85%29.aspx
+    https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/
   """
 
   NAME = 'windows_usb_devices'

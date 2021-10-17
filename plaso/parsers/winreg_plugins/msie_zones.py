@@ -31,9 +31,6 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
   The MSIE Feature controls are stored in the Zone specific subkeys in:
     Internet Settings\\Zones key
     Internet Settings\\Lockdown_Zones key
-
-  Also see:
-    http://support.microsoft.com/kb/182569
   """
 
   NAME = 'msie_zone'

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for ZSH extended_history files.
 
-The file format is described here:
-http://zsh.sourceforge.net/Doc/Release/Options.html#index-EXTENDEDHISTORY
+References:
+  https://zsh.sourceforge.io/Doc/Release/Options.html#index-EXTENDEDHISTORY
 """
 
 import re
