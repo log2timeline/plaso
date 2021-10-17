@@ -4,14 +4,6 @@ plaso.winnt package
 Submodules
 ----------
 
-plaso.winnt.known\_folder\_ids module
--------------------------------------
-
-.. automodule:: plaso.winnt.known_folder_ids
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.winnt.resource\_files module
 ----------------------------------
 

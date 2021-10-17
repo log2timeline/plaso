@@ -220,6 +220,18 @@ class ParserMediator(object):
     self._cached_parser_chain = None
     self._parser_chain_components = []
 
+  def ExpandWindowsPath(self, path):
+    """Expands a Windows path containing environment variables.
+
+    Args:
+      path (str): Windows path with environment variables.
+
+    Returns:
+      str: expanded Windows path.
+    """
+    environment_variables = self._knowledge_base.GetEnvironmentVariables()
+    return path_helper.PathHelper.ExpandWindowsPath(path, environment_variables)
+
   def GetDisplayName(self, file_entry=None):
     """Retrieves the display name for a file entry.
 
