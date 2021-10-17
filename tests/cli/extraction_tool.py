@@ -117,20 +117,22 @@ Test argument parser.
 
   _EXPECTED_TIME_ZONE_OPTION = """\
 usage: extraction_tool_test.py [--language LANGUAGE]
-                               [--extract_winevt_resources] [-z TIME_ZONE]
+                               [--no_extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
-  --extract_winevt_resources, --extract-winevt-resources
-                        Extract Windows EventLog resources such as event
-                        message template strings.
   --language LANGUAGE   The preferred language identifier for Windows Event
                         Log message strings. Use "--language list" to see a
                         list of available language identifiers. Note that
                         formatting will fall back on en-US (LCID 0x0409) if
                         the preferred language is not available in the
                         database of message string templates.
+  --no_extract_winevt_resources, --no-extract-winevt-resources
+                        Do not extract Windows EventLog resources such as
+                        event message template strings. By default Windows
+                        EventLog resources will be extracted when a Windows
+                        EventLog parser is enabled.
   -z TIME_ZONE, --zone TIME_ZONE, --timezone TIME_ZONE
                         preferred time zone of extracted date and time values
                         that are stored without a time zone indicator. The
