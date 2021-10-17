@@ -10,9 +10,9 @@ from plaso.containers import artifacts
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
+from plaso.helpers import language_tags
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.winnt import language_ids
 
 
 class ParserMediator(object):
@@ -422,12 +422,10 @@ class ParserMediator(object):
 
       # Language specific EventLog message file paths contain a language tag
       # such as "en-US".
-      base_lookup_path, _, language_tag = lookup_path.rpartition(
+      base_lookup_path, _, last_path_segment = lookup_path.rpartition(
           path_segment_separator)
-      if language_tag in language_ids.LANGUAGE_IDENTIFIERS:
+      if language_tags.LanguageTagHelper.IsLanguageTag(last_path_segment):
         lookup_path = base_lookup_path
-      else:
-        language_tag = ''
 
       providers_per_filename = self._windows_event_log_providers_per_path.get(
           lookup_path, {})
