@@ -136,6 +136,10 @@ boolean_helpers:
 message:
 - '{display_name}'
 - 'Type: {file_entry_type}'
+- 'Owner identifier: {owner_identifier}'
+- 'Group identifier: {group_identifier}'
+- 'Mode: 0o{mode:03o}'
+- 'Number of links: {number_of_links}'
 - '({unallocated})'
 short_message:
 - '{filename}'

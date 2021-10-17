@@ -1,28 +1,28 @@
 datetime,timestamp_desc,source,source_long,message,parser,md5_hash,yara_match
-2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,-,-
-2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,-,-
-2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/bzcat Type: file,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/bzcat Type: file,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/bzcat Type: file,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home/echo Type: file,filestat,e9a38f1270a55a573db9ac47d9862605,
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin Type: directory,filestat,-,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin/tune2fs Type: file,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin/tune2fs Type: file,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin/tune2fs Type: file,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin/visudo Type: file,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin/visudo Type: file,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin/visudo Type: file,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
+2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,-,-
+2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,-,-
+2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/bzcat Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/bzcat Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/bzcat Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,cc9478ee8d2f0345f383e01bcbc1680d,libcrypto_hash
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,e9a38f1270a55a573db9ac47d9862605,
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,-,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin/tune2fs Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin/tune2fs Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin/tune2fs Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,d5d2147a5fdae62ecda7c66bc8c765e0,
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin/visudo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin/visudo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,a49f5fa523b10b5921afa5801f1ca8cb,
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin/visudo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,a49f5fa523b10b5921afa5801f1ca8cb,

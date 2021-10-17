@@ -47,7 +47,11 @@ class FileStatTest(test_lib.ParserTestCase):
         'file_entry_type': 'file',
         'file_size': 116,
         'file_system_type': 'EXT2',
+        'group_identifier': 5000,
         'inode': 15,
+        'mode': 0o400,
+        'number_of_links': 1,
+        'owner_identifier': 151107,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
