@@ -78,6 +78,7 @@ class ExtractionTool(
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._expanded_parser_filter_expression = None
+    self._extract_winevt_resources = True
     self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._preferred_codepage = None
@@ -286,6 +287,9 @@ class ExtractionTool(
     # TODO: add preferred encoding
 
     self.list_language_identifiers = self._preferred_language == 'list'
+
+    self._extract_winevt_resources = getattr(
+        options, 'extract_winevt_resources', True)
 
     time_zone_string = self.ParseStringOption(options, 'timezone')
     if isinstance(time_zone_string, str):
@@ -556,6 +560,12 @@ class ExtractionTool(
 
     # Note defaults here are None so we can determine if an option was set.
 
+    argument_group.add_argument(
+        '--extract_winevt_resources', '--extract-winevt-resources',
+        dest='extract_winevt_resources', action='store_false', default=True,
+        help=('Extract Windows EventLog resources such as event message '
+              'template strings.'))
+
     # TODO: add preferred encoding
 
     argument_group.add_argument(
@@ -635,6 +645,7 @@ class ExtractionTool(
         artifact_filter_names=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
+        extract_winevt_resources=self._extract_winevt_resources,
         filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_language=self._preferred_language,

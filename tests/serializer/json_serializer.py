@@ -331,6 +331,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'analysis_reports_counter': session.analysis_reports_counter,
         'debug_mode': False,
         'event_labels_counter': session.event_labels_counter,
+        'extract_winevt_resources': True,
         'identifier': session.identifier,
         'parsers_counter': parsers_counter,
         'preferred_encoding': 'utf-8',
