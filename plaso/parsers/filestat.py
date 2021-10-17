@@ -17,6 +17,7 @@ class FileStatEventData(events.EventData):
   """File system stat event data.
 
   Attributes:
+    attribute_names ([str]): extended attribute names.
     display_name (str): display name.
     file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
@@ -36,6 +37,7 @@ class FileStatEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(FileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.attribute_names = None
     self.display_name = None
     self.file_entry_type = None
     self.file_size = None
@@ -121,12 +123,19 @@ class FileStatParser(interface.FileEntryParser):
     """
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
+    attribute_names = []
     stat_attribute = None
     for attribute in file_entry.attributes:
       if isinstance(attribute, dfvfs_attribute.StatAttribute):
         stat_attribute = attribute
+        continue
+
+      attribute_name = getattr(attribute, 'name', None)
+      if file_system_type != 'NTFS' and attribute_name:
+        attribute_names.append(attribute_name)
 
     event_data = FileStatEventData()
+    event_data.attribute_names = attribute_names or None
     event_data.display_name = parser_mediator.GetDisplayNameForPathSpec(
         file_entry.path_spec)
     event_data.file_entry_type = file_entry.entry_type
