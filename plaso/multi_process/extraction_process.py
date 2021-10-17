@@ -321,7 +321,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         task_identifier=task.identifier)
 
     try:
-      task_storage_writer.WriteTaskStart(task)
+      task_storage_writer.AddAttributeContainer(task)
 
       # TODO: add support for more task types.
       self._ProcessPathSpec(
@@ -330,7 +330,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     finally:
       task.aborted = self._abort
-      task_storage_writer.WriteTaskCompletion(task)
+      task_storage_writer.UpdateAttributeContainer(task)
 
       task_storage_writer.Close()
 

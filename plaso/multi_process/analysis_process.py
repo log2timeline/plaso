@@ -146,7 +146,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     # TODO: set event_filter_expression in mediator.
 
-    task_storage_writer.WriteTaskStart(task)
+    task_storage_writer.AddAttributeContainer(task)
 
     try:
       logger.debug(
@@ -191,7 +191,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     finally:
       task.aborted = self._abort
-      task_storage_writer.WriteTaskCompletion(task)
+      task_storage_writer.UpdateAttributeContainer(task)
 
       task_storage_writer.Close()
 
