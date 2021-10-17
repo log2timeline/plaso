@@ -298,15 +298,7 @@ class RedisStore(interface.BaseStore):
 
     Returns:
       AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      IOError: if the attribute container type is not supported.
-      OSError: if the attribute container type is not supported.
     """
-    if container_type not in self._CONTAINER_TYPES:
-      raise IOError('Unsupported attribute container type: {0:s}'.format(
-          container_type))
-
     sequence_number = index + 1
     redis_hash_name = self._GetRedisHashName(container_type)
     redis_key = '{0:s}.{1:d}'.format(container_type, sequence_number)

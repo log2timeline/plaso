@@ -138,15 +138,7 @@ class FakeStore(interface.BaseStore):
 
     Returns:
       AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      IOError: if the attribute container type is not supported.
-      OSError: if the attribute container type is not supported.
     """
-    if container_type not in self._CONTAINER_TYPES:
-      raise IOError('Unsupported attribute container type: {0:s}'.format(
-          container_type))
-
     containers = self._attribute_containers.get(container_type, {})
     number_of_containers = len(containers)
     if index < 0 or index >= number_of_containers:

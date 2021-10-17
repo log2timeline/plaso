@@ -256,9 +256,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
           event_data_stream.CONTAINER_TYPE, 0)
       self.assertIsNotNone(container)
 
-      with self.assertRaises(IOError):
-        test_store.GetAttributeContainerByIndex('bogus', 0)
-
     finally:
       test_store.Close()
 
