@@ -12,6 +12,22 @@ plaso.helpers.windows.languages module
    :undoc-members:
    :show-inheritance:
 
+plaso.helpers.windows.shell\_folders module
+-------------------------------------------
+
+.. automodule:: plaso.helpers.windows.shell_folders
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.helpers.windows.time\_zones module
+----------------------------------------
+
+.. automodule:: plaso.helpers.windows.time_zones
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

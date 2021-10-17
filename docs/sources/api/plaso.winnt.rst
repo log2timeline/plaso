@@ -20,22 +20,6 @@ plaso.winnt.resource\_files module
    :undoc-members:
    :show-inheritance:
 
-plaso.winnt.shell\_folder\_ids module
--------------------------------------
-
-.. automodule:: plaso.winnt.shell_folder_ids
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.winnt.time\_zones module
-------------------------------
-
-.. automodule:: plaso.winnt.time_zones
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
