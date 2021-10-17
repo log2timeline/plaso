@@ -7,8 +7,8 @@ import sqlite3
 
 from plaso.containers import artifacts
 from plaso.engine import path_helper
+from plaso.helpers.windows import resource_files
 from plaso.output import logger
-from plaso.winnt import resource_files
 
 
 class Sqlite3DatabaseFile(object):
@@ -144,6 +144,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     """Initializes a Windows EventLog resources SQLite database reader."""
     super(WinevtResourcesSqlite3DatabaseReader, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
+    self._resouce_file_helper = resource_files.WindowsResourceFileHelper
     self._string_format = 'wrc'
 
   def _GetEventLogProviderKey(self, log_source):
@@ -261,7 +262,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
         break
 
     if self._string_format == 'wrc':
-      message_string = resource_files.FormatMessageStringInPEP3101(
+      message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
           message_string)
 
     return message_string

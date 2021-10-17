@@ -1,17 +1,6 @@
 plaso.winnt package
 ===================
 
-Submodules
-----------
-
-plaso.winnt.resource\_files module
-----------------------------------
-
-.. automodule:: plaso.winnt.resource_files
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
