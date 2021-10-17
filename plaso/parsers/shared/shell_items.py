@@ -7,8 +7,8 @@ from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
 from plaso.containers import shell_item_events
 from plaso.containers import time_events
+from plaso.helpers.windows import shell_folders
 from plaso.lib import definitions
-from plaso.winnt import shell_folder_ids
 
 
 class ShellItemsParser(object):
@@ -93,8 +93,8 @@ class ShellItemsParser(object):
     path_segment = None
 
     if isinstance(shell_item, pyfwsi.root_folder):
-      description = shell_folder_ids.DESCRIPTIONS.get(
-          shell_item.shell_folder_identifier, None)
+      description = shell_folders.WindowsShellFoldersHelper.GetDescription(
+          shell_item.shell_folder_identifier)
 
       if description:
         path_segment = description

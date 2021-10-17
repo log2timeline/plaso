@@ -13,7 +13,7 @@ import pytz
 
 from plaso.containers import artifacts
 from plaso.engine import logger
-from plaso.winnt import time_zones
+from plaso.helpers.windows import time_zones
 
 
 class KnowledgeBase(object):
