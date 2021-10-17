@@ -152,9 +152,6 @@ class Session(interface.AttributeContainer):
         session_start, 'debug_mode', self.debug_mode)
     self.enabled_parser_names = getattr(
         session_start, 'enabled_parser_names', self.enabled_parser_names)
-    self.extract_winevt_resources = getattr(
-        session_start, 'extract_winevt_resources',
-        self.extract_winevt_resources)
     self.filter_file = getattr(
         session_start, 'filter_file', self.filter_file)
     self.parser_filter_expression = getattr(

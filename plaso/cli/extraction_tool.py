@@ -441,8 +441,33 @@ class ExtractionTool(
         configuration.parser_filter_expression.split(','))
     session.parser_filter_expression = self._parser_filter_expression
 
+    number_of_enabled_parsers = len(session.enabled_parser_names)
+
     self._SetExtractionPreferredLanguage(extraction_engine.knowledge_base)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
+
+    force_parser = False
+    if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
+        not is_archive and number_of_enabled_parsers == 1):
+      force_parser = True
+
+      self._extract_winevt_resources = False
+
+    elif ('winevt' not in session.enabled_parser_names and
+          'winevtx' not in session.enabled_parser_names):
+      self._extract_winevt_resources = False
+
+    elif (self._extract_winevt_resources and
+          'pe' not in session.enabled_parser_names):
+      logger.warning(
+          'A Windows EventLog parser is enabled in combination with '
+          'extraction of Windows EventLog resources, but the Portable '
+          'Executable (PE) parser is disabled. Therefore Windows EventLog '
+          'resources cannot be extracted.')
+
+      self._extract_winevt_resources = False
+
+    session.extract_winevt_resources = self._extract_winevt_resources
 
     # TODO: set mount path in knowledge base with
     # extraction_engine.knowledge_base.SetMountPath()
@@ -468,12 +493,6 @@ class ExtractionTool(
         self._status_view.GetExtractionStatusUpdateCallback())
 
     if single_process_mode:
-      force_parser = False
-      number_of_parsers = len(configuration.parser_filter_expression.split(','))
-      if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
-          not is_archive and number_of_parsers == 1):
-        force_parser = True
-
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
@@ -561,10 +580,12 @@ class ExtractionTool(
     # Note defaults here are None so we can determine if an option was set.
 
     argument_group.add_argument(
-        '--extract_winevt_resources', '--extract-winevt-resources',
+        '--no_extract_winevt_resources', '--no-extract-winevt-resources',
         dest='extract_winevt_resources', action='store_false', default=True,
-        help=('Extract Windows EventLog resources such as event message '
-              'template strings.'))
+        help=('Do not extract Windows EventLog resources such as event '
+              'message template strings. By default Windows EventLog '
+              'resources will be extracted when a Windows EventLog parser '
+              'is enabled.'))
 
     # TODO: add preferred encoding
 
@@ -645,7 +666,6 @@ class ExtractionTool(
         artifact_filter_names=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
-        extract_winevt_resources=self._extract_winevt_resources,
         filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_language=self._preferred_language,
