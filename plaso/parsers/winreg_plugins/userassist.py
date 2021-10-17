@@ -9,14 +9,13 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.engine import path_helper
+from plaso.helpers.windows import known_folders
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
-from plaso.winnt import known_folder_ids
 
 
 class UserAssistWindowsRegistryEventData(events.EventData):
@@ -158,19 +157,15 @@ class UserAssistPlugin(
         path_segments = value_name.split('\\')
 
         for segment_index, path_segment in enumerate(path_segments):
-          # Remove the { } from the path segment to get the GUID.
-          guid = path_segments[segment_index][1:-1]
-          path_segments[segment_index] = known_folder_ids.PATHS.get(
-              guid, path_segment)
+          path = known_folders.WindowsKnownFoldersHelper.GetPath(
+              path_segment)
+          if path:
+            path_segments[segment_index] = path
 
         value_name = '\\'.join(path_segments)
         # Check if we might need to substitute values.
         if '%' in value_name:
-          # TODO: fix missing self._knowledge_base
-          # pylint: disable=no-member
-          environment_variables = self._knowledge_base.GetEnvironmentVariables()
-          value_name = path_helper.PathHelper.ExpandWindowsPath(
-              value_name, environment_variables)
+          value_name = parser_mediator.ExpandWindowsPath(value_name)
 
       if value_name == 'UEME_CTLSESSION':
         continue

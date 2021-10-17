@@ -23,7 +23,6 @@ Subpackages
    plaso.serializer
    plaso.single_process
    plaso.storage
-   plaso.unix
    plaso.winnt
 
 Submodules
