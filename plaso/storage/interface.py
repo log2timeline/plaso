@@ -42,8 +42,7 @@ class BaseStore(object):
   _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
       artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK = tasks.Task.CONTAINER_TYPE
 
   # Container types that only should be used in a session store.
   _SESSION_STORE_ONLY_CONTAINER_TYPES = (
@@ -53,9 +52,7 @@ class BaseStore(object):
       _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
 
   # Container types that only should be used in a task store.
-  _TASK_STORE_ONLY_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_TASK_COMPLETION,
-      _CONTAINER_TYPE_TASK_START)
+  _TASK_STORE_ONLY_CONTAINER_TYPES = (_CONTAINER_TYPE_TASK,)
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a store.
@@ -428,41 +425,3 @@ class BaseStore(object):
     """
     self._RaiseIfNotWritable()
     self._WriteExistingAttributeContainer(container)
-
-  def WriteTaskCompletion(self, task_completion):
-    """Writes task completion information.
-
-    Args:
-      task_completion (TaskCompletion): task completion information.
-
-    Raises:
-      IOError: if the storage type does not support writing a task
-          completion or if the store cannot be written to.
-      OSError: if the storage type does not support writing a task
-          completion or if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError('Task start not supported by storage type.')
-
-    self._WriteNewAttributeContainer(task_completion)
-
-  def WriteTaskStart(self, task_start):
-    """Writes task start information.
-
-    Args:
-      task_start (TaskStart): task start information.
-
-    Raises:
-      IOError: if the storage type does not support writing a task
-          start or if the store cannot be written to.
-      OSError: if the storage type does not support writing a task
-          start or if the store cannot be written to.
-    """
-    self._RaiseIfNotWritable()
-
-    if self.storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError('Task completion not supported by storage type.')
-
-    self._WriteNewAttributeContainer(task_start)

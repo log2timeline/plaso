@@ -6,8 +6,6 @@ import os
 import unittest
 
 from plaso.containers import events
-from plaso.containers import sessions
-from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage.sqlite import sqlite_file
 
@@ -486,25 +484,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       number_of_containers = test_store.GetNumberOfAttributeContainers(
           event_data_stream.CONTAINER_TYPE)
       self.assertEqual(number_of_containers, 1)
-
-      test_store.Close()
-
-  def testWriteTaskStartAndCompletion(self):
-    """Tests the WriteTaskStart and WriteTaskCompletion functions."""
-    session = sessions.Session()
-    task_start = tasks.TaskStart(session_identifier=session.identifier)
-    task_completion = tasks.TaskCompletion(
-        identifier=task_start.identifier,
-        session_identifier=session.identifier)
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      test_store = sqlite_file.SQLiteStorageFile(
-          storage_type=definitions.STORAGE_TYPE_TASK)
-      test_store.Open(path=test_path, read_only=False)
-
-      test_store.WriteTaskStart(task_start)
-      test_store.WriteTaskCompletion(task_completion)
 
       test_store.Close()
 

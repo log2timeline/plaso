@@ -4,7 +4,6 @@
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
-from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.storage import logger
 
@@ -28,8 +27,6 @@ class StorageMergeReader(object):
   _CONTAINER_TYPE_PREPROCESSING_WARNING = (
       warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
   # Some container types reference other container types, such as event
   # referencing event_data. Container types in this tuple must be ordered after

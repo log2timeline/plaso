@@ -7,7 +7,6 @@ import collections
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
-from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 
@@ -26,8 +25,6 @@ class StorageWriter(object):
   _CONTAINER_TYPE_PREPROCESSING_WARNING = (
       warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer.
@@ -365,43 +362,3 @@ class StorageWriter(object):
 
     session_start = session.CreateSessionStart()
     self._store.AddAttributeContainer(session_start)
-
-  def WriteTaskCompletion(self, task):
-    """Writes task completion information.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: when the storage writer is closed or if the storage type is
-          not supported.
-      OSError: when the storage writer is closed or if the storage type is
-          not supported.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError('Unsupported storage type.')
-
-    task_completion = task.CreateTaskCompletion()
-    self._store.WriteTaskCompletion(task_completion)
-
-  def WriteTaskStart(self, task):
-    """Writes task start information.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: when the storage writer is closed or if the storage type is
-          not supported.
-      OSError: when the storage writer is closed or if the storage type is
-          not supported.
-    """
-    self._RaiseIfNotWritable()
-
-    if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError('Unsupported storage type.')
-
-    task_start = task.CreateTaskStart()
-    self._store.WriteTaskStart(task_start)

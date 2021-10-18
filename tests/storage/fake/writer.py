@@ -4,8 +4,6 @@
 
 import unittest
 
-from plaso.containers import sessions
-from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage.fake import writer as fake_writer
 
@@ -66,37 +64,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     with self.assertRaises(IOError):
       storage_writer.Close()
-
-  def testWriteTaskStartAndCompletion(self):
-    """Tests the WriteTaskStart and WriteTaskCompletion functions."""
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    storage_writer = fake_writer.FakeStorageWriter(
-        storage_type=definitions.STORAGE_TYPE_TASK)
-    storage_writer.Open()
-
-    storage_writer.WriteTaskStart(task)
-    storage_writer.WriteTaskCompletion(task)
-
-    storage_writer.Close()
-
-    with self.assertRaises(IOError):
-      storage_writer.WriteTaskStart(task)
-
-    with self.assertRaises(IOError):
-      storage_writer.WriteTaskCompletion(task)
-
-    storage_writer = fake_writer.FakeStorageWriter()
-    storage_writer.Open()
-
-    with self.assertRaises(IOError):
-      storage_writer.WriteTaskStart(task)
-
-    with self.assertRaises(IOError):
-      storage_writer.WriteTaskCompletion(task)
-
-    storage_writer.Close()
 
 
 if __name__ == '__main__':
