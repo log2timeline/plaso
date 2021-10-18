@@ -1,19 +1,19 @@
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
-2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,EXT:/lost+found,-
-2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,EXT:/lost+found,-
-2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,EXT:/lost+found Type: directory,filestat,EXT:/lost+found,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin Type: directory,filestat,EXT:/bin,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin Type: directory,filestat,EXT:/bin,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin Type: directory,filestat,EXT:/bin,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,EXT:/bin/echo,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,EXT:/bin/echo,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/echo Type: file,filestat,EXT:/bin/echo,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home Type: directory,filestat,EXT:/home,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home Type: directory,filestat,EXT:/home,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home Type: directory,filestat,EXT:/home,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home/echo Type: file,filestat,EXT:/home/echo,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home/echo Type: file,filestat,EXT:/home/echo,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home/echo Type: file,filestat,EXT:/home/echo,-
-2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin Type: directory,filestat,EXT:/sbin,-
-2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin Type: directory,filestat,EXT:/sbin,-
-2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin Type: directory,filestat,EXT:/sbin,-
+2019-10-31T13:23:21+00:00,Content Modification Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,EXT:/lost+found,-
+2019-10-31T13:23:21+00:00,Last Access Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,EXT:/lost+found,-
+2019-10-31T13:23:21+00:00,Metadata Modification Time,FILE,File stat,EXT:/lost+found Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o700 Number of links: 2,filestat,EXT:/lost+found,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/bin,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/bin,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/bin,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/bin/echo,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/bin/echo,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/bin/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/bin/echo,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/home,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/home,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/home,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/home/echo,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/home/echo,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/home/echo Type: file Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 1,filestat,EXT:/home/echo,-
+2019-10-31T13:23:48+00:00,Content Modification Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/sbin,-
+2019-10-31T13:23:48+00:00,Last Access Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/sbin,-
+2019-10-31T13:23:48+00:00,Metadata Modification Time,FILE,File stat,EXT:/sbin Type: directory Owner identifier: 0 Group identifier: 0 Mode: 0o755 Number of links: 2,filestat,EXT:/sbin,-

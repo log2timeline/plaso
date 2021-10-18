@@ -4,6 +4,7 @@
 import pytsk3
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.vfs import attribute as dfvfs_attribute
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -21,8 +22,13 @@ class FileStatEventData(events.EventData):
     file_size (int): file size in bytes.
     file_system_type (str): file system type.
     filename (str): name of the file.
+    group_identifier (int): group identifier (GID), equivalent to st_gid.
     inode (int): inode of the file.
     is_allocated (bool): True if the file is allocated.
+    mode (int): access mode, equivalent to st_mode & 0x0fff.
+    number_of_links (int): number of hard links, equivalent to st_nlink.
+    owner_identifier (int): user identifier (UID) of the owner, equivalent to
+        st_uid.
   """
 
   DATA_TYPE = 'fs:stat'
@@ -35,8 +41,12 @@ class FileStatEventData(events.EventData):
     self.file_size = None
     self.file_system_type = None
     self.filename = None
+    self.group_identifier = None
     self.inode = None
     self.is_allocated = None
+    self.mode = None
+    self.number_of_links = None
+    self.owner_identifier = None
 
 
 class FileStatParser(interface.FileEntryParser):
@@ -109,22 +119,29 @@ class FileStatParser(interface.FileEntryParser):
           and other components, such as storage and dfvfs.
       file_entry (dfvfs.FileEntry): a file entry.
     """
-    stat_object = file_entry.GetStat()
-    if not stat_object:
-      return
-
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
+
+    stat_attribute = None
+    for attribute in file_entry.attributes:
+      if isinstance(attribute, dfvfs_attribute.StatAttribute):
+        stat_attribute = attribute
 
     event_data = FileStatEventData()
     event_data.display_name = parser_mediator.GetDisplayNameForPathSpec(
         file_entry.path_spec)
-    event_data.file_entry_type = stat_object.type
-    event_data.file_size = getattr(stat_object, 'size', None)
+    event_data.file_entry_type = file_entry.entry_type
+    event_data.file_size = file_entry.size
     event_data.file_system_type = file_system_type
     event_data.filename = parser_mediator.GetRelativePathForPathSpec(
         file_entry.path_spec)
-    event_data.inode = getattr(stat_object, 'ino', None)
     event_data.is_allocated = file_entry.IsAllocated()
+
+    if stat_attribute:
+      event_data.group_identifier = stat_attribute.group_identifier
+      event_data.inode = stat_attribute.inode_number
+      event_data.mode = stat_attribute.mode
+      event_data.number_of_links = stat_attribute.number_of_links
+      event_data.owner_identifier = stat_attribute.owner_identifier
 
     if file_entry.access_time:
       event = time_events.DateTimeValuesEvent(
