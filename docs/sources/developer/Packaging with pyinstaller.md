@@ -16,7 +16,7 @@ PyInstaller from its download directory.**
 
 If you're building with Visual Studio note that for some reason PyInstaller
 does not include the Microsoft Visual C++ run-time DLLs you can find them here:
-[The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/topic/the-latest-supported-visual-c-downloads-2647da03-1eea-4433-9aff-95f26a218cc0)
+[The latest supported Visual C++ downloads](https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-160)
 
 ## Preparations
 

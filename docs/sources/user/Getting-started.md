@@ -1,18 +1,32 @@
 # Getting start with Plaso
 
-Getting started with Plaso can be challenging at first. This page describes some of the steps we recommend taking.
+Getting started with Plaso can be challenging at first. This page describes
+some of the steps we recommend taking.
 
-## I just want to run plaso log2timeline
+## I just want to run Plaso or log2timeline
 
-If you just want to run plaso we recommend to use a [packaged release](Releases-and-roadmap.md) unless you are the adventurous type.
+If you just want to run Plaso we stronly recommend to use a [packaged release](Releases-and-roadmap.md)
+unless you are the adventurous type that is familiar with troubleshooting
+installation issues.
 
-To get started have a look at the [User Guide](Users-Guide.md).
+Have a look at the [User Guide](Users-Guide.md) to get familiar with running
+the Plaso tools, such as log2timeline.
 
-If you have questions, suggestions and want to discuss them join the general discussions mailing list: [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss)
+If you have questions, suggestions and want to discuss them join the general
+discussions mailing list: [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss).
+
+Please be mindful of people's time:
+
+* Do not be that pushy person that demands help now or is asking for an ETA of a feature. All contributions are best effort.
+* Do not assume things are broken just because you cannot get it to work. Most issues we see are caused by people not following the documented instructions.
+* Always try to solve the issue yourself first. Also see [troubleshooting](../Troubleshooting.md).
+* In your communication be as specific and detailed as possible. Assume others have no context about what you are asking them and reduce the amount of follow up questions others have to do to understand you.
 
 ## I want to develop Plaso
 
-There are various ways to develop with plaso. We expect the more common use case that you would like to extend plaso by adding a parser or plugin or equivalent.
+There are various ways to develop with Plaso. We expect the more common use
+case that you would like to extend Plaso by adding a parser or plugin or
+equivalent.
 
 For this you'll need to use a [development release](Releases-and-roadmap.md).
 
@@ -20,12 +34,13 @@ Get a github and gmail account and enable 2-factor authentication.
 
 To get started have a look at the [Developers guide](../developer/Developers-Guide.md).
 
-Last but not least we also recommend joining the development mailing list: [log2timeline-dev](https://groups.google.com/forum/#!forum/log2timeline-dev)
+Last but not least we also recommend joining the development mailing list:
+[log2timeline-dev](https://groups.google.com/forum/#!forum/log2timeline-dev)
 
 ### But I don't know how to use git
 
-* [Got 15 minutes and want to learn Git?](https://try.github.io/levels/1/challenges/1)
+* [Get started using GitHub to manage Git repositories and collaborate with others](https://docs.github.com/en/get-started/quickstart)
 
 ### But I don't know how to program in Python
 
-**TODO add links**
+* [The Python Tutorial](https://docs.python.org/3/tutorial/)

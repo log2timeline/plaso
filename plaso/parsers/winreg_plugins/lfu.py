@@ -47,11 +47,7 @@ class WindowsBootVerificationEventData(events.EventData):
 
 
 class BootVerificationPlugin(interface.WindowsRegistryPlugin):
-  """Plug-in to collect the Boot Verification Key.
-
-  Also see:
-    http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx
-  """
+  """Plug-in to collect the Boot Verification Key."""
 
   NAME = 'windows_boot_verify'
   DATA_FORMAT = 'Windows boot verification Registry data'
@@ -88,11 +84,7 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
 
 
 class BootExecutePlugin(interface.WindowsRegistryPlugin):
-  """Plug-in to collect the BootExecute Value from the Session Manager key.
-
-  Also see:
-    http://technet.microsoft.com/en-us/library/cc963230.aspx
-  """
+  """Plug-in to collect the BootExecute Value from the Session Manager key."""
 
   NAME = 'windows_boot_execute'
   DATA_FORMAT = 'Boot Execution Registry data'
