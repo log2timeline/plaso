@@ -20,6 +20,14 @@ plaso.helpers.windows.languages module
    :undoc-members:
    :show-inheritance:
 
+plaso.helpers.windows.resource\_files module
+--------------------------------------------
+
+.. automodule:: plaso.helpers.windows.resource_files
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.helpers.windows.shell\_folders module
 -------------------------------------------
 

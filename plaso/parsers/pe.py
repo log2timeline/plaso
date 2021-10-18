@@ -12,13 +12,13 @@ from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.helpers.windows import languages
+from plaso.helpers.windows import resource_files
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.winnt import resource_files
 
 
 class PEEventData(events.EventData):
@@ -58,6 +58,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG'],
       pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']]
+
+  def __init__(self):
+    """Initializes a PE parser."""
+    super(PEParser, self).__init__()
+    self._resouce_file_helper = resource_files.WindowsResourceFileHelper
 
   def _GetPEType(self, pefile_object):
     """Retrieves the type of the PE file.
@@ -367,7 +372,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if alignment_padding > 0:
           string_offset += 4 - alignment_padding
 
-        string = resource_files.FormatMessageStringInPEP3101(string)
+        string = self._resouce_file_helper.FormatMessageStringInPEP3101(string)
 
         message_string = artifacts.WindowsEventLogMessageStringArtifact(
             language_identifier=language_identifier,
