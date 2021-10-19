@@ -416,60 +416,13 @@ type: 'conditional'
 data_type: 'pe'
 message:
 - 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- 'pe_type'
----
-type: 'conditional'
-data_type: 'pe:compilation:compilation_time'
-message:
-- 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- 'pe_type'
----
-type: 'conditional'
-data_type: 'pe:delay_import:import_time'
-message:
+- '[{pe_attribute}]'
 - 'DLL name: {dll_name}'
-- 'PE Type: {pe_type}'
 - 'Import hash: {imphash}'
 short_message:
+- '{pe_type}'
+- '[{pe_attribute}]'
 - '{dll_name}'
----
-type: 'conditional'
-data_type: 'pe:export_table'
-message:
-- 'DLL name: {dll_name}'
-- 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- '{dll_name}'
----
-type: 'conditional'
-data_type: 'pe:import:import_time'
-message:
-- 'DLL name: {dll_name}'
-- 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- '{dll_name}'
----
-type: 'conditional'
-data_type: 'pe:load_config:modification_time'
-message:
-- 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- 'pe_type'
----
-type: 'conditional'
-data_type: 'pe:resource:creation_time'
-message:
-- 'PE Type: {pe_type}'
-- 'Import hash: {imphash}'
-short_message:
-- 'pe_type'
 ---
 type: 'conditional'
 data_type: 'PLSRecall:event'

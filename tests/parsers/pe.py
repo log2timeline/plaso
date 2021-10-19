@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.lib import definitions
 from plaso.parsers import pe
 
 from tests.parsers import test_lib
@@ -24,24 +25,31 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'pe:compilation:compilation_time',
+        'data_type': 'pe',
         'date_time': '2015-04-21 14:53:56',
-        'pe_type': 'Executable (EXE)'}
+        'pe_attribute': None,
+        'pe_type': 'Executable (EXE)',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-        'data_type': 'pe:import:import_time',
-        'date_time': '2015-04-21 14:53:55'}
+        'data_type': 'pe',
+        'date_time': '2015-04-21 14:53:55',
+        'pe_attribute': 'DIRECTORY_ENTRY_IMPORT',
+        'pe_type': 'Executable (EXE)',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'data_type': 'pe:delay_import:import_time',
+        'data_type': 'pe',
         'date_time': '2015-04-21 14:53:54',
         'dll_name': 'USER32.dll',
         'imphash': '8d0739063fc8f9955cc6696b462544ab',
-        'pe_type': 'Executable (EXE)'}
+        'pe_attribute': 'DIRECTORY_ENTRY_DELAY_IMPORT',
+        'pe_type': 'Executable (EXE)',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -57,9 +65,11 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'pe:compilation:compilation_time',
+        'data_type': 'pe',
         'date_time': '2015-04-21 14:53:54',
-        'pe_type': 'Driver (SYS)'}
+        'pe_attribute': None,
+        'pe_type': 'Driver (SYS)',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
