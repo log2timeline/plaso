@@ -694,9 +694,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     # that support os.stat_result st_birthtime.
     expected_event_counters = {
         'fs:stat': [3, 4],
-        'pe:compilation:compilation_time': 1,
-        'pe:delay_import:import_time': 1,
-        'pe:import:import_time': 1}
+        'pe': 3}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,

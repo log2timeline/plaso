@@ -6,6 +6,7 @@ import os
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.helpers import data_slice as dfvfs_data_slice
 
 from plaso.containers import artifacts
@@ -28,8 +29,9 @@ class PEEventData(events.EventData):
     dll_name (str): name of an imported DLL.
     imphash (str): "Import Hash" of the pe file the event relates to. Also see:
         https://www.mandiant.com/resources/tracking-malware-import-hashing
+    pe_attribute (str): attribute of PE file the event relates to.
     pe_type (str): type of PE file the event relates to.
-    section_names (list[str]): names of the PE file's sections.
+    section_names (list[str]): names of the sections in the PE file.
   """
 
   DATA_TYPE = 'pe'
@@ -39,6 +41,7 @@ class PEEventData(events.EventData):
     super(PEEventData, self).__init__(data_type=self.DATA_TYPE)
     self.dll_name = None
     self.imphash = None
+    self.pe_attribute = None
     self.pe_type = None
     self.section_names = None
 
@@ -117,16 +120,14 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not load_configuration_table:
       return
 
-    timestamp = getattr(load_configuration_table.struct, 'TimeDateStamp', 0)
-    if not timestamp:
-      return
+    timestamp = getattr(load_configuration_table.struct, 'TimeDateStamp', None)
+    if timestamp:
+      event_data.pe_attribute = 'DIRECTORY_ENTRY_LOAD_CONFIG'
 
-    event_data.data_type = 'pe:load_config:modification_time'
-
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseDelayImportTable(self, parser_mediator, pefile_object, event_data):
     """Parses the delay import table.
@@ -142,8 +143,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not delay_import_table:
       return
 
-    event_data.data_type = 'pe:delay_import:import_time'
-
     for table_entry in delay_import_table:
       timestamp = getattr(table_entry.struct, 'dwTimeStamp', 0)
       if not timestamp:
@@ -157,6 +156,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       if not dll_name:
         dll_name = '<NO DLL NAME>'
 
+      event_data.pe_attribute = 'DIRECTORY_ENTRY_DELAY_IMPORT'
       event_data.dll_name = dll_name
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -179,8 +179,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not export_table:
       return
 
-    event_data.data_type = 'pe:export_table'
-
     timestamp = getattr(export_table.struct, 'TimeDateStamp', 0)
     if not timestamp:
       return
@@ -193,6 +191,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not dll_name:
       dll_name = '<NO DLL NAME>'
 
+    event_data.pe_attribute = 'DIRECTORY_ENTRY_EXPORT'
     event_data.dll_name = dll_name
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -215,8 +214,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not import_table:
       return
 
-    event_data.data_type = 'pe:import:import_time'
-
     for table_entry in import_table:
       timestamp = getattr(table_entry.struct, 'TimeDateStamp', 0)
       if not timestamp:
@@ -230,6 +227,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       if not dll_name:
         dll_name = '<NO DLL NAME>'
 
+      event_data.pe_attribute = 'DIRECTORY_ENTRY_IMPORT'
       event_data.dll_name = dll_name
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -252,21 +250,20 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not resources:
       return
 
-    event_data.data_type = 'pe:resource:creation_time'
-
     message_table_resource = None
     for resource in resources.entries:
       if resource.id == 11:
         message_table_resource = resource
 
-      timestamp = getattr(resource.directory, 'TimeDateStamp', 0)
-      if not timestamp:
-        continue
+      timestamp = getattr(resource.directory, 'TimeDateStamp', None)
+      if timestamp:
+        event_data.pe_attribute = 'DIRECTORY_ENTRY_RESOURCE: {0!s}'.format(
+            resource.id)
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if not parser_mediator.extract_winevt_resources:
       return
@@ -415,12 +412,12 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data.pe_type = self._GetPEType(pefile_object)
     event_data.section_names = self._GetSectionNames(pefile_object)
 
-    # TODO: remove after refactoring the pe event formatter.
-    event_data.data_type = 'pe:compilation:compilation_time'
-
     timestamp = getattr(pefile_object.FILE_HEADER, 'TimeDateStamp', None)
-    # TODO: handle timestamp is None.
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    else:
+      date_time = dfdatetime_semantic_time.NotSet()
+
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
