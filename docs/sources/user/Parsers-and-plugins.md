@@ -21,11 +21,13 @@ esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
 firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or earlier).
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
+fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
 java_idx | Parser for Java WebStart Cache IDX files.
 lnk | Parser for Windows Shortcut (LNK) files.
+locate_database | Parser for Locate database file (updatedb).
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_keychain | Parser for MacOS keychain database files.
 mac_securityd | Parser for MacOS security daemon (securityd) log files.
