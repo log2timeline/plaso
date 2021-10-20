@@ -39,7 +39,6 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * [OLE Compound File](https://forensicswiki.xyz/wiki/index.php?title=OLE_Compound_File) using [libolecf](https://github.com/libyal/libolecf)
 * [Opera Browser history](https://forensicswiki.xyz/wiki/index.php?title=Opera)
 * OpenXML
-* Pcap files
 * Portable Executable (PE) files using [pefile](https://github.com/erocarrera/pefile)
 * PL SQL cache file (PL-SQL developer recall files)
 * Popularity Contest log
