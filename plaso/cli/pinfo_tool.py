@@ -46,6 +46,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
+      'environment_variables': (
+          'Report environment variables extracted during processing.'),
       'file_hashes': 'Report file hashes calculated during processing.',
       'winevt_providers': (
           'Report Windows EventLog providers extracted during processing.')}
@@ -320,6 +322,43 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     return stores_are_identical
 
+  def _GenerateEnvironmentVariablesReport(self, storage_reader):
+    """Generates an evironment variables report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{"environment_variables": [\n')
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('Name | Value\n')
+      self._output_writer.Write('--- | ---\n')
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('Name\tValue\n')
+
+    generator = storage_reader.GetAttributeContainers('environment_variable')
+
+    for artifact_index, environment_variable in enumerate(generator):
+      if self._output_format == 'json':
+        if artifact_index > 0:
+          self._output_writer.Write(',\n')
+        self._output_writer.Write(
+            '{{"name": "{0:s}", "value": "{1:s}"}}'.format(
+                environment_variable.name, environment_variable.value))
+
+      elif self._output_format == 'markdown':
+        self._output_writer.Write('{0:s} | {1:s}\n'.format(
+            environment_variable.name, environment_variable.value))
+
+      elif self._output_format == 'text':
+        self._output_writer.Write('{0:s}\t{1:s}\n'.format(
+            environment_variable.name, environment_variable.value))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
   def _GenerateFileHashesReport(self, storage_reader):
     """Generates a file hashes report.
 
@@ -396,7 +435,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     generator = storage_reader.GetAttributeContainers(
         'windows_eventlog_provider')
 
-    for eventlog_provider_index, eventlog_provider in enumerate(generator):
+    for artifact_index, eventlog_provider in enumerate(generator):
       log_source = eventlog_provider.log_source
       log_type = eventlog_provider.log_type
 
@@ -407,7 +446,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         event_message_files = 'N/A'
 
       if self._output_format == 'json':
-        if eventlog_provider_index > 0:
+        if artifact_index > 0:
           self._output_writer.Write(',\n')
         event_message_files = event_message_files.replace('\\', '\\\\')
         self._output_writer.Write((
@@ -1296,10 +1335,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
+      if self._report_type == 'environment_variables':
+        self._GenerateEnvironmentVariablesReport(storage_reader)
+
       if self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
+
       elif self._report_type == 'winevt_providers':
         self._GenerateWindowsEventLogProvidersReport(storage_reader)
+
     finally:
       storage_reader.Close()
 
