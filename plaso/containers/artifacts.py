@@ -59,6 +59,11 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
   """
   CONTAINER_TYPE = 'environment_variable'
 
+  SCHEMA = {
+      'case_sensitive': 'bool',
+      'name': 'str',
+      'value': 'str'}
+
   def __init__(self, case_sensitive=True, name=None, value=None):
     """Initializes an environment variable artifact.
 

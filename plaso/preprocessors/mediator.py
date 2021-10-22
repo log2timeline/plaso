@@ -45,6 +45,9 @@ class PreprocessMediator(object):
         environment_variable_artifact.value))
     self._knowledge_base.AddEnvironmentVariable(environment_variable_artifact)
 
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(environment_variable_artifact)
+
   def AddHostname(self, hostname_artifact):
     """Adds a hostname.
 
