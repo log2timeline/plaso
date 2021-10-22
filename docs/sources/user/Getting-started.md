@@ -12,6 +12,12 @@ installation issues.
 Have a look at the [User Guide](Users-Guide.md) to get familiar with running
 the Plaso tools, such as log2timeline.
 
+We also strongly recommend to first read up on various tradeoffs of timeline
+analysis:
+
+* [Targeted timelines - Part I](https://osdfir.blogspot.com/2013/02/targeted-timelines-part-i.html)
+* [Pearls and pitfalls of timeline analysis](https://osdfir.blogspot.com/2021/10/pearls-and-pitfalls-of-timeline-analysis.html)
+
 If you have questions, suggestions and want to discuss them join the general
 discussions mailing list: [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss).
 
