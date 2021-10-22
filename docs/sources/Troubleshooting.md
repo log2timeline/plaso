@@ -253,17 +253,15 @@ components uses a lot of memory or even leaks memory. In these cases it is
 important to isolate the error, see before, to track down what the possible
 culprit is. Also see: [Profiling memory usage](developer/Profiling.md#profiling-memory-usage)
 
-Also see [Troubleshooting Plaso Issues - Memory Edition](http://blog.kiddaland.net/2014/11/troubleshooting-plaso-issues-memory.html)
+Plaso limits the memory usage on a per process basis and has multiple options
+to control enforced memory limits such as `--process_memory_limit`. Use these
+with caution. If a process exceeds the memory limit, typically, a MemoryError
+exception is thrown.
+
+Note that Guppy support has been removed but the linked article might be
+instructional for [troubleshooting Plaso memory issues](http://blog.kiddaland.net/2014/11/troubleshooting-plaso-issues-memory.html).
 
 ## MacOS specific issues
-
-### How do I remove a Plaso installation
-
-If you installed Plaso via the installer script in the .dmg, the MacOS package
-manager can be used to remove a Plaso installation. For more information about
-using the MacOS package manager see:
-
-* http://superuser.com/questions/36567/how-do-i-uninstall-any-apple-pkg-package-file
 
 ### PyParsing errors
 
