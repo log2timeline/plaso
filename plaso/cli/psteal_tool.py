@@ -387,7 +387,10 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    output_mediator = self._CreateOutputMediator()
+    # TODO: determine language based on preprocessing information.
+    preferred_language = self._preferred_language or 'en-US'
+
+    output_mediator = self._CreateOutputMediator(preferred_language)
     self._ReadMessageFormatters(output_mediator)
 
     self._ParseLogFileOptions(options)

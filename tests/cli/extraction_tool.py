@@ -116,18 +116,20 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
-usage: extraction_tool_test.py [--language LANGUAGE]
+usage: extraction_tool_test.py [--language LANGUAGE_TAG]
                                [--no_extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
-  --language LANGUAGE   The preferred language identifier for Windows Event
-                        Log message strings. Use "--language list" to see a
-                        list of available language identifiers. Note that
-                        formatting will fall back on en-US (LCID 0x0409) if
-                        the preferred language is not available in the
-                        database of message string templates.
+  --language LANGUAGE_TAG
+                        The preferred language, which is used for extracting
+                        and formatting Windows EventLog message strings. Use "
+                        --language list" to see a list of supported language
+                        tags. The en-US (LCID 0x0409) language is used as
+                        fallback if preprocessing could not determine the
+                        system language or no language information is
+                        available in the winevt-rc.db database.
   --no_extract_winevt_resources, --no-extract-winevt-resources
                         Do not extract Windows EventLog resources such as
                         event message template strings. By default Windows

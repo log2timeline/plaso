@@ -62,7 +62,7 @@ class PsortTool(
         input_reader=input_reader, output_writer=output_writer)
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._preferred_language = 'en-US'
+    self._preferred_language = None
     self._process_memory_limit = None
     self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
@@ -394,7 +394,10 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    output_mediator = self._CreateOutputMediator()
+    # TODO: determine language based on preprocessing information.
+    preferred_language = self._preferred_language or 'en-US'
+
+    output_mediator = self._CreateOutputMediator(preferred_language)
     self._ReadMessageFormatters(output_mediator)
 
     self._ParseLogFileOptions(options)

@@ -18,17 +18,19 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--language LANGUAGE]
+usage: cli_helper.py [--language LANGUAGE_TAG]
 
 Test argument parser.
 
 {0:s}:
-  --language LANGUAGE  The preferred language identifier for Windows Event Log
-                       message strings. Use "--language list" to see a list of
-                       available language identifiers. Note that formatting
-                       will fall back on en-US (LCID 0x0409) if the preferred
-                       language is not available in the database of message
-                       string templates.
+  --language LANGUAGE_TAG
+                        The preferred language, which is used for extracting
+                        and formatting Windows EventLog message strings. Use "
+                        --language list" to see a list of supported language
+                        tags. The en-US (LCID 0x0409) language is used as
+                        fallback if preprocessing could not determine the
+                        system language or no language information is
+                        available in the winevt-rc.db database.
 """.format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):

@@ -959,6 +959,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         system_configuration.operating_system_product or 'N/A')
     operating_system_version = (
         system_configuration.operating_system_version or 'N/A')
+    language = system_configuration.language or 'N/A'
     code_page = system_configuration.code_page or 'N/A'
     keyboard_layout = system_configuration.keyboard_layout or 'N/A'
     time_zone = system_configuration.time_zone or 'N/A'
@@ -967,6 +968,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     table_view.AddRow(['Operating system', operating_system])
     table_view.AddRow(['Operating system product', operating_system_product])
     table_view.AddRow(['Operating system version', operating_system_version])
+    table_view.AddRow(['Language', language])
     table_view.AddRow(['Code page', code_page])
     table_view.AddRow(['Keyboard layout', keyboard_layout])
     table_view.AddRow(['Time zone', time_zone])

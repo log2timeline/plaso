@@ -25,13 +25,14 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '--language', metavar='LANGUAGE', dest='preferred_language',
-        default='en-US', type=str, help=(
-            'The preferred language identifier for Windows Event Log message '
-            'strings. Use "--language list" to see a list of available '
-            'language identifiers. Note that formatting will fall back on '
-            'en-US (LCID 0x0409) if the preferred language is not available '
-            'in the database of message string templates.'))
+        '--language', metavar='LANGUAGE_TAG', dest='preferred_language',
+        default=None, type=str, help=(
+            'The preferred language, which is used for extracting and '
+            'formatting Windows EventLog message strings. Use "--language '
+            'list" to see a list of supported language tags. The en-US (LCID '
+            '0x0409) language is used as fallback if preprocessing could not '
+            'determine the system language or no language information is '
+            'available in the winevt-rc.db database.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -49,8 +50,7 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    preferred_language = cls._ParseStringOption(
-        options, 'preferred_language', default_value='en-US')
+    preferred_language = cls._ParseStringOption(options, 'preferred_language')
 
     setattr(configuration_object, '_preferred_language', preferred_language)
 
