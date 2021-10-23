@@ -13,7 +13,7 @@ from plaso.preprocessors import manager
 
 class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
-  """Windows environment variable artifact preprocessor plugin interface."""
+  """Windows environment variable artifact preprocessor plugin."""
 
   _NAME = None
 
@@ -36,6 +36,81 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=value_data)
+
+    try:
+      mediator.AddEnvironmentVariable(environment_variable)
+    except KeyError:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to set environment variable: {0:s} in knowledge base.'.format(
+              self._NAME))
+
+
+class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+  """Windows profile path environment variable artifact preprocessor plugin."""
+
+  _NAME = None
+
+  def _ParseKey(self, mediator, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    try:
+      registry_value = registry_key.GetValueByName('ProfilesDirectory')
+    except IOError as exception:
+      raise errors.PreProcessFail((
+          'Unable to retrieve Windows Registry key: {0:s} value: '
+          'ProfilesDirectory with error: {1!s}').format(
+              registry_key.path, exception))
+
+    profiles_directory = ''
+    if registry_value:
+      value_data = registry_value.GetDataAsObject()
+      if isinstance(value_data, str):
+        profiles_directory = value_data
+
+    try:
+      registry_value = registry_key.GetValueByName(value_name)
+    except IOError as exception:
+      raise errors.PreProcessFail((
+          'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
+          'with error: {2!s}').format(
+              registry_key.path, value_name, exception))
+
+    if not registry_value:
+      return
+
+    value_data = registry_value.GetDataAsObject()
+    if not isinstance(value_data, str):
+      raise errors.PreProcessFail(
+          'Unsupported Windows Registry value type: {0!s} for '
+          'artifact: {1:s}.'.format(
+              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+
+    first_path_segment = value_data.split('\\')[0]
+
+    # If the first path segment does not starts with an environment variable or
+    # is absolute, consider it to be a relative path and prefix it with the
+    # ProfilesDirectory value.
+    if first_path_segment[0] == '%' and first_path_segment[-1] == '%':
+      profile_path = value_data
+    elif not first_path_segment or first_path_segment[1:2] == ':\\':
+      profile_path = value_data
+    else:
+      profile_path = '\\'.join([profiles_directory.rstrip('\\'), value_data])
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=self._NAME, value=profile_path)
 
     try:
       mediator.AddEnvironmentVariable(environment_variable)
@@ -135,7 +210,7 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
 
 
 class WindowsAllUsersProfileEnvironmentVariablePlugin(
-    WindowsEnvironmentVariableArtifactPreprocessorPlugin):
+    WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %AllUsersProfile% environment variable plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableAllUsersProfile'
@@ -491,7 +566,7 @@ class WindowsLanguagePlugin(
 
 
 class WindowsProgramDataEnvironmentVariablePlugin(
-    WindowsEnvironmentVariableArtifactPreprocessorPlugin):
+    WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %ProgramData% environment variable plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableProgramData'
