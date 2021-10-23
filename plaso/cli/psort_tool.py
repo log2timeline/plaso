@@ -394,12 +394,6 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    # TODO: determine language based on preprocessing information.
-    preferred_language = self._preferred_language or 'en-US'
-
-    output_mediator = self._CreateOutputMediator(preferred_language)
-    self._ReadMessageFormatters(output_mediator)
-
     self._ParseLogFileOptions(options)
 
     self._ParseProcessingOptions(options)
@@ -424,7 +418,7 @@ class PsortTool(
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
-    self._output_module = self._CreateOutputModule(output_mediator, options)
+    self._output_module = self._CreateOutputModule(options)
 
   def ProcessStorage(self):
     """Processes a plaso storage file.
@@ -486,6 +480,18 @@ class PsortTool(
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
+
+      preferred_language = self._knowledge_base.language
+      if self._preferred_language:
+        preferred_language = self._preferred_language
+
+      if preferred_language:
+        try:
+          self._output_mediator.SetPreferredLanguageIdentifier(
+              preferred_language)
+        except (KeyError, TypeError):
+          logger.warning('Unable to to set preferred language: {0!s}.'.format(
+              preferred_language))
 
       self._output_module.SetStorageReader(storage_reader)
 

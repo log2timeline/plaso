@@ -65,7 +65,7 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
     self.preferred_encoding = 'utf-8'
-    self.preferred_language = 'en-US'
+    self.preferred_language = None
     self.preferred_time_zone = 'UTC'
     self.preferred_year = None
     self.product_name = 'plaso'

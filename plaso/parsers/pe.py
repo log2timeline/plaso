@@ -281,7 +281,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     for entry in message_table_resource.directory.entries[0].directory.entries:
       language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
           entry.id)
-      if not language_tag or parser_mediator.language != language_tag:
+      if not language_tag or language_tag.lower() != parser_mediator.language:
         continue
 
       parser_mediator.AddWindowsEventLogMessageFile(message_file)

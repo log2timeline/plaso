@@ -98,8 +98,7 @@ class KnowledgeBase(object):
 
     system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
 
-    system_configuration.language = self.GetValue(
-        'language', default_value=self._language)
+    system_configuration.language = self._language
 
     system_configuration.operating_system = self.GetValue('operating_system')
     system_configuration.operating_system_product = self.GetValue(
@@ -405,7 +404,13 @@ class KnowledgeBase(object):
 
     self.SetValue('keyboard_layout', system_configuration.keyboard_layout)
 
-    self.SetValue('language', system_configuration.language)
+    if system_configuration.language:
+      try:
+        self.SetLanguage(system_configuration.language)
+      except ValueError:
+        logger.warning(
+            'Unsupported language: {0:s}, defaulting to {1:s}'.format(
+                system_configuration.language, self._language))
 
     self.SetValue('operating_system', system_configuration.operating_system)
     self.SetValue(
@@ -427,7 +432,7 @@ class KnowledgeBase(object):
       except ValueError:
         logger.warning(
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                system_configuration.time_zone, self.timezone.zone))
+                system_configuration.time_zone, self._time_zone.zone))
 
     self._user_accounts[session_identifier] = {
         user_account.identifier: user_account
