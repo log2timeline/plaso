@@ -112,43 +112,32 @@ class OutputModuleOptions(object):
     self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
+    self._output_mediator = None
     self._output_module = None
     self._output_time_zone = None
 
     self.list_time_zones = False
 
-  def _CreateOutputMediator(self, language_tag):
+  def _CreateOutputMediator(self):
     """Creates an output mediator.
 
-    Args:
-      language_tag (str): language tag such as "en-US" for US English or
-          "is-IS" for Icelandic.
-
-    Returns:
-      OutputMediator: output mediator.
-
     Raises:
-      RuntimeError: if the preferred language identitifier is not supported.
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
     """
-    mediator = output_mediator.OutputMediator(
+    self._output_mediator = output_mediator.OutputMediator(
         self._knowledge_base, data_location=self._data_location,
         dynamic_time=self._output_dynamic_time,
         preferred_encoding=self.preferred_encoding)
 
-    try:
-      mediator.SetPreferredLanguageIdentifier(language_tag)
-    except (KeyError, TypeError) as exception:
-      raise RuntimeError(exception)
+    self._output_mediator.SetTimezone(self._output_time_zone)
 
-    mediator.SetTimezone(self._output_time_zone)
+    self._ReadMessageFormatters()
 
-    return mediator
-
-  def _CreateOutputModule(self, mediator, options):
+  def _CreateOutputModule(self, options):
     """Creates an output module.
 
     Args:
-      mediator (OutputMediator): output mediator.
       options (argparse.Namespace): command line arguments.
 
     Returns:
@@ -166,9 +155,11 @@ class OutputModuleOptions(object):
           'alternative output format like: dynamic.').format(
               self._output_format))
 
+    self._CreateOutputMediator()
+
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
-          self._output_format, mediator)
+          self._output_format, self._output_mediator)
 
     except (KeyError, ValueError) as exception:
       raise RuntimeError(
@@ -262,11 +253,8 @@ class OutputModuleOptions(object):
 
       setattr(options, parameter, value)
 
-  def _ReadMessageFormatters(self, mediator):
+  def _ReadMessageFormatters(self):
     """Reads the message formatters from a formatters file or directory.
-
-    Args:
-      mediator (OutputMediator): output mediator.
 
     Raises:
       BadConfigOption: if the message formatters file or directory cannot be
@@ -279,7 +267,8 @@ class OutputModuleOptions(object):
 
     if os.path.isdir(formatters_directory):
       try:
-        mediator.ReadMessageFormattersFromDirectory(formatters_directory)
+        self._output_mediator.ReadMessageFormattersFromDirectory(
+            formatters_directory)
       except KeyError as exception:
         raise errors.BadConfigOption((
             'Unable to read message formatters from directory: {0:s} with '
@@ -287,7 +276,8 @@ class OutputModuleOptions(object):
 
     elif os.path.isfile(formatters_file):
       try:
-        mediator.ReadMessageFormattersFromFile(formatters_file)
+        self._output_mediator.ReadMessageFormattersFromFile(
+            formatters_file)
       except KeyError as exception:
         raise errors.BadConfigOption((
             'Unable to read message formatters from file: {0:s} with error: '

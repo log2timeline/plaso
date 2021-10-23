@@ -12,6 +12,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
+from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
@@ -194,6 +195,20 @@ class PstealTool(
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
+
+      preferred_language = self._knowledge_base.language
+      if self._preferred_language:
+        preferred_language = self._preferred_language
+
+      if preferred_language:
+        try:
+          self._output_mediator.SetPreferredLanguageIdentifier(
+              preferred_language)
+        except (KeyError, TypeError):
+          logger.warning('Unable to to set preferred language: {0!s}.'.format(
+              preferred_language))
+
+      self._output_module.SetStorageReader(storage_reader)
 
       # TODO: add single process output and formatting engine support.
       output_engine = (
@@ -387,12 +402,6 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    # TODO: determine language based on preprocessing information.
-    preferred_language = self._preferred_language or 'en-US'
-
-    output_mediator = self._CreateOutputMediator(preferred_language)
-    self._ReadMessageFormatters(output_mediator)
-
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
@@ -417,4 +426,4 @@ class PstealTool(
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
-    self._output_module = self._CreateOutputModule(output_mediator, options)
+    self._output_module = self._CreateOutputModule(options)
