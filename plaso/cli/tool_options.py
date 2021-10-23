@@ -117,8 +117,12 @@ class OutputModuleOptions(object):
 
     self.list_time_zones = False
 
-  def _CreateOutputMediator(self):
+  def _CreateOutputMediator(self, language_tag):
     """Creates an output mediator.
+
+    Args:
+      language_tag (str): language tag such as "en-US" for US English or
+          "is-IS" for Icelandic.
 
     Returns:
       OutputMediator: output mediator.
@@ -132,7 +136,7 @@ class OutputModuleOptions(object):
         preferred_encoding=self.preferred_encoding)
 
     try:
-      mediator.SetPreferredLanguageIdentifier(self._preferred_language)
+      mediator.SetPreferredLanguageIdentifier(language_tag)
     except (KeyError, TypeError) as exception:
       raise RuntimeError(exception)
 
