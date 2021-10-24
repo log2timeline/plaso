@@ -438,9 +438,15 @@ class ExtractionTool(
     configuration = self._CreateProcessingConfiguration(
         extraction_engine.knowledge_base)
 
+    # TODO: move the following session values into separage processing/session
+    # configuration container.
     session.enabled_parser_names = (
         configuration.parser_filter_expression.split(','))
     session.parser_filter_expression = self._parser_filter_expression
+    session.preferred_language = self._preferred_language or 'en-US'
+    session.preferred_time_zone = self._preferred_time_zone
+    session.preferred_year = self._preferred_year
+    session.text_prepend = self._text_prepend
 
     number_of_enabled_parsers = len(session.enabled_parser_names)
 
@@ -481,7 +487,8 @@ class ExtractionTool(
     session.source_configurations = (
         extraction_engine.knowledge_base.GetSourceConfigurationArtifacts())
 
-    storage_writer.WriteSessionConfiguration(session)
+    session_configuration = session.CreateSessionConfiguration()
+    storage_writer.AddAttributeContainer(session_configuration)
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
@@ -627,10 +634,7 @@ class ExtractionTool(
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
         filter_file_path=self._filter_file,
-        preferred_encoding=self.preferred_encoding,
-        preferred_time_zone=self._preferred_time_zone,
-        preferred_year=self._preferred_year,
-        text_prepend=self._text_prepend)
+        preferred_encoding=self.preferred_encoding)
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format)
@@ -647,14 +651,17 @@ class ExtractionTool(
     processing_status = None
 
     try:
-      storage_writer.WriteSessionStart(session)
+      session_start = session.CreateSessionStart()
+      storage_writer.AddAttributeContainer(session_start)
 
       try:
         processing_status = self._ProcessSources(session, storage_writer)
 
       finally:
         session.aborted = getattr(processing_status, 'aborted', True)
-        storage_writer.WriteSessionCompletion(session)
+
+        session_completion = session.CreateSessionCompletion()
+        storage_writer.AddAttributeContainer(session_completion)
 
     except IOError as exception:
       raise IOError('Unable to write to storage with error: {0!s}'.format(
