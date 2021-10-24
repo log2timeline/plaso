@@ -252,7 +252,8 @@ setup(
         'plaso.parsers.esedb_plugins': ['*.yaml'],
         'plaso.parsers.olecf_plugins': ['*.yaml'],
         'plaso.parsers.plist_plugins': ['*.yaml'],
-        'plaso.parsers.winreg_plugins': ['*.yaml']
+        'plaso.parsers.winreg_plugins': ['*.yaml'],
+        'plaso.preprocessors': ['*.yaml']
     },
     zip_safe=False,
     scripts=glob.glob(os.path.join('tools', '[a-z]*.py')),
