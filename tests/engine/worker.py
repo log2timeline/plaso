@@ -173,8 +173,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -218,8 +219,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -282,8 +284,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -321,8 +324,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -360,8 +364,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -399,8 +404,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object, preferred_year=2016,
+        session, knowledge_base_object,
         resolver_context=resolver_context)
+    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()

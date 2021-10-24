@@ -382,7 +382,7 @@ class PstealTool(
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     # Check the list options first otherwise required options will raise.
-    if (self.list_hashers or self.list_language_identifiers or
+    if (self.list_hashers or self.list_language_tags or
         self.list_parsers_and_plugins or self.list_time_zones or
         self.show_troubleshooting):
       return

@@ -184,6 +184,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
+    preferred_language (str): preferred language.
     preferred_year (int): preferred initial year value for year-less date and
         time values.
     profiling (ProfilingConfiguration): profiling configuration.
@@ -206,6 +207,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.filter_file = None
     self.log_filename = None
     self.parser_filter_expression = None
+    self.preferred_language = None
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()
     self.task_storage_format = None

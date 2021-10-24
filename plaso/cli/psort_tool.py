@@ -35,8 +35,7 @@ class PsortTool(
   Attributes:
     list_analysis_plugins (bool): True if information about the analysis
         plugins should be shown.
-    list_language_identifiers (bool): True if information about the language
-        identifiers should be shown.
+    list_language_tags (bool): True if the language tags should be listed.
     list_output_modules (bool): True if information about the output modules
         should be shown.
     list_profilers (bool): True if the profilers should be listed.
@@ -69,7 +68,7 @@ class PsortTool(
     self._time_slice = None
     self._use_time_slicer = False
 
-    self.list_language_identifiers = False
+    self.list_language_tags = False
     self.list_output_modules = False
     self.list_profilers = False
 
@@ -238,11 +237,11 @@ class PsortTool(
             '15.0 minutes. If a worker process exceeds this timeout it is '
             'killed by the main (foreman) process.'))
 
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
+  def ListLanguageTags(self):
+    """Lists the language tags."""
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Identifier', 'Language'],
-        title='Language identifiers')
+        self._views_format_type, column_names=['Language tag', 'Description'],
+        title='Language tags')
     for language_tag, description in (
         language_tags.LanguageTagHelper.GetLanguages()):
       table_view.AddRow([language_tag, description])
@@ -370,12 +369,12 @@ class PsortTool(
         options, self, names=names)
 
     self.list_analysis_plugins = self._analysis_plugins == 'list'
-    self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_language_tags = self._preferred_language == 'list'
     self.list_profilers = self._profilers == 'list'
 
     self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
 
-    if (self.list_analysis_plugins or self.list_language_identifiers or
+    if (self.list_analysis_plugins or self.list_language_tags or
         self.list_profilers or self.list_time_zones or
         self.show_troubleshooting):
       return

@@ -22,12 +22,12 @@ class OutputMediator(object):
     data_location (Optional[str]): path of the formatter data files.
   """
 
-  DEFAULT_LANGUAGE_IDENTIFIER = 'en-US'
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
+
+  _DEFAULT_LANGUAGE_TAG = 'en-US'
 
   # LCID 0x0409 is en-US.
-  DEFAULT_LCID = 0x0409
-
-  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
+  _DEFAULT_LCID = 0x0409
 
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
@@ -46,8 +46,8 @@ class OutputMediator(object):
     super(OutputMediator, self).__init__()
     self._dynamic_time = dynamic_time
     self._knowledge_base = knowledge_base
-    self._language_identifier = self.DEFAULT_LANGUAGE_IDENTIFIER
-    self._lcid = self.DEFAULT_LCID
+    self._language_tag = self._DEFAULT_LANGUAGE_TAG
+    self._lcid = self._DEFAULT_LCID
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._storage_reader = None
@@ -370,7 +370,7 @@ class OutputMediator(object):
       raise KeyError('No LCID found for language tag: {0:s}.'.format(
           language_tag))
 
-    self._language_identifier = language_tag
+    self._language_tag = language_tag
 
   def SetStorageReader(self, storage_reader):
     """Sets the storage reader.

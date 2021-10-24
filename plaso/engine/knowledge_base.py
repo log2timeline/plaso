@@ -405,12 +405,7 @@ class KnowledgeBase(object):
     self.SetValue('keyboard_layout', system_configuration.keyboard_layout)
 
     if system_configuration.language:
-      try:
-        self.SetLanguage(system_configuration.language)
-      except ValueError:
-        logger.warning(
-            'Unsupported language: {0:s}, defaulting to {1:s}'.format(
-                system_configuration.language, self._language))
+      self.SetLanguage(system_configuration.language)
 
     self.SetValue('operating_system', system_configuration.operating_system)
     self.SetValue(

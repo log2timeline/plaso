@@ -45,8 +45,7 @@ class ExtractionTool(
   """Extraction CLI tool.
 
   Attributes:
-    list_language_identifiers (bool): True if information about the language
-        identifiers should be shown.
+    list_language_tags (bool): True if the language tags should be listed.
     list_time_zones (bool): True if the time zones should be listed.
   """
 
@@ -104,7 +103,7 @@ class ExtractionTool(
     self._worker_timeout = None
     self._yara_rules_string = None
 
-    self.list_language_identifiers = False
+    self.list_language_tags = False
     self.list_time_zones = False
 
   def _CreateProcessingConfiguration(self, knowledge_base):
@@ -184,6 +183,7 @@ class ExtractionTool(
     configuration.log_filename = self._log_file
     configuration.parser_filter_expression = (
         self._expanded_parser_filter_expression)
+    configuration.preferred_language = self._preferred_language
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
@@ -286,7 +286,7 @@ class ExtractionTool(
 
     # TODO: add preferred encoding
 
-    self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_language_tags = self._preferred_language == 'list'
 
     self._extract_winevt_resources = getattr(
         options, 'extract_winevt_resources', True)
@@ -443,7 +443,6 @@ class ExtractionTool(
 
     number_of_enabled_parsers = len(session.enabled_parser_names)
 
-    self._SetExtractionPreferredLanguage(extraction_engine.knowledge_base)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     force_parser = False
@@ -532,23 +531,6 @@ class ExtractionTool(
       raise errors.BadConfigOption(
           'Unable to read parser presets from file with error: {0!s}'.format(
               exception))
-
-  def _SetExtractionPreferredLanguage(self, knowledge_base):
-    """Sets the preferred language before extraction.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
-    """
-    # Note session.preferred_language will default to en-US but
-    # self._preferred_language is None when not set.
-    if self._preferred_language:
-      try:
-        knowledge_base.SetLanguage(self._preferred_language)
-      except ValueError:
-        logger.warning(
-            'Unsupported language: {0:s}, defaulting to {1:s}'.format(
-                self._preferred_language, knowledge_base.language))
 
   def _SetExtractionPreferredTimeZone(self, knowledge_base):
     """Sets the preferred time zone before extraction.
@@ -668,7 +650,6 @@ class ExtractionTool(
         debug_mode=self._debug_mode,
         filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
-        preferred_language=self._preferred_language,
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year,
         text_prepend=self._text_prepend)
@@ -706,11 +687,11 @@ class ExtractionTool(
 
     self._status_view.PrintExtractionSummary(processing_status)
 
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
+  def ListLanguageTags(self):
+    """Lists the language tags."""
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Identifier', 'Language'],
-        title='Language identifiers')
+        self._views_format_type, column_names=['Language tag', 'Description'],
+        title='Language tags')
     for language_tag, description in (
         language_tags.LanguageTagHelper.GetLanguages()):
       table_view.AddRow([language_tag, description])
