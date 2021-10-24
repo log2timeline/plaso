@@ -85,6 +85,38 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
+  def _CreateParserMediator(
+      self, session, knowledge_base, resolver_context,
+      processing_configuration):
+    """Creates a parser mediator.
+
+    Args:
+      session (Session): session in which the sources are processed.
+      knowledge_base (KnowledgeBase): knowledge base which contains
+          information from the source data needed for parsing.
+      resolver_context (dfvfs.Context): resolver context.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
+
+    Returns:
+      ParserMediator: parser mediator.
+    """
+    parser_mediator = parsers_mediator.ParserMediator(
+        session, knowledge_base,
+        collection_filters_helper=self._collection_filters_helper,
+        resolver_context=resolver_context)
+
+    parser_mediator.SetPreferredLanguage(
+        processing_configuration.preferred_language)
+
+    parser_mediator.SetPreferredYear(
+        processing_configuration.preferred_year)
+
+    parser_mediator.SetTemporaryDirectory(
+        processing_configuration.temporary_directory)
+
+    return parser_mediator
+
   def _GetStatus(self):
     """Retrieves status information.
 
@@ -157,12 +189,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           credential_configuration.credential_type,
           credential_configuration.credential_data)
 
-    self._parser_mediator = parsers_mediator.ParserMediator(
-        self._session, self._knowledge_base,
-        collection_filters_helper=self._collection_filters_helper,
-        preferred_year=self._processing_configuration.preferred_year,
-        resolver_context=self._resolver_context,
-        temporary_directory=self._processing_configuration.temporary_directory)
+    self._parser_mediator = self._CreateParserMediator(
+        self._session, self._knowledge_base, self._resolver_context,
+        self._processing_configuration)
 
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with

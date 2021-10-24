@@ -177,12 +177,12 @@ Test argument parser.
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
 
-  def testListLanguageIdentifiers(self):
-    """Tests the ListLanguageIdentifiers function."""
+  def testListLanguageTags(self):
+    """Tests the ListLanguageTags function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
-    test_tool.ListLanguageIdentifiers()
+    test_tool.ListLanguageTags()
 
     output = output_writer.ReadOutput()
 
@@ -195,7 +195,7 @@ Test argument parser.
       if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
-    self.assertIn('Language identifiers', lines[1])
+    self.assertIn('Language tags', lines[1])
 
     lines = frozenset(lines)
 

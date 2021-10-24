@@ -11,6 +11,7 @@ from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.helpers import language_tags
+from plaso.helpers.windows import languages
 from plaso.lib import errors
 from plaso.parsers import logger
 
@@ -29,12 +30,18 @@ class ParserMediator(object):
         information is then used by the foreman to detect workers that are
         not responding (stalled).
   """
+
+  _DEFAULT_LANGUAGE_TAG = 'en-US'
+
+  # LCID 0x0409 is en-US.
+  _DEFAULT_LCID = 0x0409
+
   _INT64_MIN = -1 << 63
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
       self, session, knowledge_base, collection_filters_helper=None,
-      preferred_year=None, resolver_context=None, temporary_directory=None):
+      resolver_context=None):
     """Initializes a parser mediator.
 
     Args:
@@ -43,10 +50,7 @@ class ParserMediator(object):
           data needed for parsing.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      preferred_year (Optional[int]): preferred year.
       resolver_context (Optional[dfvfs.Context]): resolver context.
-      temporary_directory (Optional[str]): path of the directory for temporary
-          files.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
@@ -55,8 +59,10 @@ class ParserMediator(object):
     self._event_data_stream_identifier = None
     self._file_entry = None
     self._knowledge_base = knowledge_base
+    self._language_tag = self._DEFAULT_LANGUAGE_TAG
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
+    self._lcid = self._DEFAULT_LCID
     self._memory_profiler = None
     self._number_of_event_sources = 0
     self._number_of_events = 0
@@ -64,13 +70,12 @@ class ParserMediator(object):
     self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
     self._preferred_codepage = None
-    self._preferred_language = None
-    self._preferred_year = preferred_year
+    self._preferred_year = None
     self._process_information = None
     self._resolver_context = resolver_context
     self._session = session
     self._storage_writer = None
-    self._temporary_directory = temporary_directory
+    self._temporary_directory = None
     self._windows_event_log_providers_per_path = None
 
     self.collection_filters_helper = collection_filters_helper
@@ -95,10 +100,13 @@ class ParserMediator(object):
 
   @property
   def language(self):
-    """str: preferred language tag in lower case."""
-    if not self._preferred_language:
-      self._preferred_language = self._knowledge_base.language.lower()
-    return self._preferred_language
+    """str: language tag in lower case."""
+    if not self._language_tag:
+      language_tag = (
+          self._knowledge_base.language.lower() or self._DEFAULT_LANGUAGE_TAG)
+      self._language_tag = language_tag.lower()
+
+    return self._language_tag
 
   @property
   def number_of_produced_event_sources(self):
@@ -656,6 +664,39 @@ class ParserMediator(object):
     self._file_entry = file_entry
     self._event_data_stream_identifier = None
 
+  def SetPreferredLanguage(self, language_tag):
+    """Sets the preferred language.
+
+    Args:
+      language_tag (str): language tag such as "en-US" for US English or
+          "is-IS" for Icelandic.
+
+    Raises:
+      ValueError: if the language tag is not a string type or no LCID can
+          be determined that corresponds with the language tag.
+    """
+    lcid = None
+    if language_tag:
+      if not isinstance(language_tag, str):
+        raise ValueError('Language tag: {0!s} is not a string.'.format(
+            language_tag))
+
+      lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(language_tag)
+      if not lcid:
+        raise ValueError('No LCID found for language tag: {0:s}.'.format(
+            language_tag))
+
+    self._language_tag = language_tag
+    self._lcid = lcid
+
+  def SetPreferredYear(self, preferred_year):
+    """Sets the preferred year for date and time values without a year.
+
+    Args:
+      preferred_year (int): preferred year.
+    """
+    self._preferred_year = preferred_year
+
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.
 
@@ -668,6 +709,14 @@ class ParserMediator(object):
     # contain event data for their events.
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
+
+  def SetTemporaryDirectory(self, temporary_directory):
+    """Sets the directory to store temporary files.
+
+    Args:
+      temporary_directory (str): path of the directory to store temporary files.
+    """
+    self._temporary_directory = temporary_directory
 
   def SignalAbort(self):
     """Signals the parsers to abort."""

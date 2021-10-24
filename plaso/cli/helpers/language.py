@@ -4,6 +4,7 @@
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
+from plaso.helpers import language_tags
 from plaso.lib import errors
 
 
@@ -45,14 +46,20 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when the language tag is not supported.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    preferred_language = cls._ParseStringOption(options, 'preferred_language')
+    language_tag = cls._ParseStringOption(options, 'preferred_language')
 
-    setattr(configuration_object, '_preferred_language', preferred_language)
+    if language_tag and not language_tags.LanguageTagHelper.IsLanguageTag(
+        language_tag):
+      raise errors.BadConfigOption(
+          'Unsupported preferred language tag: {0!s}'.format(language_tag))
+
+    setattr(configuration_object, '_preferred_language', language_tag)
 
 
 manager.ArgumentHelperManager.RegisterHelper(LanguageArgumentsHelper)
