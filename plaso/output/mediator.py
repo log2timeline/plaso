@@ -22,12 +22,14 @@ class OutputMediator(object):
     data_location (Optional[str]): path of the formatter data files.
   """
 
-  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
-
   _DEFAULT_LANGUAGE_TAG = 'en-US'
 
   # LCID 0x0409 is en-US.
   _DEFAULT_LCID = 0x0409
+
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
+
+  _DEFAULT_TIME_ZONE = pytz.UTC
 
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
@@ -51,7 +53,8 @@ class OutputMediator(object):
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._storage_reader = None
-    self._timezone = pytz.UTC
+    self._text_prepend = None
+    self._time_zone = None
 
     self.data_location = data_location
 
@@ -69,8 +72,11 @@ class OutputMediator(object):
 
   @property
   def timezone(self):
-    """The timezone."""
-    return self._timezone
+    """The time zone."""
+    if not self._time_zone:
+      self._time_zone = self._DEFAULT_TIME_ZONE
+
+    return self._time_zone
 
   def _ReadMessageFormattersFile(self, path):
     """Reads a message formatters configuration file.
@@ -104,9 +110,8 @@ class OutputMediator(object):
       str: human readable version of the path specification.
     """
     mount_path = self._knowledge_base.GetMountPath()
-    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
 
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
@@ -317,10 +322,10 @@ class OutputMediator(object):
     Returns:
       WinevtResourcesHelper: Windows EventLog resources helper.
     """
+    lcid = self._lcid or self._DEFAULT_LCID
     environment_variables = self._knowledge_base.GetEnvironmentVariables()
     return winevt_rc.WinevtResourcesHelper(
-        self._storage_reader, self.data_location, self._lcid,
-        environment_variables)
+        self._storage_reader, self.data_location, lcid, environment_variables)
 
   def ReadMessageFormattersFromDirectory(self, path):
     """Reads message formatters from a directory.
@@ -357,20 +362,22 @@ class OutputMediator(object):
           "is-IS" for Icelandic.
 
     Raises:
-      KeyError: if no LCID can be determined that corresponds with the language
-          tag.
-      ValueError: if the language tag is not a string type.
+      ValueError: if the language tag is not a string type or no LCID can
+          be determined that corresponds with the language tag.
     """
-    if not isinstance(language_tag, str):
-      raise ValueError('Language tag is not a string.')
+    lcid = None
+    if language_tag:
+      if not isinstance(language_tag, str):
+        raise ValueError('Language tag: {0!s} is not a string.'.format(
+            language_tag))
 
-    self._lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(
-        language_tag)
-    if not self._lcid:
-      raise KeyError('No LCID found for language tag: {0:s}.'.format(
-          language_tag))
+      lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(language_tag)
+      if not lcid:
+        raise ValueError('No LCID found for language tag: {0:s}.'.format(
+            language_tag))
 
     self._language_tag = language_tag
+    self._lcid = lcid
 
   def SetStorageReader(self, storage_reader):
     """Sets the storage reader.
@@ -380,19 +387,28 @@ class OutputMediator(object):
     """
     self._storage_reader = storage_reader
 
-  def SetTimezone(self, timezone):
-    """Sets the timezone.
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text to prepend to the display name.
 
     Args:
-      timezone (str): timezone.
+      text_prepend (str): text to prepend to the display name or None if no
+          text should be prepended.
+    """
+    self._text_prepend = text_prepend
+
+  def SetTimeZone(self, time_zone):
+    """Sets the time zone.
+
+    Args:
+      time_zone (str): time zone.
 
     Raises:
-      ValueError: if the timezone is not supported.
+      ValueError: if the time zone is not supported.
     """
-    if not timezone:
-      return
+    if time_zone:
+      try:
+        time_zone = pytz.timezone(time_zone)
+      except pytz.UnknownTimeZoneError:
+        raise ValueError('Unsupported time zone: {0:s}'.format(time_zone))
 
-    try:
-      self._timezone = pytz.timezone(timezone)
-    except pytz.UnknownTimeZoneError:
-      raise ValueError('Unsupported timezone: {0:s}'.format(timezone))
+    self._time_zone = time_zone

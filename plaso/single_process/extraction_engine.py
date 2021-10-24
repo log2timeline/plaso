@@ -270,11 +270,17 @@ class SingleProcessEngine(engine.BaseEngine):
     parser_mediator.SetPreferredLanguage(
         processing_configuration.preferred_language)
 
+    parser_mediator.SetPreferredTimeZone(
+        processing_configuration.preferred_time_zone)
+
     parser_mediator.SetPreferredYear(
         processing_configuration.preferred_year)
 
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
+
+    parser_mediator.SetTextPrepend(
+        processing_configuration.text_prepend)
 
     return parser_mediator
 

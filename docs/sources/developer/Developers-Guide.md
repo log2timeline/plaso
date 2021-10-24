@@ -30,9 +30,10 @@ Once you've set up your development environment we recommend start simple:
 * [How to write a tagging rule](How-to-write-a-tagging-rule.md)
 
 ## Design
+
 Overview of the general architecture of Plaso:
 
-* [Architecture](Internals.md)
+* [Internals](Internals.md)
 * [API documentation](https://plaso.readthedocs.io/en/latest/sources/api/plaso.html)
 
 ## Roadmap

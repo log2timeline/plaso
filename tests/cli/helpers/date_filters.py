@@ -38,8 +38,8 @@ Test argument parser.
                         formatted as: YYYY-MM-DD hh:mm:ss.######[+-]##:##
                         Where # are numeric digits ranging from 0 to 9 and the
                         seconds fraction can be either 3 or 6 digits. The time
-                        of day, seconds fraction and timezone offset are
-                        optional. The default timezone is UTC. E.g. "atime,
+                        of day, seconds fraction and time zone offset are
+                        optional. The default time zone is UTC. E.g. "atime,
                         2013-01-01 23:12:14, 2013-02-23". This parameter can
                         be repeated as needed to add additional date
                         boundaries, e.g. once for atime, once for crtime, etc.

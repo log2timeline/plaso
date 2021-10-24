@@ -185,6 +185,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
     preferred_language (str): preferred language.
+    preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred initial year value for year-less date and
         time values.
     profiling (ProfilingConfiguration): profiling configuration.
@@ -192,6 +193,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     task_storage_path (str): path of the directory containing SQLite task
         storage files.
     temporary_directory (str): path of the directory for temporary files.
+    text_prepend (str): text to prepend to every display name.
   """
   CONTAINER_TYPE = 'processing_configuration'
 
@@ -208,8 +210,10 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.log_filename = None
     self.parser_filter_expression = None
     self.preferred_language = None
+    self.preferred_time_zone = None
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()
     self.task_storage_format = None
     self.task_storage_path = None
     self.temporary_directory = None
+    self.text_prepend = None

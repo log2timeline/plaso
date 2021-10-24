@@ -112,7 +112,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     expected_display_name = 'VSS2:TSK:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
-    knowledge_base_object.SetTextPrepend('C:')
+    parser_mediator.SetTextPrepend('C:')
 
     display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
     expected_display_name = 'VSS2:TSK:C:/syslog.gz'

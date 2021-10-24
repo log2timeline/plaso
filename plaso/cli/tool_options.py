@@ -130,7 +130,7 @@ class OutputModuleOptions(object):
         dynamic_time=self._output_dynamic_time,
         preferred_encoding=self.preferred_encoding)
 
-    self._output_mediator.SetTimezone(self._output_time_zone)
+    self._output_mediator.SetTimeZone(self._output_time_zone)
 
     self._ReadMessageFormatters()
 

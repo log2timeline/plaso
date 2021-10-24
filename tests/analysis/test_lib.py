@@ -50,7 +50,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       test_events.append((event, event_data, event_data_stream))
 
     mediator = analysis_mediator.AnalysisMediator(
-        session, storage_writer, knowledge_base_object)
+        session, knowledge_base_object)
+    mediator.SetStorageWriter(storage_writer)
 
     for event, event_data, event_data_stream in test_events:
       plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
@@ -86,7 +87,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         path_segments, parser, knowledge_base_object)
 
     mediator = analysis_mediator.AnalysisMediator(
-        session, storage_writer, knowledge_base_object)
+        session, knowledge_base_object)
+    mediator.SetStorageWriter(storage_writer)
 
     for event in storage_writer.GetSortedEvents():
       event_data = None

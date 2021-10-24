@@ -23,13 +23,11 @@ class AnalysisMediator(object):
     number_of_produced_event_tags (int): number of produced event tags.
   """
 
-  def __init__(
-      self, session, storage_writer, knowledge_base, data_location=None):
+  def __init__(self, session, knowledge_base, data_location=None):
     """Initializes an analysis plugin mediator.
 
     Args:
       session (Session): session the analysis is part of.
-      storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
       data_location (Optional[str]): location of data files used during
@@ -42,7 +40,8 @@ class AnalysisMediator(object):
     self._knowledge_base = knowledge_base
     self._number_of_warnings = 0
     self._session = session
-    self._storage_writer = storage_writer
+    self._storage_writer = None
+    self._text_prepend = None
 
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
@@ -73,9 +72,8 @@ class AnalysisMediator(object):
       str: human readable version of the path specification.
     """
     mount_path = self._knowledge_base.GetMountPath()
-    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
@@ -105,7 +103,8 @@ class AnalysisMediator(object):
 
     analysis_report.event_filter = self._event_filter_expression
 
-    self._storage_writer.AddAttributeContainer(analysis_report)
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(analysis_report)
 
     self._session.UpdateAnalysisReportSessionCounter(analysis_report)
 
@@ -121,8 +120,10 @@ class AnalysisMediator(object):
       plugin_name (str): name of the analysis plugin to which the warning
           applies.
     """
-    warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
-    self._storage_writer.AddAttributeContainer(warning)
+    if self._storage_writer:
+      warning = warnings.AnalysisWarning(
+          message=message, plugin_name=plugin_name)
+      self._storage_writer.AddAttributeContainer(warning)
 
     self._number_of_warnings += 1
 
@@ -134,13 +135,31 @@ class AnalysisMediator(object):
     Args:
       event_tag (EventTag): event tag.
     """
-    self._storage_writer.AddOrUpdateEventTag(event_tag)
+    if self._storage_writer:
+      self._storage_writer.AddOrUpdateEventTag(event_tag)
 
     self._session.UpdateEventLabelsSessionCounter(event_tag)
 
     self.number_of_produced_event_tags += 1
 
     self.last_activity_timestamp = time.time()
+
+  def SetStorageWriter(self, storage_writer):
+    """Sets the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    self._storage_writer = storage_writer
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text to prepend to the display name.
+
+    Args:
+      text_prepend (str): text to prepend to the display name or None if no
+          text should be prepended.
+    """
+    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the analysis plugins to abort."""

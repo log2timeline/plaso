@@ -142,7 +142,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     mediator = analysis_mediator.AnalysisMediator(
-        session, storage_writer, knowledge_base_object)
+        session, knowledge_base_object)
+    mediator.SetStorageWriter(storage_writer)
 
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(tag_file_path)

@@ -31,7 +31,6 @@ class KnowledgeBase(object):
     self._hostnames = {}
     self._language = 'en-US'
     self._mount_path = None
-    self._text_prepend = None
     self._time_zone = pytz.UTC
     self._user_accounts = {}
     self._values = {}
@@ -275,14 +274,6 @@ class KnowledgeBase(object):
 
     return [source_configuration]
 
-  def GetTextPrepend(self):
-    """Retrieves the text to prepend to the display name.
-
-    Returns:
-      str: text to prepend to the display name or None if not set.
-    """
-    return self._text_prepend
-
   def GetUsernameByIdentifier(
       self, user_identifier, session_identifier=None):
     """Retrieves the username based on an user identifier.
@@ -501,15 +492,6 @@ class KnowledgeBase(object):
 
     self._mount_path = mount_path
 
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text to prepend to the display name.
-
-    Args:
-      text_prepend (str): text to prepend to the display name or None if no
-          text should be prepended.
-    """
-    self._text_prepend = text_prepend
-
   def SetTimeZone(self, time_zone):
     """Sets the time zone.
 
@@ -538,7 +520,7 @@ class KnowledgeBase(object):
 
     try:
       self._time_zone = pytz.timezone(time_zone)
-    except (AttributeError, pytz.UnknownTimeZoneError):
+    except pytz.UnknownTimeZoneError:
       raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
 
   def SetValue(self, identifier, value):

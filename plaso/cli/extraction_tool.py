@@ -167,7 +167,6 @@ class ExtractionTool(
 
     self._expanded_parser_filter_expression = ','.join(sorted(parser_elements))
 
-    # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
     configuration.artifact_filters = self._artifact_filters
     configuration.credentials = self._credential_configurations
@@ -184,12 +183,14 @@ class ExtractionTool(
     configuration.parser_filter_expression = (
         self._expanded_parser_filter_expression)
     configuration.preferred_language = self._preferred_language
+    configuration.preferred_time_zone = self._preferred_time_zone
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
     configuration.task_storage_format = self._task_storage_format
     configuration.temporary_directory = self._temporary_directory
+    configuration.text_prepend = self._text_prepend
 
     return configuration
 
@@ -443,8 +444,6 @@ class ExtractionTool(
 
     number_of_enabled_parsers = len(session.enabled_parser_names)
 
-    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
-
     force_parser = False
     if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
         not is_archive and number_of_enabled_parsers == 1):
@@ -467,10 +466,6 @@ class ExtractionTool(
       self._extract_winevt_resources = False
 
     session.extract_winevt_resources = self._extract_winevt_resources
-
-    # TODO: set mount path in knowledge base with
-    # extraction_engine.knowledge_base.SetMountPath()
-    extraction_engine.knowledge_base.SetTextPrepend(self._text_prepend)
 
     try:
       extraction_engine.BuildCollectionFilters(
@@ -531,24 +526,6 @@ class ExtractionTool(
       raise errors.BadConfigOption(
           'Unable to read parser presets from file with error: {0!s}'.format(
               exception))
-
-  def _SetExtractionPreferredTimeZone(self, knowledge_base):
-    """Sets the preferred time zone before extraction.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
-    """
-    # Note session.preferred_time_zone will default to UTC but
-    # self._preferred_time_zone is None when not set.
-    if self._preferred_time_zone:
-      try:
-        knowledge_base.SetTimeZone(self._preferred_time_zone)
-      except ValueError:
-        # pylint: disable=protected-access
-        logger.warning(
-            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                self._preferred_time_zone, knowledge_base._time_zone.zone))
 
   def AddExtractionOptions(self, argument_group):
     """Adds the extraction options to the argument group.
@@ -644,6 +621,7 @@ class ExtractionTool(
     self._status_view.PrintExtractionStatusHeader(None)
     self._output_writer.Write('Processing started.\n')
 
+    # TODO: attach processing configuration to session?
     session = engine.BaseEngine.CreateSession(
         artifact_filter_names=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
