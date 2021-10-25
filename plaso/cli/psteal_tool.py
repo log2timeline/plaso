@@ -165,6 +165,7 @@ class PstealTool(
     session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
+    session.preferred_language = self._preferred_language or 'en-US'
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)

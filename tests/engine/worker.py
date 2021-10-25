@@ -113,7 +113,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     try:
-      storage_writer.WriteSessionStart(session)
+      session_start = session.CreateSessionStart()
+      storage_writer.AddAttributeContainer(session_start)
 
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
       event_source = storage_writer.GetFirstWrittenEventSource()
@@ -122,7 +123,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
             parser_mediator, event_source.path_spec)
         event_source = storage_writer.GetNextWrittenEventSource()
 
-      storage_writer.WriteSessionCompletion(session)
+      session_completion = session.CreateSessionCompletion()
+      storage_writer.AddAttributeContainer(session_completion)
 
       if expected_event_counters:
         self.CheckEventCounters(storage_writer, expected_event_counters)
@@ -186,7 +188,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -197,7 +201,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeDataStream(
         file_entry, '', display_name, event_data_stream)
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
     self.assertIsNotNone(event_data_stream)
@@ -232,7 +238,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -244,7 +252,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeFileObject(
         file_object, display_name, event_data_stream)
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
     self.assertIsNotNone(event_data_stream)
@@ -297,7 +307,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -305,7 +317,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractContentFromDataStream(
         parser_mediator, file_entry, '')
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
     # TODO: check results in storage writer
@@ -337,7 +351,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -345,7 +361,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractMetadataFromFileEntry(
         parser_mediator, file_entry, '')
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
     # TODO: check results in storage writer
@@ -377,7 +395,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -387,7 +407,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         parser_mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_TAR])
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
   def testGetCompressedStreamTypes(self):
@@ -417,7 +439,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._analyzers = [test_analyzer]
 
     storage_writer.Open()
-    storage_writer.WriteSessionStart(session)
+
+    session_start = session.CreateSessionStart()
+    storage_writer.AddAttributeContainer(session_start)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -427,7 +451,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         parser_mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-    storage_writer.WriteSessionCompletion(session)
+    session_completion = session.CreateSessionCompletion()
+    storage_writer.AddAttributeContainer(session_completion)
+
     storage_writer.Close()
 
   def testIsMetadataFile(self):

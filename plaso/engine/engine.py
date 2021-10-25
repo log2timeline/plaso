@@ -186,9 +186,7 @@ class BaseEngine(object):
   @classmethod
   def CreateSession(
       cls, artifact_filter_names=None, command_line_arguments=None,
-      debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
-      preferred_language='en-US', preferred_time_zone=None,
-      preferred_year=None, text_prepend=None):
+      debug_mode=False, filter_file_path=None, preferred_encoding='utf-8'):
     """Creates a session attribute container.
 
     Args:
@@ -199,10 +197,6 @@ class BaseEngine(object):
       debug_mode (Option[bool]): True if debug mode was enabled.
       filter_file_path (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
-      preferred_language (Optional[str]): preferred language.
-      preferred_time_zone (Optional[str]): preferred time zone.
-      preferred_year (Optional[int]): preferred year.
-      text_prepend (Optional[str]): text to prepend to every display name.
 
     Returns:
       Session: session attribute container.
@@ -214,10 +208,6 @@ class BaseEngine(object):
     session.debug_mode = debug_mode
     session.filter_file = filter_file_path
     session.preferred_encoding = preferred_encoding
-    session.preferred_language = preferred_language
-    session.preferred_time_zone = preferred_time_zone
-    session.preferred_year = preferred_year
-    session.text_prepend = text_prepend
 
     return session
 

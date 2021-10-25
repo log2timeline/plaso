@@ -552,10 +552,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      storage_writer.WriteSessionStart(session)
+      session_start = session.CreateSessionStart()
+      storage_writer.AddAttributeContainer(session_start)
 
       try:
-        storage_writer.WriteSessionConfiguration(self._session)
+        session_configuration = self._session.CreateSessionConfiguration()
+        storage_writer.AddAttributeContainer(session_configuration)
 
         self._AnalyzeEvents(
             storage_writer, analysis_plugins, event_filter=event_filter)
@@ -573,7 +575,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       finally:
         self._processing_status.aborted = self._abort
         self._session.aborted = self._abort
-        storage_writer.WriteSessionCompletion(self._session)
+
+        session_completion = self._session.CreateSessionCompletion()
+        storage_writer.AddAttributeContainer(session_completion)
 
     finally:
       # Stop the status update thread after close of the storage writer
