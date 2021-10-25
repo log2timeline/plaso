@@ -101,21 +101,18 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
-    parser_mediator = parsers_mediator.ParserMediator(
+    mediator = parsers_mediator.ParserMediator(
         session, knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
         resolver_context=resolver_context)
 
-    parser_mediator.SetPreferredLanguage(
-        processing_configuration.preferred_language)
+    mediator.SetPreferredLanguage(processing_configuration.preferred_language)
+    mediator.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
+    mediator.SetPreferredYear(processing_configuration.preferred_year)
+    mediator.SetTemporaryDirectory(processing_configuration.temporary_directory)
+    mediator.SetTextPrepend(processing_configuration.text_prepend)
 
-    parser_mediator.SetPreferredYear(
-        processing_configuration.preferred_year)
-
-    parser_mediator.SetTemporaryDirectory(
-        processing_configuration.temporary_directory)
-
-    return parser_mediator
+    return mediator
 
   def _GetStatus(self):
     """Retrieves status information.

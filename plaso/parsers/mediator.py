@@ -4,6 +4,8 @@
 import datetime
 import time
 
+import pytz
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import artifacts
@@ -35,6 +37,8 @@ class ParserMediator(object):
 
   # LCID 0x0409 is en-US.
   _DEFAULT_LCID = 0x0409
+
+  _DEFAULT_TIME_ZONE = pytz.UTC
 
   _INT64_MIN = -1 << 63
   _INT64_MAX = (1 << 63) - 1
@@ -76,6 +80,8 @@ class ParserMediator(object):
     self._session = session
     self._storage_writer = None
     self._temporary_directory = None
+    self._text_prepend = None
+    self._time_zone = None
     self._windows_event_log_providers_per_path = None
 
     self.collection_filters_helper = collection_filters_helper
@@ -136,7 +142,10 @@ class ParserMediator(object):
   @property
   def timezone(self):
     """datetime.tzinfo: timezone."""
-    return self._knowledge_base.timezone
+    if not self._time_zone:
+      self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
+
+    return self._time_zone
 
   @property
   def year(self):
@@ -267,9 +276,8 @@ class ParserMediator(object):
     if not relative_path:
       return file_entry.name
 
-    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -281,9 +289,8 @@ class ParserMediator(object):
       str: human readable version of the path specification.
     """
     mount_path = self._knowledge_base.GetMountPath()
-    text_prepend = self._knowledge_base.GetTextPrepend()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=text_prepend)
+        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -669,14 +676,15 @@ class ParserMediator(object):
 
     Args:
       language_tag (str): language tag such as "en-US" for US English or
-          "is-IS" for Icelandic.
+          "is-IS" for Icelandic or None if the language determined by
+          preprocessing or the default should be used.
 
     Raises:
       ValueError: if the language tag is not a string type or no LCID can
           be determined that corresponds with the language tag.
     """
     lcid = None
-    if language_tag:
+    if language_tag is not None:
       if not isinstance(language_tag, str):
         raise ValueError('Language tag: {0!s} is not a string.'.format(
             language_tag))
@@ -689,13 +697,32 @@ class ParserMediator(object):
     self._language_tag = language_tag
     self._lcid = lcid
 
-  def SetPreferredYear(self, preferred_year):
-    """Sets the preferred year for date and time values without a year.
+  def SetPreferredTimeZone(self, time_zone):
+    """Sets the preferred time zone for zone-less date and time values.
 
     Args:
-      preferred_year (int): preferred year.
+      time_zone (str): time zone such as "Europe/Amsterdam" or None if the
+          time zone determined by preprocessing or the default should be used.
+
+    Raises:
+      ValueError: if the time zone is not supported.
     """
-    self._preferred_year = preferred_year
+    if time_zone is not None:
+      try:
+        time_zone = pytz.timezone(time_zone)
+      except pytz.UnknownTimeZoneError:
+        raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
+
+    self._time_zone = time_zone
+
+  def SetPreferredYear(self, year):
+    """Sets the preferred year for year-less date and time values.
+
+    Args:
+      year (int): initial year value such as 2012 or None if the year of
+          year-less date and time values should be estimated.
+    """
+    self._preferred_year = year
 
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.
@@ -717,6 +744,15 @@ class ParserMediator(object):
       temporary_directory (str): path of the directory to store temporary files.
     """
     self._temporary_directory = temporary_directory
+
+  def SetTextPrepend(self, text_prepend):
+    """Sets the text to prepend to the display name.
+
+    Args:
+      text_prepend (str): text to prepend to the display name or None if no
+          text should be prepended.
+    """
+    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the parsers to abort."""

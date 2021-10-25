@@ -442,6 +442,7 @@ class PsortTool(
     if not storage_reader:
       raise RuntimeError('Unable to create storage reader.')
 
+    text_prepend = None
     try:
       for session in storage_reader.GetSessions():
         for source_configuration in session.source_configurations or []:
@@ -449,7 +450,7 @@ class PsortTool(
               source_configuration.system_configuration,
               session_identifier=session.identifier)
 
-        self._knowledge_base.SetTextPrepend(session.text_prepend)
+        text_prepend = session.text_prepend
 
       self._number_of_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(
@@ -462,6 +463,7 @@ class PsortTool(
     configuration.data_location = self._data_location
     configuration.debug_output = self._debug_mode
     configuration.log_filename = self._log_file
+    configuration.text_prepend = text_prepend
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
@@ -484,14 +486,14 @@ class PsortTool(
       if self._preferred_language:
         preferred_language = self._preferred_language
 
-      if preferred_language:
-        try:
-          self._output_mediator.SetPreferredLanguageIdentifier(
-              preferred_language)
-        except (KeyError, TypeError):
-          logger.warning('Unable to to set preferred language: {0!s}.'.format(
-              preferred_language))
+      try:
+        self._output_mediator.SetPreferredLanguageIdentifier(
+            preferred_language)
+      except (KeyError, TypeError):
+        logger.warning('Unable to to set preferred language: {0!s}.'.format(
+            preferred_language))
 
+      self._output_mediator.SetTextPrepend(text_prepend)
       self._output_module.SetStorageReader(storage_reader)
 
       # TODO: add single process output and formatting engine support.
