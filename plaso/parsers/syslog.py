@@ -250,8 +250,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
       _PYPARSING_COMPONENTS['hostname'] +
       _PYPARSING_COMPONENTS['reporter'] +
-      pyparsing.Or(
-          [pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
+      pyparsing.Or([pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
       _PYPARSING_COMPONENTS['message_identifier'] +
       _PYPARSING_COMPONENTS['structured_data'] +
       _PYPARSING_COMPONENTS['body'] +
