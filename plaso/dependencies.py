@@ -51,7 +51,7 @@ PYTHON_DEPENDENCIES = {
     'pymodi': ('get_version()', '20210405', None, True),
     'pymsiecf': ('get_version()', '20150314', None, True),
     'pyolecf': ('get_version()', '20151223', None, True),
-    'pyparsing': ('__version__', '2.3.0', '3.0.0', True),
+    'pyparsing': ('__version__', '3.0.1', None, True),
     'pyqcow': ('get_version()', '20131204', None, True),
     'pyregf': ('get_version()', '20201002', None, True),
     'pyscca': ('get_version()', '20190605', None, True),

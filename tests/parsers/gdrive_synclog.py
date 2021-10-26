@@ -41,7 +41,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'data_type': 'gdrive_sync:log:line',
         'date_time': '2018-01-24 18:25:08.456',
         'log_level': 'INFO',
-        'message': ' SSL: OpenSSL 1.0.2m  2 Nov 2017',
+        'message': 'SSL: OpenSSL 1.0.2m  2 Nov 2017',
         'pid': 'pid=2376',
         'source_code': 'logging_config.py:299',
         'thread': '7780:MainThread',
@@ -56,7 +56,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'date_time': '2018-01-24 18:25:09.453',
         'log_level': 'INFO',
         'message': (
-            ' Initialize factory with policy PlatformPolicy('
+            'Initialize factory with policy PlatformPolicy('
             'google_drive_config_directory_path=u\'C:\\\\Users\\\\John\\\\App'
             'Data\\\\Local\\\\Google\\\\Drive\', main_sync_root=None, '
             'profile_id=None)'),
@@ -72,7 +72,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'date_time': '2018-01-24 18:25:18.563',
         'log_level': 'INFO',
         'message': (
-            ' Exception while auto resolving proxy. Traceback (most recent '
+            'Exception while auto resolving proxy. Traceback (most recent '
             'call last):   File "common\\proxy_manager.py", line 135, in '
             '_GetProxyInfoForUrl   File "windows\\system_proxy_resolver.py", '
             'line 96, in GetProxyForUrlViaWPAD   File "windows\\'
@@ -105,7 +105,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'data_type': 'gdrive_sync:log:line',
         'date_time': '2018-03-01 12:48:14.224',
         'log_level': 'INFO',
-        'message': ' OS: Darwin/10.13.3',
+        'message': 'OS: Darwin/10.13.3',
         'pid': 'pid=1730',
         'source_code': 'logging_config.pyo:295',
         'thread': '140736280556352:MainThread',
@@ -119,7 +119,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'data_type': 'gdrive_sync:log:line',
         'date_time': '2018-03-01 20:57:33.499',
         'log_level': 'INFO',
-        'message': ' SSL: OpenSSL 1.0.2n  7 Dec 2017',
+        'message': 'SSL: OpenSSL 1.0.2n  7 Dec 2017',
         'pid': 'pid=2590',
         'source_code': 'logging_config.pyo:299',
         'thread': '140736280556352:MainThread'}
@@ -132,7 +132,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'date_time': '2018-03-05 03:09:15.806',
         'log_level': 'INFO',
         'message': (
-            ' Updating local entry local_id=LocalID(inode=870321, volume='
+            'Updating local entry local_id=LocalID(inode=870321, volume='
             '\'60228B87-A626-4F5C-873E-476615F863C6\'), filename=АБВГДЕ.gdoc, '
             'modified=1520218963, checksum=ab0618852c5d671d7b1b9191aef03bda, '
             'size=185, is_folder=False'),

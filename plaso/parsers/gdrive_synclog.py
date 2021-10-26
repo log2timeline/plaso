@@ -52,15 +52,12 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   # premature end of string matching on multi-line log entries.
   BUFFER_SIZE = 16384
 
-  _HYPHEN = text_parser.PyparsingConstants.HYPHEN
-
-  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
-  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
-
   _GDS_DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + _HYPHEN +
-      _TWO_DIGITS.setResultsName('month') + _HYPHEN +
-      _TWO_DIGITS.setResultsName('day') +
+      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
+      text_parser.PyparsingConstants.HYPHEN +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +
+      text_parser.PyparsingConstants.HYPHEN +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS +
       pyparsing.Word(pyparsing.printables).setResultsName('time_zone_offset')
   ).setResultsName('date_time')
@@ -156,7 +153,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     # Replace newlines with spaces in structure.message to preserve output.
     message = self._GetValueFromStructure(structure, 'message')
     if message:
-      message = message.replace('\n', ' ')
+      message = message.replace('\n', ' ').strip(' ')
 
     event_data = GoogleDriveSyncLogEventData()
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')

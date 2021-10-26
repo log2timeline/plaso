@@ -199,7 +199,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     # TODO: refactor detail to individual event data attributes.
     detail = self._GetValueFromStructure(structure, 'detail')
     if detail:
-      detail = detail.replace('\n', ' ')
+      detail = detail.replace('\n', ' ').strip(' ')
 
     event_data = SkyDriveLogEventData()
     event_data.detail = detail

@@ -74,24 +74,20 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   _BLANK = pyparsing.Suppress(pyparsing.Literal('-'))
 
   _WORD = (
-      pyparsing.Word(pyparsing.alphanums, min=1) |
+      pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Word(pyparsing.alphanums + '-', min=2) |
       _BLANK)
 
-  _INTEGER = (
-      pyparsing.Word(pyparsing.nums, min=1).setParseAction(
-          text_parser.ConvertTokenToInteger) |
-      _BLANK)
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.ConvertTokenToInteger) | _BLANK
 
   _IP_ADDRESS = (
       text_parser.PyparsingConstants.IPV4_ADDRESS |
       text_parser.PyparsingConstants.IPV6_ADDRESS |
       _BLANK)
 
-  _PORT_NUMBER = (
-      pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
-          text_parser.ConvertTokenToInteger) |
-      _BLANK)
+  _PORT_NUMBER = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+      text_parser.ConvertTokenToInteger) | _BLANK
 
   _LOG_LINE = (
       text_parser.PyparsingConstants.DATE_TIME.setResultsName('date_time') +
@@ -113,11 +109,10 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
   LINE_STRUCTURES = [
       ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
-      ('logline', _LOG_LINE),
-  ]
+      ('logline', _LOG_LINE)]
 
   def __init__(self):
-    """Initializes a parser."""
+    """Initializes a Windows Firewall Log file parser."""
     super(WinFirewallParser, self).__init__()
     self._software = None
     self._use_local_timezone = False

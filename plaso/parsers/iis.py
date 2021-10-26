@@ -80,17 +80,15 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
 
-  INTEGER = (
-      pyparsing.Word(pyparsing.nums, min=1).setParseAction(
-          text_parser.ConvertTokenToInteger) | BLANK)
+  INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.ConvertTokenToInteger) | BLANK
 
   IP_ADDRESS = (
       text_parser.PyparsingConstants.IPV4_ADDRESS |
       text_parser.PyparsingConstants.IPV6_ADDRESS | BLANK)
 
-  PORT = (
-      pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
-          text_parser.ConvertTokenToInteger) | BLANK)
+  PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+      text_parser.ConvertTokenToInteger) | BLANK
 
   # Username can consist of: domain.username
   USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | BLANK

@@ -309,8 +309,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     try:
       structure = self._HEADER.parseString(line)
-    except pyparsing.ParseException:
-      logger.debug('Not a XChat log file')
+    except pyparsing.ParseException as exception:
+      logger.debug('Unable to parse XChat log file with error: {0!s}'.format(
+          exception))
       return False
 
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')

@@ -94,10 +94,11 @@ class PyparsingConstants(object):
   # Define date structures.
   HYPHEN = pyparsing.Literal('-').suppress()
 
-  ONE_OR_TWO_DIGITS = pyparsing.Word(
-      pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
-  ONE_TO_THREE_DIGITS = pyparsing.Word(
-      pyparsing.nums, min=1, max=3).setParseAction(PyParseIntCast)
+  ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      PyParseIntCast)
+  ONE_TO_THREE_DIGITS = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
+      PyParseIntCast)
+
   TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       PyParseIntCast)
   THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
@@ -132,8 +133,7 @@ class PyparsingConstants(object):
   COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
-  PID = pyparsing.Word(
-      pyparsing.nums, min=1, max=5).setParseAction(PyParseIntCast)
+  PID = pyparsing.Word(pyparsing.nums, max=5).setParseAction(PyParseIntCast)
 
 
 class PyparsingSingleLineTextParser(interface.FileObjectParser):
@@ -238,10 +238,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     value = structure.get(name, default_value)
     if isinstance(value, pyparsing.ParseResults) and not value:
       # Ensure the return value is not an empty pyparsing.ParseResults otherwise
-      # copy.deepcopy() will fail on Python 3.8 with: "TypeError: 'str' object
-      # is not callable" due to pyparsing.ParseResults overriding __getattr__
-      # with a function that returns an empty string when named token does not
-      # exists.
+      # serialization will fail.
       return None
 
     return value
@@ -396,14 +393,17 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     while line:
       if parser_mediator.abort:
         break
+
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
       for index, (key, structure) in enumerate(self._line_structures):
         try:
           parsed_structure = structure.parseString(line)
-        except pyparsing.ParseException:
-          pass
+        except pyparsing.ParseException as exception:
+          logger.debug('Unable to parse string with error: {0!s}'.format(
+              exception))
+
         if parsed_structure:
           use_key = key
           break
@@ -414,12 +414,15 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         if index is not None and index != 0:
           key_structure = self._line_structures.pop(index)
           self._line_structures.insert(0, key_structure)
+
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
+
         parser_mediator.ProduceExtractionWarning(
             'unable to parse log line: "{0:s}" at offset: {1:d}'.format(
                 line, self._current_offset))
+
         consecutive_line_failures += 1
         if (consecutive_line_failures >
             self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
@@ -675,8 +678,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         if odd_line:
           if len(odd_line) > 80:
             odd_line = '{0:s}...'.format(odd_line[:77])
+
           parser_mediator.ProduceExtractionWarning(
               'unable to parse log line: {0:s}'.format(repr(odd_line)))
+
           consecutive_line_failures += 1
           if (consecutive_line_failures >
               self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
