@@ -437,7 +437,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     for artifact_index, eventlog_provider in enumerate(generator):
       log_source = eventlog_provider.log_source
-      log_type = eventlog_provider.log_type
+      log_type = eventlog_provider.log_type or 'N/A'
 
       event_message_files = eventlog_provider.event_message_files
       if event_message_files:
