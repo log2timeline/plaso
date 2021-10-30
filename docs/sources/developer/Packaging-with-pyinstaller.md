@@ -38,6 +38,7 @@ C:\Python38\python.exe tools\update.py --preset plaso --track stable
 
 Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/main/data/pyinstaller/make_release.ps1)
 script. The easiest is to git clone l2tdevtools:
+
 ```
 git clone https://github.com/log2timeline/l2tdevtools.git
 ```
@@ -45,9 +46,10 @@ git clone https://github.com/log2timeline/l2tdevtools.git
 First check if the make_release.ps1 script is configured correctly for your
 build environment.
 
-From the plaso source directory run the following commands:
+From the Plaso source directory run the following commands:
 
-Build plaso with PyInstaller:
+Build Plaso with PyInstaller:
+
 ```
 ..\l2tdevtools\data\pyinstaller\make_release.ps1
 ```
@@ -55,6 +57,7 @@ Build plaso with PyInstaller:
 This will create: `plaso-<version>-<architecture>.zip`
 
 To do a very rudimentary test to see if the packaged binaries work run:
+
 ```
 ..\l2tdevtools\data\pyinstaller\make_check.bat
 ```
@@ -70,7 +73,7 @@ set PYTHONPATH=.
 C:\Python38 (x86)\python.exe tools\update.py --machine-type x86 --preset plaso --track stable
 ```
 
-From the plaso source directory run:
+From the Plaso source directory run:
 
 ```
 ..\l2tdevtools\data\pyinstaller\make_release.ps1 -Architecture win32
