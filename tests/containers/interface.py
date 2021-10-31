@@ -146,14 +146,6 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertIsNotNone(identifier)
 
-  def testGetSessionIdentifier(self):
-    """Tests the GetSessionIdentifier function."""
-    attribute_container = interface.AttributeContainer()
-
-    session_identifier = attribute_container.GetSessionIdentifier()
-
-    self.assertIsNone(session_identifier)
-
   def testMatchesExpression(self):
     """Tests the MatchesExpression function."""
     attribute_container = interface.AttributeContainer()
@@ -173,12 +165,6 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
     attribute_container = interface.AttributeContainer()
 
     attribute_container.SetIdentifier(None)
-
-  def testSetSessionIdentifier(self):
-    """Tests the SetSessionIdentifier function."""
-    attribute_container = interface.AttributeContainer()
-
-    attribute_container.SetSessionIdentifier(None)
 
 
 if __name__ == '__main__':

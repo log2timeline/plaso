@@ -127,12 +127,7 @@ class OutputMediator(object):
     if hostname:
       return hostname
 
-    session_identifier = event_data.GetSessionIdentifier()
-    if session_identifier is None:
-      return default_hostname
-
-    hostname = self._knowledge_base.GetHostname(
-        session_identifier=session_identifier)
+    hostname = self._knowledge_base.GetHostname()
     return hostname or default_hostname
 
   def GetMACBRepresentation(self, event, event_data):
@@ -307,13 +302,8 @@ class OutputMediator(object):
     if username and username != '-':
       return username
 
-    session_identifier = event_data.GetSessionIdentifier()
-    if session_identifier is None:
-      return default_username
-
     user_sid = getattr(event_data, 'user_sid', None)
-    username = self._knowledge_base.GetUsernameByIdentifier(
-        user_sid, session_identifier=session_identifier)
+    username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
     return username or default_username
 
   def GetWinevtResourcesHelper(self):

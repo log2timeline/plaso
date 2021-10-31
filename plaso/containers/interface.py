@@ -47,7 +47,6 @@ class AttributeContainer(object):
     """Initializes an attribute container."""
     super(AttributeContainer, self).__init__()
     self._identifier = AttributeContainerIdentifier()
-    self._session_identifier = None
 
   def CopyFromDict(self, attributes):
     """Copies the attribute container from a dictionary.
@@ -140,17 +139,6 @@ class AttributeContainer(object):
     """
     return self._identifier
 
-  def GetSessionIdentifier(self):
-    """Retrieves the session identifier.
-
-    The session identifier is a storage specific value that should not
-    be serialized.
-
-    Returns:
-      str: session identifier.
-    """
-    return self._session_identifier
-
   def MatchesExpression(self, expression):
     """Determines if an attribute container matches the expression.
 
@@ -183,14 +171,3 @@ class AttributeContainer(object):
       identifier (AttributeContainerIdentifier): identifier.
     """
     self._identifier = identifier
-
-  def SetSessionIdentifier(self, session_identifier):
-    """Sets the session identifier.
-
-    The session identifier is a storage specific value that should not
-    be serialized.
-
-    Args:
-      session_identifier (str): session identifier.
-    """
-    self._session_identifier = session_identifier

@@ -272,10 +272,10 @@ class OutputAndFormattingMultiProcessEngineTest(
         path)
 
     for session in storage_reader.GetSessions():
+      knowledge_base_object.SetActiveSession(session.identifier)
       for source_configuration in session.source_configurations or []:
         knowledge_base_object.ReadSystemConfigurationArtifact(
-            source_configuration.system_configuration,
-            session_identifier=session.identifier)
+            source_configuration.system_configuration)
 
   # TODO: add test for _ExportEvent.
 
@@ -302,10 +302,10 @@ class OutputAndFormattingMultiProcessEngineTest(
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
       for session in storage_reader.GetSessions():
+        knowledge_base_object.SetActiveSession(session.identifier)
         for source_configuration in session.source_configurations or []:
           knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+              source_configuration.system_configuration)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -336,10 +336,10 @@ class OutputAndFormattingMultiProcessEngineTest(
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
       for session in storage_reader.GetSessions():
+        knowledge_base_object.SetActiveSession(session.identifier)
         for source_configuration in session.source_configurations or []:
           knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+              source_configuration.system_configuration)
 
       test_engine._ExportEvents(storage_reader, output_module)
 
