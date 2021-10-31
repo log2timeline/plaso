@@ -4,7 +4,7 @@ To create a Docker packaged release from the development release you also need:
 
 * Docker
 
-## Packaging
+### Packaging
 
 Build Plaso Docker image:
 
