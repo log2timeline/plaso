@@ -16,33 +16,23 @@ class EventTranscriptEventData(events.EventData):
   """Windows diagnosis EventTranscript event data.
 
   Attributes:
-    compressed_payload_size (int): Size of compressed payload.
-    description (str): Tag description
+    application_name (str): Application name.
+    application_root_directory (str): Application root directory.
+    application_version (str): Applciation version.
+    compressed_payload_size (int): Size of the compressed payload.
     event_keywords (int): Event keywords
-    friendly_logging_binary_name (str): Friendly name for logging binary.
     event_name_hash (int): Hash of full event name.
     event_name (str): Diagnosis full event name.
-    is_core (int): Boolean value represted as integer.
-    logging_binary_name (str): Binary that generated the event.
-    producer_identifier (int): Producer identifier.
-    provider_group_identifier (int): Provider group identifier.
-    user_identifier (str): Windows Security ID of a user account.
-
-    The section below contains partially parsed payload data.
-    version (str): Payload version
-    name (str): Name of the payload. This contains the same information as
-        event name.
-    time (str): Timestamp of the event as string in UTC. This is the same time
-        recorded in timestamp field.
+    friendly_logging_binary_name (str): Friendly name for logging binary.
     ikey (str): iKey
-    data (str): This field contains the important information about the event.
-        The field contains JSON data stored as string. Due to the dynamic nature
-        of the data, extracting field is not practicle.
-
-    # This section contains selective fields extracted from payload data field.
-    application_name (str): Application name.
-    application_version (str): Applciation version.
-    application_root_directory (str): Application root directory.
+    is_core (int): Boolean value represented as an integer.
+    logging_binary_name (str): Binary that generated the event.
+    name (str): Name of the payload, similare as event name.
+    producer_identifier (int): Identifier of the EventTranscript event producer.
+        provider group.
+    provider_group_identifier (int): Identifier of the EventTranscript event
+    user_identifier (str): Windows Security identifier (SID) of a user account.
+    version (str): Payload version
   """
 
   DATA_TYPE = 'windows:diagnosis:eventtranscript'
@@ -50,30 +40,22 @@ class EventTranscriptEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(EventTranscriptEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application_name = None
+    self.application_root_directory = None
+    self.application_version = None
     self.compressed_payload_size = None
     self.event_keywords = None
     self.event_name_hash = None
     self.event_name = None
     self.friendly_logging_binary_name = None
+    self.ikey = None
     self.is_core = None
     self.logging_binary_name = None
+    self.name = None
     self.producer_identifier = None
     self.provider_group_identifier = None
     self.user_identifier = None
-
-    # Fields extracted from payload structure
     self.version = None
-    self.name = None
-    self.time = None
-    self.ikey = None
-    self.data = None
-
-    # The fields below are extracted from the diagnosis events
-    # - Microsoft.Windows.Inventory.Core.InventoryApplicationAdd
-    # - Win32kTraceLogging.AppInteractivitySummary
-    self.application_name = None
-    self.application_version = None
-    self.application_root_directory = None
 
 
 class EventTranscriptPlugin(interface.SQLitePlugin):
