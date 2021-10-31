@@ -80,6 +80,25 @@ short_message:
 - 'Task: {task_name}'
 ---
 type: 'conditional'
+data_type: 'windows:diagnosis:eventtranscript'
+message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
+- '[{friendly_logging_binary_name}]'
+- 'version: {version}'
+- 'name: {name}'
+- 'time: {time}'
+- 'iKey: {ikey}'
+- 'extention: {extention}'
+- 'data: {data}'
+- 'Application name: {application_name}'
+- 'Application version: {application_version}'
+- 'Application root directory: {application_root_directory}'
+short_message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
+---
+type: 'conditional'
 data_type: 'windows:distributed_link_tracking:creation'
 message:
 - '{uuid}'
