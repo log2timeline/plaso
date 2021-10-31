@@ -71,11 +71,11 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
       dfdatetime.TimeElements: date time object.
 
     Raises:
-      TimestampError: if the date or time string cannot be converted in
+      ParseError: if the date or time string cannot be converted in
           a date time object.
     """
     if not date_string and not time_string:
-      raise errors.TimestampError('Missing date or time string.')
+      raise errors.ParseError('Missing date or time string.')
 
     # TODO: Figure out how McAfee sets Day First and use that here.
     # The in-file time format is '07/30/2013\t10:22:48 AM'.
@@ -86,7 +86,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
       month = int(month_string, 10)
       day_of_month = int(day_of_month_string, 10)
     except (AttributeError, ValueError):
-      raise errors.TimestampError('Unsupported date string: {0:s}'.format(
+      raise errors.ParseError('Unsupported date string: {0:s}'.format(
           date_string))
 
     try:
@@ -96,13 +96,13 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
       minutes = int(minutes_string, 10)
       seconds = int(seconds_string, 10)
     except (AttributeError, ValueError):
-      raise errors.TimestampError('Unsupported time string: {0:s}'.format(
+      raise errors.ParseError('Unsupported time string: {0:s}'.format(
           time_string))
 
     if time_suffix == 'PM':
       hours += 12
     elif time_suffix != 'AM':
-      raise errors.TimestampError('Unsupported time suffix: {0:s}.'.format(
+      raise errors.ParseError('Unsupported time suffix: {0:s}.'.format(
           time_suffix))
 
     time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
@@ -112,7 +112,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
           time_elements_tuple=time_elements_tuple)
 
     except ValueError:
-      raise errors.TimestampError(
+      raise errors.ParseError(
           'Unsupported date and time strings: {0:s} {1:s}'.format(
               date_string, time_string))
 
@@ -130,7 +130,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     """
     try:
       date_time = self._CreateDateTime(row['date'], row['time'])
-    except errors.TimestampError as exception:
+    except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
           'Unable to create date time with error: {0!s}'.format(exception))
       date_time = dfdatetime_semantic_time.InvalidTime()
@@ -166,7 +166,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     # then do not consider this to be a McAfee AV Access Protection Log.
     try:
       self._CreateDateTime(row['date'], row['time'])
-    except errors.TimestampError:
+    except errors.ParseError:
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.

@@ -136,6 +136,48 @@ class PyparsingConstants(object):
   PID = pyparsing.Word(pyparsing.nums, max=5).setParseAction(PyParseIntCast)
 
 
+class PyparsingLineStructure(object):
+  """Line structure.
+
+  Attributes:
+    expression (pyparsing.ParserElement): pyparsing expression to parse
+        the line structure.
+    name (str): name to identify the line structure.
+    weight (int): number of times the line structure was successfully used.
+  """
+
+  def __init__(self, name, expression):
+    """Initializes a line structure.
+
+    Args:
+      name (str): name to identify the line structure.
+      expression (pyparsing.ParserElement): pyparsing expression to parse
+          the line structure.
+    """
+    super(PyparsingLineStructure, self).__init__()
+    self.expression = expression
+    self.name = name
+    self.weight = 0
+
+  def ParseString(self, string):
+    """Parses a string.
+
+    Args:
+      string (str): string to parse.
+
+    Returns:
+      pyparsing.ParseResults: parsed tokens or None if the string could not
+          be parsed.
+    """
+    try:
+      return self.expression.parseString(string)
+    except pyparsing.ParseException as exception:
+      logger.debug('Unable to parse string with error: {0!s}'.format(
+          exception))
+
+    return None
+
+
 class PyparsingSingleLineTextParser(interface.FileObjectParser):
   """Single line text parser interface based on pyparsing."""
 
@@ -187,12 +229,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     """Initializes a parser."""
     super(PyparsingSingleLineTextParser, self).__init__()
     self._current_offset = 0
-    # TODO: self._line_structures is a work-around and this needs
-    # a structural fix.
-    self._line_structures = list(self.LINE_STRUCTURES)
+    self._line_structures = []
     self._parser_mediator = None
 
     codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
+
+    if self.LINE_STRUCTURES:
+      self._SetLineStructures(self.LINE_STRUCTURES)
 
   def _EncodingErrorHandler(self, exception):
     """Encoding error handler.
@@ -332,6 +375,44 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     return line
 
+  def _ParseLineStructure(
+      self, parser_mediator, index, line_structure, parsed_structure):
+    """Parses a line structure and produces events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      index (int): index of the line structure in the run-time list of line
+          structures.
+      line_structure (PyparsingLineStructure): line structure.
+      parsed_structure (pyparsing.ParseResults): tokens from a string parsed
+          with pyparsing.
+
+    Raises:
+      ParseError: if the structure cannot be parsed.
+    """
+    self.ParseRecord(parser_mediator, line_structure.name, parsed_structure)
+
+    line_structure.weight += 1
+
+    if index:
+      previous_weight = self._line_structures[index - 1].weight
+      if previous_weight and line_structure.weight > previous_weight:
+        self._line_structures[index] = self._line_structures[index - 1]
+        self._line_structures[index - 1] = line_structure
+
+  def _SetLineStructures(self, line_structures):
+    """Sets the line structures.
+
+    Args:
+      line_structures ([(str, pyparsing.ParserElement)]): tuples of pyparsing
+          expressions to parse a line and their names.
+    """
+    self._line_structures = []
+    for key, expression in line_structures:
+      line_structure = PyparsingLineStructure(key, expression)
+      self._line_structures.append(line_structure)
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
 
@@ -343,8 +424,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    # TODO: self._line_structures is a work-around and this needs
-    # a structural fix.
     if not self._line_structures:
       raise errors.UnableToParseFile(
           'Line structure undeclared, unable to proceed.')
@@ -386,7 +465,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
 
     consecutive_line_failures = 0
-    index = None
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
@@ -394,26 +472,26 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
+      index = None
+      line_structure = None
       parsed_structure = None
-      use_key = None
-      # Try to parse the line using all the line structures.
-      for index, (key, structure) in enumerate(self._line_structures):
-        try:
-          parsed_structure = structure.parseString(line)
-        except pyparsing.ParseException as exception:
-          logger.debug('Unable to parse string with error: {0!s}'.format(
-              exception))
 
+      # Try to parse the line using all the line structures.
+      for index, line_structure in enumerate(self._line_structures):
+        parsed_structure = line_structure.ParseString(line)
         if parsed_structure:
-          use_key = key
           break
 
       if parsed_structure:
-        self.ParseRecord(parser_mediator, use_key, parsed_structure)
-        consecutive_line_failures = 0
-        if index is not None and index != 0:
-          key_structure = self._line_structures.pop(index)
-          self._line_structures.insert(0, key_structure)
+        try:
+          self._ParseLineStructure(
+              parser_mediator, index, line_structure, parsed_structure)
+          consecutive_line_failures = 0
+
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse record: {0:s} with error: {1!s}'.format(
+                  line_structure.name, exception))
 
       else:
         if len(line) > 80:
@@ -588,6 +666,22 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
 
+  def _SetLineStructures(self, line_structures):
+    """Sets the line structures.
+
+    Args:
+      line_structures ([(str, pyparsing.ParserElement)]): tuples of pyparsing
+          expressions to parse a line and their names.
+    """
+    self._line_structures = []
+    for key, expression in line_structures:
+      # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
+      # with spaces to SkipAhead() the correct number of bytes after a match.
+      expression.parseWithTabs()
+
+      line_structure = PyparsingLineStructure(key, expression)
+      self._line_structures.append(line_structure)
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
 
@@ -599,7 +693,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    if not self.LINE_STRUCTURES:
+    if not self._line_structures:
       raise errors.UnableToParseFile('Missing line structures.')
 
     encoding = self._ENCODING or parser_mediator.codepage
@@ -617,11 +711,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not self.VerifyStructure(parser_mediator, text_reader.lines):
       raise errors.UnableToParseFile('Wrong file structure.')
 
-    # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
-    # with spaces to SkipAhead() the correct number of bytes after a match.
-    for key, structure in self.LINE_STRUCTURES:
-      structure.parseWithTabs()
-
     consecutive_line_failures = 0
     # Read every line in the text file.
     while text_reader.lines:
@@ -633,43 +722,36 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       start = 0
       end = 0
 
-      key = None
-
       index = None
+      line_structure = None
 
       # Try to parse the line using all the line structures.
-      for index, (key, structure) in enumerate(self._line_structures):
+      for index, line_structure in enumerate(self._line_structures):
         try:
-          structure_generator = structure.scanString(
+          structure_generator = line_structure.expression.scanString(
               text_reader.lines, maxMatches=1)
           parsed_structure = next(structure_generator, None)
         except pyparsing.ParseException:
           parsed_structure = None
 
-        if not parsed_structure:
-          continue
+        if parsed_structure:
+          tokens, start, end = parsed_structure
 
-        tokens, start, end = parsed_structure
-
-        # Only want to parse the structure if it starts
-        # at the beginning of the buffer.
-        if start == 0:
-          break
+          # Only want to parse the structure if it starts
+          # at the beginning of the buffer.
+          if start == 0:
+            break
 
       if tokens and start == 0:
-        # Move matching key, structure pair to the front of the list, so that
-        # structures that are more likely to match are tried first.
-        if index is not None and index != 0:
-          key_structure = self._line_structures.pop(index)
-          self._line_structures.insert(0, key_structure)
-
         try:
-          self.ParseRecord(parser_mediator, key, tokens)
+          self._ParseLineStructure(
+              parser_mediator, index, line_structure, tokens)
           consecutive_line_failures = 0
-        except (errors.ParseError, errors.TimestampError) as exception:
+
+        except errors.ParseError as exception:
           parser_mediator.ProduceExtractionWarning(
               'unable to parse record: {0:s} with error: {1!s}'.format(
-                  key, exception))
+                  line_structure.name, exception))
 
         text_reader.SkipAhead(file_object, end)
 
@@ -688,6 +770,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
             raise errors.UnableToParseFile(
                 'more than {0:d} consecutive failures to parse lines.'.format(
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
+
       try:
         text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
@@ -706,9 +789,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Returns:
-      EventObject: event or None.
     """
 
   @abc.abstractmethod
