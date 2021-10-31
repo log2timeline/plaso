@@ -82,10 +82,6 @@ class TaggingFileError(Error):
   """Raised when the tagging file is invalid."""
 
 
-class TimestampError(Error):
-  """Class that defines timestamp errors."""
-
-
 class UnableToLoadRegistryHelper(Error):
   """Raised when unable to load a Registry helper object."""
 

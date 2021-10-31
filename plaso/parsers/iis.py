@@ -196,10 +196,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     self._month = None
     self._year = None
 
-  def _ParseComment(self, structure):
+  def _ParseComment(self, parser_mediator, structure):
     """Parses a comment.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure parsed from a comment in
           the log file.
     """
@@ -208,12 +210,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       self._year, self._month, self._day_of_month, _, _, _ = time_elements_tuple
 
     elif structure[1] == 'Fields:':
-      self._ParseFieldsMetadata(structure)
+      self._ParseFieldsMetadata(parser_mediator, structure)
 
-  def _ParseFieldsMetadata(self, structure):
+  def _ParseFieldsMetadata(self, parser_mediator, structure):
     """Parses the fields metadata and updates the log line definition to match.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     fields = self._GetValueFromStructure(structure, 'fields', default_value='')
@@ -226,21 +230,29 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       fields = fields[2:]
 
     for member in fields:
-      if member:
-        log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
+      if not member:
+        continue
 
-    # TODO: self._line_structures is a work-around and this needs
-    # a structural fix.
-    self._line_structures = [
+      field_structure = self._LOG_LINE_STRUCTURES.get(member, None)
+      if not field_structure:
+        field_structure = self.URI
+        parser_mediator.ProduceExtractionWarning(
+            'missing definition for field: {0:s} defaulting to URI'.format(
+                member))
+
+      log_line_structure += field_structure
+
+    line_structures = [
       ('comment', self.COMMENT),
       ('logline', log_line_structure)]
+    self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     time_elements_structure = structure.get('date_time', None)
@@ -311,7 +323,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure parsed from the log file.
 
@@ -325,7 +337,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     if key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
     elif key == 'comment':
-      self._ParseComment(structure)
+      self._ParseComment(parser_mediator, structure)
 
   # pylint: disable=unused-argument
   def VerifyStructure(self, parser_mediator, line):
@@ -333,15 +345,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
+          parsers and other components, such as storage and dfVFS.
       line (str): line from a text file.
 
     Returns:
       bool: True if the line was successfully parsed.
     """
-    # TODO: self._line_structures is a work-around and this needs
-    # a structural fix.
-    self._line_structures = self.LINE_STRUCTURES
+    self._SetLineStructures(self.LINE_STRUCTURES)
 
     self._day_of_month = None
     self._month = None
