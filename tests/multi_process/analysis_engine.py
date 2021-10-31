@@ -40,10 +40,10 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         path)
 
     for session in storage_reader.GetSessions():
+      knowledge_base_object.SetActiveSession(session.identifier)
       for source_configuration in session.source_configurations or []:
         knowledge_base_object.ReadSystemConfigurationArtifact(
-            source_configuration.system_configuration,
-            session_identifier=session.identifier)
+            source_configuration.system_configuration)
 
   def testInternalAnalyzeEvents(self):
     """Tests the _AnalyzeEvents function."""

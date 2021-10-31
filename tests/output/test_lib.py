@@ -29,10 +29,10 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
 
     if storage_file:
       for session in storage_file.GetSessions():
+        knowledge_base_object.SetActiveSession(session.identifier)
         for source_configuration in session.source_configurations or []:
           knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+              source_configuration.system_configuration)
 
     output_mediator = mediator.OutputMediator(
         knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH,

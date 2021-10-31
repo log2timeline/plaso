@@ -446,10 +446,10 @@ class PsortTool(
     text_prepend = None
     try:
       for session in storage_reader.GetSessions():
+        self._knowledge_base.SetActiveSession(session.identifier)
         for source_configuration in session.source_configurations or []:
           self._knowledge_base.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration,
-              session_identifier=session.identifier)
+              source_configuration.system_configuration)
 
         text_prepend = session.text_prepend
 

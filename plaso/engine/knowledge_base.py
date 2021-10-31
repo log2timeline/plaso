@@ -75,25 +75,19 @@ class KnowledgeBase(object):
     """int: year of the current session."""
     return self.GetValue('year', default_value=0)
 
-  def _GetSystemConfigurationArtifact(self, session_identifier=None):
+  def _GetSystemConfigurationArtifact(self):
     """Retrieves the knowledge base as a system configuration artifact.
-
-    Args:
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
     """
-    session_identifier = session_identifier or self._active_session
-
     system_configuration = artifacts.SystemConfigurationArtifact()
 
     system_configuration.code_page = self.GetValue(
         'codepage', default_value=self._codepage)
 
     system_configuration.hostname = self._hostnames.get(
-        session_identifier, None)
+        self._active_session, None)
 
     system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
 
@@ -112,36 +106,32 @@ class KnowledgeBase(object):
     system_configuration.time_zone = time_zone
 
     available_time_zones = self._available_time_zones.get(
-        session_identifier, {})
+        self._active_session, {})
     # In Python 3 dict.values() returns a type dict_values, which will cause
     # the JSON serializer to raise a TypeError.
     system_configuration.available_time_zones = list(
         available_time_zones.values())
 
-    user_accounts = self._user_accounts.get(session_identifier, {})
+    user_accounts = self._user_accounts.get(self._active_session, {})
     # In Python 3 dict.values() returns a type dict_values, which will cause
     # the JSON serializer to raise a TypeError.
     system_configuration.user_accounts = list(user_accounts.values())
 
     return system_configuration
 
-  def AddAvailableTimeZone(self, time_zone, session_identifier=None):
+  def AddAvailableTimeZone(self, time_zone):
     """Adds an available time zone.
 
     Args:
       time_zone (TimeZoneArtifact): time zone artifact.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Raises:
       KeyError: if the time zone already exists.
     """
-    session_identifier = session_identifier or self._active_session
+    if self._active_session not in self._available_time_zones:
+      self._available_time_zones[self._active_session] = {}
 
-    if session_identifier not in self._available_time_zones:
-      self._available_time_zones[session_identifier] = {}
-
-    available_time_zones = self._available_time_zones[session_identifier]
+    available_time_zones = self._available_time_zones[self._active_session]
     if time_zone.name in available_time_zones:
       raise KeyError('Time zone: {0:s} already exists.'.format(time_zone.name))
 
@@ -164,23 +154,19 @@ class KnowledgeBase(object):
 
     self._environment_variables[name] = environment_variable
 
-  def AddUserAccount(self, user_account, session_identifier=None):
+  def AddUserAccount(self, user_account):
     """Adds an user account.
 
     Args:
       user_account (UserAccountArtifact): user account artifact.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Raises:
       KeyError: if the user account already exists.
     """
-    session_identifier = session_identifier or self._active_session
+    if self._active_session not in self._user_accounts:
+      self._user_accounts[self._active_session] = {}
 
-    if session_identifier not in self._user_accounts:
-      self._user_accounts[session_identifier] = {}
-
-    user_accounts = self._user_accounts[session_identifier]
+    user_accounts = self._user_accounts[self._active_session]
     if user_account.identifier in user_accounts:
       raise KeyError('User account: {0:s} already exists.'.format(
           user_account.identifier))
@@ -226,22 +212,16 @@ class KnowledgeBase(object):
     """
     return self._environment_variables.values()
 
-  def GetHostname(self, session_identifier=None):
+  def GetHostname(self):
     """Retrieves the hostname related to the event.
 
     If the hostname is not stored in the event it is determined based
     on the preprocessing information that is stored inside the storage file.
 
-    Args:
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
-
     Returns:
       str: hostname.
     """
-    session_identifier = session_identifier or self._active_session
-
-    hostname_artifact = self._hostnames.get(session_identifier, None)
+    hostname_artifact = self._hostnames.get(self._active_session, None)
     if not hostname_artifact:
       return ''
 
@@ -255,12 +235,8 @@ class KnowledgeBase(object):
     """
     return self._mount_path
 
-  def GetSourceConfigurationArtifacts(self, session_identifier=None):
+  def GetSourceConfigurationArtifacts(self):
     """Retrieves the knowledge base as a source configuration artifacts.
-
-    Args:
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Returns:
       list[SourceConfigurationArtifact]: source configuration artifacts.
@@ -269,26 +245,20 @@ class KnowledgeBase(object):
 
     # TODO: set path_spec
     source_configuration.system_configuration = (
-        self._GetSystemConfigurationArtifact(
-            session_identifier=session_identifier))
+        self._GetSystemConfigurationArtifact())
 
     return [source_configuration]
 
-  def GetUsernameByIdentifier(
-      self, user_identifier, session_identifier=None):
+  def GetUsernameByIdentifier(self, user_identifier):
     """Retrieves the username based on an user identifier.
 
     Args:
       user_identifier (str): user identifier, either a UID or SID.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
 
     Returns:
       str: username.
     """
-    session_identifier = session_identifier or self._active_session
-
-    user_accounts = self._user_accounts.get(session_identifier, {})
+    user_accounts = self._user_accounts.get(self._active_session, {})
     user_account = user_accounts.get(user_identifier, None)
     if not user_account:
       return ''
@@ -369,8 +339,7 @@ class KnowledgeBase(object):
     """
     return self._user_accounts.get(self._active_session, {}) != {}
 
-  def ReadSystemConfigurationArtifact(
-      self, system_configuration, session_identifier=None):
+  def ReadSystemConfigurationArtifact(self, system_configuration):
     """Reads the knowledge base values from a system configuration artifact.
 
     Note that this overwrites existing values in the knowledge base.
@@ -378,11 +347,7 @@ class KnowledgeBase(object):
     Args:
       system_configuration (SystemConfigurationArtifact): system configuration
           artifact.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
     """
-    session_identifier = session_identifier or self._active_session
-
     if system_configuration.code_page:
       try:
         self.SetCodepage(system_configuration.code_page)
@@ -391,7 +356,7 @@ class KnowledgeBase(object):
             'Unsupported codepage: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.code_page, self._codepage))
 
-    self._hostnames[session_identifier] = system_configuration.hostname
+    self._hostnames[self._active_session] = system_configuration.hostname
 
     self.SetValue('keyboard_layout', system_configuration.keyboard_layout)
 
@@ -408,7 +373,7 @@ class KnowledgeBase(object):
 
     # Set the available time zones before the system time zone so that localized
     # time zone names can be mapped to their corresponding Python time zone.
-    self._available_time_zones[session_identifier] = {
+    self._available_time_zones[self._active_session] = {
         time_zone.name: time_zone
         for time_zone in system_configuration.available_time_zones}
 
@@ -420,7 +385,7 @@ class KnowledgeBase(object):
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.time_zone, self._time_zone.zone))
 
-    self._user_accounts[session_identifier] = {
+    self._user_accounts[self._active_session] = {
         user_account.identifier: user_account
         for user_account in system_configuration.user_accounts}
 
@@ -458,17 +423,13 @@ class KnowledgeBase(object):
     name = environment_variable.name.upper()
     self._environment_variables[name] = environment_variable
 
-  def SetHostname(self, hostname, session_identifier=None):
+  def SetHostname(self, hostname):
     """Sets a hostname.
 
     Args:
       hostname (HostnameArtifact): hostname artifact.
-      session_identifier (Optional[str])): session identifier, where
-          None represents the active session.
     """
-    session_identifier = session_identifier or self._active_session
-
-    self._hostnames[session_identifier] = hostname
+    self._hostnames[self._active_session] = hostname
 
   def SetLanguage(self, language):
     """Sets the language.
