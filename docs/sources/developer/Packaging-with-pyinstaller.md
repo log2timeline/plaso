@@ -1,10 +1,13 @@
+## Packaging with PyInstaller
+
 To create a Windows packaged release from the development release you also need:
 
 * PyInstaller
 
-## PyInstaller
+### PyInstaller
 
 Download the latest source from:
+
 ```
 git clone -b master git://github.com/pyinstaller/pyinstaller.git
 ```
@@ -12,7 +15,7 @@ git clone -b master git://github.com/pyinstaller/pyinstaller.git
 **Note that setup.py build and install is currently disabled, so we need to run
 PyInstaller from its download directory.**
 
-### Microsoft Visual C++ Redistributable Package
+#### Microsoft Visual C++ Redistributable Package
 
 If you're building with Visual Studio note that for some reason PyInstaller
 does not include the Microsoft Visual C++ run-time DLLs you can find them here:
@@ -34,7 +37,7 @@ set PYTHONPATH=.
 C:\Python38\python.exe tools\update.py --preset plaso --track stable
 ```
 
-## Packaging
+### Packaging
 
 Download a copy of the [make_release.ps1](https://raw.githubusercontent.com/log2timeline/l2tdevtools/main/data/pyinstaller/make_release.ps1)
 script. The easiest is to git clone l2tdevtools:
@@ -62,7 +65,7 @@ To do a very rudimentary test to see if the packaged binaries work run:
 ..\l2tdevtools\data\pyinstaller\make_check.bat
 ```
 
-### Packaging win32 on amd64
+#### Packaging win32 on amd64
 
 To create a win32 build on an amd64 system make sure you've installed the 32-bit version of Python 3.7.
 
