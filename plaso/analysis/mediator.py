@@ -71,9 +71,8 @@ class AnalysisMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    mount_path = self._knowledge_base.GetMountPath()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
+        path_spec, text_prepend=self._text_prepend)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.

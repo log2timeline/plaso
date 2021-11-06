@@ -270,14 +270,12 @@ class ParserMediator(object):
 
     path_spec = getattr(file_entry, 'path_spec', None)
 
-    mount_path = self._knowledge_base.GetMountPath()
-    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-        path_spec, mount_path=mount_path)
+    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
     if not relative_path:
       return file_entry.name
 
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
+        path_spec, text_prepend=self._text_prepend)
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -288,9 +286,8 @@ class ParserMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    mount_path = self._knowledge_base.GetMountPath()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
+        path_spec, text_prepend=self._text_prepend)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -390,9 +387,8 @@ class ParserMediator(object):
     if self._file_entry is None:
       return None
 
-    mount_path = self._knowledge_base.GetMountPath()
     return path_helper.PathHelper.GetRelativePathForPathSpec(
-        self._file_entry.path_spec, mount_path=mount_path)
+        self._file_entry.path_spec)
 
   def GetRelativePathForPathSpec(self, path_spec):
     """Retrieves the relative path for a path specification.
@@ -403,9 +399,7 @@ class ParserMediator(object):
     Returns:
       str: relative path of the path specification.
     """
-    mount_path = self._knowledge_base.GetMountPath()
-    return path_helper.PathHelper.GetRelativePathForPathSpec(
-        path_spec, mount_path=mount_path)
+    return path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
 
   def GetWindowsEventLogMessageFile(self):
     """Retrieves the Windows EventLog message file for a specific path.
@@ -436,9 +430,8 @@ class ParserMediator(object):
 
     message_file = None
     if self._file_entry:
-      mount_path = self._knowledge_base.GetMountPath()
       relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-          self._file_entry.path_spec, mount_path=mount_path)
+          self._file_entry.path_spec)
       lookup_path = relative_path.lower()
 
       path_segment_separator = path_helper.PathHelper.GetPathSegmentSeparator(

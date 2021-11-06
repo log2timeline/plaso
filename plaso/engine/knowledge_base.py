@@ -8,7 +8,6 @@ of the source data.
 """
 
 import codecs
-import os
 import pytz
 
 from plaso.containers import artifacts
@@ -173,14 +172,6 @@ class KnowledgeBase(object):
       return ''
 
     return hostname_artifact.name or ''
-
-  def GetMountPath(self):
-    """Retrieves the mount path of the source.
-
-    Returns:
-      str: mount path of the source or None if not set.
-    """
-    return self._mount_path
 
   def GetSystemConfigurationArtifact(self):
     """Retrieves the knowledge base as a system configuration artifact.
@@ -418,20 +409,6 @@ class KnowledgeBase(object):
       language (str): language.
     """
     self._language = language
-
-  def SetMountPath(self, mount_path):
-    """Sets the text to prepend to the display name.
-
-    Args:
-      mount_path (str): mount path of the source or None if the source is
-          not a mounted onto a directory.
-    """
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
 
   def SetTimeZone(self, time_zone):
     """Sets the time zone.

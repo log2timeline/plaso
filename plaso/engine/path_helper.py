@@ -294,16 +294,11 @@ class PathHelper(object):
     return path_segments
 
   @classmethod
-  def GetDisplayNameForPathSpec(
-      cls, path_spec, mount_path=None, text_prepend=None):
+  def GetDisplayNameForPathSpec(cls, path_spec, text_prepend=None):
     """Retrieves the display name of a path specification.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
-      mount_path (Optional[str]): path where the file system that is used
-          by the path specification is mounted, such as "/mnt/image". The
-          mount path will be stripped from the absolute path defined by
-          the path specification.
       text_prepend (Optional[str]): text to prepend.
 
     Returns:
@@ -313,8 +308,7 @@ class PathHelper(object):
     if not path_spec:
       return None
 
-    relative_path = cls.GetRelativePathForPathSpec(
-        path_spec, mount_path=mount_path)
+    relative_path = cls.GetRelativePathForPathSpec(path_spec)
     if not relative_path:
       return path_spec.type_indicator
 
@@ -349,7 +343,7 @@ class PathHelper(object):
     return display_name
 
   @classmethod
-  def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
+  def GetRelativePathForPathSpec(cls, path_spec):
     """Retrieves the relative path of a path specification.
 
     If a mount path is defined the path will be relative to the mount point,
@@ -358,10 +352,6 @@ class PathHelper(object):
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
-      mount_path (Optional[str]): path where the file system that is used
-          by the path specification is mounted, such as "/mnt/image". The
-          mount path will be stripped from the absolute path defined by
-          the path specification.
 
     Returns:
       str: relative path or None.
@@ -387,12 +377,6 @@ class PathHelper(object):
 
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
       return location
-
-    # If we are parsing a mount point we don't want to include the full
-    # path to file's location here, we are only interested in the path
-    # relative to the mount point.
-    if mount_path and location.startswith(mount_path):
-      location = location[len(mount_path):]
 
     return location
 

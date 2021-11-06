@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the path helper."""
 
-import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -404,18 +403,6 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
         os_path_spec)
-    self.assertEqual(relative_path, test_path)
-
-    # Test path specification with mount point.
-    mount_path = self._GetTestFilePath([])
-    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-        os_path_spec, mount_path=mount_path)
-    expected_relative_path = '{0:s}syslog.gz'.format(os.path.sep)
-    self.assertEqual(relative_path, expected_relative_path)
-
-    # Test path specification with incorrect mount point.
-    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-        os_path_spec, mount_path='/bogus')
     self.assertEqual(relative_path, test_path)
 
     # Test path specification with data stream.
