@@ -244,6 +244,14 @@ plaso.parsers.sqlite\_plugins.twitter\_ios module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.windows\_eventtranscript module
+-------------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.windows_eventtranscript
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.windows\_timeline module
 ------------------------------------------------------
 
