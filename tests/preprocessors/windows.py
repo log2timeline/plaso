@@ -295,7 +295,8 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
-    self.assertEqual(test_mediator.knowledge_base.hostname, 'WKS-WIN732BITA')
+    hostname = test_mediator.knowledge_base.GetHostname()
+    self.assertEqual(hostname, 'WKS-WIN732BITA')
 
     value_data = ['MyHost', '']
     plugin._ParseValueData(test_mediator, value_data)

@@ -47,15 +47,6 @@ class KnowledgeBase(object):
     return self.GetValue('codepage', default_value=self._codepage)
 
   @property
-  def hostname(self):
-    """str: hostname of the current session."""
-    hostname_artifact = self._hostnames.get(self._active_session, None)
-    if not hostname_artifact:
-      return ''
-
-    return hostname_artifact.name or ''
-
-  @property
   def language(self):
     """str: language of the current session."""
     return self.GetValue('language', default_value=self._language)

@@ -28,8 +28,8 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    self.assertEqual(
-        test_mediator.knowledge_base.hostname, 'plaso.kiddaland.net')
+    hostname = test_mediator.knowledge_base.GetHostname()
+    self.assertEqual(hostname, 'plaso.kiddaland.net')
 
 
 class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

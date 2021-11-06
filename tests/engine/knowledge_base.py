@@ -72,12 +72,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(knowledge_base_object.codepage, 'cp1252')
 
-  def testHostnameProperty(self):
-    """Tests the hostname property."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    self.assertEqual(knowledge_base_object.hostname, '')
-
   def testOperatingSystemProperty(self):
     """Tests the operating_system property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
