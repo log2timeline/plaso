@@ -280,14 +280,6 @@ class OutputMediator(object):
     return path_helper.PathHelper.GetRelativePathForPathSpec(
         path_spec, mount_path=mount_path)
 
-  def GetStoredHostname(self):
-    """Retrieves the stored hostname.
-
-    Returns:
-      str: hostname.
-    """
-    return self._knowledge_base.GetHostname()
-
   def GetUsername(self, event_data, default_username='-'):
     """Retrieves the username related to the event.
 

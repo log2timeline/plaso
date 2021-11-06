@@ -74,13 +74,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
   # TODO: add tests for GetMessageFormatter
   # TODO: add tests for GetRelativePathForPathSpec
 
-  def testGetStoredHostname(self):
-    """Tests the GetStoredHostname function."""
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
-
-    hostname = output_mediator.GetStoredHostname()
-    self.assertEqual(hostname, 'myhost')
-
   def testGetUsername(self):
     """Tests the GetUsername function."""
     output_mediator = mediator.OutputMediator(self._knowledge_base, None)
