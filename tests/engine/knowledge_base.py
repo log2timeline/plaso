@@ -183,30 +183,8 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
   # TODO: add tests for GetMountPoint.
 
-  def testGetSourceConfigurationArtifacts(self):
-    """Tests the GetSourceConfigurationArtifacts function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
-    knowledge_base_object.SetHostname(hostname_artifact)
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
-    source_configurations = (
-        knowledge_base_object.GetSourceConfigurationArtifacts())
-    self.assertEqual(len(source_configurations), 1)
-    self.assertIsNotNone(source_configurations[0])
-
-    system_configuration = source_configurations[0].system_configuration
-    self.assertIsNotNone(system_configuration)
-    self.assertIsNotNone(system_configuration.hostname)
-    self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
-
   def testGetSystemConfigurationArtifact(self):
-    """Tests the _GetSystemConfigurationArtifact function."""
+    """Tests the GetSystemConfigurationArtifact function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
@@ -218,7 +196,7 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object.AddUserAccount(user_account)
 
     system_configuration = (
-        knowledge_base_object._GetSystemConfigurationArtifact())
+        knowledge_base_object.GetSystemConfigurationArtifact())
     self.assertIsNotNone(system_configuration)
     self.assertIsNotNone(system_configuration.hostname)
     self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')

@@ -70,6 +70,7 @@ class Session(interface.AttributeContainer):
     self.preferred_year = None
     self.product_name = 'plaso'
     self.product_version = plaso.__version__
+    # TODO: kept for backwards compatibility.
     self.source_configurations = None
     self.start_time = int(time.time() * 1000000)
     self.text_prepend = None
@@ -323,6 +324,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.preferred_language = None
     self.preferred_time_zone = None
     self.preferred_year = None
+    # TODO: kept for backwards compatibility.
     self.source_configurations = None
     self.text_prepend = None
 

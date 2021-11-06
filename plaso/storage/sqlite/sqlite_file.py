@@ -104,6 +104,15 @@ class SQLiteStorageFile(interface.BaseStore):
   # is able to read.
   _READ_COMPATIBLE_FORMAT_VERSION = 20190309
 
+  # Container types to not create a table for.
+  _NO_CREATE_TABLE_CONTAINER_TYPES = (
+      'analyzer_result',
+      'hostname',
+      'mount_point',
+      'operating_system',
+      'path',
+      'source_configuration')
+
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
       interface.BaseStore._CONTAINER_TYPE_EVENT,
@@ -1206,6 +1215,9 @@ class SQLiteStorageFile(interface.BaseStore):
         self._UpdateStorageMetadataFormatVersion()
 
       for container_type in self._containers_manager.GetContainerTypes():
+        if container_type in self._NO_CREATE_TABLE_CONTAINER_TYPES:
+          continue
+
         if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
             container_type in self._TASK_STORE_ONLY_CONTAINER_TYPES):
           continue
