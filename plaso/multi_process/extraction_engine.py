@@ -373,12 +373,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return number_of_containers
 
-  def _ProcessSources(self, source_path_specs, storage_writer):
+  def _ProcessSources(self, source_configurations, storage_writer):
     """Processes the sources.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications of
-          the sources to process.
+      source_configurations (list[SourceConfigurationArtifact]): configurations
+          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
     """
     if self._processing_profiler:
@@ -400,6 +400,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if self.collection_filters_helper:
       find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
+
+    source_path_specs = [
+        configuration.path_spec for configuration in source_configurations]
 
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=find_specs, recurse_file_system=False,
@@ -794,15 +797,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status_update_callback(self._processing_status)
 
   def ProcessSources(
-      self, session, source_path_specs, storage_writer,
+      self, session, source_configurations, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
       status_update_callback=None, storage_file_path=None):
     """Processes the sources and extract events.
 
     Args:
       session (Session): session in which the sources are processed.
-      source_path_specs (list[dfvfs.PathSpec]): path specifications of
-          the sources to process.
+      source_configurations (list[SourceConfigurationArtifact]): configurations
+          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
@@ -864,7 +867,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      self._ProcessSources(source_path_specs, storage_writer)
+      self._ProcessSources(source_configurations, storage_writer)
 
     finally:
       # Stop the status update thread after close of the storage writer

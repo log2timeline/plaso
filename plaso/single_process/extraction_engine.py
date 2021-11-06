@@ -128,12 +128,12 @@ class SingleProcessEngine(engine.BaseEngine):
 
         self._StartStatusUpdateThread()
 
-  def _ProcessSources(self, source_path_specs, parser_mediator):
+  def _ProcessSources(self, source_configurations, parser_mediator):
     """Processes the sources.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications of
-          the sources to process.
+      source_configurations (list[SourceConfigurationArtifact]): configurations
+          of the sources to process.
       parser_mediator (ParserMediator): parser mediator.
     """
     if self._processing_profiler:
@@ -147,6 +147,9 @@ class SingleProcessEngine(engine.BaseEngine):
     if self.collection_filters_helper:
       find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
+
+    source_path_specs = [
+        configuration.path_spec for configuration in source_configurations]
 
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=find_specs, recurse_file_system=False,
@@ -285,15 +288,15 @@ class SingleProcessEngine(engine.BaseEngine):
     return parser_mediator
 
   def ProcessSources(
-      self, session, source_path_specs, storage_writer, resolver_context,
+      self, session, source_configurations, storage_writer, resolver_context,
       processing_configuration, force_parser=False,
       status_update_callback=None):
     """Processes the sources.
 
     Args:
       session (Session): session in which the sources are processed.
-      source_path_specs (list[dfvfs.PathSpec]): path specifications of
-          the sources to process.
+      source_configurations (list[SourceConfigurationArtifact]): configurations
+          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
@@ -347,7 +350,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._StartStatusUpdateThread()
 
     try:
-      self._ProcessSources(source_path_specs, parser_mediator)
+      self._ProcessSources(source_configurations, parser_mediator)
 
     finally:
       # Stop the status update thread after close of the storage writer
