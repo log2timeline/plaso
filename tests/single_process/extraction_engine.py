@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
+from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.single_process import extraction_engine
@@ -45,6 +46,9 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
+    source_configuration = artifacts.SourceConfigurationArtifact(
+        path_spec=source_path_spec)
+
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
@@ -58,7 +62,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
           registry, [source_path_spec], session, storage_writer)
 
       test_engine.ProcessSources(
-          session, [source_path_spec], storage_writer, resolver_context,
+          session, [source_configuration], storage_writer, resolver_context,
           configuration)
 
     finally:

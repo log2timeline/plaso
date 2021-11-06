@@ -487,6 +487,12 @@ class ExtractionTool(
     session_configuration = session.CreateSessionConfiguration()
     storage_writer.AddAttributeContainer(session_configuration)
 
+    source_configurations = []
+    for path_spec in self._source_path_specs:
+      source_configuration = artifacts.SourceConfigurationArtifact(
+          path_spec=path_spec)
+      source_configurations.append(source_configuration)
+
     # TODO: improve to detect more than 1 system configurations.
     # TODO: improve to add volumes to system configuration.
     system_configuration = (
@@ -500,7 +506,7 @@ class ExtractionTool(
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
-          session, self._source_path_specs, storage_writer,
+          session, source_configurations, storage_writer,
           self._resolver_context, configuration, force_parser=force_parser,
           status_update_callback=status_update_callback)
 
@@ -511,7 +517,7 @@ class ExtractionTool(
       # about which ProcessSources to check against.
       # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
       processing_status = extraction_engine.ProcessSources(
-          session, self._source_path_specs, storage_writer, configuration,
+          session, source_configurations, storage_writer, configuration,
           enable_sigsegv_handler=self._enable_sigsegv_handler,
           status_update_callback=status_update_callback,
           storage_file_path=self._storage_file_path)

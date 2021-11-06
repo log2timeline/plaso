@@ -10,6 +10,7 @@ from artifacts import registry as artifacts_registry
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.engine import configurations
@@ -43,6 +44,9 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
+    source_configuration = artifacts.SourceConfigurationArtifact(
+        path_spec=source_path_spec)
+
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
@@ -59,7 +63,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             registry, [source_path_spec], session, storage_writer)
 
         test_engine.ProcessSources(
-            session, [source_path_spec], storage_writer, configuration,
+            session, [source_configuration], storage_writer, configuration,
             storage_file_path=temp_directory)
 
       finally:
