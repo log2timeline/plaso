@@ -75,50 +75,6 @@ class KnowledgeBase(object):
     """int: year of the current session."""
     return self.GetValue('year', default_value=0)
 
-  def _GetSystemConfigurationArtifact(self):
-    """Retrieves the knowledge base as a system configuration artifact.
-
-    Returns:
-      SystemConfigurationArtifact: system configuration artifact.
-    """
-    system_configuration = artifacts.SystemConfigurationArtifact()
-
-    system_configuration.code_page = self.GetValue(
-        'codepage', default_value=self._codepage)
-
-    system_configuration.hostname = self._hostnames.get(
-        self._active_session, None)
-
-    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
-
-    system_configuration.language = self._language
-
-    system_configuration.operating_system = self.GetValue('operating_system')
-    system_configuration.operating_system_product = self.GetValue(
-        'operating_system_product')
-    system_configuration.operating_system_version = self.GetValue(
-        'operating_system_version')
-
-    time_zone = self._time_zone.zone
-    if isinstance(time_zone, bytes):
-      time_zone = time_zone.decode('ascii')
-
-    system_configuration.time_zone = time_zone
-
-    available_time_zones = self._available_time_zones.get(
-        self._active_session, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.available_time_zones = list(
-        available_time_zones.values())
-
-    user_accounts = self._user_accounts.get(self._active_session, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.user_accounts = list(user_accounts.values())
-
-    return system_configuration
-
   def AddAvailableTimeZone(self, time_zone):
     """Adds an available time zone.
 
@@ -235,19 +191,49 @@ class KnowledgeBase(object):
     """
     return self._mount_path
 
-  def GetSourceConfigurationArtifacts(self):
-    """Retrieves the knowledge base as a source configuration artifacts.
+  def GetSystemConfigurationArtifact(self):
+    """Retrieves the knowledge base as a system configuration artifact.
 
     Returns:
-      list[SourceConfigurationArtifact]: source configuration artifacts.
+      SystemConfigurationArtifact: system configuration artifact.
     """
-    source_configuration = artifacts.SourceConfigurationArtifact()
+    system_configuration = artifacts.SystemConfigurationArtifact()
 
-    # TODO: set path_spec
-    source_configuration.system_configuration = (
-        self._GetSystemConfigurationArtifact())
+    system_configuration.code_page = self.GetValue(
+        'codepage', default_value=self._codepage)
 
-    return [source_configuration]
+    system_configuration.hostname = self._hostnames.get(
+        self._active_session, None)
+
+    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
+
+    system_configuration.language = self._language
+
+    system_configuration.operating_system = self.GetValue('operating_system')
+    system_configuration.operating_system_product = self.GetValue(
+        'operating_system_product')
+    system_configuration.operating_system_version = self.GetValue(
+        'operating_system_version')
+
+    time_zone = self._time_zone.zone
+    if isinstance(time_zone, bytes):
+      time_zone = time_zone.decode('ascii')
+
+    system_configuration.time_zone = time_zone
+
+    available_time_zones = self._available_time_zones.get(
+        self._active_session, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.available_time_zones = list(
+        available_time_zones.values())
+
+    user_accounts = self._user_accounts.get(self._active_session, {})
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.user_accounts = list(user_accounts.values())
+
+    return system_configuration
 
   def GetUsernameByIdentifier(self, user_identifier):
     """Retrieves the username based on an user identifier.
@@ -348,6 +334,9 @@ class KnowledgeBase(object):
       system_configuration (SystemConfigurationArtifact): system configuration
           artifact.
     """
+    if not system_configuration:
+      return
+
     if system_configuration.code_page:
       try:
         self.SetCodepage(system_configuration.code_page)

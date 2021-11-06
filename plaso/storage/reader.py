@@ -37,6 +37,18 @@ class StorageReader(object):
     return self._store.GetAttributeContainerByIdentifier(
         container_type, identifier)
 
+  def GetAttributeContainerByIndex(self, container_type, index):
+    """Retrieves a specific attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      index (int): attribute container index.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+    return self._store.GetAttributeContainerByIndex(container_type, index)
+
   def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of attribute containers.
 

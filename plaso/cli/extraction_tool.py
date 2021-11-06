@@ -484,11 +484,14 @@ class ExtractionTool(
               exception))
 
     # TODO: decouple session and storage writer?
-    session.source_configurations = (
-        extraction_engine.knowledge_base.GetSourceConfigurationArtifacts())
-
     session_configuration = session.CreateSessionConfiguration()
     storage_writer.AddAttributeContainer(session_configuration)
+
+    # TODO: improve to detect more than 1 system configurations.
+    # TODO: improve to add volumes to system configuration.
+    system_configuration = (
+        extraction_engine.knowledge_base.GetSystemConfigurationArtifact())
+    storage_writer.AddAttributeContainer(system_configuration)
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())

@@ -445,11 +445,19 @@ class PsortTool(
 
     text_prepend = None
     try:
-      for session in storage_reader.GetSessions():
+      for session_index, session in enumerate(storage_reader.GetSessions()):
         self._knowledge_base.SetActiveSession(session.identifier)
-        for source_configuration in session.source_configurations or []:
+
+        if session.source_configurations:
+          # TODO: kept for backwards compatibility.
+          for source_configuration in session.source_configurations:
+            self._knowledge_base.ReadSystemConfigurationArtifact(
+                source_configuration.system_configuration)
+        else:
+          system_configuration = storage_reader.GetAttributeContainerByIndex(
+              'system_configuration', session_index)
           self._knowledge_base.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration)
+              system_configuration)
 
         text_prepend = session.text_prepend
 

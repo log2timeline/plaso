@@ -48,6 +48,27 @@ class StorageReaderTest(test_lib.StorageTestCase):
     finally:
       test_reader._store.Close()
 
+  def testGetAttributeContainerByIndex(self):
+    """Tests the GetAttributeContainerByIndex function."""
+    test_reader = reader.StorageReader()
+    test_reader._store = fake_store.FakeStore()
+    test_reader._store.Open()
+
+    try:
+      event_source = event_sources.EventSource()
+      test_reader._store.AddAttributeContainer(event_source)
+
+      test_container = test_reader.GetAttributeContainerByIndex(
+          event_source.CONTAINER_TYPE, 0)
+      self.assertIsNotNone(test_container)
+
+      test_container = test_reader.GetAttributeContainerByIndex(
+          event_source.CONTAINER_TYPE, 99)
+      self.assertIsNone(test_container)
+
+    finally:
+      test_reader._store.Close()
+
   def testGetAttributeContainers(self):
     """Tests the GetAttributeContainers function."""
     test_reader = reader.StorageReader()

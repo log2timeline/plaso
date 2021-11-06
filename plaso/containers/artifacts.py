@@ -442,6 +442,7 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
         a specific system installation, such as Windows or Linux, detected by
         the pre-processing on the source.
   """
+
   CONTAINER_TYPE = 'source_configuration'
 
   def __init__(self, path_spec=None):
@@ -454,6 +455,7 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
     super(SourceConfigurationArtifact, self).__init__()
     self.mount_path = None
     self.path_spec = path_spec
+    # TODO: kept for backwards compatibility.
     self.system_configuration = None
 
 
@@ -477,6 +479,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
   """
+
   CONTAINER_TYPE = 'system_configuration'
 
   def __init__(self, code_page=None, language=None, time_zone=None):
