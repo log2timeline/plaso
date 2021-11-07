@@ -7,7 +7,6 @@ from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
-from plaso.containers import storage_media
 from plaso.containers import tasks
 from plaso.containers import warnings
 

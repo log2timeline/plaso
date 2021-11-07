@@ -109,9 +109,8 @@ class OutputMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    mount_path = self._knowledge_base.GetMountPath()
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, mount_path=mount_path, text_prepend=self._text_prepend)
+        path_spec, text_prepend=self._text_prepend)
 
   def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
@@ -276,9 +275,7 @@ class OutputMediator(object):
     Returns:
       str: relateive path of the path specification.
     """
-    mount_path = self._knowledge_base.GetMountPath()
-    return path_helper.PathHelper.GetRelativePathForPathSpec(
-        path_spec, mount_path=mount_path)
+    return path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
 
   def GetUsername(self, event_data, default_username='-'):
     """Retrieves the username related to the event.
