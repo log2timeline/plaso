@@ -1,0 +1,49 @@
+name: mounted_devices
+type: format
+description: Windows Registry mounted devices format
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: mounted_devices_gpt_partition
+type: structure
+description: Mounted devices GPT partition value data
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 8
+  value: "DMIO:ID:"
+- name: partition_identifier
+  type: uuid
+---
+name: mounted_devices_mbr_partition
+type: structure
+description: Mounted devices MBR partition value data
+attributes:
+  byte_order: little-endian
+members:
+- name: disk_identity
+  data_type: uint32
+- name: partition_offset
+  data_type: uint64

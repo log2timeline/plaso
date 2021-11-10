@@ -98,7 +98,6 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         registry_file_reader=registry_file_reader)
 
     session = sessions.Session()
-    storage_writer = self._CreateTestStorageWriter()
     test_knowledge_base = knowledge_base.KnowledgeBase()
     test_mediator = mediator.PreprocessMediator(
         session, storage_writer, test_knowledge_base)

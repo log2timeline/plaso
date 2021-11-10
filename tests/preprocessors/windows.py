@@ -214,7 +214,7 @@ class WindowsAvailableTimeZonesPluginTest(
     self.assertEqual(available_time_zones[0].name, 'AUS Central Standard Time')
 
 
-class WindowsCodepagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Windows codepage plugin."""
 
   def testParseValueData(self):
@@ -319,6 +319,39 @@ class WindowsLanguagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.language, 'en-US')
+
+
+class WindowsMountedDevicesPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows mounted devices plugin."""
+
+  # pylint: disable=protected-access
+
+  def testParseValueData(self):
+    """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = windows.WindowsMountedDevicesPlugin()
+    self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
+        storage_writer, plugin)
+
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+
+    number_of_windows_mounted_devices = (
+        storage_writer._attribute_containers_counter['windows_mounted_device'])
+    self.assertEqual(number_of_windows_mounted_devices, 11)
+
+    attribute_containers = list(storage_writer.GetAttributeContainers(
+        'windows_mounted_device'))
+    self.assertEqual(len(attribute_containers), 11)
+
+    mounted_device_artifact = attribute_containers[0]
+    self.assertEqual(mounted_device_artifact.identifier, '\\DosDevices\\C:')
+    self.assertEqual(mounted_device_artifact.disk_identity, 0x5cbea03e)
+    self.assertEqual(mounted_device_artifact.partition_offset, 1048576)
 
 
 class WindowsProgramDataEnvironmentVariablePluginTest(
@@ -548,7 +581,9 @@ class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    # Unable to map: "@tzres.dll,-112" to time zone with error: Unsupported
+    # time zone: @tzres.dll,-112
+    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'America/New_York')
