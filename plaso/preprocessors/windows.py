@@ -42,8 +42,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s} in knowledge base.'.format(
-              self._NAME))
+          'Unable to set environment variable: {0:s}.'.format(self._NAME))
 
 
 class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -117,8 +116,7 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s} in knowledge base.'.format(
-              self._NAME))
+          'Unable to set environment variable: {0:s}.'.format(self._NAME))
 
 
 class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -164,8 +162,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s} in knowledge base.'.format(
-              self._NAME))
+          'Unable to set environment variable: {0:s}.'.format(self._NAME))
 
 
 class WindowsAllUsersAppDataKnowledgeBasePlugin(
@@ -205,8 +202,7 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
       except KeyError:
         mediator.ProducePreprocessingWarning(
             self.__class__.__name__,
-            ('Unable to set environment variable: %AllUsersAppData% in '
-             'knowledge base.'))
+            'Unable to set environment variable: %AllUsersAppData% in.')
 
 
 class WindowsAllUsersProfileEnvironmentVariablePlugin(
@@ -255,8 +251,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
         except KeyError:
           mediator.ProducePreprocessingWarning(
               self.__class__.__name__,
-              ('Unable to set environment variable: %AllUsersProfile% in '
-               'knowledge base.'))
+              'Unable to set environment variable: %AllUsersProfile% in.')
 
 
 class WindowsAvailableTimeZonesPlugin(
@@ -376,13 +371,12 @@ class WindowsCodepagePlugin(
       mediator.SetCodepage(codepage)
     except ValueError:
       mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set codepage in knowledge base.')
+          self.ARTIFACT_DEFINITION_NAME, 'Unable to set codepage.')
 
 
 class WindowsEventLogPublishersPlugin(
     interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
-  """The Windows Event Log publishers plugin."""
+  """The Windows EventLog publishers plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsEventLogPublishers'
 
@@ -427,13 +421,13 @@ class WindowsEventLogPublishersPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          ('Unable to set add Windows Event Log provider: {0:s} to '
-           'knowledge base.').format(log_source))
+          'Unable to set add Windows EventLog provider: {0:s}.',format(
+              log_source))
 
 
 class WindowsEventLogSourcesPlugin(
     interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
-  """The Windows Event Log sources plugin."""
+  """The Windows EventLog sources plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsEventLogSources'
 
@@ -492,8 +486,8 @@ class WindowsEventLogSourcesPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          ('Unable to set add Windows Event Log provider: {0:s}/{1:s} to '
-           'knowledge base.').format(log_type, log_source))
+          'Unable to set add Windows EventLog provider: {0:s}/{1:s}.'.format(
+              log_type, log_source))
 
 
 class WindowsHostnamePlugin(
@@ -565,6 +559,90 @@ class WindowsLanguagePlugin(
               value_data))
 
 
+class WindowsMountedDevicesPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin,
+    dtfabric_helper.DtFabricHelper):
+  """The Windows mounted devices plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsMountedDevices'
+
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'mounted_devices.yaml')
+
+  def _ParseKey(self, mediator, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    for registry_value in registry_key.GetValues():
+      mounted_device_artifact = artifacts.WindowsMountedDeviceArtifact(
+          identifier=registry_value.name)
+
+      # TODO: parse registry_value.data
+      value_data_size = len(registry_value.data)
+      if value_data_size == 12:
+        data_type_map = self._GetDataTypeMap('mounted_devices_mbr_partition')
+
+        try:
+          partition_values = self._ReadStructureFromByteStream(
+              registry_value.data, 0, data_type_map)
+
+          mounted_device_artifact.disk_identity = partition_values.disk_identity
+          mounted_device_artifact.partition_offset = (
+              partition_values.partition_offset)
+
+        except (ValueError, errors.ParseError) as exception:
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME,
+              ('Unable to parse mounted devices MBR partition value Windows '
+               'Registry value: {0:s} with error: {1!s}').format(
+                  registry_value.name, exception))
+
+      elif value_data_size == 24:
+        data_type_map = self._GetDataTypeMap('mounted_devices_gpt_partition')
+
+        try:
+          partition_values = self._ReadStructureFromByteStream(
+              registry_value.data, 0, data_type_map)
+
+          mounted_device_artifact.partition_identifier = (
+              partition_values.partition_identifier)
+
+        except (ValueError, errors.ParseError) as exception:
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME,
+              ('Unable to parse mounted devices GPT partition value Windows '
+               'Registry value: {0:s} with error: {1!s}').format(
+                  registry_value.name, exception))
+
+      else:
+        try:
+          mounted_device_artifact.device = registry_value.data.decode(
+              'utf-16-le')
+        except UnicodeDecodeError as exception:
+          mediator.ProducePreprocessingWarning(
+              self.ARTIFACT_DEFINITION_NAME,
+              ('Unable to parse mounted devices device string value Windows '
+               'Registry value: {0:s} with error: {1!s}').format(
+                  registry_value.name, exception))
+
+      try:
+        mediator.AddArtifact(mounted_device_artifact)
+      except KeyError:
+        mediator.ProducePreprocessingWarning(
+            self.ARTIFACT_DEFINITION_NAME,
+            'Unable to add Windows mounted device: {0:s} artifact.'.format(
+                registry_value.name))
+
+
 class WindowsProgramDataEnvironmentVariablePlugin(
     WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %ProgramData% environment variable plugin."""
@@ -611,8 +689,7 @@ class WindowsProgramDataKnowledgeBasePlugin(
         except KeyError:
           mediator.ProducePreprocessingWarning(
               self.__class__.__name__,
-              ('Unable to set environment variable: %ProgramData% in '
-               'knowledge base.'))
+              'Unable to set environment variable: %ProgramData%.')
 
 
 class WindowsProgramFilesEnvironmentVariablePlugin(
@@ -800,7 +877,7 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAvailableTimeZonesPlugin,
     WindowsCodepagePlugin, WindowsEventLogPublishersPlugin,
     WindowsEventLogSourcesPlugin, WindowsHostnamePlugin, WindowsLanguagePlugin,
-    WindowsProgramDataEnvironmentVariablePlugin,
+    WindowsMountedDevicesPlugin, WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,
     WindowsProgramFilesX86EnvironmentVariablePlugin,

@@ -301,6 +301,14 @@ sources:
 supported_os: [Windows]
 urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Language.html']
 ---
+name: WindowsMountedDevices
+doc: Windows mounted devices
+sources:
+- type: REGISTRY_KEY
+  attributes: {keys: ['HKEY_LOCAL_MACHINE\System\MountedDevices']}
+supported_os: [Windows]
+urls: ['https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Mounted-devices.html']
+---
 name: WindowsRegistryProfiles
 doc: |
   Get SIDs for all users on the system with profiles present in the Registry.

@@ -57,6 +57,7 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
     value (str): environment variable value such as "C:\\Windows" or
         "/home/user".
   """
+
   CONTAINER_TYPE = 'environment_variable'
 
   SCHEMA = {
@@ -90,6 +91,7 @@ class HostnameArtifact(ArtifactAttributeContainer):
     name (str): name of the host according to the naming schema.
     schema (str): naming schema such as "DNS", "NIS", "SMB/NetBIOS".
   """
+
   CONTAINER_TYPE = 'hostname'
 
   def __init__(self, name=None, schema='DNS'):
@@ -120,6 +122,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     version (str): version, such as "10.14.1" or "5.1". This value is typically
         obtained from the source data.
   """
+
   CONTAINER_TYPE = 'operating_system'
 
   _DEFAULT_FAMILY_AND_VERSION = (
@@ -265,6 +268,7 @@ class PathArtifact(ArtifactAttributeContainer):
     path_segment_separator (str): path segment separator.
     path_segments (list[str]): path segments.
   """
+
   CONTAINER_TYPE = 'path'
 
   def __init__(self, data_stream=None, path=None, path_segment_separator='/'):
@@ -515,6 +519,7 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
         Time".
     offset (int): time zone offset in number of minutes from UTC.
   """
+
   CONTAINER_TYPE = 'time_zone'
 
   def __init__(
@@ -550,6 +555,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     user_directory (str): path of the user (or home or profile) directory.
     username (str): name uniquely identifying the user.
   """
+
   CONTAINER_TYPE = 'user_account'
 
   def __init__(
@@ -595,6 +601,7 @@ class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
     path (str): path.
     windows_path (str): path as defined by the Windows EventLog provider.
   """
+
   CONTAINER_TYPE = 'windows_eventlog_message_file'
 
   SCHEMA = {
@@ -622,6 +629,7 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
     message_identifier (int): message identifier.
     string (str): string.
   """
+
   CONTAINER_TYPE = 'windows_eventlog_message_string'
 
   SCHEMA = {
@@ -679,6 +687,7 @@ class WindowsEventLogProviderArtifact(
     parameter_message_files (list[str]): filenames of the parameter message
         files.
   """
+
   CONTAINER_TYPE = 'windows_eventlog_provider'
 
   SCHEMA = {
@@ -718,8 +727,43 @@ class WindowsEventLogProviderArtifact(
     self.parameter_message_files = parameter_message_files
 
 
+class WindowsMountedDeviceArtifact(ArtifactAttributeContainer):
+  """Windows mounted device artifact attribute container.
+
+  Attributes:
+    device (str): device.
+    disk_identity (int): MBR disk identity.
+    identifier (str): identifier.
+    partition_identifier (str): GPT partition identifier.
+    partition_offset (int): MBR partition offset.
+  """
+
+  CONTAINER_TYPE = 'windows_mounted_device'
+
+  SCHEMA = {
+      'device': 'str',
+      'disk_identity': 'int',
+      'identifier': 'str',
+      'partition_identifier': 'str',
+      'partition_offset': 'int'}
+
+  def __init__(self, identifier=None):
+    """Initializes a Windows mounted device artifact.
+
+    Args:
+      identifier (Optional[str]): identifier.
+    """
+    super(WindowsMountedDeviceArtifact, self).__init__()
+    self.device = None
+    self.disk_identity = None
+    self.identifier = identifier
+    self.partition_identifier = None
+    self.partition_offset = None
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
     TimeZoneArtifact, UserAccountArtifact, WindowsEventLogMessageFileArtifact,
-    WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact])
+    WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact,
+    WindowsMountedDeviceArtifact])

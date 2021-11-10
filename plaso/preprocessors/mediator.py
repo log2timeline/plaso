@@ -30,6 +30,16 @@ class PreprocessMediator(object):
     """KnowledgeBase: knowledge base."""
     return self._knowledge_base
 
+  def AddArtifact(self, artifact_attribute_container):
+    """Adds a pre-processing artifact attribute container.
+
+    Args:
+      artifact_attribute_container (ArtifactAttributeContainer): artifact
+          attribute container.
+    """
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(artifact_attribute_container)
+
   def AddEnvironmentVariable(self, environment_variable_artifact):
     """Adds an environment variable.
 
