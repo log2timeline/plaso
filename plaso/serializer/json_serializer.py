@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The JSON serializer object implementation."""
+"""JSON attribute container serializer."""
 
 import binascii
 import codecs
@@ -19,24 +19,11 @@ from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
 
 from plaso.containers import interface as containers_interface
 from plaso.containers import manager as containers_manager
-from plaso.serializer import interface
 from plaso.serializer import logger
 
 
-class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
+class JSONAttributeContainerSerializer(object):
   """JSON attribute container serializer."""
-
-  # Backwards compatibility for older session attribute containers that
-  # contain session configuration attributes.
-  _SESSION_START_LEGACY_ATTRIBUTE_NAMES = frozenset([
-      'artifact_filters',
-      'command_line_arguments',
-      'debug_mode',
-      'enabled_parser_names',
-      'filter_file',
-      'parser_filter_expression',
-      'preferred_encoding',
-      'preferred_time_zone'])
 
   @classmethod
   def _ConvertAttributeContainerToDict(cls, attribute_container):
@@ -253,16 +240,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
             attribute_name == 'event_row_identifier'):
         attribute_name = '_event_row_identifier'
 
-      # Backwards compatibility for older session attribute containers that
-      # contain session configuration attributes.
-      if (container_type == 'session_start' and
-          attribute_name in cls._SESSION_START_LEGACY_ATTRIBUTE_NAMES):
-        pass
-
       # Be strict about which attributes to set in non event data attribute
       # containers.
-      elif (container_type != 'event_data' and
-            attribute_name not in supported_attribute_names):
+      if (container_type != 'event_data' and
+          attribute_name not in supported_attribute_names):
 
         if attribute_name not in ('__container_type__', '__type__'):
           logger.debug((
