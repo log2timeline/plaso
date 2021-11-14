@@ -22,7 +22,7 @@ PYTHON_DEPENDENCIES = {
     'cryptography': ('__version__', '2.0.2', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
-    'dfdatetime': ('__version__', '20210509', None, True),
+    'dfdatetime': ('__version__', '20211113', None, True),
     'dfvfs': ('__version__', '20211017', None, True),
     'dfwinreg': ('__version__', '20201002', None, True),
     'dtfabric': ('__version__', '20200621', None, True),

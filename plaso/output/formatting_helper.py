@@ -105,14 +105,13 @@ class FieldFormattingHelper(object):
       if not iso8601_string:
         return 'Invalid'
 
-      if (self._output_mediator.timezone == pytz.UTC and
-          not date_time.time_zone_offset):
-        # Note that CopyToDateTimeStringISO8601 will represent the date and time
-        # without normalizing to UTC.
+      if iso8601_string[-1] == 'Z':
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
-      else:
-        # For output in a specific time zone overwrite the date, time in seconds
-        # and time zone offset in the UTC ISO8601 string. Note that
+
+      if (self._output_mediator.timezone != pytz.UTC or
+          date_time.time_zone_offset):
+        # For output in a specific time zone overwrite the date, time in
+        # seconds and time zone offset in the UTC ISO8601 string. Note that
         # GetDateWithTimeOfDay will return the date and time in UTC, so no
         # adjustment for date_time.time_zone_offset is needed.
         year, month, day_of_month, hours, minutes, seconds = (
@@ -128,7 +127,7 @@ class FieldFormattingHelper(object):
 
           isoformat_string = datetime_object.isoformat()
           iso8601_string = ''.join([
-              isoformat_string[:19], iso8601_string[19:-1],
+              isoformat_string[:19], iso8601_string[19:-6],
               isoformat_string[-6:]])
         except (OverflowError, TypeError, ValueError):
           return 'Invalid'

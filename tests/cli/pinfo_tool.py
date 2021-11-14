@@ -193,8 +193,8 @@ Storage files are different.
     format_version = '20210621'
     plaso_version = '20210606'
     session_identifier = '678d3612-feac-4de7-b929-0bd3260a9365'
-    session_start_time = '2021-06-23T07:42:30.094310Z'
-    session_completion_time = '2021-06-23T07:42:39.183687Z'
+    session_start_time = '2021-06-23T07:42:30.094310+00:00'
+    session_completion_time = '2021-06-23T07:42:39.183687+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '

@@ -128,7 +128,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
         '+-+-+-+-+-+-\n'
         '[Timestamp]:\n'
-        '  2012-06-27T18:17:01.000000Z\n'
+        '  2012-06-27T18:17:01.000000+00:00\n'
         '\n'
         '[Pathspec]:\n'
         '  type: OS, location: {1:s}\n'
