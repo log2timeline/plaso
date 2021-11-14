@@ -530,9 +530,8 @@ class EventExtractionWorker(object):
               break
 
             event_source = event_sources.FileEntryEventSource(
+                file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                 path_spec=generated_path_spec)
-            event_source.file_entry_type = (
-                dfvfs_definitions.FILE_ENTRY_TYPE_FILE)
             mediator.ProduceEventSource(event_source)
 
             self.last_activity_timestamp = time.time()
@@ -595,8 +594,8 @@ class EventExtractionWorker(object):
 
       if compressed_stream_path_spec:
         event_source = event_sources.FileEntryEventSource(
+            file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
             path_spec=compressed_stream_path_spec)
-        event_source.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_FILE
         mediator.ProduceEventSource(event_source)
 
         self.last_activity_timestamp = time.time()
@@ -637,12 +636,8 @@ class EventExtractionWorker(object):
           continue
 
       event_source = event_sources.FileEntryEventSource(
+          file_entry_type=sub_file_entry.entry_type,
           path_spec=sub_file_entry.path_spec)
-
-      # TODO: move this into a dfVFS file entry property.
-      stat_object = sub_file_entry.GetStat()
-      if stat_object:
-        event_source.file_entry_type = stat_object.type
 
       mediator.ProduceEventSource(event_source)
 
