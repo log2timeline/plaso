@@ -6,7 +6,7 @@ export CFLAGS="-I/usr/local/include -I/usr/local/opt/openssl@1.1/include ${CFLAG
 export LDFLAGS="-L/usr/local/lib -L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}";
 export TOX_TESTENV_PASSENV="CFLAGS LDFLAGS";
 
-# Set the following environment variables to ensure tox can find Python 3.9.
-export PATH="/usr/local/opt/python@3.9/bin:${PATH}";
+# Set the following environment variables to ensure tox can find Python 3.10.
+export PATH="/usr/local/opt/python@3.10/bin:${PATH}";
 
-tox -e py39
+tox -e py310

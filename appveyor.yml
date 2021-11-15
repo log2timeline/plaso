@@ -1,18 +1,18 @@
 environment:
   matrix:
-  - DESCRIPTION: "Windows with 32-bit Python 3.9"
+  - DESCRIPTION: "Windows with 32-bit Python 3.10"
     MACHINE_TYPE: "x86"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    PYTHON: "C:\\Python39"
-    PYTHON_VERSION: "3.9"
+    PYTHON: "C:\\Python310"
+    PYTHON_VERSION: "3.10"
     L2TBINARIES_TRACK: "dev"
-  - DESCRIPTION: "Windows with 64-bit Python 3.9"
+  - DESCRIPTION: "Windows with 64-bit Python 3.10"
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    PYTHON: "C:\\Python39-x64"
-    PYTHON_VERSION: "3.9"
+    PYTHON: "C:\\Python310-x64"
+    PYTHON_VERSION: "3.10"
     L2TBINARIES_TRACK: "dev"
-  - DESCRIPTION: "Mac OS with Python 3.9"
+  - DESCRIPTION: "Mac OS with Python 3.10"
     APPVEYOR_BUILD_WORKER_IMAGE: macos
     HOMEBREW_NO_INSTALL_CLEANUP: 1
 
