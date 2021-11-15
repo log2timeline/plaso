@@ -25,15 +25,16 @@ class EventSource(interface.AttributeContainer):
       'file_entry_type': 'str',
       'path_spec': 'dfvfs.PathSpec'}
 
-  def __init__(self, path_spec=None):
+  def __init__(self, file_entry_type=None, path_spec=None):
     """Initializes an event source.
 
     Args:
+      file_entry_type (Optional[str]): dfVFS file entry type.
       path_spec (Optional[dfvfs.PathSpec]): path specification.
     """
     super(EventSource, self).__init__()
     self.data_type = self.DATA_TYPE
-    self.file_entry_type = None
+    self.file_entry_type = file_entry_type
     self.path_spec = path_spec
 
   # This method is necessary for heap sort.

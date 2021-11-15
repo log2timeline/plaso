@@ -84,10 +84,10 @@ class _PendingMergeTaskHeap(object):
     if not storage_file_size:
       raise ValueError('Task storage file size not set.')
 
-    if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
-      weight = 1
-    else:
+    if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_FILE:
       weight = storage_file_size
+    else:
+      weight = 1
 
     task.merge_priority = weight
 
