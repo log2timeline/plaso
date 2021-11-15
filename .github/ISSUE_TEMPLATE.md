@@ -35,7 +35,6 @@ If multiple methods were used please indicate.
 **Debug output/tracebacks:**
 
 Please run the tool with "-d" to generate debug output, and include anything relevant.
-Also see: [Producing debug logs][https://plaso.readthedocs.io/en/latest/sources/user/Troubleshooting.html#producing-debug-logs]
+Also see: [Producing debug logs][https://plaso.readthedocs.io/en/latest/sources/Troubleshooting.html#producing-debug-logs]
 
-For more information see the [troubleshooting
-guide][https://plaso.readthedocs.io/en/latest/sources/user/Troubleshooting.html].
+For more information see the [troubleshooting guide][https://plaso.readthedocs.io/en/latest/sources/Troubleshooting.html]
