@@ -236,32 +236,49 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       'target_processing_time')
     event_data.response_processing_time = self._GetValueFromStructure(structure,
       'response_processing_time')
-    event_data.elb_status_code = self._GetValueFromStructure(structure, 'elb_status_code')
-    event_data.target_status_code = self._GetValueFromStructure(structure, 'target_status_code')
-    event_data.received_bytes = self._GetValueFromStructure(structure, 'received_bytes')
-    event_data.sent_bytes = self._GetValueFromStructure(structure, 'sent_bytes')
-    event_data.request = self._GetValueFromStructure(structure, 'request')
-    event_data.user_agent = self._GetValueFromStructure(structure, 'user_agent')
-    event_data.ssl_cipher = self._GetValueFromStructure(structure, 'ssl_cipher')
-    event_data.ssl_protocol = self._GetValueFromStructure(structure, 'ssl_protocol')
-    event_data.target_group_arn = self._GetValueFromStructure(structure, 'target_group_arn')
-    event_data.trace_id = self._GetValueFromStructure(structure, 'trace_id')
-    event_data.domain_name = self._GetValueFromStructure(structure, 'domain_name')
-    event_data.chosen_cert_arn = self._GetValueFromStructure(structure, 'chosen_cert_arn')
+    event_data.elb_status_code = self._GetValueFromStructure(structure,
+      'elb_status_code')
+    event_data.target_status_code = self._GetValueFromStructure(structure,
+      'target_status_code')
+    event_data.received_bytes = self._GetValueFromStructure(structure,
+      'received_bytes')
+    event_data.sent_bytes = self._GetValueFromStructure(structure,
+      'sent_bytes')
+    event_data.request = self._GetValueFromStructure(structure,
+      'request')
+    event_data.user_agent = self._GetValueFromStructure(structure,
+      'user_agent')
+    event_data.ssl_cipher = self._GetValueFromStructure(structure,
+      'ssl_cipher')
+    event_data.ssl_protocol = self._GetValueFromStructure(structure,
+      'ssl_protocol')
+    event_data.target_group_arn = self._GetValueFromStructure(structure,
+      'target_group_arn')
+    event_data.trace_id = self._GetValueFromStructure(structure,
+      'trace_id')
+    event_data.domain_name = self._GetValueFromStructure(structure,
+      'domain_name')
+    event_data.chosen_cert_arn = self._GetValueFromStructure(structure,
+      'chosen_cert_arn')
     event_data.matched_rule_priority = self._GetValueFromStructure(structure,
       'matched_rule_priority')
     event_data.request_creation_time = self._GetValueFromStructure(structure,
       'request_creation_time')
-    event_data.actions_executed = self._GetValueFromStructure(structure, 'actions_executed')
-    event_data.redirect_url = self._GetValueFromStructure(structure, 'redirect_url')
-    event_data.error_reason = self._GetValueFromStructure(structure, 'error_reason')
-    event_data.target_port_list = self._GetValueFromStructure(structure, 'target_port_list')
+    event_data.actions_executed = self._GetValueFromStructure(structure,
+      'actions_executed')
+    event_data.redirect_url = self._GetValueFromStructure(structure,
+      'redirect_url')
+    event_data.error_reason = self._GetValueFromStructure(structure,
+      'error_reason')
+    event_data.target_port_list = self._GetValueFromStructure(structure,
+      'target_port_list')
     event_data.target_status_code_list = self._GetValueFromStructure(structure,
       'target_status_code_list')
-    event_data.classification = self._GetValueFromStructure(structure, 'classification')
+    event_data.classification = self._GetValueFromStructure(structure,
+      'classification')
     event_data.classification_reason = self._GetValueFromStructure(structure,
       'classification_reason')
-    
+
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
 
