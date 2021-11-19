@@ -105,6 +105,8 @@ class GCPLogsParser(interface.FileObjectParser):
 
       text_payload = json_log_entry.get('textPayload', None)
 
+      # TODO: jsonPayload can also contain arbitrary fields so should be
+      # handled like textPayload if user, action or resource cannot be parsed.
       if text_payload:
         # Textpayload records can be anything, so we don't want to try to
         # format them.
