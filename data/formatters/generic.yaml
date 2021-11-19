@@ -178,6 +178,19 @@ short_message:
 - '{attribute_name}'
 ---
 type: 'conditional'
+data_type: 'gcp:json:log'
+message:
+- '{textPayload}'
+- 'User {user}'
+- 'performed {action}'
+- 'on {resource}'
+short_message:
+- '{textPayload}'
+- 'User {user}'
+- 'performed {action}'
+- 'on {resource}'
+---
+type: 'conditional'
 data_type: 'gdrive:snapshot:cloud_entry'
 boolean_helpers:
 - input_attribute: 'shared'
