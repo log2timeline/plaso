@@ -517,5 +517,21 @@
     },
     "severity": "NOTICE",
     "timestamp": "2021-10-19T02:42:13.839954Z"
+  },
+  {
+    "insertId": "1io3yo2fursxdi",
+    "logName": "projects/fake-project/logs/testlog",
+    "receiveTimestamp": "2021-10-19T05:04:00.272384509Z",
+    "resource": {
+      "labels": {
+        "location": "",
+        "namespace": "",
+        "node_id": "",
+        "project_id": "fake-project"
+      },
+      "type": "generic_node"
+    },
+    "textPayload": "This is a text payload",
+    "timestamp": "2021-10-19T05:04:00.272384509Z"
   }
 ]
