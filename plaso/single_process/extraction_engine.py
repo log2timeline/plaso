@@ -38,7 +38,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
     self._resolver_context = None
-    self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_active = False
     self._status_update_callback = None
@@ -284,13 +283,12 @@ class SingleProcessEngine(engine.BaseEngine):
     return parser_mediator
 
   def ProcessSources(
-      self, session, source_configurations, storage_writer, resolver_context,
+      self, source_configurations, storage_writer, resolver_context,
       processing_configuration, force_parser=False,
       status_update_callback=None):
     """Processes the sources.
 
     Args:
-      session (Session): session in which the sources are processed.
       source_configurations (list[SourceConfigurationArtifact]): configurations
           of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
@@ -306,7 +304,6 @@ class SingleProcessEngine(engine.BaseEngine):
       ProcessingStatus: processing status.
     """
     self._resolver_context = resolver_context
-    self._session = session
 
     parser_mediator = self._CreateParserMediator(
         self.knowledge_base, resolver_context, processing_configuration)
@@ -376,13 +373,12 @@ class SingleProcessEngine(engine.BaseEngine):
     # Update the status view one last time.
     self._UpdateStatus()
 
-    session.parsers_counter += parser_mediator.parsers_counter
+    self._processing_status.parsers_counter += parser_mediator.parsers_counter
 
     self._extraction_worker = None
     self._file_system_cache = []
     self._processing_configuration = None
     self._resolver_context = None
-    self._session = None
     self._status_update_callback = None
     self._storage_writer = None
 

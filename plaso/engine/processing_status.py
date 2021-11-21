@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Processing status classes."""
 
+import collections
 import time
 
 
@@ -321,6 +322,8 @@ class ProcessingStatus(object):
         caused critical errors during processing.
     events_status (EventsStatus): status information about events.
     foreman_status (ProcessingStatus): foreman processing status.
+    parsers_counter (collections.Counter): number of events per parser or
+        parser plugin.
     start_time (float): time that the processing was started. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
     tasks_status (TasksStatus): status information about tasks.
@@ -335,6 +338,7 @@ class ProcessingStatus(object):
     self.error_path_specs = []
     self.events_status = None
     self.foreman_status = None
+    self.parsers_counter = collections.Counter()
     self.start_time = time.time()
     self.tasks_status = None
 
