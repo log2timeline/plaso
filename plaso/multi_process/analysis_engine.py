@@ -177,8 +177,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_queue.Close()
 
           storage_merge_reader = self._StartMergeTaskStorage(
-              self._session, storage_writer, definitions.STORAGE_FORMAT_SQLITE,
-              task)
+              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
 
           storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
