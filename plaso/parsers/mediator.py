@@ -48,7 +48,7 @@ class ParserMediator(object):
 
   def __init__(
       self, knowledge_base, collection_filters_helper=None,
-      extract_winevt_resources=True, resolver_context=None):
+      resolver_context=None):
     """Initializes a parser mediator.
 
     Args:
@@ -56,8 +56,6 @@ class ParserMediator(object):
           data needed for parsing.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      extract_winevt_resources (Optional[bool]): True if Windows EventLog
-          resources should be extracted.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     super(ParserMediator, self).__init__()
@@ -65,7 +63,7 @@ class ParserMediator(object):
     self._cached_parser_chain = None
     self._cpu_time_profiler = None
     self._event_data_stream_identifier = None
-    self._extract_winevt_resources = extract_winevt_resources
+    self._extract_winevt_resources = True
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._language_tag = self._DEFAULT_LANGUAGE_TAG
@@ -659,6 +657,15 @@ class ParserMediator(object):
     """
     if self._cpu_time_profiler:
       self._cpu_time_profiler.StopTiming(parser_name)
+
+  def SetExtractWinEvtResources(self, extract_winevt_resources):
+    """Sets value to indicate if Windows EventLog resources should be extracted.
+
+    Args:
+      extract_winevt_resources (bool): True if Windows EventLog resources
+          should be extracted.
+    """
+    self._extract_winevt_resources = extract_winevt_resources
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.

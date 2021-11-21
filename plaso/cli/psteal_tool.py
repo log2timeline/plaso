@@ -182,8 +182,7 @@ class PstealTool(
     finally:
       storage_reader.Close()
 
-    configuration = self._CreateProcessingConfiguration(
-        self._knowledge_base)
+    configuration = self._CreateProcessingConfiguration()
 
     counter = collections.Counter()
     if self._output_format != 'null':

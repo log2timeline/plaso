@@ -250,12 +250,10 @@ class SingleProcessEngine(engine.BaseEngine):
       self._status_update_callback(self._processing_status)
 
   def _CreateParserMediator(
-      self, session, knowledge_base, resolver_context,
-      processing_configuration):
+      self, knowledge_base, resolver_context, processing_configuration):
     """Creates a parser mediator.
 
     Args:
-      session (Session): session in which the sources are processed.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       resolver_context (dfvfs.Context): resolver context.
@@ -268,21 +266,18 @@ class SingleProcessEngine(engine.BaseEngine):
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
-        extract_winevt_resources=session.extract_winevt_resources,
         resolver_context=resolver_context)
 
+    parser_mediator.SetExtractWinEvtResources(
+        processing_configuration.extraction.extract_winevt_resources)
     parser_mediator.SetPreferredLanguage(
         processing_configuration.preferred_language)
-
     parser_mediator.SetPreferredTimeZone(
         processing_configuration.preferred_time_zone)
-
     parser_mediator.SetPreferredYear(
         processing_configuration.preferred_year)
-
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
-
     parser_mediator.SetTextPrepend(
         processing_configuration.text_prepend)
 
@@ -314,8 +309,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._session = session
 
     parser_mediator = self._CreateParserMediator(
-        session, self.knowledge_base, resolver_context,
-        processing_configuration)
+        self.knowledge_base, resolver_context, processing_configuration)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(

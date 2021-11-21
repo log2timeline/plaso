@@ -23,7 +23,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(
-      self, task_queue, collection_filters_helper, knowledge_base, session,
+      self, task_queue, collection_filters_helper, knowledge_base,
       processing_configuration, **kwargs):
     """Initializes a worker process.
 
@@ -36,7 +36,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
-      session (Session): session.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -54,7 +53,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._resolver_context = None
-    self._session = session
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._task = None
     self._task_queue = task_queue
@@ -86,12 +84,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._file_system_cache.append(file_system)
 
   def _CreateParserMediator(
-      self, session, knowledge_base, resolver_context,
-      processing_configuration):
+      self, knowledge_base, resolver_context, processing_configuration):
     """Creates a parser mediator.
 
     Args:
-      session (Session): session in which the sources are processed.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       resolver_context (dfvfs.Context): resolver context.
@@ -101,17 +97,13 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
-    if session:
-      extract_winevt_resources = session.extract_winevt_resources
-    else:
-      extract_winevt_resources = True
-
     mediator = parsers_mediator.ParserMediator(
         knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
-        extract_winevt_resources=extract_winevt_resources,
         resolver_context=resolver_context)
 
+    mediator.SetExtractWinEvtResources(
+        processing_configuration.extraction.extract_winevt_resources)
     mediator.SetPreferredLanguage(processing_configuration.preferred_language)
     mediator.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
     mediator.SetPreferredYear(processing_configuration.preferred_year)
@@ -193,7 +185,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           credential_configuration.credential_data)
 
     self._parser_mediator = self._CreateParserMediator(
-        self._session, self._knowledge_base, self._resolver_context,
+        self._knowledge_base, self._resolver_context,
         self._processing_configuration)
 
     # We need to initialize the parser and hasher objects after the process

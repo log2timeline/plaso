@@ -609,7 +609,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self.collection_filters_helper, self.knowledge_base,
-        self._session, self._processing_configuration,
+        self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
