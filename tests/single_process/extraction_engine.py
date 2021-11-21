@@ -61,8 +61,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
       test_engine.PreprocessSources(
           registry, [source_path_spec], session, storage_writer)
 
-      test_engine.ProcessSources(
-          session, [source_configuration], storage_writer, resolver_context,
+      processing_status = test_engine.ProcessSources(
+          [source_configuration], storage_writer, resolver_context,
           configuration)
 
     finally:
@@ -74,9 +74,9 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     expected_parsers_counter = collections.Counter({
         'filestat': 15,
-        'total': 15
-    })
-    self.assertEqual(session.parsers_counter, expected_parsers_counter)
+        'total': 15})
+    self.assertEqual(
+        processing_status.parsers_counter, expected_parsers_counter)
 
 
 if __name__ == '__main__':

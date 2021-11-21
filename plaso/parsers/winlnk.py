@@ -100,7 +100,7 @@ class WinLnkParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       uuid_string (str): UUID string of the Distributed Tracking identifier.
       origin (str): origin of the event (event source).
     """
@@ -119,7 +119,7 @@ class WinLnkParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
     display_name = parser_mediator.GetDisplayName()
@@ -131,7 +131,7 @@ class WinLnkParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
       display_name (str): display name.
     """

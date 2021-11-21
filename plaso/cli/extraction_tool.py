@@ -515,8 +515,8 @@ class ExtractionTool(
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
-          session, source_configurations, storage_writer,
-          self._resolver_context, configuration, force_parser=force_parser,
+          source_configurations, storage_writer, self._resolver_context,
+          configuration, force_parser=force_parser,
           status_update_callback=status_update_callback)
 
     else:
@@ -526,8 +526,8 @@ class ExtractionTool(
       # about which ProcessSources to check against.
       # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
       processing_status = extraction_engine.ProcessSources(
-          session, source_configurations, storage_writer, configuration,
-          enable_sigsegv_handler=self._enable_sigsegv_handler,
+          source_configurations, storage_writer, session.identifier,
+          configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
           status_update_callback=status_update_callback,
           storage_file_path=self._storage_file_path)
 
@@ -677,6 +677,7 @@ class ExtractionTool(
 
       finally:
         session.aborted = getattr(processing_status, 'aborted', True)
+        session.parsers_counter = processing_status.parsers_counter
 
         session_completion = session.CreateSessionCompletion()
         storage_writer.AddAttributeContainer(session_completion)

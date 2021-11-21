@@ -58,6 +58,7 @@ class Session(interface.AttributeContainer):
     self.completion_time = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
     self.event_labels_counter = collections.Counter()
     self.filter_file = None
@@ -316,6 +317,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier
