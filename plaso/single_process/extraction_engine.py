@@ -266,8 +266,9 @@ class SingleProcessEngine(engine.BaseEngine):
       ParserMediator: parser mediator.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base,
+        knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
+        extract_winevt_resources=session.extract_winevt_resources,
         resolver_context=resolver_context)
 
     parser_mediator.SetPreferredLanguage(
@@ -380,6 +381,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     # Update the status view one last time.
     self._UpdateStatus()
+
+    session.parsers_counter += parser_mediator.parsers_counter
 
     self._extraction_worker = None
     self._file_system_cache = []

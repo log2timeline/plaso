@@ -5,7 +5,6 @@ from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
-from plaso.containers import sessions
 from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
@@ -101,12 +100,11 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     self.assertIsNotNone(registry_key)
 
-    session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=file_entry,
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values, timezone=timezone)
 
     # Most tests aren't explicitly checking for parser chain values,

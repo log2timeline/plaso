@@ -7,7 +7,6 @@ import unittest
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.path import fake_path_spec
 
-from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import cups_ipp
@@ -217,11 +216,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     test_file_entry = file_system_builder.file_system.GetFileEntryByPathSpec(
         test_path_spec)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=test_file_entry)
+        storage_writer, file_entry=test_file_entry)
 
     parser = cups_ipp.CupsIppParser()
 
@@ -263,10 +260,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     header_data = self._CreateHeaderData(parser)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA]))
@@ -278,10 +273,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # Test with attribute group data too small.
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA[:-1]]))
@@ -297,10 +290,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     attribute_data = self._CreateAttributeTestData(
         parser, 0x31, 'date-time-at-creation', datetime_data)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, b'\x01', attribute_data, b'\x03']))

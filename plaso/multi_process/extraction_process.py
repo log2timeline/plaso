@@ -101,9 +101,15 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
+    if session:
+      extract_winevt_resources = session.extract_winevt_resources
+    else:
+      extract_winevt_resources = True
+
     mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base,
+        knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
+        extract_winevt_resources=extract_winevt_resources,
         resolver_context=resolver_context)
 
     mediator.SetPreferredLanguage(processing_configuration.preferred_language)

@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.parsers import systemd_journal
 
@@ -93,10 +92,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
     parser = systemd_journal.SystemdJournalParser()
 
     path_segments = [

@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.parsers import esedb
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
@@ -47,10 +46,8 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
     parser = esedb.ESEDBParser()
     parser.ParseFileObject(parser_mediator, None)
 

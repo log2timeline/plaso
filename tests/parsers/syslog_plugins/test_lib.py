@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Syslog plugin related functions and classes for testing."""
 
-from plaso.containers import sessions
 from plaso.parsers import syslog
 from plaso.storage.fake import writer as fake_writer
 
@@ -29,13 +28,12 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=file_entry,
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 
