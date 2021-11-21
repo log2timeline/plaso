@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.containers import sessions
 from plaso.lib import errors
 from plaso.parsers import asl
 
@@ -67,10 +66,8 @@ class ASLParserTest(test_lib.ParserTestCase):
     """Tests the _ParseRecord function."""
     parser = asl.ASLParser()
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     file_object = self._CreateFileObject('asl', self._TEST_RECORD)
 
@@ -172,10 +169,8 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     file_header_data = self._CreateFileHeaderData(parser)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     file_object = self._CreateFileObject('asl', file_header_data)
 
@@ -194,11 +189,9 @@ class ASLParserTest(test_lib.ParserTestCase):
     # Test with invalid signature.
     file_object = self._CreateFileObject(
         'asl', b''.join([b'\xff\xff\xff\xff', file_header_data[4:]]))
-    session = sessions.Session()
-
 
     storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(session, storage_writer)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     with self.assertRaises(errors.UnableToParseFile):
       parser.ParseFileObject(parser_mediator, file_object)

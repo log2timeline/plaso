@@ -3,7 +3,6 @@
 
 import os
 
-from plaso.containers import sessions
 from plaso.parsers import sqlite
 from plaso.storage.fake import writer as fake_writer
 
@@ -74,7 +73,6 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
@@ -86,7 +84,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     self.assertTrue(required_tables_and_column_exist)
 
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=file_entry,
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)
 
     parser_mediator.SetFileEntry(file_entry)

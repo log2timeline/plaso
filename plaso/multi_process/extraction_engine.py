@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The task-based multi-process processing extraction engine."""
 
+import collections
 import heapq
 import logging
 import multiprocessing
@@ -166,6 +167,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
+    self._parsers_counter = collections.Counter()
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._session = None
@@ -375,13 +377,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return number_of_containers
 
-  def _ProcessSources(self, source_configurations, storage_writer):
+  def _ProcessSources(
+      self, source_configurations, storage_writer, session_identifier):
     """Processes the sources.
 
     Args:
       source_configurations (list[SourceConfigurationArtifact]): configurations
           of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -427,7 +432,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    self._ScheduleTasks(storage_writer, self._session.identifier)
+    self._ScheduleTasks(storage_writer, session_identifier)
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -869,7 +874,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      self._ProcessSources(source_configurations, storage_writer)
+      self._ProcessSources(
+          source_configurations, storage_writer, session.identifier)
 
     finally:
       # Stop the status update thread after close of the storage writer
@@ -906,7 +912,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StopTaskStorage(
-          self._task_storage_format, self._session.identifier,
+          self._task_storage_format, session.identifier,
           abort=task_storage_abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
@@ -920,6 +926,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     # Update the status view one last time.
     self._UpdateStatus()
+
+    session.parsers_counter += self._parsers_counter
 
     # Reset values.
     self._enable_sigsegv_handler = None

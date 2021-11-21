@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The parser mediator."""
 
+import collections
 import datetime
 import time
 
@@ -31,6 +32,8 @@ class ParserMediator(object):
         to indicate the last time the worker was known to be active. This
         information is then used by the foreman to detect workers that are
         not responding (stalled).
+    parsers_counter (collections.Counter): number of events per parser or
+        parser plugin.
   """
 
   _DEFAULT_LANGUAGE_TAG = 'en-US'
@@ -44,16 +47,17 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, session, knowledge_base, collection_filters_helper=None,
-      resolver_context=None):
+      self, knowledge_base, collection_filters_helper=None,
+      extract_winevt_resources=True, resolver_context=None):
     """Initializes a parser mediator.
 
     Args:
-      session (Session): session the parsing is part of.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
+      extract_winevt_resources (Optional[bool]): True if Windows EventLog
+          resources should be extracted.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     super(ParserMediator, self).__init__()
@@ -61,6 +65,7 @@ class ParserMediator(object):
     self._cached_parser_chain = None
     self._cpu_time_profiler = None
     self._event_data_stream_identifier = None
+    self._extract_winevt_resources = extract_winevt_resources
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._language_tag = self._DEFAULT_LANGUAGE_TAG
@@ -77,7 +82,6 @@ class ParserMediator(object):
     self._preferred_year = None
     self._process_information = None
     self._resolver_context = resolver_context
-    self._session = session
     self._storage_writer = None
     self._temporary_directory = None
     self._text_prepend = None
@@ -86,6 +90,7 @@ class ParserMediator(object):
 
     self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
+    self.parsers_counter = collections.Counter()
 
   @property
   def abort(self):
@@ -102,7 +107,7 @@ class ParserMediator(object):
   @property
   def extract_winevt_resources(self):
     """bool: extract Windows EventLog resources."""
-    return self._session.extract_winevt_resources
+    return self._extract_winevt_resources
 
   @property
   def language(self):
@@ -564,8 +569,8 @@ class ParserMediator(object):
 
     if self._parser_chain_components:
       parser_name = self._parser_chain_components[-1]
-      self._session.parsers_counter[parser_name] += 1
-    self._session.parsers_counter['total'] += 1
+      self.parsers_counter[parser_name] += 1
+    self.parsers_counter['total'] += 1
 
     self._number_of_events += 1
 
