@@ -275,6 +275,18 @@ class StorageWriter(object):
     """
     return self._store.GetSystemConfigurationIdentifier()
 
+  def HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      bool: True if the store contains the specified type of attribute
+          containers.
+    """
+    return self._store.HasAttributeContainers(container_type)
+
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage writer."""

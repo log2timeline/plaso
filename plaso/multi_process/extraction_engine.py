@@ -343,8 +343,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       if fully_merged:
         self._storage_merge_reader.Close()
 
-        for key, value in sorted(
-            self._storage_merge_reader.parsers_counter.items()):
+        for key, value in self._storage_merge_reader.parsers_counter.items():
           parser_count = self._parsers_counter.get(key, None)
           if parser_count:
             parser_count.number_of_events += value

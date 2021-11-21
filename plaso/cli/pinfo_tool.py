@@ -110,13 +110,25 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     analysis_reports_counter = collections.Counter()
     analysis_reports_counter_error = False
-    event_labels_counter = collections.Counter()
+
+    event_labels_counter = {}
+    if storage_reader.HasAttributeContainers('event_label_count'):
+      event_labels_counter = {
+          event_label_count.label: event_label_count.number_of_events
+          for event_label_count in storage_reader.GetAttributeContainers(
+              'event_label_count')}
+
+    event_labels_counter = collections.Counter(event_labels_counter)
     event_labels_counter_error = False
 
-    parsers_counter = collections.Counter({
-        parser_count.name: parser_count.number_of_events
-        for parser_count in storage_reader.GetAttributeContainers(
-            'parser_count')})
+    parsers_counter = {}
+    if storage_reader.HasAttributeContainers('parser_count'):
+      parsers_counter = {
+          parser_count.name: parser_count.number_of_events
+          for parser_count in storage_reader.GetAttributeContainers(
+              'parser_count')}
+
+    parsers_counter = collections.Counter(parsers_counter)
     parsers_counter_error = False
 
     format_version = storage_reader.GetFormatVersion()
@@ -127,16 +139,18 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       else:
         analysis_reports_counter_error = True
 
+      if format_version >= 20211121:
+        continue
+
       if isinstance(session.event_labels_counter, collections.Counter):
         event_labels_counter += session.event_labels_counter
       else:
         event_labels_counter_error = True
 
-      if format_version < 20211121:
-        if isinstance(session.parsers_counter, collections.Counter):
-          parsers_counter += session.parsers_counter
-        else:
-          parsers_counter_error = True
+      if isinstance(session.parsers_counter, collections.Counter):
+        parsers_counter += session.parsers_counter
+      else:
+        parsers_counter_error = True
 
     storage_counters = {}
 
@@ -900,9 +914,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             session.analysis_reports_counter,
             session_identifier=session_identifier)
 
-        self._PrintEventLabelsCounter(
-            session.event_labels_counter,
-            session_identifier=session_identifier)
+        if format_version < 20211121:
+          self._PrintEventLabelsCounter(
+              session.event_labels_counter,
+              session_identifier=session_identifier)
 
     if self._output_format == 'json':
       self._output_writer.Write('}')

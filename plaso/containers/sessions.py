@@ -60,7 +60,8 @@ class Session(interface.AttributeContainer):
     self.enabled_parser_names = None
     # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
-    self.event_labels_counter = collections.Counter()
+    # TODO: kept for backwards compatibility.
+    self.event_labels_counter = None
     self.filter_file = None
     self.identifier = '{0:s}'.format(uuid.uuid4().hex)
     self.parser_filter_expression = None
@@ -223,16 +224,6 @@ class Session(interface.AttributeContainer):
     report_identifier = analysis_report.plugin_name
     self.analysis_reports_counter[report_identifier] += 1
     self.analysis_reports_counter['total'] += 1
-
-  def UpdateEventLabelsSessionCounter(self, event_tag):
-    """Updates the event labels session counter.
-
-    Args:
-      event_tag (EventTag): an event tag.
-    """
-    for label in event_tag.labels:
-      self.event_labels_counter[label] += 1
-    self.event_labels_counter['total'] += 1
 
 
 class SessionCompletion(interface.AttributeContainer):
