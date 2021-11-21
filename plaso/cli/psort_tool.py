@@ -483,8 +483,9 @@ class PsortTool(
           session, configuration, status_update_callback=status_update_callback)
 
       analysis_counter = collections.Counter()
-      for item, value in session.analysis_reports_counter.items():
-        analysis_counter[item] = value
+      if session.analysis_reports_counter:
+        for item, value in session.analysis_reports_counter.items():
+          analysis_counter[item] = value
 
     if self._output_format != 'null':
       storage_reader = (

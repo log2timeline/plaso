@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The single process processing engine."""
 
+import collections
 import os
 import pdb
 import threading
@@ -10,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver
 
+from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
@@ -33,6 +35,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
+    self._parsers_counter = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
@@ -341,6 +344,11 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._StartStatusUpdateThread()
 
+    self._parsers_counter = collections.Counter({
+        parser_count.name: parser_count
+        for parser_count in self._storage_writer.GetAttributeContainers(
+            'parser_count')})
+
     try:
       self._ProcessSources(source_configurations, parser_mediator)
 
@@ -364,6 +372,16 @@ class SingleProcessEngine(engine.BaseEngine):
       self._StopProfiling()
       parser_mediator.StopProfiling()
 
+    for key, value in sorted(parser_mediator.parsers_counter.items()):
+      parser_count = self._parsers_counter.get(key, None)
+      if parser_count:
+        parser_count.number_of_events += value
+        self._storage_writer.UpdateAttributeContainer(parser_count)
+      else:
+        parser_count = counts.ParserCount(name=key, number_of_events=value)
+        self._parsers_counter[key] = parser_count
+        self._storage_writer.AddAttributeContainer(parser_count)
+
     if self._abort:
       logger.debug('Processing aborted.')
       self._processing_status.aborted = True
@@ -372,8 +390,6 @@ class SingleProcessEngine(engine.BaseEngine):
 
     # Update the status view one last time.
     self._UpdateStatus()
-
-    self._processing_status.parsers_counter += parser_mediator.parsers_counter
 
     self._extraction_worker = None
     self._file_system_cache = []

@@ -112,8 +112,14 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     analysis_reports_counter_error = False
     event_labels_counter = collections.Counter()
     event_labels_counter_error = False
-    parsers_counter = collections.Counter()
+
+    parsers_counter = collections.Counter({
+        parser_count.name: parser_count.number_of_events
+        for parser_count in storage_reader.GetAttributeContainers(
+            'parser_count')})
     parsers_counter_error = False
+
+    format_version = storage_reader.GetFormatVersion()
 
     for session in storage_reader.GetSessions():
       if isinstance(session.analysis_reports_counter, collections.Counter):
@@ -126,10 +132,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       else:
         event_labels_counter_error = True
 
-      if isinstance(session.parsers_counter, collections.Counter):
-        parsers_counter += session.parsers_counter
-      else:
-        parsers_counter_error = True
+      if format_version < 20211121:
+        if isinstance(session.parsers_counter, collections.Counter):
+          parsers_counter += session.parsers_counter
+        else:
+          parsers_counter_error = True
 
     storage_counters = {}
 
@@ -861,6 +868,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (BaseStore): storage.
     """
+    format_version = storage_reader.GetFormatVersion()
+
     if self._output_format == 'json':
       self._output_writer.Write('"sessions": {')
 
@@ -883,8 +892,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               session.source_configurations,
               session_identifier=session_identifier)
 
-        self._PrintParsersCounter(
-            session.parsers_counter, session_identifier=session_identifier)
+        if format_version < 20211121:
+          self._PrintParsersCounter(
+              session.parsers_counter, session_identifier=session_identifier)
 
         self._PrintAnalysisReportCounter(
             session.analysis_reports_counter,

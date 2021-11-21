@@ -533,9 +533,17 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
-    total_number_of_events = 0
-    for stored_session in storage_writer.GetSessions():
-      total_number_of_events += stored_session.parsers_counter['total']
+    parsers_counter = collections.Counter({
+        parser_count.name: parser_count.number_of_events
+        for parser_count in storage_writer.GetAttributeContainers(
+            'parser_count')})
+
+    if parsers_counter:
+      total_number_of_events = parsers_counter['total']
+    else:
+      total_number_of_events = 0
+      for stored_session in storage_writer.GetSessions():
+        total_number_of_events += stored_session.parsers_counter['total']
 
     self._events_status.total_number_of_events = total_number_of_events
 
