@@ -313,8 +313,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._merge_task = task
         try:
           self._storage_merge_reader = self._StartMergeTaskStorage(
-              self._session, self._storage_writer, self._task_storage_format,
-              task)
+              self._storage_writer, self._task_storage_format, task)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 
@@ -341,6 +340,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       if fully_merged:
         self._storage_merge_reader.Close()
+
+        self._session.parsers_counter += (
+            self._storage_merge_reader.parsers_counter)
 
         self._RemoveMergeTaskStorage(
             self._task_storage_format, self._merge_task)
