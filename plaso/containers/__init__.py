@@ -3,6 +3,7 @@
 
 from plaso.containers import analyzer_result
 from plaso.containers import artifacts
+from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports

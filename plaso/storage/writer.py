@@ -86,6 +86,16 @@ class StorageWriter(object):
     return self._attribute_containers_counter[
         self._CONTAINER_TYPE_RECOVERY_WARNING]
 
+  def _RaiseIfNotReadable(self):
+    """Raises if the storage writer is not readable.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Unable to read from closed storage writer.')
+
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
 
@@ -166,7 +176,7 @@ class StorageWriter(object):
       IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
-    self._RaiseIfNotWritable()
+    self._RaiseIfNotReadable()
 
     return self._store.GetAttributeContainerByIdentifier(
         container_type, identifier)
@@ -185,7 +195,7 @@ class StorageWriter(object):
       IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
-    self._RaiseIfNotWritable()
+    self._RaiseIfNotReadable()
 
     return self._store.GetAttributeContainerByIndex(container_type, index)
 
@@ -202,7 +212,7 @@ class StorageWriter(object):
       IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
-    self._RaiseIfNotWritable()
+    self._RaiseIfNotReadable()
 
     return self._store.GetAttributeContainers(container_type)
 

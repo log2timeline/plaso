@@ -677,7 +677,6 @@ class ExtractionTool(
 
       finally:
         session.aborted = getattr(processing_status, 'aborted', True)
-        session.parsers_counter = processing_status.parsers_counter
 
         session_completion = session.CreateSessionCompletion()
         storage_writer.AddAttributeContainer(session_completion)

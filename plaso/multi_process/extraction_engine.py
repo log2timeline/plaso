@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The task-based multi-process processing extraction engine."""
 
+import collections
 import heapq
 import logging
 import multiprocessing
@@ -12,6 +13,7 @@ import traceback
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
+from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import warnings
 from plaso.engine import extractors
@@ -166,6 +168,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
+    self._parsers_counter = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._status = definitions.STATUS_INDICATOR_IDLE
@@ -340,8 +343,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       if fully_merged:
         self._storage_merge_reader.Close()
 
-        self._processing_status.parsers_counter += (
-            self._storage_merge_reader.parsers_counter)
+        for key, value in sorted(
+            self._storage_merge_reader.parsers_counter.items()):
+          parser_count = self._parsers_counter.get(key, None)
+          if parser_count:
+            parser_count.number_of_events += value
+            self._storage_writer.UpdateAttributeContainer(parser_count)
+          else:
+            parser_count = counts.ParserCount(name=key, number_of_events=value)
+            self._parsers_counter[key] = parser_count
+            self._storage_writer.AddAttributeContainer(parser_count)
 
         self._RemoveMergeTaskStorage(
             self._task_storage_format, self._merge_task)
@@ -869,6 +880,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       storage_writer.SetStorageProfiler(self._storage_profiler)
 
     self._StartStatusUpdateThread()
+
+    self._parsers_counter = collections.Counter({
+        parser_count.name: parser_count
+        for parser_count in self._storage_writer.GetAttributeContainers(
+            'parser_count')})
 
     try:
       self._ProcessSources(
