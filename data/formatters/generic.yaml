@@ -180,12 +180,12 @@ short_message:
 type: 'conditional'
 data_type: 'gcp:json:log'
 message:
-- '{textPayload}'
+- '{text_payload}'
 - 'User {user}'
 - 'performed {action}'
 - 'on {resource}'
 short_message:
-- '{textPayload}'
+- '{text_payload}'
 - 'User {user}'
 - 'performed {action}'
 - 'on {resource}'

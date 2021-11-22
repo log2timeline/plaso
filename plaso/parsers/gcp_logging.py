@@ -38,11 +38,11 @@ class GCPLogEventData(events.EventData):
     self.user = None
     self.action = None
     self.resource = None
-    self.textPayload = None
+    self.text_payload = None
 
   def AddEventAttributes(self, event_attributes):
     """Add extra event attributes parsed from GCP logs.
-    
+
     Extra attributes vary across log types and so must be dynamically added
     depending on presence in the log entry.
 
@@ -55,7 +55,7 @@ class GCPLogEventData(events.EventData):
 
 class GCPLogsParser(interface.FileObjectParser):
   """Parser for GCP logging in json format.
-  
+
   Parsing logic taken from DFTimewolf's GCPLoggingTimesketch module for
   consistency https://github.com/log2timeline/dftimewolf
   """
@@ -110,7 +110,7 @@ class GCPLogsParser(interface.FileObjectParser):
       if text_payload:
         # Textpayload records can be anything, so we don't want to try to
         # format them.
-        event_data.textPayload = text_payload
+        event_data.text_payload = text_payload
       else:
         # Ordered from least to most preferred value
         user_attributes = ['principalEmail', 'user']
@@ -189,7 +189,7 @@ class GCPLogsParser(interface.FileObjectParser):
                     bd.get('action', ''), bd.get('member', ''),
                     bd.get('role', '')))
           event_attributes['policyDelta']  = ', '.join(policy_deltas)
-  
+
   def _ParseProtoPayloadRequest(self, request, event_attributes):
     """Extracts information from the request field of a protoPayload field.
 
