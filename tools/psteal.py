@@ -77,7 +77,7 @@ def Main():
 
   try:
     tool.ExtractEventsFromSources()
-    tool.AnalyzeEvents()
+    tool.ProcessStorage()
 
   # Writing to stdout and stderr will raise BrokenPipeError if it
   # receives a SIGPIPE.

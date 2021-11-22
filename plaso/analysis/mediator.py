@@ -12,6 +12,8 @@ class AnalysisMediator(object):
   """Analysis plugin mediator.
 
   Attributes:
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
     event_labels_counter (collections.Counter): number of event tags per label.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
@@ -45,6 +47,7 @@ class AnalysisMediator(object):
     self._storage_writer = None
     self._text_prepend = None
 
+    self.analysis_reports_counter = collections.Counter()
     self.event_labels_counter = collections.Counter()
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
@@ -108,7 +111,8 @@ class AnalysisMediator(object):
     if self._storage_writer:
       self._storage_writer.AddAttributeContainer(analysis_report)
 
-    self._session.UpdateAnalysisReportSessionCounter(analysis_report)
+    self.analysis_reports_counter[analysis_report.plugin_name] += 1
+    self.analysis_reports_counter['total'] += 1
 
     self.number_of_produced_analysis_reports += 1
 

@@ -187,7 +187,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           storage_merge_reader.Close()
 
-          for key, value in  storage_merge_reader.event_labels_counter.items():
+          for key, value in storage_merge_reader.event_labels_counter.items():
             event_label_count = self._event_labels_counter.get(key, None)
             if event_label_count:
               event_label_count.number_of_events += value
@@ -197,6 +197,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                   label=key, number_of_events=value)
               self._event_labels_counter[key] = event_label_count
               storage_writer.AddAttributeContainer(event_label_count)
+
+          self._processing_status.analysis_reports_counter += (
+              storage_merge_reader.analysis_reports_counter)
 
           self._RemoveMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
@@ -526,11 +529,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           updates.
       storage_file_path (Optional[str]): path to the session storage file.
 
+    Returns:
+      ProcessingStatus: processing status.
+
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
+      ValueError: if analysis plugins are missing.
     """
     if not analysis_plugins:
-      return
+      raise ValueError('Missing analysis plugins')
 
     abort_kill = False
     keyboard_interrupt = False
@@ -549,7 +556,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     event_labels_counter = {}
     if storage_writer.HasAttributeContainers('event_label_count'):
       event_labels_counter = {
-          event_label_count.name: event_label_count
+          event_label_count.label: event_label_count
           for event_label_count in storage_writer.GetAttributeContainers(
               'event_label_count')}
 
@@ -666,3 +673,5 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if keyboard_interrupt:
       raise KeyboardInterrupt
+
+    return self._processing_status

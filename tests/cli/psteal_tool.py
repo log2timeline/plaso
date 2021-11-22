@@ -379,7 +379,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       self._CheckOutput(output, expected_output)
 
   def testProcessStorage(self):
-    """Test the AnalyzeEvents function"""
+    """Test the ProcessStorage function"""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -404,7 +404,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
-      test_tool.AnalyzeEvents()
+      test_tool.ProcessStorage()
 
       with open(
           expected_output_file_path, 'rt', encoding='utf-8') as file_object:

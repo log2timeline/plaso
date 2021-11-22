@@ -20,7 +20,7 @@ class EventLabelCount(interface.AttributeContainer):
       'number_of_events': 'int'}
 
   def __init__(self, label=None, number_of_events=None):
-    """Initializes a parser count attribute container.
+    """Initializes an event label count attribute container.
 
     Args:
       label (Optional[str]): event label.

@@ -14,6 +14,8 @@ class StorageMergeReader(object):
   """Storage reader for merging.
 
   Attributes:
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
     event_labels_counter (collections.Counter): number of event tags per label.
     number_of_containers (int): number of containers merged in last call to
         MergeAttributeContainers.
@@ -69,6 +71,7 @@ class StorageMergeReader(object):
     self._task_identifier = task_identifier
     self._task_storage_reader = task_storage_reader
 
+    self.analysis_reports_counter = collections.Counter()
     self.event_labels_counter = collections.Counter()
     self.number_of_containers = 0
     self.parsers_counter = collections.Counter()
@@ -166,7 +169,11 @@ class StorageMergeReader(object):
     else:
       self._storage_writer.AddAttributeContainer(container)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+      self.analysis_reports_counter[container.plugin_name] += 1
+      self.analysis_reports_counter['total'] += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       parser_name = self._event_data_parser_mappings.get(
           event_data_lookup_key, 'N/A')
       self.parsers_counter[parser_name] += 1

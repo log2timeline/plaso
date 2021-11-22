@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Processing status classes."""
 
+import collections
 import time
 
 
@@ -317,6 +318,8 @@ class ProcessingStatus(object):
 
   Attributes:
     aborted (bool): True if processing was aborted.
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
     error_path_specs (list[dfvfs.PathSpec]): path specifications that
         caused critical errors during processing.
     events_status (EventsStatus): status information about events.
@@ -332,6 +335,7 @@ class ProcessingStatus(object):
     self._workers_status = {}
 
     self.aborted = False
+    self.analysis_reports_counter = collections.Counter()
     self.error_path_specs = []
     self.events_status = None
     self.foreman_status = None

@@ -2,11 +2,8 @@
 """The psteal CLI tool."""
 
 import argparse
-import collections
 import os
 import textwrap
-
-from dfdatetime import posix_time as dfdatetime_posix_time
 
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
@@ -14,7 +11,6 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.cli import extraction_tool
 from plaso.cli import logger
 from plaso.cli import tool_options
-from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import reports
 from plaso.engine import engine
@@ -104,44 +100,6 @@ class PstealTool(
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
 
-  def _PrintAnalysisReportsDetails(
-      self, storage_reader, number_of_analysis_reports):
-    """Prints the details of the analysis reports.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-      number_of_analysis_reports (int): number of analysis reports.
-    """
-    generator = storage_reader.GetAttributeContainers(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-
-    for index, analysis_report in enumerate(generator):
-      if index + 1 <= number_of_analysis_reports:
-        continue
-
-      date_time_string = None
-      if analysis_report.time_compiled is not None:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=analysis_report.time_compiled)
-        date_time_string = date_time.CopyToDateTimeStringISO8601()
-
-      title = 'Analysis report: {0:d}'.format(index)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title=title)
-
-      table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
-      table_view.AddRow(['Date and time', date_time_string or 'N/A'])
-      table_view.AddRow(['Event filter', analysis_report.event_filter or 'N/A'])
-
-      if not analysis_report.analysis_counter:
-        table_view.AddRow(['Text', analysis_report.text or ''])
-      else:
-        table_view.AddRow(['Results', ''])
-        for key, value in sorted(analysis_report.analysis_counter.items()):
-          table_view.AddRow([key, value])
-
-      table_view.Write(self._output_writer)
-
   def AddStorageOptions(self, argument_group):  # pylint: disable=arguments-renamed
     """Adds the storage options to the argument group.
 
@@ -153,99 +111,6 @@ class PstealTool(
         type=str, default=None, help=(
             'The path of the storage file. If not specified, one will be made '
             'in the form <timestamp>-<source>.plaso'))
-
-  def AnalyzeEvents(self):
-    """Analyzes events from a plaso storage file and generate a report.
-
-    Raises:
-      BadConfigOption: when a configuration parameter fails validation or the
-          storage file cannot be opened with read access.
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    session = engine.BaseEngine.CreateSession(
-        command_line_arguments=self._command_line_arguments,
-        preferred_encoding=self.preferred_encoding)
-    session.preferred_language = self._preferred_language or 'en-US'
-
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    if not storage_reader:
-      raise errors.BadConfigOption(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
-
-    try:
-      self._number_of_analysis_reports = (
-          storage_reader.GetNumberOfAttributeContainers(
-              self._CONTAINER_TYPE_ANALYSIS_REPORT))
-
-    finally:
-      storage_reader.Close()
-
-    configuration = self._CreateProcessingConfiguration()
-
-    counter = collections.Counter()
-    if self._output_format != 'null':
-      self._status_view.SetMode(self._status_view_mode)
-      self._status_view.SetStorageFileInformation(self._storage_file_path)
-
-      status_update_callback = (
-          self._status_view.GetAnalysisStatusUpdateCallback())
-
-      storage_reader = (
-          storage_factory.StorageFactory.CreateStorageReaderForFile(
-              self._storage_file_path))
-
-      preferred_language = self._knowledge_base.language
-      if self._preferred_language:
-        preferred_language = self._preferred_language
-
-      if preferred_language:
-        try:
-          self._output_mediator.SetPreferredLanguageIdentifier(
-              preferred_language)
-        except (KeyError, TypeError):
-          logger.warning('Unable to to set preferred language: {0!s}.'.format(
-              preferred_language))
-
-      self._output_module.SetStorageReader(storage_reader)
-
-      # TODO: add single process output and formatting engine support.
-      output_engine = (
-          multi_output_engine.OutputAndFormattingMultiProcessEngine())
-
-      output_engine.ExportEvents(
-          self._knowledge_base, storage_reader, self._output_module,
-          configuration, deduplicate_events=self._deduplicate_events,
-          status_update_callback=status_update_callback,
-          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
-
-      self._output_module.Close()
-      self._output_module = None
-
-    for item, value in session.analysis_reports_counter.items():
-      counter[item] = value
-
-    if self._quiet_mode:
-      return
-
-    self._output_writer.Write('Processing completed.\n')
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Counter')
-    for element, count in counter.most_common():
-      if not element:
-        element = 'N/A'
-      table_view.AddRow([element, count])
-    table_view.Write(self._output_writer)
-
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        self._storage_file_path)
-    self._PrintAnalysisReportsDetails(
-        storage_reader, self._number_of_analysis_reports)
-
-    self._output_writer.Write('Storage file is {0:s}\n'.format(
-        self._storage_file_path))
 
   def ParseArguments(self, arguments):
     """Parses the command line arguments.
@@ -427,3 +292,79 @@ class PstealTool(
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._output_module = self._CreateOutputModule(options)
+
+  def ProcessStorage(self):
+    """Processes a Plaso storage file.
+
+    Raises:
+      BadConfigOption: when a configuration parameter fails validation or the
+          storage file cannot be opened with read access.
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    session = engine.BaseEngine.CreateSession(
+        command_line_arguments=self._command_line_arguments,
+        preferred_encoding=self.preferred_encoding)
+    session.preferred_language = self._preferred_language or 'en-US'
+
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+        self._storage_file_path)
+    if not storage_reader:
+      raise errors.BadConfigOption(
+          'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
+
+    try:
+      self._number_of_analysis_reports = (
+          storage_reader.GetNumberOfAttributeContainers(
+              self._CONTAINER_TYPE_ANALYSIS_REPORT))
+
+    finally:
+      storage_reader.Close()
+
+    configuration = self._CreateProcessingConfiguration()
+
+    if self._output_format != 'null':
+      self._status_view.SetMode(self._status_view_mode)
+      self._status_view.SetStorageFileInformation(self._storage_file_path)
+
+      status_update_callback = (
+          self._status_view.GetAnalysisStatusUpdateCallback())
+
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(
+              self._storage_file_path))
+
+      preferred_language = self._knowledge_base.language
+      if self._preferred_language:
+        preferred_language = self._preferred_language
+
+      if preferred_language:
+        try:
+          self._output_mediator.SetPreferredLanguageIdentifier(
+              preferred_language)
+        except (KeyError, TypeError):
+          logger.warning('Unable to to set preferred language: {0!s}.'.format(
+              preferred_language))
+
+      self._output_module.SetStorageReader(storage_reader)
+
+      # TODO: add single process output and formatting engine support.
+      output_engine = (
+          multi_output_engine.OutputAndFormattingMultiProcessEngine())
+
+      output_engine.ExportEvents(
+          self._knowledge_base, storage_reader, self._output_module,
+          configuration, deduplicate_events=self._deduplicate_events,
+          status_update_callback=status_update_callback,
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+      self._output_module.Close()
+      self._output_module = None
+
+    if self._quiet_mode:
+      return
+
+    self._output_writer.Write('Processing completed.\n')
+
+    self._output_writer.Write('Storage file is {0:s}\n'.format(
+        self._storage_file_path))
