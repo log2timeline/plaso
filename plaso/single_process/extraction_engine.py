@@ -372,7 +372,7 @@ class SingleProcessEngine(engine.BaseEngine):
       self._StopProfiling()
       parser_mediator.StopProfiling()
 
-    for key, value in sorted(parser_mediator.parsers_counter.items()):
+    for key, value in parser_mediator.parsers_counter.items():
       parser_count = self._parsers_counter.get(key, None)
       if parser_count:
         parser_count.number_of_events += value

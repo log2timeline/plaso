@@ -14,6 +14,7 @@ class StorageMergeReader(object):
   """Storage reader for merging.
 
   Attributes:
+    event_labels_counter (collections.Counter): number of event tags per label.
     number_of_containers (int): number of containers merged in last call to
         MergeAttributeContainers.
     parsers_counter (collections.Counter): number of events per parser or
@@ -68,6 +69,7 @@ class StorageMergeReader(object):
     self._task_identifier = task_identifier
     self._task_storage_reader = task_storage_reader
 
+    self.event_labels_counter = collections.Counter()
     self.number_of_containers = 0
     self.parsers_counter = collections.Counter()
 
@@ -180,6 +182,11 @@ class StorageMergeReader(object):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA_STREAM:
       identifier = container.GetIdentifier()
       self._event_data_stream_identifier_mappings[lookup_key] = identifier
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      for label in container.labels:
+        self.event_labels_counter[label] += 1
+        self.event_labels_counter['total'] += 1
 
     elif container.CONTAINER_TYPE == 'windows_eventlog_message_file':
       identifier = container.GetIdentifier()

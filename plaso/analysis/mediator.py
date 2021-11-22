@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
+import collections
 import time
 
 from plaso.containers import warnings
@@ -11,6 +12,7 @@ class AnalysisMediator(object):
   """Analysis plugin mediator.
 
   Attributes:
+    event_labels_counter (collections.Counter): number of event tags per label.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
         when the mediator produces an attribute container, such as an event
@@ -43,6 +45,7 @@ class AnalysisMediator(object):
     self._storage_writer = None
     self._text_prepend = None
 
+    self.event_labels_counter = collections.Counter()
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
     self.number_of_produced_event_tags = 0
@@ -137,7 +140,9 @@ class AnalysisMediator(object):
     if self._storage_writer:
       self._storage_writer.AddOrUpdateEventTag(event_tag)
 
-    self._session.UpdateEventLabelsSessionCounter(event_tag)
+    for label in event_tag.labels:
+      self.event_labels_counter[label] += 1
+      self.event_labels_counter['total'] += 1
 
     self.number_of_produced_event_tags += 1
 

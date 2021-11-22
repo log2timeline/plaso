@@ -5,6 +5,33 @@ from plaso.containers import interface
 from plaso.containers import manager
 
 
+class EventLabelCount(interface.AttributeContainer):
+  """Event label count attribute container.
+
+  Attributes:
+    label (str): event label.
+    number_of_events (int): number of events with label.
+  """
+
+  CONTAINER_TYPE = 'event_label_count'
+
+  SCHEMA = {
+      'label': 'str',
+      'number_of_events': 'int'}
+
+  def __init__(self, label=None, number_of_events=None):
+    """Initializes a parser count attribute container.
+
+    Args:
+      label (Optional[str]): event label.
+      number_of_events (Optional[int]): number of events with label.
+          the parser or parser plugin.
+    """
+    super(EventLabelCount, self).__init__()
+    self.label = label
+    self.number_of_events = number_of_events
+
+
 class ParserCount(interface.AttributeContainer):
   """Parser count attribute container.
 
@@ -34,4 +61,4 @@ class ParserCount(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    ParserCount])
+    EventLabelCount, ParserCount])
