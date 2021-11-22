@@ -178,30 +178,6 @@ class Session(interface.AttributeContainer):
     session_completion.timestamp = self.completion_time
     return session_completion
 
-  def CreateSessionConfiguration(self):
-    """Creates a session configuration.
-
-    Returns:
-      SessionConfiguration: session configuration attribute container.
-    """
-    session_configuration = SessionConfiguration()
-    session_configuration.artifact_filters = self.artifact_filters
-    session_configuration.command_line_arguments = self.command_line_arguments
-    session_configuration.debug_mode = self.debug_mode
-    session_configuration.enabled_parser_names = self.enabled_parser_names
-    session_configuration.extract_winevt_resources = (
-        self.extract_winevt_resources)
-    session_configuration.filter_file = self.filter_file
-    session_configuration.identifier = self.identifier
-    session_configuration.parser_filter_expression = (
-        self.parser_filter_expression)
-    session_configuration.preferred_encoding = self.preferred_encoding
-    session_configuration.preferred_language = self.preferred_language
-    session_configuration.preferred_time_zone = self.preferred_time_zone
-    session_configuration.source_configurations = self.source_configurations
-    session_configuration.text_prepend = self.text_prepend
-    return session_configuration
-
   def CreateSessionStart(self):
     """Creates a session start.
 
@@ -294,7 +270,6 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
-    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier

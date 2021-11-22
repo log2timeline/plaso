@@ -8,6 +8,7 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.containers import reports
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.multi_process import analysis_engine as multi_analysis_engine
 from plaso.storage import factory as storage_factory
@@ -41,6 +42,7 @@ class AnalysisTool(
     self._analysis_manager = analysis_manager.AnalysisPluginManager
     self._analysis_plugins = None
     self._analysis_plugins_output_format = None
+    self._command_line_arguments = None
     self._event_filter_expression = None
     self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
@@ -50,6 +52,22 @@ class AnalysisTool(
     self._worker_timeout = None
 
     self.list_analysis_plugins = False
+
+  def _CreateAnalysisSessionConfiguration(self, session):
+    """Creates an analysis session configuration.
+
+    Args:
+      session (Session): session in which the events are analyzed.
+
+    Returns:
+      SessionConfiguration: extraction session configuration.
+    """
+    session_configuration = sessions.SessionConfiguration()
+    session_configuration.command_line_arguments = self._command_line_arguments
+    session_configuration.debug_mode = self._debug_mode
+    session_configuration.identifier = session.identifier
+
+    return session_configuration
 
   def _AnalyzeEvents(self, session, configuration, status_update_callback=None):
     """Analyzes events in a Plaso storage.
@@ -79,13 +97,27 @@ class AnalysisTool(
     storage_writer.Open(path=self._storage_file_path)
 
     try:
-      processing_status = analysis_engine.AnalyzeEvents(
-          session, self._knowledge_base, storage_writer, self._data_location,
-          self._analysis_plugins, configuration,
-          event_filter=self._event_filter,
-          event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback,
-          storage_file_path=self._storage_file_path)
+      session_start = session.CreateSessionStart()
+      storage_writer.AddAttributeContainer(session_start)
+
+      try:
+        session_configuration = self._CreateAnalysisSessionConfiguration(
+            session)
+        storage_writer.AddAttributeContainer(session_configuration)
+
+        processing_status = analysis_engine.AnalyzeEvents(
+            session, self._knowledge_base, storage_writer, self._data_location,
+            self._analysis_plugins, configuration,
+            event_filter=self._event_filter,
+            event_filter_expression=self._event_filter_expression,
+            status_update_callback=status_update_callback,
+            storage_file_path=self._storage_file_path)
+
+      finally:
+        session.aborted = getattr(processing_status, 'aborted', True)
+
+        session_completion = session.CreateSessionCompletion()
+        storage_writer.AddAttributeContainer(session_completion)
 
     finally:
       storage_writer.Close()
