@@ -519,9 +519,32 @@
     "timestamp": "2021-10-19T02:42:13.839954Z"
   },
   {
+    "insertId": "1k28f3cfv7aknt",
+    "jsonPayload": {
+      "content": "This is a json payload",
+      "event_subtype": "test_subtype",
+      "actor": {
+        "user": "fakeemailxyz@gmail.com"
+      }
+    },
+    "logName": "projects/fake-project/logs/testlog",
+    "receiveTimestamp": "2021-10-19T02:05:41.496590981Z",
+    "resource": {
+      "labels": {
+        "location": "",
+        "namespace": "",
+        "node_id": "",
+        "project_id": "fake-project",
+        "instance_id": "866011396029255273" 
+      },
+      "type": "generic_node"
+    },
+    "timestamp": "2021-10-19T02:05:41.496590981Z"
+  },
+  {
     "insertId": "1io3yo2fursxdi",
     "logName": "projects/fake-project/logs/testlog",
-    "receiveTimestamp": "2021-10-19T05:04:00.272384509Z",
+    "receiveTimestamp": "2021-10-19T02:04:00.272384509Z",
     "resource": {
       "labels": {
         "location": "",
@@ -532,24 +555,6 @@
       "type": "generic_node"
     },
     "textPayload": "This is a text payload",
-    "timestamp": "2021-10-19T05:04:00.272384509Z"
-  },
-  {                                                                                                                                                                                                                                                                                   
-    "insertId": "1k28f3cfv7aknt",                                                                                                                                                                                                                                                     
-    "jsonPayload": {                                                                                                                                                                                                                                                                  
-      "content": "This is a json payload"                                                                                                                                                                                                                                             
-    },                                                                                                                                                                                                                                                                                
-    "logName": "projects/fake-project/logs/testlog",                                                                                                                                                                                                                                  
-    "receiveTimestamp": "2021-10-19T05:50:41.496590981Z",                                                                                                                                                                                                                             
-    "resource": {                                                                                                                                                                                                                                                                     
-      "labels": {                                                                                                                                                                                                                                                                     
-        "location": "",                                                                                                                                                                                                                                                               
-        "namespace": "",                                                                                                                                                                                                                                                              
-        "node_id": "",                                                                                                                                                                                                                                                                
-        "project_id": "fake-project"                                                                                                                                                                                                                                                  
-      },                                                                                                                                                                                                                                                                              
-      "type": "generic_node"                                                                                                                                                                                                                                                          
-    },                                                                                                                                                                                                                                                                                
-    "timestamp": "2021-10-19T05:50:41.496590981Z"                                                                                                                                                                                                                                     
+    "timestamp": "2021-10-19T02:04:00.272384509Z"
   }
 ]
