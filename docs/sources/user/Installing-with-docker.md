@@ -62,7 +62,7 @@ For example, if you store your current evidences to analyse in
 file as /data/evidences.plaso this way:
 
 ```bash
-$ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences.plaso /data/evidences
+$ docker run -v /data/:/data log2timeline/plaso log2timeline /data/evidences --storage-file /data/evidences.plaso
 ```
 
 This way your Plaso file will also be stored on the host filesystem.
