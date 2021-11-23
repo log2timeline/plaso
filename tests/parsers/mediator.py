@@ -11,7 +11,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
-from plaso.containers import sessions
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -29,9 +28,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetEarliestYearFromFileEntry(self):
     """Tests the _GetEarliestYearFromFileEntry function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -43,9 +41,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetLatestYearFromFileEntry(self):
     """Tests the _GetLatestYearFromFileEntry function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -60,9 +57,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -122,9 +118,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetDisplayNameForPathSpec(self):
     """Tests the GetDisplayNameForPathSpec function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -141,9 +136,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetEstimatedYear(self):
     """Tests the GetEstimatedYear function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -156,9 +150,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetFileEntry(self):
     """Tests the GetFileEntry function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -168,9 +161,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetFilename(self):
     """Tests the GetFilename function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -180,9 +172,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetLatestYear(self):
     """Tests the GetLatestYear function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -199,9 +190,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testProduceEventWithEventData(self):
     """Tests the ProduceEventWithEventData method."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -231,9 +221,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testProduceExtractionWarning(self):
     """Tests the ProduceExtractionWarning method."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -247,9 +236,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testProduceRecoveryWarning(self):
     """Tests the ProduceRecoveryWarning method."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -263,9 +251,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testResetFileEntry(self):
     """Tests the ResetFileEntry function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -274,9 +261,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSetFileEntry(self):
     """Tests the SetFileEntry function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -285,9 +271,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSetStorageWriter(self):
     """Tests the SetStorageWriter function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -296,9 +281,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
-    session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(session, knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

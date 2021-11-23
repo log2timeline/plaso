@@ -106,73 +106,20 @@ class ExtractionTool(
     self.list_language_tags = False
     self.list_time_zones = False
 
-  def _CreateProcessingConfiguration(self, knowledge_base):
+  def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
 
     Returns:
       ProcessingConfiguration: processing configuration.
-
-    Raises:
-      BadConfigOption: if presets in the parser filter expression could not
-          be expanded or if an invalid parser or plugin name is specified.
     """
-    parser_filter_expression = self._parser_filter_expression
-    if not parser_filter_expression and not self._single_process_mode:
-      operating_system_family = knowledge_base.GetValue('operating_system')
-      operating_system_product = knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = knowledge_base.GetValue(
-          'operating_system_version')
-
-      operating_system_artifact = artifacts.OperatingSystemArtifact(
-          family=operating_system_family, product=operating_system_product,
-          version=operating_system_version)
-
-      preset_definitions = self._presets_manager.GetPresetsByOperatingSystem(
-          operating_system_artifact)
-      if preset_definitions:
-        self._parser_filter_expression = ','.join([
-            preset_definition.name
-            for preset_definition in preset_definitions])
-
-        logger.debug('Parser filter expression set to preset: {0:s}'.format(
-            self._parser_filter_expression))
-
-    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
-
-    try:
-      parser_filter_expression = parser_filter_helper.ExpandPresets(
-          self._presets_manager, self._parser_filter_expression)
-      logger.debug('Parser filter expression set to: {0:s}'.format(
-          parser_filter_expression or 'N/A'))
-    except RuntimeError as exception:
-      raise errors.BadConfigOption((
-          'Unable to expand presets in parser filter expression with '
-          'error: {0!s}').format(exception))
-
-    parser_elements, invalid_parser_elements = (
-        parsers_manager.ParsersManager.CheckFilterExpression(
-            parser_filter_expression))
-
-    if invalid_parser_elements:
-      invalid_parser_names_string = ','.join(invalid_parser_elements)
-      raise errors.BadConfigOption(
-          'Unknown parser or plugin names in element(s): "{0:s}" of '
-          'parser filter expression: {1:s}'.format(
-              invalid_parser_names_string, parser_filter_expression))
-
-    self._expanded_parser_filter_expression = ','.join(sorted(parser_elements))
-
     configuration = configurations.ProcessingConfiguration()
     configuration.artifact_filters = self._artifact_filters
     configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
     configuration.extraction.hasher_file_size_limit = (
         self._hasher_file_size_limit)
+    configuration.extraction.extract_winevt_resources = (
+        self._extract_winevt_resources)
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_archives = self._process_archives
     configuration.extraction.process_compressed_streams = (
@@ -223,6 +170,67 @@ class ExtractionTool(
       source_name = 'ROOT'
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
+
+  def _GetExpandedParserFilterExpression(self, knowledge_base):
+    """Determines the expanded parser filter expression.
+
+    Args:
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for parsing.
+
+    Returns:
+      str: expanded parser filter expression.
+
+    Raises:
+      BadConfigOption: if presets in the parser filter expression could not
+          be expanded or if an invalid parser or plugin name is specified.
+    """
+    parser_filter_expression = self._parser_filter_expression
+    if not parser_filter_expression and not self._single_process_mode:
+      operating_system_family = knowledge_base.GetValue('operating_system')
+      operating_system_product = knowledge_base.GetValue(
+          'operating_system_product')
+      operating_system_version = knowledge_base.GetValue(
+          'operating_system_version')
+
+      operating_system_artifact = artifacts.OperatingSystemArtifact(
+          family=operating_system_family, product=operating_system_product,
+          version=operating_system_version)
+
+      preset_definitions = self._presets_manager.GetPresetsByOperatingSystem(
+          operating_system_artifact)
+      if preset_definitions:
+        self._parser_filter_expression = ','.join([
+            preset_definition.name
+            for preset_definition in preset_definitions])
+
+        logger.debug('Parser filter expression set to preset: {0:s}'.format(
+            self._parser_filter_expression))
+
+    parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
+
+    try:
+      parser_filter_expression = parser_filter_helper.ExpandPresets(
+          self._presets_manager, self._parser_filter_expression)
+      logger.debug('Parser filter expression set to: {0:s}'.format(
+          parser_filter_expression or 'N/A'))
+    except RuntimeError as exception:
+      raise errors.BadConfigOption((
+          'Unable to expand presets in parser filter expression with '
+          'error: {0!s}').format(exception))
+
+    parser_elements, invalid_parser_elements = (
+        parsers_manager.ParsersManager.CheckFilterExpression(
+            parser_filter_expression))
+
+    if invalid_parser_elements:
+      invalid_parser_names_string = ','.join(invalid_parser_elements)
+      raise errors.BadConfigOption(
+          'Unknown parser or plugin names in element(s): "{0:s}" of '
+          'parser filter expression: {1:s}'.format(
+              invalid_parser_names_string, parser_filter_expression))
+
+    return ','.join(sorted(parser_elements))
 
   def _IsArchiveFile(self, path_spec):
     """Determines if a path specification references an archive file.
@@ -435,13 +443,14 @@ class ExtractionTool(
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine, session, storage_writer)
 
-    configuration = self._CreateProcessingConfiguration(
-        extraction_engine.knowledge_base)
+    self._expanded_parser_filter_expression = (
+        self._GetExpandedParserFilterExpression(
+            extraction_engine.knowledge_base))
 
     # TODO: move the following session values into separage processing/session
     # configuration container.
     session.enabled_parser_names = (
-        configuration.parser_filter_expression.split(','))
+        self._expanded_parser_filter_expression.split(','))
     session.parser_filter_expression = self._parser_filter_expression
     session.preferred_language = self._preferred_language or 'en-US'
     session.preferred_time_zone = self._preferred_time_zone
@@ -471,7 +480,7 @@ class ExtractionTool(
 
       self._extract_winevt_resources = False
 
-    session.extract_winevt_resources = self._extract_winevt_resources
+    configuration = self._CreateProcessingConfiguration()
 
     try:
       extraction_engine.BuildCollectionFilters(
@@ -506,8 +515,8 @@ class ExtractionTool(
       logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
-          session, source_configurations, storage_writer,
-          self._resolver_context, configuration, force_parser=force_parser,
+          source_configurations, storage_writer, self._resolver_context,
+          configuration, force_parser=force_parser,
           status_update_callback=status_update_callback)
 
     else:
@@ -517,8 +526,8 @@ class ExtractionTool(
       # about which ProcessSources to check against.
       # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
       processing_status = extraction_engine.ProcessSources(
-          session, source_configurations, storage_writer, configuration,
-          enable_sigsegv_handler=self._enable_sigsegv_handler,
+          source_configurations, storage_writer, session.identifier,
+          configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
           status_update_callback=status_update_callback,
           storage_file_path=self._storage_file_path)
 

@@ -466,9 +466,18 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     output_module.SetStorageReader(storage_reader)
 
-    total_number_of_events = 0
-    for stored_session in storage_reader.GetSessions():
-      total_number_of_events += stored_session.parsers_counter['total']
+    if storage_reader.HasAttributeContainers('parser_count'):
+      parsers_counter = {
+          parser_count.name: parser_count.number_of_events
+          for parser_count in storage_reader.GetAttributeContainers(
+              'parser_count')}
+
+      total_number_of_events = parsers_counter['total']
+
+    else:
+      total_number_of_events = 0
+      for stored_session in storage_reader.GetSessions():
+        total_number_of_events += stored_session.parsers_counter['total']
 
     self._events_status.total_number_of_events = total_number_of_events
 

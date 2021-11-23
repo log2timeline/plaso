@@ -12,7 +12,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.containers import sessions
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
@@ -25,13 +24,12 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the event extractor."""
 
   def _CreateParserMediator(
-      self, session, storage_writer, collection_filters_helper=None,
+      self, storage_writer, collection_filters_helper=None,
       file_entry=None, knowledge_base_values=None, parser_chain=None,
       timezone='UTC'):
     """Creates a parser mediator.
 
     Args:
-      session (Session): session.
       storage_writer (StorageWriter): storage writer.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
@@ -54,7 +52,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object,
+        knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
     parser_mediator.SetStorageWriter(storage_writer)
 
@@ -95,11 +93,9 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=file_entry)
+        storage_writer, file_entry=file_entry)
 
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 
@@ -119,11 +115,9 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-    session = sessions.Session()
-
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(
-        session, storage_writer, file_entry=file_entry)
+        storage_writer, file_entry=file_entry)
 
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 

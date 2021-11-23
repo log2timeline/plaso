@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The storage merge reader."""
 
+import collections
+
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
@@ -12,8 +14,11 @@ class StorageMergeReader(object):
   """Storage reader for merging.
 
   Attributes:
+    event_labels_counter (collections.Counter): number of event tags per label.
     number_of_containers (int): number of containers merged in last call to
         MergeAttributeContainers.
+    parsers_counter (collections.Counter): number of events per parser or
+        parser plugin.
   """
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -44,12 +49,10 @@ class StorageMergeReader(object):
       'windows_eventlog_message_file',
       'windows_eventlog_message_string')
 
-  def __init__(
-      self, session, storage_writer, task_storage_reader, task_identifier):
+  def __init__(self, storage_writer, task_storage_reader, task_identifier):
     """Initializes a storage merge reader.
 
     Args:
-      session (Session): session the task is part of.
       storage_writer (StorageWriter): storage writer.
       task_storage_reader (StorageReader): task storage reader.
       task_identifier (str): identifier of the task that is merged.
@@ -62,12 +65,13 @@ class StorageMergeReader(object):
     self._event_data_parser_mappings = {}
     self._event_data_stream_identifier_mappings = {}
     self._message_file_identifier_mappings = {}
-    self._session = session
     self._storage_writer = storage_writer
     self._task_identifier = task_identifier
     self._task_storage_reader = task_storage_reader
 
+    self.event_labels_counter = collections.Counter()
     self.number_of_containers = 0
+    self.parsers_counter = collections.Counter()
 
   def Close(self):
     """Closes the merge reader."""
@@ -165,8 +169,8 @@ class StorageMergeReader(object):
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       parser_name = self._event_data_parser_mappings.get(
           event_data_lookup_key, 'N/A')
-      self._session.parsers_counter[parser_name] += 1
-      self._session.parsers_counter['total'] += 1
+      self.parsers_counter[parser_name] += 1
+      self.parsers_counter['total'] += 1
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       identifier = container.GetIdentifier()
@@ -178,6 +182,11 @@ class StorageMergeReader(object):
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA_STREAM:
       identifier = container.GetIdentifier()
       self._event_data_stream_identifier_mappings[lookup_key] = identifier
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+      for label in container.labels:
+        self.event_labels_counter[label] += 1
+        self.event_labels_counter['total'] += 1
 
     elif container.CONTAINER_TYPE == 'windows_eventlog_message_file':
       identifier = container.GetIdentifier()

@@ -127,9 +127,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    session = sessions.Session()
-    parser_mediator = parsers_mediator.ParserMediator(
-        session, knowledge_base_object)
+    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
 
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()

@@ -61,12 +61,19 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
       test_engine.PreprocessSources(
           registry, [source_path_spec], session, storage_writer)
 
-      test_engine.ProcessSources(
-          session, [source_configuration], storage_writer, resolver_context,
+      processing_status = test_engine.ProcessSources(
+          [source_configuration], storage_writer, resolver_context,
           configuration)
+
+      parsers_counter = collections.Counter({
+          parser_count.name: parser_count.number_of_events
+          for parser_count in storage_writer.GetAttributeContainers(
+              'parser_count')})
 
     finally:
       storage_writer.Close()
+
+    self.assertFalse(processing_status.aborted)
 
     self.assertEqual(storage_writer.number_of_events, 15)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -74,9 +81,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     expected_parsers_counter = collections.Counter({
         'filestat': 15,
-        'total': 15
-    })
-    self.assertEqual(session.parsers_counter, expected_parsers_counter)
+        'total': 15})
+    self.assertEqual(parsers_counter, expected_parsers_counter)
 
 
 if __name__ == '__main__':

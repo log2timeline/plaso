@@ -87,18 +87,18 @@ class SQLiteStorageFile(interface.BaseStore):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20210621
+  _FORMAT_VERSION = 20211121
 
   # The earliest format version with a schema.
   _WITH_SCHEMA_FORMAT_VERSION = 20210621
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
-  _APPEND_COMPATIBLE_FORMAT_VERSION = 20190309
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20211121
 
   # The earliest format version, stored in-file, that this class
   # is able to upgrade (write new format features).
-  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20210621
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20211121
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -119,8 +119,6 @@ class SQLiteStorageFile(interface.BaseStore):
       interface.BaseStore._CONTAINER_TYPE_EVENT_DATA,
       interface.BaseStore._CONTAINER_TYPE_EVENT_DATA_STREAM,
       interface.BaseStore._CONTAINER_TYPE_EVENT_SOURCE)
-
-  _CONTAINER_SCHEMA_VERSION = 20210621
 
   # TODO: automatically generate mappings
   _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {

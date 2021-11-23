@@ -274,8 +274,9 @@ Test argument parser.
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        '2021-06-23T07:42:09.168590698+00:00,Last Access Time,FILE,File stat,'
-        'OS:/tmp/test/test_data/syslog Type: file,filestat,'
+        '2021-11-21T16:57:33.061054974+00:00,Last Access Time,FILE,File stat,'
+        'OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 '
+        'Group identifier: 1000 Mode: 0o664 Number of links: 1,filestat,'
         'OS:/tmp/test/test_data/syslog,-')
     self.assertIn(expected_line, lines)
 

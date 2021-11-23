@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The task-based multi-process processing extraction engine."""
 
+import collections
 import heapq
 import logging
 import multiprocessing
@@ -12,6 +13,7 @@ import traceback
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
+from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import warnings
 from plaso.engine import extractors
@@ -166,9 +168,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
+    self._parsers_counter = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
-    self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
@@ -313,8 +315,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._merge_task = task
         try:
           self._storage_merge_reader = self._StartMergeTaskStorage(
-              self._session, self._storage_writer, self._task_storage_format,
-              task)
+              self._storage_writer, self._task_storage_format, task)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 
@@ -341,6 +342,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       if fully_merged:
         self._storage_merge_reader.Close()
+
+        for key, value in self._storage_merge_reader.parsers_counter.items():
+          parser_count = self._parsers_counter.get(key, None)
+          if parser_count:
+            parser_count.number_of_events += value
+            self._storage_writer.UpdateAttributeContainer(parser_count)
+          else:
+            parser_count = counts.ParserCount(name=key, number_of_events=value)
+            self._parsers_counter[key] = parser_count
+            self._storage_writer.AddAttributeContainer(parser_count)
 
         self._RemoveMergeTaskStorage(
             self._task_storage_format, self._merge_task)
@@ -373,13 +384,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return number_of_containers
 
-  def _ProcessSources(self, source_configurations, storage_writer):
+  def _ProcessSources(
+      self, source_configurations, storage_writer, session_identifier):
     """Processes the sources.
 
     Args:
       source_configurations (list[SourceConfigurationArtifact]): configurations
           of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -425,7 +439,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    self._ScheduleTasks(storage_writer, self._session.identifier)
+    self._ScheduleTasks(storage_writer, session_identifier)
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -602,7 +616,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self.collection_filters_helper, self.knowledge_base,
-        self._session, self._processing_configuration,
+        self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -797,16 +811,17 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status_update_callback(self._processing_status)
 
   def ProcessSources(
-      self, session, source_configurations, storage_writer,
+      self, source_configurations, storage_writer, session_identifier,
       processing_configuration, enable_sigsegv_handler=False,
       status_update_callback=None, storage_file_path=None):
     """Processes the sources and extract events.
 
     Args:
-      session (Session): session in which the sources are processed.
       source_configurations (list[SourceConfigurationArtifact]): configurations
           of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
@@ -825,7 +840,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._debug_output = processing_configuration.debug_output
     self._log_filename = processing_configuration.log_filename
-    self._session = session
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
     self._storage_writer = storage_writer
@@ -866,8 +880,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._StartStatusUpdateThread()
 
+    self._parsers_counter = collections.Counter({
+        parser_count.name: parser_count
+        for parser_count in self._storage_writer.GetAttributeContainers(
+            'parser_count')})
+
     try:
-      self._ProcessSources(source_configurations, storage_writer)
+      self._ProcessSources(
+          source_configurations, storage_writer, session_identifier)
 
     finally:
       # Stop the status update thread after close of the storage writer
@@ -904,7 +924,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StopTaskStorage(
-          self._task_storage_format, self._session.identifier,
+          self._task_storage_format, session_identifier,
           abort=task_storage_abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
@@ -924,7 +944,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._processing_configuration = None
 
-    self._session = None
     self._status_update_callback = None
     self._storage_file_path = None
     self._storage_writer = None

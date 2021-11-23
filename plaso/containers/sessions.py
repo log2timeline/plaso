@@ -58,12 +58,15 @@ class Session(interface.AttributeContainer):
     self.completion_time = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
-    self.event_labels_counter = collections.Counter()
+    # TODO: kept for backwards compatibility.
+    self.event_labels_counter = None
     self.filter_file = None
     self.identifier = '{0:s}'.format(uuid.uuid4().hex)
     self.parser_filter_expression = None
-    self.parsers_counter = collections.Counter()
+    # TODO: kept for backwards compatibility.
+    self.parsers_counter = None
     self.preferred_encoding = 'utf-8'
     self.preferred_language = None
     self.preferred_time_zone = 'UTC'
@@ -90,18 +93,11 @@ class Session(interface.AttributeContainer):
       raise ValueError('Session identifier mismatch.')
 
     self.aborted = session_completion.aborted
-
-    if session_completion.analysis_reports_counter:
-      self.analysis_reports_counter = (
-          session_completion.analysis_reports_counter)
-
+    self.analysis_reports_counter = (
+        session_completion.analysis_reports_counter or None)
     self.completion_time = session_completion.timestamp
-
-    if session_completion.event_labels_counter:
-      self.event_labels_counter = session_completion.event_labels_counter
-
-    if session_completion.parsers_counter:
-      self.parsers_counter = session_completion.parsers_counter
+    self.event_labels_counter = session_completion.event_labels_counter or None
+    self.parsers_counter = session_completion.parsers_counter or None
 
   def CopyAttributesFromSessionConfiguration(self, session_configuration):
     """Copies attributes from a session configuration.
@@ -229,16 +225,6 @@ class Session(interface.AttributeContainer):
     self.analysis_reports_counter[report_identifier] += 1
     self.analysis_reports_counter['total'] += 1
 
-  def UpdateEventLabelsSessionCounter(self, event_tag):
-    """Updates the event labels session counter.
-
-    Args:
-      event_tag (EventTag): an event tag.
-    """
-    for label in event_tag.labels:
-      self.event_labels_counter[label] += 1
-    self.event_labels_counter['total'] += 1
-
 
 class SessionCompletion(interface.AttributeContainer):
   """Session completion attribute container.
@@ -269,6 +255,7 @@ class SessionCompletion(interface.AttributeContainer):
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier
+    # TODO: kept for backwards compatibility.
     self.parsers_counter = None
     self.timestamp = None
 
@@ -316,6 +303,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
+    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier

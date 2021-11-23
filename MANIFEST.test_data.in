@@ -13,4 +13,4 @@ recursive-exclude plaso *.pyc
 # The test scripts are not required in a binary distribution package they 
 # are considered source distribution files and excluded in find_package()
 # in setup.py.
-recursive-include tests *.py *.sh
+recursive-include tests *.py

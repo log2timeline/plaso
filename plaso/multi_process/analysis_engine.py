@@ -5,6 +5,7 @@ import collections
 import os
 import time
 
+from plaso.containers import counts
 from plaso.containers import events
 from plaso.containers import tasks
 from plaso.engine import processing_status
@@ -51,9 +52,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._completed_analysis_processes = set()
     self._data_location = None
     self._event_filter_expression = None
+    self._event_labels_counter = None
     self._event_queues = {}
-    self._events_status = processing_status.EventsStatus()
     self._event_tag_index = event_tag_index.EventTagIndex()
+    self._events_status = processing_status.EventsStatus()
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
@@ -177,14 +179,24 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_queue.Close()
 
           storage_merge_reader = self._StartMergeTaskStorage(
-              self._session, storage_writer, definitions.STORAGE_FORMAT_SQLITE,
-              task)
+              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
 
           storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
 
           storage_merge_reader.Close()
+
+          for key, value in  storage_merge_reader.event_labels_counter.items():
+            event_label_count = self._event_labels_counter.get(key, None)
+            if event_label_count:
+              event_label_count.number_of_events += value
+              storage_writer.UpdateAttributeContainer(event_label_count)
+            else:
+              event_label_count = counts.EventLabelCount(
+                  label=key, number_of_events=value)
+              self._event_labels_counter[key] = event_label_count
+              storage_writer.AddAttributeContainer(event_label_count)
 
           self._RemoveMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
@@ -534,9 +546,27 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
-    total_number_of_events = 0
-    for stored_session in storage_writer.GetSessions():
-      total_number_of_events += stored_session.parsers_counter['total']
+    event_labels_counter = {}
+    if storage_writer.HasAttributeContainers('event_label_count'):
+      event_labels_counter = {
+          event_label_count.name: event_label_count
+          for event_label_count in storage_writer.GetAttributeContainers(
+              'event_label_count')}
+
+    self._event_labels_counter = collections.Counter(event_labels_counter)
+
+    if storage_writer.HasAttributeContainers('parser_count'):
+      parsers_counter = {
+          parser_count.name: parser_count.number_of_events
+          for parser_count in storage_writer.GetAttributeContainers(
+              'parser_count')}
+
+      total_number_of_events = parsers_counter['total']
+
+    else:
+      total_number_of_events = 0
+      for stored_session in storage_writer.GetSessions():
+        total_number_of_events += stored_session.parsers_counter['total']
 
     self._events_status.total_number_of_events = total_number_of_events
 
