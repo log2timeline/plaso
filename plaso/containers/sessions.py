@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Session related attribute container definitions."""
 
-import collections
 import time
 import uuid
 
@@ -52,7 +51,8 @@ class Session(interface.AttributeContainer):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
     self.aborted = False
-    self.analysis_reports_counter = collections.Counter()
+    # TODO: kept for backwards compatibility.
+    self.analysis_reports_counter = None
     self.artifact_filters = None
     self.command_line_arguments = None
     self.completion_time = None
@@ -215,16 +215,6 @@ class Session(interface.AttributeContainer):
     session_start.timestamp = self.start_time
     return session_start
 
-  def UpdateAnalysisReportSessionCounter(self, analysis_report):
-    """Updates the analysis report session counter.
-
-    Args:
-      analysis_report (AnalysisReport): a report.
-    """
-    report_identifier = analysis_report.plugin_name
-    self.analysis_reports_counter[report_identifier] += 1
-    self.analysis_reports_counter['total'] += 1
-
 
 class SessionCompletion(interface.AttributeContainer):
   """Session completion attribute container.
@@ -252,6 +242,7 @@ class SessionCompletion(interface.AttributeContainer):
     """
     super(SessionCompletion, self).__init__()
     self.aborted = False
+    # TODO: kept for backwards compatibility.
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier

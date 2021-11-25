@@ -328,7 +328,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_session_dict = {
         'aborted': False,
-        'analysis_reports_counter': session.analysis_reports_counter,
         'debug_mode': False,
         'extract_winevt_resources': True,
         'identifier': session.identifier,

@@ -108,6 +108,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Returns:
       dict[str, collections.Counter]: storage counters.
     """
+    # TODO: determine analysis report counter from actual stored analysis
+    # reports or remove.
     analysis_reports_counter = collections.Counter()
     analysis_reports_counter_error = False
 
@@ -133,24 +135,23 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     format_version = storage_reader.GetFormatVersion()
 
-    for session in storage_reader.GetSessions():
-      if isinstance(session.analysis_reports_counter, collections.Counter):
-        analysis_reports_counter += session.analysis_reports_counter
-      else:
-        analysis_reports_counter_error = True
+    # TODO: kept for backwards compatibility.
+    if format_version < 20211121:
+      for session in storage_reader.GetSessions():
+        if isinstance(session.analysis_reports_counter, collections.Counter):
+          analysis_reports_counter += session.analysis_reports_counter
+        else:
+          analysis_reports_counter_error = True
 
-      if format_version >= 20211121:
-        continue
+        if isinstance(session.event_labels_counter, collections.Counter):
+          event_labels_counter += session.event_labels_counter
+        else:
+          event_labels_counter_error = True
 
-      if isinstance(session.event_labels_counter, collections.Counter):
-        event_labels_counter += session.event_labels_counter
-      else:
-        event_labels_counter_error = True
-
-      if isinstance(session.parsers_counter, collections.Counter):
-        parsers_counter += session.parsers_counter
-      else:
-        parsers_counter_error = True
+        if isinstance(session.parsers_counter, collections.Counter):
+          parsers_counter += session.parsers_counter
+        else:
+          parsers_counter_error = True
 
     storage_counters = {}
 
@@ -906,15 +907,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               session.source_configurations,
               session_identifier=session_identifier)
 
+        # TODO: kept for backwards compatibility.
         if format_version < 20211121:
           self._PrintParsersCounter(
               session.parsers_counter, session_identifier=session_identifier)
 
-        self._PrintAnalysisReportCounter(
-            session.analysis_reports_counter,
-            session_identifier=session_identifier)
+          self._PrintAnalysisReportCounter(
+              session.analysis_reports_counter,
+              session_identifier=session_identifier)
 
-        if format_version < 20211121:
           self._PrintEventLabelsCounter(
               session.event_labels_counter,
               session_identifier=session_identifier)

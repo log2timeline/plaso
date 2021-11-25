@@ -60,6 +60,9 @@ class AnalysisTool(
       status_update_callback (Optional[function]): callback function for status
           updates.
 
+    Returns:
+      ProcessingStatus: processing status.
+
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
@@ -76,7 +79,7 @@ class AnalysisTool(
     storage_writer.Open(path=self._storage_file_path)
 
     try:
-      analysis_engine.AnalyzeEvents(
+      processing_status = analysis_engine.AnalyzeEvents(
           session, self._knowledge_base, storage_writer, self._data_location,
           self._analysis_plugins, configuration,
           event_filter=self._event_filter,
@@ -86,6 +89,8 @@ class AnalysisTool(
 
     finally:
       storage_writer.Close()
+
+    return processing_status
 
   def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.

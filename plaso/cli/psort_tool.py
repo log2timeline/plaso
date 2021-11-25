@@ -2,7 +2,6 @@
 """The psort CLI tool."""
 
 import argparse
-import collections
 import os
 
 # The following import makes sure the filters are registered.
@@ -43,7 +42,7 @@ class PsortTool(
 
   NAME = 'psort'
   DESCRIPTION = (
-      'Application to read, filter and process output from a plaso storage '
+      'Application to read, filter and process output from a Plaso storage '
       'file.')
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -420,7 +419,7 @@ class PsortTool(
     self._output_module = self._CreateOutputModule(options)
 
   def ProcessStorage(self):
-    """Processes a plaso storage file.
+    """Processes a Plaso storage file.
 
     Raises:
       BadConfigOption: when a configuration parameter fails validation or the
@@ -478,14 +477,21 @@ class PsortTool(
     configuration.profiling.profilers = self._profilers
 
     analysis_counter = None
-    if self._analysis_plugins:
-      self._AnalyzeEvents(
-          session, configuration, status_update_callback=status_update_callback)
 
-      analysis_counter = collections.Counter()
-      if session.analysis_reports_counter:
-        for item, value in session.analysis_reports_counter.items():
-          analysis_counter[item] = value
+    if self._analysis_plugins:
+      processing_status = None
+
+      try:
+        processing_status = self._AnalyzeEvents(
+            session, configuration,
+            status_update_callback=status_update_callback)
+
+        analysis_counter = processing_status.analysis_reports_counter
+
+      finally:
+        session.aborted = getattr(processing_status, 'aborted', True)
+
+    # TODO: abort if session.aborted is True
 
     if self._output_format != 'null':
       storage_reader = (
