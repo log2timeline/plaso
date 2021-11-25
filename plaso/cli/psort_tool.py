@@ -58,7 +58,6 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._command_line_arguments = None
     self._deduplicate_events = True
     self._preferred_language = None
     self._process_memory_limit = None
@@ -432,11 +431,6 @@ class PsortTool(
     status_update_callback = (
         self._status_view.GetAnalysisStatusUpdateCallback())
 
-    session = engine.BaseEngine.CreateSession(
-        command_line_arguments=self._command_line_arguments,
-        preferred_encoding=self.preferred_encoding)
-    session.preferred_language = self._preferred_language or 'en-US'
-
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
@@ -467,6 +461,8 @@ class PsortTool(
     finally:
       storage_reader.Close()
 
+    session = engine.BaseEngine.CreateSession()
+
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
     configuration.debug_output = self._debug_mode
@@ -479,17 +475,10 @@ class PsortTool(
     analysis_counter = None
 
     if self._analysis_plugins:
-      processing_status = None
+      processing_status = self._AnalyzeEvents(
+          session, configuration, status_update_callback=status_update_callback)
 
-      try:
-        processing_status = self._AnalyzeEvents(
-            session, configuration,
-            status_update_callback=status_update_callback)
-
-        analysis_counter = processing_status.analysis_reports_counter
-
-      finally:
-        session.aborted = getattr(processing_status, 'aborted', True)
+      analysis_counter = processing_status.analysis_reports_counter
 
     # TODO: abort if session.aborted is True
 

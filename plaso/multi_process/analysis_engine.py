@@ -589,34 +589,23 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
+      self._AnalyzeEvents(
+          storage_writer, analysis_plugins, event_filter=event_filter)
 
-      try:
-        session_configuration = self._session.CreateSessionConfiguration()
-        storage_writer.AddAttributeContainer(session_configuration)
+      self._status = definitions.STATUS_INDICATOR_FINALIZING
 
-        self._AnalyzeEvents(
-            storage_writer, analysis_plugins, event_filter=event_filter)
+    except errors.QueueFull:
+      queue_full = True
+      self._abort = True
 
-        self._status = definitions.STATUS_INDICATOR_FINALIZING
-
-      except errors.QueueFull:
-        queue_full = True
-        self._abort = True
-
-      except KeyboardInterrupt:
-        keyboard_interrupt = True
-        self._abort = True
-
-      finally:
-        self._processing_status.aborted = self._abort
-        self._session.aborted = self._abort
-
-        session_completion = self._session.CreateSessionCompletion()
-        storage_writer.AddAttributeContainer(session_completion)
+    except KeyboardInterrupt:
+      keyboard_interrupt = True
+      self._abort = True
 
     finally:
+      self._processing_status.aborted = self._abort
+      session.aborted = self._abort
+
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
@@ -647,7 +636,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StopTaskStorage(
-          definitions.STORAGE_FORMAT_SQLITE, self._session.identifier,
+          definitions.STORAGE_FORMAT_SQLITE, session.identifier,
           abort=self._abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(

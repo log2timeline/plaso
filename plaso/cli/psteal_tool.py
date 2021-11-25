@@ -321,7 +321,7 @@ class PstealTool(
     finally:
       storage_reader.Close()
 
-    configuration = self._CreateProcessingConfiguration()
+    configuration = self._CreateExtractionProcessingConfiguration()
 
     if self._output_format != 'null':
       self._status_view.SetMode(self._status_view_mode)
