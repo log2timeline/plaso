@@ -1112,9 +1112,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       if self._output_format == 'json':
         self._output_writer.Write('}')
 
-    elif storage_type == definitions.STORAGE_TYPE_TASK:
-      self._PrintTasksInformation(storage_reader)
-
     if self._output_format == 'json':
       self._output_writer.Write('}')
     elif self._output_format in ('markdown', 'text'):
@@ -1186,26 +1183,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     table_view.AddRow(['Format version', format_version])
     table_view.AddRow(['Storage type', storage_type])
     table_view.AddRow(['Serialization format', serialization_format])
-    table_view.Write(self._output_writer)
-
-  def _PrintTasksInformation(self, storage_reader):
-    """Prints information about the tasks.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Tasks')
-
-    for task_start, _ in storage_reader.GetSessions():
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=task_start.timestamp)
-      start_time = date_time.CopyToDateTimeStringISO8601()
-
-      task_identifier = uuid.UUID(hex=task_start.identifier)
-      task_identifier = '{0!s}'.format(task_identifier)
-      table_view.AddRow([task_identifier, start_time])
-
     table_view.Write(self._output_writer)
 
   def _PrintWarningCountersJSON(

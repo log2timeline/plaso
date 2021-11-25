@@ -8,6 +8,8 @@ class StorageReader(object):
   def __init__(self):
     """Initializes a storage reader."""
     super(StorageReader, self).__init__()
+    self._serializers_profiler = None
+    self._storage_profiler = None
     self._store = None
 
   def __enter__(self):
@@ -119,7 +121,7 @@ class StorageReader(object):
     Returns:
       generator(EventObject): event generator.
     """
-    return self._store.GetSortedEvents(time_range)
+    return self._store.GetSortedEvents(time_range=time_range)
 
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.
@@ -139,7 +141,9 @@ class StorageReader(object):
     Args:
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
-    self._store.SetSerializersProfiler(serializers_profiler)
+    self._serializers_profiler = serializers_profiler
+    if self._store:
+      self._store.SetSerializersProfiler(serializers_profiler)
 
   def SetStorageProfiler(self, storage_profiler):
     """Sets the storage profiler.
@@ -147,4 +151,6 @@ class StorageReader(object):
     Args:
       storage_profiler (StorageProfiler): storage profiler.
     """
-    self._store.SetStorageProfiler(storage_profiler)
+    self._storage_profiler = storage_profiler
+    if self._store:
+      self._store.SetStorageProfiler(storage_profiler)

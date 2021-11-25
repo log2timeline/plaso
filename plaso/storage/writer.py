@@ -9,9 +9,10 @@ from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import warnings
 from plaso.lib import definitions
+from plaso.storage import reader
 
 
-class StorageWriter(object):
+class StorageWriter(reader.StorageReader):
   """Storage writer interface."""
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -35,10 +36,7 @@ class StorageWriter(object):
     super(StorageWriter, self).__init__()
     self._attribute_containers_counter = collections.Counter()
     self._first_written_event_source_index = 0
-    self._serializers_profiler = None
-    self._storage_profiler = None
     self._storage_type = storage_type
-    self._store = None
     self._written_event_source_index = 0
 
   @property
@@ -85,16 +83,6 @@ class StorageWriter(object):
     """int: number of recovery warnings written."""
     return self._attribute_containers_counter[
         self._CONTAINER_TYPE_RECOVERY_WARNING]
-
-  def _RaiseIfNotReadable(self):
-    """Raises if the storage writer is not readable.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
@@ -162,60 +150,6 @@ class StorageWriter(object):
     self._store.Close()
     self._store = None
 
-  def GetAttributeContainerByIdentifier(self, container_type, identifier):
-    """Retrieves a specific type of container with a specific identifier.
-
-    Args:
-      container_type (str): container type.
-      identifier (AttributeContainerIdentifier): attribute container identifier.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotReadable()
-
-    return self._store.GetAttributeContainerByIdentifier(
-        container_type, identifier)
-
-  def GetAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotReadable()
-
-    return self._store.GetAttributeContainerByIndex(container_type, index)
-
-  def GetAttributeContainers(self, container_type):
-    """Retrieves a specific type of attribute containers.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      generator(AttributeContainers): attribute container generator.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotReadable()
-
-    return self._store.GetAttributeContainers(container_type)
-
   # TODO: remove this helper method, currently only used by parser tests.
   def GetEvents(self):
     """Retrieves the events.
@@ -244,29 +178,6 @@ class StorageWriter(object):
       EventSource: event source or None if there are no newly written ones.
     """
 
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Returns:
-      generator(Session): session generator.
-    """
-    return self._store.GetSessions()
-
-  def GetSortedEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self._store.GetSortedEvents(time_range=time_range)
-
   def GetSystemConfigurationIdentifier(self):
     """Retrieves the system configuration identifier.
 
@@ -275,41 +186,9 @@ class StorageWriter(object):
     """
     return self._store.GetSystemConfigurationIdentifier()
 
-  def HasAttributeContainers(self, container_type):
-    """Determines if a store contains a specific type of attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      bool: True if the store contains the specified type of attribute
-          containers.
-    """
-    return self._store.HasAttributeContainers(container_type)
-
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage writer."""
-
-  def SetSerializersProfiler(self, serializers_profiler):
-    """Sets the serializers profiler.
-
-    Args:
-      serializers_profiler (SerializersProfiler): serializers profiler.
-    """
-    self._serializers_profiler = serializers_profiler
-    if self._store:
-      self._store.SetSerializersProfiler(serializers_profiler)
-
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profiler.
-    """
-    self._storage_profiler = storage_profiler
-    if self._store:
-      self._store.SetStorageProfiler(storage_profiler)
 
   def UpdateAttributeContainer(self, container):
     """Updates an existing attribute container.

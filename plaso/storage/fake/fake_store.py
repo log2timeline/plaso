@@ -34,7 +34,7 @@ class FakeStore(interface.BaseStore):
        IOError: if the store cannot be read from.
     """
     if not self._is_open:
-      raise IOError('Unable to write to closed storage writer.')
+      raise IOError('Unable to read from closed storage writer.')
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage file is not writable.
