@@ -63,7 +63,6 @@ class BaseStore(object):
     super(BaseStore, self).__init__()
     self._attribute_container_sequence_numbers = collections.Counter()
     self._containers_manager = containers_manager.AttributeContainersManager
-    self._last_session = 0
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
     self._storage_profiler = None
@@ -308,71 +307,6 @@ class BaseStore(object):
     Returns:
       int: the number of containers of a specified type.
     """
-
-  # TODO: remove the need for seperate SessionStart and SessionCompletion
-  # attribute containers.
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Yields:
-      Session: session attribute container.
-
-    Raises:
-      IOError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-      OSError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-    """
-    session_start_generator = self.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-    session_completion_generator = self.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
-    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
-      session_configuration_generator = self.GetAttributeContainers(
-          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
-    else:
-      session_configuration_generator = None
-
-    for session_index in range(1, self._last_session + 1):
-      try:
-        session_start = next(session_start_generator)
-      except StopIteration:
-        raise IOError('Missing session start: {0:d}'.format(session_index))
-
-      try:
-        session_completion = next(session_completion_generator)
-      except StopIteration:
-        pass
-
-      session_configuration = None
-      if session_configuration_generator:
-        try:
-          session_configuration = next(session_configuration_generator)
-        except StopIteration:
-          raise IOError('Missing session configuration: {0:d}'.format(
-              session_index))
-
-      session = sessions.Session()
-      session.CopyAttributesFromSessionStart(session_start)
-
-      if session_configuration:
-        try:
-          session.CopyAttributesFromSessionConfiguration(session_configuration)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session configuration: '
-              '{0:d}').format(session_index))
-
-      if session_completion:
-        try:
-          session.CopyAttributesFromSessionCompletion(session_completion)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session completion: '
-              '{0:d}').format(session_index))
-
-      yield session
 
   @abc.abstractmethod
   def GetSortedEvents(self, time_range=None):
