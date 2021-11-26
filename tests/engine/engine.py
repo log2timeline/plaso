@@ -4,8 +4,6 @@
 
 import unittest
 
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -148,10 +146,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     test_artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-    registry.ReadFromDirectory(reader, test_artifacts_path)
-
     test_engine = TestEngine()
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -163,12 +157,13 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     test_engine.PreprocessSources(
-        registry, [source_path_spec], session, storage_writer)
+        test_artifacts_path, None, [source_path_spec], session, storage_writer)
 
     operating_system = test_engine.knowledge_base.GetValue('operating_system')
     self.assertEqual(operating_system, 'Windows NT')
 
-    test_engine.PreprocessSources(registry, [None], session, storage_writer)
+    test_engine.PreprocessSources(
+        test_artifacts_path, None, [None], session, storage_writer)
 
 
 if __name__ == '__main__':

@@ -6,8 +6,6 @@ import collections
 import os
 import unittest
 
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -28,10 +26,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests the PreprocessSources and ProcessSources function."""
     artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(artifacts_path)
-
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-    registry.ReadFromDirectory(reader, artifacts_path)
 
     test_engine = extraction_engine.ExtractionMultiProcessEngine(
         maximum_number_of_tasks=100)
@@ -61,7 +55,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       try:
         test_engine.PreprocessSources(
-            registry, [source_path_spec], session, storage_writer)
+            artifacts_path, None, [source_path_spec], session, storage_writer)
 
         processing_status = test_engine.ProcessSources(
             [source_configuration], storage_writer, session.identifier,
