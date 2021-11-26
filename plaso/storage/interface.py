@@ -390,14 +390,6 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-    """
-
-  @abc.abstractmethod
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.
 

@@ -178,14 +178,6 @@ class StorageWriter(reader.StorageReader):
       EventSource: event source or None if there are no newly written ones.
     """
 
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-    """
-    return self._store.GetSystemConfigurationIdentifier()
-
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage writer."""

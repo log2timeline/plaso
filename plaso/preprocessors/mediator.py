@@ -137,11 +137,6 @@ class PreprocessMediator(object):
 
     else:
       if self._storage_writer:
-        system_configuration_identifier = (
-            self._storage_writer.GetSystemConfigurationIdentifier())
-        windows_eventlog_provider.SetSystemConfigurationIdentifier(
-            system_configuration_identifier)
-
         self._storage_writer.AddAttributeContainer(windows_eventlog_provider)
 
       self._knowledge_base.AddWindowsEventLogProvider(

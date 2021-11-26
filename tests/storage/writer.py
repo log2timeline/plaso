@@ -34,7 +34,6 @@ class StorageWriterTest(test_lib.StorageTestCase):
   # TODO: add tests for AddOrUpdateEventTag method
   # TODO: add tests for Close method
   # TODO: add tests for GetEvents method
-  # TODO: add tests for GetSystemConfigurationIdentifier method
   # TODO: add tests for UpdateAttributeContainer method
 
 
