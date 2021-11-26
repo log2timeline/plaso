@@ -24,11 +24,12 @@ class GCPLogEventData(events.EventData):
     user (str): the user principal performing the logged action.
     action (str): the logged GCP action.
     resource (str): the resource the action is being performed on.
-    textPayload (str): the textPayload for logs not using a json or proto
+    text_payload (str): the textPayload for logs not using a json or proto
       payload.
+    log_name (str): the logName for the log entry.
   """
 
-  DATA_TYPE = 'gcp:json:log'
+  DATA_TYPE = 'gcp:log:json'
 
   def __init__(self):
     """Initializes event data."""
@@ -39,6 +40,7 @@ class GCPLogEventData(events.EventData):
     self.action = None
     self.resource = None
     self.text_payload = None
+    self.log_name = None
 
   def AddEventAttributes(self, event_attributes):
     """Add extra event attributes parsed from GCP logs.
@@ -94,6 +96,10 @@ class GCPLogsParser(interface.FileObjectParser):
       severity = json_log_entry.get('severity')
       if severity:
         event_data.severity = severity
+
+      log_name = json_log_entry.get('logName')
+      if log_name:
+        event_data.log_name = log_name
 
       json_payload = json_log_entry.get('jsonPayload', None)
       if json_payload:

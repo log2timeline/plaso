@@ -178,7 +178,7 @@ short_message:
 - '{attribute_name}'
 ---
 type: 'conditional'
-data_type: 'gcp:json:log'
+data_type: 'gcp:log:json'
 message:
 - '{text_payload}'
 - 'User {user}'
