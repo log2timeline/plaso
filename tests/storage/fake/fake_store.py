@@ -13,7 +13,7 @@ from tests.containers import test_lib as containers_test_lib
 
 
 class FakeStoreTest(test_lib.StorageTestCase):
-  """Tests for the fake storage writer object."""
+  """Tests for the fake (in-memory only) store."""
 
   # pylint: disable=protected-access
 

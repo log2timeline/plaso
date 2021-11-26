@@ -399,8 +399,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       test_store.Close()
 
-  # TODO: add tests for GetSessions
-
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
     with shared_test_lib.TempDirectory() as temp_directory:
