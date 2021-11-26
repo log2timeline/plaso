@@ -1111,17 +1111,6 @@ class SQLiteStorageFile(interface.BaseStore):
         self._CONTAINER_TYPE_EVENT, column_names=column_names,
         filter_expression=filter_expression, order_by=filter_column_name)
 
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-    """
-    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-       self._CONTAINER_TYPE_SESSION_CONFIGURATION)
-    return identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_SESSION_CONFIGURATION, next_sequence_number)
-
   def HasAttributeContainers(self, container_type):
     """Determines if store contains a specific type of attribute containers.
 

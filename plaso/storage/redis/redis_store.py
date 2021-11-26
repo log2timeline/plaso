@@ -412,20 +412,6 @@ class RedisStore(interface.BaseStore):
       yield self.GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, identifier)
 
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-
-    Raises:
-      IOError: always, as the Redis store does not support writing a system
-          configuration.
-      OSError: always, as the Redis store does not support writing a system
-          configuration.
-    """
-    raise IOError('System configuration is not supported by the redis store.')
-
   def HasAttributeContainers(self, container_type):
     """Determines if the store contains a specific type of attribute container.
 
