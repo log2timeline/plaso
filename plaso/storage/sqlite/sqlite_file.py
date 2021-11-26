@@ -12,7 +12,6 @@ from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import identifiers
 from plaso.storage import interface
-from plaso.storage import logger
 
 
 def PythonAST2SQL(ast_node):
@@ -1229,12 +1228,6 @@ class SQLiteStorageFile(interface.BaseStore):
 
       self._connection.commit()
 
-    last_session_start = self.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-
-    last_session_completion = self.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
     # Initialize next_sequence_number based on the file contents so that
     # SQLTableIdentifier points to the correct attribute container.
     for container_type in self._REFERENCED_CONTAINER_TYPES:
@@ -1242,9 +1235,3 @@ class SQLiteStorageFile(interface.BaseStore):
           container_type)
       self._SetAttributeContainerNextSequenceNumber(
           container_type, next_sequence_number)
-
-    # TODO: handle open sessions.
-    if last_session_start != last_session_completion:
-      logger.warning('Detected unclosed session.')
-
-    self._last_session = last_session_completion
