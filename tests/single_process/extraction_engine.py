@@ -5,8 +5,6 @@
 import collections
 import unittest
 
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
@@ -33,10 +31,6 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['ímynd.dd'])
     self._SkipIfPathNotExists(test_file_path)
 
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-    registry.ReadFromDirectory(reader, test_artifacts_path)
-
     test_engine = extraction_engine.SingleProcessEngine()
     resolver_context = context.Context()
 
@@ -59,7 +53,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     try:
       test_engine.PreprocessSources(
-          registry, [source_path_spec], session, storage_writer)
+          test_artifacts_path, None, [source_path_spec], session,
+          storage_writer)
 
       processing_status = test_engine.ProcessSources(
           [source_configuration], storage_writer, resolver_context,

@@ -427,10 +427,9 @@ class ExtractionTool(
     logger.debug('Starting preprocessing.')
 
     try:
-      artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
-          self._artifact_definitions_path, self._custom_artifacts_path)
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs, session, storage_writer,
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          self._source_path_specs, session, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:

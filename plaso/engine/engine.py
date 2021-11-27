@@ -58,6 +58,55 @@ class BaseEngine(object):
     self.collection_filters_helper = None
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
+  def _BuildArtifactsRegistry(
+      self, artifact_definitions_path, custom_artifacts_path):
+    """Build Find Specs from artifacts or filter file if available.
+
+    Args:
+      artifact_definitions_path (str): path to artifact definitions directory
+          or file.
+      custom_artifacts_path (str): path to custom artifact definitions
+          directory or file.
+
+    Returns:
+      artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
+
+    Raises:
+      BadConfigOption: if artifact definitions cannot be read.
+    """
+    if not artifact_definitions_path:
+      raise errors.BadConfigOption(
+          'No such artifact definitions: {0:s}.'.format(
+              artifact_definitions_path))
+
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+
+    try:
+      if os.path.isdir(artifact_definitions_path):
+        registry.ReadFromDirectory(reader, artifact_definitions_path)
+      else:
+        registry.ReadFromFile(reader, artifact_definitions_path)
+
+    except (KeyError, artifacts_errors.FormatError) as exception:
+      raise errors.BadConfigOption((
+          'Unable to read artifact definitions from: {0:s} with error: '
+          '{1!s}').format(artifact_definitions_path, exception))
+
+    if custom_artifacts_path:
+      try:
+        if os.path.isdir(custom_artifacts_path):
+          registry.ReadFromDirectory(reader, custom_artifacts_path)
+        else:
+          registry.ReadFromFile(reader, custom_artifacts_path)
+
+      except (KeyError, artifacts_errors.FormatError) as exception:
+        raise errors.BadConfigOption((
+            'Unable to read custom artifact definitions from: {0:s} with '
+            'error: {1!s}').format(custom_artifacts_path, exception))
+
+    return registry
+
   def _DetermineOperatingSystem(self, searcher):
     """Tries to determine the underlying operating system.
 
@@ -247,19 +296,27 @@ class BaseEngine(object):
     return file_system, mount_point
 
   def PreprocessSources(
-      self, artifacts_registry_object, source_path_specs, session,
-      storage_writer, resolver_context=None):
+      self, artifact_definitions_path, custom_artifacts_path,
+      source_path_specs, session, storage_writer, resolver_context=None):
     """Preprocesses the sources.
 
     Args:
-      artifacts_registry_object (artifacts.ArtifactDefinitionsRegistry):
-          artifact definitions registry.
+      artifact_definitions_path (str): path to artifact definitions directory
+          or file.
+      custom_artifacts_path (str): path to custom artifact definitions
+          directory or file.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
+    artifacts_registry_object = self._BuildArtifactsRegistry(
+        artifact_definitions_path, custom_artifacts_path)
+
+    mediator = preprocess_mediator.PreprocessMediator(
+        session, storage_writer, self.knowledge_base)
+
     detected_operating_systems = []
     for source_path_spec in source_path_specs:
       try:
@@ -279,9 +336,6 @@ class BaseEngine(object):
         continue
 
       if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
-        mediator = preprocess_mediator.PreprocessMediator(
-            session, storage_writer, self.knowledge_base)
-
         preprocess_manager.PreprocessPluginsManager.RunPlugins(
             artifacts_registry_object, file_system, mount_point, mediator)
 
@@ -316,7 +370,7 @@ class BaseEngine(object):
           'building find specification based on artifacts: {0:s}'.format(
               ', '.join(artifact_filter_names)))
 
-      artifacts_registry_object = BaseEngine.BuildArtifactsRegistry(
+      artifacts_registry_object = self._BuildArtifactsRegistry(
           artifact_definitions_path, custom_artifacts_path)
       self.collection_filters_helper = (
           artifact_filters.ArtifactDefinitionsFiltersHelper(
@@ -361,53 +415,3 @@ class BaseEngine(object):
         raise errors.InvalidFilter((
             'No valid file system find specifications were built from filter '
             'file: {0:s}.').format(filter_file_path))
-
-  @classmethod
-  def BuildArtifactsRegistry(
-      cls, artifact_definitions_path, custom_artifacts_path):
-    """Build Find Specs from artifacts or filter file if available.
-
-    Args:
-       artifact_definitions_path (str): path to artifact definitions directory
-           or file.
-       custom_artifacts_path (str): path to custom artifact definitions
-           directory or file.
-
-    Returns:
-      artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
-
-    Raises:
-      BadConfigOption: if artifact definitions cannot be read.
-    """
-    if not artifact_definitions_path:
-      raise errors.BadConfigOption(
-          'No such artifact definitions: {0:s}.'.format(
-              artifact_definitions_path))
-
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-
-    try:
-      if os.path.isdir(artifact_definitions_path):
-        registry.ReadFromDirectory(reader, artifact_definitions_path)
-      else:
-        registry.ReadFromFile(reader, artifact_definitions_path)
-
-    except (KeyError, artifacts_errors.FormatError) as exception:
-      raise errors.BadConfigOption((
-          'Unable to read artifact definitions from: {0:s} with error: '
-          '{1!s}').format(artifact_definitions_path, exception))
-
-    if custom_artifacts_path:
-      try:
-        if os.path.isdir(custom_artifacts_path):
-          registry.ReadFromDirectory(reader, custom_artifacts_path)
-        else:
-          registry.ReadFromFile(reader, custom_artifacts_path)
-
-      except (KeyError, artifacts_errors.FormatError) as exception:
-        raise errors.BadConfigOption((
-            'Unable to read custom artifact definitions from: {0:s} with '
-            'error: {1!s}').format(custom_artifacts_path, exception))
-
-    return registry
