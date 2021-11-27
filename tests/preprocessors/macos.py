@@ -139,7 +139,9 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'Europe/Amsterdam')
@@ -158,7 +160,9 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
@@ -186,7 +190,9 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     users = sorted(
         test_mediator.knowledge_base.user_accounts,
@@ -218,7 +224,9 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
 
 if __name__ == '__main__':

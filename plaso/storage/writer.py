@@ -73,12 +73,6 @@ class StorageWriter(reader.StorageReader):
         self._CONTAINER_TYPE_EXTRACTION_WARNING]
 
   @property
-  def number_of_preprocessing_warnings(self):
-    """int: number of preprocessing warnings written."""
-    return self._attribute_containers_counter[
-        self._CONTAINER_TYPE_PREPROCESSING_WARNING]
-
-  @property
   def number_of_recovery_warnings(self):
     """int: number of recovery warnings written."""
     return self._attribute_containers_counter[
