@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Linux preprocess plug-ins."""
+"""Tests for the Linux preprocessor plugins."""
 
 import unittest
 

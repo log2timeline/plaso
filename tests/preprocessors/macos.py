@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MacOS preprocess plug-ins."""
+"""Tests for the MacOS preprocessor plugins."""
 
 import unittest
 
