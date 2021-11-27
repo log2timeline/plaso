@@ -20,9 +20,16 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History'], plugin)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 71)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 71)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -62,9 +69,16 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-57.0.2987.133'], plugin)
 
     # The History file contains 3 events (1 page visit, 2 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -104,9 +118,16 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-58.0.3029.96'], plugin)
 
     # The History file contains 3 events (1 page visit, 2 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -146,9 +167,16 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-59.0.3071.86'], plugin)
 
     # The History file contains 3 events (1 page visit, 2 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -190,9 +218,16 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         ['History-59_added-fake-column'], plugin)
 
     # The History file contains 3 events (1 page visit, 2 file downloads).
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
