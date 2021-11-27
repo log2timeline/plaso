@@ -18,7 +18,6 @@ from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import warnings
 from plaso.engine import path_helper
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.serializer import json_serializer
@@ -1077,40 +1076,38 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     elif self._output_format in ('markdown', 'text'):
       self._PrintStorageOverviewAsTable(storage_reader)
 
-    storage_type = storage_reader.GetStorageType()
-    if storage_type == definitions.STORAGE_TYPE_SESSION:
-      if self._sections == 'all' or 'sessions' in self._sections:
-        self._PrintSessionsSection(storage_reader)
+    if self._sections == 'all' or 'sessions' in self._sections:
+      self._PrintSessionsSection(storage_reader)
 
-      if self._sections == 'all' or 'sources' in self._sections:
-        self._PrintSourcesOverview(storage_reader)
+    if self._sections == 'all' or 'sources' in self._sections:
+      self._PrintSourcesOverview(storage_reader)
 
-      storage_counters = self._CalculateStorageCounters(storage_reader)
+    storage_counters = self._CalculateStorageCounters(storage_reader)
 
-      if self._output_format == 'json':
-        self._output_writer.Write(', "storage_counters": {')
+    if self._output_format == 'json':
+      self._output_writer.Write(', "storage_counters": {')
 
-      if self._sections == 'all' or 'events' in self._sections:
-        parsers = storage_counters.get('parsers', collections.Counter())
+    if self._sections == 'all' or 'events' in self._sections:
+      parsers = storage_counters.get('parsers', collections.Counter())
 
-        self._PrintParsersCounter(parsers)
+      self._PrintParsersCounter(parsers)
 
-        event_labels = storage_counters.get(
-            'event_labels', collections.Counter())
+      event_labels = storage_counters.get(
+          'event_labels', collections.Counter())
 
-        self._PrintEventLabelsCounter(event_labels)
+      self._PrintEventLabelsCounter(event_labels)
 
-      if self._sections == 'all' or 'warnings' in self._sections:
-        self._PrintWarningsSection(storage_reader, storage_counters)
+    if self._sections == 'all' or 'warnings' in self._sections:
+      self._PrintWarningsSection(storage_reader, storage_counters)
 
-      if self._sections == 'all' or 'reports' in self._sections:
-        analysis_reports = storage_counters.get(
-            'analysis_reports', collections.Counter())
+    if self._sections == 'all' or 'reports' in self._sections:
+      analysis_reports = storage_counters.get(
+          'analysis_reports', collections.Counter())
 
-        self._PrintAnalysisReportSection(storage_reader, analysis_reports)
+      self._PrintAnalysisReportSection(storage_reader, analysis_reports)
 
-      if self._output_format == 'json':
-        self._output_writer.Write('}')
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
@@ -1174,14 +1171,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     format_version = storage_reader.GetFormatVersion()
     serialization_format = storage_reader.GetSerializationFormat()
-    storage_type = storage_reader.GetStorageType()
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information',
         title_level=1)
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow(['Format version', format_version])
-    table_view.AddRow(['Storage type', storage_type])
     table_view.AddRow(['Serialization format', serialization_format])
     table_view.Write(self._output_writer)
 

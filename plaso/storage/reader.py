@@ -100,14 +100,6 @@ class StorageReader(object):
     """
     return self._store.serialization_format
 
-  def GetStorageType(self):
-    """Retrieves the storage type of the underlying storage file.
-
-    Returns:
-      str: the storage type.
-    """
-    return self._store.storage_type
-
   # TODO: remove the need for seperate SessionStart and SessionCompletion
   # attribute containers.
   def GetSessions(self):

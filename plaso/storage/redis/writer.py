@@ -63,7 +63,7 @@ class RedisStorageWriter(writer.StorageWriter):
     if self._store:
       raise IOError('Storage writer already opened.')
 
-    self._store = redis_store.RedisStore(storage_type=self._storage_type)
+    self._store = redis_store.RedisStore()
 
     if self._serializers_profiler:
       self._store.SetSerializersProfiler(self._serializers_profiler)

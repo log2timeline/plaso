@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The single process processing engine."""
+"""The single process extraction engine."""
 
 import collections
 import os
@@ -23,13 +23,13 @@ from plaso.parsers import mediator as parsers_mediator
 
 
 class SingleProcessEngine(engine.BaseEngine):
-  """Class that defines the single process engine."""
+  """Single process extraction engine."""
 
   # Maximum number of dfVFS file system objects to cache.
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(self):
-    """Initializes a single process engine."""
+    """Initializes a single process extraction engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
     self._extraction_worker = None

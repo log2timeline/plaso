@@ -83,7 +83,6 @@ class SQLiteStorageFile(interface.BaseStore):
     compression_format (str): compression format.
     format_version (int): storage format version.
     serialization_format (str): serialization format.
-    storage_type (str): storage type.
   """
 
   _FORMAT_VERSION = 20211121
@@ -159,18 +158,9 @@ class SQLiteStorageFile(interface.BaseStore):
   # The maximum number of cached attribute containers
   _MAXIMUM_CACHED_CONTAINERS = 32 * 1024
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a SQLite storage file.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
-    if storage_type == definitions.STORAGE_TYPE_SESSION:
-      compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-    else:
-      compression_format = definitions.COMPRESSION_FORMAT_NONE
-
-    super(SQLiteStorageFile, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a SQLite storage file."""
+    super(SQLiteStorageFile, self).__init__()
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
@@ -179,7 +169,7 @@ class SQLiteStorageFile(interface.BaseStore):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._use_schema = True
 
-    self.compression_format = compression_format
+    self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
@@ -254,11 +244,6 @@ class SQLiteStorageFile(interface.BaseStore):
     if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
       raise IOError('Unsupported serialization format: {0!s}'.format(
           serialization_format))
-
-    storage_type = metadata_values.get('storage_type', None)
-    if storage_type not in definitions.STORAGE_TYPES:
-      raise IOError('Unsupported storage type: {0!s}'.format(
-          storage_type))
 
   def _CreateAttributeContainerTable(self, container_type):
     """Creates a table for a specific attribute container type.
@@ -522,7 +507,6 @@ class SQLiteStorageFile(interface.BaseStore):
     self.format_version = metadata_values['format_version']
     self.compression_format = metadata_values['compression_format']
     self.serialization_format = metadata_values['serialization_format']
-    self.storage_type = metadata_values['storage_type']
 
     self._use_schema = bool(
         self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
@@ -728,7 +712,6 @@ class SQLiteStorageFile(interface.BaseStore):
         'format_version', '{0:d}'.format(self._FORMAT_VERSION))
     self._WriteMetadataValue('compression_format', self.compression_format)
     self._WriteMetadataValue('serialization_format', self.serialization_format)
-    self._WriteMetadataValue('storage_type', self.storage_type)
 
   def _WriteMetadataValue(self, key, value):
     """Writes a metadata value.
@@ -826,11 +809,7 @@ class SQLiteStorageFile(interface.BaseStore):
       if self._storage_profiler:
         self._storage_profiler.StopTiming('write_new')
 
-    if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
-        container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE):
-      # Cache the event source for a session store since it will be accessed
-      # after write.
-      self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+    self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
   @classmethod
   def CheckSupportedFormat(cls, path, check_readable_only=False):
@@ -1202,14 +1181,6 @@ class SQLiteStorageFile(interface.BaseStore):
 
       for container_type in self._containers_manager.GetContainerTypes():
         if container_type in self._NO_CREATE_TABLE_CONTAINER_TYPES:
-          continue
-
-        if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
-            container_type in self._TASK_STORE_ONLY_CONTAINER_TYPES):
-          continue
-
-        if (self.storage_type == definitions.STORAGE_TYPE_TASK and
-            container_type in self._SESSION_STORE_ONLY_CONTAINER_TYPES):
           continue
 
         if not self._HasTable(container_type):
