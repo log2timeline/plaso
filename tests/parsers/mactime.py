@@ -18,9 +18,16 @@ class MactimeTest(test_lib.ParserTestCase):
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['mactime.body'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 67)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 67)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -84,9 +91,16 @@ class MactimeTest(test_lib.ParserTestCase):
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['corrupt.body'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 10)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 1)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 10)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     events = list(storage_writer.GetSortedEvents())
 

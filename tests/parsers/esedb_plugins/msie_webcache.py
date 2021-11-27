@@ -39,9 +39,16 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = msie_webcache.MsieWebCacheESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 1372)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1372)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is
     # nondeterministic hence we sort the events.
@@ -66,9 +73,16 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['PartitionsEx-WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 4200)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 3)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 4200)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is
     # nondeterministic hence we sort the events.
