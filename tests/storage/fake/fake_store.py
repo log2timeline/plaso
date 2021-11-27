@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.storage.fake import fake_store
 
 from tests.storage import test_lib
@@ -271,8 +270,7 @@ class FakeStoreTest(test_lib.StorageTestCase):
     test_store.Open()
     test_store.Close()
 
-    test_store = fake_store.FakeStore(
-        storage_type=definitions.STORAGE_TYPE_TASK)
+    test_store = fake_store.FakeStore()
     test_store.Open()
     test_store.Close()
 

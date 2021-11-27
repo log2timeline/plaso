@@ -60,8 +60,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       metadata_values = {
           'compression_format': definitions.COMPRESSION_FORMAT_ZLIB,
           'format_version': '{0:d}'.format(test_store._FORMAT_VERSION),
-          'serialization_format': definitions.SERIALIZER_FORMAT_JSON,
-          'storage_type': definitions.STORAGE_TYPE_SESSION}
+          'serialization_format': definitions.SERIALIZER_FORMAT_JSON}
       test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['format_version'] = 'bogus'
@@ -86,7 +85,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       metadata_values['serialization_format'] = (
           definitions.SERIALIZER_FORMAT_JSON)
-      metadata_values['storage_type'] = None
       with self.assertRaises(IOError):
         test_store._CheckStorageMetadata(metadata_values)
 
@@ -489,19 +487,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     """Tests the version compatibility methods."""
     with shared_test_lib.TempDirectory() as temp_directory:
       v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
-      v1_test_store = _TestSQLiteStorageFileV1(
-          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v1_test_store = _TestSQLiteStorageFileV1()
       v1_test_store.Open(path=v1_storage_path, read_only=False)
       v1_test_store.Close()
 
-      v2_test_store_rw = _TestSQLiteStorageFileV2(
-          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v2_test_store_rw = _TestSQLiteStorageFileV2()
 
       with self.assertRaises((IOError, OSError)):
         v2_test_store_rw.Open(path=v1_storage_path, read_only=False)
 
-      v2_test_store_ro = _TestSQLiteStorageFileV2(
-          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v2_test_store_ro = _TestSQLiteStorageFileV2()
       v2_test_store_ro.Open(path=v1_storage_path, read_only=True)
       v2_test_store_ro.Close()
 

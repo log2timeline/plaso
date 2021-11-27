@@ -27,20 +27,9 @@ class RedisStore(interface.BaseStore):
 
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a Redis store.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-
-    Raises:
-      ValueError: if the storage type is not supported.
-    """
-    if storage_type != definitions.STORAGE_TYPE_TASK:
-      raise ValueError('Unsupported storage type: {0:s}.'.format(
-          storage_type))
-
-    super(RedisStore, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a Redis store."""
+    super(RedisStore, self).__init__()
     self._redis_client = None
     self._session_identifier = None
     self._task_identifier = None
@@ -233,7 +222,6 @@ class RedisStore(interface.BaseStore):
     """Writes the storage metadata."""
     metadata = {
         'format_version': self._FORMAT_VERSION,
-        'storage_type': definitions.STORAGE_TYPE_TASK,
         'serialization_format': self.serialization_format}
     metadata_key = self._GetRedisHashName('metadata')
 

@@ -6,7 +6,6 @@ import collections
 import copy
 import itertools
 
-from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage.fake import event_heap
@@ -15,13 +14,9 @@ from plaso.storage.fake import event_heap
 class FakeStore(interface.BaseStore):
   """Fake (in-memory only) store for testing."""
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a fake (in-memory only) store.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
-    super(FakeStore, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a fake (in-memory only) store."""
+    super(FakeStore, self).__init__()
     self._attribute_containers = {}
     self._event_tag_per_event_identifier = {}
     self._is_open = False

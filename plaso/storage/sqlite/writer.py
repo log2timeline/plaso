@@ -66,7 +66,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     if self._store:
       raise IOError('Storage writer already opened.')
 
-    self._store = sqlite_file.SQLiteStorageFile(storage_type=self._storage_type)
+    self._store = sqlite_file.SQLiteStorageFile()
 
     if self._serializers_profiler:
       self._store.SetSerializersProfiler(self._serializers_profiler)

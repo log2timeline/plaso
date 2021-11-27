@@ -120,14 +120,6 @@ class StorageReaderTest(test_lib.StorageTestCase):
     serialization_format = test_reader.GetSerializationFormat()
     self.assertIsNone(serialization_format)
 
-  def testGetStorageType(self):
-    """Tests the GetStorageType function."""
-    test_reader = reader.StorageReader()
-    test_reader._store = fake_store.FakeStore()
-
-    storage_type = test_reader.GetStorageType()
-    self.assertEqual(storage_type, 'session')
-
   # TODO: add tests for GetSessions
   # TODO: add tests for GetSortedEvents
 

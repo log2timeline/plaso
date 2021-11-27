@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Redis storage reader."""
 
-from plaso.lib import definitions
 from plaso.storage import reader
 from plaso.storage.redis import redis_store
 
@@ -20,9 +19,7 @@ class RedisStorageReader(reader.StorageReader):
           will be opened connected to the Redis instance specified by 'url'.
     """
     super(RedisStorageReader, self).__init__()
-    # The Redis store currently can only be used as task storage.
-    self._store = redis_store.RedisStore(
-        storage_type=definitions.STORAGE_TYPE_TASK)
+    self._store = redis_store.RedisStore()
     self._store.Open(
         redis_client=redis_client, session_identifier=session_identifier,
         task_identifier=task_identifier)

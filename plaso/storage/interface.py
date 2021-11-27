@@ -9,10 +9,7 @@ from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import manager as containers_manager
 from plaso.containers import reports
-from plaso.containers import sessions
-from plaso.containers import tasks
 from plaso.containers import warnings
-from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
 
@@ -22,7 +19,6 @@ class BaseStore(object):
   Attributes:
     format_version (int): storage format version.
     serialization_format (str): serialization format.
-    storage_type (str): storage type.
   """
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -36,30 +32,11 @@ class BaseStore(object):
   _CONTAINER_TYPE_PREPROCESSING_WARNING = (
       warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_CONFIGURATION = (
-      sessions.SessionConfiguration.CONTAINER_TYPE)
-  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
       artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK = tasks.Task.CONTAINER_TYPE
 
-  # Container types that only should be used in a session store.
-  _SESSION_STORE_ONLY_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_SESSION_COMPLETION,
-      _CONTAINER_TYPE_SESSION_CONFIGURATION,
-      _CONTAINER_TYPE_SESSION_START,
-      _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
-
-  # Container types that only should be used in a task store.
-  _TASK_STORE_ONLY_CONTAINER_TYPES = (_CONTAINER_TYPE_TASK,)
-
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a store.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
+  def __init__(self):
+    """Initializes an attribute container store."""
     super(BaseStore, self).__init__()
     self._attribute_container_sequence_numbers = collections.Counter()
     self._containers_manager = containers_manager.AttributeContainersManager
@@ -69,7 +46,6 @@ class BaseStore(object):
 
     self.format_version = None
     self.serialization_format = None
-    self.storage_type = storage_type
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.

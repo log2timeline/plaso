@@ -382,7 +382,6 @@ Storage files are different.
         title='Plaso Storage Information')
     table_view.AddRow(['Filename', test_filename])
     table_view.AddRow(['Format version', format_version])
-    table_view.AddRow(['Storage type', 'session'])
     table_view.AddRow(['Serialization format', 'json'])
     table_view.Write(output_writer)
 
