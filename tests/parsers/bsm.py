@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import bsm
 
 from tests.parsers import test_lib
@@ -16,11 +15,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a MacOS BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {
-        'operating_system': definitions.OPERATING_SYSTEM_FAMILY_MACOS}
-    storage_writer = self._ParseFile(
-        ['apple.bsm'], parser,
-        knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['apple.bsm'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 54)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -161,10 +156,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {
-        'operating_system': definitions.OPERATING_SYSTEM_FAMILY_LINUX}
-    storage_writer = self._ParseFile(
-        ['openbsm.bsm'], parser, knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['openbsm.bsm'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 50)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
