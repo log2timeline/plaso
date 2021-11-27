@@ -7,7 +7,6 @@ from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -21,7 +20,6 @@ from plaso.engine import path_filters
 from plaso.engine import processing_status
 from plaso.engine import profilers
 from plaso.engine import yaml_filter_file
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
 from plaso.preprocessors import mediator as preprocess_mediator
@@ -106,62 +104,6 @@ class BaseEngine(object):
             'error: {1!s}').format(custom_artifacts_path, exception))
 
     return registry
-
-  def _DetermineOperatingSystem(self, searcher):
-    """Tries to determine the underlying operating system.
-
-    Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
-
-    Returns:
-      str: operating system for example "Windows". This should be one of
-          the values in definitions.OPERATING_SYSTEM_FAMILIES.
-    """
-    find_specs = [
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='/etc',
-            location_separator='/'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='/System/Library',
-            location_separator='/'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\Windows\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WINNT\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WINNT35\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WTSRV\\System32',
-            location_separator='\\')]
-
-    locations = []
-    for path_spec in searcher.Find(find_specs=find_specs):
-      relative_path = searcher.GetRelativePath(path_spec)
-      if relative_path:
-        locations.append(relative_path.lower())
-
-    # We need to check for both forward and backward slashes since the path
-    # spec will be OS dependent, as in running the tool on Windows will return
-    # Windows paths (backward slash) vs. forward slash on *NIX systems.
-    windows_locations = set([
-        '/windows/system32', '\\windows\\system32', '/winnt/system32',
-        '\\winnt\\system32', '/winnt35/system32', '\\winnt35\\system32',
-        '\\wtsrv\\system32', '/wtsrv/system32'])
-
-    operating_system = definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN
-    if windows_locations.intersection(set(locations)):
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT
-
-    elif '/system/library' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_MACOS
-
-    elif '/etc' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_LINUX
-
-    return operating_system
 
   def _StartProfiling(self, configuration):
     """Starts profiling.
@@ -275,8 +217,7 @@ class BaseEngine(object):
         path.PathSpec: mount point path specification. The mount point path
             specification refers to either a directory or a volume on a storage
             media device or image. It is needed by the dfVFS file system
-            searcher (FileSystemSearcher) to indicate the base location of
-            the file system.
+            to indicate the base location of the file system.
 
     Raises:
       RuntimeError: if source file system path specification is not set.
@@ -326,19 +267,11 @@ class BaseEngine(object):
         logger.error(exception)
         continue
 
-      searcher = file_system_searcher.FileSystemSearcher(
-          file_system, mount_point)
+      preprocess_manager.PreprocessPluginsManager.RunPlugins(
+          artifacts_registry_object, file_system, mount_point, mediator)
 
-      try:
-        operating_system = self._DetermineOperatingSystem(searcher)
-      except (ValueError, dfvfs_errors.PathSpecError) as exception:
-        logger.error(exception)
-        continue
-
-      if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
-        preprocess_manager.PreprocessPluginsManager.RunPlugins(
-            artifacts_registry_object, file_system, mount_point, mediator)
-
+      operating_system = self.knowledge_base.GetValue('operating_system')
+      if operating_system:
         detected_operating_systems.append(operating_system)
 
     if detected_operating_systems:

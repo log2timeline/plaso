@@ -142,23 +142,31 @@ class PreprocessPluginsManager(object):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
     """
     for preprocess_plugin in cls._file_system_plugins.values():
-      artifact_definition = artifacts_registry.GetDefinitionByName(
-          preprocess_plugin.ARTIFACT_DEFINITION_NAME)
-      if not artifact_definition:
-        logger.warning('Missing artifact definition: {0:s}'.format(
-            preprocess_plugin.ARTIFACT_DEFINITION_NAME))
-        continue
+      artifact_definition = None
+      if preprocess_plugin.ARTIFACT_DEFINITION_NAME:
+        artifact_definition = artifacts_registry.GetDefinitionByName(
+            preprocess_plugin.ARTIFACT_DEFINITION_NAME)
+        if not artifact_definition:
+          logger.warning('Missing artifact definition: {0:s}'.format(
+              preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+          continue
 
-      logger.debug('Running file system preprocessor plugin: {0:s}'.format(
-          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+      logger.debug((
+          'Running file system preprocessor plugin: {0:s} with artifact '
+          'definition: {1:s}').format(
+              preprocess_plugin.__class__.__name__,
+              preprocess_plugin.ARTIFACT_DEFINITION_NAME or 'N/A'))
+
       try:
         preprocess_plugin.Collect(
             mediator, artifact_definition, searcher, file_system)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
-            'Unable to collect value from artifact definition: {0:s} '
-            'with error: {1!s}').format(
-                preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
+            'Preprocessor plugin: {0:s} with artifact definition: {1:s} '
+            'was unable to collect value with error: {2!s}').format(
+                preprocess_plugin.__class__.__name__,
+                preprocess_plugin.ARTIFACT_DEFINITION_NAME or 'N/A',
+                exception))
 
   @classmethod
   def CollectFromKnowledgeBase(cls, mediator):
@@ -222,8 +230,8 @@ class PreprocessPluginsManager(object):
       KeyError: if plugin class is not set for the corresponding name.
       TypeError: if the source type of the plugin class is not supported.
     """
-    name = getattr(
-        plugin_class, 'ARTIFACT_DEFINITION_NAME', plugin_class.__name__)
+    name = (getattr(plugin_class, 'ARTIFACT_DEFINITION_NAME', None) or
+            plugin_class.__name__)
     name = name.lower()
     if name not in cls._plugins:
       raise KeyError(
@@ -266,8 +274,8 @@ class PreprocessPluginsManager(object):
       KeyError: if plugin class is already set for the corresponding name.
       TypeError: if the source type of the plugin class is not supported.
     """
-    name = getattr(
-        plugin_class, 'ARTIFACT_DEFINITION_NAME', plugin_class.__name__)
+    name = (getattr(plugin_class, 'ARTIFACT_DEFINITION_NAME', None) or
+            plugin_class.__name__)
     name = name.lower()
     if name in cls._plugins:
       raise KeyError(
@@ -338,6 +346,3 @@ class PreprocessPluginsManager(object):
     cls.CollectFromWindowsRegistry(artifacts_registry, mediator, searcher)
 
     cls.CollectFromKnowledgeBase(mediator)
-
-    if not mediator.knowledge_base.HasUserAccounts():
-      logger.warning('Unable to find any user accounts on the system.')
