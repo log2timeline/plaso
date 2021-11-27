@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains preprocessors for Linux."""
+"""Linux preprocessor plugins."""
 
 import csv
 import datetime
