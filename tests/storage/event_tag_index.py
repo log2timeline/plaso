@@ -20,15 +20,15 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  def _CreateTestStorageFileWithTags(self, path):
-    """Creates a storage file with event tags for testing.
+  def _AddTestEvents(self, storage_file):
+    """Adds tests events to the storage file.
 
     Args:
-      path (str): path of the storage file.
-    """
-    storage_file = sqlite_file.SQLiteStorageFile()
-    storage_file.Open(path=path, read_only=False)
+      storage_file (SQLiteStorageFile): storage file.
 
+    Returns:
+      list[EventObject]: test events.
+    """
     test_events = []
     for event, event_data, event_data_stream in (
         containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
@@ -42,13 +42,28 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
       test_events.append(event)
 
-    test_event_tags = self._CreateTestEventTags(test_events)
-    for event_tag in test_event_tags[:-1]:
-      storage_file.AddAttributeContainer(event_tag)
-    for event_tag in test_event_tags[-1:]:
-      storage_file.AddAttributeContainer(event_tag)
+    return test_events
 
-    storage_file.Close()
+  def _CreateTestStorageFileWithTags(self, path):
+    """Creates a storage file with event tags for testing.
+
+    Args:
+      path (str): path of the storage file.
+    """
+    storage_file = sqlite_file.SQLiteStorageFile()
+    storage_file.Open(path=path, read_only=False)
+
+    try:
+      test_events = self._AddTestEvents(storage_file)
+
+      test_event_tags = self._CreateTestEventTags(test_events)
+      for event_tag in test_event_tags[:-1]:
+        storage_file.AddAttributeContainer(event_tag)
+      for event_tag in test_event_tags[-1:]:
+        storage_file.AddAttributeContainer(event_tag)
+
+    finally:
+      storage_file.Close()
 
   def testBuild(self):
     """Tests the _Build function."""
@@ -61,8 +76,11 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
     storage_reader = sqlite_file_reader.SQLiteStorageFileReader(
         test_file_path)
-    test_index._Build(storage_reader)
-    storage_reader.Close()
+
+    try:
+      test_index._Build(storage_reader)
+    finally:
+      storage_reader.Close()
 
     self.assertIsNotNone(test_index._index)
 
@@ -77,17 +95,19 @@ class EventTagIndexTest(test_lib.StorageTestCase):
       storage_reader = sqlite_file_reader.SQLiteStorageFileReader(
           temp_file)
 
-      event_identifier = identifiers.SQLTableIdentifier('event', 1)
-      event_tag = test_index.GetEventTagByIdentifier(
-          storage_reader, event_identifier)
-      self.assertIsNotNone(event_tag)
+      try:
+        event_identifier = identifiers.SQLTableIdentifier('event', 1)
+        event_tag = test_index.GetEventTagByIdentifier(
+            storage_reader, event_identifier)
+        self.assertIsNotNone(event_tag)
 
-      event_identifier = identifiers.SQLTableIdentifier('event', 99)
-      event_tag = test_index.GetEventTagByIdentifier(
-          storage_reader, event_identifier)
-      self.assertIsNone(event_tag)
+        event_identifier = identifiers.SQLTableIdentifier('event', 99)
+        event_tag = test_index.GetEventTagByIdentifier(
+            storage_reader, event_identifier)
+        self.assertIsNone(event_tag)
 
-      storage_reader.Close()
+      finally:
+        storage_reader.Close()
 
   # TODO: add test for SetEventTag.
 

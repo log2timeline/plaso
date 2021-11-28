@@ -297,65 +297,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
       self._RemoveSessionData(redis_client, session.identifier)
 
-  def testGetEventTagByEventIdentifier(self):
-    """Tests the GetEventTagByEventIdentifier function."""
-    redis_client = self._CreateRedisClient()
-
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    test_store = redis_store.RedisStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
-
-    try:
-      index = 0
-      for event, event_data, event_data_stream in (
-          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-        test_store.AddAttributeContainer(event_data_stream)
-
-        event_data.SetEventDataStreamIdentifier(
-            event_data_stream.GetIdentifier())
-        test_store.AddAttributeContainer(event_data)
-
-        event.SetEventDataIdentifier(event_data.GetIdentifier())
-        test_store.AddAttributeContainer(event)
-
-        if index == 1:
-          event_tag = events.EventTag()
-          event_tag.AddLabels(['Malware', 'Benign'])
-
-          event_identifier = event.GetIdentifier()
-          event_tag.SetEventIdentifier(event_identifier)
-          test_store.AddAttributeContainer(event_tag)
-
-        index += 1
-
-    finally:
-      test_store.Close()
-
-      self._RemoveSessionData(redis_client, session.identifier)
-
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    test_store = redis_store.RedisStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
-
-    try:
-      test_event = test_store.GetAttributeContainerByIndex(
-          events.EventObject.CONTAINER_TYPE, 1)
-      # Note that this method is not implemented.
-      self.assertIsNone(test_event)
-
-    finally:
-      test_store.Close()
-
-      self._RemoveSessionData(redis_client, session.identifier)
-
   def testGetNumberOfAttributeContainers(self):
     """Tests the GetNumberOfAttributeContainers function."""
     redis_client = self._CreateRedisClient()
