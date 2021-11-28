@@ -38,9 +38,16 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['plist_binary'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 12)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 12)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     keys = set()
     roots = set()
@@ -89,18 +96,32 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['leading_whitespace.plist'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 4)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 4)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testParseWithXMLFileInvalidDate(self):
     """Tests the Parse function on an XML file with an invalid date and time."""
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['com.apple.security.KCN.plist'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testParseWithXMLFileExpatError(self):
     """Tests the Parse function on an XML file that causes an ExpatError."""
@@ -147,18 +168,32 @@ class PlistParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'com.apple.networkextension.uuidcache.plist'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testParseWithXMLPlistFileNoTopLevel(self):
     """Tests the Parse function on an XML plist file without top level."""
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['empty.plist'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
 
 if __name__ == '__main__':

@@ -43,9 +43,16 @@ class OLECFParserTest(test_lib.ParserTestCase):
     #     Sector size         : 512
     #     Short sector size   : 64
 
-    self.assertEqual(storage_writer.number_of_events, 9)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 9)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -62,9 +69,16 @@ class OLECFParserTest(test_lib.ParserTestCase):
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     generator = storage_writer.GetAttributeContainers(
         warnings.ExtractionWarning.CONTAINER_TYPE)

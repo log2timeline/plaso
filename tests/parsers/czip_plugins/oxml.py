@@ -90,27 +90,48 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
-    self.assertEqual(storage_writer.number_of_events, 1)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     # Test parsing a date and time string in intervals of 100 ns.
     plugin._ProduceEvent(
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
-    self.assertEqual(storage_writer.number_of_events, 2)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 2)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     plugin = oxml.OpenXMLPlugin()
     storage_writer = self._ParseZIPFileWithPlugin(['Document.docx'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 2)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 2)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
