@@ -17,9 +17,16 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(['AccessProtectionLog.txt'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 14)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 14)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
