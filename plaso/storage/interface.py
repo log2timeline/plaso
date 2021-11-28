@@ -4,12 +4,7 @@
 import abc
 import collections
 
-from plaso.containers import artifacts
-from plaso.containers import event_sources
-from plaso.containers import events
 from plaso.containers import manager as containers_manager
-from plaso.containers import reports
-from plaso.containers import warnings
 from plaso.serializer import json_serializer
 
 
@@ -20,20 +15,6 @@ class BaseStore(object):
     format_version (int): storage format version.
     serialization_format (str): serialization format.
   """
-
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
-      warnings.PreprocessingWarning.CONTAINER_TYPE)
-  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
-      artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
 
   def __init__(self):
     """Initializes an attribute container store."""
