@@ -26,6 +26,7 @@ from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import task_manager
 from plaso.multi_process import zeromq_queue
+from plaso.storage import merge_reader
 
 
 class _EventSourceHeap(object):
@@ -312,8 +313,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         self._merge_task = task
         try:
-          self._storage_merge_reader = self._StartMergeTaskStorage(
-              self._storage_writer, self._task_storage_format, task)
+          task_storage_reader = self._GetMergeTaskStorage(
+              self._task_storage_format, task)
+
+          self._storage_merge_reader = merge_reader.StorageMergeReader(
+              self._storage_writer, task_storage_reader, task.identifier)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 

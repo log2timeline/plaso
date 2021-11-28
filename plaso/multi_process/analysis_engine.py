@@ -17,6 +17,7 @@ from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
 from plaso.storage import event_tag_index
+from plaso.storage import merge_reader
 
 
 class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
@@ -174,14 +175,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           event_queue.Close()
 
-          storage_merge_reader = self._StartMergeTaskStorage(
-              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
+          task_storage_reader = self._GetMergeTaskStorage(
+              definitions.STORAGE_FORMAT_SQLITE, task)
+
+          storage_merge_reader = merge_reader.StorageMergeReader(
+              storage_writer, task_storage_reader, task.identifier)
 
           storage_merge_reader.MergeAttributeContainers()
-          # TODO: temporary solution.
-          plugin_names.remove(plugin_name)
-
-          storage_merge_reader.Close()
 
           for key, value in storage_merge_reader.event_labels_counter.items():
             event_label_count = self._event_labels_counter.get(key, None)
@@ -197,15 +197,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._processing_status.analysis_reports_counter += (
               storage_merge_reader.analysis_reports_counter)
 
+          self._number_of_produced_analysis_reports += (
+              task_storage_reader.GetNumberOfAttributeContainers(
+                  'analysis_report'))
+          self._number_of_produced_event_tags += (
+              task_storage_reader.GetNumberOfAttributeContainers('event_tag'))
+
+          task_storage_reader.Close()
+
           self._RemoveMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
 
           self._status = definitions.STATUS_INDICATOR_RUNNING
 
-          self._number_of_produced_event_tags = (
-              storage_writer.number_of_event_tags)
-          self._number_of_produced_analysis_reports = (
-              storage_writer.number_of_analysis_reports)
+          # TODO: temporary solution.
+          plugin_names.remove(plugin_name)
 
     events_counter = collections.Counter()
     events_counter['Events filtered'] = number_of_filtered_events

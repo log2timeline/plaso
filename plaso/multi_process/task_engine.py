@@ -10,7 +10,6 @@ import redis
 from plaso.lib import definitions
 from plaso.multi_process import engine
 from plaso.storage import factory as storage_factory
-from plaso.storage import merge_reader
 from plaso.storage.redis import redis_store
 
 
@@ -60,6 +59,39 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return True
 
     return False
+
+  def _GetMergeTaskStorage(self, task_storage_format, task):
+    """Retrieves a task store ready to be merged with the session store.
+
+    Args:
+      task_storage_format (str): storage format used to store task results.
+      task (Task): task the storage changes are part of.
+
+    Returns:
+      StorageReader: storage reader of the task storage.
+
+    Raises:
+      IOError: if the temporary path for the task storage does not exist or
+          if the temporary path for the task storage doe not refers to a file.
+      OSError: if the temporary path for the task storage does not exist or
+          if the temporary path for the task storage doe not refers to a file.
+    """
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(
+        task_storage_format, task)
+
+    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      if not self._merge_task_storage_path:
+        raise IOError('Missing merge task storage path.')
+
+      if not os.path.isfile(merge_storage_file_path):
+        raise IOError('Merge task storage path is not a file.')
+
+    task_storage_reader = (
+        storage_factory.StorageFactory.CreateTaskStorageReader(
+            task_storage_format, task, merge_storage_file_path))
+    task_storage_reader.SetStorageProfiler(self._storage_profiler)
+
+    return task_storage_reader
 
   def _GetMergeTaskStorageRedisHashName(self, task):
     """Retrieves the Redis hash name of a task store that should be merged.
@@ -251,42 +283,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         raise IOError((
             'Unable to remove processed task storage file: {0:s} with error: '
             '{1!s}').format(processed_storage_file_path, exception))
-
-  def _StartMergeTaskStorage(self, storage_writer, task_storage_format, task):
-    """Starts a merge of a task store with the session storage.
-
-    Args:
-      storage_writer (StorageWriter): storage writer for a session storage.
-      task_storage_format (str): storage format used to store task results.
-      task (Task): task the storage changes are part of.
-
-    Returns:
-      StorageMergeReader: storage merge reader of the task storage.
-
-    Raises:
-      IOError: if the temporary path for the task storage does not exist or
-          if the temporary path for the task storage doe not refers to a file.
-      OSError: if the temporary path for the task storage does not exist or
-          if the temporary path for the task storage doe not refers to a file.
-    """
-    merge_storage_file_path = self._GetMergeTaskStorageFilePath(
-        task_storage_format, task)
-
-    if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      if not self._merge_task_storage_path:
-        raise IOError('Missing merge task storage path.')
-
-      if not os.path.isfile(merge_storage_file_path):
-        raise IOError('Merge task storage path is not a file.')
-
-    path = self._GetMergeTaskStorageFilePath(task_storage_format, task)
-    task_storage_reader = (
-        storage_factory.StorageFactory.CreateTaskStorageReader(
-            task_storage_format, task, path))
-    task_storage_reader.SetStorageProfiler(self._storage_profiler)
-
-    return merge_reader.StorageMergeReader(
-        storage_writer, task_storage_reader, task.identifier)
 
   def _StartTaskStorage(self, task_storage_format):
     """Starts the task storage.

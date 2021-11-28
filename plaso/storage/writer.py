@@ -40,26 +40,9 @@ class StorageWriter(reader.StorageReader):
     self._written_event_source_index = 0
 
   @property
-  def number_of_analysis_reports(self):
-    """int: number of analysis reports warnings written."""
-    return self._attribute_containers_counter[
-        self._CONTAINER_TYPE_ANALYSIS_REPORT]
-
-  @property
-  def number_of_analysis_warnings(self):
-    """int: number of analysis warnings written."""
-    return self._attribute_containers_counter[
-        self._CONTAINER_TYPE_ANALYSIS_WARNING]
-
-  @property
   def number_of_event_sources(self):
     """int: number of event sources written."""
     return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_SOURCE]
-
-  @property
-  def number_of_event_tags(self):
-    """int: number of event tags written."""
-    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_TAG]
 
   @property
   def number_of_events(self):
