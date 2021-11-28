@@ -130,9 +130,16 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile(['contacts2.db'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 5)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 5)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     for event in storage_writer.GetEvents():
       event_data = self._GetEventDataOfEvent(storage_writer, event)
@@ -143,9 +150,16 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile(['data.db'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
 
 if __name__ == '__main__':
