@@ -425,7 +425,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     self._processing_status.UpdateForemanStatus(
         self._name, self._status, self._pid, used_memory, '',
-        0, 0, self._number_of_consumed_events, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, self._number_of_consumed_events, 0, 0, 0, 0, 0)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
 

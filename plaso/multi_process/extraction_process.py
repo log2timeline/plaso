@@ -25,7 +25,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   def __init__(
       self, task_queue, collection_filters_helper, knowledge_base,
       processing_configuration, **kwargs):
-    """Initializes a worker process.
+    """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
     multiprocessing.Process.
@@ -121,13 +121,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._parser_mediator:
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
-      number_of_produced_extraction_warnings = (
-          self._parser_mediator.number_of_produced_extraction_warnings)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
     else:
       number_of_produced_events = None
-      number_of_produced_extraction_warnings = None
       number_of_produced_sources = None
 
     if self._extraction_worker and self._parser_mediator:
@@ -159,12 +156,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         'last_activity_timestamp': last_activity_timestamp,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
-        'number_of_consumed_extraction_warnings': None,
         'number_of_consumed_sources': self._number_of_consumed_sources,
         'number_of_produced_event_tags': None,
         'number_of_produced_events': number_of_produced_events,
-        'number_of_produced_extraction_warnings': (
-            number_of_produced_extraction_warnings),
         'number_of_produced_sources': number_of_produced_sources,
         'processing_status': processing_status,
         'task_identifier': task_identifier,

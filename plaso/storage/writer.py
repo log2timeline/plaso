@@ -66,6 +66,7 @@ class StorageWriter(reader.StorageReader):
     """int: number of events written."""
     return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT]
 
+  # TODO: kept for backwards compatibility.
   @property
   def number_of_extraction_warnings(self):
     """int: number of extraction warnings written."""

@@ -159,12 +159,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._merge_task_on_hold = None
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
-    self._number_of_consumed_extraction_warnings = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
-    self._number_of_produced_extraction_warnings = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
@@ -379,8 +377,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_RUNNING
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
-      self._number_of_produced_extraction_warnings = (
-          storage_writer.number_of_extraction_warnings)
 
     return number_of_containers
 
@@ -401,12 +397,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status = definitions.STATUS_INDICATOR_COLLECTING
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
-    self._number_of_consumed_extraction_warnings = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
-    self._number_of_produced_extraction_warnings = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
@@ -447,8 +441,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     self._number_of_produced_events = storage_writer.number_of_events
-    self._number_of_produced_extraction_warnings = (
-        storage_writer.number_of_extraction_warnings)
     self._number_of_produced_sources = storage_writer.number_of_event_sources
 
     if self._processing_profiler:
@@ -703,9 +695,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags, self._number_of_consumed_reports,
-        self._number_of_produced_reports,
-        self._number_of_consumed_extraction_warnings,
-        self._number_of_produced_extraction_warnings)
+        self._number_of_produced_reports)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -742,11 +732,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     number_of_produced_events = process_status.get(
         'number_of_produced_events', None)
 
-    number_of_consumed_extraction_warnings = process_status.get(
-        'number_of_consumed_extraction_warnings', None)
-    number_of_produced_extraction_warnings = process_status.get(
-        'number_of_produced_extraction_warnings', None)
-
     number_of_consumed_reports = process_status.get(
         'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
@@ -776,9 +761,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_reports, number_of_produced_reports,
-        number_of_consumed_extraction_warnings,
-        number_of_produced_extraction_warnings)
+        number_of_consumed_reports, number_of_produced_reports)
 
     task_identifier = process_status.get('task_identifier', '')
     if not task_identifier:

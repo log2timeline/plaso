@@ -245,8 +245,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._storage_writer.number_of_event_sources,
         0, self._storage_writer.number_of_events,
         0, 0,
-        0, 0,
-        0, self._storage_writer.number_of_extraction_warnings)
+        0, 0)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
