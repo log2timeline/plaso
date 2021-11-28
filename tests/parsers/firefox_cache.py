@@ -27,9 +27,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'firefox_cache', 'firefox28', '_CACHE_001_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 1668)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1668)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -50,9 +57,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox28', '_CACHE_002_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 141)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 141)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -86,9 +100,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox28', '_CACHE_003_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 9)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 9)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -111,9 +132,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox28', 'E8D65m01'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 9)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 9)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testParseLegacyCache_001(self):
     """Test Firefox 3 cache file _CACHE_001_ parsing."""
@@ -121,9 +149,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_001_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 73)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 73)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -142,9 +177,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_002_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 6)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 6)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -160,9 +202,16 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_003_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 6)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 6)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -183,9 +232,16 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
         'firefox_cache', 'cache2', '1F4B3A4FC81FB19C530758231FA54313BE8F6FA2']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_events, 3)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
