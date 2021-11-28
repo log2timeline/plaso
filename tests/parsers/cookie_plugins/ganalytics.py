@@ -15,29 +15,30 @@ from tests.parsers.sqlite_plugins import test_lib as sqlite_plugins_test_lib
 class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
   """Tests for the Google Analytics plugin."""
 
-  def _GetAnalyticsCookieEvents(self, storage_writer):
-    """Retrieves the analytics cookie events.
-
-    Returns:
-      list[EventObject]: analytics cookie events.
-    """
-    cookies = []
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      if event_data.data_type.startswith('cookie:google:analytics'):
-        cookies.append(event)
-    return cookies
-
   def testParsingFirefox29CookieDatabase(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin = firefox_cookies.FirefoxCookiePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
-    events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(len(events), 25)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 295)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    cookie_events = []
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type.startswith('cookie:google:analytics'):
+        cookie_events.append(event)
+
+    self.assertEqual(len(cookie_events), 25)
 
     expected_event_values = {
         'cookie_name': '__utmz',
@@ -53,19 +54,33 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'utmcmd': 'referral',
         'utmcsr': 'mbl.is'}
 
-    self.CheckEventValues(storage_writer, events[14], expected_event_values)
+    self.CheckEventValues(
+        storage_writer, cookie_events[14], expected_event_values)
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.Chrome17CookiePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['cookies.db'], plugin)
-    events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    # The cookie database contains 560 entries in total. Out of them
-    # there are 75 events created by the Google Analytics plugin.
-    self.assertEqual(len(events), 75)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1755)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    cookie_events = []
+    for event in storage_writer.GetEvents():
+      event_data = self._GetEventDataOfEvent(storage_writer, event)
+      if event_data.data_type.startswith('cookie:google:analytics'):
+        cookie_events.append(event)
+
+    # There are 75 events created by the Google Analytics plugin.
+    self.assertEqual(len(cookie_events), 75)
 
     # Check few "random" events to verify.
 
@@ -82,7 +97,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'utmcmd': 'organic',
         'utmcsr': 'google'}
 
-    self.CheckEventValues(storage_writer, events[39], expected_event_values)
+    self.CheckEventValues(
+        storage_writer, cookie_events[39], expected_event_values)
 
     # Check the UTMA Google Analytics event.
     expected_event_values = {
@@ -95,7 +111,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'url': 'http://assets.tumblr.com/',
         'visitor_id': '1827102436'}
 
-    self.CheckEventValues(storage_writer, events[41], expected_event_values)
+    self.CheckEventValues(
+        storage_writer, cookie_events[41], expected_event_values)
 
     # Check the UTMB Google Analytics event.
     expected_event_values = {
@@ -107,7 +124,8 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'url': 'http://upressonline.com/'}
 
-    self.CheckEventValues(storage_writer, events[34], expected_event_values)
+    self.CheckEventValues(
+        storage_writer, cookie_events[34], expected_event_values)
 
 
 if __name__ == '__main__':
