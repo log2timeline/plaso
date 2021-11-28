@@ -9,6 +9,7 @@ import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -199,6 +200,37 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_counters['parsers'] = parsers_counter
 
     return storage_counters
+
+  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+      warn_about_existing (bool): True if the user should be warned about
+          the storage file already existing.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+
+      if warn_about_existing:
+        logger.warning('Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = '.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
   def _CompareCounter(self, counter, compare_counter):
     """Compares two counters.

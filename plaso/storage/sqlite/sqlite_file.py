@@ -812,14 +812,11 @@ class SQLiteStorageFile(interface.BaseStore):
     self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
   @classmethod
-  def CheckSupportedFormat(cls, path, check_readable_only=False):
+  def CheckSupportedFormat(cls, path):
     """Checks if the storage file format is supported.
 
     Args:
       path (str): path to the storage file.
-      check_readable_only (Optional[bool]): whether the store should only be
-          checked to see if it can be read. If False, the store will be checked
-          to see if it can be read and written to.
 
     Returns:
       bool: True if the format is supported.
@@ -840,13 +837,17 @@ class SQLiteStorageFile(interface.BaseStore):
 
       metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
 
-      cls._CheckStorageMetadata(
-          metadata_values, check_readable_only=check_readable_only)
+      format_version = metadata_values.get('format_version', None)
+      if format_version:
+        try:
+          format_version = int(format_version, 10)
+          result = True
+        except (TypeError, ValueError):
+          pass
 
       connection.close()
-      result = True
 
-    except (IOError, sqlite3.DatabaseError):
+    except (IOError, TypeError, ValueError, sqlite3.DatabaseError):
       result = False
 
     return result

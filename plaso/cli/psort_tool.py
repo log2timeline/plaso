@@ -20,6 +20,7 @@ from plaso.containers import reports
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.helpers import language_tags
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_process import output_engine as multi_output_engine
@@ -70,14 +71,18 @@ class PsortTool(
     self.list_output_modules = False
     self.list_profilers = False
 
-  def _CheckStorageFile(self, storage_file_path):  # pylint: disable=arguments-differ
-    """Checks if the storage file path is valid.
+  def _CheckStorageFile(
+      self, storage_file_path, check_readable_only=False):
+    """Checks if the storage file is valid.
 
     Args:
       storage_file_path (str): path of the storage file.
+      check_readable_only (Optional[bool]): whether the storage file should
+          only be checked to see if it can be read. If False, the store will
+          be checked to see if it can be read and written to.
 
     Raises:
-      BadConfigOption: if the storage file path is invalid.
+      BadConfigOption: if the storage file is invalid.
     """
     if not storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
@@ -91,16 +96,27 @@ class PsortTool(
           'Storage file: {0:s} already exists and is not a file.'.format(
               storage_file_path))
 
-    storage_file_directory = os.path.dirname(storage_file_path) or '.'
-    if not os.access(storage_file_directory, os.W_OK):
-      raise errors.BadConfigOption(
-          'Unable to write to storage file: {0:s}'.format(storage_file_path))
+    if not check_readable_only:
+      storage_file_directory = os.path.dirname(storage_file_path) or '.'
+      if not os.access(storage_file_directory, os.W_OK):
+        raise errors.BadConfigOption(
+            'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-    if not storage_factory.StorageFactory.CheckStorageFileHasSupportedFormat(
-        storage_file_path, check_readable_only=False):
+    storage_file = storage_factory.StorageFactory.CreateStorageFile(
+        definitions.STORAGE_FORMAT_SQLITE)
+    if not storage_file:
       raise errors.BadConfigOption(
-          'Format of storage file: {0:s} not supported'.format(
-              storage_file_path))
+          'Unable to open storage file: {0:s}'.format(storage_file_path))
+
+    try:
+      storage_file.Open(
+          path=storage_file_path, read_only=check_readable_only)
+    except IOError as exception:
+      raise errors.BadConfigOption(
+          'Unable to open storage file: {0:s} with error: {1!s}'.format(
+              storage_file_path, exception))
+
+    storage_file.Close()
 
   def _GetAnalysisPlugins(self, analysis_plugins_string):
     """Retrieves analysis plugins.
@@ -408,14 +424,16 @@ class PsortTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    # TODO: move check into _CheckStorageFile.
     self._storage_file_path = self.ParseStringOption(options, 'storage_file')
-    self._CheckStorageFile(self._storage_file_path)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
     self._output_module = self._CreateOutputModule(options)
+
+    check_readable_only = not self._analysis_plugins
+    self._CheckStorageFile(
+        self._storage_file_path, check_readable_only=check_readable_only)
 
   def ProcessStorage(self):
     """Processes a Plaso storage file.

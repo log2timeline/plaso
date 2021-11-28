@@ -96,6 +96,8 @@ class AnalysisTool(
 
     storage_writer.Open(path=self._storage_file_path)
 
+    processing_status = None
+
     try:
       session_start = session.CreateSessionStart()
       storage_writer.AddAttributeContainer(session_start)
