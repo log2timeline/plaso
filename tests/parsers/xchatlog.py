@@ -17,9 +17,16 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     parser = xchatlog.XChatLogParser()
     storage_writer = self._ParseFile(['xchat.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 9)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 9)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -88,9 +95,16 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['xchat.log'], parser, timezone='Europe/Rome')
 
-    self.assertEqual(storage_writer.number_of_events, 9)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 9)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
