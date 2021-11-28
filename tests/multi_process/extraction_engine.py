@@ -61,6 +61,15 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             [source_configuration], storage_writer, session.identifier,
             configuration, storage_file_path=temp_directory)
 
+        number_of_events = storage_writer.GetNumberOfAttributeContainers(
+            'event')
+        number_of_extraction_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'extraction_warning'))
+        number_of_recovery_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'recovery_warning'))
+
         parsers_counter = collections.Counter({
             parser_count.name: parser_count.number_of_events
             for parser_count in storage_writer.GetAttributeContainers(
@@ -71,9 +80,9 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     self.assertFalse(processing_status.aborted)
 
-    self.assertEqual(storage_writer.number_of_events, 15)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    self.assertEqual(number_of_events, 15)
+    self.assertEqual(number_of_extraction_warnings, 0)
+    self.assertEqual(number_of_recovery_warnings, 0)
 
     expected_parsers_counter = collections.Counter({
         'filestat': 15,

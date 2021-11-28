@@ -72,6 +72,7 @@ class StorageWriter(reader.StorageReader):
     return self._attribute_containers_counter[
         self._CONTAINER_TYPE_EXTRACTION_WARNING]
 
+  # TODO: kept for backwards compatibility.
   @property
   def number_of_recovery_warnings(self):
     """int: number of recovery warnings written."""
