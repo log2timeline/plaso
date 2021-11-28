@@ -125,7 +125,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
@@ -133,7 +132,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['application_execution'])
 
     # Test: data_type is 'windows:registry:mrulistex' AND
@@ -147,7 +145,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
@@ -155,7 +152,6 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['application_execution'])
 
     # Test: data_type is 'windows:registry:userassist' AND
@@ -229,14 +225,12 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_open'])
 
     # Test: data_type is 'windows:registry:mrulistex' AND
@@ -253,14 +247,12 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_open'])
 
     # Test: data_type is 'windows:registry:office_mru'
@@ -584,14 +576,12 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['file_download'])
 
   def testDocumentPrint(self):
@@ -608,14 +598,12 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_print'])
 
   def testFirewallChange(self):

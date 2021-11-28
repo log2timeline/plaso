@@ -117,7 +117,9 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._MACOS_USERS})
 
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
+    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+        'analysis_report')
+    self.assertEqual(number_of_reports, 1)
 
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
@@ -150,7 +152,9 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._WINDOWS_USERS})
 
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
+    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+        'analysis_report')
+    self.assertEqual(number_of_reports, 1)
 
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)

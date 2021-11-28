@@ -58,8 +58,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
       event_data.parser = 'test'
       storage_writer = self._TagEvent(event, event_data, None)
 
-      self.assertEqual(
-          storage_writer.number_of_event_tags, len(expected_rule_names))
       self._CheckLabels(storage_writer, expected_rule_names)
 
     else:
@@ -82,8 +80,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
         storage_writer = self._TagEvent(event, event_data, None)
 
-        self.assertEqual(
-            storage_writer.number_of_event_tags, len(expected_rule_names))
         self._CheckLabels(storage_writer, expected_rule_names)
 
       # Test if bogus variations on attribute_values_per_name do not match
@@ -103,7 +99,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
         storage_writer = self._TagEvent(event, event_data, None)
 
-        self.assertEqual(storage_writer.number_of_event_tags, 0)
         self._CheckLabels(storage_writer, [])
 
   def _TagEvent(self, event, event_data, event_data_stream):

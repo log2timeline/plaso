@@ -69,7 +69,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event_data = filestat.FileStatEventData()
@@ -78,7 +77,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['autorun'])
 
   def testRuleFileDownload(self):
@@ -105,14 +103,12 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['file_download'])
 
   def testRuleDeviceConnection(self):
@@ -145,14 +141,12 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['document_print'])
 
 

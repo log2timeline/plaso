@@ -49,7 +49,9 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
     plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
+    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+        'analysis_report')
+    self.assertEqual(number_of_reports, 1)
 
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)

@@ -21,9 +21,9 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._ParseAndAnalyzeFile(['History'], parser, plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 71)
-
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
+    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+        'analysis_report')
+    self.assertEqual(number_of_reports, 1)
 
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
