@@ -66,14 +66,15 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
           task_storage_path)
 
       test_reader = merge_reader.StorageMergeReader(
-          storage_writer, task_storage_reader, 'test_task')
+          task_storage_reader, 'test_task')
 
       storage_writer.Open(path=task_storage_path)
 
-      result = test_reader.MergeAttributeContainers()
-      self.assertTrue(result)
-
-      storage_writer.Close()
+      try:
+        result = test_reader.MergeAttributeContainers(storage_writer)
+        self.assertTrue(result)
+      finally:
+        storage_writer.Close()
 
   def testMergeAttributeContainersWithDeserializationError(self):
     """Tests MergeAttributeContainers with a deserialization error."""
@@ -90,14 +91,15 @@ class StorageMergeReaderTest(test_lib.StorageTestCase):
           task_storage_path)
 
       test_reader = merge_reader.StorageMergeReader(
-          storage_writer, task_storage_reader, 'test_task')
+          task_storage_reader, 'test_task')
 
       storage_writer.Open(path=task_storage_path)
 
-      result = test_reader.MergeAttributeContainers()
-      self.assertTrue(result)
-
-      storage_writer.Close()
+      try:
+        result = test_reader.MergeAttributeContainers(storage_writer)
+        self.assertTrue(result)
+      finally:
+        storage_writer.Close()
 
 
 if __name__ == '__main__':

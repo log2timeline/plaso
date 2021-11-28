@@ -46,7 +46,7 @@ class AnalysisTool(
     self._event_filter_expression = None
     self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
-    self._number_of_analysis_reports = 0
+    self._number_of_stored_analysis_reports = 0
     self._storage_file_path = None
     self._worker_memory_limit = None
     self._worker_timeout = None
@@ -136,7 +136,7 @@ class AnalysisTool(
         self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
     for index, analysis_report in enumerate(generator):
-      if index + 1 <= self._number_of_analysis_reports:
+      if index + 1 <= self._number_of_stored_analysis_reports:
         continue
 
       date_time_string = None
@@ -145,19 +145,19 @@ class AnalysisTool(
             timestamp=analysis_report.time_compiled)
         date_time_string = date_time.CopyToDateTimeStringISO8601()
 
-      title = 'Analysis report: {0:d}'.format(index)
+      title = 'Analysis report: {0:s}'.format(analysis_report.plugin_name)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow(['Name plugin', analysis_report.plugin_name or 'N/A'])
       table_view.AddRow(['Date and time', date_time_string or 'N/A'])
       table_view.AddRow(['Event filter', analysis_report.event_filter or 'N/A'])
 
       if not analysis_report.analysis_counter:
         table_view.AddRow(['Text', analysis_report.text or ''])
       else:
-        table_view.AddRow(['Results', ''])
+        text = 'Results'
         for key, value in sorted(analysis_report.analysis_counter.items()):
-          table_view.AddRow([key, value])
+          table_view.AddRow([text, '{0:s}: {1:d}'.format(key, value)])
+          text = ''
 
       table_view.Write(self._output_writer)

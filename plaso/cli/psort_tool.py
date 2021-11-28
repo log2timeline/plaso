@@ -472,7 +472,7 @@ class PsortTool(
 
         text_prepend = session.text_prepend
 
-      self._number_of_analysis_reports = (
+      self._number_of_stored_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(
               self._CONTAINER_TYPE_ANALYSIS_REPORT))
 
@@ -490,13 +490,9 @@ class PsortTool(
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
 
-    analysis_counter = None
-
     if self._analysis_plugins:
-      processing_status = self._AnalyzeEvents(
+      self._AnalyzeEvents(
           session, configuration, status_update_callback=status_update_callback)
-
-      analysis_counter = processing_status.analysis_reports_counter
 
     # TODO: abort if session.aborted is True
 
@@ -537,16 +533,6 @@ class PsortTool(
       return
 
     self._output_writer.Write('Processing completed.\n')
-
-    if analysis_counter:
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title='Analysis reports generated')
-      for element, count in analysis_counter.most_common():
-        if element != 'total':
-          table_view.AddRow([element, count])
-
-      table_view.AddRow(['Total', analysis_counter['total']])
-      table_view.Write(self._output_writer)
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
