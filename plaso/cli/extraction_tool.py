@@ -107,6 +107,37 @@ class ExtractionTool(
     self.list_language_tags = False
     self.list_time_zones = False
 
+  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+      warn_about_existing (bool): True if the user should be warned about
+          the storage file already existing.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+
+      if warn_about_existing:
+        logger.warning('Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = '.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
   def _CreateExtractionProcessingConfiguration(self):
     """Creates an extraction processing configuration.
 

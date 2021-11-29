@@ -13,22 +13,6 @@ class StorageFactory(object):
   """Storage factory."""
 
   @classmethod
-  def CheckStorageFileHasSupportedFormat(cls, path, check_readable_only=False):
-    """Checks if the storage file format is supported.
-
-    Args:
-      path (str): path to the storage file.
-      check_readable_only (Optional[bool]): whether the store should only be
-          checked to see if it can be read. If False, the store will be checked
-          to see if it can be read and written to.
-
-    Returns:
-      bool: True if the format is supported.
-    """
-    return sqlite_file.SQLiteStorageFile.CheckSupportedFormat(
-        path, check_readable_only=check_readable_only)
-
-  @classmethod
   def CreateStorageFile(cls, storage_format):
     """Creates a storage file.
 
@@ -55,8 +39,7 @@ class StorageFactory(object):
       StorageReader: a storage reader or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(
-        path, check_readable_only=True):
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return sqlite_reader.SQLiteStorageFileReader(path)
 
     return None
