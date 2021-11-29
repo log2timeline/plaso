@@ -97,11 +97,13 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      with self.assertRaises(IOError):
-        test_store._CreateAttributeContainerTable(
-            event_data_stream.CONTAINER_TYPE)
+      try:
+        with self.assertRaises(IOError):
+          test_store._CreateAttributeContainerTable(
+              event_data_stream.CONTAINER_TYPE)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   # TODO: add tests for _CreatetAttributeContainerFromRow
 
@@ -131,14 +133,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      result = test_store._HasTable(
-          test_store._CONTAINER_TYPE_EVENT_DATA_STREAM)
-      self.assertTrue(result)
+      try:
+        result = test_store._HasTable(
+            test_store._CONTAINER_TYPE_EVENT_DATA_STREAM)
+        self.assertTrue(result)
 
-      result = test_store._HasTable('bogus')
-      self.assertFalse(result)
+        result = test_store._HasTable('bogus')
+        self.assertFalse(result)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   # TODO: add tests for _RaiseIfNotReadable
   # TODO: add tests for _RaiseIfNotWritable
@@ -163,26 +167,28 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+      try:
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-    with self.assertRaises(IOError):
-      test_store._WriteExistingAttributeContainer(event_data_stream)
+        with self.assertRaises(IOError):
+          test_store._WriteExistingAttributeContainer(event_data_stream)
 
-      test_store._WriteNewAttributeContainer(event_data_stream)
+        test_store._WriteNewAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store._WriteExistingAttributeContainer(event_data_stream)
+        test_store._WriteExistingAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   # TODO: add tests for _WriteMetadata
   # TODO: add tests for _WriteMetadataValue
@@ -196,17 +202,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+      try:
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-      test_store._WriteNewAttributeContainer(event_data_stream)
+        test_store._WriteNewAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testAddAttributeContainer(self):
     """Tests the AddAttributeContainer function."""
@@ -217,17 +225,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+      try:
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
       with self.assertRaises(IOError):
         test_store.AddAttributeContainer(event_data_stream)
@@ -244,32 +254,34 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE))
-      self.assertEqual(len(containers), 0)
+      try:
+        containers = list(test_store.GetAttributeContainers(
+            event_data_stream.CONTAINER_TYPE))
+        self.assertEqual(len(containers), 0)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE))
-      self.assertEqual(len(containers), 1)
+        containers = list(test_store.GetAttributeContainers(
+            event_data_stream.CONTAINER_TYPE))
+        self.assertEqual(len(containers), 1)
 
-      filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE,
-          filter_expression=filter_expression))
-      self.assertEqual(len(containers), 1)
+        filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+        containers = list(test_store.GetAttributeContainers(
+            event_data_stream.CONTAINER_TYPE,
+            filter_expression=filter_expression))
+        self.assertEqual(len(containers), 1)
 
-      filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE,
-          filter_expression=filter_expression))
-      self.assertEqual(len(containers), 0)
+        filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+        containers = list(test_store.GetAttributeContainers(
+            event_data_stream.CONTAINER_TYPE,
+            filter_expression=filter_expression))
+        self.assertEqual(len(containers), 0)
 
-      with self.assertRaises(IOError):
-        list(test_store.GetAttributeContainers('bogus'))
+        with self.assertRaises(IOError):
+          list(test_store.GetAttributeContainers('bogus'))
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testGetAttributeContainerByIdentifier(self):
     """Tests the GetAttributeContainerByIdentifier function."""
@@ -280,20 +292,22 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      test_store.AddAttributeContainer(event_data_stream)
-      identifier = event_data_stream.GetIdentifier()
+      try:
+        test_store.AddAttributeContainer(event_data_stream)
+        identifier = event_data_stream.GetIdentifier()
 
-      container = test_store.GetAttributeContainerByIdentifier(
-          event_data_stream.CONTAINER_TYPE, identifier)
-      self.assertIsNotNone(container)
+        container = test_store.GetAttributeContainerByIdentifier(
+            event_data_stream.CONTAINER_TYPE, identifier)
+        self.assertIsNotNone(container)
 
-      identifier.sequence_number = 99
+        identifier.sequence_number = 99
 
-      container = test_store.GetAttributeContainerByIdentifier(
-          event_data_stream.CONTAINER_TYPE, identifier)
-      self.assertIsNone(container)
+        container = test_store.GetAttributeContainerByIdentifier(
+            event_data_stream.CONTAINER_TYPE, identifier)
+        self.assertIsNone(container)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testGetAttributeContainerByIndex(self):
     """Tests the GetAttributeContainerByIndex function."""
@@ -304,20 +318,22 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      container = test_store.GetAttributeContainerByIndex(
-          event_data_stream.CONTAINER_TYPE, 0)
-      self.assertIsNone(container)
+      try:
+        container = test_store.GetAttributeContainerByIndex(
+            event_data_stream.CONTAINER_TYPE, 0)
+        self.assertIsNone(container)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      container = test_store.GetAttributeContainerByIndex(
-          event_data_stream.CONTAINER_TYPE, 0)
-      self.assertIsNotNone(container)
+        container = test_store.GetAttributeContainerByIndex(
+            event_data_stream.CONTAINER_TYPE, 0)
+        self.assertIsNotNone(container)
 
-      with self.assertRaises(IOError):
-        test_store.GetAttributeContainerByIndex('bogus', 0)
+        with self.assertRaises(IOError):
+          test_store.GetAttributeContainerByIndex('bogus', 0)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testGetNumberOfAttributeContainers(self):
     """Tests the GetNumberOfAttributeContainers function."""
@@ -328,25 +344,27 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+      try:
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      # Test for a supported container type that does not have a table
-      # present in the storage file.
-      query = 'DROP TABLE {0:s}'.format(event_data_stream.CONTAINER_TYPE)
-      test_store._cursor.execute(query)
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+        # Test for a supported container type that does not have a table
+        # present in the storage file.
+        query = 'DROP TABLE {0:s}'.format(event_data_stream.CONTAINER_TYPE)
+        test_store._cursor.execute(query)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
@@ -355,26 +373,30 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      for event, event_data, event_data_stream in (
-          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-        test_store.AddAttributeContainer(event_data_stream)
+      try:
+        for event, event_data, event_data_stream in (
+            containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
+          test_store.AddAttributeContainer(event_data_stream)
 
-        event_data.SetEventDataStreamIdentifier(
-            event_data_stream.GetIdentifier())
-        test_store.AddAttributeContainer(event_data)
+          event_data.SetEventDataStreamIdentifier(
+              event_data_stream.GetIdentifier())
+          test_store.AddAttributeContainer(event_data)
 
-        event.SetEventDataIdentifier(event_data.GetIdentifier())
-        test_store.AddAttributeContainer(event)
+          event.SetEventDataIdentifier(event_data.GetIdentifier())
+          test_store.AddAttributeContainer(event)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path)
 
-      test_events = list(test_store.GetSortedEvents())
-      self.assertEqual(len(test_events), 4)
+      try:
+        test_events = list(test_store.GetSortedEvents())
+        self.assertEqual(len(test_events), 4)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
     # TODO: add test with time range.
 
@@ -387,20 +409,22 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      result = test_store.HasAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertFalse(result)
+      try:
+        result = test_store.HasAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertFalse(result)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      result = test_store.HasAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertTrue(result)
+        result = test_store.HasAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertTrue(result)
 
-      result = test_store.HasAttributeContainers('bogus')
-      self.assertFalse(result)
+        result = test_store.HasAttributeContainers('bogus')
+        self.assertFalse(result)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   # TODO: add tests for Open and Close
 
@@ -413,26 +437,28 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store = sqlite_file.SQLiteStorageFile()
       test_store.Open(path=test_path, read_only=False)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+      try:
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 0)
 
-    with self.assertRaises(IOError):
-      test_store.UpdateAttributeContainer(event_data_stream)
+        with self.assertRaises(IOError):
+          test_store.UpdateAttributeContainer(event_data_stream)
 
-      test_store.AddAttributeContainer(event_data_stream)
+        test_store.AddAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store.UpdateAttributeContainer(event_data_stream)
+        test_store.UpdateAttributeContainer(event_data_stream)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        number_of_containers = test_store.GetNumberOfAttributeContainers(
+            event_data_stream.CONTAINER_TYPE)
+        self.assertEqual(number_of_containers, 1)
 
-      test_store.Close()
+      finally:
+        test_store.Close()
 
   def testVersionCompatibility(self):
     """Tests the version compatibility methods."""
