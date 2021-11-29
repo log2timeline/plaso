@@ -8,6 +8,7 @@ import uuid
 
 import redis
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
@@ -21,6 +22,10 @@ class RedisStore(interface.BaseStore):
   All keys are prefixed with the session identifier to avoid collisions.
   Event identifiers are also stored in an index to enable sorting.
   """
+
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
 
   _FORMAT_VERSION = '20181013'
   _EVENT_INDEX_NAME = 'sorted_event_identifier'

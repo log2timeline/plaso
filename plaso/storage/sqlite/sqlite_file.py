@@ -8,6 +8,8 @@ import pathlib
 import sqlite3
 import zlib
 
+from plaso.containers import event_sources
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import identifiers
@@ -85,6 +87,12 @@ class SQLiteStorageFile(interface.BaseStore):
     serialization_format (str): serialization format.
   """
 
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+
   _FORMAT_VERSION = 20211121
 
   # The earliest format version with a schema.
@@ -113,10 +121,10 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
-      interface.BaseStore._CONTAINER_TYPE_EVENT,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_DATA,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_DATA_STREAM,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_SOURCE)
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
+      _CONTAINER_TYPE_EVENT_SOURCE)
 
   # TODO: automatically generate mappings
   _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {
