@@ -319,55 +319,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       test_store.Close()
 
-  def testGetEventTagByEventIdentifier(self):
-    """Tests the GetEventTagByEventIdentifier function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      test_store = sqlite_file.SQLiteStorageFile()
-      test_store.Open(path=test_path, read_only=False)
-
-      index = 0
-      for event, event_data, event_data_stream in (
-          containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-        test_store.AddAttributeContainer(event_data_stream)
-
-        event_data.SetEventDataStreamIdentifier(
-            event_data_stream.GetIdentifier())
-        test_store.AddAttributeContainer(event_data)
-
-        event.SetEventDataIdentifier(event_data.GetIdentifier())
-        test_store.AddAttributeContainer(event)
-
-        if index == 1:
-          event_tag = events.EventTag()
-          event_tag.AddLabels(['Malware', 'Benign'])
-
-          event_identifier = event.GetIdentifier()
-          event_tag.SetEventIdentifier(event_identifier)
-          test_store.AddAttributeContainer(event_tag)
-
-        index += 1
-
-      test_store.Close()
-
-      test_store = sqlite_file.SQLiteStorageFile()
-      test_store.Open(path=test_path)
-
-      test_event = test_store.GetAttributeContainerByIndex(
-          events.EventObject.CONTAINER_TYPE, 1)
-      self.assertIsNotNone(test_event)
-
-      test_event_identifier = test_event.GetIdentifier()
-      self.assertIsNotNone(test_event_identifier)
-
-      test_event_tag = test_store.GetEventTagByEventIdentifier(
-          test_event_identifier)
-      self.assertIsNotNone(test_event_tag)
-
-      self.assertEqual(test_event_tag.labels, ['Malware', 'Benign'])
-
-      test_store.Close()
-
   def testGetNumberOfAttributeContainers(self):
     """Tests the GetNumberOfAttributeContainers function."""
     event_data_stream = events.EventDataStream()
