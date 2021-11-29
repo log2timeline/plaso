@@ -22,7 +22,6 @@ class FakeStore(interface.BaseStore):
     """Initializes a fake (in-memory only) store."""
     super(FakeStore, self).__init__()
     self._attribute_containers = {}
-    self._event_tag_per_event_identifier = {}
     self._is_open = False
 
   def _RaiseIfNotReadable(self):
@@ -96,11 +95,6 @@ class FakeStore(interface.BaseStore):
     container = copy.deepcopy(container)
     containers[lookup_key] = container
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      event_identifier = container.GetEventIdentifier()
-      lookup_key = event_identifier.CopyToString()
-      self._event_tag_per_event_identifier[lookup_key] = container
-
   def Close(self):
     """Closes the store.
 
@@ -165,28 +159,6 @@ class FakeStore(interface.BaseStore):
         container_type, {}).values():
       if attribute_container.MatchesExpression(filter_expression):
         yield attribute_container
-
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: if an unsupported event identifier is provided or if the event
-          tag does not exist.
-      OSError: if an unsupported event identifier is provided or if the event
-          tag does not exist.
-    """
-    if not isinstance(event_identifier, identifiers.FakeIdentifier):
-      raise IOError('Unsupported event identifier type: {0!s}'.format(
-          type(event_identifier)))
-
-    lookup_key = event_identifier.CopyToString()
-    return self._event_tag_per_event_identifier.get(lookup_key, None)
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.

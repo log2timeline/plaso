@@ -27,6 +27,9 @@ class StorageWriter(reader.StorageReader):
       warnings.PreprocessingWarning.CONTAINER_TYPE)
   _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
 
+  # The maximum number of cached event tags
+  _MAXIMUM_CACHED_EVENT_TAGS = 32 * 1024
+
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer.
 
@@ -35,6 +38,7 @@ class StorageWriter(reader.StorageReader):
     """
     super(StorageWriter, self).__init__()
     self._attribute_containers_counter = collections.Counter()
+    self._event_tag_per_event_identifier = collections.OrderedDict()
     self._first_written_event_source_index = 0
     self._storage_type = storage_type
     self._written_event_source_index = 0
@@ -62,6 +66,53 @@ class StorageWriter(reader.StorageReader):
     """int: number of recovery warnings written."""
     return self._attribute_containers_counter[
         self._CONTAINER_TYPE_RECOVERY_WARNING]
+
+  def _CacheEventTagByEventIdentifier(self, event_tag, event_identifier):
+    """Caches a specific event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+      event_identifier (AttributeContainerIdentifier): event identifier.
+    """
+    if len(self._event_tag_per_event_identifier) >= (
+        self._MAXIMUM_CACHED_EVENT_TAGS):
+      self._event_tag_per_event_identifier.popitem(last=True)
+
+    lookup_key = event_identifier.CopyToString()
+
+    self._event_tag_per_event_identifier[lookup_key] = event_tag
+    self._event_tag_per_event_identifier.move_to_end(lookup_key, last=False)
+
+  def _GetCachedEventTag(self, event_identifier):
+    """Retrieves a specific cached event tag.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    lookup_key = event_identifier.CopyToString()
+
+    event_tag = self._event_tag_per_event_identifier.get(lookup_key, None)
+    if not event_tag:
+      filter_expression = '_event_row_identifier == {0:d}'.format(
+          event_identifier.sequence_number)
+
+      generator = self._store.GetAttributeContainers(
+          self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)
+
+      existing_event_tags = list(generator)
+      if len(existing_event_tags) == 1:
+        event_tag = existing_event_tags[0]
+
+    if event_tag:
+      self._event_tag_per_event_identifier.move_to_end(lookup_key, last=False)
+    return event_tag
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage writer is not writable.
@@ -102,11 +153,12 @@ class StorageWriter(reader.StorageReader):
     self._RaiseIfNotWritable()
 
     event_identifier = event_tag.GetEventIdentifier()
-    existing_event_tag = self._store.GetEventTagByEventIdentifier(
-        event_identifier)
 
+    existing_event_tag = self._GetCachedEventTag(event_identifier)
     if not existing_event_tag:
       self.AddAttributeContainer(event_tag)
+
+      self._CacheEventTagByEventIdentifier(event_tag, event_identifier)
 
     else:
       if not set(existing_event_tag.labels).issubset(event_tag.labels):
