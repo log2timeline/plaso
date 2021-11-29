@@ -299,7 +299,6 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event_data.type = 8
@@ -307,7 +306,6 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event_data.terminal = 'tty1'
@@ -315,14 +313,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 0)
     self._CheckLabels(storage_writer, [])
 
     event_data.pid = 1
 
     storage_writer = self._TagEvent(event, event_data, None)
 
-    self.assertEqual(storage_writer.number_of_event_tags, 1)
     self._CheckLabels(storage_writer, ['logout'])
 
     # Test: reporter is 'login' AND body contains 'session closed'
