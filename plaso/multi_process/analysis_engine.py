@@ -60,12 +60,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._memory_profiler = None
     self._merge_task = None
     self._number_of_consumed_analysis_reports = 0
-    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_analysis_reports = 0
-    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
@@ -95,12 +93,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     """
     self._status = definitions.STATUS_INDICATOR_RUNNING
     self._number_of_consumed_analysis_reports = 0
-    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_analysis_reports = 0
-    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
@@ -413,9 +409,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags,
         self._number_of_consumed_analysis_reports,
-        self._number_of_produced_analysis_reports,
-        self._number_of_consumed_analysis_warnings,
-        self._number_of_produced_analysis_warnings)
+        self._number_of_produced_analysis_reports)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
 
@@ -443,11 +437,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._RaiseIfNotMonitored(pid)
 
     display_name = process_status.get('display_name', '')
-
-    number_of_consumed_analysis_warnings = process_status.get(
-        'number_of_consumed_analysis_warnings', None)
-    number_of_produced_analysis_warnings = process_status.get(
-        'number_of_produced_analysis_warnings', None)
 
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
@@ -488,9 +477,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_reports, number_of_produced_reports,
-        number_of_consumed_analysis_warnings,
-        number_of_produced_analysis_warnings)
+        number_of_consumed_reports, number_of_produced_reports)
 
   def _UpdateStatus(self):
     """Update the status."""

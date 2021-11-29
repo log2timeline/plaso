@@ -686,8 +686,12 @@ class ExtractionTool(
           exception))
 
     processing_status = None
+    number_of_extraction_warnings = 0
 
     try:
+      stored_number_of_extraction_warnings = (
+          storage_writer.GetNumberOfAttributeContainers('extraction_warning'))
+
       session_start = session.CreateSessionStart()
       storage_writer.AddAttributeContainer(session_start)
 
@@ -700,6 +704,10 @@ class ExtractionTool(
         session_completion = session.CreateSessionCompletion()
         storage_writer.AddAttributeContainer(session_completion)
 
+        number_of_extraction_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'extraction_warning') - stored_number_of_extraction_warnings)
+
     except IOError as exception:
       raise IOError('Unable to write to storage with error: {0!s}'.format(
           exception))
@@ -707,7 +715,8 @@ class ExtractionTool(
     finally:
       storage_writer.Close()
 
-    self._status_view.PrintExtractionSummary(processing_status)
+    self._status_view.PrintExtractionSummary(
+        processing_status, number_of_extraction_warnings)
 
   def ListLanguageTags(self):
     """Lists the language tags."""

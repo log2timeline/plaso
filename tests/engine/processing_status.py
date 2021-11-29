@@ -58,18 +58,6 @@ class ProcessStatusTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       process_status.UpdateNumberOfEventTags(10, 1)
 
-  def testUpdateNumberOfExtractionWarnings(self):
-    """Tests the UpdateNumberOfExtractionWarnings function."""
-    process_status = processing_status.ProcessStatus()
-
-    process_status.UpdateNumberOfExtractionWarnings(5, 5)
-
-    with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfExtractionWarnings(1, 10)
-
-    with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfExtractionWarnings(10, 1)
-
 
 class ProcessingStatusTest(unittest.TestCase):
   """Tests the processing status."""
@@ -88,14 +76,14 @@ class ProcessingStatusTest(unittest.TestCase):
     status = processing_status.ProcessingStatus()
     status._UpdateProcessStatus(
         process_status, 'test', 'Idle', 12345, 2000000, 'test process',
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0, 0)
 
   def testUpdateForemanStatus(self):
     """Tests the UpdateForemanStatus function."""
     status = processing_status.ProcessingStatus()
     status.UpdateForemanStatus(
         'test', 'Idle', 12345, 2000000, 'test process',
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0, 0)
 
   def testUpdateTasksStatus(self):
     """Tests the UpdateTasksStatus function."""
@@ -109,7 +97,7 @@ class ProcessingStatusTest(unittest.TestCase):
     status = processing_status.ProcessingStatus()
     status.UpdateWorkerStatus(
         'test', 'Idle', 12345, 2000000, 'test process', 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0)
 
 
 class TasksStatusTest(unittest.TestCase):

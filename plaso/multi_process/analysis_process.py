@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The multi-process analysis process."""
+"""The multi-process analysis worker process."""
 
 import threading
 
@@ -13,7 +13,7 @@ from plaso.multi_process import task_process
 
 
 class AnalysisProcess(task_process.MultiProcessTaskProcess):
-  """Multi-processing analysis process."""
+  """Multi-processing analysis worker process."""
 
   # Number of seconds to wait for the completion status to be queried
   # by the foreman process.
@@ -23,7 +23,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       self, event_queue, knowledge_base, session, analysis_plugin,
       processing_configuration, data_location=None,
       event_filter_expression=None, **kwargs):
-    """Initializes an analysis process.
+    """Initializes an analysis worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
     multiprocessing.Process.
@@ -86,12 +86,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     status = {
         'display_name': '',
         'identifier': self._name,
-        'number_of_consumed_analysis_warnings': None,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
-        'number_of_produced_analysis_warnings': None,
         'number_of_produced_event_tags': number_of_produced_event_tags,
         'number_of_produced_events': None,
         'number_of_produced_reports': number_of_produced_reports,

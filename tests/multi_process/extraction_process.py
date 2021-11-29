@@ -87,8 +87,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       self.assertIsNotNone(status_attributes)
       self.assertEqual(status_attributes['identifier'], 'TestWorker')
       self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-      self.assertIsNone(
-          status_attributes['number_of_produced_extraction_warnings'])
 
       task_storage_writer = self._CreateStorageWriter()
       knowledge_base = self._CreateKnowledgeBase()
@@ -99,8 +97,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       self.assertIsNotNone(status_attributes)
       self.assertEqual(status_attributes['identifier'], 'TestWorker')
       self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-      self.assertEqual(
-          status_attributes['number_of_produced_extraction_warnings'], 0)
 
   def testMain(self):
     """Tests the _Main function."""
