@@ -7,7 +7,9 @@ import time
 
 from plaso.containers import counts
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -17,7 +19,6 @@ from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
 from plaso.storage import event_tag_index
-from plaso.storage import merge_reader
 
 
 class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
@@ -29,6 +30,20 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   """
 
   # pylint: disable=abstract-method
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+
+  # Container types produced by the analysis worker processes that need to be
+  # merged. Note that some container types reference other container types and
+  # therefore container types that are referenced, must be defined before
+  # container types that reference them.
+
+  _MERGE_CONTAINER_TYPES = (
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_ANALYSIS_REPORT,
+      _CONTAINER_TYPE_ANALYSIS_WARNING)
 
   _PROCESS_JOIN_TIMEOUT = 5.0
 
@@ -178,30 +193,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           task_storage_reader = self._GetMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
 
-          storage_merge_reader = merge_reader.StorageMergeReader(
+          self._MergeAttributeContainers(
               storage_writer, task_storage_reader, task.identifier)
-
-          storage_merge_reader.MergeAttributeContainers()
-
-          for key, value in storage_merge_reader.event_labels_counter.items():
-            event_label_count = self._event_labels_counter.get(key, None)
-            if event_label_count:
-              event_label_count.number_of_events += value
-              storage_writer.UpdateAttributeContainer(event_label_count)
-            else:
-              event_label_count = counts.EventLabelCount(
-                  label=key, number_of_events=value)
-              self._event_labels_counter[key] = event_label_count
-              storage_writer.AddAttributeContainer(event_label_count)
-
-          self._processing_status.analysis_reports_counter += (
-              storage_merge_reader.analysis_reports_counter)
-
-          self._number_of_produced_analysis_reports += (
-              task_storage_reader.GetNumberOfAttributeContainers(
-                  'analysis_report'))
-          self._number_of_produced_event_tags += (
-              task_storage_reader.GetNumberOfAttributeContainers('event_tag'))
 
           task_storage_reader.Close()
 
@@ -296,6 +289,42 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
+
+  def _MergeAttributeContainers(
+      self, storage_writer, task_storage_reader, task_identifier):
+    """Reads attribute containers from a task store into the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      task_storage_reader (StorageReader): task storage reader.
+      task_identifier (str): identifier of the task that is merged.
+    """
+    logger.debug('Starting merge of task: {0:s}'.format(task_identifier))
+
+    number_of_containers = 0
+
+    for container_type in self._MERGE_CONTAINER_TYPES:
+      for container in task_storage_reader.GetAttributeContainers(
+          container_type):
+        if container_type == self._CONTAINER_TYPE_EVENT_TAG:
+          storage_writer.AddOrUpdateEventTag(container)
+        else:
+          storage_writer.AddAttributeContainer(container)
+
+        if container_type == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+          self._number_of_produced_analysis_reports += 1
+
+        elif container_type == self._CONTAINER_TYPE_EVENT_TAG:
+          self._number_of_produced_event_tags += 1
+
+          for label in container.labels:
+            self._event_labels_counter[label] += 1
+            self._event_labels_counter['total'] += 1
+
+        number_of_containers += 1
+
+    logger.debug('Merged {0:d} containers of task: {1:s}'.format(
+        number_of_containers, task_identifier))
 
   def _StartAnalysisProcesses(self, analysis_plugins):
     """Starts the analysis processes.
@@ -546,14 +575,14 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
-    event_labels_counter = {}
+    stored_event_labels_counter = {}
     if storage_writer.HasAttributeContainers('event_label_count'):
-      event_labels_counter = {
+      stored_event_labels_counter = {
           event_label_count.label: event_label_count
           for event_label_count in storage_writer.GetAttributeContainers(
               'event_label_count')}
 
-    self._event_labels_counter = collections.Counter(event_labels_counter)
+    self._event_labels_counter = collections.Counter()
 
     if storage_writer.HasAttributeContainers('parser_count'):
       parsers_counter = {
@@ -584,6 +613,16 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     try:
       self._AnalyzeEvents(
           storage_writer, analysis_plugins, event_filter=event_filter)
+
+      for key, value in self._event_labels_counter.items():
+        event_label_count = stored_event_labels_counter.get(key, None)
+        if event_label_count:
+          event_label_count.number_of_events += value
+          storage_writer.UpdateAttributeContainer(event_label_count)
+        else:
+          event_label_count = counts.EventLabelCount(
+              label=key, number_of_events=value)
+          storage_writer.AddAttributeContainer(event_label_count)
 
       self._status = definitions.STATUS_INDICATOR_FINALIZING
 
