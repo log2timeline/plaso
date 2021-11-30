@@ -113,6 +113,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
           event_tag.CONTAINER_TYPE)
       self.assertEqual(number_of_containers, 2)
 
+      event_tags = list(storage_writer.GetAttributeContainers(
+          event_tag.CONTAINER_TYPE))
+      self.assertEqual(event_tags[0].labels, ['Label1', 'AnotherLabel1'])
+      self.assertEqual(event_tags[1].labels, ['Label2'])
+
     finally:
       storage_writer.Close()
 
