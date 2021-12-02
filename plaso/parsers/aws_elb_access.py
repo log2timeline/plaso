@@ -189,6 +189,20 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
   LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
 
+  def _GetValue(self, structure, name, key_name):
+    """Retrieves a value from a Pyparsing.Group structure
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+      key_name (str): key name to retrieve the value of.
+
+    Returns:
+      object: value for the specified key.
+      """
+    structure_value = self._GetValueFromStructure(structure, name)
+    return structure_value.get(key_name)
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -225,14 +239,14 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     event_data.type = self._GetValueFromStructure(structure, 'type')
     event_data.resource_identifier = self._GetValueFromStructure(
         structure, 'resource_identifier')
-    event_data.client_ip_address = self._GetValueFromStructure(structure,
-        'client_ip_port').get('client_ip_address')
-    event_data.client_port = self._GetValueFromStructure(structure,
-        'client_ip_port').get('client_port')
-    event_data.target_ip_address = self._GetValueFromStructure(structure,
-        'target_ip_port').get('target_ip_address')
-    event_data.target_port = self._GetValueFromStructure(structure,
-        'target_ip_port').get('target_port')
+    event_data.client_ip_address = self._GetValue(structure,
+        'client_ip_port', 'client_ip_address')
+    event_data.client_port = self._GetValue(structure,
+        'client_ip_port', 'client_port')
+    event_data.target_ip_address = self._GetValue(structure,
+        'target_ip_port', 'target_ip_address')
+    event_data.target_port = self._GetValue(structure,
+        'target_ip_port', 'target_port')
     event_data.request_processing_time = self._GetValueFromStructure(structure,
         'request_processing_time')
     event_data.target_processing_time = self._GetValueFromStructure(structure,
