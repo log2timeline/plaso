@@ -188,7 +188,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
   )
 
   LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
-  
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -301,12 +301,9 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       structure = self._LOG_LINE.parseString(line)
-      if structure:
-        return True
     except pyparsing.ParseException:
-      return False
+      structure = None
 
-    return False
-
+    return bool(structure)
 
 manager.ParsersManager.RegisterParser(AWSELBParser)
