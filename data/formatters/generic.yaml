@@ -18,7 +18,7 @@ type: 'conditional'
 data_type: 'aws:elb:access'
 message:
 - 'type: {type}'
-- 'elb: {elb}'
+- 'resource_identifier: {resource_identifier}'
 - 'client_ip_address: {client_ip_address}'
 - 'client_port: {client_port}'
 - 'target_ip_address: {target_ip_address}'

@@ -35,7 +35,7 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
       "client_port": 44325,
       "data_type": "aws:elb:access",
       "domain_name": "www.domain.name",
-      "elb": "app/production-web/jf29fj2198ejf922",
+      "resource_identifier": "app/production-web/jf29fj2198ejf922",
       "elb_status_code": 200,
       "error_reason": "-",
       "matched_rule_priority": 2,
@@ -55,7 +55,7 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
       "target_processing_time": "0.164",
       "target_status_code": 200,
       "target_status_code_list": "200",
-      "trace_id": "\"XXXXXXX\"",
+      "trace_identifier": "\"XXXXXXX\"",
       "type": "https",
       "user_agent":
       "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"

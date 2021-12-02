@@ -21,31 +21,31 @@ class AWSELBEventData(events.EventData):
 
   Attributes:
     type (str): The type of request or connection.
-    elb (str): The resource ID of the load balancer.
+    resource_identifier (str): The resource ID of the load balancer.
     client_ip_address (str): The IP address of the requesting client.
     client_port (int): The port of the requesting client.
     target_ip_address (str): The IP address of the target that processed
         this request.
     target_port (int): The port of the target that processed this request.
-    request_processing_time (str): The total time elapsed from
+    request_processing_time (str): The total duration from
         the time the load balancer received the request until the
         time it sent the request to a target.
-    target_processing_time (str): The total time elapsed from
+    target_processing_time (str): The total duration from
         the time the load balancer sent the request to a target until
         the target started to send the response headers.
-    response_processing_time (str): The total processing time elapsed.
+    response_processing_time (str): The total processing duration.
     target_status_code (int): The status code of the response from the target.
     received_bytes (int): The size of the request, in bytes, received from
         the client.
     sent_bytes (int): The size of the response, in bytes, sent to the client.
     user_agent (str): A User-Agent string.
-    ssl_cipher (str): [HTTPS listener] The SSL cipher.
-    ssl_protocol (str): [HTTPS listener] The SSL protocol.
+    ssl_cipher (str): The SSL cipher of the HTTPS listener.
+    ssl_protocol (str): The SSL protocol of the HTTPS listener.
     target_group_arn (str): The Amazon Resource Name (ARN) of the target group.
-    trace_id (str): The contents of the X-Amzn-Trace-Id header.
-    domain_name (str): [HTTPS listener] The SNI domain provided by the
+    trace_identifier (str): The contents of the X-Amzn-Trace-Id header.
+    domain_name (str): The SNI domain provided by the
         client during the TLS handshake.
-    chosen_cert_arn (str): [HTTPS listener] The ARN of the certificate
+    chosen_cert_arn (str): The ARN of the certificate
         presented to the client.
     matched_rule_priority (int): The priority value of the rule that
         matched the request.
@@ -65,9 +65,9 @@ class AWSELBEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AWSELBEventData, self).__init__(data_type = self.DATA_TYPE)
+    super(AWSELBEventData, self).__init__(data_type=self.DATA_TYPE)
     self.type = None
-    self.elb = None
+    self.resource_identifier = None
     self.client_ip_address = None
     self.client_port = None
     self.target_ip_address = None
@@ -84,7 +84,7 @@ class AWSELBEventData(events.EventData):
     self.ssl_cipher = None
     self.ssl_protocol = None
     self.target_group_arn = None
-    self.trace_id = None
+    self.trace_identifier = None
     self.domain_name = None
     self.chosen_cert_arn = None
     self.matched_rule_priority = None
@@ -121,18 +121,18 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.ConvertTokenToInteger) | BLANK
 
   _CLIENT_IP_ADDRESS_PORT = pyparsing.Group(
-      text_parser.PyparsingConstants.IP_ADDRESS('client_ip_address') \
-      + pyparsing.Suppress(":") + _PORT('client_port') | BLANK)
+      text_parser.PyparsingConstants.IP_ADDRESS('client_ip_address') +
+          pyparsing.Suppress(":") + _PORT('client_port') | BLANK)
 
   _TARGET_IP_ADDRESS_PORT = pyparsing.Group(
-      text_parser.PyparsingConstants.IP_ADDRESS('target_ip_address') \
-      + pyparsing.Suppress(":") + _PORT('target_port') | BLANK)
+      text_parser.PyparsingConstants.IP_ADDRESS('target_ip_address') +
+          pyparsing.Suppress(":") + _PORT('target_port') | BLANK)
 
   _DATE_TIME_ISOFORMAT = (
       text_parser.PyparsingConstants.DATE_ELEMENTS +
-      pyparsing.Suppress("T") +
+          pyparsing.Suppress("T") +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS +
-      pyparsing.Suppress("Z"))
+          pyparsing.Suppress("Z"))
 
   _DATE_TIME_ISOFORMAT_STRING = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
@@ -147,7 +147,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
   _LOG_LINE = (
       _WORD.setResultsName('type') +
       _DATE_TIME_ISOFORMAT.setResultsName('time') +
-      _WORD.setResultsName('elb') +
+      _WORD.setResultsName('resource_identifier') +
       _CLIENT_IP_ADDRESS_PORT.setResultsName('client_ip_port') +
       _TARGET_IP_ADDRESS_PORT.setResultsName('target_ip_port') +
       _FLOAT.setResultsName('request_processing_time') +
@@ -157,39 +157,38 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       _INTEGER.setResultsName('target_status_code') +
       _INTEGER.setResultsName('received_bytes') +
       _INTEGER.setResultsName('sent_bytes') +
-      pyparsing.quotedString.setResultsName('request') \
+      pyparsing.quotedString.setResultsName('request')
       .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('user_agent') \
+      pyparsing.quotedString.setResultsName('user_agent')
       .setParseAction(pyparsing.removeQuotes) +
       _WORD.setResultsName('ssl_cipher') +
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('target_group_arn') +
-      _WORD.setResultsName('trace_id') +
-      pyparsing.quotedString.setResultsName('domain_name') \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('chosen_cert_arn') \
-      .setParseAction(pyparsing.removeQuotes) +
+      _WORD.setResultsName('trace_identifier') +
+      pyparsing.quotedString.setResultsName(
+          'domain_name').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'chosen_cert_arn').setParseAction(pyparsing.removeQuotes) +
       _INTEGER.setResultsName('matched_rule_priority') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('request_creation_time') +
-      pyparsing.quotedString.setResultsName('actions_executed')  \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('redirect_url') \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('error_reason') \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('target_port_list') \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('target_status_code_list') \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('classification')  \
-      .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('classification_reason')  \
-      .setParseAction(pyparsing.removeQuotes)
+      pyparsing.quotedString.setResultsName(
+          'actions_executed').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'redirect_url').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'error_reason').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'target_port_list').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'target_status_code_list').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'classification').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName(
+          'classification_reason').setParseAction(pyparsing.removeQuotes)
   )
 
   LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
-
-
+  
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -200,7 +199,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure parsed from the log file.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: when the structure type is unsupported.
     """
 
     if key != 'elb_accesslog':
@@ -216,7 +215,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple = time_elements_tuple)
+          time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_tuple))
@@ -224,7 +223,8 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     event_data = AWSELBEventData()
     event_data.type = self._GetValueFromStructure(structure, 'type')
-    event_data.elb = self._GetValueFromStructure(structure, 'elb')
+    event_data.resource_identifier = self._GetValueFromStructure(
+        structure, 'resource_identifier')
     event_data.client_ip_address = self._GetValueFromStructure(structure,
         'client_ip_port').get('client_ip_address')
     event_data.client_port = self._GetValueFromStructure(structure,
@@ -257,8 +257,8 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
         'ssl_protocol')
     event_data.target_group_arn = self._GetValueFromStructure(structure,
         'target_group_arn')
-    event_data.trace_id = self._GetValueFromStructure(structure,
-        'trace_id')
+    event_data.trace_identifier = self._GetValueFromStructure(structure,
+        'trace_identifier')
     event_data.domain_name = self._GetValueFromStructure(structure,
         'domain_name')
     event_data.chosen_cert_arn = self._GetValueFromStructure(structure,
