@@ -112,8 +112,8 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).setResultsName('user_name')
 
-    # Defined in https://httpd.apache.org/docs/2.4/logs.html
-    # format: "%h %l %u %t \"%r\" %>s %b"
+  # Defined in https://httpd.apache.org/docs/2.4/logs.html
+  # format: "%h %l %u %t \"%r\" %>s %b"
   _COMMON_LOG_FORMAT_LINE = (
       text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
       _REMOTE_NAME +
@@ -124,8 +124,8 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       _RESPONSE_BYTES +
       pyparsing.lineEnd())
 
-    # Defined in https://httpd.apache.org/docs/2.4/logs.html
-    # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
+  # Defined in https://httpd.apache.org/docs/2.4/logs.html
+  # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
   _COMBINED_LOG_FORMAT_LINE = (
       text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
       _REMOTE_NAME +
