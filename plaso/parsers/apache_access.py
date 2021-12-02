@@ -6,6 +6,7 @@ defined in https://httpd.apache.org/docs/2.4/logs.html
 """
 
 import pyparsing
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events

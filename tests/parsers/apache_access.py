@@ -3,6 +3,7 @@
 """Tests for Apache access log parser."""
 
 import unittest
+
 from plaso.containers import warnings
 from plaso.parsers import apache_access
 
@@ -19,6 +20,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)
+
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 1)
