@@ -3,7 +3,6 @@
 """Tests for Apache access log parser."""
 
 import unittest
-
 from plaso.containers import warnings
 from plaso.parsers import apache_access
 
@@ -19,8 +18,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['access.log'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 13)
-
+    self.assertEqual(number_of_events, 14)
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 1)
@@ -97,7 +95,21 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'server_name': 'plaso.log2timeline.net',
         'user_name': '-'}
 
+
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
+
+    # Test common log format parser event with Kerberos user name
+    expected_event_values = {
+        'data_type': 'apache:access',
+        'date_time': '2019-11-16 09:46:42',
+        'http_request': ('GET / HTTP/1.1'),
+        'http_response_code': 200,
+        'http_response_bytes': 8264,
+        'ip_address': '192.168.0.64',
+        'remote_name': '-',
+        'user_name': 'pyllyukko@EXAMPLE.COM'}
+
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
 
 if __name__ == '__main__':
