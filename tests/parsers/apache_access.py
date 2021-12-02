@@ -97,7 +97,6 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'server_name': 'plaso.log2timeline.net',
         'user_name': '-'}
 
-
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Test common log format parser event with Kerberos user name
