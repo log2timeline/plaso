@@ -158,9 +158,9 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       _INTEGER.setResultsName('received_bytes') +
       _INTEGER.setResultsName('sent_bytes') +
       pyparsing.quotedString.setResultsName('request')
-      .setParseAction(pyparsing.removeQuotes) +
+          .setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName('user_agent')
-      .setParseAction(pyparsing.removeQuotes) +
+          .setParseAction(pyparsing.removeQuotes) +
       _WORD.setResultsName('ssl_cipher') +
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('target_group_arn') +
