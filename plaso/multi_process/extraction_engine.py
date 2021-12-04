@@ -15,6 +15,7 @@ from dfvfs.resolver import context
 
 from plaso.containers import counts
 from plaso.containers import event_sources
+from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import extractors
 from plaso.lib import definitions
@@ -22,11 +23,11 @@ from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_process import extraction_process
 from plaso.multi_process import logger
+from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import task_manager
 from plaso.multi_process import zeromq_queue
-from plaso.storage import merge_reader
 
 
 class _EventSourceHeap(object):
@@ -89,15 +90,20 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   * merge results returned by extraction worker processes.
   """
 
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
-
-  _WORKER_PROCESSES_MINIMUM = 2
-  _WORKER_PROCESSES_MAXIMUM = 15
 
   _TASK_QUEUE_TIMEOUT_SECONDS = 2
 
   _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
+
+  _WORKER_PROCESSES_MINIMUM = 2
+  _WORKER_PROCESSES_MAXIMUM = 15
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -167,13 +173,13 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
-    self._parsers_counter = None
+    self._parsers_counter = collections.Counter()
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._status = definitions.STATUS_INDICATOR_IDLE
-    self._storage_merge_reader = None
-    self._storage_merge_reader_on_hold = None
     self._task_manager = task_manager.TaskManager()
+    self._task_merge_helper = None
+    self._task_merge_helper_on_hold = None
     self._task_queue = None
     self._task_queue_port = None
     self._task_storage_format = None
@@ -240,8 +246,145 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return path_spec_string
 
-  def _MergeTaskStorage(
-      self, storage_writer, session_identifier, maximum_number_of_containers=0):
+  def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
+    """Merges an attribute container from a task store into the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      merge_helper (ExtractionTaskMergeHelper): helper to merge attribute
+          containers.
+      container (AttributeContainer): attribute container.
+    """
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      event_data_identifier = container.GetEventDataIdentifier()
+      event_data_lookup_key = event_data_identifier.CopyToString()
+
+      event_data_identifier = merge_helper.GetAttributeContainerIdentifier(
+          event_data_lookup_key)
+
+      if event_data_identifier:
+        container.SetEventDataIdentifier(event_data_identifier)
+      else:
+        identifier = container.GetIdentifier()
+        identifier_string = identifier.CopyToString()
+
+        # TODO: store this as a merge warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge event attribute container: {0:s} since '
+            'corresponding event data: {1:s} could not be found.').format(
+                identifier_string, event_data_lookup_key))
+        return
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+      event_data_stream_lookup_key = None
+      if event_data_stream_identifier:
+        event_data_stream_lookup_key = (
+            event_data_stream_identifier.CopyToString())
+
+        event_data_stream_identifier = (
+            merge_helper.GetAttributeContainerIdentifier(
+                event_data_stream_lookup_key))
+
+      if event_data_stream_identifier:
+        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+      elif event_data_stream_lookup_key:
+        identifier = container.GetIdentifier()
+        identifier_string = identifier.CopyToString()
+
+        # TODO: store this as a merge warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge event data attribute container: {0:s} since '
+            'corresponding event data stream: {1:s} could not be '
+            'found.').format(identifier_string, event_data_stream_lookup_key))
+        return
+
+    elif container.CONTAINER_TYPE == 'windows_eventlog_message_string':
+      message_file_identifier = container.GetMessageFileIdentifier()
+      message_file_lookup_key = message_file_identifier.CopyToString()
+
+      message_file_identifier = merge_helper.GetAttributeContainerIdentifier(
+          message_file_lookup_key)
+
+      if message_file_identifier:
+        container.SetMessageFileIdentifier(message_file_identifier)
+      else:
+        identifier = container.GetIdentifier()
+        identifier_string = identifier.CopyToString()
+
+        # TODO: store this as a merge warning so this is preserved
+        # in the storage file.
+        logger.error((
+            'Unable to merge Windows EventLog message string attribute '
+            'container: {0:s} since corresponding Windows EventLog message '
+            'file: {1:s} could not be found.').format(
+                identifier_string, message_file_lookup_key))
+        return
+
+    lookup_key = None
+    if container.CONTAINER_TYPE in (
+        self._CONTAINER_TYPE_EVENT_DATA,
+        self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+        'windows_eventlog_message_file'):
+      # Preserve the lookup key before adding it to the attribute container
+      # store.
+      identifier = container.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+
+    storage_writer.AddAttributeContainer(container)
+
+    if lookup_key:
+      identifier = container.GetIdentifier()
+      merge_helper.SetAttributeContainerIdentifier(lookup_key, identifier)
+
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      parser_name = merge_helper.event_data_parser_mappings.get(
+          event_data_lookup_key, 'N/A')
+      self._parsers_counter[parser_name] += 1
+      self._parsers_counter['total'] += 1
+
+      self._number_of_produced_events += 1
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      parser_name = container.parser.split('/')[-1]
+      merge_helper.event_data_parser_mappings[lookup_key] = parser_name
+
+    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
+      self._number_of_produced_sources += 1
+
+  def _MergeAttributeContainers(
+        self, storage_writer, merge_helper, maximum_number_of_containers=0):
+    """Merges attribute containers from a task store into the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      merge_helper (ExtractionTaskMergeHelper): helper to merge attribute
+          containers.
+      maximum_number_of_containers (Optional[int]): maximum number of
+          containers to merge, where 0 represent no limit.
+
+    Returns:
+      int: number of containers merged.
+    """
+    number_of_containers = 0
+
+    container = merge_helper.GetAttributeContainer()
+
+    while container:
+      number_of_containers += 1
+
+      self._MergeAttributeContainer(storage_writer, merge_helper, container)
+
+      if 0 < maximum_number_of_containers <= number_of_containers:
+        break
+
+      container = merge_helper.GetAttributeContainer()
+
+    return number_of_containers
+
+  def _MergeTaskStorage(self, storage_writer, session_identifier):
     """Merges a task storage with the session storage.
 
     This function checks all task stores that are ready to merge and updates
@@ -253,11 +396,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           to merge task storage.
       session_identifier (str): the identifier of the session the tasks are
           part of.
-      maximum_number_of_containers (Optional[int]): maximum number of
-          containers to merge, where 0 represent no limit.
-
-    Returns:
-      int: number of containers merged.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
@@ -291,22 +429,20 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('merge_check')
 
-    number_of_containers = 0
-
     task = None
-    if not self._storage_merge_reader_on_hold:
+    if not self._task_merge_helper_on_hold:
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
-    if task or self._storage_merge_reader:
+    if task or self._task_merge_helper:
       self._status = definitions.STATUS_INDICATOR_MERGING
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming('merge')
 
       if task:
-        if self._storage_merge_reader:
+        if self._task_merge_helper:
           self._merge_task_on_hold = self._merge_task
-          self._storage_merge_reader_on_hold = self._storage_merge_reader
+          self._task_merge_helper_on_hold = self._task_merge_helper
 
           self._task_manager.SampleTaskStatus(
               self._merge_task_on_hold, 'merge_on_hold')
@@ -316,7 +452,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           task_storage_reader = self._GetMergeTaskStorage(
               self._task_storage_format, task)
 
-          self._storage_merge_reader = merge_reader.StorageMergeReader(
+          self._task_merge_helper = merge_helpers.ExtractionTaskMergeHelper(
               task_storage_reader, task.identifier)
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
@@ -325,14 +461,32 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           logger.error((
               'Unable to merge results of task: {0:s} '
               'with error: {1!s}').format(task.identifier, exception))
-          self._storage_merge_reader = None
+          self._task_merge_helper = None
 
-      if self._storage_merge_reader:
-        fully_merged = self._storage_merge_reader.MergeAttributeContainers(
-            self._storage_writer,
-            maximum_number_of_containers=maximum_number_of_containers)
+      if self._task_merge_helper:
+        merge_duration = time.time()
 
-        number_of_containers = self._storage_merge_reader.number_of_containers
+        number_of_containers = self._MergeAttributeContainers(
+            storage_writer, self._task_merge_helper,
+            maximum_number_of_containers=self._maximum_number_of_containers)
+
+        merge_duration = time.time() - merge_duration
+
+        fully_merged = self._task_merge_helper.fully_merged
+
+        if merge_duration > 0.0 and number_of_containers > 0:
+          # Limit the number of attribute containers from a single task-based
+          # storage file that are merged per loop to keep tasks flowing.
+          containers_per_second = number_of_containers / merge_duration
+          maximum_number_of_containers = int(0.5 * containers_per_second)
+
+          if fully_merged:
+            self._maximum_number_of_containers = max(
+                self._maximum_number_of_containers,
+                maximum_number_of_containers)
+
+          else:
+            self._maximum_number_of_containers = maximum_number_of_containers
 
       else:
         # TODO: Do something more sensible when this happens, perhaps
@@ -344,17 +498,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._processing_profiler.StopTiming('merge')
 
       if fully_merged:
-        self._storage_merge_reader.Close()
-
-        for key, value in self._storage_merge_reader.parsers_counter.items():
-          parser_count = self._parsers_counter.get(key, None)
-          if parser_count:
-            parser_count.number_of_events += value
-            self._storage_writer.UpdateAttributeContainer(parser_count)
-          else:
-            parser_count = counts.ParserCount(name=key, number_of_events=value)
-            self._parsers_counter[key] = parser_count
-            self._storage_writer.AddAttributeContainer(parser_count)
+        self._task_merge_helper.Close()
 
         self._RemoveMergeTaskStorage(
             self._task_storage_format, self._merge_task)
@@ -367,23 +511,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               'Unable to complete task: {0:s} with error: {1!s}'.format(
                   self._merge_task.identifier, exception))
 
-        if not self._storage_merge_reader_on_hold:
+        if not self._task_merge_helper_on_hold:
           self._merge_task = None
-          self._storage_merge_reader = None
+          self._task_merge_helper = None
         else:
           self._merge_task = self._merge_task_on_hold
-          self._storage_merge_reader = self._storage_merge_reader_on_hold
+          self._task_merge_helper = self._task_merge_helper_on_hold
 
           self._merge_task_on_hold = None
-          self._storage_merge_reader_on_hold = None
+          self._task_merge_helper_on_hold = None
 
           self._task_manager.SampleTaskStatus(self._merge_task, 'merge_resumed')
 
       self._status = definitions.STATUS_INDICATOR_RUNNING
-      self._number_of_produced_events = storage_writer.number_of_events
-      self._number_of_produced_sources = storage_writer.number_of_event_sources
-
-    return number_of_containers
 
   def _ProcessSources(
       self, source_configurations, storage_writer, session_identifier):
@@ -409,6 +549,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
+    stored_parsers_counter = collections.Counter({
+        parser_count.name: parser_count
+        for parser_count in storage_writer.GetAttributeContainers(
+            'parser_count')})
+
     find_specs = None
     if self.collection_filters_helper:
       find_specs = (
@@ -430,7 +575,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddAttributeContainer(event_source)
 
-      self._number_of_produced_sources = storage_writer.number_of_event_sources
+      self._number_of_produced_sources += 1
 
       # Update the foreman process status in case we are using a filter file.
       self._UpdateForemanProcessStatus()
@@ -445,8 +590,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-    self._number_of_produced_events = storage_writer.number_of_events
-    self._number_of_produced_sources = storage_writer.number_of_event_sources
+    for key, value in self._parsers_counter.items():
+      parser_count = stored_parsers_counter.get(key, None)
+      if parser_count:
+        parser_count.number_of_events += value
+        storage_writer.UpdateAttributeContainer(parser_count)
+      else:
+        parser_count = counts.ParserCount(name=key, number_of_events=value)
+        storage_writer.AddAttributeContainer(parser_count)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
@@ -546,19 +697,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             task = None
 
-        # Limit the number of attribute containers from a single task-based
-        # storage file that are merged per loop to keep tasks flowing.
-        merge_duration = time.time()
-
-        number_of_containers = self._MergeTaskStorage(
-            storage_writer, session_identifier,
-            maximum_number_of_containers=self._maximum_number_of_containers)
-
-        merge_duration = time.time() - merge_duration
-
-        if merge_duration > 0.0 and number_of_containers > 0:
-          containers_per_second = number_of_containers / merge_duration
-          self._maximum_number_of_containers = int(0.5 * containers_per_second)
+        self._MergeTaskStorage(storage_writer, session_identifier)
 
         if not event_source_heap.IsFull():
           self._FillEventSourceHeap(storage_writer, event_source_heap)
@@ -867,11 +1006,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       storage_writer.SetStorageProfiler(self._storage_profiler)
 
     self._StartStatusUpdateThread()
-
-    self._parsers_counter = collections.Counter({
-        parser_count.name: parser_count
-        for parser_count in self._storage_writer.GetAttributeContainers(
-            'parser_count')})
 
     try:
       self._ProcessSources(

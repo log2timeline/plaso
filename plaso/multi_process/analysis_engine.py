@@ -9,12 +9,12 @@ from plaso.containers import counts
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import tasks
-from plaso.containers import warnings
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_process import analysis_process
 from plaso.multi_process import logger
+from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
@@ -32,18 +32,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   # pylint: disable=abstract-method
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-
-  # Container types produced by the analysis worker processes that need to be
-  # merged. Note that some container types reference other container types and
-  # therefore container types that are referenced, must be defined before
-  # container types that reference them.
-
-  _MERGE_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_ANALYSIS_REPORT,
-      _CONTAINER_TYPE_ANALYSIS_WARNING)
 
   _PROCESS_JOIN_TIMEOUT = 5.0
 
@@ -193,10 +182,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           task_storage_reader = self._GetMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
 
-          self._MergeAttributeContainers(
-              storage_writer, task_storage_reader, task.identifier)
+          try:
+            merge_helper = merge_helpers.AnalysisTaskMergeHelper(
+                task_storage_reader, task.identifier)
 
-          task_storage_reader.Close()
+            logger.debug('Starting merge of task: {0:s}'.format(
+                merge_helper.task_identifier))
+
+            number_of_containers = self._MergeAttributeContainers(
+                storage_writer, merge_helper)
+
+            logger.debug('Merged {0:d} containers of task: {1:s}'.format(
+                number_of_containers, merge_helper.task_identifier))
+
+          finally:
+            task_storage_reader.Close()
 
           self._RemoveMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
@@ -290,34 +290,24 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       self._TerminateProcessByPid(pid)
 
-  def _GetMergeAttributeContainers(self, task_storage_reader):
-    """Retrieves attribute containers to merge.
-
-    Args:
-      task_storage_reader (StorageReader): task storage reader.
-
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    for container_type in self._MERGE_CONTAINER_TYPES:
-      for container in task_storage_reader.GetAttributeContainers(
-          container_type):
-        yield container
-
-  def _MergeAttributeContainers(
-      self, storage_writer, task_storage_reader, task_identifier):
+  def _MergeAttributeContainers(self, storage_writer, merge_helper):
     """Merges attribute containers from a task store into the storage writer.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      task_storage_reader (StorageReader): task storage reader.
-      task_identifier (str): identifier of the task that is merged.
-    """
-    logger.debug('Starting merge of task: {0:s}'.format(task_identifier))
+      merge_helper (AnalysisTaskMergeHelper): helper to merge attribute
+          containers.
 
+    Returns:
+      int: number of containers merged.
+    """
     number_of_containers = 0
 
-    for container in self._GetMergeAttributeContainers(task_storage_reader):
+    container = merge_helper.GetAttributeContainer()
+
+    while container:
+      number_of_containers += 1
+
       if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
         storage_writer.AddOrUpdateEventTag(container)
       else:
@@ -333,10 +323,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._event_labels_counter[label] += 1
           self._event_labels_counter['total'] += 1
 
-      number_of_containers += 1
+      container = merge_helper.GetAttributeContainer()
 
-    logger.debug('Merged {0:d} containers of task: {1:s}'.format(
-        number_of_containers, task_identifier))
+    return number_of_containers
 
   def _StartAnalysisProcesses(self, analysis_plugins):
     """Starts the analysis processes.
