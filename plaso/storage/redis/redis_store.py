@@ -53,21 +53,6 @@ class RedisStore(interface.BaseStore):
     return '{0:s}-{1:s}-{2:s}'.format(
         self._session_identifier, self._task_identifier, container_type)
 
-  # pylint: disable=redundant-returns-doc
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-    """
-    # Note that the Redis store is only used for storing tasks and does not
-    # support this method. None is returned to have code using this method
-    # add an event tag instead of updating the existing one.
-    return None
-
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
 

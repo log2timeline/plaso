@@ -72,6 +72,9 @@ def PythonAST2SQL(ast_node):
   if isinstance(ast_node, ast.Name):
     return ast_node.id
 
+  if isinstance(ast_node, ast.Num):
+    return str(ast_node.n)
+
   if isinstance(ast_node, ast.Str):
     return '"{0:s}"'.format(ast_node.s)
 
@@ -188,12 +191,6 @@ class SQLiteStorageFile(interface.BaseStore):
       attribute_container (AttributeContainer): attribute container.
       index (int): attribute container index.
     """
-    # Do not cache event tags since this causes GetEventTagByIdentifier to fail
-    # for older SQLite storage formats.
-    if (self.format_version < self._WITH_SCHEMA_FORMAT_VERSION and
-        attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG):
-      return
-
     if len(self._attribute_container_cache) >= self._MAXIMUM_CACHED_CONTAINERS:
       self._attribute_container_cache.popitem(last=True)
 
@@ -995,40 +992,6 @@ class SQLiteStorageFile(interface.BaseStore):
     return self._GetAttributeContainersWithFilter(
         container_type, column_names=column_names,
         filter_expression=sql_filter_expression)
-
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (SQLTableIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: when the store is closed or when there is an error querying
-          the storage file.
-      OSError: when the store is closed or when there is an error querying
-          the storage file.
-    """
-    schema = self._GetAttributeContainerSchema(self._CONTAINER_TYPE_EVENT_TAG)
-    if not self._use_schema or not schema:
-      return None
-
-    column_names = sorted(schema.keys())
-
-    filter_expression = '_event_row_identifier = {0:d}'.format(
-        event_identifier.sequence_number)
-
-    generator = self._GetAttributeContainersWithFilter(
-        self._CONTAINER_TYPE_EVENT_TAG, column_names=column_names,
-        filter_expression=filter_expression)
-
-    existing_event_tags = list(generator)
-    if len(existing_event_tags) != 1:
-      return None
-
-    return existing_event_tags[0]
 
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.

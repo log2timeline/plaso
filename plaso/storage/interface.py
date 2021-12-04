@@ -240,21 +240,6 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: when the store is closed.
-      OSError: when the store is closed.
-    """
-
-  @abc.abstractmethod
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
 
