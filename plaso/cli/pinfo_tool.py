@@ -46,6 +46,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
+      'browser_searches': 'Report browser searches determined during analysis.',
       'environment_variables': (
           'Report environment variables extracted during processing.'),
       'file_hashes': 'Report file hashes calculated during processing.',
@@ -375,8 +376,52 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     return stores_are_identical
 
+  def _GenerateBrowserSearchesReport(self, storage_reader):
+    """Generates a browser searches report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{"browser_searches": [\n')
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write(
+          'Search engine | Search term | Number of queries\n')
+      self._output_writer.Write('--- | --- | ---\n')
+
+    elif self._output_format == 'text':
+      self._output_writer.Write(
+          'Search engine\tSearch term\tNumber of queries\n')
+
+    generator = storage_reader.GetAttributeContainers(
+        'browser_search_analysis_result')
+
+    for artifact_index, analysis_result in enumerate(generator):
+      if self._output_format == 'json':
+        if artifact_index > 0:
+          self._output_writer.Write(',\n')
+        self._output_writer.Write((
+            '{{"search_engine": "{0:s}", "search_term": "{1:s}"'
+            '"number_of_queries": {2:d}}}').format(
+                analysis_result.search_engine, analysis_result.search_term,
+                analysis_result.number_of_queries))
+
+      elif self._output_format == 'markdown':
+        self._output_writer.Write('{0:s} | {1:s} | {2:d}\n'.format(
+            analysis_result.search_engine, analysis_result.search_term,
+            analysis_result.number_of_queries))
+
+      elif self._output_format == 'text':
+        self._output_writer.Write('{0:s}\t{1:s}\t{2:d}\n'.format(
+            analysis_result.search_engine, analysis_result.search_term,
+            analysis_result.number_of_queries))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
   def _GenerateEnvironmentVariablesReport(self, storage_reader):
-    """Generates an evironment variables report.
+    """Generates an environment variables report.
 
     Args:
       storage_reader (StorageReader): storage reader.
@@ -1367,10 +1412,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
-      if self._report_type == 'environment_variables':
+      if self._report_type == 'browser_searches':
+        self._GenerateBrowserSearchesReport(storage_reader)
+
+      elif self._report_type == 'environment_variables':
         self._GenerateEnvironmentVariablesReport(storage_reader)
 
-      if self._report_type == 'file_hashes':
+      elif self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
 
       elif self._report_type == 'winevt_providers':

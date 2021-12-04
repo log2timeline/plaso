@@ -240,6 +240,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
         for source in service.sources])
     return '\n'.join(string_segments)
 
+  # pylint: disable=arguments-renamed
   def CompileReport(self, mediator):
     """Compiles an analysis report.
 

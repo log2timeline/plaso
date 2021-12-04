@@ -16,6 +16,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     super(TaggingAnalysisPlugin, self).__init__()
     self._tagging_rules = None
 
+  # pylint: disable=arguments-renamed
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Labels events according to the rules in a tagging file.
 
