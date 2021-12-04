@@ -43,11 +43,7 @@ class StorageWriter(reader.StorageReader):
     self._storage_type = storage_type
     self._written_event_source_index = 0
 
-  @property
-  def number_of_event_sources(self):
-    """int: number of event sources written."""
-    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_SOURCE]
-
+  # TODO: kept for backwards compatibility.
   @property
   def number_of_events(self):
     """int: number of events written."""
