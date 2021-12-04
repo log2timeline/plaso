@@ -50,8 +50,8 @@ class StorageMergeReader(object):
     """
     super(StorageMergeReader, self).__init__()
     self._active_container_type = None
-    self._active_generator = None
-    self._container_types = list(self._CONTAINER_TYPES)
+    self._active_generator = self._GetMergeAttributeContainers(
+        task_storage_reader)
     self._event_data_identifier_mappings = {}
     self._event_data_parser_mappings = {}
     self._event_data_stream_identifier_mappings = {}
@@ -61,6 +61,20 @@ class StorageMergeReader(object):
 
     self.number_of_containers = 0
     self.parsers_counter = collections.Counter()
+
+  def _GetMergeAttributeContainers(self, task_storage_reader):
+    """Retrieves attribute containers to merge.
+
+    Args:
+      task_storage_reader (StorageReader): task storage reader.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+    for container_type in self._CONTAINER_TYPES:
+      for container in task_storage_reader.GetAttributeContainers(
+          container_type):
+        yield container
 
   def _MergeAttributeContainer(self, storage_writer, container):
     """Merges an attribute container from a task store into the storage writer.
@@ -176,7 +190,7 @@ class StorageMergeReader(object):
 
   def MergeAttributeContainers(
       self, storage_writer, maximum_number_of_containers=0):
-    """Reads attribute containers from a task store into the storage writer.
+    """Merges attribute containers from a task store into the storage writer.
 
     Args:
       storage_writer (StorageWriter): storage writer.
@@ -186,22 +200,16 @@ class StorageMergeReader(object):
     Returns:
       bool: True if the entire task storage file has been merged.
     """
-    if not self._active_container_type:
-      logger.debug('Starting merge of task: {0:s}'.format(
-          self._task_identifier))
-    else:
+    if self._active_container_type:
       logger.debug('Continuing merge of: {0:s} of task: {1:s}'.format(
           self._active_container_type, self._task_identifier))
+    else:
+      logger.debug('Starting merge of task: {0:s}'.format(
+          self._task_identifier))
 
     self.number_of_containers = 0
 
-    while self._active_generator or self._container_types:
-      if not self._active_generator:
-        self._active_container_type = self._container_types.pop(0)
-        self._active_generator = (
-            self._task_storage_reader.GetAttributeContainers(
-                self._active_container_type))
-
+    while self._active_generator:
       try:
         container = next(self._active_generator)
         self.number_of_containers += 1
@@ -210,12 +218,13 @@ class StorageMergeReader(object):
         self._active_generator = None
 
       if container:
+        self._active_container_type = container.CONTAINER_TYPE
         self._MergeAttributeContainer(storage_writer, container)
 
       if 0 < maximum_number_of_containers <= self.number_of_containers:
         break
 
-    merge_completed = not self._active_generator and not self._container_types
+    merge_completed = not self._active_generator
 
     logger.debug('Merged {0:d} containers of task: {1:s}'.format(
         self.number_of_containers, self._task_identifier))
