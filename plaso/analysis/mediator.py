@@ -4,6 +4,7 @@
 import collections
 import time
 
+from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import path_helper
 
@@ -27,6 +28,11 @@ class AnalysisMediator(object):
     number_of_produced_event_tags (int): number of produced event tags.
   """
 
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+
+  # The maximum number of cached event tags
+  _MAXIMUM_CACHED_EVENT_TAGS = 32 * 1024
+
   def __init__(self, session, knowledge_base, data_location=None):
     """Initializes an analysis plugin mediator.
 
@@ -41,6 +47,7 @@ class AnalysisMediator(object):
     self._abort = False
     self._data_location = data_location
     self._event_filter_expression = None
+    self._event_tag_per_event_identifier = collections.OrderedDict()
     self._knowledge_base = knowledge_base
     self._number_of_warnings = 0
     self._session = session
@@ -62,6 +69,72 @@ class AnalysisMediator(object):
   def data_location(self):
     """str: path to the data files."""
     return self._data_location
+
+  def _AddOrUpdateEventTag(self, event_tag):
+    """Adds a new or updates an existing event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+    """
+    event_identifier = event_tag.GetEventIdentifier()
+
+    existing_event_tag = self._GetCachedEventTag(event_identifier)
+    if not existing_event_tag:
+      self._storage_writer.AddAttributeContainer(event_tag)
+
+      self._CacheEventTagByEventIdentifier(event_tag, event_identifier)
+
+    elif not set(existing_event_tag.labels).issubset(event_tag.labels):
+      # No need to update the storage if all the labels are already set.
+      existing_event_tag.AddLabels(event_tag.labels)
+      self._storage_writer.UpdateAttributeContainer(existing_event_tag)
+
+  def _CacheEventTagByEventIdentifier(self, event_tag, event_identifier):
+    """Caches a specific event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+      event_identifier (AttributeContainerIdentifier): event identifier.
+    """
+    if len(self._event_tag_per_event_identifier) >= (
+        self._MAXIMUM_CACHED_EVENT_TAGS):
+      self._event_tag_per_event_identifier.popitem(last=True)
+
+    lookup_key = event_identifier.CopyToString()
+
+    self._event_tag_per_event_identifier[lookup_key] = event_tag
+    self._event_tag_per_event_identifier.move_to_end(lookup_key, last=False)
+
+  def _GetCachedEventTag(self, event_identifier):
+    """Retrieves a specific cached event tag.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    lookup_key = event_identifier.CopyToString()
+
+    event_tag = self._event_tag_per_event_identifier.get(lookup_key, None)
+    if not event_tag:
+      filter_expression = '_event_row_identifier == {0:d}'.format(
+          event_identifier.sequence_number)
+
+      generator = self._storage_writer.GetAttributeContainers(
+          self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)
+
+      existing_event_tags = list(generator)
+      if len(existing_event_tags) == 1:
+        event_tag = existing_event_tags[0]
+
+    if event_tag:
+      self._event_tag_per_event_identifier.move_to_end(lookup_key, last=False)
+    return event_tag
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -137,7 +210,7 @@ class AnalysisMediator(object):
       event_tag (EventTag): event tag.
     """
     if self._storage_writer:
-      self._storage_writer.AddOrUpdateEventTag(event_tag)
+      self._AddOrUpdateEventTag(event_tag)
 
     for label in event_tag.labels:
       self.event_labels_counter[label] += 1

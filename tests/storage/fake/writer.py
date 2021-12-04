@@ -65,62 +65,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.AddAttributeContainer(event_data_stream)
 
-  def testAddOrUpdateEventTag(self):
-    """Tests the AddOrUpdateEventTag function."""
-    storage_writer = fake_writer.FakeStorageWriter()
-    storage_writer.Open()
-
-    try:
-      test_events = self._AddTestEvents(storage_writer)
-
-      event_tag = events.EventTag()
-      event_identifier = test_events[1].GetIdentifier()
-      event_tag.SetEventIdentifier(event_identifier)
-
-      event_tag.AddLabel('Label1')
-
-      number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-          event_tag.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
-
-      storage_writer.AddOrUpdateEventTag(event_tag)
-
-      number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-          event_tag.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
-
-      event_tag = events.EventTag()
-      event_identifier = test_events[2].GetIdentifier()
-      event_tag.SetEventIdentifier(event_identifier)
-
-      event_tag.AddLabel('Label2')
-
-      storage_writer.AddOrUpdateEventTag(event_tag)
-
-      number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-          event_tag.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 2)
-
-      event_tag = events.EventTag()
-      event_identifier = test_events[1].GetIdentifier()
-      event_tag.SetEventIdentifier(event_identifier)
-
-      event_tag.AddLabel('AnotherLabel1')
-
-      storage_writer.AddOrUpdateEventTag(event_tag)
-
-      number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-          event_tag.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 2)
-
-      event_tags = list(storage_writer.GetAttributeContainers(
-          event_tag.CONTAINER_TYPE))
-      self.assertEqual(event_tags[0].labels, ['Label1', 'AnotherLabel1'])
-      self.assertEqual(event_tags[1].labels, ['Label2'])
-
-    finally:
-      storage_writer.Close()
-
   # TODO: add tests for GetFirstWrittenEventSource
   # TODO: add tests for GetNextWrittenEventSource
 
