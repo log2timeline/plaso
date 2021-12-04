@@ -290,9 +290,23 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       self._TerminateProcessByPid(pid)
 
+  def _GetMergeAttributeContainers(self, task_storage_reader):
+    """Retrieves attribute containers to merge.
+
+    Args:
+      task_storage_reader (StorageReader): task storage reader.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+    for container_type in self._MERGE_CONTAINER_TYPES:
+      for container in task_storage_reader.GetAttributeContainers(
+          container_type):
+        yield container
+
   def _MergeAttributeContainers(
       self, storage_writer, task_storage_reader, task_identifier):
-    """Reads attribute containers from a task store into the storage writer.
+    """Merges attribute containers from a task store into the storage writer.
 
     Args:
       storage_writer (StorageWriter): storage writer.
@@ -303,25 +317,23 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     number_of_containers = 0
 
-    for container_type in self._MERGE_CONTAINER_TYPES:
-      for container in task_storage_reader.GetAttributeContainers(
-          container_type):
-        if container_type == self._CONTAINER_TYPE_EVENT_TAG:
-          storage_writer.AddOrUpdateEventTag(container)
-        else:
-          storage_writer.AddAttributeContainer(container)
+    for container in self._GetMergeAttributeContainers(task_storage_reader):
+      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+        storage_writer.AddOrUpdateEventTag(container)
+      else:
+        storage_writer.AddAttributeContainer(container)
 
-        if container_type == self._CONTAINER_TYPE_ANALYSIS_REPORT:
-          self._number_of_produced_analysis_reports += 1
+      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+        self._number_of_produced_analysis_reports += 1
 
-        elif container_type == self._CONTAINER_TYPE_EVENT_TAG:
-          self._number_of_produced_event_tags += 1
+      elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+        self._number_of_produced_event_tags += 1
 
-          for label in container.labels:
-            self._event_labels_counter[label] += 1
-            self._event_labels_counter['total'] += 1
+        for label in container.labels:
+          self._event_labels_counter[label] += 1
+          self._event_labels_counter['total'] += 1
 
-        number_of_containers += 1
+      number_of_containers += 1
 
     logger.debug('Merged {0:d} containers of task: {1:s}'.format(
         number_of_containers, task_identifier))
