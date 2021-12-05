@@ -46,7 +46,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
-      'browser_searches': (
+      'browser_search': (
           'Report browser searches determined by the browser_search '
           'analysis plugin.'),
       'chrome_extension': (
@@ -382,20 +382,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     return stores_are_identical
 
   def _GenerateAnalysisResultsReport(
-      self, storage_reader, report_type, column_titles, container_type,
+      self, storage_reader, json_base_type, column_titles, container_type,
       attribute_names):
     """Generates an analysis results report.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      report_type (str): report type.
+      json_base_type (str): JSON base type.
       column_titles (list[str]): column titles of the Markdown and tab
           separated tables.
       container_type (str): attribute container type.
       attribute_names (list[str]): names of the attributes to report.
     """
     if self._output_format == 'json':
-      self._output_writer.Write('{{"{0:s}": [\n'.format(report_type))
+      self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
 
       entry_format_string = '    {{{{{0:s}}}}}'.format(', '.join([
           '"{0:s}": "{{{0:s}!s}}"'.format(name) for name in attribute_names]))
@@ -413,15 +413,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       entry_format_string = '{0:s}\n'.format('\t'.join([
           '{{{0:s}!s}}'.format(name) for name in attribute_names]))
 
-    generator = storage_reader.GetAttributeContainers(container_type)
+    if storage_reader.HasAttributeContainers(container_type):
+      generator = storage_reader.GetAttributeContainers(container_type)
 
-    for artifact_index, analysis_result in enumerate(generator):
-      if self._output_format == 'json':
-        if artifact_index > 0:
-          self._output_writer.Write(',\n')
+      for artifact_index, analysis_result in enumerate(generator):
+        if self._output_format == 'json':
+          if artifact_index > 0:
+            self._output_writer.Write(',\n')
 
-      attribute_values = analysis_result.CopyToDict()
-      self._output_writer.Write(entry_format_string.format(**attribute_values))
+        attribute_values = analysis_result.CopyToDict()
+        self._output_writer.Write(entry_format_string.format(
+            **attribute_values))
 
     if self._output_format == 'json':
       self._output_writer.Write('\n]}\n')
@@ -1418,18 +1420,18 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
-      if self._report_type == 'browser_searches':
+      if self._report_type == 'browser_search':
         column_titles = ['Search engine', 'Search term', 'Number of queries']
         attribute_names = ['search_engine', 'search_term', 'number_of_queries']
         self._GenerateAnalysisResultsReport(
-            storage_reader, self._report_type, column_titles,
+            storage_reader, 'browser_searches', column_titles,
             'browser_search_analysis_result', attribute_names)
 
-      elif self._report_type == 'chrome_extensions':
+      elif self._report_type == 'chrome_extension':
         column_titles = ['Username', 'Extension identifier', 'Extension']
         attribute_names = ['username', 'extension_identifier', 'extension']
         self._GenerateAnalysisResultsReport(
-            storage_reader, self._report_type, column_titles,
+            storage_reader, 'chrome_extensions', column_titles,
             'chrome_extension_analysis_result', attribute_names)
 
       elif self._report_type == 'environment_variables':

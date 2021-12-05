@@ -4,6 +4,14 @@ plaso.preprocessors package
 Submodules
 ----------
 
+plaso.preprocessors.generic module
+----------------------------------
+
+.. automodule:: plaso.preprocessors.generic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.preprocessors.interface module
 ------------------------------------
 
