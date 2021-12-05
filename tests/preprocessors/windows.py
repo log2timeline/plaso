@@ -563,6 +563,30 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
     self.assertEqual(environment_variable.value, '\\Windows')
 
 
+class WindowsServicesAndDriversPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows service (and driver) configurations plugin."""
+
+  def testParseValueData(self):
+    """Tests the _ParseValueData function."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    storage_writer = self._CreateTestStorageWriter()
+
+    plugin = windows.WindowsServicesAndDriversPlugin()
+    self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
+        storage_writer, plugin)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'windows_service_configuration')
+    self.assertEqual(number_of_artifacts, 416)
+
+
 class WindowsSystemProductPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the system product information plugin."""
