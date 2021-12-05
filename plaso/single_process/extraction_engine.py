@@ -35,6 +35,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
+    self._parser_mediator = None
     self._parsers_counter = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
@@ -155,7 +156,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=find_specs, recurse_file_system=False,
-        resolver_context=parser_mediator.resolver_context)
+        resolver_context=self._resolver_context)
 
     for path_spec in path_spec_generator:
       if self._abort:
@@ -168,7 +169,7 @@ class SingleProcessEngine(engine.BaseEngine):
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      self._storage_writer.AddAttributeContainer(event_source)
+      parser_mediator.ProduceEventSource(event_source)
 
     self._status = definitions.STATUS_INDICATOR_RUNNING
 
@@ -242,8 +243,8 @@ class SingleProcessEngine(engine.BaseEngine):
     self._processing_status.UpdateForemanStatus(
         self._name, status, self._pid, used_memory, self._current_display_name,
         self._number_of_consumed_sources,
-        self._storage_writer.number_of_event_sources,
-        0, self._storage_writer.number_of_events,
+        self._parser_mediator.number_of_produced_event_sources,
+        0, self._parser_mediator.number_of_produced_events,
         0, 0,
         0, 0)
 
@@ -305,8 +306,6 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       ProcessingStatus: processing status.
     """
-    self._resolver_context = resolver_context
-
     parser_mediator = self._CreateParserMediator(
         self.knowledge_base, resolver_context, processing_configuration)
     parser_mediator.SetStorageWriter(storage_writer)
@@ -318,7 +317,9 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
+    self._parser_mediator = parser_mediator
     self._processing_configuration = processing_configuration
+    self._resolver_context = resolver_context
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
 
@@ -392,6 +393,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._extraction_worker = None
     self._file_system_cache = []
+    self._parser_mediator = None
     self._processing_configuration = None
     self._resolver_context = None
     self._status_update_callback = None
