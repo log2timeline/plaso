@@ -10,8 +10,8 @@ First run log2timeline to extract events:
 log2timeline.py --storage-file timeline.plaso image.raw
 ```
 
-Note that the browser search analysis plugin analyzes URLS in browser history
-data such as events with data type:
+Note that the browser search analysis plugin analyzes URLS in web history data
+such as events with data type:
 
 * chrome:autofill:entry
 * chrome:cache:entry
@@ -43,7 +43,7 @@ data such as events with data type:
 * safari:history:visit
 * safari:history:visit_sqlite
 
-Next run psort to determine browser searches:
+Next run psort to determine the browser searches:
 
 ```bash
 psort.py --analysis browser_search -o null timeline.plaso

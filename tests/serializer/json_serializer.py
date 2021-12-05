@@ -78,16 +78,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedAnalysisReport(self):
     """Test ReadSerialized and WriteSerialized of AnalysisReport."""
-    expected_report_dict = {
-        'dude': [
-            ['Google Keep - notes and lists',
-             'hmjkmjkepdijhoojdojkdfohbdgmmhki']
-        ],
-        'frank': [
-            ['YouTube', 'blpcfgokakmgnkcojhhkbfbldkacnbeo'],
-            ['Google Play Music', 'icppfcnhkcmnfdhfhphakoifcfokfdhg']
-        ]
-    }
     expected_report_text = (
         ' == USER: dude ==\n'
         '  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]\n'
@@ -99,7 +89,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_analysis_report = reports.AnalysisReport(
         plugin_name='chrome_extension_test', text=expected_report_text)
-    expected_analysis_report.report_dict = expected_report_dict
     expected_analysis_report.time_compiled = 1431978243000000
 
     json_string = (
@@ -114,20 +103,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     self.assertIsNotNone(analysis_report)
     self.assertIsInstance(analysis_report, reports.AnalysisReport)
-
-    # TODO: preserve the tuples in the report dict.
-    # TODO: add report_array tests.
-
-    expected_analysis_report_dict = {
-        'plugin_name': 'chrome_extension_test',
-        'report_dict': expected_report_dict,
-        'text': expected_report_text,
-        'time_compiled': 1431978243000000}
-
-    analysis_report_dict = analysis_report.CopyToDict()
-    self.assertEqual(
-        sorted(analysis_report_dict.items()),
-        sorted(expected_analysis_report_dict.items()))
 
   # TODO: add ExtractionWarning tests.
 

@@ -20,13 +20,12 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
     super(TestMemoryAnalysisPlugin, self).__init__()
     self._objects = []
 
-  # pylint: disable=arguments-renamed,unused-argument
-  def CompileReport(self, mediator):
+  def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
 
     Returns:
       AnalysisReport: analysis report.
@@ -34,12 +33,14 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
     return reports.AnalysisReport(
         plugin_name=self.NAME, text='TestMemory report')
 
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  # pylint: disable=unused-argument
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
