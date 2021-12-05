@@ -1,4 +1,4 @@
-# Virustotal Analysis Plugin
+# Viper Analysis Plugin
 
 Notes on how to use the viper analysis plugin.
 
@@ -7,7 +7,7 @@ Notes on how to use the viper analysis plugin.
 The Viper project maintains installation instructions here:
 https://viper-framework.readthedocs.io/en/latest/installation/index.html
 
-## Running plaso
+## Running the analysis plugin
 
 First run log2timeline to extract events:
 
@@ -21,9 +21,15 @@ This is default setting for log2timeline.py.
 Next run psort to tag events, then output them:
 
 ```bash
-psort.py --analysis viper -o timeline_with_viper_tags.csv timeline.plaso
+psort.py --analysis viper -o null timeline.plaso
 ```
 
 If a file processed by Plaso is present in the viper instance, it will be
 tagged with `viper_present`. If it's part of a project in viper, it will also
 be tagged with `viper_project_$PROJECTNAME`.
+
+The last step would be to export a timeline with the tags:
+
+```bash
+psort.py -o dynamic --fields datetime,timestamp_desc,source,source_long,message,parser,tag -w timeline.csv timeline.plaso
+```

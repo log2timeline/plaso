@@ -1,6 +1,10 @@
 # Analysis Plugins
 
-* [nsrlsvr](Analysis-plugin-nsrlsvr.md)
-* [tagging](Analysis-plugin-tagging.md)
-* [viper](Analysis-plugin-viper.md)
-* [virustotal](Analysis-plugin-virustotal.md)
+* [browser_search](Analysis-plugin-browser-search.md): Analyze browser search entries from events.
+* [chrome_extension](Analysis-plugin-chrome-extension.md): Analysis plugin to gather information about Chrome extensions.
+* [nsrlsvr](Analysis-plugin-nsrlsvr.md): Analysis plugin for looking up hashes in nsrlsvr.
+* sessionize: Analysis plugin that labels events by session.
+* [tagging](Analysis-plugin-tagging.md): Analysis plugin that labels events according to rules in a tagging file.
+* unique_domains_visited: A plugin to generate a list all domains visited.
+* [viper](Analysis-plugin-viper.md): An analysis plugin for looking up SHA256 hashes in Viper.
+* [virustotal](Analysis-plugin-virustotal.md): An analysis plugin for looking up hashes in VirusTotal.

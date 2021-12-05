@@ -4,6 +4,14 @@ plaso.containers package
 Submodules
 ----------
 
+plaso.containers.analysis\_results module
+-----------------------------------------
+
+.. automodule:: plaso.containers.analysis_results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.containers.analyzer\_result module
 ----------------------------------------
 
@@ -16,6 +24,14 @@ plaso.containers.artifacts module
 ---------------------------------
 
 .. automodule:: plaso.containers.artifacts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.containers.counts module
+------------------------------
+
+.. automodule:: plaso.containers.counts
    :members:
    :undoc-members:
    :show-inheritance:
@@ -80,14 +96,6 @@ plaso.containers.shell\_item\_events module
 -------------------------------------------
 
 .. automodule:: plaso.containers.shell_item_events
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.containers.storage\_media module
---------------------------------------
-
-.. automodule:: plaso.containers.storage_media
    :members:
    :undoc-members:
    :show-inheritance:

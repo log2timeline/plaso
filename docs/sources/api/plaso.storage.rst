@@ -54,14 +54,6 @@ plaso.storage.logger module
    :undoc-members:
    :show-inheritance:
 
-plaso.storage.merge\_reader module
-----------------------------------
-
-.. automodule:: plaso.storage.merge_reader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.storage.reader module
 ---------------------------
 
