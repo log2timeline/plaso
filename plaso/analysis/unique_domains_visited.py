@@ -29,6 +29,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       'opera:history',
       'safari:history:visit'])
 
+  # pylint: disable=arguments-renamed
   # pylint: disable=unused-argument
   def ExamineEvent(self, mediator, event, event_data, event_data_stream):
     """Analyzes an event and extracts domains from it.

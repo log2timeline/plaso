@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """A plugin that extracts browser history from events."""
 
-import collections
 import re
 
 from urllib import parse as urlparse
@@ -9,6 +8,7 @@ from urllib import parse as urlparse
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
+from plaso.containers import analysis_results
 
 
 class BrowserSearchPlugin(interface.AnalysisPlugin):
@@ -74,11 +74,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       ('Youtube', re.compile(r'youtube\.com'),
        '_ExtractYouTubeSearchQuery'),
   ])
-
-  def __init__(self):
-    """Initializes an analysis plugin."""
-    super(BrowserSearchPlugin, self).__init__()
-    self._search_queries_counter = collections.Counter()
 
   def _ExtractDuckDuckGoSearchQuery(self, url):
     """Extracts a search query from a DuckDuckGo search URL.
@@ -255,48 +250,33 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     url, _, _ = url.partition('&')
     return url
 
-  def CompileReport(self, mediator):
+  def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
 
     Returns:
       AnalysisReport: analysis report.
     """
-    queries_per_engine = {}
-    for key, number_of_queries in self._search_queries_counter.items():
-      search_engine, _, search_term = key.partition(':')
-      queries_per_engine.setdefault(search_engine, {})
-      queries_per_engine[search_engine][search_term] = number_of_queries
+    for lookup_key, number_of_queries in self._analysis_counter.items():
+      search_engine, _, search_term = lookup_key.partition(':')
 
-    lines_of_text = []
-    for search_engine, terms in sorted(queries_per_engine.items()):
-      lines_of_text.append(' == ENGINE: {0:s} =='.format(search_engine))
+      analysis_result = analysis_results.BrowserSearchAnalysisResult(
+          number_of_queries=number_of_queries, search_engine=search_engine,
+          search_term=search_term)
+      analysis_mediator.ProduceAnalysisResultContainer(analysis_result)
 
-      for search_term, number_of_queries in sorted(
-          terms.items(), key=lambda x: (x[1], x[0]), reverse=True):
-        line = '{0:d} {1:s}'.format(number_of_queries, search_term)
-        lines_of_text.append(line)
+    return super(BrowserSearchPlugin, self).CompileReport(analysis_mediator)
 
-      # An empty string is added to have SetText create an empty line.
-      lines_of_text.append('')
-
-    lines_of_text.append('')
-    report_text = '\n'.join(lines_of_text)
-
-    analysis_report = super(BrowserSearchPlugin, self).CompileReport(mediator)
-    analysis_report.text = report_text
-    analysis_report.report_dict = queries_per_engine
-    return analysis_report
-
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -322,7 +302,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
       search_query = callback_method(url)
       if not search_query:
-        mediator.ProduceAnalysisWarning(
+        analysis_mediator.ProduceAnalysisWarning(
             'Unable to determine search query: {0:s} in URL: {1:s}'.format(
                 method_name, url), self.NAME)
         continue
@@ -333,16 +313,16 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         search_query = None
 
       if not search_query:
-        mediator.ProduceAnalysisWarning(
+        analysis_mediator.ProduceAnalysisWarning(
             'Unable to decode search query: {0:s} in URL: {1:s}'.format(
                 method_name, url), self.NAME)
         continue
 
       event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)
-      mediator.ProduceEventTag(event_tag)
+      analysis_mediator.ProduceEventTag(event_tag)
 
       lookup_key = '{0:s}:{1:s}'.format(engine, search_query)
-      self._search_queries_counter[lookup_key] += 1
+      self._analysis_counter[lookup_key] += 1
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

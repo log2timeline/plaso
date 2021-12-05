@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Classes to assist in merging attribute containers of tasks."""
 
+from plaso.containers import analysis_results
+from plaso.containers import artifacts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
@@ -98,7 +100,8 @@ class AnalysisTaskMergeHelper(BaseTaskMergeHelper):
   _CONTAINER_TYPES = (
       events.EventTag.CONTAINER_TYPE,
       reports.AnalysisReport.CONTAINER_TYPE,
-      warnings.AnalysisWarning.CONTAINER_TYPE)
+      warnings.AnalysisWarning.CONTAINER_TYPE,
+      analysis_results.BrowserSearchAnalysisResult.CONTAINER_TYPE)
 
 
 class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
@@ -121,8 +124,8 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       events.EventObject.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
-      'windows_eventlog_message_file',
-      'windows_eventlog_message_string')
+      artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
+      artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE)
 
   def __init__(self, task_storage_reader, task_identifier):
     """Initialize a helper for merging extraction task attribute containers.

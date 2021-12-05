@@ -31,6 +31,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
     self._maximum_pause_microseconds = (
         maximum_pause_minutes * definitions.MICROSECONDS_PER_MINUTE)
 
+  # pylint: disable=arguments-renamed
   def CompileReport(self, mediator):
     """Compiles an analysis report.
 

@@ -20,6 +20,7 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
     super(TestMemoryAnalysisPlugin, self).__init__()
     self._objects = []
 
+  # pylint: disable=arguments-renamed,unused-argument
   def CompileReport(self, mediator):
     """Compiles an analysis report.
 

@@ -109,6 +109,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     self._extensions[extension_identifier] = name
     return name
 
+  # pylint: disable=arguments-renamed
   def CompileReport(self, mediator):
     """Compiles an analysis report.
 

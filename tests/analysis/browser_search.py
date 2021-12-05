@@ -21,6 +21,15 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._ParseAndAnalyzeFile(['History'], parser, plugin)
 
+    analysis_results = list(storage_writer.GetAttributeContainers(
+        'browser_search_analysis_result'))
+    self.assertEqual(len(analysis_results), 4)
+
+    analysis_result = analysis_results[2]
+    self.assertEqual(analysis_result.search_engine, 'Google Search')
+    self.assertEqual(analysis_result.search_term, 'really really funny cats')
+    self.assertEqual(analysis_result.number_of_queries, 1)
+
     number_of_reports = storage_writer.GetNumberOfAttributeContainers(
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
@@ -28,23 +37,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
-
-    # Due to the behavior of the join one additional empty string at the end
-    # is needed to create the last empty line.
-    expected_text = '\n'.join([
-        ' == ENGINE: Google Search ==',
-        '1 really really funny cats',
-        '1 java plugin',
-        '1 funnycats.exe',
-        '1 funny cats',
-        '',
-        ''])
-
-    self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'browser_search')
-
-    expected_keys = set(['Google Search'])
-    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

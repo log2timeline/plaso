@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file imports Python modules that register attribute container types."""
 
+from plaso.containers import analysis_results
 from plaso.containers import analyzer_result
 from plaso.containers import artifacts
 from plaso.containers import counts

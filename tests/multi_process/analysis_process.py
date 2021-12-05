@@ -22,6 +22,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
 
   NAME = 'test_plugin'
 
+  # pylint: disable=arguments-renamed
   # pylint: disable=unused-argument
   def CompileReport(self, mediator):
     """Compiles a report of the analysis.
