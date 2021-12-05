@@ -117,6 +117,17 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._MACOS_USERS})
 
+    analysis_results = list(storage_writer.GetAttributeContainers(
+        'chrome_extension_analysis_result'))
+    self.assertEqual(len(analysis_results), 2)
+
+    analysis_result = analysis_results[0]
+    self.assertEqual(analysis_result.extension, 'Google Drive')
+    self.assertEqual(
+        analysis_result.extension_identifier,
+        'apdfllckaahabafndbhieahigkjlhalf')
+    self.assertEqual(analysis_result.username, 'dude')
+
     number_of_reports = storage_writer.GetNumberOfAttributeContainers(
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
@@ -124,23 +135,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
-
-    # Due to the behavior of the join one additional empty string at the end
-    # is needed to create the last empty line.
-    expected_text = '\n'.join([
-        ' == USER: dude ==',
-        '  Google Drive [apdfllckaahabafndbhieahigkjlhalf]',
-        '',
-        ' == USER: frank ==',
-        '  Gmail [pjkljhegncpnkpknbcohdijeoejaedia]',
-        '',
-        ''])
-
-    self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
-
-    expected_keys = set(['frank', 'dude'])
-    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
@@ -152,6 +147,17 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
             'users': self._WINDOWS_USERS})
 
+    analysis_results = list(storage_writer.GetAttributeContainers(
+        'chrome_extension_analysis_result'))
+    self.assertEqual(len(analysis_results), 3)
+
+    analysis_result = analysis_results[0]
+    self.assertEqual(analysis_result.extension, 'Google Keep - notes and lists')
+    self.assertEqual(
+        analysis_result.extension_identifier,
+        'hmjkmjkepdijhoojdojkdfohbdgmmhki')
+    self.assertEqual(analysis_result.username, 'dude')
+
     number_of_reports = storage_writer.GetNumberOfAttributeContainers(
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
@@ -160,23 +166,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
 
-    # Due to the behavior of the join one additional empty string at the end
-    # is needed to create the last empty line.
-    expected_text = '\n'.join([
-        ' == USER: dude ==',
-        '  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
-        '',
-        ' == USER: frank ==',
-        '  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]',
-        '  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]',
-        '',
-        ''])
-
-    self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
-
-    expected_keys = set(['frank', 'dude'])
-    self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 
 if __name__ == '__main__':

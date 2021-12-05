@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A plugin that gather extension IDs from Chrome history browser."""
+"""Analysis plugin to gather information about Chrome extensions."""
 
 import re
 
@@ -8,10 +8,11 @@ import requests
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
+from plaso.containers import analysis_results
 
 
 class ChromeExtensionPlugin(interface.AnalysisPlugin):
-  """Convert Chrome extension IDs into names, requires Internet connection."""
+  """Analysis plugin to gather information about Chrome extensions."""
 
   NAME = 'chrome_extension'
 
@@ -22,7 +23,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
   _WEB_STORE_URL = 'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
   def __init__(self):
-    """Initializes the Chrome extension analysis plugin."""
+    """Initializes an Chrome extension analysis plugin."""
     super(ChromeExtensionPlugin, self).__init__()
 
     # Saved list of already looked up extensions.
@@ -103,46 +104,41 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
         name = title[:-19]
 
     if not name:
-      self._extensions[extension_identifier] = 'UNKNOWN'
+      self._extensions[extension_identifier] = None
       return None
 
     self._extensions[extension_identifier] = name
     return name
 
-  # pylint: disable=arguments-renamed
-  def CompileReport(self, mediator):
+  def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
 
     Returns:
       AnalysisReport: analysis report.
     """
-    lines_of_text = []
-    for user, extensions in sorted(self._extensions_per_user.items()):
-      lines_of_text.append(' == USER: {0:s} =='.format(user))
+    for username, extensions in sorted(self._extensions_per_user.items()):
       for extension, extension_identifier in sorted(extensions):
-        lines_of_text.append('  {0:s} [{1:s}]'.format(
-            extension, extension_identifier))
-      lines_of_text.append('')
+        analysis_result = analysis_results.ChromeExtensionAnalysisResult(
+            extension=extension, extension_identifier=extension_identifier,
+            username=username)
+        analysis_mediator.ProduceAnalysisResultContainer(analysis_result)
 
-    lines_of_text.append('')
-    report_text = '\n'.join(lines_of_text)
+        self._analysis_counter[username] += 1
 
-    analysis_report = super(ChromeExtensionPlugin, self).CompileReport(mediator)
-    analysis_report.text = report_text
-    analysis_report.report_dict = self._extensions_per_user
-    return analysis_report
+    return super(ChromeExtensionPlugin, self).CompileReport(analysis_mediator)
 
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -169,24 +165,24 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     if extension_identifier == 'Temp':
       return
 
-    user = mediator.GetUsernameForPath(filename)
+    username = analysis_mediator.GetUsernameForPath(filename)
 
     # We still want this information in here, so that we can
     # manually deduce the username.
-    if not user:
+    if not username:
       if len(filename) > 25:
-        user = 'Not found ({0:s}...)'.format(filename[0:25])
+        username = 'Not found ({0:s}...)'.format(filename[0:25])
       else:
-        user = 'Not found ({0:s})'.format(filename)
+        username = 'Not found ({0:s})'.format(filename)
 
     extension_string = self._GetTitleFromChromeWebStore(extension_identifier)
     if not extension_string:
       extension_string = extension_identifier
 
-    self._extensions_per_user.setdefault(user, [])
+    self._extensions_per_user.setdefault(username, [])
     extension_tuple = (extension_string, extension_identifier)
-    if extension_tuple not in self._extensions_per_user[user]:
-      self._extensions_per_user[user].append(extension_tuple)
+    if extension_tuple not in self._extensions_per_user[username]:
+      self._extensions_per_user[username].append(extension_tuple)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(ChromeExtensionPlugin)

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Analysis result attribute container."""
+"""Analysis result attribute containers."""
 
 from plaso.containers import interface
 from plaso.containers import manager
 
 
 class BrowserSearchAnalysisResult(interface.AttributeContainer):
-  """Browser search analyzer result attribute container.
+  """Browser search analysis plugin result container.
 
   Attributes:
     number_of_queries (int): number of times the search engine was queried.
@@ -23,7 +23,7 @@ class BrowserSearchAnalysisResult(interface.AttributeContainer):
 
   def __init__(
       self, number_of_queries=None, search_engine=None, search_term=None):
-    """Initializes a browser search analyzer result attribute container.
+    """Initializes a browser search analysis plugin result container.
 
     Args:
       number_of_queries (Optional[int]): number of times the search engine was
@@ -37,5 +37,37 @@ class BrowserSearchAnalysisResult(interface.AttributeContainer):
     self.search_term = search_term
 
 
+class ChromeExtensionAnalysisResult(interface.AttributeContainer):
+  """Chrome extension analysis plugin result container.
+
+  Attributes:
+    extension (str): name of the Chrome extension.
+    extension_identifier (str): identifier of the Chrome extension.
+    username (str): name of a user that has installed the Chrome extension.
+  """
+
+  CONTAINER_TYPE = 'chrome_extension_analysis_result'
+
+  SCHEMA = {
+      'extension': 'str',
+      'extension_identifier': 'str',
+      'username': 'str'}
+
+  def __init__(
+      self, extension=None, extension_identifier=None, username=None):
+    """Initializes a Chrome extension analysis plugin result container.
+
+    Args:
+      extension (Optional[str]): name of the Chrome extension.
+      extension_identifier (Optional[str]): identifier of the Chrome extension.
+      username (Optional[str]): name of a user that has installed the Chrome
+          extension.
+    """
+    super(ChromeExtensionAnalysisResult, self).__init__()
+    self.extension = extension
+    self.extension_identifier = extension_identifier
+    self.username = username
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    BrowserSearchAnalysisResult])
+    BrowserSearchAnalysisResult, ChromeExtensionAnalysisResult])
