@@ -203,8 +203,6 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-    self._current_display_name = ''
-
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
 
