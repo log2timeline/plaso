@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin."""
 
+import collections
 import unittest
 
 from unittest import mock
@@ -109,22 +110,23 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'viper')
+
+    expected_analysis_counter = collections.Counter({
+        'viper_present': 1,
+        'viper_project_default': 1,
+        'viper_tag_darkcomet': 1,
+        'viper_tag_rat': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 1)
-
-    report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
-
-    expected_text = (
-        'viper hash tagging results\n'
-        '1 events tagged with label: viper_present\n'
-        '1 events tagged with label: viper_project_default\n'
-        '1 events tagged with label: viper_tag_darkcomet\n'
-        '1 events tagged with label: viper_tag_rat\n')
-
-    self.assertEqual(report.text, expected_text)
 
     labels = []
     for event_tag in storage_writer.GetAttributeContainers(

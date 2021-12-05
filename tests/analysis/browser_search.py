@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the browser search analysis plugin."""
 
+import collections
 import unittest
 
 from plaso.analysis import browser_search
@@ -37,7 +38,16 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
+
     self.assertEqual(analysis_report.plugin_name, 'browser_search')
+
+    expected_analysis_counter = collections.Counter({
+        'Google Search:funny cats': 1,
+        'Google Search:funnycats.exe': 1,
+        'Google Search:java plugin': 1,
+        'Google Search:really really funny cats': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
 
 
 if __name__ == '__main__':

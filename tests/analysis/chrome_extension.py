@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the chrome extension analysis plugin."""
+"""Tests for the Chrome extension analysis plugin."""
 
+import collections
 import os
 import unittest
 
@@ -39,7 +40,7 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
-  """Tests for the chrome extension analysis plugin."""
+  """Tests for the Chrome extension analysis plugin."""
 
   # pylint: disable=protected-access
 
@@ -135,7 +136,14 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
+
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
+
+    expected_analysis_counter = collections.Counter({
+        'dude': 1,
+        'frank': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
 
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
@@ -167,6 +175,12 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     self.assertIsNotNone(analysis_report)
 
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
+
+    expected_analysis_counter = collections.Counter({
+        'dude': 1,
+        'frank': 2})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
 
 
 if __name__ == '__main__':
