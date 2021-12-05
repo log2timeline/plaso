@@ -101,7 +101,8 @@ class AnalysisTaskMergeHelper(BaseTaskMergeHelper):
       events.EventTag.CONTAINER_TYPE,
       reports.AnalysisReport.CONTAINER_TYPE,
       warnings.AnalysisWarning.CONTAINER_TYPE,
-      analysis_results.BrowserSearchAnalysisResult.CONTAINER_TYPE)
+      analysis_results.BrowserSearchAnalysisResult.CONTAINER_TYPE,
+      analysis_results.ChromeExtensionAnalysisResult.CONTAINER_TYPE)
 
 
 class ExtractionTaskMergeHelper(BaseTaskMergeHelper):

@@ -46,7 +46,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
-      'browser_searches': 'Report browser searches determined during analysis.',
+      'browser_searches': (
+          'Report browser searches determined by the browser_search '
+          'analysis plugin.'),
+      'chrome_extension': (
+          'Report Chrome extensions determined by the chrome_extension '
+          'analysis plugin.'),
       'environment_variables': (
           'Report environment variables extracted during processing.'),
       'file_hashes': 'Report file hashes calculated during processing.',
@@ -376,46 +381,47 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     return stores_are_identical
 
-  def _GenerateBrowserSearchesReport(self, storage_reader):
-    """Generates a browser searches report.
+  def _GenerateAnalysisResultsReport(
+      self, storage_reader, report_type, column_titles, container_type,
+      attribute_names):
+    """Generates an analysis results report.
 
     Args:
       storage_reader (StorageReader): storage reader.
+      report_type (str): report type.
+      column_titles (list[str]): column titles of the Markdown and tab
+          separated tables.
+      container_type (str): attribute container type.
+      attribute_names (list[str]): names of the attributes to report.
     """
     if self._output_format == 'json':
-      self._output_writer.Write('{"browser_searches": [\n')
+      self._output_writer.Write('{{"{0:s}": [\n'.format(report_type))
+
+      entry_format_string = '    {{{{{0:s}}}}}'.format(', '.join([
+          '"{0:s}": "{{{0:s}!s}}"'.format(name) for name in attribute_names]))
 
     elif self._output_format == 'markdown':
-      self._output_writer.Write(
-          'Search engine | Search term | Number of queries\n')
+      self._output_writer.Write('{0:s}\n'.format(' | '.join(column_titles)))
       self._output_writer.Write('--- | --- | ---\n')
 
-    elif self._output_format == 'text':
-      self._output_writer.Write(
-          'Search engine\tSearch term\tNumber of queries\n')
+      entry_format_string = '{0:s}\n'.format(' | '.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
 
-    generator = storage_reader.GetAttributeContainers(
-        'browser_search_analysis_result')
+    elif self._output_format == 'text':
+      self._output_writer.Write('{0:s}\n'.format('\t'.join(column_titles)))
+
+      entry_format_string = '{0:s}\n'.format('\t'.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+
+    generator = storage_reader.GetAttributeContainers(container_type)
 
     for artifact_index, analysis_result in enumerate(generator):
       if self._output_format == 'json':
         if artifact_index > 0:
           self._output_writer.Write(',\n')
-        self._output_writer.Write((
-            '{{"search_engine": "{0:s}", "search_term": "{1:s}"'
-            '"number_of_queries": {2:d}}}').format(
-                analysis_result.search_engine, analysis_result.search_term,
-                analysis_result.number_of_queries))
 
-      elif self._output_format == 'markdown':
-        self._output_writer.Write('{0:s} | {1:s} | {2:d}\n'.format(
-            analysis_result.search_engine, analysis_result.search_term,
-            analysis_result.number_of_queries))
-
-      elif self._output_format == 'text':
-        self._output_writer.Write('{0:s}\t{1:s}\t{2:d}\n'.format(
-            analysis_result.search_engine, analysis_result.search_term,
-            analysis_result.number_of_queries))
+      attribute_values = analysis_result.CopyToDict()
+      self._output_writer.Write(entry_format_string.format(**attribute_values))
 
     if self._output_format == 'json':
       self._output_writer.Write('\n]}\n')
@@ -1413,7 +1419,18 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     try:
       if self._report_type == 'browser_searches':
-        self._GenerateBrowserSearchesReport(storage_reader)
+        column_titles = ['Search engine', 'Search term', 'Number of queries']
+        attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        self._GenerateAnalysisResultsReport(
+            storage_reader, self._report_type, column_titles,
+            'browser_search_analysis_result', attribute_names)
+
+      elif self._report_type == 'chrome_extensions':
+        column_titles = ['Username', 'Extension identifier', 'Extension']
+        attribute_names = ['username', 'extension_identifier', 'extension']
+        self._GenerateAnalysisResultsReport(
+            storage_reader, self._report_type, column_titles,
+            'chrome_extension_analysis_result', attribute_names)
 
       elif self._report_type == 'environment_variables':
         self._GenerateEnvironmentVariablesReport(storage_reader)
