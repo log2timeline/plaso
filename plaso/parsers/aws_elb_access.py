@@ -128,12 +128,6 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.IP_ADDRESS('target_ip_address') +
           pyparsing.Suppress(":") + _PORT('target_port') | BLANK)
 
-  _DATE_TIME_ISOFORMAT = (
-      text_parser.PyparsingConstants.DATE_ELEMENTS +
-          pyparsing.Suppress("T") +
-      text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS +
-          pyparsing.Suppress("Z"))
-
   _DATE_TIME_ISOFORMAT_STRING = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
@@ -146,7 +140,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
   # A log line is defined as in the AWS ELB documentation
   _LOG_LINE = (
       _WORD.setResultsName('type') +
-      _DATE_TIME_ISOFORMAT.setResultsName('time') +
+      _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
       _WORD.setResultsName('resource_identifier') +
       _CLIENT_IP_ADDRESS_PORT.setResultsName('client_ip_port') +
       _TARGET_IP_ADDRESS_PORT.setResultsName('target_ip_port') +
@@ -220,18 +214,13 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     time_elements_structure = structure.get('time')
-    if time_elements_structure:
-      year, month, day_of_month, hours, minutes, seconds, microseconds = (
-          time_elements_structure)
-      time_elements_tuple = (year, month, day_of_month, hours, minutes,
-          seconds, microseconds)
 
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+      date_time = dfdatetime_time_elements.TimeElements()
+      date_time.CopyFromStringISO8601(time_elements_structure)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+          'invalid date time value: {0!s}'.format(time_elements_structure))
       return
 
     event_data = AWSELBEventData()

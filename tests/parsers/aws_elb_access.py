@@ -18,11 +18,11 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
 
     # Test number of events and warnings
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 14)
+    self.assertEqual(number_of_events, 10)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 1)
+    self.assertEqual(number_of_warnings, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
