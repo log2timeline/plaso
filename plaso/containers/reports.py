@@ -32,8 +32,9 @@ class AnalysisReport(interface.AttributeContainer):
     self.analysis_counter = None
     self.event_filter = None
     self.plugin_name = plugin_name
+    # TODO: kept for backwards compatibility.
     self.report_dict = None
-    # TODO: rename text to body?
+    # TODO: kept for backwards compatibility.
     self.text = text
     self.time_compiled = None
 
