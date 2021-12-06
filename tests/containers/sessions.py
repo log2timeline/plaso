@@ -88,15 +88,6 @@ class SessionTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         session_completion.identifier, attribute_container.identifier)
 
-  def testCreateSessionConfiguration(self):
-    """Tests the CreateSessionConfiguration function."""
-    attribute_container = sessions.Session()
-
-    session_configuration = attribute_container.CreateSessionConfiguration()
-    self.assertIsNotNone(session_configuration)
-    self.assertEqual(
-        session_configuration.identifier, attribute_container.identifier)
-
   def testCreateSessionStart(self):
     """Tests the CreateSessionStart function."""
     attribute_container = sessions.Session()

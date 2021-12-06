@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 """The storage reader."""
 
+from plaso.containers import sessions
+from plaso.storage import logger
+
 
 class StorageReader(object):
   """Storage reader interface."""
 
+  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_CONFIGURATION = (
+      sessions.SessionConfiguration.CONTAINER_TYPE)
+  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
+
   def __init__(self):
     """Initializes a storage reader."""
     super(StorageReader, self).__init__()
+    self._serializers_profiler = None
+    self._storage_profiler = None
     self._store = None
 
   def __enter__(self):
@@ -90,21 +100,79 @@ class StorageReader(object):
     """
     return self._store.serialization_format
 
-  def GetStorageType(self):
-    """Retrieves the storage type of the underlying storage file.
-
-    Returns:
-      str: the storage type.
-    """
-    return self._store.storage_type
-
+  # TODO: remove the need for seperate SessionStart and SessionCompletion
+  # attribute containers.
   def GetSessions(self):
     """Retrieves the sessions.
 
-    Returns:
-      generator(Session): session generator.
+    Yields:
+      Session: session attribute container.
+
+    Raises:
+      IOError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+      OSError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
     """
-    return self._store.GetSessions()
+    last_session_start = self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
+    last_session_completion = self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    # TODO: handle open sessions.
+    if last_session_start != last_session_completion:
+      logger.warning('Detected unclosed session.')
+
+    session_start_generator = self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
+    session_completion_generator = self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
+      session_configuration_generator = self._store.GetAttributeContainers(
+          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    else:
+      session_configuration_generator = None
+
+    for session_index in range(1, last_session_completion + 1):
+      try:
+        session_start = next(session_start_generator)
+      except StopIteration:
+        raise IOError('Missing session start: {0:d}'.format(session_index))
+
+      try:
+        session_completion = next(session_completion_generator)
+      except StopIteration:
+        pass
+
+      session_configuration = None
+      if session_configuration_generator:
+        try:
+          session_configuration = next(session_configuration_generator)
+        except StopIteration:
+          raise IOError('Missing session configuration: {0:d}'.format(
+              session_index))
+
+      session = sessions.Session()
+      session.CopyAttributesFromSessionStart(session_start)
+
+      if session_configuration:
+        try:
+          session.CopyAttributesFromSessionConfiguration(session_configuration)
+        except ValueError:
+          raise IOError((
+              'Session identifier mismatch for session configuration: '
+              '{0:d}').format(session_index))
+
+      if session_completion:
+        try:
+          session.CopyAttributesFromSessionCompletion(session_completion)
+        except ValueError:
+          raise IOError((
+              'Session identifier mismatch for session completion: '
+              '{0:d}').format(session_index))
+
+      yield session
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -119,7 +187,7 @@ class StorageReader(object):
     Returns:
       generator(EventObject): event generator.
     """
-    return self._store.GetSortedEvents(time_range)
+    return self._store.GetSortedEvents(time_range=time_range)
 
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.
@@ -139,7 +207,9 @@ class StorageReader(object):
     Args:
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
-    self._store.SetSerializersProfiler(serializers_profiler)
+    self._serializers_profiler = serializers_profiler
+    if self._store:
+      self._store.SetSerializersProfiler(serializers_profiler)
 
   def SetStorageProfiler(self, storage_profiler):
     """Sets the storage profiler.
@@ -147,4 +217,6 @@ class StorageReader(object):
     Args:
       storage_profiler (StorageProfiler): storage profiler.
     """
-    self._store.SetStorageProfiler(storage_profiler)
+    self._storage_profiler = storage_profiler
+    if self._store:
+      self._store.SetStorageProfiler(storage_profiler)

@@ -209,9 +209,17 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     event_data.parser = 'test_parser'
 
     parser_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
-    self.assertEqual(storage_writer.number_of_events, 1)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     event_without_timestamp = events.EventObject()
     event_without_timestamp.parser = 'test_parser'
@@ -230,9 +238,17 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer.Open()
 
     parser_mediator.ProduceExtractionWarning('test')
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
   def testProduceRecoveryWarning(self):
     """Tests the ProduceRecoveryWarning method."""
@@ -245,9 +261,17 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer.Open()
 
     parser_mediator.ProduceRecoveryWarning('test')
-    self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 1)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 1)
 
   def testResetFileEntry(self):
     """Tests the ResetFileEntry function."""

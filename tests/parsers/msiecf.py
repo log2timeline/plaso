@@ -25,9 +25,16 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of recovered items       : 11
 
     # 7 + 11 records, each with 4 records.
-    self.assertEqual(storage_writer.number_of_events, (7 + 11) * 4)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, (7 + 11) * 4)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -80,8 +87,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     """Tests the Parse function with leak and redirected records."""
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['nfury_index.dat'], parser)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
@@ -89,7 +94,16 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 1027
     #   Number of recovered items       : 8
 
-    self.assertEqual(storage_writer.number_of_events, 2898)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 2898)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -145,9 +159,16 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         ['MSHist012013031020130311-index.dat'], parser,
         timezone='Europe/Amsterdam')
 
-    self.assertEqual(storage_writer.number_of_events, 83)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 83)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 

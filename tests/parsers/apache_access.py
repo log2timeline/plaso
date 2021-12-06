@@ -18,9 +18,16 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     parser = apache_access.ApacheAccessParser()
     storage_writer = self._ParseFile(['access.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 13)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 1)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 14)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     # The order in which parser generates events is nondeterministic hence
     # we sort the events.
@@ -91,6 +98,19 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'user_name': '-'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
+
+    # Test common log format parser event with Kerberos user name
+    expected_event_values = {
+        'data_type': 'apache:access',
+        'date_time': '2019-11-16 09:46:42',
+        'http_request': ('GET / HTTP/1.1'),
+        'http_response_code': 200,
+        'http_response_bytes': 8264,
+        'ip_address': '192.168.0.64',
+        'remote_name': '-',
+        'user_name': 'pyllyukko@EXAMPLE.COM'}
+
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
 
 if __name__ == '__main__':

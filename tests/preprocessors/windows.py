@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows preprocess plug-ins."""
+"""Tests for the Windows preprocessor plugins."""
 
 import unittest
 
@@ -33,7 +33,9 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -57,7 +59,9 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -84,7 +88,9 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersappdata')
@@ -107,7 +113,9 @@ class WindowsAllUsersProfileEnvironmentVariablePluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'AllUsersProfile')
@@ -130,7 +138,9 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -154,7 +164,9 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -180,7 +192,9 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'allusersprofile')
@@ -203,7 +217,9 @@ class WindowsAvailableTimeZonesPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     available_time_zones = sorted(
         test_mediator.knowledge_base.available_time_zones,
@@ -228,7 +244,9 @@ class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.codepage, 'cp1252')
 
@@ -248,7 +266,9 @@ class WindowsEventLogPublishersPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     windows_eventlog_providers = (
         test_mediator.knowledge_base.GetWindowsEventLogProviders())
@@ -270,7 +290,9 @@ class WindowsEventLogSourcesPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     windows_eventlog_providers = (
         test_mediator.knowledge_base.GetWindowsEventLogProviders())
@@ -293,7 +315,9 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     hostname = test_mediator.knowledge_base.GetHostname()
     self.assertEqual(hostname, 'WKS-WIN732BITA')
@@ -316,7 +340,9 @@ class WindowsLanguagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.language, 'en-US')
 
@@ -338,7 +364,9 @@ class WindowsMountedDevicesPluginTest(
     self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     number_of_windows_mounted_devices = (
         storage_writer._attribute_containers_counter['windows_mounted_device'])
@@ -369,7 +397,9 @@ class WindowsProgramDataEnvironmentVariablePluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramData')
@@ -393,7 +423,9 @@ class WindowsProgramDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -417,7 +449,9 @@ class WindowsProgramDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -443,7 +477,9 @@ class WindowsProgramDataKnowledgeBasePluginTest(
 
     plugin.Collect(test_mediator)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'programdata')
@@ -466,7 +502,9 @@ class WindowsProgramFilesEnvironmentVariablePluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramFiles')
@@ -489,7 +527,9 @@ class WindowsProgramFilesX86EnvironmentVariablePluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
         'ProgramFilesX86')
@@ -538,7 +578,9 @@ class WindowsSystemProductPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     system_product = test_mediator.knowledge_base.GetValue(
         'operating_system_product')
@@ -560,7 +602,9 @@ class WindowsSystemVersionPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     system_version = test_mediator.knowledge_base.GetValue(
         'operating_system_version')
@@ -583,7 +627,9 @@ class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     # Unable to map: "@tzres.dll,-112" to time zone with error: Unsupported
     # time zone: @tzres.dll,-112
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'America/New_York')
@@ -606,7 +652,9 @@ class WindowsUserAccountsPluginTest(
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     user_accounts = sorted(
         test_mediator.knowledge_base.user_accounts,

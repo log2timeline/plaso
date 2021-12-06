@@ -8,11 +8,12 @@ import pathlib
 import sqlite3
 import zlib
 
+from plaso.containers import event_sources
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import identifiers
 from plaso.storage import interface
-from plaso.storage import logger
 
 
 def PythonAST2SQL(ast_node):
@@ -71,6 +72,9 @@ def PythonAST2SQL(ast_node):
   if isinstance(ast_node, ast.Name):
     return ast_node.id
 
+  if isinstance(ast_node, ast.Num):
+    return str(ast_node.n)
+
   if isinstance(ast_node, ast.Str):
     return '"{0:s}"'.format(ast_node.s)
 
@@ -84,8 +88,13 @@ class SQLiteStorageFile(interface.BaseStore):
     compression_format (str): compression format.
     format_version (int): storage format version.
     serialization_format (str): serialization format.
-    storage_type (str): storage type.
   """
+
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
   _FORMAT_VERSION = 20211121
 
@@ -115,10 +124,10 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (
-      interface.BaseStore._CONTAINER_TYPE_EVENT,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_DATA,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_DATA_STREAM,
-      interface.BaseStore._CONTAINER_TYPE_EVENT_SOURCE)
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_DATA_STREAM,
+      _CONTAINER_TYPE_EVENT_SOURCE)
 
   # TODO: automatically generate mappings
   _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {
@@ -160,18 +169,9 @@ class SQLiteStorageFile(interface.BaseStore):
   # The maximum number of cached attribute containers
   _MAXIMUM_CACHED_CONTAINERS = 32 * 1024
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a SQLite storage file.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
-    if storage_type == definitions.STORAGE_TYPE_SESSION:
-      compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-    else:
-      compression_format = definitions.COMPRESSION_FORMAT_NONE
-
-    super(SQLiteStorageFile, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a SQLite storage file."""
+    super(SQLiteStorageFile, self).__init__()
     self._attribute_container_cache = collections.OrderedDict()
     self._connection = None
     self._cursor = None
@@ -180,7 +180,7 @@ class SQLiteStorageFile(interface.BaseStore):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._use_schema = True
 
-    self.compression_format = compression_format
+    self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
@@ -191,12 +191,6 @@ class SQLiteStorageFile(interface.BaseStore):
       attribute_container (AttributeContainer): attribute container.
       index (int): attribute container index.
     """
-    # Do not cache event tags since this causes GetEventTagByIdentifier to fail
-    # for older SQLite storage formats.
-    if (self.format_version < self._WITH_SCHEMA_FORMAT_VERSION and
-        attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG):
-      return
-
     if len(self._attribute_container_cache) >= self._MAXIMUM_CACHED_CONTAINERS:
       self._attribute_container_cache.popitem(last=True)
 
@@ -255,11 +249,6 @@ class SQLiteStorageFile(interface.BaseStore):
     if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
       raise IOError('Unsupported serialization format: {0!s}'.format(
           serialization_format))
-
-    storage_type = metadata_values.get('storage_type', None)
-    if storage_type not in definitions.STORAGE_TYPES:
-      raise IOError('Unsupported storage type: {0!s}'.format(
-          storage_type))
 
   def _CreateAttributeContainerTable(self, container_type):
     """Creates a table for a specific attribute container type.
@@ -523,7 +512,6 @@ class SQLiteStorageFile(interface.BaseStore):
     self.format_version = metadata_values['format_version']
     self.compression_format = metadata_values['compression_format']
     self.serialization_format = metadata_values['serialization_format']
-    self.storage_type = metadata_values['storage_type']
 
     self._use_schema = bool(
         self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
@@ -729,7 +717,6 @@ class SQLiteStorageFile(interface.BaseStore):
         'format_version', '{0:d}'.format(self._FORMAT_VERSION))
     self._WriteMetadataValue('compression_format', self.compression_format)
     self._WriteMetadataValue('serialization_format', self.serialization_format)
-    self._WriteMetadataValue('storage_type', self.storage_type)
 
   def _WriteMetadataValue(self, key, value):
     """Writes a metadata value.
@@ -827,21 +814,14 @@ class SQLiteStorageFile(interface.BaseStore):
       if self._storage_profiler:
         self._storage_profiler.StopTiming('write_new')
 
-    if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
-        container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE):
-      # Cache the event source for a session store since it will be accessed
-      # after write.
-      self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+    self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
   @classmethod
-  def CheckSupportedFormat(cls, path, check_readable_only=False):
+  def CheckSupportedFormat(cls, path):
     """Checks if the storage file format is supported.
 
     Args:
       path (str): path to the storage file.
-      check_readable_only (Optional[bool]): whether the store should only be
-          checked to see if it can be read. If False, the store will be checked
-          to see if it can be read and written to.
 
     Returns:
       bool: True if the format is supported.
@@ -862,13 +842,17 @@ class SQLiteStorageFile(interface.BaseStore):
 
       metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
 
-      cls._CheckStorageMetadata(
-          metadata_values, check_readable_only=check_readable_only)
+      format_version = metadata_values.get('format_version', None)
+      if format_version:
+        try:
+          format_version = int(format_version, 10)
+          result = True
+        except (TypeError, ValueError):
+          pass
 
       connection.close()
-      result = True
 
-    except (IOError, sqlite3.DatabaseError):
+    except (IOError, TypeError, ValueError, sqlite3.DatabaseError):
       result = False
 
     return result
@@ -1009,40 +993,6 @@ class SQLiteStorageFile(interface.BaseStore):
         container_type, column_names=column_names,
         filter_expression=sql_filter_expression)
 
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (SQLTableIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: when the store is closed or when there is an error querying
-          the storage file.
-      OSError: when the store is closed or when there is an error querying
-          the storage file.
-    """
-    schema = self._GetAttributeContainerSchema(self._CONTAINER_TYPE_EVENT_TAG)
-    if not self._use_schema or not schema:
-      return None
-
-    column_names = sorted(schema.keys())
-
-    filter_expression = '_event_row_identifier = {0:d}'.format(
-        event_identifier.sequence_number)
-
-    generator = self._GetAttributeContainersWithFilter(
-        self._CONTAINER_TYPE_EVENT_TAG, column_names=column_names,
-        filter_expression=filter_expression)
-
-    existing_event_tags = list(generator)
-    if len(existing_event_tags) != 1:
-      return None
-
-    return existing_event_tags[0]
-
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
 
@@ -1111,17 +1061,6 @@ class SQLiteStorageFile(interface.BaseStore):
     return self._GetAttributeContainersWithFilter(
         self._CONTAINER_TYPE_EVENT, column_names=column_names,
         filter_expression=filter_expression, order_by=filter_column_name)
-
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-    """
-    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-       self._CONTAINER_TYPE_SESSION_CONFIGURATION)
-    return identifiers.SQLTableIdentifier(
-        self._CONTAINER_TYPE_SESSION_CONFIGURATION, next_sequence_number)
 
   def HasAttributeContainers(self, container_type):
     """Determines if store contains a specific type of attribute containers.
@@ -1216,24 +1155,10 @@ class SQLiteStorageFile(interface.BaseStore):
         if container_type in self._NO_CREATE_TABLE_CONTAINER_TYPES:
           continue
 
-        if (self.storage_type == definitions.STORAGE_TYPE_SESSION and
-            container_type in self._TASK_STORE_ONLY_CONTAINER_TYPES):
-          continue
-
-        if (self.storage_type == definitions.STORAGE_TYPE_TASK and
-            container_type in self._SESSION_STORE_ONLY_CONTAINER_TYPES):
-          continue
-
         if not self._HasTable(container_type):
           self._CreateAttributeContainerTable(container_type)
 
       self._connection.commit()
-
-    last_session_start = self.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-
-    last_session_completion = self.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     # Initialize next_sequence_number based on the file contents so that
     # SQLTableIdentifier points to the correct attribute container.
@@ -1242,9 +1167,3 @@ class SQLiteStorageFile(interface.BaseStore):
           container_type)
       self._SetAttributeContainerNextSequenceNumber(
           container_type, next_sequence_number)
-
-    # TODO: handle open sessions.
-    if last_session_start != last_session_completion:
-      logger.warning('Detected unclosed session.')
-
-    self._last_session = last_session_completion

@@ -18,9 +18,16 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$II3DF3L.zip'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 1)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -38,9 +45,16 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$I103S5F.jpg'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 1)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -62,9 +76,16 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecyclerInfo2Parser()
     storage_writer = self._ParseFile(['INFO2'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 4)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 4)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 

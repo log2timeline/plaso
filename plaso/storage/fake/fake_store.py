@@ -6,7 +6,7 @@ import collections
 import copy
 import itertools
 
-from plaso.lib import definitions
+from plaso.containers import events
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage.fake import event_heap
@@ -15,15 +15,13 @@ from plaso.storage.fake import event_heap
 class FakeStore(interface.BaseStore):
   """Fake (in-memory only) store for testing."""
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a fake (in-memory only) store.
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
-    super(FakeStore, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a fake (in-memory only) store."""
+    super(FakeStore, self).__init__()
     self._attribute_containers = {}
-    self._event_tag_per_event_identifier = {}
     self._is_open = False
 
   def _RaiseIfNotReadable(self):
@@ -34,7 +32,7 @@ class FakeStore(interface.BaseStore):
        IOError: if the store cannot be read from.
     """
     if not self._is_open:
-      raise IOError('Unable to write to closed storage writer.')
+      raise IOError('Unable to read from closed storage writer.')
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage file is not writable.
@@ -96,11 +94,6 @@ class FakeStore(interface.BaseStore):
     # Make sure the fake storage preserves the state of the attribute container.
     container = copy.deepcopy(container)
     containers[lookup_key] = container
-
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
-      event_identifier = container.GetEventIdentifier()
-      lookup_key = event_identifier.CopyToString()
-      self._event_tag_per_event_identifier[lookup_key] = container
 
   def Close(self):
     """Closes the store.
@@ -167,28 +160,6 @@ class FakeStore(interface.BaseStore):
       if attribute_container.MatchesExpression(filter_expression):
         yield attribute_container
 
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: if an unsupported event identifier is provided or if the event
-          tag does not exist.
-      OSError: if an unsupported event identifier is provided or if the event
-          tag does not exist.
-    """
-    if not isinstance(event_identifier, identifiers.FakeIdentifier):
-      raise IOError('Unsupported event identifier type: {0!s}'.format(
-          type(event_identifier)))
-
-    lookup_key = event_identifier.CopyToString()
-    return self._event_tag_per_event_identifier.get(lookup_key, None)
-
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
 
@@ -232,16 +203,6 @@ class FakeStore(interface.BaseStore):
       sorted_events.PushEvent(event, event_index)
 
     return iter(sorted_events.PopEvents())
-
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-    """
-    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-       self._CONTAINER_TYPE_SESSION_CONFIGURATION)
-    return identifiers.FakeIdentifier(next_sequence_number)
 
   def HasAttributeContainers(self, container_type):
     """Determines if a store contains a specific type of attribute container.

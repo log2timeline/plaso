@@ -60,6 +60,14 @@ plaso.multi\_process.logger module
    :undoc-members:
    :show-inheritance:
 
+plaso.multi\_process.merge\_helpers module
+------------------------------------------
+
+.. automodule:: plaso.multi_process.merge_helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.multi\_process.output\_engine module
 ------------------------------------------
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains preprocessors for MacOS."""
+"""MacOS preprocessor plugins."""
 
 import abc
 import plistlib

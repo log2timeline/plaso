@@ -489,11 +489,13 @@ class StatusView(object):
     self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
 
-  def PrintExtractionSummary(self, processing_status):
+  def PrintExtractionSummary(
+      self, processing_status, number_of_extraction_warnings):
     """Prints a summary of the extraction.
 
     Args:
       processing_status (ProcessingStatus): processing status.
+      number_of_extraction_warnings (int): number of extraction warnings.
     """
     if not processing_status:
       self._output_writer.Write(
@@ -505,13 +507,11 @@ class StatusView(object):
       else:
         self._output_writer.Write('Processing completed.\n')
 
-      foreman_status = processing_status.foreman_status
-      number_of_warnings = foreman_status.number_of_produced_extraction_warnings
-      if number_of_warnings:
+      if number_of_extraction_warnings:
         output_text = '\n'.join([
             '',
             ('Number of warnings generated while extracting events: '
-             '{0:d}.').format(number_of_warnings),
+             '{0:d}.').format(number_of_extraction_warnings),
             '',
             'Use pinfo to inspect warnings in more detail.',
             ''])

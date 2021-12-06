@@ -315,17 +315,23 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         debug_output=self._debug_output, filename=self._log_filename,
         quiet_mode=self._quiet_mode)
 
-    logger.debug(
-        'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
+    logger.debug('Process: {0!s} (PID: {1:d}) started'.format(
+        self._name, self._pid))
 
     self._StartProcessStatusRPCServer()
 
+    logger.debug('Process: {0!s} (PID: {1:d}) enter main'.format(
+        self._name, self._pid))
+
     self._Main()
+
+    logger.debug('Process: {0!s} (PID: {1:d}) exit main'.format(
+        self._name, self._pid))
 
     self._StopProcessStatusRPCServer()
 
-    logger.debug(
-        'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
+    logger.debug('Process: {0!s} (PID: {1:d}) stopped'.format(
+        self._name, self._pid))
 
     # Make sure log files are cleanly closed.
     logging.shutdown()

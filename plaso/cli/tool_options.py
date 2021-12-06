@@ -5,7 +5,6 @@ import os
 import pytz
 
 from plaso.analysis import manager as analysis_manager
-from plaso.cli import logger
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
@@ -360,37 +359,6 @@ class ProfilingOptions(object):
 
 class StorageFileOptions(object):
   """Storage file options mix-in."""
-
-  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
-    """Checks if the storage file path is valid.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-      warn_about_existing (bool): True if the user should be warned about
-          the storage file already existing.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid.
-    """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-
-      if warn_about_existing:
-        logger.warning('Appending to an already existing storage file.')
-
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = '.'
-
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
   def AddStorageOptions(self, argument_parser):
     """Adds the storage options to the argument group.

@@ -6,8 +6,6 @@ import collections
 import os
 import unittest
 
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -28,10 +26,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests the PreprocessSources and ProcessSources function."""
     artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(artifacts_path)
-
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-    registry.ReadFromDirectory(reader, artifacts_path)
 
     test_engine = extraction_engine.ExtractionMultiProcessEngine(
         maximum_number_of_tasks=100)
@@ -61,11 +55,20 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       try:
         test_engine.PreprocessSources(
-            registry, [source_path_spec], session, storage_writer)
+            artifacts_path, None, [source_path_spec], session, storage_writer)
 
         processing_status = test_engine.ProcessSources(
             [source_configuration], storage_writer, session.identifier,
             configuration, storage_file_path=temp_directory)
+
+        number_of_events = storage_writer.GetNumberOfAttributeContainers(
+            'event')
+        number_of_extraction_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'extraction_warning'))
+        number_of_recovery_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'recovery_warning'))
 
         parsers_counter = collections.Counter({
             parser_count.name: parser_count.number_of_events
@@ -77,9 +80,9 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     self.assertFalse(processing_status.aborted)
 
-    self.assertEqual(storage_writer.number_of_events, 15)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    self.assertEqual(number_of_events, 15)
+    self.assertEqual(number_of_extraction_warnings, 0)
+    self.assertEqual(number_of_recovery_warnings, 0)
 
     expected_parsers_counter = collections.Counter({
         'filestat': 15,

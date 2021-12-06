@@ -23,9 +23,16 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     # * 182 events from the safari cookie parser
     # * 25 event from the cookie plugins
 
-    self.assertEqual(storage_writer.number_of_events, 207)
-    self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
-    self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 207)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     events = []
     for event in storage_writer.GetEvents():

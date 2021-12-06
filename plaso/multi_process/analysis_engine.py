@@ -7,12 +7,14 @@ import time
 
 from plaso.containers import counts
 from plaso.containers import events
+from plaso.containers import reports
 from plaso.containers import tasks
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_process import analysis_process
 from plaso.multi_process import logger
+from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
@@ -28,6 +30,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   """
 
   # pylint: disable=abstract-method
+
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
   _PROCESS_JOIN_TIMEOUT = 5.0
 
@@ -60,12 +65,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._memory_profiler = None
     self._merge_task = None
     self._number_of_consumed_analysis_reports = 0
-    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_analysis_reports = 0
-    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
@@ -95,12 +98,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     """
     self._status = definitions.STATUS_INDICATOR_RUNNING
     self._number_of_consumed_analysis_reports = 0
-    self._number_of_consumed_analysis_warnings = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_analysis_reports = 0
-    self._number_of_produced_analysis_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_sources = 0
@@ -178,35 +179,32 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           event_queue.Close()
 
-          storage_merge_reader = self._StartMergeTaskStorage(
-              storage_writer, definitions.STORAGE_FORMAT_SQLITE, task)
+          task_storage_reader = self._GetMergeTaskStorage(
+              definitions.STORAGE_FORMAT_SQLITE, task)
 
-          storage_merge_reader.MergeAttributeContainers()
-          # TODO: temporary solution.
-          plugin_names.remove(plugin_name)
+          try:
+            merge_helper = merge_helpers.AnalysisTaskMergeHelper(
+                task_storage_reader, task.identifier)
 
-          storage_merge_reader.Close()
+            logger.debug('Starting merge of task: {0:s}'.format(
+                merge_helper.task_identifier))
 
-          for key, value in  storage_merge_reader.event_labels_counter.items():
-            event_label_count = self._event_labels_counter.get(key, None)
-            if event_label_count:
-              event_label_count.number_of_events += value
-              storage_writer.UpdateAttributeContainer(event_label_count)
-            else:
-              event_label_count = counts.EventLabelCount(
-                  label=key, number_of_events=value)
-              self._event_labels_counter[key] = event_label_count
-              storage_writer.AddAttributeContainer(event_label_count)
+            number_of_containers = self._MergeAttributeContainers(
+                storage_writer, merge_helper)
+
+            logger.debug('Merged {0:d} containers of task: {1:s}'.format(
+                number_of_containers, merge_helper.task_identifier))
+
+          finally:
+            task_storage_reader.Close()
 
           self._RemoveMergeTaskStorage(
               definitions.STORAGE_FORMAT_SQLITE, task)
 
           self._status = definitions.STATUS_INDICATOR_RUNNING
 
-          self._number_of_produced_event_tags = (
-              storage_writer.number_of_event_tags)
-          self._number_of_produced_analysis_reports = (
-              storage_writer.number_of_analysis_reports)
+          # TODO: temporary solution.
+          plugin_names.remove(plugin_name)
 
     events_counter = collections.Counter()
     events_counter['Events filtered'] = number_of_filtered_events
@@ -291,6 +289,43 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
+
+  def _MergeAttributeContainers(self, storage_writer, merge_helper):
+    """Merges attribute containers from a task store into the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      merge_helper (AnalysisTaskMergeHelper): helper to merge attribute
+          containers.
+
+    Returns:
+      int: number of containers merged.
+    """
+    number_of_containers = 0
+
+    container = merge_helper.GetAttributeContainer()
+
+    while container:
+      number_of_containers += 1
+
+      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+        storage_writer.AddOrUpdateEventTag(container)
+      else:
+        storage_writer.AddAttributeContainer(container)
+
+      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_ANALYSIS_REPORT:
+        self._number_of_produced_analysis_reports += 1
+
+      elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_TAG:
+        self._number_of_produced_event_tags += 1
+
+        for label in container.labels:
+          self._event_labels_counter[label] += 1
+          self._event_labels_counter['total'] += 1
+
+      container = merge_helper.GetAttributeContainer()
+
+    return number_of_containers
 
   def _StartAnalysisProcesses(self, analysis_plugins):
     """Starts the analysis processes.
@@ -410,9 +445,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags,
         self._number_of_consumed_analysis_reports,
-        self._number_of_produced_analysis_reports,
-        self._number_of_consumed_analysis_warnings,
-        self._number_of_produced_analysis_warnings)
+        self._number_of_produced_analysis_reports)
 
     self._processing_status.UpdateEventsStatus(self._events_status)
 
@@ -440,11 +473,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._RaiseIfNotMonitored(pid)
 
     display_name = process_status.get('display_name', '')
-
-    number_of_consumed_analysis_warnings = process_status.get(
-        'number_of_consumed_analysis_warnings', None)
-    number_of_produced_analysis_warnings = process_status.get(
-        'number_of_produced_analysis_warnings', None)
 
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
@@ -485,9 +513,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_reports, number_of_produced_reports,
-        number_of_consumed_analysis_warnings,
-        number_of_produced_analysis_warnings)
+        number_of_consumed_reports, number_of_produced_reports)
 
   def _UpdateStatus(self):
     """Update the status."""
@@ -526,11 +552,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           updates.
       storage_file_path (Optional[str]): path to the session storage file.
 
+    Returns:
+      ProcessingStatus: processing status.
+
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
+      ValueError: if analysis plugins are missing.
     """
     if not analysis_plugins:
-      return
+      raise ValueError('Missing analysis plugins')
 
     abort_kill = False
     keyboard_interrupt = False
@@ -546,14 +576,14 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
 
-    event_labels_counter = {}
+    stored_event_labels_counter = {}
     if storage_writer.HasAttributeContainers('event_label_count'):
-      event_labels_counter = {
-          event_label_count.name: event_label_count
+      stored_event_labels_counter = {
+          event_label_count.label: event_label_count
           for event_label_count in storage_writer.GetAttributeContainers(
               'event_label_count')}
 
-    self._event_labels_counter = collections.Counter(event_labels_counter)
+    self._event_labels_counter = collections.Counter()
 
     if storage_writer.HasAttributeContainers('parser_count'):
       parsers_counter = {
@@ -582,34 +612,33 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
+      self._AnalyzeEvents(
+          storage_writer, analysis_plugins, event_filter=event_filter)
 
-      try:
-        session_configuration = self._session.CreateSessionConfiguration()
-        storage_writer.AddAttributeContainer(session_configuration)
+      for key, value in self._event_labels_counter.items():
+        event_label_count = stored_event_labels_counter.get(key, None)
+        if event_label_count:
+          event_label_count.number_of_events += value
+          storage_writer.UpdateAttributeContainer(event_label_count)
+        else:
+          event_label_count = counts.EventLabelCount(
+              label=key, number_of_events=value)
+          storage_writer.AddAttributeContainer(event_label_count)
 
-        self._AnalyzeEvents(
-            storage_writer, analysis_plugins, event_filter=event_filter)
+      self._status = definitions.STATUS_INDICATOR_FINALIZING
 
-        self._status = definitions.STATUS_INDICATOR_FINALIZING
+    except errors.QueueFull:
+      queue_full = True
+      self._abort = True
 
-      except errors.QueueFull:
-        queue_full = True
-        self._abort = True
-
-      except KeyboardInterrupt:
-        keyboard_interrupt = True
-        self._abort = True
-
-      finally:
-        self._processing_status.aborted = self._abort
-        self._session.aborted = self._abort
-
-        session_completion = self._session.CreateSessionCompletion()
-        storage_writer.AddAttributeContainer(session_completion)
+    except KeyboardInterrupt:
+      keyboard_interrupt = True
+      self._abort = True
 
     finally:
+      self._processing_status.aborted = self._abort
+      session.aborted = self._abort
+
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
@@ -640,7 +669,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StopTaskStorage(
-          definitions.STORAGE_FORMAT_SQLITE, self._session.identifier,
+          definitions.STORAGE_FORMAT_SQLITE, session.identifier,
           abort=self._abort)
     except (IOError, OSError) as exception:
       logger.error('Unable to stop task storage with error: {0!s}'.format(
@@ -666,3 +695,5 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if keyboard_interrupt:
       raise KeyboardInterrupt
+
+    return self._processing_status

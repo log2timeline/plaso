@@ -134,14 +134,20 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.Open(path=temp_file)
 
       try:
+        number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+            'analysis_report')
+        self.assertEqual(number_of_reports, 2)
+
         test_engine.AnalyzeEvents(
             session, knowledge_base_object, storage_writer, data_location,
             analysis_plugins, configuration, storage_file_path=temp_directory)
 
+        number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+            'analysis_report')
+        self.assertEqual(number_of_reports, 3)
+
       finally:
         storage_writer.Close()
-
-      self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
   def testAnalyzeEventsWithEventFilter(self):
     """Tests the AnalyzeEvents function with an event filter."""
@@ -176,15 +182,21 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       storage_writer.Open(path=temp_file)
 
       try:
+        number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+            'analysis_report')
+        self.assertEqual(number_of_reports, 2)
+
         test_engine.AnalyzeEvents(
             session, knowledge_base_object, storage_writer, data_location,
             analysis_plugins, configuration, event_filter=test_filter,
             storage_file_path=temp_directory)
 
+        number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+            'analysis_report')
+        self.assertEqual(number_of_reports, 3)
+
       finally:
         storage_writer.Close()
-
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
 
   # TODO: add bogus data location test.
 

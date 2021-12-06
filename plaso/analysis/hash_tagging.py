@@ -342,6 +342,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     logger.info(log_message)
     self._time_of_last_status_log = current_time
 
+  # pylint: disable=arguments-renamed
   def CompileReport(self, mediator):
     """Compiles an analysis report.
 

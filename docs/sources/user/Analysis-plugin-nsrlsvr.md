@@ -26,7 +26,7 @@ echo $MD5 | nsrllookup -s localhost -p 9120 -k
 
 Which will return $MD5 if present in NSRLFile.txt and nothing when $MD5 does not present.
 
-## Running plaso
+## Running the analysis plugin
 
 First run log2timeline to calculate the hashes:
 
@@ -40,4 +40,10 @@ Next run psort to tag events:
 
 ```bash
 psort.py --analysis nsrlsvr --nsrlsvr-hash md5 --nsrlsvr-host localhost --nsrlsvr-port 9120 -o null timeline.plaso
+```
+
+The last step would be to export a timeline with the tags:
+
+```bash
+psort.py -o dynamic --fields datetime,timestamp_desc,source,source_long,message,parser,tag -w timeline.csv timeline.plaso
 ```

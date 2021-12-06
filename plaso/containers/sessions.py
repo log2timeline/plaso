@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Session related attribute container definitions."""
 
-import collections
 import time
 import uuid
 
@@ -52,7 +51,8 @@ class Session(interface.AttributeContainer):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
     self.aborted = False
-    self.analysis_reports_counter = collections.Counter()
+    # TODO: kept for backwards compatibility.
+    self.analysis_reports_counter = None
     self.artifact_filters = None
     self.command_line_arguments = None
     self.completion_time = None
@@ -178,30 +178,6 @@ class Session(interface.AttributeContainer):
     session_completion.timestamp = self.completion_time
     return session_completion
 
-  def CreateSessionConfiguration(self):
-    """Creates a session configuration.
-
-    Returns:
-      SessionConfiguration: session configuration attribute container.
-    """
-    session_configuration = SessionConfiguration()
-    session_configuration.artifact_filters = self.artifact_filters
-    session_configuration.command_line_arguments = self.command_line_arguments
-    session_configuration.debug_mode = self.debug_mode
-    session_configuration.enabled_parser_names = self.enabled_parser_names
-    session_configuration.extract_winevt_resources = (
-        self.extract_winevt_resources)
-    session_configuration.filter_file = self.filter_file
-    session_configuration.identifier = self.identifier
-    session_configuration.parser_filter_expression = (
-        self.parser_filter_expression)
-    session_configuration.preferred_encoding = self.preferred_encoding
-    session_configuration.preferred_language = self.preferred_language
-    session_configuration.preferred_time_zone = self.preferred_time_zone
-    session_configuration.source_configurations = self.source_configurations
-    session_configuration.text_prepend = self.text_prepend
-    return session_configuration
-
   def CreateSessionStart(self):
     """Creates a session start.
 
@@ -214,16 +190,6 @@ class Session(interface.AttributeContainer):
     session_start.product_version = self.product_version
     session_start.timestamp = self.start_time
     return session_start
-
-  def UpdateAnalysisReportSessionCounter(self, analysis_report):
-    """Updates the analysis report session counter.
-
-    Args:
-      analysis_report (AnalysisReport): a report.
-    """
-    report_identifier = analysis_report.plugin_name
-    self.analysis_reports_counter[report_identifier] += 1
-    self.analysis_reports_counter['total'] += 1
 
 
 class SessionCompletion(interface.AttributeContainer):
@@ -252,6 +218,7 @@ class SessionCompletion(interface.AttributeContainer):
     """
     super(SessionCompletion, self).__init__()
     self.aborted = False
+    # TODO: kept for backwards compatibility.
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier
@@ -303,7 +270,6 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
-    # TODO: kept for backwards compatibility.
     self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier

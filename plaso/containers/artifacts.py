@@ -10,40 +10,6 @@ class ArtifactAttributeContainer(interface.AttributeContainer):
   """Base class to represent an artifact attribute container."""
 
 
-class SystemSubConfigurationArtifactAttributeContainer(
-    ArtifactAttributeContainer):
-  """System sub configuration artifact attribute container."""
-
-  def __init__(self):
-    """Initializes a system sub configuration artifact attribute container."""
-    super(SystemSubConfigurationArtifactAttributeContainer, self).__init__()
-    self._system_configuration_identifier = None
-
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the identifier of the associated system configuration.
-
-    The system configuration identifier is a storage specific value that
-    requires special handling during serialization.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier or None
-          when not set.
-    """
-    return self._system_configuration_identifier
-
-  def SetSystemConfigurationIdentifier(self, system_configuration_identifier):
-    """Sets the identifier of the associated system configuration.
-
-    The system configuration identifier is a storage specific value that
-    requires special handling during serialization.
-
-    Args:
-      system_configuration_identifier (AttributeContainerIdentifier): system
-          configuration identifier.
-    """
-    self._system_configuration_identifier = system_configuration_identifier
-
-
 class EnvironmentVariableArtifact(ArtifactAttributeContainer):
   """Environment variable artifact attribute container.
 
@@ -673,8 +639,7 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
     self._message_file_identifier = message_file_identifier
 
 
-class WindowsEventLogProviderArtifact(
-    SystemSubConfigurationArtifactAttributeContainer):
+class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
   """Windows EventLog provider artifact attribute container.
 
   Attributes:

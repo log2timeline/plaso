@@ -54,8 +54,13 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    self.assertEqual(storage_writer.number_of_analysis_reports, 1)
-    self.assertEqual(storage_writer.number_of_event_tags, 4)
+    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+        'analysis_report')
+    self.assertEqual(number_of_reports, 1)
+
+    number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
+        'event_tag')
+    self.assertEqual(number_of_event_tags, 4)
 
     report = storage_writer.GetAttributeContainerByIndex(
         reports.AnalysisReport.CONTAINER_TYPE, 0)

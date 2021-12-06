@@ -8,6 +8,7 @@ import uuid
 
 import redis
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
@@ -22,25 +23,18 @@ class RedisStore(interface.BaseStore):
   Event identifiers are also stored in an index to enable sorting.
   """
 
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
+
   _FORMAT_VERSION = '20181013'
   _EVENT_INDEX_NAME = 'sorted_event_identifier'
 
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a Redis store.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-
-    Raises:
-      ValueError: if the storage type is not supported.
-    """
-    if storage_type != definitions.STORAGE_TYPE_TASK:
-      raise ValueError('Unsupported storage type: {0:s}.'.format(
-          storage_type))
-
-    super(RedisStore, self).__init__(storage_type=storage_type)
+  def __init__(self):
+    """Initializes a Redis store."""
+    super(RedisStore, self).__init__()
     self._redis_client = None
     self._session_identifier = None
     self._task_identifier = None
@@ -58,21 +52,6 @@ class RedisStore(interface.BaseStore):
     """
     return '{0:s}-{1:s}-{2:s}'.format(
         self._session_identifier, self._task_identifier, container_type)
-
-  # pylint: disable=redundant-returns-doc
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-    """
-    # Note that the Redis store is only used for storing tasks and does not
-    # support this method. None is returned to have code using this method
-    # add an event tag instead of updating the existing one.
-    return None
 
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
@@ -233,7 +212,6 @@ class RedisStore(interface.BaseStore):
     """Writes the storage metadata."""
     metadata = {
         'format_version': self._FORMAT_VERSION,
-        'storage_type': definitions.STORAGE_TYPE_TASK,
         'serialization_format': self.serialization_format}
     metadata_key = self._GetRedisHashName('metadata')
 
@@ -411,20 +389,6 @@ class RedisStore(interface.BaseStore):
           container_type, sequence_number)
       yield self.GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, identifier)
-
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
-
-    Raises:
-      IOError: always, as the Redis store does not support writing a system
-          configuration.
-      OSError: always, as the Redis store does not support writing a system
-          configuration.
-    """
-    raise IOError('System configuration is not supported by the redis store.')
 
   def HasAttributeContainers(self, container_type):
     """Determines if the store contains a specific type of attribute container.

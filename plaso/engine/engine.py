@@ -7,7 +7,6 @@ from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -21,7 +20,6 @@ from plaso.engine import path_filters
 from plaso.engine import processing_status
 from plaso.engine import profilers
 from plaso.engine import yaml_filter_file
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
 from plaso.preprocessors import mediator as preprocess_mediator
@@ -58,61 +56,54 @@ class BaseEngine(object):
     self.collection_filters_helper = None
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
-  def _DetermineOperatingSystem(self, searcher):
-    """Tries to determine the underlying operating system.
+  def _BuildArtifactsRegistry(
+      self, artifact_definitions_path, custom_artifacts_path):
+    """Build Find Specs from artifacts or filter file if available.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      artifact_definitions_path (str): path to artifact definitions directory
+          or file.
+      custom_artifacts_path (str): path to custom artifact definitions
+          directory or file.
 
     Returns:
-      str: operating system for example "Windows". This should be one of
-          the values in definitions.OPERATING_SYSTEM_FAMILIES.
+      artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
+
+    Raises:
+      BadConfigOption: if artifact definitions cannot be read.
     """
-    find_specs = [
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='/etc',
-            location_separator='/'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='/System/Library',
-            location_separator='/'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\Windows\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WINNT\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WINNT35\\System32',
-            location_separator='\\'),
-        file_system_searcher.FindSpec(
-            case_sensitive=False, location='\\WTSRV\\System32',
-            location_separator='\\')]
+    if not artifact_definitions_path:
+      raise errors.BadConfigOption(
+          'No such artifact definitions: {0:s}.'.format(
+              artifact_definitions_path))
 
-    locations = []
-    for path_spec in searcher.Find(find_specs=find_specs):
-      relative_path = searcher.GetRelativePath(path_spec)
-      if relative_path:
-        locations.append(relative_path.lower())
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
 
-    # We need to check for both forward and backward slashes since the path
-    # spec will be OS dependent, as in running the tool on Windows will return
-    # Windows paths (backward slash) vs. forward slash on *NIX systems.
-    windows_locations = set([
-        '/windows/system32', '\\windows\\system32', '/winnt/system32',
-        '\\winnt\\system32', '/winnt35/system32', '\\winnt35\\system32',
-        '\\wtsrv\\system32', '/wtsrv/system32'])
+    try:
+      if os.path.isdir(artifact_definitions_path):
+        registry.ReadFromDirectory(reader, artifact_definitions_path)
+      else:
+        registry.ReadFromFile(reader, artifact_definitions_path)
 
-    operating_system = definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN
-    if windows_locations.intersection(set(locations)):
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT
+    except (KeyError, artifacts_errors.FormatError) as exception:
+      raise errors.BadConfigOption((
+          'Unable to read artifact definitions from: {0:s} with error: '
+          '{1!s}').format(artifact_definitions_path, exception))
 
-    elif '/system/library' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_MACOS
+    if custom_artifacts_path:
+      try:
+        if os.path.isdir(custom_artifacts_path):
+          registry.ReadFromDirectory(reader, custom_artifacts_path)
+        else:
+          registry.ReadFromFile(reader, custom_artifacts_path)
 
-    elif '/etc' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_FAMILY_LINUX
+      except (KeyError, artifacts_errors.FormatError) as exception:
+        raise errors.BadConfigOption((
+            'Unable to read custom artifact definitions from: {0:s} with '
+            'error: {1!s}').format(custom_artifacts_path, exception))
 
-    return operating_system
+    return registry
 
   def _StartProfiling(self, configuration):
     """Starts profiling.
@@ -226,8 +217,7 @@ class BaseEngine(object):
         path.PathSpec: mount point path specification. The mount point path
             specification refers to either a directory or a volume on a storage
             media device or image. It is needed by the dfVFS file system
-            searcher (FileSystemSearcher) to indicate the base location of
-            the file system.
+            to indicate the base location of the file system.
 
     Raises:
       RuntimeError: if source file system path specification is not set.
@@ -247,19 +237,27 @@ class BaseEngine(object):
     return file_system, mount_point
 
   def PreprocessSources(
-      self, artifacts_registry_object, source_path_specs, session,
-      storage_writer, resolver_context=None):
+      self, artifact_definitions_path, custom_artifacts_path,
+      source_path_specs, session, storage_writer, resolver_context=None):
     """Preprocesses the sources.
 
     Args:
-      artifacts_registry_object (artifacts.ArtifactDefinitionsRegistry):
-          artifact definitions registry.
+      artifact_definitions_path (str): path to artifact definitions directory
+          or file.
+      custom_artifacts_path (str): path to custom artifact definitions
+          directory or file.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
+    artifacts_registry_object = self._BuildArtifactsRegistry(
+        artifact_definitions_path, custom_artifacts_path)
+
+    mediator = preprocess_mediator.PreprocessMediator(
+        session, storage_writer, self.knowledge_base)
+
     detected_operating_systems = []
     for source_path_spec in source_path_specs:
       try:
@@ -269,22 +267,11 @@ class BaseEngine(object):
         logger.error(exception)
         continue
 
-      searcher = file_system_searcher.FileSystemSearcher(
-          file_system, mount_point)
+      preprocess_manager.PreprocessPluginsManager.RunPlugins(
+          artifacts_registry_object, file_system, mount_point, mediator)
 
-      try:
-        operating_system = self._DetermineOperatingSystem(searcher)
-      except (ValueError, dfvfs_errors.PathSpecError) as exception:
-        logger.error(exception)
-        continue
-
-      if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
-        mediator = preprocess_mediator.PreprocessMediator(
-            session, storage_writer, self.knowledge_base)
-
-        preprocess_manager.PreprocessPluginsManager.RunPlugins(
-            artifacts_registry_object, file_system, mount_point, mediator)
-
+      operating_system = self.knowledge_base.GetValue('operating_system')
+      if operating_system:
         detected_operating_systems.append(operating_system)
 
     if detected_operating_systems:
@@ -316,7 +303,7 @@ class BaseEngine(object):
           'building find specification based on artifacts: {0:s}'.format(
               ', '.join(artifact_filter_names)))
 
-      artifacts_registry_object = BaseEngine.BuildArtifactsRegistry(
+      artifacts_registry_object = self._BuildArtifactsRegistry(
           artifact_definitions_path, custom_artifacts_path)
       self.collection_filters_helper = (
           artifact_filters.ArtifactDefinitionsFiltersHelper(
@@ -361,53 +348,3 @@ class BaseEngine(object):
         raise errors.InvalidFilter((
             'No valid file system find specifications were built from filter '
             'file: {0:s}.').format(filter_file_path))
-
-  @classmethod
-  def BuildArtifactsRegistry(
-      cls, artifact_definitions_path, custom_artifacts_path):
-    """Build Find Specs from artifacts or filter file if available.
-
-    Args:
-       artifact_definitions_path (str): path to artifact definitions directory
-           or file.
-       custom_artifacts_path (str): path to custom artifact definitions
-           directory or file.
-
-    Returns:
-      artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
-
-    Raises:
-      BadConfigOption: if artifact definitions cannot be read.
-    """
-    if not artifact_definitions_path:
-      raise errors.BadConfigOption(
-          'No such artifact definitions: {0:s}.'.format(
-              artifact_definitions_path))
-
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-
-    try:
-      if os.path.isdir(artifact_definitions_path):
-        registry.ReadFromDirectory(reader, artifact_definitions_path)
-      else:
-        registry.ReadFromFile(reader, artifact_definitions_path)
-
-    except (KeyError, artifacts_errors.FormatError) as exception:
-      raise errors.BadConfigOption((
-          'Unable to read artifact definitions from: {0:s} with error: '
-          '{1!s}').format(artifact_definitions_path, exception))
-
-    if custom_artifacts_path:
-      try:
-        if os.path.isdir(custom_artifacts_path):
-          registry.ReadFromDirectory(reader, custom_artifacts_path)
-        else:
-          registry.ReadFromFile(reader, custom_artifacts_path)
-
-      except (KeyError, artifacts_errors.FormatError) as exception:
-        raise errors.BadConfigOption((
-            'Unable to read custom artifact definitions from: {0:s} with '
-            'error: {1!s}').format(custom_artifacts_path, exception))
-
-    return registry

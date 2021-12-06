@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains preprocessors for Windows."""
+"""Windows preprocessor plugins."""
 
 import os
 

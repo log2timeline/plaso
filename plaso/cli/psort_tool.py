@@ -2,7 +2,6 @@
 """The psort CLI tool."""
 
 import argparse
-import collections
 import os
 
 # The following import makes sure the filters are registered.
@@ -21,6 +20,7 @@ from plaso.containers import reports
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.helpers import language_tags
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_process import output_engine as multi_output_engine
@@ -43,7 +43,7 @@ class PsortTool(
 
   NAME = 'psort'
   DESCRIPTION = (
-      'Application to read, filter and process output from a plaso storage '
+      'Application to read, filter and process output from a Plaso storage '
       'file.')
 
   _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
@@ -59,7 +59,6 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._command_line_arguments = None
     self._deduplicate_events = True
     self._preferred_language = None
     self._process_memory_limit = None
@@ -72,14 +71,18 @@ class PsortTool(
     self.list_output_modules = False
     self.list_profilers = False
 
-  def _CheckStorageFile(self, storage_file_path):  # pylint: disable=arguments-differ
-    """Checks if the storage file path is valid.
+  def _CheckStorageFile(
+      self, storage_file_path, check_readable_only=False):
+    """Checks if the storage file is valid.
 
     Args:
       storage_file_path (str): path of the storage file.
+      check_readable_only (Optional[bool]): whether the storage file should
+          only be checked to see if it can be read. If False, the store will
+          be checked to see if it can be read and written to.
 
     Raises:
-      BadConfigOption: if the storage file path is invalid.
+      BadConfigOption: if the storage file is invalid.
     """
     if not storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
@@ -93,16 +96,27 @@ class PsortTool(
           'Storage file: {0:s} already exists and is not a file.'.format(
               storage_file_path))
 
-    storage_file_directory = os.path.dirname(storage_file_path) or '.'
-    if not os.access(storage_file_directory, os.W_OK):
-      raise errors.BadConfigOption(
-          'Unable to write to storage file: {0:s}'.format(storage_file_path))
+    if not check_readable_only:
+      storage_file_directory = os.path.dirname(storage_file_path) or '.'
+      if not os.access(storage_file_directory, os.W_OK):
+        raise errors.BadConfigOption(
+            'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-    if not storage_factory.StorageFactory.CheckStorageFileHasSupportedFormat(
-        storage_file_path, check_readable_only=False):
+    storage_file = storage_factory.StorageFactory.CreateStorageFile(
+        definitions.STORAGE_FORMAT_SQLITE)
+    if not storage_file:
       raise errors.BadConfigOption(
-          'Format of storage file: {0:s} not supported'.format(
-              storage_file_path))
+          'Unable to open storage file: {0:s}'.format(storage_file_path))
+
+    try:
+      storage_file.Open(
+          path=storage_file_path, read_only=check_readable_only)
+    except IOError as exception:
+      raise errors.BadConfigOption(
+          'Unable to open storage file: {0:s} with error: {1!s}'.format(
+              storage_file_path, exception))
+
+    storage_file.Close()
 
   def _GetAnalysisPlugins(self, analysis_plugins_string):
     """Retrieves analysis plugins.
@@ -410,17 +424,19 @@ class PsortTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    # TODO: move check into _CheckStorageFile.
     self._storage_file_path = self.ParseStringOption(options, 'storage_file')
-    self._CheckStorageFile(self._storage_file_path)
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
     self._output_module = self._CreateOutputModule(options)
 
+    check_readable_only = not self._analysis_plugins
+    self._CheckStorageFile(
+        self._storage_file_path, check_readable_only=check_readable_only)
+
   def ProcessStorage(self):
-    """Processes a plaso storage file.
+    """Processes a Plaso storage file.
 
     Raises:
       BadConfigOption: when a configuration parameter fails validation or the
@@ -432,11 +448,6 @@ class PsortTool(
 
     status_update_callback = (
         self._status_view.GetAnalysisStatusUpdateCallback())
-
-    session = engine.BaseEngine.CreateSession(
-        command_line_arguments=self._command_line_arguments,
-        preferred_encoding=self.preferred_encoding)
-    session.preferred_language = self._preferred_language or 'en-US'
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
@@ -461,12 +472,14 @@ class PsortTool(
 
         text_prepend = session.text_prepend
 
-      self._number_of_analysis_reports = (
+      self._number_of_stored_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(
               self._CONTAINER_TYPE_ANALYSIS_REPORT))
 
     finally:
       storage_reader.Close()
+
+    session = engine.BaseEngine.CreateSession()
 
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
@@ -477,15 +490,11 @@ class PsortTool(
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
 
-    analysis_counter = None
     if self._analysis_plugins:
       self._AnalyzeEvents(
           session, configuration, status_update_callback=status_update_callback)
 
-      analysis_counter = collections.Counter()
-      if session.analysis_reports_counter:
-        for item, value in session.analysis_reports_counter.items():
-          analysis_counter[item] = value
+    # TODO: abort if session.aborted is True
 
     if self._output_format != 'null':
       storage_reader = (
@@ -524,16 +533,6 @@ class PsortTool(
       return
 
     self._output_writer.Write('Processing completed.\n')
-
-    if analysis_counter:
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title='Analysis reports generated')
-      for element, count in analysis_counter.most_common():
-        if element != 'total':
-          table_view.AddRow([element, count])
-
-      table_view.AddRow(['Total', analysis_counter['total']])
-      table_view.Write(self._output_writer)
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)

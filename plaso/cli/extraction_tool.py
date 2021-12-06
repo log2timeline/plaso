@@ -24,6 +24,7 @@ from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import artifacts
+from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.single_process import extraction_engine as single_extraction_engine
@@ -106,11 +107,42 @@ class ExtractionTool(
     self.list_language_tags = False
     self.list_time_zones = False
 
-  def _CreateProcessingConfiguration(self):
-    """Creates a processing configuration.
+  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+      warn_about_existing (bool): True if the user should be warned about
+          the storage file already existing.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+
+      if warn_about_existing:
+        logger.warning('Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = '.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def _CreateExtractionProcessingConfiguration(self):
+    """Creates an extraction processing configuration.
 
     Returns:
-      ProcessingConfiguration: processing configuration.
+      ProcessingConfiguration: extraction processing configuration.
     """
     configuration = configurations.ProcessingConfiguration()
     configuration.artifact_filters = self._artifact_filters
@@ -140,6 +172,37 @@ class ExtractionTool(
     configuration.text_prepend = self._text_prepend
 
     return configuration
+
+  def _CreateExtractionSessionConfiguration(
+      self, session, enabled_parser_names):
+    """Creates an extraction session configuration.
+
+    Args:
+      session (Session): session in which the sources are processed.
+      enabled_parser_names (list[str]): enabled parser names.
+
+    Returns:
+      SessionConfiguration: extraction session configuration.
+    """
+    session_configuration = sessions.SessionConfiguration()
+    session_configuration.artifact_filters = self._artifact_filters
+    session_configuration.command_line_arguments = self._command_line_arguments
+    session_configuration.debug_mode = self._debug_mode
+    session_configuration.enabled_parser_names = enabled_parser_names
+    session_configuration.extract_winevt_resources = (
+        self._extract_winevt_resources)
+    session_configuration.filter_file_path = self._filter_file
+    session_configuration.identifier = session.identifier
+    session_configuration.parser_filter_expression = (
+        self._parser_filter_expression)
+    session_configuration.preferred_encoding = self.preferred_encoding
+    session_configuration. preferred_language = (
+        self._preferred_language or 'en-US')
+    session_configuration.preferred_time_zone = self._preferred_time_zone
+    session_configuration.preferred_year = self._preferred_year
+    session_configuration.text_prepend = self._text_prepend
+
+    return session_configuration
 
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
@@ -186,7 +249,7 @@ class ExtractionTool(
           be expanded or if an invalid parser or plugin name is specified.
     """
     parser_filter_expression = self._parser_filter_expression
-    if not parser_filter_expression and not self._single_process_mode:
+    if not parser_filter_expression:
       operating_system_family = knowledge_base.GetValue('operating_system')
       operating_system_product = knowledge_base.GetValue(
           'operating_system_product')
@@ -395,10 +458,9 @@ class ExtractionTool(
     logger.debug('Starting preprocessing.')
 
     try:
-      artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
-          self._artifact_definitions_path, self._custom_artifacts_path)
       extraction_engine.PreprocessSources(
-          artifacts_registry, self._source_path_specs, session, storage_writer,
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          self._source_path_specs, session, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -447,17 +509,9 @@ class ExtractionTool(
         self._GetExpandedParserFilterExpression(
             extraction_engine.knowledge_base))
 
-    # TODO: move the following session values into separage processing/session
-    # configuration container.
-    session.enabled_parser_names = (
-        self._expanded_parser_filter_expression.split(','))
-    session.parser_filter_expression = self._parser_filter_expression
-    session.preferred_language = self._preferred_language or 'en-US'
-    session.preferred_time_zone = self._preferred_time_zone
-    session.preferred_year = self._preferred_year
-    session.text_prepend = self._text_prepend
+    enabled_parser_names = self._expanded_parser_filter_expression.split(',')
 
-    number_of_enabled_parsers = len(session.enabled_parser_names)
+    number_of_enabled_parsers = len(enabled_parser_names)
 
     force_parser = False
     if (self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE and
@@ -466,12 +520,12 @@ class ExtractionTool(
 
       self._extract_winevt_resources = False
 
-    elif ('winevt' not in session.enabled_parser_names and
-          'winevtx' not in session.enabled_parser_names):
+    elif ('winevt' not in enabled_parser_names and
+          'winevtx' not in enabled_parser_names):
       self._extract_winevt_resources = False
 
     elif (self._extract_winevt_resources and
-          'pe' not in session.enabled_parser_names):
+          'pe' not in enabled_parser_names):
       logger.warning(
           'A Windows EventLog parser is enabled in combination with '
           'extraction of Windows EventLog resources, but the Portable '
@@ -480,7 +534,7 @@ class ExtractionTool(
 
       self._extract_winevt_resources = False
 
-    configuration = self._CreateProcessingConfiguration()
+    configuration = self._CreateExtractionProcessingConfiguration()
 
     try:
       extraction_engine.BuildCollectionFilters(
@@ -492,8 +546,9 @@ class ExtractionTool(
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
-    # TODO: decouple session and storage writer?
-    session_configuration = session.CreateSessionConfiguration()
+    session_configuration = self._CreateExtractionSessionConfiguration(
+        session, enabled_parser_names)
+
     storage_writer.AddAttributeContainer(session_configuration)
 
     source_configurations = []
@@ -647,12 +702,7 @@ class ExtractionTool(
     self._output_writer.Write('Processing started.\n')
 
     # TODO: attach processing configuration to session?
-    session = engine.BaseEngine.CreateSession(
-        artifact_filter_names=self._artifact_filters,
-        command_line_arguments=self._command_line_arguments,
-        debug_mode=self._debug_mode,
-        filter_file_path=self._filter_file,
-        preferred_encoding=self.preferred_encoding)
+    session = engine.BaseEngine.CreateSession()
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format)
@@ -667,8 +717,12 @@ class ExtractionTool(
           exception))
 
     processing_status = None
+    number_of_extraction_warnings = 0
 
     try:
+      stored_number_of_extraction_warnings = (
+          storage_writer.GetNumberOfAttributeContainers('extraction_warning'))
+
       session_start = session.CreateSessionStart()
       storage_writer.AddAttributeContainer(session_start)
 
@@ -681,6 +735,10 @@ class ExtractionTool(
         session_completion = session.CreateSessionCompletion()
         storage_writer.AddAttributeContainer(session_completion)
 
+        number_of_extraction_warnings = (
+            storage_writer.GetNumberOfAttributeContainers(
+                'extraction_warning') - stored_number_of_extraction_warnings)
+
     except IOError as exception:
       raise IOError('Unable to write to storage with error: {0!s}'.format(
           exception))
@@ -688,7 +746,8 @@ class ExtractionTool(
     finally:
       storage_writer.Close()
 
-    self._status_view.PrintExtractionSummary(processing_status)
+    self._status_view.PrintExtractionSummary(
+        processing_status, number_of_extraction_warnings)
 
   def ListLanguageTags(self):
     """Lists the language tags."""

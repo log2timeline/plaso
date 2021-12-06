@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Linux preprocess plug-ins."""
+"""Tests for the Linux preprocessor plugins."""
 
 import unittest
 
@@ -158,7 +158,9 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     self.assertEqual(
         test_mediator.knowledge_base.timezone.zone, 'Europe/Zurich')
@@ -177,7 +179,9 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
@@ -197,7 +201,9 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'CET')
 
@@ -217,7 +223,9 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
 
@@ -252,7 +260,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 0)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     users = sorted(
         test_mediator.knowledge_base.user_accounts,
@@ -279,7 +289,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with empty username.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -293,7 +305,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with empty user identifier.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -307,7 +321,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 username.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -321,7 +337,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 user identifier.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -335,7 +353,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 group identifier.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -349,7 +369,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 full name.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -363,7 +385,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 user directory.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -377,7 +401,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
     # Test on /etc/passwd with non UTF-8 shell.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -391,7 +417,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    self.assertEqual(storage_writer.number_of_preprocessing_warnings, 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 1)
 
 
 if __name__ == '__main__':

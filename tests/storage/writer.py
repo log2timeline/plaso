@@ -14,6 +14,15 @@ class StorageWriterTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add tests for number_of_analysis_reports property
+  # TODO: add tests for number_of_analysis_warnings property
+  # TODO: add tests for number_of_event_sources property
+  # TODO: add tests for number_of_event_tags property
+  # TODO: add tests for number_of_events property
+  # TODO: add tests for number_of_extraction_warnings property
+  # TODO: add tests for number_of_preprocessing_warnings property
+  # TODO: add tests for number_of_recovery_warnings property
+
   def testRaiseIfNotWritable(self):
     """Tests the _RaiseIfNotWritable function."""
     storage_writer = writer.StorageWriter()
@@ -21,17 +30,11 @@ class StorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer._RaiseIfNotWritable()
 
-  def testSetSerializersProfiler(self):
-    """Tests the SetSerializersProfiler function."""
-    storage_writer = writer.StorageWriter()
-
-    storage_writer.SetSerializersProfiler(None)
-
-  def testSetStorageProfiler(self):
-    """Tests the SetStorageProfiler function."""
-    storage_writer = writer.StorageWriter()
-
-    storage_writer.SetStorageProfiler(None)
+  # TODO: add tests for AddAttributeContainer method
+  # TODO: add tests for AddOrUpdateEventTag method
+  # TODO: add tests for Close method
+  # TODO: add tests for GetEvents method
+  # TODO: add tests for UpdateAttributeContainer method
 
 
 if __name__ == '__main__':

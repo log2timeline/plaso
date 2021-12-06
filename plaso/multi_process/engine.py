@@ -395,6 +395,10 @@ class MultiProcessEngine(engine.BaseEngine):
         self._status_update_thread.join()
       self._status_update_thread = None
 
+    # Update the status view one last time so we have the latest worker process
+    # status information.
+    self._UpdateStatus()
+
   def _TerminateProcessByPid(self, pid):
     """Terminate a process that's monitored by the engine.
 

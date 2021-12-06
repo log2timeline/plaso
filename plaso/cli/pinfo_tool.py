@@ -9,6 +9,7 @@ import uuid
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -18,7 +19,6 @@ from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import warnings
 from plaso.engine import path_helper
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.serializer import json_serializer
@@ -46,6 +46,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
   _HASH_CHOICES = ('md5', 'sha1', 'sha256')
 
   _REPORTS = {
+      'browser_search': (
+          'Report browser searches determined by the browser_search '
+          'analysis plugin.'),
+      'chrome_extension': (
+          'Report Chrome extensions determined by the chrome_extension '
+          'analysis plugin.'),
       'environment_variables': (
           'Report environment variables extracted during processing.'),
       'file_hashes': 'Report file hashes calculated during processing.',
@@ -108,6 +114,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Returns:
       dict[str, collections.Counter]: storage counters.
     """
+    # TODO: determine analysis report counter from actual stored analysis
+    # reports or remove.
     analysis_reports_counter = collections.Counter()
     analysis_reports_counter_error = False
 
@@ -133,24 +141,23 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     format_version = storage_reader.GetFormatVersion()
 
-    for session in storage_reader.GetSessions():
-      if isinstance(session.analysis_reports_counter, collections.Counter):
-        analysis_reports_counter += session.analysis_reports_counter
-      else:
-        analysis_reports_counter_error = True
+    # TODO: kept for backwards compatibility.
+    if format_version < 20211121:
+      for session in storage_reader.GetSessions():
+        if isinstance(session.analysis_reports_counter, collections.Counter):
+          analysis_reports_counter += session.analysis_reports_counter
+        else:
+          analysis_reports_counter_error = True
 
-      if format_version >= 20211121:
-        continue
+        if isinstance(session.event_labels_counter, collections.Counter):
+          event_labels_counter += session.event_labels_counter
+        else:
+          event_labels_counter_error = True
 
-      if isinstance(session.event_labels_counter, collections.Counter):
-        event_labels_counter += session.event_labels_counter
-      else:
-        event_labels_counter_error = True
-
-      if isinstance(session.parsers_counter, collections.Counter):
-        parsers_counter += session.parsers_counter
-      else:
-        parsers_counter_error = True
+        if isinstance(session.parsers_counter, collections.Counter):
+          parsers_counter += session.parsers_counter
+        else:
+          parsers_counter_error = True
 
     storage_counters = {}
 
@@ -199,6 +206,37 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_counters['parsers'] = parsers_counter
 
     return storage_counters
+
+  def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+      warn_about_existing (bool): True if the user should be warned about
+          the storage file already existing.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+
+      if warn_about_existing:
+        logger.warning('Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = '.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
   def _CompareCounter(self, counter, compare_counter):
     """Compares two counters.
@@ -343,8 +381,55 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     return stores_are_identical
 
+  def _GenerateAnalysisResultsReport(
+      self, storage_reader, json_base_type, column_titles, container_type,
+      attribute_names):
+    """Generates an analysis results report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      json_base_type (str): JSON base type.
+      column_titles (list[str]): column titles of the Markdown and tab
+          separated tables.
+      container_type (str): attribute container type.
+      attribute_names (list[str]): names of the attributes to report.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
+
+      entry_format_string = '    {{{{{0:s}}}}}'.format(', '.join([
+          '"{0:s}": "{{{0:s}!s}}"'.format(name) for name in attribute_names]))
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('{0:s}\n'.format(' | '.join(column_titles)))
+      self._output_writer.Write('--- | --- | ---\n')
+
+      entry_format_string = '{0:s}\n'.format(' | '.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('{0:s}\n'.format('\t'.join(column_titles)))
+
+      entry_format_string = '{0:s}\n'.format('\t'.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+
+    if storage_reader.HasAttributeContainers(container_type):
+      generator = storage_reader.GetAttributeContainers(container_type)
+
+      for artifact_index, analysis_result in enumerate(generator):
+        if self._output_format == 'json':
+          if artifact_index > 0:
+            self._output_writer.Write(',\n')
+
+        attribute_values = analysis_result.CopyToDict()
+        self._output_writer.Write(entry_format_string.format(
+            **attribute_values))
+
+    if self._output_format == 'json':
+      self._output_writer.Write('\n]}\n')
+
   def _GenerateEnvironmentVariablesReport(self, storage_reader):
-    """Generates an evironment variables report.
+    """Generates an environment variables report.
 
     Args:
       storage_reader (StorageReader): storage reader.
@@ -906,15 +991,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               session.source_configurations,
               session_identifier=session_identifier)
 
+        # TODO: kept for backwards compatibility.
         if format_version < 20211121:
           self._PrintParsersCounter(
               session.parsers_counter, session_identifier=session_identifier)
 
-        self._PrintAnalysisReportCounter(
-            session.analysis_reports_counter,
-            session_identifier=session_identifier)
+          self._PrintAnalysisReportCounter(
+              session.analysis_reports_counter,
+              session_identifier=session_identifier)
 
-        if format_version < 20211121:
           self._PrintEventLabelsCounter(
               session.event_labels_counter,
               session_identifier=session_identifier)
@@ -1076,43 +1161,38 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     elif self._output_format in ('markdown', 'text'):
       self._PrintStorageOverviewAsTable(storage_reader)
 
-    storage_type = storage_reader.GetStorageType()
-    if storage_type == definitions.STORAGE_TYPE_SESSION:
-      if self._sections == 'all' or 'sessions' in self._sections:
-        self._PrintSessionsSection(storage_reader)
+    if self._sections == 'all' or 'sessions' in self._sections:
+      self._PrintSessionsSection(storage_reader)
 
-      if self._sections == 'all' or 'sources' in self._sections:
-        self._PrintSourcesOverview(storage_reader)
+    if self._sections == 'all' or 'sources' in self._sections:
+      self._PrintSourcesOverview(storage_reader)
 
-      storage_counters = self._CalculateStorageCounters(storage_reader)
+    storage_counters = self._CalculateStorageCounters(storage_reader)
 
-      if self._output_format == 'json':
-        self._output_writer.Write(', "storage_counters": {')
+    if self._output_format == 'json':
+      self._output_writer.Write(', "storage_counters": {')
 
-      if self._sections == 'all' or 'events' in self._sections:
-        parsers = storage_counters.get('parsers', collections.Counter())
+    if self._sections == 'all' or 'events' in self._sections:
+      parsers = storage_counters.get('parsers', collections.Counter())
 
-        self._PrintParsersCounter(parsers)
+      self._PrintParsersCounter(parsers)
 
-        event_labels = storage_counters.get(
-            'event_labels', collections.Counter())
+      event_labels = storage_counters.get(
+          'event_labels', collections.Counter())
 
-        self._PrintEventLabelsCounter(event_labels)
+      self._PrintEventLabelsCounter(event_labels)
 
-      if self._sections == 'all' or 'warnings' in self._sections:
-        self._PrintWarningsSection(storage_reader, storage_counters)
+    if self._sections == 'all' or 'warnings' in self._sections:
+      self._PrintWarningsSection(storage_reader, storage_counters)
 
-      if self._sections == 'all' or 'reports' in self._sections:
-        analysis_reports = storage_counters.get(
-            'analysis_reports', collections.Counter())
+    if self._sections == 'all' or 'reports' in self._sections:
+      analysis_reports = storage_counters.get(
+          'analysis_reports', collections.Counter())
 
-        self._PrintAnalysisReportSection(storage_reader, analysis_reports)
+      self._PrintAnalysisReportSection(storage_reader, analysis_reports)
 
-      if self._output_format == 'json':
-        self._output_writer.Write('}')
-
-    elif storage_type == definitions.STORAGE_TYPE_TASK:
-      self._PrintTasksInformation(storage_reader)
+    if self._output_format == 'json':
+      self._output_writer.Write('}')
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
@@ -1176,35 +1256,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     format_version = storage_reader.GetFormatVersion()
     serialization_format = storage_reader.GetSerializationFormat()
-    storage_type = storage_reader.GetStorageType()
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information',
         title_level=1)
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow(['Format version', format_version])
-    table_view.AddRow(['Storage type', storage_type])
     table_view.AddRow(['Serialization format', serialization_format])
-    table_view.Write(self._output_writer)
-
-  def _PrintTasksInformation(self, storage_reader):
-    """Prints information about the tasks.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Tasks')
-
-    for task_start, _ in storage_reader.GetSessions():
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=task_start.timestamp)
-      start_time = date_time.CopyToDateTimeStringISO8601()
-
-      task_identifier = uuid.UUID(hex=task_start.identifier)
-      task_identifier = '{0!s}'.format(task_identifier)
-      table_view.AddRow([task_identifier, start_time])
-
     table_view.Write(self._output_writer)
 
   def _PrintWarningCountersJSON(
@@ -1362,10 +1420,24 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_reader = self._GetStorageReader(self._storage_file_path)
 
     try:
-      if self._report_type == 'environment_variables':
+      if self._report_type == 'browser_search':
+        column_titles = ['Search engine', 'Search term', 'Number of queries']
+        attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        self._GenerateAnalysisResultsReport(
+            storage_reader, 'browser_searches', column_titles,
+            'browser_search_analysis_result', attribute_names)
+
+      elif self._report_type == 'chrome_extension':
+        column_titles = ['Username', 'Extension identifier', 'Extension']
+        attribute_names = ['username', 'extension_identifier', 'extension']
+        self._GenerateAnalysisResultsReport(
+            storage_reader, 'chrome_extensions', column_titles,
+            'chrome_extension_analysis_result', attribute_names)
+
+      elif self._report_type == 'environment_variables':
         self._GenerateEnvironmentVariablesReport(storage_reader)
 
-      if self._report_type == 'file_hashes':
+      elif self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
 
       elif self._report_type == 'winevt_providers':

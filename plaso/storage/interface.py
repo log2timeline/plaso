@@ -4,15 +4,7 @@
 import abc
 import collections
 
-from plaso.containers import artifacts
-from plaso.containers import event_sources
-from plaso.containers import events
 from plaso.containers import manager as containers_manager
-from plaso.containers import reports
-from plaso.containers import sessions
-from plaso.containers import tasks
-from plaso.containers import warnings
-from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
 
@@ -22,55 +14,19 @@ class BaseStore(object):
   Attributes:
     format_version (int): storage format version.
     serialization_format (str): serialization format.
-    storage_type (str): storage type.
   """
 
-  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
-  _CONTAINER_TYPE_ANALYSIS_WARNING = warnings.AnalysisWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_PREPROCESSING_WARNING = (
-      warnings.PreprocessingWarning.CONTAINER_TYPE)
-  _CONTAINER_TYPE_RECOVERY_WARNING = warnings.RecoveryWarning.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
-  _CONTAINER_TYPE_SESSION_CONFIGURATION = (
-      sessions.SessionConfiguration.CONTAINER_TYPE)
-  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
-  _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
-      artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK = tasks.Task.CONTAINER_TYPE
-
-  # Container types that only should be used in a session store.
-  _SESSION_STORE_ONLY_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_SESSION_COMPLETION,
-      _CONTAINER_TYPE_SESSION_CONFIGURATION,
-      _CONTAINER_TYPE_SESSION_START,
-      _CONTAINER_TYPE_SYSTEM_CONFIGURATION)
-
-  # Container types that only should be used in a task store.
-  _TASK_STORE_ONLY_CONTAINER_TYPES = (_CONTAINER_TYPE_TASK,)
-
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a store.
-
-    Args:
-      storage_type (Optional[str]): storage type.
-    """
+  def __init__(self):
+    """Initializes an attribute container store."""
     super(BaseStore, self).__init__()
     self._attribute_container_sequence_numbers = collections.Counter()
     self._containers_manager = containers_manager.AttributeContainersManager
-    self._last_session = 0
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
     self._storage_profiler = None
 
     self.format_version = None
     self.serialization_format = None
-    self.storage_type = storage_type
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -284,21 +240,6 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def GetEventTagByEventIdentifier(self, event_identifier):
-    """Retrieves the event tag related to a specific event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event.
-
-    Returns:
-      EventTag: event tag or None if not available.
-
-    Raises:
-      IOError: when the store is closed.
-      OSError: when the store is closed.
-    """
-
-  @abc.abstractmethod
   def GetNumberOfAttributeContainers(self, container_type):
     """Retrieves the number of a specific type of attribute containers.
 
@@ -308,71 +249,6 @@ class BaseStore(object):
     Returns:
       int: the number of containers of a specified type.
     """
-
-  # TODO: remove the need for seperate SessionStart and SessionCompletion
-  # attribute containers.
-  def GetSessions(self):
-    """Retrieves the sessions.
-
-    Yields:
-      Session: session attribute container.
-
-    Raises:
-      IOError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-      OSError: if there is a mismatch in session identifiers between the
-          session start and completion attribute containers.
-    """
-    session_start_generator = self.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-    session_completion_generator = self.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
-    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
-      session_configuration_generator = self.GetAttributeContainers(
-          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
-    else:
-      session_configuration_generator = None
-
-    for session_index in range(1, self._last_session + 1):
-      try:
-        session_start = next(session_start_generator)
-      except StopIteration:
-        raise IOError('Missing session start: {0:d}'.format(session_index))
-
-      try:
-        session_completion = next(session_completion_generator)
-      except StopIteration:
-        pass
-
-      session_configuration = None
-      if session_configuration_generator:
-        try:
-          session_configuration = next(session_configuration_generator)
-        except StopIteration:
-          raise IOError('Missing session configuration: {0:d}'.format(
-              session_index))
-
-      session = sessions.Session()
-      session.CopyAttributesFromSessionStart(session_start)
-
-      if session_configuration:
-        try:
-          session.CopyAttributesFromSessionConfiguration(session_configuration)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session configuration: '
-              '{0:d}').format(session_index))
-
-      if session_completion:
-        try:
-          session.CopyAttributesFromSessionCompletion(session_completion)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session completion: '
-              '{0:d}').format(session_index))
-
-      yield session
 
   @abc.abstractmethod
   def GetSortedEvents(self, time_range=None):
@@ -387,14 +263,6 @@ class BaseStore(object):
 
     Yields:
       EventObject: event.
-    """
-
-  @abc.abstractmethod
-  def GetSystemConfigurationIdentifier(self):
-    """Retrieves the system configuration identifier.
-
-    Returns:
-      AttributeContainerIdentifier: system configuration identifier.
     """
 
   @abc.abstractmethod

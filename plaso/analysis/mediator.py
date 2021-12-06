@@ -12,6 +12,8 @@ class AnalysisMediator(object):
   """Analysis plugin mediator.
 
   Attributes:
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
     event_labels_counter (collections.Counter): number of event tags per label.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
@@ -45,6 +47,7 @@ class AnalysisMediator(object):
     self._storage_writer = None
     self._text_prepend = None
 
+    self.analysis_reports_counter = collections.Counter()
     self.event_labels_counter = collections.Counter()
     self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
@@ -59,11 +62,6 @@ class AnalysisMediator(object):
   def data_location(self):
     """str: path to the data files."""
     return self._data_location
-
-  @property
-  def operating_system(self):
-    """str: operating system or None if not set."""
-    return self._knowledge_base.GetValue('operating_system')
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -92,6 +90,16 @@ class AnalysisMediator(object):
     """
     return self._knowledge_base.GetUsernameForPath(path)
 
+  def ProduceAnalysisResultContainer(self, attribute_container):
+    """Produces an analysis result attribute container.
+
+    Args:
+      attribute_container (AttributeContainer): analysis result attribute
+          container.
+    """
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(attribute_container)
+
   def ProduceAnalysisReport(self, plugin):
     """Produces an analysis report.
 
@@ -108,7 +116,8 @@ class AnalysisMediator(object):
     if self._storage_writer:
       self._storage_writer.AddAttributeContainer(analysis_report)
 
-    self._session.UpdateAnalysisReportSessionCounter(analysis_report)
+    self.analysis_reports_counter[analysis_report.plugin_name] += 1
+    self.analysis_reports_counter['total'] += 1
 
     self.number_of_produced_analysis_reports += 1
 
