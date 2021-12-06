@@ -7,6 +7,7 @@ import os
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
+from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -67,8 +68,8 @@ class GCPLogsParser(interface.FileObjectParser):
 
   _ENCODING = 'utf-8'
 
-  def _ParseLogJSON(self, parser_mediator, file_json):
-    """Extract events from Google Cloud Logging saved to a file.
+  def _ParseGCPLog(self, parser_mediator, file_object):
+    """Extract events from GCP Logging saved to a file in JSON-L format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -76,7 +77,11 @@ class GCPLogsParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
     """
 
-    for json_log_entry in file_json:
+    text_file_object = text_file.TextFile(file_object)
+
+    for line in text_file_object:
+
+      json_log_entry = json.loads(line)
 
       time_string = json_log_entry.get('timestamp', None)
       if time_string is None:
@@ -270,24 +275,27 @@ class GCPLogsParser(interface.FileObjectParser):
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
-      ValueError: if the JSON file cannot be decoded.
     """
-    if file_object.read(1) != b'[':
+    # Trivial JSON format check: first character must be an open brace.
+    if file_object.read(1) != b'{':
       raise errors.UnableToParseFile(
           'is not a valid JSON file, missing opening brace.')
     file_object.seek(0, os.SEEK_SET)
+
+    text_file_object = text_file.TextFile(file_object)
+
+    first_line_json = None
     try:
-      file_json = json.loads(file_object.read().decode('utf-8'))
+      first_line = text_file_object.readline()
+      first_line_json = json.loads(first_line)
     except JSONDecodeError:
       raise errors.UnableToParseFile('could not decode json.')
+    file_object.seek(0, os.SEEK_SET)
 
-    try:
-      if 'logName' in file_json[0]:
-        self._ParseLogJSON(parser_mediator, file_json)
-    except ValueError as exception:
-      if exception == 'No JSON object could be decoded':
-        raise errors.UnableToParseFile(exception)
-      raise
+    if first_line_json and 'logName' in first_line_json:
+      self._ParseGCPLog(parser_mediator, file_object)
+    else:
+      raise errors.UnableToParseFile('no logName field, not a GCP log entry.')
 
 
 manager.ParsersManager.RegisterParser(GCPLogsParser)

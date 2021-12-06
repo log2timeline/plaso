@@ -13,7 +13,7 @@ class GCPLoggingUnitTest(test_lib.ParserTestCase):
   def testParseGCPLogs(self):
     """Tests the _ParseLogJSON function."""
     parser = gcp_logging.GCPLogsParser()
-    path_segments = ['gcp_logging.json']
+    path_segments = ['gcp_logging.jsonl']
 
     storage_writer = self._ParseFile(path_segments, parser)
 
