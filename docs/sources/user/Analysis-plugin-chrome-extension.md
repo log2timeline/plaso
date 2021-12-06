@@ -15,7 +15,7 @@ file system data such as events with data type:
 
 * fs:stat
 
-Next run psort to determine Chrome extension:
+Next run psort to determine Chrome extensions:
 
 ```bash
 psort.py --analysis chrome_extention -o null timeline.plaso
