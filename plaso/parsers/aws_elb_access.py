@@ -189,7 +189,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
   LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
 
-  def _GetValue(self, structure, name, key_name):
+  def _GetValueFromGroup(self, structure, name, key_name):
     """Retrieves a value from a Pyparsing.Group structure
 
     Args:
@@ -199,7 +199,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     Returns:
       object: value for the specified key.
-      """
+    """
     structure_value = self._GetValueFromStructure(structure, name)
     return structure_value.get(key_name)
 
@@ -215,7 +215,6 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unsupported.
     """
-
     if key != 'elb_accesslog':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
@@ -239,13 +238,13 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     event_data.type = self._GetValueFromStructure(structure, 'type')
     event_data.resource_identifier = self._GetValueFromStructure(
         structure, 'resource_identifier')
-    event_data.client_ip_address = self._GetValue(structure,
+    event_data.client_ip_address = self._GetValueFromGroup(structure,
         'client_ip_port', 'client_ip_address')
-    event_data.client_port = self._GetValue(structure,
+    event_data.client_port = self._GetValueFromGroup(structure,
         'client_ip_port', 'client_port')
-    event_data.target_ip_address = self._GetValue(structure,
+    event_data.target_ip_address = self._GetValueFromGroup(structure,
         'target_ip_port', 'target_ip_address')
-    event_data.target_port = self._GetValue(structure,
+    event_data.target_port = self._GetValueFromGroup(structure,
         'target_ip_port', 'target_port')
     event_data.request_processing_time = self._GetValueFromStructure(structure,
         'request_processing_time')
@@ -312,7 +311,6 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       bool: True if the line was successfully parsed.
     """
-
     try:
       structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
