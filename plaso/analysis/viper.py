@@ -140,7 +140,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """Initializes a Viper analysis plugin."""
     super(ViperAnalysisPlugin, self).__init__(ViperAnalyzer)
 
-  def GenerateLabels(self, hash_information):
+  def _GenerateLabels(self, hash_information):
     """Generates a list of labels that will be used in the event tag.
 
     Args:

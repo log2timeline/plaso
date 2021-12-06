@@ -266,23 +266,50 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       self._analyzer.start()
       self._analyzer_started = True
 
-  def _HandleHashAnalysis(self, mediator, hash_analysis):
-    """Deals with the results of the analysis of a hash.
+  # pylint: disable=redundant-returns-doc
+  @abc.abstractmethod
+  def _GenerateLabels(self, hash_information):
+    """Generates a list of strings to tag events with.
+
+    Args:
+      hash_information (bool): response from the hash tagging analyzer that
+          indicates that the file hash was present or not.
+
+    Returns:
+      list[str]: list of labels to apply to event.
+    """
+
+  # TODO: Refactor to do this more elegantly, perhaps via callback.
+  def _LogProgressUpdateIfReasonable(self):
+    """Prints a progress update if enough time has passed."""
+    next_log_time = (
+        self._time_of_last_status_log +
+        self.SECONDS_BETWEEN_STATUS_LOG_MESSAGES)
+    current_time = time.time()
+    if current_time < next_log_time:
+      return
+
+    completion_time = time.ctime(current_time + self.EstimateTimeRemaining())
+    log_message = (
+        '{0:s} hash analysis plugin running. {1:d} hashes in queue, '
+        'estimated completion time {2:s}.'.format(
+            self.NAME, self._hash_queue.qsize(), completion_time))
+    logger.info(log_message)
+    self._time_of_last_status_log = current_time
+
+  def _ProcessHashAnalysis(self, analysis_mediator, hash_analysis):
+    """Processes the results of the analysis of a hash.
 
     This method ensures that labels are generated for the hash,
     then tags all events derived from files with that hash.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
+      analysis_mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfVFS.
       hash_analysis (HashAnalysis): hash analysis plugin's results for a given
           hash.
-
-    Returns:
-      collections.Counter: number of events per label.
     """
-    events_per_labels_counter = collections.Counter()
-    labels = self.GenerateLabels(hash_analysis.hash_information)
+    labels = self._GenerateLabels(hash_analysis.hash_information)
 
     try:
       data_stream_identifiers = self._data_streams_by_hash.pop(
@@ -317,45 +344,21 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
           labels = [error_label]
           event_tag.AddLabels(labels)
 
-        mediator.ProduceEventTag(event_tag)
+        analysis_mediator.ProduceEventTag(event_tag)
 
         for label in labels:
-          events_per_labels_counter[label] += 1
+          self._analysis_counter[label] += 1
 
-    return events_per_labels_counter
-
-  # TODO: Refactor to do this more elegantly, perhaps via callback.
-  def _LogProgressUpdateIfReasonable(self):
-    """Prints a progress update if enough time has passed."""
-    next_log_time = (
-        self._time_of_last_status_log +
-        self.SECONDS_BETWEEN_STATUS_LOG_MESSAGES)
-    current_time = time.time()
-    if current_time < next_log_time:
-      return
-
-    completion_time = time.ctime(current_time + self.EstimateTimeRemaining())
-    log_message = (
-        '{0:s} hash analysis plugin running. {1:d} hashes in queue, '
-        'estimated completion time {2:s}.'.format(
-            self.NAME, self._hash_queue.qsize(), completion_time))
-    logger.info(log_message)
-    self._time_of_last_status_log = current_time
-
-  # pylint: disable=arguments-renamed
-  def CompileReport(self, mediator):
+  def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
+      analysis_mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfVFS.
 
     Returns:
       AnalysisReport: report.
     """
-    # TODO: refactor to update the counter on demand instead of
-    # during reporting.
-    events_per_labels_counter = collections.Counter()
     while self._ContinueReportCompilation():
       try:
         self._LogProgressUpdateIfReasonable()
@@ -363,27 +366,15 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
             timeout=self._analysis_queue_timeout)
       except queue.Empty:
         # The result queue is empty, but there could still be items that need
-        # to be processed by the analyzer.
+        # to be processed by the hash analyzer.
         continue
 
-      hash_analysis_events_per_labels_counter = self._HandleHashAnalysis(
-          mediator, hash_analysis)
-      events_per_labels_counter += hash_analysis_events_per_labels_counter
+      self._ProcessHashAnalysis(analysis_mediator, hash_analysis)
 
     self._analyzer.SignalAbort()
 
-    lines_of_text = ['{0:s} hash tagging results'.format(self.NAME)]
-    for label, number_of_events in sorted(events_per_labels_counter.items()):
-      line_of_text = '{0:d} events tagged with label: {1:s}'.format(
-          number_of_events, label)
-      lines_of_text.append(line_of_text)
-    lines_of_text.append('')
-    report_text = '\n'.join(lines_of_text)
-
-    analysis_report = super(HashTaggingAnalysisPlugin, self).CompileReport(
-        mediator)
-    analysis_report.text = report_text
-    return analysis_report
+    return super(HashTaggingAnalysisPlugin, self).CompileReport(
+        analysis_mediator)
 
   def EstimateTimeRemaining(self):
     """Estimates how long until all hashes have been analyzed.
@@ -406,11 +397,12 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
     return batches_remaining * estimated_seconds_per_batch
 
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
+      analysis_mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
@@ -429,33 +421,20 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
       lookup_hash = getattr(event_data_stream, lookup_hash, None)
 
-      if not lookup_hash:
+      if lookup_hash:
+        self._data_streams_by_hash[lookup_hash].add(data_stream_identifier)
+        self._hash_queue.put(lookup_hash)
+      else:
         path_specification = getattr(event_data_stream, 'path_spec', None)
-        display_name = mediator.GetDisplayNameForPathSpec(path_specification)
+        display_name = analysis_mediator.GetDisplayNameForPathSpec(
+            path_specification)
         logger.warning((
             'Lookup hash attribute: {0:s}_hash missing from event data stream: '
             '{1:s}.').format(self._analyzer.lookup_hash, display_name))
 
-      else:
-        self._data_streams_by_hash[lookup_hash].add(data_stream_identifier)
-        self._hash_queue.put(lookup_hash)
-
     event_identifier = event.GetIdentifier()
     self._event_identifiers_by_data_stream[data_stream_identifier].add(
         event_identifier)
-
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
-  def GenerateLabels(self, hash_information):
-    """Generates a list of strings to tag events with.
-
-    Args:
-      hash_information (bool): response from the hash tagging analyzer that
-          indicates that the file hash was present or not.
-
-    Returns:
-      list[str]: list of labels to apply to event.
-    """
 
   def SetLookupHash(self, lookup_hash):
     """Sets the hash to query.

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the hash tagging analysis plugin."""
 
+import collections
 import unittest
 
 from dfvfs.path import fake_path_spec
@@ -45,13 +46,13 @@ class TestHashTaggingAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
   DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
 
-  NAME = 'test'
+  NAME = 'hash_tagging_test'
 
   def __init__(self):
     """Initializes a test hash tagging analysis plugin."""
     super(TestHashTaggingAnalysisPlugin, self).__init__(TestHashAnalyzer)
 
-  def GenerateLabels(self, hash_information):
+  def _GenerateLabels(self, hash_information):
     """Generates a labels that will be used in the event tag.
 
     Args:
@@ -102,18 +103,20 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'hash_tagging_test')
+
+    expected_analysis_counter = collections.Counter({
+        'hashtag': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 1)
-
-    report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
-
-    expected_text = (
-        'test hash tagging results\n'
-        '1 events tagged with label: hashtag\n')
-    self.assertEqual(report.text, expected_text)
 
     labels = []
     for event_tag in storage_writer.GetAttributeContainers(
@@ -134,17 +137,19 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'hash_tagging_test')
+
+    expected_analysis_counter = collections.Counter({})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 0)
-
-    report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
-
-    expected_text = (
-        'test hash tagging results\n')
-    self.assertEqual(report.text, expected_text)
 
     labels = []
     for event_tag in storage_writer.GetAttributeContainers(

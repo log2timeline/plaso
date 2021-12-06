@@ -175,7 +175,7 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
     self._label = self.DEFAULT_LABEL
 
-  def GenerateLabels(self, hash_information):
+  def _GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
