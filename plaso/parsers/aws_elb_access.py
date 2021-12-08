@@ -20,7 +20,7 @@ class AWSELBEventData(events.EventData):
   """AWS Elastic Load Balancer access log event data
 
   Attributes:
-    type (str): The type of request or connection.
+    request_type (str): The type of request or connection.
     resource_identifier (str): The resource ID of the load balancer.
     client_ip_address (str): The IP address of the requesting client.
     client_port (int): The port of the requesting client.
@@ -66,7 +66,7 @@ class AWSELBEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AWSELBEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.type = None
+    self.request_type = None
     self.resource_identifier = None
     self.client_ip_address = None
     self.client_port = None
@@ -110,8 +110,8 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
   _WORD = pyparsing.Word(pyparsing.printables) | BLANK
 
-  _QUOTE_INTEGER = pyparsing.OneOrMore('"') \
-      + text_parser.PyparsingConstants.INTEGER | BLANK
+  _QUOTE_INTEGER = (
+      pyparsing.OneOrMore('"') + text_parser.PyparsingConstants.INTEGER | BLANK)
 
   _INTEGER = text_parser.PyparsingConstants.INTEGER | BLANK
 
@@ -139,7 +139,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
   # A log line is defined as in the AWS ELB documentation
   _LOG_LINE = (
-      _WORD.setResultsName('type') +
+      _WORD.setResultsName('request_type') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
       _WORD.setResultsName('resource_identifier') +
       _CLIENT_IP_ADDRESS_PORT.setResultsName('client_ip_port') +
@@ -224,7 +224,8 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = AWSELBEventData()
-    event_data.type = self._GetValueFromStructure(structure, 'type')
+    event_data.request_type = self._GetValueFromStructure(
+        structure, 'request_type')
     event_data.resource_identifier = self._GetValueFromStructure(
         structure, 'resource_identifier')
     event_data.client_ip_address = self._GetValueFromGroup(structure,

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for Apache access log parser."""
+"""Tests for the Apache access log parser."""
 
 import unittest
 
@@ -65,7 +65,7 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
         "target_status_code": 200,
         "target_status_code_list": "200",
         "trace_identifier": "\"XXXXXXX\"",
-        "type": "https",
+        "request_type": "https",
         "user_agent":
         "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"}
 

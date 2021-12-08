@@ -53,6 +53,14 @@ plaso.parsers.asl module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.aws\_elb\_access module
+-------------------------------------
+
+.. automodule:: plaso.parsers.aws_elb_access
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.bash\_history module
 ----------------------------------
 
