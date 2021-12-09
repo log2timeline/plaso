@@ -561,7 +561,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
 
 
 class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
-  """Windows EventLog message file attribute container.
+  """Windows EventLog message file artifact attribute container.
 
   Attributes:
     path (str): path.
@@ -588,7 +588,7 @@ class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
 
 
 class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
-  """Windows EventLog message string attribute container.
+  """Windows EventLog message string artifact attribute container.
 
   Attributes:
     language_identifier (str): language identifier.
@@ -726,9 +726,52 @@ class WindowsMountedDeviceArtifact(ArtifactAttributeContainer):
     self.partition_offset = None
 
 
+class WindowsServiceConfigurationArtifact(ArtifactAttributeContainer):
+  """Windows service (or driver) configuration artifact attribute container.
+
+  Attributes:
+    error_control (int): error control value of the service (or driver)
+        executable.
+    image_path (str): path of the service (or driver) executable.
+    name (str): name of the service (or driver).
+    object_name (str): service object name.
+    service_dll (str): service DLL.
+    service_type (int): service (or driver) type.
+    start_type (int): service (or driver) start type.
+  """
+
+  CONTAINER_TYPE = 'windows_service_configuration'
+
+  SCHEMA = {
+      'error_control': 'int',
+      'image_path': 'str',
+      'name': 'str',
+      'object_name': 'str',
+      'service_dll': 'str',
+      'service_type': 'int',
+      'start_type': 'int'}
+
+  def __init__(self, name=None, service_type=None, start_type=None):
+    """Initializes a Windows service (or driver) configuration artifact.
+
+    Args:
+      name (Optional[str]): name of the service (or driver).
+      service_type (Optional[int]): service (or driver) type.
+      start_type (Optional[int]): service (or driver) start type.
+    """
+    super(WindowsServiceConfigurationArtifact, self).__init__()
+    self.error_control = None
+    self.image_path = None
+    self.name = name
+    self.object_name = None
+    self.service_dll = None
+    self.service_type = service_type
+    self.start_type = start_type
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
     TimeZoneArtifact, UserAccountArtifact, WindowsEventLogMessageFileArtifact,
     WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact,
-    WindowsMountedDeviceArtifact])
+    WindowsMountedDeviceArtifact, WindowsServiceConfigurationArtifact])
