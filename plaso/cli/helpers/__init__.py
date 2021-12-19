@@ -27,7 +27,6 @@ from plaso.cli.helpers import temporary_directory
 from plaso.cli.helpers import text_prepend
 from plaso.cli.helpers import viper_analysis
 from plaso.cli.helpers import virustotal_analysis
-from plaso.cli.helpers import windows_services_analysis
 from plaso.cli.helpers import xlsx_output
 from plaso.cli.helpers import yara_rules
 from plaso.cli.helpers import vfs_backend
