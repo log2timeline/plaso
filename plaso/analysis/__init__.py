@@ -10,4 +10,3 @@ from plaso.analysis import test_memory
 from plaso.analysis import unique_domains_visited
 from plaso.analysis import viper
 from plaso.analysis import virustotal
-from plaso.analysis import windows_services

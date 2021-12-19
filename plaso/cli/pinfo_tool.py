@@ -385,7 +385,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
   def _GenerateAnalysisResultsReport(
       self, storage_reader, json_base_type, column_titles, container_type,
-      attribute_names):
+      attribute_names, attribute_mappings):
     """Generates an analysis results report.
 
     Args:
@@ -395,6 +395,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           separated tables.
       container_type (str): attribute container type.
       attribute_names (list[str]): names of the attributes to report.
+      attribute_mappings (dict[str, dict[st, str]]): mappings of attribute
+          values to human readable strings.
     """
     if self._output_format == 'json':
       self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
@@ -429,6 +431,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           value = attribute_values.get(key, None)
           if value is None:
             value = ''
+          elif isinstance(value, int):
+            value = attribute_mappings.get(key, {}).get(value, value)
           elif self._output_format == 'json':
             value = value.replace('\\', '\\\\')
           attribute_values[key] = value
@@ -1385,16 +1389,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       if self._report_type == 'browser_search':
         column_titles = ['Search engine', 'Search term', 'Number of queries']
         attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        attribute_mappings = {}
         self._GenerateAnalysisResultsReport(
             storage_reader, 'browser_searches', column_titles,
-            'browser_search_analysis_result', attribute_names)
+            'browser_search_analysis_result', attribute_names,
+            attribute_mappings)
 
       elif self._report_type == 'chrome_extension':
         column_titles = ['Username', 'Extension identifier', 'Extension']
         attribute_names = ['username', 'extension_identifier', 'extension']
+        attribute_mappings = {}
         self._GenerateAnalysisResultsReport(
             storage_reader, 'chrome_extensions', column_titles,
-            'chrome_extension_analysis_result', attribute_names)
+            'chrome_extension_analysis_result', attribute_names,
+            attribute_mappings)
 
       elif self._report_type == 'environment_variables':
         self._GenerateEnvironmentVariablesReport(storage_reader)
@@ -1405,16 +1413,34 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       elif self._report_type == 'windows_services':
         column_titles = ['Name', 'Service type', 'Start type', 'Image path']
         attribute_names = ['name', 'service_type', 'start_type', 'image_path']
+        # TODO: consider using message formatting helpers?
+        attribute_mappings = {
+            'service_type': {
+                0x01: 'Kernel device driver (0x01)',
+                0x02: 'File system driver (0x02)',
+                0x04: 'Adapter (0x04)',
+                0x10: 'Stand-alone service (0x10)',
+                0x20: 'Shared service (0x20)'},
+            'start_type': {
+                0: 'Boot (0)',
+                1: 'System (1)',
+                2: 'Automatic (2)',
+                3: 'On demand (3)',
+                4: 'Disabled (4)'}
+        }
         self._GenerateAnalysisResultsReport(
             storage_reader, 'windows_services', column_titles,
-            'windows_service_configuration', attribute_names)
+            'windows_service_configuration', attribute_names,
+            attribute_mappings)
 
       elif self._report_type == 'winevt_providers':
         column_titles = ['Log source', 'Log type', 'Event message files']
         attribute_names = ['log_source', 'log_type', 'event_message_files']
+        attribute_mappings = {}
         self._GenerateAnalysisResultsReport(
             storage_reader, 'winevt_providers', column_titles,
-            'windows_eventlog_provider', attribute_names)
+            'windows_eventlog_provider', attribute_names,
+            attribute_mappings)
 
     finally:
       storage_reader.Close()
