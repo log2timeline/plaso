@@ -15,6 +15,8 @@ sudo apt-get install -y wget
 # TODO: update /etc/sysctl.conf
 # vm.max_map_count=262144
 
+adduser opensearch -s /sbin/nologin
+
 # Download OpenSearch
 
 wget https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz
@@ -31,4 +33,4 @@ sudo apt-get install -y python3-opensearch
 
 cd opensearch-${OPENSEARCH_VERSION}
 
-./opensearch-tar-install.sh &
+su -c ./opensearch-tar-install.sh opensearch &
