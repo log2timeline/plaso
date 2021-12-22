@@ -15,7 +15,7 @@ sudo apt-get install -y wget
 # TODO: update /etc/sysctl.conf
 # vm.max_map_count=262144
 
-adduser opensearch -s /sbin/nologin
+adduser opensearch --shell /sbin/nologin
 
 # Download OpenSearch
 
