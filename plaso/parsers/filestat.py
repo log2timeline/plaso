@@ -4,7 +4,6 @@
 import pytsk3
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.vfs import attribute as dfvfs_attribute
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -123,13 +122,10 @@ class FileStatParser(interface.FileEntryParser):
     """
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
-    attribute_names = []
-    stat_attribute = None
-    for attribute in file_entry.attributes:
-      if isinstance(attribute, dfvfs_attribute.StatAttribute):
-        stat_attribute = attribute
-        continue
+    stat_attribute = file_entry.GetStatAttribute()
 
+    attribute_names = []
+    for attribute in file_entry.attributes:
       attribute_name = getattr(attribute, 'name', None)
       if file_system_type != 'NTFS' and attribute_name:
         attribute_names.append(attribute_name)
