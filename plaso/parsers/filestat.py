@@ -144,7 +144,8 @@ class FileStatParser(interface.FileEntryParser):
     if stat_attribute:
       event_data.group_identifier = stat_attribute.group_identifier
       event_data.inode = stat_attribute.inode_number
-      event_data.mode = stat_attribute.mode
+      if stat_attribute.mode is not None:
+        event_data.mode = stat_attribute.mode & 0x0fff
       event_data.number_of_links = stat_attribute.number_of_links
       event_data.owner_identifier = stat_attribute.owner_identifier
 
