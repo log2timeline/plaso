@@ -106,8 +106,15 @@ class StorageWriter(reader.StorageReader):
       if len(existing_event_tags) == 1:
         event_tag = existing_event_tags[0]
 
+        if len(self._event_tag_per_event_identifier) >= (
+            self._MAXIMUM_CACHED_EVENT_TAGS):
+          self._event_tag_per_event_identifier.popitem(last=True)
+
+        self._event_tag_per_event_identifier[lookup_key] = event_tag
+
     if event_tag:
       self._event_tag_per_event_identifier.move_to_end(lookup_key, last=False)
+
     return event_tag
 
   def _RaiseIfNotWritable(self):
