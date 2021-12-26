@@ -125,7 +125,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
         analysis_result = analysis_results.ChromeExtensionAnalysisResult(
             extension=extension, extension_identifier=extension_identifier,
             username=username)
-        analysis_mediator.ProduceAnalysisResultContainer(analysis_result)
+        analysis_mediator.ProduceAnalysisResult(analysis_result)
 
         self._analysis_counter[username] += 1
 
