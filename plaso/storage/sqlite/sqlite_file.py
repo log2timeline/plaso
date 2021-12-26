@@ -286,7 +286,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -296,7 +296,7 @@ class SQLiteStorageFile(interface.BaseStore):
           'ON event_tag (_event_row_identifier)')
       try:
         self._cursor.execute(query)
-      except sqlite3.OperationalError as exception:
+      except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
         raise IOError('Unable to query storage file with error: {0!s}'.format(
             exception))
 
@@ -382,7 +382,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError((
           'Unable to query storage file for attribute container: {0:s} with '
           'error: {1!s}').format(container_type, exception))
@@ -455,7 +455,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -500,7 +500,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -637,7 +637,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
       try:
         self._cursor.execute(query)
-      except sqlite3.OperationalError as exception:
+      except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
         raise IOError('Unable to query storage file with error: {0!s}'.format(
             exception))
 
@@ -692,7 +692,7 @@ class SQLiteStorageFile(interface.BaseStore):
     try:
       self._cursor.execute(query, values)
 
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -709,7 +709,7 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     try:
       self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -731,7 +731,7 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     try:
       self._cursor.execute(self._INSERT_METADATA_VALUE_QUERY, (key, value))
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -806,7 +806,7 @@ class SQLiteStorageFile(interface.BaseStore):
     try:
       self._cursor.execute(query, values)
 
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -934,7 +934,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -1016,7 +1016,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     try:
       self._cursor.execute(query)
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
@@ -1126,7 +1126,7 @@ class SQLiteStorageFile(interface.BaseStore):
       # Turn off insert transaction integrity since we want to do bulk insert.
       connection.execute('PRAGMA synchronous=OFF')
 
-    except sqlite3.OperationalError as exception:
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
           exception))
 
