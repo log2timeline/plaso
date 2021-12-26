@@ -42,6 +42,16 @@ do
 
 	if [[ ${TEST_CASE} == "extract_and_output" ]];
 	then
+		# Note that output is mapped to /home/test/plaso/plaso-out to ensure files
+		# created by the end-to-end.py script are stored outside the container.
+
+		COMMAND="./tests/end-to-end.py --config config/jenkins/${TEST_SET}/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --tools-directory ./tools";
+
+		if [[ ${TEST_NAME} == *\-mounted ]];
+		then
+			# TODO: add support for mounted tests
+			continue;
+		fi
 		if [[ ${TEST_NAME} == *\-redis ]];
 		then
 			# TODO: add support for Redis tests
@@ -51,17 +61,20 @@ do
 
 		mkdir -p ${TEST_RESULTS}/${TEST_SET}/${TEST_NAME}/profiling;
 
-		# Note that output is mapped to /home/test/plaso/plaso-out to ensure files
-		# created by the end-to-end.py script are stored outside the container.
-
-		docker run -v "${TEST_RESULTS}/${TEST_SET}/${TEST_NAME}:/home/test/plaso/plaso-out:z" -v "${TEST_DATA}/${TEST_SET}:/sources:z" log2timeline/plaso ./tests/end-to-end.py --config config/jenkins/${TEST_SET}/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --tools-directory ./tools
+		docker run -v "${TEST_RESULTS}/${TEST_SET}/${TEST_NAME}:/home/test/plaso/plaso-out:z" -v "${TEST_DATA}/${TEST_SET}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}";
 
 		echo "";
+
+		# The output end-to-end tests depend on the output of the student-pc1
+		# extract_and_output test.
+
+		if [[ ${TEST_NAME} != "student-pc1" ]];
+		then
+			rm -rf ${TEST_RESULTS}/${TEST_SET}/${TEST_NAME};
+		fi
 	fi
 done
 
-# The output end-to-end tests depend on the output of the student-pc1
-# extract_and_output test.
 for CONFIG_FILE in ../jenkins/${TEST_SET}/*.ini;
 do
 	TEST_NAME=`basename ${CONFIG_FILE} | sed 's/\.ini$//'`;
@@ -69,31 +82,35 @@ do
 
 	if [[ ${TEST_CASE} == "output" ]];
 	then
-		if [[ ${TEST_NAME} == *_elastic ]];
+		# Note that output is mapped to /home/test/plaso/plaso-out to ensure files
+		# created by the end-to-end.py script are stored outside the container.
+
+		COMMAND="./tests/end-to-end.py --config config/jenkins/${TEST_SET}/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --tools-directory ./tools";
+
+		if [[ ${TEST_NAME} == *_elastic || ${TEST_NAME} == *_elastic_ts ]];
 		then
-			# TODO: add support for psort+elasticsearch tests
-			continue;
+			# Install Elasticsearch 7 and give it 3 minutes to start-up before running the output end-to-end test.
+			COMMAND="./config/linux/ubuntu_install_elasticsearch7.sh && sleep 3m && ${COMMAND}";
 
 		elif [[ ${TEST_NAME} == *\-nsrlsvr ]];
 		then
-			# TODO: add support for psort+nsrlsvr tests
-			continue;
+			# Install nsrlsvr and give it 3 minutes to start-up before running the output end-to-end test.
+			COMMAND="./config/linux/ubuntu_install_nsrlsvr.sh && sleep 3m && ${COMMAND}";
 
 		elif [[ ${TEST_NAME} == *_opensearch ]];
 		then
-			# TODO: add support for psort+opensearch tests
-			continue;
+			# Install OpenSearch and give it 3 minutes to start-up before running the output end-to-end test.
+			COMMAND="./config/linux/ubuntu_install_opensearch.sh && sleep 3m && ${COMMAND}";
 		fi
 		echo "Running output end-to-end test: ${TEST_SET}/${TEST_NAME}";
 
 		mkdir -p ${TEST_RESULTS}/${TEST_SET}/${TEST_NAME};
 
-		# Note that output is mapped to /home/test/plaso/plaso-out to ensure files
-		# created by the end-to-end.py script are stored outside the container.
-
-		docker run -v "${TEST_RESULTS}/${TEST_SET}/${TEST_NAME}:/home/test/plaso/plaso-out:z" -v "${TEST_RESULTS}/${TEST_SET}/student-pc1:/sources:z" log2timeline/plaso ./tests/end-to-end.py --config config/jenkins/${TEST_SET}/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --tools-directory ./tools
+		docker run -v "${TEST_RESULTS}/${TEST_SET}/${TEST_NAME}:/home/test/plaso/plaso-out:z" -v "${TEST_RESULTS}/${TEST_SET}/student-pc1:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}";
 
 		echo "";
+
+		rm -rf ${TEST_RESULTS}/${TEST_SET}/${TEST_NAME};
 	fi
 done
 
