@@ -11,7 +11,7 @@ class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal.
 
   The API is documented here:
-  https://developers.virustotal.com/reference
+  https://developers.virustotal.com/reference/overview
   """
 
   SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']

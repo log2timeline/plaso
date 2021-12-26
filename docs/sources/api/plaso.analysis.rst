@@ -124,14 +124,6 @@ plaso.analysis.virustotal module
    :undoc-members:
    :show-inheritance:
 
-plaso.analysis.windows\_services module
----------------------------------------
-
-.. automodule:: plaso.analysis.windows_services
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

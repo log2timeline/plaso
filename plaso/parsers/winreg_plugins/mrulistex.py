@@ -2,7 +2,7 @@
 """This file contains MRUListEx Windows Registry plugins.
 
 Also see:
-https://github.com/libyal/winreg-kb/blob/main/documentation/MRU%20keys.asciidoc
+https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html
 """
 
 import abc
