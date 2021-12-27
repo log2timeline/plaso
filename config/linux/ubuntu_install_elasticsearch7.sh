@@ -6,7 +6,7 @@
 set -e
 
 sudo apt-get update
-sudo apt-get install -y apt-transport-https
+sudo apt-get install -y apt-transport-https wget
 
 # Add the Elasticseach repository key
 wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -

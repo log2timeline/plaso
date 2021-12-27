@@ -8,8 +8,6 @@ set -e
 OPENSEARCH_VERSION="1.2.2";
 
 sudo apt-get update
-sudo apt-get install -y apt-transport-https
-
 sudo apt-get install -y wget
 
 # TODO: update /etc/sysctl.conf
@@ -19,7 +17,7 @@ adduser opensearch
 
 # Download OpenSearch
 
-wget https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz
+wget -q https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz
 
 # Install OpenSearch
 
