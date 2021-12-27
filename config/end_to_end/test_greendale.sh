@@ -97,7 +97,7 @@ do
 			# Install nsrlsvr and give it 3 minutes to start-up before running the output end-to-end test.
 			COMMAND="./config/linux/ubuntu_install_nsrlsvr.sh && sleep 3m && ${COMMAND}";
 
-		elif [[ ${TEST_NAME} == *_opensearch ]];
+		elif [[ ${TEST_NAME} == *_opensearch || ${TEST_NAME} == *_opensearch_ts ]];
 		then
 			# Install OpenSearch and give it 3 minutes to start-up before running the output end-to-end test.
 			COMMAND="./config/linux/ubuntu_install_opensearch.sh && sleep 3m && ${COMMAND}";
