@@ -90,15 +90,14 @@ class AnalysisMediator(object):
     """
     return self._knowledge_base.GetUsernameForPath(path)
 
-  def ProduceAnalysisResultContainer(self, attribute_container):
-    """Produces an analysis result attribute container.
+  def ProduceAnalysisResult(self, analysis_result):
+    """Produces an analysis result attribute.
 
     Args:
-      attribute_container (AttributeContainer): analysis result attribute
-          container.
+      analysis_result (AttributeContainer): analysis result.
     """
     if self._storage_writer:
-      self._storage_writer.AddAttributeContainer(attribute_container)
+      self._storage_writer.AddAttributeContainer(analysis_result)
 
   def ProduceAnalysisReport(self, plugin):
     """Produces an analysis report.

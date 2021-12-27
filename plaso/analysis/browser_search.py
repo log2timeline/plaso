@@ -266,7 +266,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       analysis_result = analysis_results.BrowserSearchAnalysisResult(
           number_of_queries=number_of_queries, search_engine=search_engine,
           search_term=search_term)
-      analysis_mediator.ProduceAnalysisResultContainer(analysis_result)
+      analysis_mediator.ProduceAnalysisResult(analysis_result)
 
     return super(BrowserSearchPlugin, self).CompileReport(analysis_mediator)
 
