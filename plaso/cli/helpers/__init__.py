@@ -16,6 +16,7 @@ from plaso.cli.helpers import hashers
 from plaso.cli.helpers import language
 from plaso.cli.helpers import nsrlsvr_analysis
 from plaso.cli.helpers import opensearch_output
+from plaso.cli.helpers import opensearch_ts_output
 from plaso.cli.helpers import output_modules
 from plaso.cli.helpers import parsers
 from plaso.cli.helpers import profiling
