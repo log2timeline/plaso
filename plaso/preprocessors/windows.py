@@ -613,7 +613,7 @@ class WindowsMountedDevicesPlugin(
           partition_values = self._ReadStructureFromByteStream(
               registry_value.data, 0, data_type_map)
 
-          mounted_device_artifact.partition_identifier = (
+          mounted_device_artifact.partition_identifier = str(
               partition_values.partition_identifier)
 
         except (ValueError, errors.ParseError) as exception:
