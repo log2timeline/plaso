@@ -116,6 +116,14 @@ plaso.output.opensearch module
    :undoc-members:
    :show-inheritance:
 
+plaso.output.opensearch\_ts module
+----------------------------------
+
+.. automodule:: plaso.output.opensearch_ts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.output.rawpy module
 -------------------------
 
