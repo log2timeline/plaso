@@ -31,7 +31,7 @@ Check if you have all the dependencies installed and have the right minimum
 version:
 
 ```bash
-C:\Python38\python.exe utils\check_dependencies.py
+C:\Python3\python.exe utils\check_dependencies.py
 ```
 
 **Note that some dependencies are actively under development and can be
@@ -50,7 +50,7 @@ set PYTHONPATH=C:\plaso-build\plaso
 To run a tool, for example `pinfo`:
 
 ```bash
-C:\Python39\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plaso
+C:\Python3\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plaso
 ```
 
 ## Development tools
@@ -74,7 +74,7 @@ To build the MSI file run the following commands from the build root directory:
 ```bash
 tar xvf mock-1.0.1.tar.gz
 cd mock-1.0.1\
-C:\Python39\python.exe setup.py bdist_msi
+C:\Python3\python.exe setup.py bdist_msi
 cd ..
 ```
 

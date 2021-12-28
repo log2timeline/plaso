@@ -140,6 +140,14 @@ plaso.cli.helpers.opensearch\_output module
    :undoc-members:
    :show-inheritance:
 
+plaso.cli.helpers.opensearch\_ts\_output module
+-----------------------------------------------
+
+.. automodule:: plaso.cli.helpers.opensearch_ts_output
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.cli.helpers.output\_modules module
 ----------------------------------------
 
