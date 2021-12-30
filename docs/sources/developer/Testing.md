@@ -1,6 +1,6 @@
-# Automated tests
+# Testing
 
-Plaso comes with multiple forms of automated tests:
+Plaso comes with multiple forms of tests:
 
 * unit tests
 * end-to-end tests
