@@ -168,7 +168,7 @@ class DSVParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: encoding determined based on BOM or None if no BOM was found.
         int: offset of the text after the BOM of 0 if no BOM was found.
