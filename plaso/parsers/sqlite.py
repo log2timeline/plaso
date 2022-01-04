@@ -317,7 +317,7 @@ class SQLiteParser(interface.FileEntryParser):
       filename (str): name of the database file entry.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         SQLiteDatabase: a database object with WAL file committed or None
         dfvfs.FileEntry: a file entry object of WAL file or None

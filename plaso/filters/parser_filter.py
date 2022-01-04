@@ -216,7 +216,7 @@ class ParserFilterExpressionHelper(object):
           the element will be included.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         excludes (dict[str, set[str]]): excluded presets, plugins and presets.
             Dictionary keys are preset and/or parser names, and values are
