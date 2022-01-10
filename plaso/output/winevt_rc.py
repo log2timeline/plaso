@@ -403,6 +403,11 @@ class WinevtResourcesHelper(object):
           database reader or None.
     """
     if not self._winevt_database_reader and self._data_location:
+      logger.warning((
+          'Falling back to {0:s}. Please make sure the Windows EventLog '
+          'message strings in the database correspond to those in the '
+          'EventLog files.').format(self._WINEVT_RC_DATABASE))
+
       database_path = os.path.join(
           self._data_location, self._WINEVT_RC_DATABASE)
       if not os.path.isfile(database_path):
@@ -562,7 +567,8 @@ class WinevtResourcesHelper(object):
     message_string = self._GetCachedMessageString(
         log_source, message_identifier)
     if not message_string:
-      if self._storage_reader:
+      if self._storage_reader and self._storage_reader.HasAttributeContainers(
+          'windows_eventlog_provider'):
         message_string = self._ReadWindowsEventLogMessageString(
             self._storage_reader, log_source, message_identifier)
 
