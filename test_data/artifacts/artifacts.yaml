@@ -323,6 +323,17 @@ provides: [users.sid, users.userprofile, users.homedir, users.username]
 supported_os: [Windows]
 urls: ['http://msdn.microsoft.com/en-us/library/windows/desktop/bb776892(v=vs.85).aspx']
 ---
+name: WindowsServices
+doc: Windows services and drivers configuration.
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys:
+    - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\*'
+labels: [Software]
+supported_os: [Windows]
+urls: ['https://artifacts-kb.readthedocs.io/en/latest/sources/windows/ServicesAndDrivers.html']
+---
 name: WindowsTimezone
 doc: The time zone of the system as a Windows time zone name or in MUI form.
 sources:

@@ -11,7 +11,7 @@ class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal.
 
   The API is documented here:
-  https://developers.virustotal.com/reference
+  https://developers.virustotal.com/reference/overview
   """
 
   SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
@@ -120,17 +120,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """Initializes a VirusTotal analysis plugin."""
     super(VirusTotalAnalysisPlugin, self).__init__(VirusTotalAnalyzer)
 
-  def EnableFreeAPIKeyRateLimit(self):
-    """Configures Rate limiting for queries to VirusTotal.
-
-    The default rate limit for free VirusTotal API keys is 4 requests per
-    minute.
-    """
-    self._analyzer.hashes_per_batch = 4
-    self._analyzer.wait_after_analysis = 60
-    self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
-
-  def GenerateLabels(self, hash_information):
+  def _GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
@@ -158,6 +148,16 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
         'VirusTotal returned unknown response code {0!s}'.format(
             response_code))
     return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]
+
+  def EnableFreeAPIKeyRateLimit(self):
+    """Configures Rate limiting for queries to VirusTotal.
+
+    The default rate limit for free VirusTotal API keys is 4 requests per
+    minute.
+    """
+    self._analyzer.hashes_per_batch = 4
+    self._analyzer.wait_after_analysis = 60
+    self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
 
   def SetAPIKey(self, api_key):
     """Sets the VirusTotal API key to use in queries.

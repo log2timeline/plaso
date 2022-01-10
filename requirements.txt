@@ -1,15 +1,15 @@
 pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-artifacts >= 20211107
+artifacts >= 20211205
 bencode.py
 certifi >= 2016.9.26
 cffi >= 1.9.1
 cryptography >= 2.0.2
 defusedxml >= 0.5.0
 dfdatetime >= 20211113
-dfvfs >= 20211017
-dfwinreg >= 20201002
+dfvfs >= 20211224
+dfwinreg >= 20211207
 dtfabric >= 20200621
 elasticsearch >= 7.0,< 8.0
 future >= 0.16.0
@@ -44,6 +44,7 @@ libvsgpt-python >= 20210115
 libvshadow-python >= 20160109
 libvslvm-python >= 20160109
 lz4 >= 0.10.0
+opensearch-py
 pefile >= 2021.5.24
 psutil >= 5.4.3
 pyparsing >= 2.4.2

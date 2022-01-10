@@ -60,6 +60,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-future
                      python3-idna
                      python3-lz4
+                     python3-opensearch
                      python3-pefile
                      python3-psutil
                      python3-pyparsing

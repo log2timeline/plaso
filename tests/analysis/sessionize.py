@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the sessionize analysis plugin."""
 
+import collections
 import unittest
 
 from plaso.analysis import sessionize
@@ -47,16 +48,21 @@ class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'sessionize')
+
+    expected_analysis_counter = collections.Counter({
+        'session_0': 3,
+        'session_1': 2})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 5)
-
-    analysis_report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-
-    self.assertIsNotNone(analysis_report)
-    self.assertEqual(analysis_report.analysis_counter['session_0'], 3)
-    self.assertEqual(analysis_report.analysis_counter['session_1'], 2)
 
 
 if __name__ == '__main__':

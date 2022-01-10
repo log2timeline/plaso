@@ -108,6 +108,22 @@ plaso.output.null module
    :undoc-members:
    :show-inheritance:
 
+plaso.output.opensearch module
+------------------------------
+
+.. automodule:: plaso.output.opensearch
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.output.opensearch\_ts module
+----------------------------------
+
+.. automodule:: plaso.output.opensearch_ts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.output.rawpy module
 -------------------------
 
@@ -136,6 +152,14 @@ plaso.output.shared\_json module
 --------------------------------
 
 .. automodule:: plaso.output.shared_json
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.output.shared\_opensearch module
+--------------------------------------
+
+.. automodule:: plaso.output.shared_opensearch
    :members:
    :undoc-members:
    :show-inheritance:

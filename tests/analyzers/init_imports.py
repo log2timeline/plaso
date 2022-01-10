@@ -21,7 +21,7 @@ class AnalyzersImportTest(test_lib.ImportCheckTestCase):
 
   def testHashersImported(self):
     """Tests that all plugins are imported."""
-    parsers_glob = '{0:s}/*_hashers/'.format(test_lib.ANALYZERS_PATH)
+    parsers_glob = os.path.join(test_lib.ANALYZERS_PATH, 'hashers')
     plugin_directories = glob.glob(parsers_glob)
     for plugin_directory in plugin_directories:
       plugin_directory_path = os.path.join(

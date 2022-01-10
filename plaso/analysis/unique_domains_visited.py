@@ -29,17 +29,17 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       'opera:history',
       'safari:history:visit'])
 
-  # pylint: disable=arguments-renamed
   # pylint: disable=unused-argument
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
     be inferred by TypedURLs, cookies or other means.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -48,16 +48,11 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       return
 
     url = getattr(event_data, 'url', None)
-    if url is None:
-      return
-
-    parsed_url = urlparse.urlparse(url)
-
-    domain = getattr(parsed_url, 'netloc', None)
-    if not domain:
-      return
-
-    self._analysis_counter[domain] += 1
+    if url:
+      parsed_url = urlparse.urlparse(url)
+      domain = getattr(parsed_url, 'netloc', None)
+      if domain:
+        self._analysis_counter[domain] += 1
 
 
 manager.AnalysisPluginManager.RegisterPlugin(UniqueDomainsVisitedPlugin)

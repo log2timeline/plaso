@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the nsrlsvr analysis plugin."""
 
+import collections
 import unittest
 
 from unittest import mock
@@ -114,18 +115,20 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'nsrlsvr')
+
+    expected_analysis_counter = collections.Counter({
+        'nsrl_present': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 1)
-
-    report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
-
-    expected_text = (
-        'nsrlsvr hash tagging results\n'
-        '1 events tagged with label: nsrl_present\n')
-    self.assertEqual(report.text, expected_text)
 
     labels = []
     for event_tag in storage_writer.GetAttributeContainers(

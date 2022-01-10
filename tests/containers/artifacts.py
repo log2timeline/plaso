@@ -42,7 +42,7 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
   # pylint: disable=protected-access
 
   def testVersionTuple(self):
-    """Tests the version_tuplele property."""
+    """Tests the version_tuple property."""
     attribute_container = artifacts.OperatingSystemArtifact(version="5.1")
     self.assertEqual(attribute_container.version_tuple, (5, 1))
 
@@ -190,12 +190,48 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
+class WindowsEventLogMessageFileArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows EventLog message file artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsEventLogMessageFileArtifact()
+    self.assertIsNotNone(attribute_container)
+
+
+class WindowsEventLogMessageStringArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows EventLog message string artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsEventLogMessageStringArtifact()
+    self.assertIsNotNone(attribute_container)
+
+
 class WindowsEventLogProviderArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows EventLog provider artifact."""
 
   def testInitialize(self):
     """Tests the __init__ function."""
     attribute_container = artifacts.WindowsEventLogProviderArtifact()
+    self.assertIsNotNone(attribute_container)
+
+
+class WindowsMountedDeviceArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows mounted device artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsMountedDeviceArtifact()
+    self.assertIsNotNone(attribute_container)
+
+
+class WindowsServiceConfigurationArtifactTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows service (or driver) configuration artifact."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    attribute_container = artifacts.WindowsServiceConfigurationArtifact()
     self.assertIsNotNone(attribute_container)
 
 

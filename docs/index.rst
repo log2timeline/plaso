@@ -13,7 +13,7 @@ average computer.
 The source code is available from the `project page <https://github.com/log2timeline/plaso>`__.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sources/user/index
 

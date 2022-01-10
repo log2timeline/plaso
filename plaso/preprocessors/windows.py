@@ -613,7 +613,7 @@ class WindowsMountedDevicesPlugin(
           partition_values = self._ReadStructureFromByteStream(
               registry_value.data, 0, data_type_map)
 
-          mounted_device_artifact.partition_identifier = (
+          mounted_device_artifact.partition_identifier = str(
               partition_values.partition_identifier)
 
         except (ValueError, errors.ParseError) as exception:
@@ -708,6 +708,70 @@ class WindowsProgramFilesX86EnvironmentVariablePlugin(
   ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableProgramFilesX86'
 
   _NAME = 'programfilesx86'
+
+
+class WindowsServicesAndDriversPlugin(
+    interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+  """The Windows service (and driver) configurations plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsServices'
+
+  def _ParseKey(self, mediator, registry_key, value_name):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      mediator (PreprocessMediator): mediates interactions between preprocess
+          plugins and other components, such as storage and knowledge base.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the Windows Registry value or None if not
+          specified.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    service_type = None
+    start_type = None
+
+    registry_value = registry_key.GetValueByName('Type')
+    if registry_value:
+      service_type = registry_value.GetDataAsObject()
+
+    registry_value = registry_key.GetValueByName('Start')
+    if registry_value:
+      start_type = registry_value.GetDataAsObject()
+
+    if None in (service_type, start_type):
+      return
+
+    service_configuration = artifacts.WindowsServiceConfigurationArtifact(
+        name=registry_key.name, service_type=service_type,
+        start_type=start_type)
+
+    registry_value = registry_key.GetValueByName('ErrorControl')
+    if registry_value:
+      service_configuration.error_control = registry_value.GetDataAsObject()
+
+    registry_value = registry_key.GetValueByName('ImagePath')
+    if registry_value:
+      service_configuration.image_path = registry_value.GetDataAsObject()
+
+    registry_value = registry_key.GetValueByName('ObjectName')
+    if registry_value:
+      service_configuration.object_name = registry_value.GetDataAsObject()
+
+    sub_registry_key = registry_key.GetSubkeyByName('Parameters')
+    if sub_registry_key:
+      registry_value = sub_registry_key.GetValueByName('ServiceDll')
+      if registry_value:
+        service_configuration.service_dll = registry_value.GetDataAsObject()
+
+    try:
+      mediator.AddArtifact(service_configuration)
+    except KeyError:
+      mediator.ProducePreprocessingWarning(
+          self.ARTIFACT_DEFINITION_NAME,
+          'Unable to add Windows service configuation: {0:s} artifact.'.format(
+              registry_value.name))
 
 
 class WindowsSystemProductPlugin(
@@ -881,6 +945,7 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,
     WindowsProgramFilesX86EnvironmentVariablePlugin,
-    WindowsSystemProductPlugin, WindowsSystemRootEnvironmentVariablePlugin,
-    WindowsSystemVersionPlugin, WindowsTimeZonePlugin,
-    WindowsWinDirEnvironmentVariablePlugin, WindowsUserAccountsPlugin])
+    WindowsServicesAndDriversPlugin, WindowsSystemProductPlugin,
+    WindowsSystemRootEnvironmentVariablePlugin, WindowsSystemVersionPlugin,
+    WindowsTimeZonePlugin, WindowsWinDirEnvironmentVariablePlugin,
+    WindowsUserAccountsPlugin])

@@ -127,7 +127,7 @@ To install the development versions of the dependencies run:
 ```
 set PYTHONPATH=.
 
-C:\Python38\python.exe tools\update.py --preset plaso --track dev
+C:\Python3\python.exe tools\update.py --preset plaso --track dev
 ```
 
 ## Batch build
@@ -142,7 +142,7 @@ On Windows run:
 ```
 set PYTHONPATH=.
 
-C:\Python38\python.exe tools\build.py --preset plaso BUILD_TARGET
+C:\Python3\python.exe tools\build.py --preset plaso BUILD_TARGET
 ```
 
 On other platforms run:

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin."""
 
+import collections
 import unittest
 
 from plaso.analysis import tagging
@@ -58,21 +59,25 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         'analysis_report')
     self.assertEqual(number_of_reports, 1)
 
+    analysis_report = storage_writer.GetAttributeContainerByIndex(
+        reports.AnalysisReport.CONTAINER_TYPE, 0)
+    self.assertIsNotNone(analysis_report)
+
+    self.assertEqual(analysis_report.plugin_name, 'tagging')
+
+    expected_analysis_counter = collections.Counter({
+        'application_execution': 1,
+        'event_tags': 4,
+        'file_downloaded': 1,
+        'login_attempt': 1,
+        'security_event': 1,
+        'text_contains': 1})
+    self.assertEqual(
+        analysis_report.analysis_counter, expected_analysis_counter)
+
     number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
         'event_tag')
     self.assertEqual(number_of_event_tags, 4)
-
-    report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(report)
-
-    self.assertIsNotNone(report.analysis_counter)
-    self.assertEqual(report.analysis_counter['event_tags'], 4)
-    self.assertEqual(report.analysis_counter['application_execution'], 1)
-    self.assertEqual(report.analysis_counter['file_downloaded'], 1)
-    self.assertEqual(report.analysis_counter['login_attempt'], 1)
-    self.assertEqual(report.analysis_counter['security_event'], 1)
-    self.assertEqual(report.analysis_counter['text_contains'], 1)
 
     labels = []
     for event_tag in storage_writer.GetAttributeContainers(

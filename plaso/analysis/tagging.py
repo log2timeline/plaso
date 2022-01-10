@@ -16,13 +16,13 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     super(TaggingAnalysisPlugin, self).__init__()
     self._tagging_rules = None
 
-  # pylint: disable=arguments-renamed
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream):
     """Labels events according to the rules in a tagging file.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -39,7 +39,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     if matched_label_names:
       event_tag = self._CreateEventTag(event, matched_label_names)
 
-      mediator.ProduceEventTag(event_tag)
+      analysis_mediator.ProduceEventTag(event_tag)
 
       for label_name in matched_label_names:
         self._analysis_counter[label_name] += 1

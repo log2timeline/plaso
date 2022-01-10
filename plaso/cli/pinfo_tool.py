@@ -55,6 +55,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       'environment_variables': (
           'Report environment variables extracted during processing.'),
       'file_hashes': 'Report file hashes calculated during processing.',
+      'windows_services': (
+          'Report Windows services and drivers extracted during processing.'),
       'winevt_providers': (
           'Report Windows EventLog providers extracted during processing.')}
 
@@ -383,7 +385,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
   def _GenerateAnalysisResultsReport(
       self, storage_reader, json_base_type, column_titles, container_type,
-      attribute_names):
+      attribute_names, attribute_mappings):
     """Generates an analysis results report.
 
     Args:
@@ -393,6 +395,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           separated tables.
       container_type (str): attribute container type.
       attribute_names (list[str]): names of the attributes to report.
+      attribute_mappings (dict[str, dict[st, str]]): mappings of attribute
+          values to human readable strings.
     """
     if self._output_format == 'json':
       self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
@@ -402,7 +406,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     elif self._output_format == 'markdown':
       self._output_writer.Write('{0:s}\n'.format(' | '.join(column_titles)))
-      self._output_writer.Write('--- | --- | ---\n')
+      self._output_writer.Write(
+          '{0:s}\n'.format(' | '.join(['---'] * len(column_titles))))
 
       entry_format_string = '{0:s}\n'.format(' | '.join([
           '{{{0:s}!s}}'.format(name) for name in attribute_names]))
@@ -422,6 +427,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             self._output_writer.Write(',\n')
 
         attribute_values = analysis_result.CopyToDict()
+        for key in attribute_names:
+          value = attribute_values.get(key, None)
+          if value is None:
+            value = ''
+          elif isinstance(value, int):
+            value = attribute_mappings.get(key, {}).get(value, value)
+          elif self._output_format == 'json':
+            value = value.replace('\\', '\\\\')
+          attribute_values[key] = value
+
         self._output_writer.Write(entry_format_string.format(
             **attribute_values))
 
@@ -518,55 +533,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       elif self._output_format == 'text':
         self._output_writer.Write('{0:s}\t{1:s}\n'.format(
             hash_value, display_name))
-
-    if self._output_format == 'json':
-      self._output_writer.Write('\n]}\n')
-
-  def _GenerateWindowsEventLogProvidersReport(self, storage_reader):
-    """Generates a Windows EventLog providers report.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    if self._output_format == 'json':
-      self._output_writer.Write('{"winevt_providers": [\n')
-
-    elif self._output_format == 'markdown':
-      self._output_writer.Write('Log source | Log type | Event message files\n')
-      self._output_writer.Write('--- | --- | ---\n')
-
-    elif self._output_format == 'text':
-      self._output_writer.Write('Log source\tLog type\tEvent message files\n')
-
-    generator = storage_reader.GetAttributeContainers(
-        'windows_eventlog_provider')
-
-    for artifact_index, eventlog_provider in enumerate(generator):
-      log_source = eventlog_provider.log_source
-      log_type = eventlog_provider.log_type or 'N/A'
-
-      event_message_files = eventlog_provider.event_message_files
-      if event_message_files:
-        event_message_files = ', '.join(event_message_files)
-      else:
-        event_message_files = 'N/A'
-
-      if self._output_format == 'json':
-        if artifact_index > 0:
-          self._output_writer.Write(',\n')
-        event_message_files = event_message_files.replace('\\', '\\\\')
-        self._output_writer.Write((
-            '{{"log_source": "{0:s}", "log_type": "{1:s}", '
-            '"event_message_files": "{2:s}"}}').format(
-                log_source, log_type, event_message_files))
-
-      elif self._output_format == 'markdown':
-        self._output_writer.Write('{0:s} | {1:s} | {2:s}\n'.format(
-            log_source, log_type, event_message_files))
-
-      elif self._output_format == 'text':
-        self._output_writer.Write('{0:s}\t{1:s}\t{2:s}\n'.format(
-            log_source, log_type, event_message_files))
 
     if self._output_format == 'json':
       self._output_writer.Write('\n]}\n')
@@ -1423,16 +1389,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       if self._report_type == 'browser_search':
         column_titles = ['Search engine', 'Search term', 'Number of queries']
         attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        attribute_mappings = {}
         self._GenerateAnalysisResultsReport(
             storage_reader, 'browser_searches', column_titles,
-            'browser_search_analysis_result', attribute_names)
+            'browser_search_analysis_result', attribute_names,
+            attribute_mappings)
 
       elif self._report_type == 'chrome_extension':
         column_titles = ['Username', 'Extension identifier', 'Extension']
         attribute_names = ['username', 'extension_identifier', 'extension']
+        attribute_mappings = {}
         self._GenerateAnalysisResultsReport(
             storage_reader, 'chrome_extensions', column_titles,
-            'chrome_extension_analysis_result', attribute_names)
+            'chrome_extension_analysis_result', attribute_names,
+            attribute_mappings)
 
       elif self._report_type == 'environment_variables':
         self._GenerateEnvironmentVariablesReport(storage_reader)
@@ -1440,8 +1410,37 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       elif self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
 
+      elif self._report_type == 'windows_services':
+        column_titles = ['Name', 'Service type', 'Start type', 'Image path']
+        attribute_names = ['name', 'service_type', 'start_type', 'image_path']
+        # TODO: consider using message formatting helpers?
+        attribute_mappings = {
+            'service_type': {
+                0x01: 'Kernel device driver (0x01)',
+                0x02: 'File system driver (0x02)',
+                0x04: 'Adapter (0x04)',
+                0x10: 'Stand-alone service (0x10)',
+                0x20: 'Shared service (0x20)'},
+            'start_type': {
+                0: 'Boot (0)',
+                1: 'System (1)',
+                2: 'Automatic (2)',
+                3: 'On demand (3)',
+                4: 'Disabled (4)'}
+        }
+        self._GenerateAnalysisResultsReport(
+            storage_reader, 'windows_services', column_titles,
+            'windows_service_configuration', attribute_names,
+            attribute_mappings)
+
       elif self._report_type == 'winevt_providers':
-        self._GenerateWindowsEventLogProvidersReport(storage_reader)
+        column_titles = ['Log source', 'Log type', 'Event message files']
+        attribute_names = ['log_source', 'log_type', 'event_message_files']
+        attribute_mappings = {}
+        self._GenerateAnalysisResultsReport(
+            storage_reader, 'winevt_providers', column_titles,
+            'windows_eventlog_provider', attribute_names,
+            attribute_mappings)
 
     finally:
       storage_reader.Close()

@@ -196,22 +196,24 @@ def parse_requirements_from_file(path):
   Args:
     path (str): path to the requirements file.
 
-  Yields:
-    str: name and optional version information of the required package.
+  Returns:
+    list[str]: name and optional version information of the required packages.
   """
-  with open(path, 'r') as file_object:
-    file_contents = file_object.read()
+  requirements = []
+  if os.path.isfile(path):
+    with open(path, 'r') as file_object:
+      file_contents = file_object.read()
 
-  for requirement in pkg_resources.parse_requirements(file_contents):
-    try:
-      name = str(requirement.req)
-    except AttributeError:
-      name = str(requirement)
+    for requirement in pkg_resources.parse_requirements(file_contents):
+      try:
+        name = str(requirement.req)
+      except AttributeError:
+        name = str(requirement)
 
-    if name.startswith('pip '):
-      continue
+      if not name.startswith('pip '):
+        requirements.append(name)
 
-    yield name
+  return requirements
 
 
 plaso_description = (

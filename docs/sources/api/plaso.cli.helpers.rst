@@ -132,6 +132,22 @@ plaso.cli.helpers.nsrlsvr\_analysis module
    :undoc-members:
    :show-inheritance:
 
+plaso.cli.helpers.opensearch\_output module
+-------------------------------------------
+
+.. automodule:: plaso.cli.helpers.opensearch_output
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.cli.helpers.opensearch\_ts\_output module
+-----------------------------------------------
+
+.. automodule:: plaso.cli.helpers.opensearch_ts_output
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.cli.helpers.output\_modules module
 ----------------------------------------
 
@@ -232,14 +248,6 @@ plaso.cli.helpers.virustotal\_analysis module
 ---------------------------------------------
 
 .. automodule:: plaso.cli.helpers.virustotal_analysis
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.cli.helpers.windows\_services\_analysis module
-----------------------------------------------------
-
-.. automodule:: plaso.cli.helpers.windows_services_analysis
    :members:
    :undoc-members:
    :show-inheritance:
