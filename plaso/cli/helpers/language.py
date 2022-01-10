@@ -54,8 +54,8 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
 
     language_tag = cls._ParseStringOption(options, 'preferred_language')
 
-    if language_tag and not language_tags.LanguageTagHelper.IsLanguageTag(
-        language_tag):
+    if (language_tag and language_tag != 'list' and
+        not language_tags.LanguageTagHelper.IsLanguageTag(language_tag)):
       raise errors.BadConfigOption(
           'Unsupported preferred language tag: {0!s}'.format(language_tag))
 
