@@ -58,12 +58,12 @@ class FishHistoryParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
 
     if filename != self._FILENAME:
-      raise errors.UnableToParseFile('Not a Fish history file.')
+      raise errors.WrongParser('Not a Fish history file.')
 
     text_file_object = text_file.TextFile(file_object, encoding='utf-8')
 
@@ -71,7 +71,7 @@ class FishHistoryParser(interface.FileObjectParser):
     header_line_2 = text_file_object.readline()
     if (not self._YAML_FORMAT_RE_1.match(header_line_1) or
         not self._YAML_FORMAT_RE_2.match(header_line_2)):
-      raise errors.UnableToParseFile('Not a valid fish history file.')
+      raise errors.WrongParser('Not a valid fish history file.')
 
     file_size = file_object.get_size()
     if file_size > self._MAXIMUM_FISH_HISTORY_FILE_SIZE:

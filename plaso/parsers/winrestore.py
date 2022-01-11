@@ -58,7 +58,7 @@ class RestorePointLogParser(
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_size = file_object.get_size()
 
@@ -68,7 +68,7 @@ class RestorePointLogParser(
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 

@@ -912,7 +912,7 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_offset = file_object.get_offset()
     file_size = file_object.get_size()
@@ -921,7 +921,7 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         self._ParseRecord(parser_mediator, file_object)
       except errors.ParseError as exception:
         if file_offset == 0:
-          raise errors.UnableToParseFile(
+          raise errors.WrongParser(
               'Unable to parse first event record with error: {0!s}'.format(
                   exception))
 

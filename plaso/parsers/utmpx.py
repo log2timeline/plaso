@@ -155,7 +155,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_offset = 0
 
@@ -163,16 +163,16 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       timestamp, event_data = self._ReadEntry(
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse utmpx file header with error: {0!s}'.format(
               exception))
 
     if event_data.username != self._FILE_HEADER_USERNAME:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse utmpx file header with error: unsupported username')
 
     if event_data.type != self._FILE_HEADER_TYPE:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse utmp file header with error: unsupported type of '
           'login')
 

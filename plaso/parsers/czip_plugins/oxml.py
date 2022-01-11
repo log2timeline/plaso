@@ -198,7 +198,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
            in czip.py.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     try:
       xml_data = zip_file.read('_rels/.rels')

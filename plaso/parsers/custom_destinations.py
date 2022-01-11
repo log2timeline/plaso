@@ -99,7 +99,7 @@ class CustomDestinationsParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_entry = parser_mediator.GetFileEntry()
     display_name = parser_mediator.GetDisplayName()
@@ -110,17 +110,17 @@ class CustomDestinationsParser(
       file_header, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Invalid Custom Destination: {0:s} - unable to parse file header '
           'with error: {1!s}').format(display_name, exception))
 
     if file_header.unknown1 != 2:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unsupported Custom Destination file: {0:s} - invalid unknown1: '
           '{1:d}.').format(display_name, file_header.unknown1))
 
     if file_header.header_values_type > 2:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unsupported Custom Destination file: {0:s} - invalid header value '
           'type: {1:d}.').format(display_name, file_header.header_values_type))
 
@@ -135,7 +135,7 @@ class CustomDestinationsParser(
       _, value_data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, file_header_value_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Invalid Custom Destination: {0:s} - unable to parse file header '
           'value with error: {1!s}').format(display_name, exception))
 
@@ -157,7 +157,7 @@ class CustomDestinationsParser(
 
       except (ValueError, errors.ParseError) as exception:
         if not first_guid_checked:
-          raise errors.UnableToParseFile((
+          raise errors.WrongParser((
               'Invalid Custom Destination file: {0:s} - unable to parse '
               'entry header with error: {1!s}').format(
                   display_name, exception))
@@ -169,7 +169,7 @@ class CustomDestinationsParser(
 
       if entry_header.guid != self._LNK_GUID:
         if not first_guid_checked:
-          raise errors.UnableToParseFile((
+          raise errors.WrongParser((
               'Unsupported Custom Destination file: {0:s} - invalid entry '
               'header signature offset: 0x{1:08x}.').format(
                   display_name, file_offset))

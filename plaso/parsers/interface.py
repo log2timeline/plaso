@@ -229,17 +229,17 @@ class FileEntryParser(BaseParser):
   """The file entry parser interface."""
 
   def Parse(self, parser_mediator):
-    """Parsers the file entry and extracts event objects.
+    """Parses the file entry and extracts event objects.
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_entry = parser_mediator.GetFileEntry()
     if not file_entry:
-      raise errors.UnableToParseFile('Invalid file entry')
+      raise errors.WrongParser('Invalid file entry')
 
     parser_mediator.AppendToParserChain(self)
     try:
@@ -256,7 +256,7 @@ class FileEntryParser(BaseParser):
       file_entry (dfvfs.FileEntry): a file entry to parse.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
 
 
@@ -275,10 +275,10 @@ class FileObjectParser(BaseParser):
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     if not file_object:
-      raise errors.UnableToParseFile('Invalid file object')
+      raise errors.WrongParser('Invalid file object')
 
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
@@ -298,5 +298,5 @@ class FileObjectParser(BaseParser):
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """

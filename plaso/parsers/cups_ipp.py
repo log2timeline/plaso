@@ -341,21 +341,21 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the header cannot be parsed.
+      WrongParser: when the header cannot be parsed.
     """
     header_map = self._GetDataTypeMap('cups_ipp_header')
 
     try:
       header, _ = self._ReadStructureFromFileObject(file_object, 0, header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] Unable to parse header with error: {1!s}'.format(
               self.NAME, exception))
 
     format_version = '{0:d}.{1:d}'.format(
         header.major_version, header.minor_version)
     if format_version not in self._SUPPORTED_FORMAT_VERSIONS:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] Unsupported format version {1:s}.'.format(
               self.NAME, format_version))
 
@@ -376,7 +376,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     self._last_charset_attribute = 'ascii'
 
@@ -401,7 +401,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       error_message = (
           'unable to parse attribute group with error: {0!s}').format(exception)
       if is_first_attribute_group:
-        raise errors.UnableToParseFile(error_message)
+        raise errors.WrongParser(error_message)
 
       parser_mediator.ProduceExtractionWarning(error_message)
       return

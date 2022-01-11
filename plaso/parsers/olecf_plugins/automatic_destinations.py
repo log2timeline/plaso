@@ -103,7 +103,7 @@ class AutomaticDestinationsOLECFPlugin(
       olecf_item (pyolecf.item): OLECF item.
 
     Raises:
-      UnableToParseFile: if the DestList cannot be parsed.
+      WrongParser: if the DestList cannot be parsed.
     """
     if olecf_item.size == 0:
       parser_mediator.ProduceExtractionWarning('empty DestList stream')
@@ -115,7 +115,7 @@ class AutomaticDestinationsOLECFPlugin(
       header, entry_offset = self._ReadStructureFromFileObject(
           olecf_item, 0, header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse DestList header with error: {0!s}'.format(
               exception))
 
@@ -133,7 +133,7 @@ class AutomaticDestinationsOLECFPlugin(
         entry, entry_data_size = self._ReadStructureFromFileObject(
             olecf_item, entry_offset, entry_map)
       except (ValueError, errors.ParseError) as exception:
-        raise errors.UnableToParseFile(
+        raise errors.WrongParser(
             'Unable to parse DestList entry with error: {0!s}'.format(
                 exception))
 

@@ -60,7 +60,7 @@ class LocateDatabaseParser(
       file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed, this will signal
+      WrongParser: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
     locate_database_header_map = self._GetDataTypeMap('locate_database_header')
@@ -69,7 +69,7 @@ class LocateDatabaseParser(
       locate_database_header, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, locate_database_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse locate database header with error: {0!s}'.format(
               exception))
 

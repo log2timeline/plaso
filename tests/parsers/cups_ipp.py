@@ -230,7 +230,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test with header data too small.
     file_object = self._CreateFileObject('cups_ipp', header_data[:-1])
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       parser._ParseHeader(parser_mediator, file_object)
 
     # Test with unsupported format version.
@@ -242,7 +242,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     header_data = header_map.FoldByteStream(header)
     file_object = self._CreateFileObject('cups_ipp', header_data)
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       parser._ParseHeader(parser_mediator, file_object)
 
     # Test with unsupported operation identifier.

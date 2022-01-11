@@ -50,13 +50,13 @@ class CompoundZIPTest(test_lib.ParserTestCase):
     # Try parsing a file that is not a ZIP file.
     parser = czip.CompoundZIPParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       storage_writer = self._ParseFile(['syslog.xz'], parser)
 
     # Try parsing a file that is not a ZIP file but looks like one.
     parser = czip.CompoundZIPParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       storage_writer = self._ParseFile(['passes_is_zipfile.bin'], parser)
 
 

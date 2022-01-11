@@ -195,11 +195,11 @@ class ChromePreferencesParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     # First pass check for initial character being open brace.
     if file_object.read(1) != b'{':
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] {1:s} is not a valid Preference file, '
           'missing opening brace.').format(
               self.NAME, parser_mediator.GetDisplayName()))
@@ -210,7 +210,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
     try:
       file_content = codecs.decode(file_content, self._ENCODING)
     except UnicodeDecodeError:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] {1:s} is not a valid Preference file, '
           'unable to decode UTF-8.').format(
               self.NAME, parser_mediator.GetDisplayName()))
@@ -219,29 +219,29 @@ class ChromePreferencesParser(interface.FileObjectParser):
     try:
       json_dict = json.loads(file_content)
     except ValueError as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] Unable to parse file {1:s} as JSON: {2!s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
     except IOError as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] Unable to open file {1:s} for parsing as'
           'JSON: {2!s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     # Third pass to verify the file has the correct keys in it for Preferences
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
-      raise errors.UnableToParseFile('File does not contain Preference data.')
+      raise errors.WrongParser('File does not contain Preference data.')
 
     extensions_setting_dict = json_dict.get('extensions')
     if not extensions_setting_dict:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] {1:s} is not a valid Preference file, '
           'does not contain extensions value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
     extensions_dict = extensions_setting_dict.get('settings')
     if not extensions_dict:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] {1:s} is not a valid Preference file, '
           'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))

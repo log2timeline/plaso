@@ -98,14 +98,14 @@ class WinRecycleBinParser(
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     # We may have to rely on filenames since this header is very generic.
 
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
     if not filename.startswith('$I'):
-      raise errors.UnableToParseFile('Filename must start with $I.')
+      raise errors.WrongParser('Filename must start with $I.')
 
     file_header_map = self._GetDataTypeMap('recycle_bin_metadata_file_header')
 
@@ -113,12 +113,12 @@ class WinRecycleBinParser(
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse Windows Recycle.Bin metadata file header with '
           'error: {0!s}').format(exception))
 
     if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unsupported format version: {0:d}.'.format(
               file_header.format_version))
 
@@ -239,7 +239,7 @@ class WinRecyclerInfo2Parser(
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
@@ -255,7 +255,7 @@ class WinRecyclerInfo2Parser(
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse Windows Recycler INFO2 file header with '
           'error: {0!s}').format(exception))
 

@@ -173,7 +173,7 @@ class EventExtractor(object):
       int: parse result which is _PARSE_RESULT_FAILURE if the file entry
           could not be parsed, _PARSE_RESULT_SUCCESS if the file entry
           successfully was parsed or _PARSE_RESULT_UNSUPPORTED when
-          UnableToParseFile was raised.
+          WrongParser was raised.
 
     Raises:
       TypeError: if parser object is not a supported parser type.
@@ -201,7 +201,7 @@ class EventExtractor(object):
               parser.NAME, display_name, exception))
       result = self._PARSE_RESULT_FAILURE
 
-    except errors.UnableToParseFile as exception:
+    except errors.WrongParser as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logger.debug(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
@@ -230,7 +230,7 @@ class EventExtractor(object):
       int: parse result which is _PARSE_RESULT_FAILURE if the file entry
           could not be parsed, _PARSE_RESULT_SUCCESS if the file entry
           successfully was parsed or _PARSE_RESULT_UNSUPPORTED when
-          UnableToParseFile was raised or no names of parser were provided.
+          WrongParser was raised or no names of parser were provided.
 
     Raises:
       RuntimeError: if the parser object is missing.

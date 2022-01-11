@@ -190,7 +190,7 @@ class ASLParserTest(test_lib.ParserTestCase):
     # Test with file header data too small.
     file_object = self._CreateFileObject('asl', file_header_data[:-1])
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       parser.ParseFileObject(parser_mediator, file_object)
 
     # Test with invalid signature.
@@ -200,7 +200,7 @@ class ASLParserTest(test_lib.ParserTestCase):
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       parser.ParseFileObject(parser_mediator, file_object)
 
     # Test with first record data too small.

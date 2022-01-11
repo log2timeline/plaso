@@ -186,7 +186,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     fixed_section_data_map = self._GetDataTypeMap(
         'job_fixed_length_data_section')
@@ -195,17 +195,17 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       fixed_length_section, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, fixed_section_data_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse fixed-length data section with error: {0!s}'.format(
               exception))
 
     if not fixed_length_section.product_version in self._PRODUCT_VERSIONS:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unsupported product version in: 0x{0:04x}'.format(
               fixed_length_section.product_version))
 
     if not fixed_length_section.format_version == 1:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unsupported format version in: {0:d}'.format(
               fixed_length_section.format_version))
 
@@ -216,7 +216,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       variable_length_section, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, variable_section_data_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse variable-length data section with error: '
           '{0!s}').format(exception))
 
@@ -237,7 +237,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         trigger, data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, trigger_data_map)
       except (ValueError, errors.ParseError) as exception:
-        raise errors.UnableToParseFile((
+        raise errors.WrongParser((
             'Unable to parse trigger: {0:d} with error: {1!s}').format(
                 trigger_index, exception))
 

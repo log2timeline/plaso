@@ -445,14 +445,14 @@ class ChromeCacheParser(interface.FileEntryParser):
       file_entry (dfvfs.FileEntry): file entry.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     index_file_parser = ChromeCacheIndexFileParser()
 
     file_object = file_entry.GetFileObject()
     if not file_object:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] unable to parse index file {1:s}'.format(
               self.NAME, display_name))
 
@@ -460,7 +460,7 @@ class ChromeCacheParser(interface.FileEntryParser):
       index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 

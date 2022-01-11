@@ -61,7 +61,7 @@ class GooglelogParserTest(test_lib.ParserTestCase):
     invalid_file_path = self._GetTestFilePath([invalid_file_name])
     self._SkipIfPathNotExists(invalid_file_path)
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(
           [invalid_file_name], parser,
           knowledge_base_values=knowledge_base_values)

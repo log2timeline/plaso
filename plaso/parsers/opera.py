@@ -78,16 +78,16 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not an Opera typed history file [not a XML]')
 
     _, _, data = data.partition(b'\n')
     if not data.startswith(b'<typed_history'):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not an Opera typed history file [wrong XML root key]')
 
     # For ElementTree to work we need to work on a file object seeked
@@ -304,12 +304,12 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     encoding = self._ENCODING or parser_mediator.codepage
     text_file_object = text_file.TextFile(file_object, encoding=encoding)
     if not self._ParseAndValidateRecord(parser_mediator, text_file_object):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse as Opera global_history.dat.')
 
     while self._ParseRecord(parser_mediator, text_file_object):

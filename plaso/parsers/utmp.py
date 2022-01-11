@@ -155,7 +155,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_offset = 0
 
@@ -163,21 +163,21 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       timestamp, event_data, warning_strings = self._ReadEntry(
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse first utmp entry with error: {0!s}'.format(
               exception))
 
     if not timestamp:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing timestamp')
 
     if not event_data.username and event_data.type != self._DEAD_PROCESS_TYPE:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing username')
 
     if warning_strings:
       all_warnings = ', '.join(warning_strings)
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse first utmp entry with error: {0:s}'.format(
               all_warnings))
 

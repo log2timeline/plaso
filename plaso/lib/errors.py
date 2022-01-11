@@ -86,16 +86,8 @@ class UnableToLoadRegistryHelper(Error):
   """Raised when unable to load a Registry helper object."""
 
 
-class UnableToParseFile(Error):
-  """Raised when a parser is not designed to parse a file."""
-
-
 class UserAbort(Error):
   """Class that defines an user initiated abort exception."""
-
-
-class WrongBencodePlugin(Error):
-  """Error reporting wrong bencode plugin used."""
 
 
 class WrongFormatter(Error):
@@ -104,6 +96,10 @@ class WrongFormatter(Error):
 
 class WrongPlugin(Error):
   """Raised when the plugin is of the wrong type."""
+
+
+class WrongParser(Error):
+  """Raised when a parser is not designed to parse a file."""
 
 
 class WrongQueueType(Error):

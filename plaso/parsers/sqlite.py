@@ -413,7 +413,7 @@ class SQLiteParser(interface.FileEntryParser):
       file_entry (dfvfs.FileEntry): file entry to be parsed.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
     database = SQLiteDatabase(

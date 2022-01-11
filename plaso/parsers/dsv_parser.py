@@ -203,13 +203,13 @@ class DSVParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     encoding, text_offset = self._CheckForByteOrderMark(file_object)
 
     if encoding and self._encoding and encoding != self._encoding:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] Unable to parse DSV file: {1:s} encoding does not match the '
           'one required by the parser.').format(self._encoding, display_name))
 
@@ -223,13 +223,13 @@ class DSVParser(interface.FileObjectParser):
     try:
       if not self._HasExpectedLineLength(file_object, encoding=encoding):
         display_name = parser_mediator.GetDisplayName()
-        raise errors.UnableToParseFile((
+        raise errors.WrongParser((
             '[{0:s}] Unable to parse DSV file: {1:s} with error: '
             'unexpected line length.').format(self.NAME, display_name))
 
     except UnicodeDecodeError as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
               self.NAME, display_name, exception))
 
@@ -240,7 +240,7 @@ class DSVParser(interface.FileObjectParser):
       row = next(reader)
     except (StopIteration, UnicodeDecodeError, csv.Error) as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
               self.NAME, display_name, exception))
 
@@ -249,7 +249,7 @@ class DSVParser(interface.FileObjectParser):
 
     if number_of_records != number_of_columns:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] Unable to parse DSV file: {1:s}. Wrong number of '
           'records (expected: {2:d}, got: {3:d})').format(
               self.NAME, display_name, number_of_columns,
@@ -258,13 +258,13 @@ class DSVParser(interface.FileObjectParser):
     for key, value in row.items():
       if self._MAGIC_TEST_STRING in (key, value):
         display_name = parser_mediator.GetDisplayName()
-        raise errors.UnableToParseFile((
+        raise errors.WrongParser((
             '[{0:s}] Unable to parse DSV file: {1:s}. Signature '
             'mismatch.').format(self.NAME, display_name))
 
     if not self.VerifyRow(parser_mediator, row):
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           '[{0:s}] Unable to parse DSV file: {1:s}. Verification '
           'failed.').format(self.NAME, display_name))
 
