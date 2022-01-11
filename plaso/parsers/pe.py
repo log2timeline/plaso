@@ -65,7 +65,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   def __init__(self):
     """Initializes a PE parser."""
     super(PEParser, self).__init__()
-    self._resouce_file_helper = resource_files.WindowsResourceFileHelper
+    self._resource_file_helper = resource_files.WindowsResourceFileHelper
 
   def _GetPEType(self, pefile_object):
     """Retrieves the type of the PE file.
@@ -302,7 +302,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           and other components, such as storage and dfVFS.
       message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
           message file.
-      language_identifier (int): language indentifier (LCID).
+      language_identifier (int): language identifier (LCID).
       data (bytes): message table data.
 
     Raises:
@@ -369,7 +369,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if alignment_padding > 0:
           string_offset += 4 - alignment_padding
 
-        string = self._resouce_file_helper.FormatMessageStringInPEP3101(string)
+        string = self._resource_file_helper.FormatMessageStringInPEP3101(string)
 
         message_string = artifacts.WindowsEventLogMessageStringArtifact(
             language_identifier=language_identifier,

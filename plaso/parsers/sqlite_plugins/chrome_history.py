@@ -101,7 +101,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
   _PAGE_TRANSITION_CORE_MASK = 0xff
 
   def _GetUrl(self, url, cache, database):
-    """Retrieves an URL from a reference to an entry in the from_visit table.
+    """Retrieves a URL from a reference to an entry in the from_visit table.
 
     Args:
       url (str): URL.

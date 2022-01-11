@@ -99,7 +99,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | BLANK
 
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
-  # IIS does not require the a query comply with RFC1738 restrictions on valid
+  # IIS does not require that a query comply with RFC1738 restrictions on valid
   # URI characters
   QUERY = (pyparsing.Word(
       pyparsing.alphanums + _URI_SAFE_CHARACTERS + _URI_UNSAFE_CHARACTERS) |

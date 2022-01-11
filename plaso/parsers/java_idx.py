@@ -70,7 +70,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

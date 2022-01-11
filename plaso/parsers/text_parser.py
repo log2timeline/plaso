@@ -182,7 +182,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   """Single line text parser interface based on pyparsing."""
 
   # The actual structure, this needs to be defined by each parser.
-  # This is defined as a list of tuples so that more then a single line
+  # This is defined as a list of tuples so that more than a single line
   # structure can be defined. That way the parser can support more than a
   # single type of log entry, despite them all having in common the constraint
   # that each log entry is a single line.

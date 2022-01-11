@@ -428,7 +428,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['shell_start'])
 
-  def testTaksSchedule(self):
+  def testTaskSchedule(self):
     """Tests the task_schedule tagging rule."""
     # Test: data_type is 'windows:evt:record' AND
     #       source_name is 'Security' AND

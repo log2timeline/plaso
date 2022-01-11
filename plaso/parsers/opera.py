@@ -139,7 +139,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
   _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
 
   def _IsValidUrl(self, url):
-    """Checks if an URL is considered valid.
+    """Checks if a URL is considered valid.
 
     Returns:
       bool: True if the URL is valid.

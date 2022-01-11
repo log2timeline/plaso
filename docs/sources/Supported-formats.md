@@ -130,7 +130,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * MacOS MacKeeper cache SQLite database file
 * MacOS Notes SQLite database (NotesV7.storedata) file
 * MacOS Notification Center SQLite database file
-* MacOS Transaprency, Consent, Control (TCC) SQLite database (TCC.db) file
+* MacOS Transparency, Consent, Control (TCC) SQLite database (TCC.db) file
 * Mozilla Firefox cookies SQLite database file
 * Mozilla Firefox downloads SQLite database (downloads.sqlite) file
 * Mozilla Firefox history SQLite database (places.sqlite) file

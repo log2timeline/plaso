@@ -160,7 +160,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     """Retrieves a specific string value from the data dict.
 
     Args:
-      data_dict (dict[str, list[str]): values per name.
+      data_dict (dict[str, list[str]]): values per name.
       name (str): name of the value to retrieve.
       default_value (Optional[object]): value to return if the name has no value
           set in data_dict.

@@ -18,7 +18,7 @@ file system data such as events with data type:
 Next run psort to determine Chrome extensions:
 
 ```bash
-psort.py --analysis chrome_extention -o null timeline.plaso
+psort.py --analysis chrome_extension -o null timeline.plaso
 ```
 
 This will extract information of Chrome extensions, such as name and identifier

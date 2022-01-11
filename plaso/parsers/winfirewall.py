@@ -135,7 +135,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         self._use_local_timezone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line and and produce an event object.
+    """Parse a single log line and produce an event object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -147,7 +147,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
     # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
     # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exists.
+    # named token does not exist.
     time_elements_structure = structure.get('date_time', None)
 
     try:

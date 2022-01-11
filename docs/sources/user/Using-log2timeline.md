@@ -167,7 +167,7 @@ $ log2timeline.py --logfile test.log --storage-file timeline.plaso test.vhd
 ```
 
 Note that the foreman (main process) and each worker will have a separate log
-file. If th .log.gz extention is used log2timeline.py will create a compressed
+file. If th .log.gz extension is used log2timeline.py will create a compressed
 log file.
 
 ## Using filter files for triage

@@ -14,7 +14,7 @@ class ESEDatabase(object):
   """Extensible Storage Engine (ESE) database."""
 
   def __init__(self):
-    """Initializes a Extensible Storage Engine (ESE) database."""
+    """Initializes an Extensible Storage Engine (ESE) database."""
     super(ESEDatabase, self).__init__()
     self._esedb_file = None
     self._table_names = []

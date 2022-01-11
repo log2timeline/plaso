@@ -24,7 +24,7 @@ class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
     """Called to handle arbitrary data processed by the parser.
 
     Args:
-      data(str): arbitrry data processed by the parser, such as text nodes and
+      data(str): arbitrary data processed by the parser, such as text nodes and
           the content of <script>...</script> and <style>...</style>.
     """
     # Not defined in init due to Python2/Python3 complications.

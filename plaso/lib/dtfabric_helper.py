@@ -111,7 +111,7 @@ class DtFabricHelper(object):
     """Reads data.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to read.
+      file_object (dfvfs.FileIO): a file-like object to read.
       file_offset (int): offset of the data relative to the start of
           the file-like object.
       data_size (int): size of the data. The resulting data size much match

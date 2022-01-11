@@ -21,7 +21,7 @@ class MacAppFirewallLogEventData(events.EventData):
     action (str): action.
     agent (str): agent that save the log.
     computer_name (str): name of the computer.
-    process_name (str): name of the entity that tried do the action.
+    process_name (str): name of the entity that tried to do the action.
     status (str): saved status action.
   """
 

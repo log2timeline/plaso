@@ -272,7 +272,7 @@ class FileObjectParser(BaseParser):
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -295,7 +295,7 @@ class FileObjectParser(BaseParser):
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

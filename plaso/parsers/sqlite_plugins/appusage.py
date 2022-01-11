@@ -36,7 +36,7 @@ class MacOSApplicationUsageEventData(events.EventData):
 class ApplicationUsagePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS application usage database files.
 
-  The MacOS application usage database is typlically stored in:
+  The MacOS application usage database is typically stored in:
   /var/db/application_usage.sqlite
 
   Application usage is a SQLite database that logs down entries triggered by

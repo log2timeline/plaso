@@ -8,7 +8,7 @@ Information updated 24 July 2013.
 The parser applies to XChat log files. Despite their apparent
 simplicity it's not straightforward to manage every possible case.
 XChat tool allows users to specify how timestamp will be
-encoded (using the strftime function), by letting them to specify
+encoded (using the strftime function), by letting them specify
 additional separators. This parser will accept only the simplest
 default English form of an XChat log file, as the following::
 

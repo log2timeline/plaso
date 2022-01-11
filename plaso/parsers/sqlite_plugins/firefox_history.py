@@ -459,7 +459,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     return hostname[::-1][0:]
 
   def _GetUrl(self, url_id, cache, database):
-    """Retrieves an URL from a reference to an entry in the from_visit table.
+    """Retrieves a URL from a reference to an entry in the from_visit table.
 
     Args:
       url_id (str): identifier of the visited URL.
