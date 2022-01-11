@@ -376,6 +376,85 @@ Storage files are different.
     # differences.
     self.assertEqual(output.split('\n'), expected_output)
 
+  def testGenerateWinEvtProvidersReportAsJSON(self):
+    """Tests the _GenerateWinEvtProvidersReport function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+    test_tool._output_format = 'json'
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+    try:
+      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+
+    finally:
+      storage_reader.Close()
+
+    expected_output = [
+        '{"winevt_providers": [', '', ']}',
+        '']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split('\n'), expected_output)
+
+  def testGenerateWinEvtProvidersReportAsMarkdown(self):
+    """Tests the _GenerateWinEvtProvidersReport function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+    test_tool._output_format = 'markdown'
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+    try:
+      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+
+    finally:
+      storage_reader.Close()
+
+    expected_output = [
+        'Log source | Log type | Event message file(s)',
+        '--- | --- | ---',
+        '']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split('\n'), expected_output)
+
+  def testGenerateWinEvtProvidersReportAsText(self):
+    """Tests the _GenerateWinEvtProvidersReport function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+    test_tool._output_format = 'text'
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+    try:
+      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+
+    finally:
+      storage_reader.Close()
+
+    expected_output = [
+        'Log source\tLog type\tEvent message file(s)',
+        '']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split('\n'), expected_output)
+
   def testGetStorageReader(self):
     """Tests the _GetStorageReader function."""
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
