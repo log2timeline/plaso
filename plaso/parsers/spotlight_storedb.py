@@ -130,7 +130,7 @@ class SpotlightStoreDatabaseParser(
       ('kMDItemKind', 'kind')]
 
   def __init__(self):
-    """Initializes a Apple Spotlight store database parser."""
+    """Initializes an Apple Spotlight store database parser."""
     super(SpotlightStoreDatabaseParser, self).__init__()
     self._map_values = []
     self._metadata_lists = {}

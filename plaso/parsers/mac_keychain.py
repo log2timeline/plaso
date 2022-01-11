@@ -27,7 +27,7 @@ class KeychainInternetRecordEventData(events.EventData):
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
     protocol (str): internet protocol used, for example "https".
-    ssgp_hash (str): password/certificate hash formatted as an hexadecimal
+    ssgp_hash (str): password/certificate hash formatted as a hexadecimal
         string.
     text_description (str): description.
     type_protocol (str): sub-protocol used, for example "form".
@@ -58,7 +58,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     account_name (str): name of the account.
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
-    ssgp_hash (str): password/certificate hash formatted as an hexadecimal
+    ssgp_hash (str): password/certificate hash formatted as a hexadecimal
         string.
     text_description (str): description.
   """

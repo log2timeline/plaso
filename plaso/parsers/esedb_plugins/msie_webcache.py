@@ -206,7 +206,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         sync_count = record_values.get('SyncCount', None)
 
         url = record_values.get('Url', '')
-        # Ignore an URL that start with a binary value.
+        # Ignore a URL that start with a binary value.
         if ord(url[0]) < 0x20 or ord(url[0]) == 0x7f:
           url = None
 

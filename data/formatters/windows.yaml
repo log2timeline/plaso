@@ -89,7 +89,7 @@ message:
 - 'name: {name}'
 - 'time: {time}'
 - 'iKey: {ikey}'
-- 'extention: {extention}'
+- 'extension: {extension}'
 - 'data: {data}'
 - 'Application name: {application_name}'
 - 'Application version: {application_version}'

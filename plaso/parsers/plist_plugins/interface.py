@@ -219,7 +219,7 @@ class PlistPlugin(plugins.BasePlugin):
     self.matched = {'DeviceCache': [{'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}, 'DE:AD:BE:EF:01': {'LastInquiryUpdate':
     DateTime_Object}'...}]} and needs to implement logic here to extract
-    values, format, and produce the data as a event.PlistEvent.
+    values, format, and produce the data as an event.PlistEvent.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

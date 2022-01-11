@@ -235,7 +235,7 @@ class WinRegistryParser(interface.FileObjectParser):
       registry_file.SetKeyPathPrefix(key_path_prefix)
       root_key = registry_file.GetRootKey()
       if root_key:
-        # For now treat AMCache.hve seperately.
+        # For now treat AMCache.hve separately.
         if root_key.name.lower() in self._AMCACHE_ROOT_KEY_NAMES:
           self._ParseRecurseKeys(parser_mediator, root_key)
 

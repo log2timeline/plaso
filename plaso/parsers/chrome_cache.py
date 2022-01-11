@@ -80,7 +80,7 @@ class CacheEntry(object):
 
   Attributes:
     creation_time (int): creation time, in number of microseconds since
-        since January 1, 1601, 00:00:00 UTC.
+        January 1, 1601, 00:00:00 UTC.
     hash (int): super fast hash of the key.
     key (bytes): key.
     next (int): cache address of the next cache entry.
@@ -104,8 +104,8 @@ class ChromeCacheIndexFileParser(
   """Chrome cache index file parser.
 
   Attributes:
-    creation_time (int): creation time, in number of number of microseconds
-        since January 1, 1601, 00:00:00 UTC.
+    creation_time (int): creation time, in number of microseconds since January
+        1, 1601, 00:00:00 UTC.
     index_table (list[CacheAddress]): the cache addresses which are stored in
         the index file.
   """

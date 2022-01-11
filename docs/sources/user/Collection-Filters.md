@@ -102,7 +102,7 @@ For example:
 
 The first line defines a path filter that uses the "systemroot" path expansion
 variable that is discovered during preprocessing and denotes the Windows
-SytemRoot folder. It will then process the directories and files with a name
+SystemRoot folder. It will then process the directories and files with a name
 that endswith ".evt".
 
 The second line defines a path filter using both regular expressions and

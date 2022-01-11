@@ -11,7 +11,7 @@ the problem.
 **Source data:**
 
 Please provide the source data you used when you experienced the problem.
-For publicly available data please provide an URL or path of the source data.
+For publicly available data please provide a URL or path of the source data.
 
 **Plaso version:**
 

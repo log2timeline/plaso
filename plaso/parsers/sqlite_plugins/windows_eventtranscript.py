@@ -18,7 +18,7 @@ class EventTranscriptEventData(events.EventData):
   Attributes:
     application_name (str): Application name.
     application_root_directory (str): Application root directory.
-    application_version (str): Applciation version.
+    application_version (str): Application version.
     compressed_payload_size (int): Size of the compressed payload.
     event_keywords (int): Event keywords
     event_name_hash (int): Hash of full event name.
@@ -27,7 +27,7 @@ class EventTranscriptEventData(events.EventData):
     ikey (str): iKey
     is_core (int): Boolean value represented as an integer.
     logging_binary_name (str): Binary that generated the event.
-    name (str): Name of the payload, similare as event name.
+    name (str): Name of the payload, similar to event name.
     producer_identifier (int): Identifier of the EventTranscript event producer.
         provider group.
     provider_group_identifier (int): Identifier of the EventTranscript event
@@ -171,7 +171,7 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
 
     # TODO: add support for
     # data = json.dumps(payload_data, separators=(',',':'))
-    # extention = json.dumps(payload['ext'], separators=(',',':'))
+    # extension = json.dumps(payload['ext'], separators=(',',':'))
 
     # Microsoft.Windows.Inventory.Core.InventoryApplicationAdd
     if payload_name == (

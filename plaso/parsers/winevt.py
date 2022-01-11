@@ -129,7 +129,7 @@ class WinEvtParser(interface.FileObjectParser):
     event_data.source_name = evt_record.source_name
 
     # Computer name is the value stored in the event record and does not
-    # necessarily corresponds with the actual hostname.
+    # necessarily correspond with the actual hostname.
     event_data.computer_name = evt_record.computer_name
     event_data.user_sid = evt_record.user_security_identifier
 

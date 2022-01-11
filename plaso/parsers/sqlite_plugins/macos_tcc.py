@@ -16,7 +16,7 @@ class MacOSTCCEntry(events.EventData):
   Attributes:
     allowed (bool): whether access to the service was allowed.
     client (str): name of the client requesting access to the service.
-    prompt_count (int): number of times an appplication prompted the user for
+    prompt_count (int): number of times an application prompted the user for
         access to a service.
     query (str): SQL query that was used to obtain the event data.
     service (str): name of the service.
@@ -37,7 +37,7 @@ class MacOSTCCEntry(events.EventData):
 class MacOSTCCPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS TCC database files.
 
-  The MacOS Transaprency, Consent, Control (TCC) database file is typically
+  The MacOS Transparency, Consent, Control (TCC) database file is typically
   stored in:
   /Library/Application Support/com.apple.TCC/TCC.db
   /Users/<username>/Library/Application Support/com.apple.TCC/TCC.db
@@ -45,7 +45,7 @@ class MacOSTCCPlugin(interface.SQLitePlugin):
 
   NAME = 'macostcc'
   DATA_FORMAT = (
-      'MacOS Transaprency, Consent, Control (TCC) SQLite database (TCC.db) '
+      'MacOS Transparency, Consent, Control (TCC) SQLite database (TCC.db) '
       'file')
 
   REQUIRED_STRUCTURE = {

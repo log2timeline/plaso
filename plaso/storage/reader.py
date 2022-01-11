@@ -100,7 +100,7 @@ class StorageReader(object):
     """
     return self._store.serialization_format
 
-  # TODO: remove the need for seperate SessionStart and SessionCompletion
+  # TODO: remove the need for separate SessionStart and SessionCompletion
   # attribute containers.
   def GetSessions(self):
     """Retrieves the sessions.

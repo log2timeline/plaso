@@ -49,7 +49,7 @@ class DataFormatDescriptor(object):
     self.url = url
 
 
-class DataFormatInformationExractor(object):
+class DataFormatInformationExtractor(object):
   """Data format information extractor."""
 
   _CATEGORIES_OUTPUT_ORDER = [
@@ -273,7 +273,7 @@ def Main():
 
   argument_parser.parse_args()
 
-  extractor = DataFormatInformationExractor()
+  extractor = DataFormatInformationExtractor()
 
   data_format_descriptors = extractor.GetDataFormatInformation()
   if not data_format_descriptors:

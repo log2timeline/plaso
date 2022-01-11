@@ -135,7 +135,7 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
       except (KeyError, artifacts_errors.FormatError) as exception:
         raise errors.BadConfigOption((
-            'Unable to read custorm artifact definitions from: {0:s} with '
+            'Unable to read custom artifact definitions from: {0:s} with '
             'error: {1!s}').format(custom_artifacts_path, exception))
 
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():

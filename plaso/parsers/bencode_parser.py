@@ -156,10 +156,10 @@ class BencodeParser(interface.FileObjectParser):
     try:
       bencode_file.Open(file_object)
     except IOError as exception:
-      diplay_name = parser_mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
-              self.NAME, diplay_name, exception))
+              self.NAME, display_name, exception))
 
     if not bencode_file.decoded_values:
       parser_mediator.ProduceExtractionWarning('missing decoded Bencode values')

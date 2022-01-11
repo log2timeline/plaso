@@ -14,12 +14,13 @@ class BasePlugin(object):
 
   When a data structure is common among several artifacts or files a plugin
   infrastructure can be written to make writing parsers simpler. The goal of a
-  parser plugin is have only a single parser that understands the data structure
-  that can call plugins that have specialized knowledge of certain structures.
+  parser plugin is to have only a single parser that understands the data
+  structure that can call plugins that have specialized knowledge of certain
+  structures.
 
   An example of this is a SQLite database. A plugin can be written that has
   knowledge of certain database, such as Chrome history, or Skype history, etc.
-  This can be done without needing to write a full fledged parser that needs
+  This can be done without needing to write a fully-fledged parser that needs
   to re-implement the data structure knowledge. A single parser can be created
   that calls the plugins to see if it knows that particular database.
 

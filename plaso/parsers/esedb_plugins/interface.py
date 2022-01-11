@@ -199,7 +199,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       table_name (str): name of the table.
       record_index (int): ESE record index.
       record (pyesedb.record): ESE record.
-      value_mappings (Optional[dict[str, str]): value mappings, which map
+      value_mappings (Optional[dict[str, str]]): value mappings, which map
           the column name to a callback method.
 
     Returns:
