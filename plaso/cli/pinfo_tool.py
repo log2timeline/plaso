@@ -398,25 +398,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       attribute_mappings (dict[str, dict[st, str]]): mappings of attribute
           values to human readable strings.
     """
-    if self._output_format == 'json':
-      self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
+    self._GenerateReportHeader(json_base_type, column_titles)
 
-      entry_format_string = '    {{{{{0:s}}}}}'.format(', '.join([
-          '"{0:s}": "{{{0:s}!s}}"'.format(name) for name in attribute_names]))
-
-    elif self._output_format == 'markdown':
-      self._output_writer.Write('{0:s}\n'.format(' | '.join(column_titles)))
-      self._output_writer.Write(
-          '{0:s}\n'.format(' | '.join(['---'] * len(column_titles))))
-
-      entry_format_string = '{0:s}\n'.format(' | '.join([
-          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
-
-    elif self._output_format == 'text':
-      self._output_writer.Write('{0:s}\n'.format('\t'.join(column_titles)))
-
-      entry_format_string = '{0:s}\n'.format('\t'.join([
-          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+    entry_format_string = self._GenerateReportEntryFormatString(attribute_names)
 
     if storage_reader.HasAttributeContainers(container_type):
       generator = storage_reader.GetAttributeContainers(container_type)
@@ -440,45 +424,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._output_writer.Write(entry_format_string.format(
             **attribute_values))
 
-    if self._output_format == 'json':
-      self._output_writer.Write('\n]}\n')
-
-  def _GenerateEnvironmentVariablesReport(self, storage_reader):
-    """Generates an environment variables report.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    if self._output_format == 'json':
-      self._output_writer.Write('{"environment_variables": [\n')
-
-    elif self._output_format == 'markdown':
-      self._output_writer.Write('Name | Value\n')
-      self._output_writer.Write('--- | ---\n')
-
-    elif self._output_format == 'text':
-      self._output_writer.Write('Name\tValue\n')
-
-    generator = storage_reader.GetAttributeContainers('environment_variable')
-
-    for artifact_index, environment_variable in enumerate(generator):
-      if self._output_format == 'json':
-        if artifact_index > 0:
-          self._output_writer.Write(',\n')
-        self._output_writer.Write(
-            '{{"name": "{0:s}", "value": "{1:s}"}}'.format(
-                environment_variable.name, environment_variable.value))
-
-      elif self._output_format == 'markdown':
-        self._output_writer.Write('{0:s} | {1:s}\n'.format(
-            environment_variable.name, environment_variable.value))
-
-      elif self._output_format == 'text':
-        self._output_writer.Write('{0:s}\t{1:s}\n'.format(
-            environment_variable.name, environment_variable.value))
-
-    if self._output_format == 'json':
-      self._output_writer.Write('\n]}\n')
+    self._GenerateReportFooter()
 
   def _GenerateFileHashesReport(self, storage_reader):
     """Generates a file hashes report.
@@ -486,56 +432,116 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    if self._output_format == 'json':
-      self._output_writer.Write('{"file_hashes": [\n')
+    column_titles = [
+        '{0:s} hash'.format(self._hash_type.upper()),
+        'Display name']
+    self._GenerateReportHeader('file_hashes', column_titles)
 
-    elif self._output_format == 'markdown':
-      self._output_writer.Write('{0:s} hash | Display name\n'.format(
-          self._hash_type.upper()))
-      self._output_writer.Write('--- | ---\n')
-
-    elif self._output_format == 'text':
-      self._output_writer.Write('{0:s} hash\tDisplay name\n'.format(
-          self._hash_type.upper()))
+    hash_attribute_name = '{0:s}_hash'.format(self._hash_type)
+    attribute_names = [hash_attribute_name, 'display_name']
+    entry_format_string = self._GenerateReportEntryFormatString(attribute_names)
 
     generator = storage_reader.GetAttributeContainers(
         self._CONTAINER_TYPE_EVENT_DATA_STREAM)
 
     for event_data_stream_index, event_data_stream in enumerate(generator):
-      if self._hash_type == 'md5':
-        hash_value = event_data_stream.md5_hash
-      elif self._hash_type == 'sha1':
-        hash_value = event_data_stream.sha1_hash
-      elif self._hash_type == 'sha256':
-        hash_value = event_data_stream.sha256_hash
-
-      if not hash_value:
-        hash_value = 'N/A'
-
-      if event_data_stream.path_spec:
-        display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-           event_data_stream.path_spec)
-      else:
-        display_name = 'N/A'
-
       if self._output_format == 'json':
         if event_data_stream_index > 0:
           self._output_writer.Write(',\n')
-        display_name = display_name.replace('\\', '\\\\')
-        self._output_writer.Write(
-            '{{"{0:s}_hash": "{1:s}", "display_name": "{2:s}"}}'.format(
-                self._hash_type, hash_value, display_name))
 
-      elif self._output_format == 'markdown':
-        self._output_writer.Write('{0:s} | {1:s}\n'.format(
-            hash_value, display_name))
+      hash_value = getattr(
+          event_data_stream, hash_attribute_name, None) or 'N/A'
 
-      elif self._output_format == 'text':
-        self._output_writer.Write('{0:s}\t{1:s}\n'.format(
-            hash_value, display_name))
+      display_name = 'N/A'
+      if event_data_stream.path_spec:
+        display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+           event_data_stream.path_spec)
 
+      attribute_values = {
+          'display_name': display_name, hash_attribute_name: hash_value}
+
+      self._output_writer.Write(entry_format_string.format(
+          **attribute_values))
+
+    self._GenerateReportFooter()
+
+  def _GenerateReportEntryFormatString(self, attribute_names):
+    """Generates a report entry format string.
+
+    Args:
+      attribute_names (list[str]): names of the attributes to report.
+
+    Returns:
+      str: entry format string.
+    """
+    if self._output_format == 'json':
+      return '    {{{{{0:s}}}}}'.format(', '.join([
+          '"{0:s}": "{{{0:s}!s}}"'.format(name) for name in attribute_names]))
+
+    if self._output_format == 'markdown':
+      return '{0:s}\n'.format(' | '.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+
+    if self._output_format == 'text':
+      return '{0:s}\n'.format('\t'.join([
+          '{{{0:s}!s}}'.format(name) for name in attribute_names]))
+
+    return ''
+
+  def _GenerateReportFooter(self):
+    """Generates a report footer."""
     if self._output_format == 'json':
       self._output_writer.Write('\n]}\n')
+
+  def _GenerateReportHeader(self, json_base_type, column_titles):
+    """Generates a report header.
+
+    Args:
+      json_base_type (str): JSON base type.
+      column_titles (list[str]): column titles of the Markdown and tab
+          separated tables.
+    """
+    if self._output_format == 'json':
+      self._output_writer.Write('{{"{0:s}": [\n'.format(json_base_type))
+
+    elif self._output_format == 'markdown':
+      self._output_writer.Write('{0:s}\n'.format(' | '.join(column_titles)))
+      self._output_writer.Write(
+          '{0:s}\n'.format(' | '.join(['---'] * len(column_titles))))
+
+    elif self._output_format == 'text':
+      self._output_writer.Write('{0:s}\n'.format('\t'.join(column_titles)))
+
+  def _GenerateWinEvtProvidersReport(self, storage_reader):
+    """Generates a Windows Event Log providers report.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+    """
+    column_titles = ['Log source', 'Log type', 'Event message file(s)']
+    self._GenerateReportHeader('winevt_providers', column_titles)
+
+    attribute_names = ['log_source', 'log_type', 'event_message_files']
+    entry_format_string = self._GenerateReportEntryFormatString(attribute_names)
+
+    if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
+      generator = storage_reader.GetAttributeContainers(
+          'windows_eventlog_provider')
+
+      for artifact_index, artifact in enumerate(generator):
+        if self._output_format == 'json':
+          if artifact_index > 0:
+            self._output_writer.Write(',\n')
+
+        attribute_values = {
+            'event_message_files': artifact.event_message_files,
+            'log_source': artifact.log_sources[0],
+            'log_type': artifact.log_types[0]}
+
+        self._output_writer.Write(entry_format_string.format(
+            **attribute_values))
+
+    self._GenerateReportFooter()
 
   def _GetStorageReader(self, path):
     """Retrieves a storage reader.
@@ -1405,7 +1411,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             attribute_mappings)
 
       elif self._report_type == 'environment_variables':
-        self._GenerateEnvironmentVariablesReport(storage_reader)
+        column_titles = ['Name', 'Value']
+        attribute_names = ['name', 'value']
+        attribute_mappings = {}
+        self._GenerateAnalysisResultsReport(
+            storage_reader, 'environment_variables', column_titles,
+            'environment_variable', attribute_names, attribute_mappings)
 
       elif self._report_type == 'file_hashes':
         self._GenerateFileHashesReport(storage_reader)
@@ -1434,13 +1445,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             attribute_mappings)
 
       elif self._report_type == 'winevt_providers':
-        column_titles = ['Log source', 'Log type', 'Event message files']
-        attribute_names = ['log_source', 'log_type', 'event_message_files']
-        attribute_mappings = {}
-        self._GenerateAnalysisResultsReport(
-            storage_reader, 'winevt_providers', column_titles,
-            'windows_eventlog_provider', attribute_names,
-            attribute_mappings)
+        self._GenerateWinEvtProvidersReport(storage_reader)
 
     finally:
       storage_reader.Close()
