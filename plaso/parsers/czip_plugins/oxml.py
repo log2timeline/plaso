@@ -196,9 +196,6 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       zip_file (zipfile.ZipFile): the zip file containing OXML content. It is
           not be closed in this method, but will be closed by the parser logic
            in czip.py.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     try:
       xml_data = zip_file.read('_rels/.rels')

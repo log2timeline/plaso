@@ -122,7 +122,7 @@ class PlsRecallParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_offset = 0
     file_size = file_object.get_size()
@@ -134,7 +134,7 @@ class PlsRecallParser(
             file_object, file_offset, record_map)
       except (ValueError, errors.ParseError) as exception:
         if file_offset == 0:
-          raise errors.UnableToParseFile('Unable to parse first record.')
+          raise errors.WrongParser('Unable to parse first record.')
 
         parser_mediator.ProduceExtractionWarning((
             'unable to parse record at offset: 0x{0:08x} with error: '
@@ -143,7 +143,7 @@ class PlsRecallParser(
 
       if file_offset == 0 and not self._VerifyRecord(
           parser_mediator, pls_record):
-        raise errors.UnableToParseFile('Verification of first record failed.')
+        raise errors.WrongParser('Verification of first record failed.')
 
       event_data = PlsRecallEventData()
       event_data.database_name = pls_record.database_name.rstrip('\x00')

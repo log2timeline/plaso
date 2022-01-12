@@ -281,7 +281,7 @@ class SystemdJournalParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the header cannot be parsed.
+      WrongParser: when the header cannot be parsed.
     """
     file_header_map = self._GetDataTypeMap('systemd_journal_file_header')
 
@@ -289,12 +289,12 @@ class SystemdJournalParser(
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
     if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unsupported file header size: {0:d}.'.format(
               file_header.header_size))
 

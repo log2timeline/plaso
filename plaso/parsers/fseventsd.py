@@ -153,7 +153,7 @@ class FseventsdParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the header cannot be parsed.
+      WrongParser: when the header cannot be parsed.
     """
     page_header_map = self._GetDataTypeMap('dls_page_header')
 
@@ -161,7 +161,7 @@ class FseventsdParser(
       page_header, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, page_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse page header with error: {0!s}'.format(
               exception))
 

@@ -30,12 +30,12 @@ class CompoundZIPParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     display_name = parser_mediator.GetDisplayName()
 
     if not zipfile.is_zipfile(file_object):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, display_name, 'Not a Zip file.'))
 
@@ -46,7 +46,7 @@ class CompoundZIPParser(interface.FileObjectParser):
     # error like a negative seek (IOError). Note that this function can raise
     # many different exceptions.
     except Exception as exception:  # pylint: disable=broad-except
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 

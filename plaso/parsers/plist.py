@@ -80,17 +80,17 @@ class PlistParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
     file_size = file_object.get_size()
 
     if file_size <= 0:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'File size: {0:d} bytes is less equal 0.'.format(file_size))
 
     if file_size > self._MAXIMUM_PLIST_FILE_SIZE:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'File size: {0:d} bytes is larger than 50 MB.'.format(file_size))
 
     plist_data = file_object.read()
@@ -116,7 +116,7 @@ class PlistParser(interface.FileObjectParser):
         plist_data = plist_data.rstrip()
 
         if not plist_data.endswith(plist_footer):
-          raise errors.UnableToParseFile(
+          raise errors.WrongParser(
               'Unable to parse XML plist with error: missing plist XML root '
               'element.')
 
@@ -125,7 +125,7 @@ class PlistParser(interface.FileObjectParser):
 
     except (AttributeError, binascii.Error, expat.ExpatError,
             plistlib.InvalidFileException) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse plist with error: {0!s}'.format(exception))
 
     except (LookupError, ValueError) as exception:
@@ -155,7 +155,7 @@ class PlistParser(interface.FileObjectParser):
     try:
       top_level_keys = set(top_level_object.keys())
     except AttributeError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse top level keys of: {0:s} with error: {1!s}.'.format(
               filename, exception))
 

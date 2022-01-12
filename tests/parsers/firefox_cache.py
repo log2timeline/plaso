@@ -18,7 +18,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     parser = firefox_cache.FirefoxCacheParser()
     path_segments = ['firefox_cache', 'invalid_file']
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(path_segments, parser)
 
   def testParseCache_001(self):
@@ -275,7 +275,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     path_segments = [
         'firefox_cache', 'cache2', 'C966EB70794E44E7E3E8A260106D0C72439AF65B']
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(path_segments, parser)
 
   def testParseVersion3Entry(self):

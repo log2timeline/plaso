@@ -882,12 +882,12 @@ class KeychainParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     try:
       file_header = self._ReadFileHeader(file_object)
     except (ValueError, errors.ParseError):
-      raise errors.UnableToParseFile('Unable to parse file header.')
+      raise errors.WrongParser('Unable to parse file header.')
 
     tables = self._ReadTablesArray(file_object, file_header.tables_array_offset)
 

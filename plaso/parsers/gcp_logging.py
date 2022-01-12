@@ -274,11 +274,11 @@ class GCPLogsParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     # Trivial JSON format check: first character must be an open brace.
     if file_object.read(1) != b'{':
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'is not a valid JSON file, missing opening brace.')
     file_object.seek(0, os.SEEK_SET)
 
@@ -289,13 +289,13 @@ class GCPLogsParser(interface.FileObjectParser):
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
     except JSONDecodeError:
-      raise errors.UnableToParseFile('could not decode json.')
+      raise errors.WrongParser('could not decode json.')
     file_object.seek(0, os.SEEK_SET)
 
     if first_line_json and 'logName' in first_line_json:
       self._ParseGCPLog(parser_mediator, file_object)
     else:
-      raise errors.UnableToParseFile('no logName field, not a GCP log entry.')
+      raise errors.WrongParser('no logName field, not a GCP log entry.')
 
 
 manager.ParsersManager.RegisterParser(GCPLogsParser)

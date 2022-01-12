@@ -48,16 +48,16 @@ class AndroidAppUsageParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not an Android usage history file [not XML]')
 
     _, _, data = data.partition(b'\n')
     if not data.startswith(b'<usage-history'):
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not an Android usage history file [wrong XML root key]')
 
     # The current offset of the file-like object needs to point at

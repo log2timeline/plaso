@@ -145,11 +145,11 @@ class BencodeParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     header_data = file_object.read(2)
     if not self._BENCODE_RE.match(header_data):
-      raise errors.UnableToParseFile('Not a valid Bencoded file.')
+      raise errors.WrongParser('Not a valid Bencoded file.')
 
     bencode_file = BencodeFile()
 
@@ -157,7 +157,7 @@ class BencodeParser(interface.FileObjectParser):
       bencode_file.Open(file_object)
     except IOError as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 

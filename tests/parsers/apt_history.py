@@ -245,7 +245,7 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
   def testParseInvalidLog(self):
     """Tests the Parse function on a non APT History log."""
     parser = apt_history.APTHistoryLogParser()
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['setupapi.dev.log'], parser)
 
 

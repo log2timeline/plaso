@@ -278,7 +278,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_header_map = self._GetDataTypeMap('asl_file_header')
 
@@ -286,7 +286,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 

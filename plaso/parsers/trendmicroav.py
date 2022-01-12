@@ -107,7 +107,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       dict[str, str]: column values keyed by column header.
 
     Raises:
-      UnableToParseFile: if a log line cannot be parsed.
+      WrongParser: if a log line cannot be parsed.
     """
     for line in line_reader:
       stripped_line = line.strip()
@@ -116,12 +116,12 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       number_of_columns = len(self.COLUMNS)
 
       if number_of_values < self.MIN_COLUMNS:
-        raise errors.UnableToParseFile(
+        raise errors.WrongParser(
             'Expected at least {0:d} values, found {1:d}'.format(
                 self.MIN_COLUMNS, number_of_values))
 
       if number_of_values > number_of_columns:
-        raise errors.UnableToParseFile(
+        raise errors.WrongParser(
             'Expected at most {0:d} values, found {1:d}'.format(
                 number_of_columns, number_of_values))
 

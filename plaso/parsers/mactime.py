@@ -111,7 +111,7 @@ class MactimeParser(interface.FileObjectParser):
       int: integer value or None if not available or invalid.
 
     Raises:
-      UnableToParseFile: when an invalid integer value is found on
+      WrongParser: when an invalid integer value is found on
           the first line.
     """
     integer_value = values.pop(-1) or None
@@ -122,7 +122,7 @@ class MactimeParser(interface.FileObjectParser):
         error_string = 'invalid {0:s} value in line: {1:d}'.format(
             description, line_number)
         if line_number == 0:
-          raise errors.UnableToParseFile(error_string)
+          raise errors.WrongParser(error_string)
 
         parser_mediator.ProduceRecoveryWarning(error_string)
         integer_value = None
@@ -144,7 +144,7 @@ class MactimeParser(interface.FileObjectParser):
       float: floating-point value or None if not available or invalid.
 
     Raises:
-      UnableToParseFile: when an invalid floating-point value is found on
+      WrongParser: when an invalid floating-point value is found on
           the first line.
     """
     float_value = values.pop(-1) or None
@@ -155,7 +155,7 @@ class MactimeParser(interface.FileObjectParser):
         error_string = 'invalid {0:s} value in line: {1:d}'.format(
             description, line_number)
         if line_number == 0:
-          raise errors.UnableToParseFile(error_string)
+          raise errors.WrongParser(error_string)
 
         parser_mediator.ProduceRecoveryWarning(error_string)
         float_value = None
@@ -171,7 +171,7 @@ class MactimeParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     # Note that we cannot use the DSVParser here since the mactime bodyfile
     # format is not strict and clean file format.
@@ -183,7 +183,7 @@ class MactimeParser(interface.FileObjectParser):
     try:
       line = line_reader.readline()
     except UnicodeDecodeError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'unable to read line: {0:d} with error: {1!s}'.format(
               line_number, exception))
 
@@ -194,7 +194,7 @@ class MactimeParser(interface.FileObjectParser):
         error_string = 'invalid number of values: {0:d} in line: {1:d}'.format(
             number_of_values, line_number)
         if line_number == 0:
-          raise errors.UnableToParseFile(error_string)
+          raise errors.WrongParser(error_string)
 
         parser_mediator.ProduceExtractionWarning(error_string)
 
@@ -206,7 +206,7 @@ class MactimeParser(interface.FileObjectParser):
           error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
               md5_value, line_number)
           if line_number == 0:
-            raise errors.UnableToParseFile(error_string)
+            raise errors.WrongParser(error_string)
 
           parser_mediator.ProduceRecoveryWarning(error_string)
 

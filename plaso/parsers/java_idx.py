@@ -73,7 +73,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     file_header_map = self._GetDataTypeMap('java_idx_file_header')
 
@@ -81,12 +81,12 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_header, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
     if not file_header.format_version in self._SUPPORTED_FORMAT_VERSIONS:
-      raise errors.UnableToParseFile('Unsupported format version.')
+      raise errors.WrongParser('Unsupported format version.')
 
     if file_header.format_version == 602:
       section1_map = self._GetDataTypeMap('java_idx_602_section1')
@@ -99,7 +99,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section1, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, section1_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse section 1 (format version: {0:d}) with error: '
           '{1!s}').format(file_header.format_version, exception))
 
@@ -115,14 +115,14 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section2, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, section2_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse section 2 (format version: {0:d}) with error: '
           '{1!s}').format(file_header.format_version, exception))
 
     file_offset += data_size
 
     if not section2.url:
-      raise errors.UnableToParseFile('URL not found in file.')
+      raise errors.WrongParser('URL not found in file.')
 
     date_http_header = None
     for _ in range(section2.number_of_http_headers):

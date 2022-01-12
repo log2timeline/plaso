@@ -211,7 +211,7 @@ class BinaryCookieParser(
 
     Raises:
       ParseError: when the page sizes array cannot be parsed.
-      UnableToParseFile: when the file cannot be parsed, this will signal
+      WrongParser: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
     file_header_map = self._GetDataTypeMap('binarycookies_file_header')
@@ -220,7 +220,7 @@ class BinaryCookieParser(
       file_header, file_header_data_size = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to read file header with error: {0!s}.'.format(exception))
 
     file_offset = file_header_data_size

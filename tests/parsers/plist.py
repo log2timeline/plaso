@@ -88,7 +88,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a truncated plist file."""
     parser = plist.PlistParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['truncated.plist'], parser)
 
   def testParseWithXMLFileLeadingWhitespace(self):
@@ -127,39 +127,39 @@ class PlistParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on an XML file that causes an ExpatError."""
     parser = plist.PlistParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['WMSDKNS.DTD'], parser)
 
   def testParseWithXMLFileBinASCIIError(self):
     """Tests the Parse function on an XML file that causes a binascii.Error."""
     parser = plist.PlistParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['manageconsolidatedProviders.aspx.resx'], parser)
 
   def testParseWithXMLFileNoTopLevel(self):
     """Tests the Parse function on an XML file without top level."""
     parser = plist.PlistParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       test_path_segments = [
           'SettingsPane_{F8B5DB1C-D219-4bf9-A747-A1325024469B}'
           '.settingcontent-ms']
       self._ParseFile(test_path_segments, parser)
 
     # UTF-8 encoded XML file with byte-order-mark.
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['ReAgent.xml'], parser)
 
     # UTF-16 little-endian encoded XML file with byte-order-mark.
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['SampleMachineList.xml'], parser)
 
   def testParseWithXMLFileEncodingUnicode(self):
     """Tests the Parse function on an XML file with encoding Unicode."""
     parser = plist.PlistParser()
 
-    with self.assertRaises(errors.UnableToParseFile):
+    with self.assertRaises(errors.WrongParser):
       self._ParseFile(['SAFStore.xml'], parser)
 
   def testParseWithEmptyBinaryPlistFile(self):

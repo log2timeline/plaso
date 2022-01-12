@@ -118,7 +118,7 @@ class DockerJSONParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file is not a valid layer config file.
+      WrongParser: when the file is not a valid layer config file.
     """
     file_content = file_object.read()
     file_content = codecs.decode(file_content, self._ENCODING)
@@ -126,7 +126,7 @@ class DockerJSONParser(interface.FileObjectParser):
     json_dict = json.loads(file_content)
 
     if 'docker_version' not in json_dict:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'not a valid Docker layer configuration file, missing '
           '\'docker_version\' key.')
 
@@ -166,7 +166,7 @@ class DockerJSONParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file is not a valid container config file.
+      WrongParser: when the file is not a valid container config file.
     """
     file_content = file_object.read()
     file_content = codecs.decode(file_content, self._ENCODING)
@@ -174,20 +174,20 @@ class DockerJSONParser(interface.FileObjectParser):
     json_dict = json.loads(file_content)
 
     if 'Driver' not in json_dict:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'not a valid Docker container configuration file, ' 'missing '
           '\'Driver\' key.')
 
     container_id_from_path = self._GetIdentifierFromPath(parser_mediator)
     container_id_from_json = json_dict.get('ID', None)
     if not container_id_from_json:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'not a valid Docker layer configuration file, the \'ID\' key is '
           'missing from the JSON dict (should be {0:s})'.format(
               container_id_from_path))
 
     if container_id_from_json != container_id_from_path:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'not a valid Docker container configuration file. The \'ID\' key of '
           'the JSON dict ({0:s}) is different from the layer ID taken from the'
           ' path to the file ({1:s}) JSON file.)'.format(
@@ -313,12 +313,12 @@ class DockerJSONParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
       ValueError: if the JSON file cannot be decoded.
     """
     # Trivial JSON format check: first character must be an open brace.
     if file_object.read(1) != b'{':
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'is not a valid JSON file, missing opening brace.')
 
     file_object.seek(0, os.SEEK_SET)
@@ -342,7 +342,7 @@ class DockerJSONParser(interface.FileObjectParser):
           self._ParseLayerConfigJSON(parser_mediator, file_object)
     except ValueError as exception:
       if exception == 'No JSON object could be decoded':
-        raise errors.UnableToParseFile(exception)
+        raise errors.WrongParser(exception)
       raise
 
 

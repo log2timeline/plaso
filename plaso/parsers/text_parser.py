@@ -422,10 +422,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     if not self._line_structures:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Line structure undeclared, unable to proceed.')
 
     encoding = self._ENCODING or parser_mediator.codepage
@@ -438,11 +438,11 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     try:
       line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
     except UnicodeDecodeError:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not a text file or encoding not supported.')
 
     if not line:
-      raise errors.UnableToParseFile('Not a text file.')
+      raise errors.WrongParser('Not a text file.')
 
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
@@ -453,10 +453,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
               self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
 
     if not self._IsText(line):
-      raise errors.UnableToParseFile('Not a text file, unable to proceed.')
+      raise errors.WrongParser('Not a text file, unable to proceed.')
 
     if not self.VerifyStructure(parser_mediator, line):
-      raise errors.UnableToParseFile('Wrong file structure.')
+      raise errors.WrongParser('Wrong file structure.')
 
     self._parser_mediator = parser_mediator
 
@@ -504,7 +504,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         consecutive_line_failures += 1
         if (consecutive_line_failures >
             self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-          raise errors.UnableToParseFile(
+          raise errors.WrongParser(
               'more than {0:d} consecutive failures to parse lines.'.format(
                   self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 
@@ -691,10 +691,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     if not self._line_structures:
-      raise errors.UnableToParseFile('Missing line structures.')
+      raise errors.WrongParser('Missing line structures.')
 
     encoding = self._ENCODING or parser_mediator.codepage
     text_reader = EncodedTextReader(
@@ -705,11 +705,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     try:
       text_reader.ReadLines(file_object)
     except UnicodeDecodeError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Not a text file, with error: {0!s}'.format(exception))
 
     if not self.VerifyStructure(parser_mediator, text_reader.lines):
-      raise errors.UnableToParseFile('Wrong file structure.')
+      raise errors.WrongParser('Wrong file structure.')
 
     consecutive_line_failures = 0
     # Read every line in the text file.
@@ -767,7 +767,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           consecutive_line_failures += 1
           if (consecutive_line_failures >
               self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-            raise errors.UnableToParseFile(
+            raise errors.WrongParser(
                 'more than {0:d} consecutive failures to parse lines.'.format(
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 

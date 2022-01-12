@@ -165,7 +165,7 @@ class FirefoxCacheParser(
           record offset.
 
     Raises:
-      UnableToParseFile: if no valid cache record could be found.
+      WrongParser: if no valid cache record could be found.
     """
     # There ought to be a valid record within the first 4 MiB. We use this
     # limit to prevent reading large invalid files.
@@ -200,7 +200,7 @@ class FirefoxCacheParser(
         logger.debug('[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
             self.NAME, display_name, offset))
 
-    raise errors.UnableToParseFile(
+    raise errors.WrongParser(
         'Could not find a valid cache record. Not a Firefox cache file.')
 
   def _ParseCacheEntry(
@@ -337,13 +337,13 @@ class FirefoxCacheParser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
 
     if (not self._CACHE_FILENAME_RE.match(filename) and
         not filename.startswith('_CACHE_00')):
-      raise errors.UnableToParseFile('Not a Firefox cache1 file.')
+      raise errors.WrongParser('Not a Firefox cache1 file.')
 
     display_name = parser_mediator.GetDisplayName()
     firefox_config = self._GetFirefoxConfig(file_object, display_name)
@@ -394,7 +394,7 @@ class FirefoxCache2Parser(
           of the file.
 
     Raises:
-      UnableToParseFile: if the size of the cache file metadata cannot be
+      WrongParser: if the size of the cache file metadata cannot be
           determined.
     """
     file_object.seek(-4, os.SEEK_END)
@@ -406,7 +406,7 @@ class FirefoxCache2Parser(
       metadata_size, _ = self._ReadStructureFromFileObject(
           file_object, file_offset, metadata_size_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to parse cache file metadata size with error: {0!s}'.format(
               exception))
 
@@ -446,18 +446,18 @@ class FirefoxCache2Parser(
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
     if not self._CACHE_FILENAME_RE.match(filename):
-      raise errors.UnableToParseFile('Not a Firefox cache2 file.')
+      raise errors.WrongParser('Not a Firefox cache2 file.')
 
     # The file needs to be at least 36 bytes in size for it to contain
     # a cache2 file metadata header and a 4-byte offset that points to its
     # location in the file.
     file_size = file_object.get_size()
     if file_size < 36:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'File size too small for Firefox cache2 file.')
 
     file_offset = self._GetCacheFileMetadataHeaderOffset(file_object)
@@ -468,12 +468,12 @@ class FirefoxCache2Parser(
       file_metadata_header, _ = self._ReadStructureFromFileObject(
           file_object, file_offset, file_metadata_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.WrongParser((
           'Unable to parse Firefox cache2 file metadata header with error: '
           '{0!s}').format(exception))
 
     if not self._ValidateCacheFileMetadataHeader(file_metadata_header):
-      raise errors.UnableToParseFile('Not a valid Firefox cache2 record.')
+      raise errors.WrongParser('Not a valid Firefox cache2 record.')
 
     if file_metadata_header.format_version >= 2:
       file_object.seek(4, os.SEEK_CUR)

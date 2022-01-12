@@ -395,14 +395,14 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      WrongParser: when the file cannot be parsed.
     """
     pe_data_slice = dfvfs_data_slice.DataSlice(file_object)
     try:
       pefile_object = pefile.PE(data=pe_data_slice, fast_load=True)
       pefile_object.parse_data_directories(directories=self._PE_DIRECTORIES)
     except Exception as exception:
-      raise errors.UnableToParseFile(
+      raise errors.WrongParser(
           'Unable to read PE file with error: {0!s}'.format(exception))
 
     event_data = PEEventData()
