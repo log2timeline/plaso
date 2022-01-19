@@ -111,9 +111,7 @@ class FieldFormattingHelper(object):
       if (self._output_mediator.timezone != pytz.UTC or
           date_time.time_zone_offset):
         # For output in a specific time zone overwrite the date, time in
-        # seconds and time zone offset in the UTC ISO8601 string. Note that
-        # GetDateWithTimeOfDay will return the date and time in UTC, so no
-        # adjustment for date_time.time_zone_offset is needed.
+        # seconds and time zone offset in the UTC ISO8601 string.
         year, month, day_of_month, hours, minutes, seconds = (
             date_time.GetDateWithTimeOfDay())
 
@@ -156,9 +154,9 @@ class FieldFormattingHelper(object):
         datetime_object = datetime_object.astimezone(
             self._output_mediator.timezone)
 
-        iso8601_string = datetime_object.isoformat(timespec='seconds')
+        iso8601_string = datetime_object.isoformat()
         iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
-            iso8601_string[:-6], fraction_of_second, iso8601_string[-6:])
+            iso8601_string[:19], fraction_of_second, iso8601_string[-6:])
 
       except (OverflowError, TypeError, ValueError) as exception:
         iso8601_string = '0000-00-00T00:00:00.000000+00:00'
@@ -446,8 +444,6 @@ class FieldFormattingHelper(object):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
-    # Note that GetDateWithTimeOfDay will return the date and time in UTC,
-    # so no adjustment for date_time.time_zone_offset is needed.
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
@@ -497,8 +493,6 @@ class FieldFormattingHelper(object):
     if self._output_mediator.timezone == pytz.UTC:
       return 'UTC'
 
-    # Note that GetDateWithTimeOfDay will return the date and time in UTC,
-    # so no adjustment for date_time.time_zone_offset is needed.
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
