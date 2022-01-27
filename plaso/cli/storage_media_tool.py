@@ -5,7 +5,7 @@ import codecs
 import os
 
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
-from dfvfs.analyzer import fvde_analyzer_helper
+from dfvfs.analyzer import cs_analyzer_helper
 from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -20,9 +20,9 @@ from plaso.lib import errors
 
 
 try:
-  # Disable experimental FVDE support.
+  # Disable experimental Core Storage support.
   dfvfs_analyzer.Analyzer.DeregisterHelper(
-      fvde_analyzer_helper.FVDEAnalyzerHelper())
+      cs_analyzer_helper.CSAnalyzerHelper())
 except KeyError:
   pass
 

@@ -27,6 +27,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libmodi-python3
                       libmsiecf-python3
                       libolecf-python3
+                      libphdi-python3
                       libqcow-python3
                       libregf-python3
                       libscca-python3
@@ -120,6 +121,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libmsiecf-python3-debuginfo
                     libolecf-debuginfo
                     libolecf-python3-debuginfo
+                    libphdi-debuginfo
+                    libphdi-python3-debuginfo
                     libqcow-debuginfo
                     libqcow-python3-debuginfo
                     libregf-debuginfo
