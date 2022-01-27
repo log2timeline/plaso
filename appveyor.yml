@@ -17,7 +17,7 @@ environment:
     HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 install:
-- cmd: "%PYTHON%\\python.exe -m pip install -U pip setuptools wheel"
+- cmd: "%PYTHON%\\python.exe -m pip install -U pip setuptools twine wheel"
 - cmd: "%PYTHON%\\python.exe -m pip install pywin32 WMI"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
 - ps: If ($isWindows) { .\config\appveyor\install.ps1 }
