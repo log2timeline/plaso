@@ -210,6 +210,17 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     structure_value = self._GetValueFromStructure(structure, name)
     return structure_value.get(key_name)
 
+  def _GetDateTime(self, parser_mediator,time_structure):
+    date_time = None
+    try:
+      date_time = dfdatetime_time_elements.TimeElements()
+      date_time.CopyFromStringISO8601(time_structure)
+    except ValueError:
+      parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0!s}'.format(time_structure))
+
+    return date_time
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -226,14 +237,15 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_elements_structure = structure.get('time')
+    time_response_sent = structure.get('time')
+    time_request_received = structure.get('request_creation_time')
 
-    try:
-      date_time = dfdatetime_time_elements.TimeElements()
-      date_time.CopyFromStringISO8601(time_elements_structure)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
+    date_time_response_sent = self._GetDateTime(
+        parser_mediator, time_response_sent)
+    date_time_request_received = self._GetDateTime(
+        parser_mediator, time_request_received)
+
+    if date_time_request_received is None or date_time_response_sent is None:
       return
 
     event_data = AWSELBEventData()
@@ -299,10 +311,19 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
         structure, 'destination_list')
     event_data.destination_list = destination_list.split()
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+    elb_response_sent_event = time_events.DateTimeValuesEvent(
+        date_time_response_sent,
+        definitions.TIME_DESCRIPTION_AWS_ELB_RESPONSE_SENT)
 
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    elb_request_received_event = time_events.DateTimeValuesEvent(
+        date_time_request_received,
+        definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
+
+    parser_mediator.ProduceEventWithEventData(
+        elb_response_sent_event, event_data)
+
+    parser_mediator.ProduceEventWithEventData(
+        elb_request_received_event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a valid AWS ELB access log.

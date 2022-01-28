@@ -18,7 +18,7 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
 
     # Test number of events and warnings
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 10)
+    self.assertEqual(number_of_events, 20)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -32,7 +32,8 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
     # we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = ['2020-01-11 16:55:20.000000']
+    expected_timestamps = [
+        '2020-01-11 16:55:19.000000', '2020-01-11 16:55:20.000000']
 
     # pylint: disable=line-too-long
     expected_event_values = {
@@ -71,9 +72,11 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
 
     # Test for the expected timestamp value
     self.CheckTimestamp(events[0].timestamp, expected_timestamps[0])
+    self.CheckTimestamp(events[1].timestamp, expected_timestamps[1])
 
     # Test the rest of the expected values
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':
