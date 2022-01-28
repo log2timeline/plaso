@@ -211,6 +211,17 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     return structure_value.get(key_name)
 
   def _GetDateTime(self, parser_mediator, time_structure):
+    """Retrurns a dfdatetime object from a timestamp.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+        and other components, such as storage and dfvfs.
+      time_structure (str): a timestamp string of the event.
+
+    Returns:
+      TimeElements: Time elements contain separate values for year, month,
+        day of month, hours, minutes and seconds.
+    """
     date_time = None
     try:
       date_time = dfdatetime_time_elements.TimeElements()
