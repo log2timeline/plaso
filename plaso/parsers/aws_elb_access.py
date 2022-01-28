@@ -210,7 +210,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     structure_value = self._GetValueFromStructure(structure, name)
     return structure_value.get(key_name)
 
-  def _GetDateTime(self, parser_mediator,time_structure):
+  def _GetDateTime(self, parser_mediator, time_structure):
     date_time = None
     try:
       date_time = dfdatetime_time_elements.TimeElements()
