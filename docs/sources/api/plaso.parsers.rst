@@ -181,6 +181,14 @@ plaso.parsers.fseventsd module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.gcp\_logging module
+---------------------------------
+
+.. automodule:: plaso.parsers.gcp_logging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.gdrive\_synclog module
 ------------------------------------
 

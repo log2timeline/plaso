@@ -23,6 +23,7 @@ firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or e
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
+gcplogging | Parser for Google Cloud Logging.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
 java_idx | Parser for Java WebStart Cache IDX files.
