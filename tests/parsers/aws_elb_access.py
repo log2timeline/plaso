@@ -52,7 +52,6 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
         "received_bytes": 391,
         "redirect_url": "-",
         "request": "GET https://www.domain.name:443/ HTTP/1.1",
-        "request_creation_time": "2020-01-11T16:55:19.624000Z",
         "request_processing_time": "0.013",
         "response_processing_time": "0.000",
         "sent_bytes": 107999,
@@ -78,6 +77,8 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
+    # TODO: test for request_creation_time event "2020-01-11T16:55:19.624000Z"
+    
 
 if __name__ == '__main__':
   unittest.main()
