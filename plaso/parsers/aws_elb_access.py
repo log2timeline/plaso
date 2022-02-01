@@ -60,8 +60,6 @@ class AWSELBEventData(events.EventData):
         presented to the source.
     matched_rule_priority (int): The priority value of the rule that
         matched the request.
-    request_creation_time (str): The time when the load balancer received the
-        request from the source, in ISO 8601 format.
     actions_executed (str): The actions taken when processing the request.
     redirect_url (str): The URL of the redirect destination.
     error_reason (str): The error reason code, enclosed in
@@ -100,7 +98,6 @@ class AWSELBEventData(events.EventData):
     self.domain_name = None
     self.chosen_cert_arn = None
     self.matched_rule_priority = None
-    self.request_creation_time = None
     self.actions_executed = None
     self.redirect_url = None
     self.error_reason = None
@@ -304,8 +301,6 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
         structure, 'chosen_cert_arn')
     event_data.matched_rule_priority = self._GetValueFromStructure(
         structure, 'matched_rule_priority')
-    event_data.request_creation_time = self._GetValueFromStructure(
-        structure, 'request_creation_time')
     event_data.actions_executed = self._GetValueFromStructure(
         structure, 'actions_executed')
     event_data.redirect_url = self._GetValueFromStructure(
