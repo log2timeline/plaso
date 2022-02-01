@@ -78,7 +78,7 @@ class AWSELBUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # TODO: test for request_creation_time event "2020-01-11T16:55:19.624000Z"
-    
+
 
 if __name__ == '__main__':
   unittest.main()
