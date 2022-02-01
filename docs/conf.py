@@ -58,7 +58,7 @@ napoleon_include_special_with_doc = True
 # General information about the project.
 # pylint: disable=redefined-builtin
 project = 'Plaso (log2timeline)'
-copyright = 'The Plaso (log2timeline) Project Authors'
+copyright = 'The Plaso (log2timeline) authors'
 version = plaso.__version__
 release = plaso.__version__
 
