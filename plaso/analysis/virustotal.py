@@ -32,7 +32,7 @@ class VirusTotalAnalyzer(hash_tagging.HTTPHashAnalyzer):
     self._checked_for_old_python_version = False
 
   def _QueryHashes(self, digests):
-    """Queries VirusTotal for a specfic hashes.
+    """Queries VirusTotal for a specific hashes.
 
     Args:
       digests (list[str]): hashes to look up.

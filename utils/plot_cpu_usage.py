@@ -88,7 +88,7 @@ def Main():
     if data.size > 0:
       for name in numpy.unique(data['name']):
         # Ignore process_sources since it is a single sample that contains
-        # the cummulative CPU time.
+        # the cumulative CPU time.
         if options.profiler == 'processing' and name == 'process_sources':
           continue
 

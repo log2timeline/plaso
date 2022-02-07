@@ -6,7 +6,7 @@ of log2timeline, also known as Log2Timeline Perl or Log2Timeline legacy.
 The syntax has changed somewhat from the 0.x version, the largest differences
 may be:
 
-* The output of the tool is no longer controllable through the log2timeline.py command line tool (or front-end). There is only one storage mechanism and that is the Plaso storage file. To produce an output file comparable withe the 0.x version you'll need to run the psort.py command line tool with l2t_csv output module.
+* The output of the tool is no longer controllable through the log2timeline.py command line tool (or front-end). There is only one storage mechanism and that is the Plaso storage file. To produce an output file comparable with the 0.x version you'll need to run the psort.py command line tool with l2t_csv output module.
 * The log2timeline.py command line tool can extract events **directly** from storage media images, such as raw or E01. Removing the need to manually mounting these images.
 * The names of the parser have changed. There are a numerous new parsers, but note that some of the older parsers have not been ported.
 * The post-processing tool is no longer called l2t_process, it is now named **psort.py**.

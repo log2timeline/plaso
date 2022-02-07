@@ -23,7 +23,7 @@ collect:
 * Timezone information.
 * Names and metadata about all users, like the path to their home directory.
 * Hostname.
-* Operating sytems specific items that make future processing simpler
+* Operating systems specific items that make future processing simpler
 (such as current control set in registry, code page used, etc.)
 
 ## Collection

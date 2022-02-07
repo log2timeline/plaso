@@ -206,7 +206,7 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    # Note that "compatiblity" is spelt incorrectly in the actual message being
+    # Note that "compatibility" is spelt incorrectly in the actual message being
     # tested here.
     expected_event_values = {
         'computer_name': 'DarkTemplar-2.local',
@@ -220,7 +220,7 @@ class ASLParserTest(test_lib.ParserTestCase):
         'level': 4,
         'message': (
             'Incorrect NSStringEncoding value 0x8000100 detected. '
-            'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
+            'Assuming NSASCIIStringEncoding. Will stop this compatibility '
             'mapping behavior in the near future.'),
         'message_id': 101406,
         'pid': 69,
