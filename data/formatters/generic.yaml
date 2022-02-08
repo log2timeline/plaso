@@ -15,6 +15,19 @@ short_message:
 - 'from: {ip_address}'
 ---
 type: 'conditional'
+data_type: 'aws:cloudtrail:json'
+message:
+- 'User {user}'
+- 'performed {action}'
+- 'on [{resource}]'
+- 'using access key {access_key_id}'
+- 'from IP address {source_ip}'
+short_message:
+- 'User {user}'
+- 'performed {action}'
+- 'on [{resource}]'
+---
+type: 'conditional'
 data_type: 'aws:elb:access'
 message:
 - 'type: {type}'
