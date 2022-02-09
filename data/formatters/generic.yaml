@@ -45,9 +45,13 @@ short_message:
 type: 'conditional'
 data_type: 'azure:activitylog:json'
 message:
-- '{action}'
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
 short_message:
-- '{action}'
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
 ---
 type: 'basic'
 data_type: 'bash:history:command'

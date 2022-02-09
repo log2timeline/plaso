@@ -20,7 +20,21 @@ from plaso.parsers import interface
 class AzureActivityLogEventData(events.EventData):
   """Azure activity log event data.
   Attributes:
-    action (str): The logged Azure action.
+    caller (str): The Azure identity associated with the log entry.
+    event_data_id (str): Event data ID for the log entry.
+    correlation_id (str): Correlation ID for the log entry.
+    event_name (str): The name of the event associated with the log
+      entry.
+    client_ip (str): The client IP address associated with the log entry.
+    level (str): The log level associated with the log entry.
+    resource_group (str): The resource group associated with the log entry.
+    resource_provider (str): The API service associated with the log entry.
+    resource_id (str): The resource associated with the log entry.
+    resource_type (str): The resource type associated with the log entry.
+    operation_id (str): Operation ID associated with the log entry.
+    operation_name (str): The operation name associated with the log entry.
+    subscription_id (str): The subscription ID associated with the log entry.
+    tenant_id (str): The tenant ID associated with the log entry.
   """
 
   DATA_TYPE = 'azure:activitylog:json'
@@ -28,7 +42,20 @@ class AzureActivityLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AzureActivityLogEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.action = None
+    self.caller = None
+    self.event_data_id = None
+    self.correlation_id = None
+    self.event_name = None
+    self.client_ip = None
+    self.level = None
+    self.resource_group = None
+    self.resource_provider = None
+    self.resource_id = None
+    self.resource_type = None
+    self.operation_id = None
+    self.operation_name = None
+    self.subscription_id = None
+    self.tenant_id = None
 
 
 class AzureActivityLogParser(interface.FileObjectParser):
@@ -57,9 +84,28 @@ class AzureActivityLogParser(interface.FileObjectParser):
         continue
 
       event_data = AzureActivityLogEventData()
-      event_data.action = json_log_entry['authorization']['action']
-
-      # TODO: parse events here!
+      event_data.caller = json_log_entry.get('caller')
+      event_data.event_data_id = json_log_entry.get('event_data_id')
+      event_data.correlation_id = json_log_entry.get('correlation_id')
+      if 'event_name' in json_log_entry:
+        event_data.event_name = json_log_entry['event_name'].get('value')
+      if 'http_request' in json_log_entry:
+        event_data.client_ip = json_log_entry['http_request'].get(
+          'client_ip_address')
+      event_data.level = json_log_entry.get('level')
+      event_data.resource_group = json_log_entry.get('resource_group_name')
+      if 'resource_provider_name' in json_log_entry:
+        event_data.resource_provider = (
+            json_log_entry['resource_provider_name'].get('value'))
+      event_data.resource_id = json_log_entry.get('resource_id')
+      if 'resource_type' in json_log_entry:
+        event_data.resource_type = json_log_entry['resource_type'].get('value')
+      event_data.operation_id = json_log_entry.get('operation_id')
+      if 'operation_name' in json_log_entry:
+        event_data.operation_name = json_log_entry['operation_name'].get(
+            'value')
+      event_data.subscription_id = json_log_entry.get('subscription_id')
+      event_data.tenant_id = json_log_entry.get('tenant_id')
 
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
