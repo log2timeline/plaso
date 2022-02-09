@@ -22,7 +22,7 @@ class AWSCloudTrailTest(test_lib.ParserTestCase):
       '2022-02-07 22:19:04.000000',
     ]
 
-    expected_event_values = [
+    expected_events = [
       {
         'access_key_id': '0123456789ABCDEFGHIJ',
         'event_name': 'DescribeInstances',
@@ -78,18 +78,17 @@ class AWSCloudTrailTest(test_lib.ParserTestCase):
     ]
 
     parser = aws_cloudtrail.AWSCloudTrailParser()
-    path_segments = ['aws_cloudtrail.jsonl']
-    storage_writer = self._ParseFile(path_segments, parser)
+    storage_writer = self._ParseFile(['aws_cloudtrail.jsonl'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 6)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
     self.assertEqual(storage_writer.number_of_recovery_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-    for index, event in enumerate(events):
-      self.CheckTimestamp(event.timestamp, expected_timestamps[index])
-      self.CheckEventValues(
-          storage_writer, event, expected_event_values[index])
+    events = storage_writer.GetEvents()
+    for event, expected_event, expected_timestamp in zip(
+        events, expected_events, expected_timestamps):
+      self.CheckTimestamp(event.timestamp, expected_timestamp)
+      self.CheckEventValues(storage_writer, event, expected_event)
 
 
 if __name__ == '__main__':
