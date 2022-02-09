@@ -42,6 +42,13 @@ short_message:
 - 'request: {request}'
 - 'user_agent: {user_agent}'
 ---
+type: 'conditional'
+data_type: 'azure:activitylog:json'
+message:
+- '{action}'
+short_message:
+- '{action}'
+---
 type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
