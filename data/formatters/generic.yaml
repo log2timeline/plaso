@@ -17,15 +17,15 @@ short_message:
 type: 'conditional'
 data_type: 'aws:cloudtrail:json'
 message:
-- 'User {user}'
-- 'performed {action}'
-- 'on [{resource}]'
+- 'User {user_name}'
+- 'performed {event_name}'
+- 'on [{resources}]'
 - 'using access key {access_key_id}'
 - 'from IP address {source_ip}'
 short_message:
-- 'User {user}'
-- 'performed {action}'
-- 'on [{resource}]'
+- 'User {user_name}'
+- 'performed {event_name}'
+- 'on [{resources}]'
 ---
 type: 'conditional'
 data_type: 'aws:elb:access'

@@ -14,48 +14,68 @@ class AWSCloudTrailTest(test_lib.ParserTestCase):
     """Tests that AWS Cloudtrail logs are correctly parsed."""
 
     expected_timestamps = [
-      "2022-02-07 22:23:37.000000",
-      "2022-02-07 22:23:18.000000",
-      "2022-02-07 22:23:03.000000",
-      "2022-02-07 22:19:07.000000",
-      "2022-02-07 22:19:05.000000",
-      "2022-02-07 22:19:04.000000",
+      '2022-02-07 22:23:37.000000',
+      '2022-02-07 22:23:18.000000',
+      '2022-02-07 22:23:03.000000',
+      '2022-02-07 22:19:07.000000',
+      '2022-02-07 22:19:05.000000',
+      '2022-02-07 22:19:04.000000',
     ]
 
-    # pylint: disable=line-too-long
     expected_event_values = [
       {
-        "user": "fakeusername",
-        "action": "DescribeInstances",
-        "resource": "(no resource)"
+        'access_key_id': '0123456789ABCDEFGHIJ',
+        'event_name': 'DescribeInstances',
+        'event_source': 'ec2.amazonaws.com',
+        'source_ip': '1.2.3.4',
+        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
+        'user_name': 'fakeusername'
       },
       {
-        "user": "fakeusername",
-        "action": "TerminateInstances",
-        "resource": "i-01234567890123456"
+        'access_key_id': '0123456789ABCDEFGHIJ',
+        'event_name': 'TerminateInstances',
+        'event_source': 'ec2.amazonaws.com',
+        'resources': 'i-01234567890123456',
+        'source_ip': '1.2.3.4',
+        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
+        'user_name': 'fakeusername'
       },
       {
-        "user": "fakeusername",
-        "action": "StopInstances",
-        "resource": "i-01234567890123456"
+        'access_key_id': '0123456789ABCDEFGHIJ',
+        'event_name': 'StopInstances',
+        'event_source': 'ec2.amazonaws.com',
+        'resources': 'i-01234567890123456',
+        'source_ip': '1.2.3.4',
+        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
+        'user_name': 'fakeusername'
       },
       {
-        "user": "(no user)",
-        "action": "SharedSnapshotVolumeCreated",
-        "resource": "(no resource)"
+        'event_name': 'SharedSnapshotVolumeCreated',
+        'event_source': 'ec2.amazonaws.com',
+        'source_ip': 'ec2.amazonaws.com'
       },
       {
-        "user": "fakeusername",
-        "action": "RunInstances",
-        "resource": "vpc-01234567890123456, ami-01234567890123456, eni-01234567890123456, i-01234567890123456, aws-testing, no-access, sg-01234567890123456, subnet-01234567890123456"
+        'access_key_id': '0123456789ABCDEFGHIJ',
+        'event_name': 'RunInstances',
+        'event_source': 'ec2.amazonaws.com',
+        'resources': (
+            'vpc-01234567890123456, ami-01234567890123456, '
+            'eni-01234567890123456, i-01234567890123456, aws-testing, '
+            'no-access, sg-01234567890123456, subnet-01234567890123456'),
+        'source_ip': '1.2.3.4',
+        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
+        'user_name': 'fakeusername'
       },
       {
-        "user": "fakeusername",
-        "action": "CreateSecurityGroup",
-        "resource": "vpc-01234567890123456, no-access, sg-01234567890123456"
+        'access_key_id': '0123456789ABCDEFGHIJ',
+        'event_name': 'CreateSecurityGroup',
+        'event_source': 'ec2.amazonaws.com',
+        'resources': 'vpc-01234567890123456, no-access, sg-01234567890123456',
+        'source_ip': '1.2.3.4',
+        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
+        'user_name': 'fakeusername'
       },
     ]
-    # pylint: enable=line-too-long
 
     parser = aws_cloudtrail.AWSCloudTrailParser()
     path_segments = ['aws_cloudtrail.jsonl']
