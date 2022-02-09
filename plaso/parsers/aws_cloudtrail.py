@@ -91,9 +91,9 @@ class AWSCloudTrailParser(interface.FileObjectParser):
         ct_event_json = None
         try:
           ct_event_json = json.loads(event_data.cloud_trail_event)
-        except json_decoder.JSONDecodeError as excecption:
+        except json_decoder.JSONDecodeError as exception:
           parser_mediator.ProduceExtractionWarning(
-              f'Unable to decode CloudTrailEvent JSON {str(excecption)}')
+              f'Unable to decode CloudTrailEvent JSON {str(exception)}')
         if ct_event_json:
           event_data.source_ip = ct_event_json.get('sourceIPAddress')
           user_id_json = ct_event_json.get('userIdentity')
@@ -106,8 +106,8 @@ class AWSCloudTrailParser(interface.FileObjectParser):
         date_time.CopyFromDateTimeString(time_string)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            f'Unable to parse written time string: {time_string} with error: '
-            f'{exception}')
+            f'Unable to parse time string: {time_string} with error: '
+            f'{str(exception)}')
         date_time = dfdatetime_semantic_time.InvalidTime()
 
       event = time_events.DateTimeValuesEvent(
@@ -144,7 +144,7 @@ class AWSCloudTrailParser(interface.FileObjectParser):
       self._ParseAWSCloudtrailLog(parser_mediator, file_object)
     else:
       raise errors.WrongParser(
-          'no "CloudTrailEvent field, not an AWS log entry.')
+          'no "CloudTrailEvent" field, not an AWS log entry.')
 
 
 manager.ParsersManager.RegisterParser(AWSCloudTrailParser)
