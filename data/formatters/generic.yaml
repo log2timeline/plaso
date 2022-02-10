@@ -48,6 +48,7 @@ message:
 - 'User {caller}'
 - 'performed {operation_name}'
 - 'on {resource_id}'
+- 'from IP address {client_ip}'
 short_message:
 - 'User {caller}'
 - 'performed {operation_name}'
