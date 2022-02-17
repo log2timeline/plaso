@@ -17,12 +17,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
     parser = santa.SantaParser()
     storage_writer = self._ParseFile(['santa.log'], parser)
 
-    # Test file contains 194 lines
-    # - 3 lines should be skipped in the results.
-    # - 17 new events should be added from existing lines.
-
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 208)
+    self.assertEqual(number_of_events, 222)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -35,6 +31,88 @@ class SantaUnitTest(test_lib.ParserTestCase):
     # The order in which parser generates events is nondeterministic hence
     # we sort the events.
     events = list(storage_writer.GetSortedEvents())
+
+    # Process exit log
+    expected_event_values = {
+        'action': 'EXIT',
+        'date_time': '2022-02-09 16:47:02.893',
+        'pid': '75780',
+        'pid_version': '1765713',
+        'ppid': '155',
+        'uid': '0',
+        'gid': '1'
+    }
+
+    self.CheckEventValues(storage_writer, events[209], expected_event_values)
+
+    # File rename operation event log
+    expected_event_values = {
+        'action': 'RENAME',
+        'date_time': '2022-02-17 16:30:05.253',
+        'data_type': 'santa:file_system_event',
+        'file_path': '/private/var/db/santa/santa.log.5.gz',
+        'file_new_path': '/private/var/db/santa/santa.log.6.gz',
+        'pid': '26150',
+        'pid_version': '2228280',
+        'ppid': '1',
+        'process': 'newsyslog',
+        'process_path': '/usr/sbin/newsyslog',
+        'uid': '0',
+        'gid': '0',
+        'user': 'root',
+        'group': 'wheel'
+        }
+
+    self.CheckEventValues(storage_writer, events[211], expected_event_values)
+
+    # Link file operation event log
+    expected_event_values = {
+        'action': 'LINK',
+        'date_time': '2022-02-17 16:30:05.257',
+        'data_type': 'santa:file_system_event',
+        'file_path': '/private/var/db/santa/santa.log',
+        'file_new_path': '/private/var/db/santa/santa.log.0',
+        'pid': '26150',
+        'pid_version': '2228280',
+        'ppid': '1',
+        'process': 'newsyslog',
+        'process_path': '/usr/sbin/newsyslog',
+        'uid': '0',
+        'gid': '0',
+        'user': 'root',
+        'group': 'wheel'
+        }
+
+    self.CheckEventValues(storage_writer, events[212], expected_event_values)
+
+    # Execution event log
+    expected_event_values = {
+        'action': 'EXEC',
+        'date_time': '2022-02-17 16:31:28.414',
+        'data_type': 'santa:execution',
+        'decision': 'ALLOW',
+        'reason': 'BINARY',
+        'explain': 'critical system binary',
+        'process_hash':
+            '25977d1584525b571fc6d19dcac1a768d0555c58777876869255de312dcfcaf3',
+        'certificate_hash':
+            'd84db96af8c2e60ac4c851a21ec460f6f84e0235beb17d24a78712b9b021ed57',
+        'certificate_common_name': 'Software Signing',
+        'pid': '26364',
+        'pid_version': '2228711',
+        'ppid': '1',
+        'uid': '0',
+        'gid': '0',
+        'user': 'root',
+        'group': 'wheel',
+        'mode': 'M',
+        'process_path': '/usr/libexec/xpcproxy',
+        'process_arguments':
+            'xpcproxy ' +
+            'com.apple.mdworker.shared.07000000-0000-0000-0000-000000000000'
+        }
+
+    self.CheckEventValues(storage_writer, events[214], expected_event_values)
 
     # Execution event with quarantine URL.
     expected_event_values = {
