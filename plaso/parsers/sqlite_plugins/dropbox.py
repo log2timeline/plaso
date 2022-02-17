@@ -8,6 +8,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import sqlite
+from plaso.parsers.sqlite_plugins import interface
 
 
 class DropboxSyncHistoryEventData(events.EventData):
@@ -22,7 +23,7 @@ class DropboxSyncHistoryEventData(events.EventData):
   """
   pass
 
-  DATA_TYPE = 'dropbox:sync:entry'
+  DATA_TYPE = 'dropbox:sync_history:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -34,51 +35,50 @@ class DropboxSyncHistoryEventData(events.EventData):
     self.local_path = None
 
 
-class DropboxSyncDatabasePlugin(interface.SqlitePlugin):
+class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Dropbox sync_history.db database files.
 
   The Linux sync_history.db database is typically stored in:
-  $HOME/AppData/Local/Dropbox/instance1/sync_history.db
+  $HOME/.dropbox/instance1/sync_history.db
 
   The Windows 10 sync_history.db database is typically stored in:
   $HOME/AppData/Local/Dropbox/instance1/sync_history.db
   """
 
   NAME = 'dropbox'
-  DATA_FORMAT = 'Dropbox Desktop client'
+  DATA_FORMAT = 'Dropbox sync history database (sync_history.db) file'
 
   REQUIRED_STRUCTURE = {
-    'sync_history': frozenset(['timestamp', 'event_data', 'file_event_type',
+    'sync_history': frozenset(['timestamp', 'event_type', 'file_event_type',
         'direction', 'file_id', 'local_path'])}
 
-  QUERIES = [(
+  QUERIES = [
       ('SELECT timestamp, event_type, file_event_type, direction, file_id, '
-       'local_path, other_user'),
+       'local_path FROM sync_history;',
        'ParseSyncHistoryRow')]
 
   SCHEMAS = [{
-      'sync_history_old': (
-          'CREATE TABLE sync_history (event_type TEXT NOT NULL, file_event_type'
-          ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp'
-          ' INTEGER NOT NULL'),
+      # 'sync_history_old': (
+      #     'CREATE TABLE sync_history (event_type TEXT NOT NULL, file_event_type'
+      #     ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp'
+      #     ' INTEGER NOT NULL'),
       'sync_history': (
           'CREATE TABLE sync_history (event_type TEXT NOT NULL, file_event_type'
           ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp '
           'INTEGER NOT NULL, other_user INTEGER')}]
 
-  def ParseSyncHistoryRow(
-      self, parser_mediator, query, row, **unused_kwargs):
-      """Parses a sync_event row.
+  def ParseSyncHistoryRow(self, parser_mediator, query, row, **unused_kwargs):
+      """Parses a sync_history row.
 
       Args:
         parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+            and other components, such as storage and dfvfs.
         query (str): query that created the row.
         row (sqlite3.Row): row.
       """
       query_hash = hash(query)
 
-      event_data = DropboxSyncDatabasePlugin()
+      event_data = DropboxSyncHistoryEventData()
       event_data.event_type = self._GetRowValue(query_hash, row, 'event_type')
       event_data.file_event_type = self._GetRowValue(
           query_hash, row, 'file_event_type')
@@ -87,10 +87,8 @@ class DropboxSyncDatabasePlugin(interface.SqlitePlugin):
       event_data.local_path = self._GetRowValue(query_hash, row, 'local_path')
 
       timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-      if timestamp:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 

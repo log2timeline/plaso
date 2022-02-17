@@ -95,6 +95,14 @@ short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
 ---
+type: 'conditional'
+data_type: 'dropbox:sync_history:entry'
+message:
+- 'File: {local_path}'
+- 'ID: {file_id}'
+- 'Event Type: {event_type}'
+- 'Direction: {direction}'
+---
 type: 'basic'
 data_type: 'fish:history:command'
 message: 'Command executed: {command}'
