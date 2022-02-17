@@ -16,11 +16,13 @@ Python and use of git.
 ## Format
 
 Before you can write a binary file parser you will need to have a good
-understanding of the file format. A description of the
-Safari Cookies.binarycookies format can be found
-[here](https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc).
+understanding of the file format. Several things can help here:
+
+* having a diverse set of test data, preferable test data that is reproducible. Examples of how to create reprocible test data can be found [here](https://github.com/dfirlabs)
+* having format specifications
 
 ## Parsers vs. Plugins
+
 Before starting work on a parser, check if Plaso already has a parser that
 handles the underlying format of the file you're parsing. Plaso currently
 supports plugins for the following file formats:
@@ -40,10 +42,14 @@ write a plugin of the appropriate type, rather than a parser.
 For our example, however, the Safari Cookies.binarycookies file is in its own
 binary format, so a separate parser is appropriate.
 
+A description of the Safari Cookies.binarycookies format can be found
+[here](https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc).
+
 ## Test data
 
 First we make a representative test file and add it to the `test_data/`
 directory, in our example:
+
 ```
 test_data/Cookies.binarycookies
 ```
