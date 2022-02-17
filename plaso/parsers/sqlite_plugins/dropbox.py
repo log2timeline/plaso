@@ -5,7 +5,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -21,7 +20,6 @@ class DropboxSyncHistoryEventData(events.EventData):
     file_id (str): the ID of the file.
     local_path (str): the local path of the file.
   """
-  pass
 
   DATA_TYPE = 'dropbox:sync_history:entry'
 
@@ -58,39 +56,35 @@ class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
        'ParseSyncHistoryRow')]
 
   SCHEMAS = [{
-      # 'sync_history_old': (
-      #     'CREATE TABLE sync_history (event_type TEXT NOT NULL, file_event_type'
-      #     ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp'
-      #     ' INTEGER NOT NULL'),
       'sync_history': (
           'CREATE TABLE sync_history (event_type TEXT NOT NULL, file_event_type'
           ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp '
           'INTEGER NOT NULL, other_user INTEGER')}]
 
   def ParseSyncHistoryRow(self, parser_mediator, query, row, **unused_kwargs):
-      """Parses a sync_history row.
+    """Parses a sync_history row.
 
-      Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfvfs.
-        query (str): query that created the row.
-        row (sqlite3.Row): row.
-      """
-      query_hash = hash(query)
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      query (str): query that created the row.
+      row (sqlite3.Row): row.
+    """
+    query_hash = hash(query)
 
-      event_data = DropboxSyncHistoryEventData()
-      event_data.event_type = self._GetRowValue(query_hash, row, 'event_type')
-      event_data.file_event_type = self._GetRowValue(
-          query_hash, row, 'file_event_type')
-      event_data.direction = self._GetRowValue(query_hash, row, 'direction')
-      event_data.file_id = self._GetRowValue(query_hash, row, 'file_id')
-      event_data.local_path = self._GetRowValue(query_hash, row, 'local_path')
+    event_data = DropboxSyncHistoryEventData()
+    event_data.event_type = self._GetRowValue(query_hash, row, 'event_type')
+    event_data.file_event_type = self._GetRowValue(
+        query_hash, row, 'file_event_type')
+    event_data.direction = self._GetRowValue(query_hash, row, 'direction')
+    event_data.file_id = self._GetRowValue(query_hash, row, 'file_id')
+    event_data.local_path = self._GetRowValue(query_hash, row, 'local_path')
 
-      timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(DropboxSyncDatabasePlugin)
