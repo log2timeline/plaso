@@ -43,6 +43,7 @@ class MultiProcessEngine(engine.BaseEngine):
     super(MultiProcessEngine, self).__init__()
     self._debug_output = False
     self._name = 'Main'
+    self._last_worker_number = 0
     self._log_filename = None
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
@@ -170,13 +171,15 @@ class MultiProcessEngine(engine.BaseEngine):
       self._TerminateProcessByPid(pid)
 
       replacement_process = None
+      replacement_process_name = 'Worker_{0:02d}'.format(
+          self._last_worker_number)
       for replacement_process_attempt in range(
           self._MAXIMUM_REPLACEMENT_RETRIES):
         logger.info((
             'Attempt: {0:d} to start replacement worker process for '
             '{1:s}').format(replacement_process_attempt + 1, process.name))
 
-        replacement_process = self._StartWorkerProcess(process.name)
+        replacement_process = self._StartWorkerProcess(replacement_process_name)
         if replacement_process:
           break
 
@@ -217,12 +220,11 @@ class MultiProcessEngine(engine.BaseEngine):
       dict[str, str]: status values received from the worker process.
     """
     process_is_alive = process.is_alive()
-    if process_is_alive:
-      rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
-      process_status = rpc_client.CallFunction()
-    else:
-      process_status = None
-    return process_status
+    if not process_is_alive:
+      return None
+
+    rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
+    return rpc_client.CallFunction()
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.

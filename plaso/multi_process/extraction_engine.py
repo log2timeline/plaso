@@ -159,7 +159,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     super(ExtractionMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
-    self._last_worker_number = 0
     self._maximum_number_of_containers = 50
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
