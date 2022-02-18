@@ -19,19 +19,20 @@ class SantaExecutionEventData(events.EventData):
   Attributes:
     action (str): action recorded by Santa.
     decision (str): if the process was allowed or blocked.
-    reason (str): reason behind santa decision to execute or block a process.
-    explain (str): further explanation behind santa decision to execute
+    reason (str): reason behind Santa decision to execute or block a process.
+    long_reason (str): further explanation behind Santa decision to execute
         or block a process.
     process_hash (str): SHA256 hash for the executed process.
     certificate_hash (str): SHA256 hash for the certificate associated with the
         executed process.
     certificate_common_name (str): certificate common name.
-    pid (str): process id for the process.
-    pid_version (str): process id version.
-    ppid (str): parent process id for the executed process.
-    uid (str): user id associated with the executed process.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can sed to identify process ID rollovers.
+    ppid (str): parent process identifier for the executed process.
+    uid (str): user identifier associated with the executed process.
     user (str): user name associated with the executed process.
-    gid (str): group id associated with the executed process.
+    gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
     mode (str): Santa execution mode, for example Monitor or Lockdown.
     process_path (str): process file path.
@@ -46,7 +47,7 @@ class SantaExecutionEventData(events.EventData):
     self.action = None
     self.decision = None
     self.reason = None
-    self.explain = None
+    self.long_reason = None
     self.process_hash = None
     self.certificate_hash = None
     self.certificate_common_name = None
@@ -68,11 +69,11 @@ class SantaProcessExitEventData(events.EventData):
 
   Attributes:
     action (str): action recorded by Santa.
-    pid (str): process id for the process.
-    pid_version (str): process id version.
-    ppid (str): parent process id for the executed process.
-    uid (str): user id associated with the executed process.
-    gid (str): group id associated with the executed process.
+    pid (str): process identifier for the process.
+    pid_version (str): process identifier version.
+    ppid (str): parent process identifier for the executed process.
+    uid (str): user identifier associated with the executed process.
+    gid (str): group identifier associated with the executed process.
   """
 
   DATA_TYPE = 'santa:process_exit'
@@ -95,14 +96,15 @@ class SantaFileSystemEventData(events.EventData):
     action (str): event type recorded by Santa.
     file_path (str): file path and name for WRITE/DELETE events.
     file_new_path (str): new file path and name for RENAME events.
-    pid (str): process id for the process.
-    pid_version (str): process id version.
-    ppid (str): parent process id for the executed process.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can sed to identify process ID rollovers.
+    ppid (str): parent process identifier for the executed process.
     process (str): process name.
     process_path (str): process file path.
-    uid (str): user id associated with the executed process.
+    uid (str): user identifier associated with the executed process.
     user (str): user name associated with the executed process.
-    gid (str): group id associated with the executed process.
+    gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
   """
 
@@ -383,7 +385,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data = SantaExecutionEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
       event_data.decision = self._GetValueFromStructure(structure, 'decision')
-      event_data.explain = self._GetValueFromStructure(structure, 'explain')
+      event_data.long_reason = self._GetValueFromStructure(structure, 'explain')
       event_data.reason = self._GetValueFromStructure(structure, 'reason')
       event_data.process_hash = self._GetValueFromStructure(structure, 'sha256')
       event_data.certificate_hash = self._GetValueFromStructure(
@@ -419,7 +421,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data.gid = self._GetValueFromStructure(structure, 'gid')
 
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_EXIT)
+          date_time, definitions.TIME_DESCRIPTION_EXIT)
 
     elif key == 'file_system_event_line':
       event_data = SantaFileSystemEventData()
