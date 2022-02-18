@@ -132,7 +132,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up SHA256 hashes in Viper."""
 
   # TODO: Check if there are other file types worth checking Viper for.
-  DATA_TYPES = ['pe:compilation:compilation_time']
+  DATA_TYPES = ['pe', 'pe:compilation:compilation_time']
 
   NAME = 'viper'
 
