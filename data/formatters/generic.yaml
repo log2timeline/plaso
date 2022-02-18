@@ -98,8 +98,8 @@ short_message:
 type: 'basic'
 data_type: 'dropbox:sync_history:entry'
 message:
-- 'File: {local_path}'
-- 'ID: {file_id}'
+- 'File Path: {local_path}'
+- 'File ID: {file_id}'
 - 'Event Type: {event_type}'
 - 'Direction: {direction}'
 short_message:
