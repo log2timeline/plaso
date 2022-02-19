@@ -47,8 +47,8 @@ class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
   DATA_FORMAT = 'Dropbox sync history database (sync_history.db) file'
 
   REQUIRED_STRUCTURE = {
-    'sync_history': frozenset(['timestamp', 'event_type', 'file_event_type',
-        'direction', 'file_id', 'local_path'])}
+      'sync_history': frozenset(['timestamp', 'event_type', 'file_event_type',
+      'direction', 'file_id', 'local_path'])}
 
   QUERIES = [
       ('SELECT timestamp, event_type, file_event_type, direction, file_id, '
