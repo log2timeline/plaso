@@ -36,7 +36,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'add',
         'direction': 'upload',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAAGg',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAAGg',
         'local_path': '/home/useraa/Dropbox/loc1/create_local.txt',
         'date_time': '2022-02-17 10:57:18',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
@@ -47,7 +47,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'delete',
         'direction': 'upload',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAAKg',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAAKg',
         'local_path': '/home/useraa/Dropbox/loc1/.create_local.txt.swp',
         'date_time': '2022-02-17 10:57:19',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
@@ -58,7 +58,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'add',
         'direction': 'download',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAAKw',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAAKw',
         'local_path': '/home/useraa/Dropbox/web1/create_web.txt',
         'date_time': '2022-02-17 11:01:21',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
@@ -69,7 +69,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'delete',
         'direction': 'download',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAALA',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAALA',
         'local_path': '/home/useraa/Dropbox/web2/create_web.txt',
         'date_time': '2022-02-17 11:04:03',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
@@ -80,7 +80,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'edit',
         'direction': 'download',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAALQ',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAALQ',
         'local_path': '/home/useraa/Dropbox/web2/Document.docx',
         'date_time': '2022-02-17 11:05:50',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
@@ -91,7 +91,7 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_type': 'file',
         'file_event_type': 'add',
         'direction': 'download',
-        'file_id': 'XXXXXXXXXXXAAAAAAAAALg',
+        'file_identifier': 'XXXXXXXXXXXAAAAAAAAALg',
         'local_path': '/home/useraa/Dropbox/web2/Untitled.gdoc',
         'date_time': '2022-02-17 11:06:34',
         'timestamp_desc': definitions.TIME_DESCRIPTION_RECORDED}
