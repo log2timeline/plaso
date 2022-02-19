@@ -17,7 +17,7 @@ class DropboxSyncHistoryEventData(events.EventData):
     event_type (str): the event type
     file_event_type (str): the file event type
     direction (str): the source of the synchronisation event
-    file_id (str): the Dropbox identifier of the file.
+    file_identifier (str): the Dropbox identifier of the file.
     local_path (str): the local path of the file.
   """
 
@@ -29,7 +29,7 @@ class DropboxSyncHistoryEventData(events.EventData):
     self.event_type = None
     self.file_event_type = None
     self.direction = None
-    self.file_id = None
+    self.file_identifier = None
     self.local_path = None
 
 
@@ -77,7 +77,7 @@ class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
     event_data.file_event_type = self._GetRowValue(
         query_hash, row, 'file_event_type')
     event_data.direction = self._GetRowValue(query_hash, row, 'direction')
-    event_data.file_id = self._GetRowValue(query_hash, row, 'file_id')
+    event_data.file_identifier = self._GetRowValue(query_hash, row, 'file_id')
     event_data.local_path = self._GetRowValue(query_hash, row, 'local_path')
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
