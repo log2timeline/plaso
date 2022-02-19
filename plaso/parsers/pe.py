@@ -8,6 +8,7 @@ import pefile
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.helpers import data_slice as dfvfs_data_slice
+from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import artifacts
 from plaso.containers import events
@@ -316,26 +317,31 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     data_offset = 0
 
+    context = dtfabric_data_maps.DataTypeMapContext()
+
     try:
       message_table_header = self._ReadStructureFromByteStream(
-          data, data_offset, message_table_header_map)
+          data, data_offset, message_table_header_map, context=context)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to read message table header with error: {0!s}'.format(
               exception))
 
-    data_offset += message_table_header_map.GetByteSize()
+    data_offset += context.byte_size
 
     for entry_index in range(message_table_header.number_of_entries):
+      context = dtfabric_data_maps.DataTypeMapContext()
+
       try:
         message_table_entry = self._ReadStructureFromByteStream(
-            data[data_offset:], data_offset, message_table_entry_map)
+            data[data_offset:], data_offset, message_table_entry_map,
+            context=context)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
             'Unable to read message table entry: {0:d} at offset: {1:d} with '
             'error: {2!s}').format(entry_index, data_offset, exception))
 
-      data_offset += message_table_entry_map.GetByteSize()
+      data_offset += context.byte_size
 
       message_identifier = message_table_entry.first_message_identifier
       string_offset = message_table_entry.first_string_offset

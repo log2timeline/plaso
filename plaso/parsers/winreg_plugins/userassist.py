@@ -172,8 +172,10 @@ class UserAssistPlugin(
 
       if format_version == 3:
         entry_map = self._GetDataTypeMap('user_assist_entry_v3')
+        entry_data_size = 16
       elif format_version == 5:
         entry_map = self._GetDataTypeMap('user_assist_entry_v5')
+        entry_data_size = 72
       else:
         parser_mediator.ProduceExtractionWarning(
             'unsupported format version: {0:d}'.format(format_version))
@@ -185,7 +187,6 @@ class UserAssistPlugin(
                 registry_value.data_type_string))
         continue
 
-      entry_data_size = entry_map.GetByteSize()
       value_data_size = len(registry_value.data)
       if entry_data_size != value_data_size:
         parser_mediator.ProduceExtractionWarning(
