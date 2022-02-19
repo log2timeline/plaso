@@ -98,9 +98,9 @@ short_message:
 type: 'conditional'
 data_type: 'dropbox:sync_history:entry'
 message:
-- 'File Path: {local_path}'
-- 'File ID: {file_id}'
-- 'Event Type: {event_type}'
+- 'Path: {local_path}'
+- 'File identifier: {file_identifier}'
+- 'Event type: {event_type}'
 - 'Direction: {direction}'
 short_message:
 - '{local_path} {event_type} {direction}'
