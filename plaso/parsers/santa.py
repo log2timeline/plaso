@@ -162,7 +162,7 @@ class SantaMountEventData(events.EventData):
 
 
 class SantaParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses santa log files."""
+  """Parses a Santa log file."""
 
   NAME = 'santa'
   DATA_FORMAT = 'Santa log (santa.log) file'
@@ -240,8 +240,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       'dmg_path': pyparsing.Suppress('dmgpath=') +
                   _SKIP_SEP.setResultsName('dmg_path') + _SEP_TOKEN,
       'appearance': pyparsing.Suppress('appearance=') +
-                    _SKIP_END.setResultsName('appearance')
-  }
+                    _SKIP_END.setResultsName('appearance')}
 
   _PYPARSING_COMPONENTS['date'] = pyparsing.Combine(
       pyparsing.Suppress('[') +
@@ -272,8 +271,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       _PYPARSING_COMPONENTS['pidversion'] +
       _PYPARSING_COMPONENTS['ppid'] +
       _PYPARSING_COMPONENTS['uid'] +
-      _PYPARSING_COMPONENTS['gid']
-  )
+      _PYPARSING_COMPONENTS['gid'])
 
   _EXECUTION_LINE = (
       _PYPARSING_COMPONENTS['date'].setResultsName('date') +
