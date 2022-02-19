@@ -18,25 +18,25 @@ class SantaExecutionEventData(events.EventData):
 
   Attributes:
     action (str): action recorded by Santa.
-    decision (str): if the process was allowed or blocked.
-    reason (str): reason behind Santa decision to execute or block a process.
-    long_reason (str): further explanation behind Santa decision to execute
-        or block a process.
-    process_hash (str): SHA256 hash for the executed process.
+    certificate_common_name (str): certificate common name.
     certificate_hash (str): SHA256 hash for the certificate associated with the
         executed process.
-    certificate_common_name (str): certificate common name.
-    pid (str): process identifier for the process.
-    pid_version (str): the process identifier version extracted from the Mach
-        audit token. The version can sed to identify process ID rollovers.
-    ppid (str): parent process identifier for the executed process.
-    uid (str): user identifier associated with the executed process.
-    user (str): user name associated with the executed process.
+    decision (str): if the process was allowed or blocked.
     gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
+    long_reason (str): further explanation behind Santa decision to execute
+        or block a process.
     mode (str): Santa execution mode, for example Monitor or Lockdown.
-    process_path (str): process file path.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can sed to identify process identifier rollovers.
+    ppid (str): parent process identifier for the executed process.
     process_arguments (str): executed process with its arguments.
+    process_hash (str): SHA256 hash for the executed process.
+    process_path (str): process file path.
+    reason (str): reason behind Santa decision to execute or block a process.
+    uid (str): user identifier associated with the executed process.
+    user (str): user name associated with the executed process.
   """
 
   DATA_TYPE = 'santa:execution'
@@ -45,23 +45,23 @@ class SantaExecutionEventData(events.EventData):
     """Initializes event data."""
     super(SantaExecutionEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.decision = None
-    self.reason = None
-    self.long_reason = None
-    self.process_hash = None
-    self.certificate_hash = None
     self.certificate_common_name = None
-    self.quarantine_url = None
+    self.certificate_hash = None
+    self.decision = None
+    self.gid = None
+    self.group = None
+    self.long_reason = None
+    self.mode = None
     self.pid = None
     self.pid_version = None
     self.ppid = None
+    self.process_arguments = None
+    self.process_hash = None
+    self.process_path = None
+    self.quarantine_url = None
+    self.reason = None
     self.uid = None
     self.user = None
-    self.gid = None
-    self.group = None
-    self.mode = None
-    self.process_path = None
-    self.process_arguments = None
 
 
 class SantaProcessExitEventData(events.EventData):
@@ -70,7 +70,8 @@ class SantaProcessExitEventData(events.EventData):
   Attributes:
     action (str): action recorded by Santa.
     pid (str): process identifier for the process.
-    pid_version (str): process identifier version.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can sed to identify process identifier rollovers.
     ppid (str): parent process identifier for the executed process.
     uid (str): user identifier associated with the executed process.
     gid (str): group identifier associated with the executed process.
@@ -98,7 +99,7 @@ class SantaFileSystemEventData(events.EventData):
     file_new_path (str): new file path and name for RENAME events.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
-        audit token. The version can sed to identify process ID rollovers.
+        audit token. The version can sed to identify process identifier rollovers.
     ppid (str): parent process identifier for the executed process.
     process (str): process name.
     process_path (str): process file path.
