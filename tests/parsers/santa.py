@@ -124,8 +124,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'uid': '0',
         'gid': '0',
         'user': 'root',
-        'group': 'wheel'
-        }
+        'group': 'wheel'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
@@ -137,8 +136,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'pid_version': '1765713',
         'ppid': '155',
         'uid': '0',
-        'gid': '1'
-    }
+        'gid': '1'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -184,8 +182,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'mode': 'M',
         'process_path': '/usr/libexec/xpcproxy',
         'process_arguments': ('xpcproxy '
-            'com.apple.mdworker.shared.07000000-0000-0000-0000-000000000000')
-    }
+            'com.apple.mdworker.shared.07000000-0000-0000-0000-000000000000')}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
