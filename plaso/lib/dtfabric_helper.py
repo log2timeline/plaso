@@ -56,7 +56,7 @@ class DtFabricHelper(object):
   _DEFINITION_FILE = None
 
   def __init__(self):
-    """Initializes the ESE database plugin."""
+    """Initializes the dtFabric format definition helper mix-in."""
     super(DtFabricHelper, self).__init__()
     self._data_type_maps = {}
     self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
