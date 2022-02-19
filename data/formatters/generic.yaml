@@ -95,7 +95,7 @@ short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'dropbox:sync_history:entry'
 message:
 - 'File Path: {local_path}'
