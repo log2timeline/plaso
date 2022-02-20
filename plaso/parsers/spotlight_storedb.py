@@ -901,15 +901,17 @@ class SpotlightStoreDatabaseParser(
     """
     data_type_map = self._GetDataTypeMap(
         'spotlight_store_db_lz4_block_header')
+    context = dtfabric_data_maps.DataTypeMapContext()
 
     try:
-      lz4_block_header = data_type_map.MapByteStream(compressed_page_data)
+      lz4_block_header = data_type_map.MapByteStream(
+          compressed_page_data, context=context)
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError((
           'Unable to map LZ4 block header at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
 
-    lz4_block_header_size = data_type_map.GetByteSize()
+    lz4_block_header_size = context.byte_size
     end_of_compressed_data_offset = (
         lz4_block_header_size + lz4_block_header.compressed_data_size)
 

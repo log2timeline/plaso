@@ -74,7 +74,7 @@ class RestorePointLogParser(
 
     file_footer_map = self._GetDataTypeMap('rp_log_file_footer')
 
-    file_footer_offset = file_size - file_footer_map.GetByteSize()
+    file_footer_offset = file_size - 8
 
     try:
       file_footer, _ = self._ReadStructureFromFileObject(
