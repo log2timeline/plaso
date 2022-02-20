@@ -129,6 +129,8 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     """
     definition = self._artifacts_registry.GetDefinitionByName(group_name)
     if not definition:
+      definition = self._artifacts_registry.GetDefinitionByAlias(group_name)
+    if not definition:
       return None
 
     return self._BuildFindSpecsFromArtifact(definition, environment_variables)
@@ -226,6 +228,8 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     find_specs = []
     for name in artifact_filter_names:
       definition = self._artifacts_registry.GetDefinitionByName(name)
+      if not definition:
+        definition = self._artifacts_registry.GetDefinitionByAlias(name)
       if not definition:
         logger.debug('undefined artifact definition: {0:s}'.format(name))
         continue
