@@ -30,7 +30,7 @@ class AWSCloudTrailEventData(events.EventData):
     source_ip (str): The source IP address associated with the event.
     user_identity_arn (str): The AWS ARN for the user associated with the
       event.
-    account_id (str): The AWS account ID associcated with the event.
+    account_id (str): The AWS account ID associated with the event.
   """
 
   DATA_TYPE = 'aws:cloudtrail:json'
@@ -88,18 +88,19 @@ class AWSCloudTrailParser(interface.FileObjectParser):
 
       event_data.cloud_trail_event = json_log_entry.get('CloudTrailEvent')
       if event_data.cloud_trail_event:
-        ct_event_json = None
+        cloud_trail_event_json = None
         try:
-          ct_event_json = json.loads(event_data.cloud_trail_event)
+          cloud_trail_event_json = json.loads(event_data.cloud_trail_event)
         except json_decoder.JSONDecodeError as exception:
           parser_mediator.ProduceExtractionWarning(
               f'Unable to decode CloudTrailEvent JSON {str(exception)}')
-        if ct_event_json:
-          event_data.source_ip = ct_event_json.get('sourceIPAddress')
-          user_id_json = ct_event_json.get('userIdentity')
+
+        if cloud_trail_event_json:
+          event_data.source_ip = cloud_trail_event_json.get('sourceIPAddress')
+          user_id_json = cloud_trail_event_json.get('userIdentity')
           if user_id_json:
             event_data.user_identity_arn = user_id_json.get('arn')
-            event_data.account_id = ct_event_json.get('accountId')
+            event_data.account_id = cloud_trail_event_json.get('accountId')
 
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
@@ -116,6 +117,7 @@ class AWSCloudTrailParser(interface.FileObjectParser):
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses AWS Cloudtrail logging saved in JSON-L format.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
@@ -132,19 +134,21 @@ class AWSCloudTrailParser(interface.FileObjectParser):
 
     text_file_object = text_file.TextFile(file_object)
 
-    first_line_json = None
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
     except json_decoder.JSONDecodeError:
       raise errors.WrongParser('could not decode json.')
-    file_object.seek(0, os.SEEK_SET)
 
-    if first_line_json and 'CloudTrailEvent' in first_line_json:
-      self._ParseAWSCloudtrailLog(parser_mediator, file_object)
-    else:
+    if not first_line_json:
+      raise errors.WrongParser('no JSON found in file.')
+
+    if 'CloudTrailEvent' not in first_line_json:
       raise errors.WrongParser(
           'no "CloudTrailEvent" field, not an AWS log entry.')
+
+    file_object.seek(0, os.SEEK_SET)
+    self._ParseAWSCloudtrailLog(parser_mediator, file_object)
 
 
 manager.ParsersManager.RegisterParser(AWSCloudTrailParser)
