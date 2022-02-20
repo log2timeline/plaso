@@ -19,6 +19,7 @@ from plaso.parsers import interface
 
 class AzureActivityLogEventData(events.EventData):
   """Azure activity log event data.
+
   Attributes:
     caller (str): The Azure identity associated with the log entry.
     event_data_id (str): Event data ID for the log entry.
@@ -87,20 +88,25 @@ class AzureActivityLogParser(interface.FileObjectParser):
       event_data.caller = json_log_entry.get('caller')
       event_data.event_data_id = json_log_entry.get('event_data_id')
       event_data.correlation_id = json_log_entry.get('correlation_id')
+
       if 'event_name' in json_log_entry:
         event_data.event_name = json_log_entry['event_name'].get('value')
+
       if 'http_request' in json_log_entry:
         event_data.client_ip = json_log_entry['http_request'].get(
           'client_ip_address')
       event_data.level = json_log_entry.get('level')
       event_data.resource_group = json_log_entry.get('resource_group_name')
+
       if 'resource_provider_name' in json_log_entry:
         event_data.resource_provider = (
             json_log_entry['resource_provider_name'].get('value'))
       event_data.resource_id = json_log_entry.get('resource_id')
+
       if 'resource_type' in json_log_entry:
         event_data.resource_type = json_log_entry['resource_type'].get('value')
       event_data.operation_id = json_log_entry.get('operation_id')
+
       if 'operation_name' in json_log_entry:
         event_data.operation_name = json_log_entry['operation_name'].get(
             'value')
@@ -122,10 +128,12 @@ class AzureActivityLogParser(interface.FileObjectParser):
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses Azure activity logging saved in JSON-L format.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
+
     Raises:
       WrongParser: when the file cannot be parsed.
     """
@@ -137,19 +145,21 @@ class AzureActivityLogParser(interface.FileObjectParser):
 
     text_file_object = text_file.TextFile(file_object)
 
-    first_line_json = None
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
     except json_decoder.JSONDecodeError:
       raise errors.WrongParser('could not decode json.')
-    file_object.seek(0, os.SEEK_SET)
 
-    if first_line_json and 'subscription_id' in first_line_json:
-      self._ParseAzureActivityLog(parser_mediator, file_object)
-    else:
+    if not first_line_json:
+      raise errors.WrongParser('no JSON found in file.')
+
+    if 'subscription_id' not in first_line_json:
       raise errors.WrongParser(
           'no "subscription_id" field, not an Azure activity log entry.')
+
+    file_object.seek(0, os.SEEK_SET)
+    self._ParseAzureActivityLog(parser_mediator, file_object)
 
 
 manager.ParsersManager.RegisterParser(AzureActivityLogParser)
