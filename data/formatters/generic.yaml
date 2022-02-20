@@ -42,6 +42,18 @@ short_message:
 - 'request: {request}'
 - 'user_agent: {user_agent}'
 ---
+type: 'conditional'
+data_type: 'azure:activitylog:json'
+message:
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
+- 'from IP address {client_ip}'
+short_message:
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
+---
 type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
