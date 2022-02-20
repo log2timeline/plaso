@@ -139,7 +139,10 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
             'error: {1!s}').format(custom_artifacts_path, exception))
 
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
-      if not registry.GetDefinitionByName(name):
+      artifact_definition = registry.GetDefinitionByName(name)
+      if not artifact_definition:
+        artifact_definition = registry.GetDefinitionByAlias(name)
+      if not artifact_definition:
         raise errors.BadConfigOption(
             'Missing required artifact definition: {0:s}'.format(name))
 
