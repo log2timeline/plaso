@@ -15,8 +15,10 @@ Volume system format support is provided by [dfvfs](https://dfvfs.readthedocs.io
 File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#file-systems).
 
 ### File formats
-
+* [Amazon Web Services CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
+* [Amazon Web Services Elastic Load Balancer access logs](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-log-file-format)
 * Apple System Log (ASL)
+* [Azure Activity logs](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
 * Android usage-history (app usage)
 * [Basic Security Module (BSM)](https://forensicswiki.xyz/wiki/index.php?title=Basic_Security_Module_(BSM)_file_format)
 * Bencode files
@@ -44,6 +46,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * Popularity Contest log
 * [Property list (plist) format](https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)) using plistlib
 * [Restore Point logs (rp.log)](https://github.com/libyal/dtformats/blob/main/documentation/Restore%20point%20formats.asciidoc)
+* Santa logs
 * [Safari Binary Cookies](https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc)
 * SCCM client logs
 * SELinux audit logs
@@ -112,6 +115,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * Android text messages (SMS) SQLite database (mmssms.dbs) file
 * Android WebViewCache SQLite database file
 * Android WebView SQLite database file
+* Dropbox sync_history SQLite database file
 * Google Chrome 17 - 65 cookies SQLite database file
 * Google Chrome 27 and later history SQLite database file
 * Google Chrome 66 and later cookies SQLite database file
