@@ -72,7 +72,7 @@ class SantaProcessExitEventData(events.EventData):
     action (str): action recorded by Santa.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
-        audit token. The version can sed to identify process identifier
+        audit token. The version can be used to identify process identifier
         rollovers.
     ppid (str): parent process identifier for the executed process.
     uid (str): user identifier associated with the executed process.
@@ -101,7 +101,7 @@ class SantaFileSystemEventData(events.EventData):
     file_new_path (str): new file path and name for RENAME events.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
-        audit token. The version can sed to identify process identifier
+        audit token. The version can be used to identify process identifier
         rollovers.
     ppid (str): parent process identifier for the executed process.
     process (str): process name.
