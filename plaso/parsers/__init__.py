@@ -37,6 +37,7 @@ from plaso.parsers import mac_securityd
 from plaso.parsers import mac_wifi
 from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
+from plaso.parsers import mobile_installation
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer
 from plaso.parsers import ntfs

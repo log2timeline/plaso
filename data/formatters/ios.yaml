@@ -86,3 +86,11 @@ message:
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'
+---
+type: 'conditional'
+data_type: 'mobile_installation:line'
+message:
+- 'Originator: {originator}'
+- 'Body: {body}'
+short_message:
+  - 'Body: {body}'
