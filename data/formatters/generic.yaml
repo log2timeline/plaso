@@ -15,6 +15,19 @@ short_message:
 - 'from: {ip_address}'
 ---
 type: 'conditional'
+data_type: 'aws:cloudtrail:json'
+message:
+- 'User {user_name}'
+- 'performed {event_name}'
+- 'on [{resources}]'
+- 'using access key {access_key_id}'
+- 'from IP address {source_ip}'
+short_message:
+- 'User {user_name}'
+- 'performed {event_name}'
+- 'on [{resources}]'
+---
+type: 'conditional'
 data_type: 'aws:elb:access'
 message:
 - 'type: {type}'
@@ -41,6 +54,18 @@ short_message:
 - 'domain_name: {domain_name}'
 - 'request: {request}'
 - 'user_agent: {user_agent}'
+---
+type: 'conditional'
+data_type: 'azure:activitylog:json'
+message:
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
+- 'from IP address {client_ip}'
+short_message:
+- 'User {caller}'
+- 'performed {operation_name}'
+- 'on {resource_id}'
 ---
 type: 'basic'
 data_type: 'bash:history:command'
@@ -94,6 +119,16 @@ separator: ', '
 short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
+---
+type: 'conditional'
+data_type: 'dropbox:sync_history:entry'
+message:
+- 'Path: {local_path}'
+- 'File identifier: {file_identifier}'
+- 'Event type: {event_type}'
+- 'Direction: {direction}'
+short_message:
+- '{local_path} {event_type} {direction}'
 ---
 type: 'basic'
 data_type: 'fish:history:command'

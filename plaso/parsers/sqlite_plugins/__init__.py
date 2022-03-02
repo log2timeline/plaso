@@ -10,6 +10,7 @@ from plaso.parsers.sqlite_plugins import chrome_autofill
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 from plaso.parsers.sqlite_plugins import chrome_history
+from plaso.parsers.sqlite_plugins import dropbox
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history

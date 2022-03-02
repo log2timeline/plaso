@@ -147,6 +147,9 @@ class PreprocessPluginsManager(object):
         artifact_definition = artifacts_registry.GetDefinitionByName(
             preprocess_plugin.ARTIFACT_DEFINITION_NAME)
         if not artifact_definition:
+          artifact_definition = artifacts_registry.GetDefinitionByAlias(
+              preprocess_plugin.ARTIFACT_DEFINITION_NAME)
+        if not artifact_definition:
           logger.warning('Missing artifact definition: {0:s}'.format(
               preprocess_plugin.ARTIFACT_DEFINITION_NAME))
           continue
@@ -204,6 +207,9 @@ class PreprocessPluginsManager(object):
     for _, preprocess_plugin in sorted(cls._windows_registry_plugins.items()):
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
+      if not artifact_definition:
+        artifact_definition = artifacts_registry.GetDefinitionByAlias(
+            preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
         logger.warning('Missing artifact definition: {0:s}'.format(
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))

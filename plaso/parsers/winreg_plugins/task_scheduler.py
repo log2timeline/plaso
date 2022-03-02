@@ -105,9 +105,6 @@ class TaskCacheWindowsRegistryPlugin(
     dynamic_info_map = self._GetDataTypeMap('dynamic_info_record')
     dynamic_info2_map = self._GetDataTypeMap('dynamic_info2_record')
 
-    dynamic_info_size = dynamic_info_map.GetByteSize()
-    dynamic_info2_size = dynamic_info2_map.GetByteSize()
-
     for sub_key in tasks_key.GetSubkeys():
       dynamic_info_value = sub_key.GetValueByName('DynamicInfo')
       if not dynamic_info_value:
@@ -115,9 +112,9 @@ class TaskCacheWindowsRegistryPlugin(
 
       dynamic_info_record_map = None
       dynamic_info_value_data_size = len(dynamic_info_value.data)
-      if dynamic_info_value_data_size == dynamic_info_size:
+      if dynamic_info_value_data_size == 28:
         dynamic_info_record_map = dynamic_info_map
-      elif dynamic_info_value_data_size == dynamic_info2_size:
+      elif dynamic_info_value_data_size == 36:
         dynamic_info_record_map = dynamic_info2_map
       else:
         if not dynamic_info_size_error_reported:

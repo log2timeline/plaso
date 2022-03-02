@@ -16,7 +16,7 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    'artifacts': ('__version__', '20211205', None, True),
+    'artifacts': ('__version__', '20220219', None, True),
     'bencode': ('', '', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'cryptography': ('__version__', '2.0.2', None, True),
@@ -25,7 +25,7 @@ PYTHON_DEPENDENCIES = {
     'dfdatetime': ('__version__', '20211113', None, True),
     'dfvfs': ('__version__', '20220121', None, True),
     'dfwinreg': ('__version__', '20211207', None, True),
-    'dtfabric': ('__version__', '20170524', None, True),
+    'dtfabric': ('__version__', '20220219', None, True),
     'elasticsearch': ('__versionstr__', '7.0', '8.0', False),
     'future': ('__version__', '0.16.0', None, True),
     'lz4': ('__version__', '0.10.0', None, True),

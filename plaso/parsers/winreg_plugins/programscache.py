@@ -4,6 +4,8 @@
 import os
 import uuid
 
+from dtfabric.runtime import data_maps as dtfabric_data_maps
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -104,16 +106,19 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
 
     sentinel = 0
     if header.format_version != 9:
+      context = dtfabric_data_maps.DataTypeMapContext()
+
       try:
         entry_footer = self._ReadStructureFromByteStream(
-            value_data[value_data_offset:], value_data_offset, entry_footer_map)
+            value_data[value_data_offset:], value_data_offset, entry_footer_map,
+            context=context)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse sentinel at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         return
 
-      value_data_offset += entry_footer_map.GetByteSize()
+      value_data_offset += context.byte_size
 
       sentinel = entry_footer.sentinel
 
@@ -122,16 +127,19 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
       if value_data_offset >= value_data_size:
         break
 
+      context = dtfabric_data_maps.DataTypeMapContext()
+
       try:
         entry_header = self._ReadStructureFromByteStream(
-            value_data[value_data_offset:], value_data_offset, entry_header_map)
+            value_data[value_data_offset:], value_data_offset, entry_header_map,
+            context=context)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse entry header at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         break
 
-      value_data_offset += entry_header_map.GetByteSize()
+      value_data_offset += context.byte_size
 
       display_name = '{0:s} {1:s}'.format(
           registry_key.path, registry_value.name)
@@ -147,16 +155,19 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
 
       value_data_offset += entry_header.data_size
 
+      context = dtfabric_data_maps.DataTypeMapContext()
+
       try:
         entry_footer = self._ReadStructureFromByteStream(
-            value_data[value_data_offset:], value_data_offset, entry_footer_map)
+            value_data[value_data_offset:], value_data_offset, entry_footer_map,
+            context=context)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse entry footer at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         return
 
-      value_data_offset += entry_footer_map.GetByteSize()
+      value_data_offset += context.byte_size
 
       sentinel = entry_footer.sentinel
 

@@ -18,21 +18,26 @@ class SantaExecutionEventData(events.EventData):
 
   Attributes:
     action (str): action recorded by Santa.
-    decision (str): if the process was allowed or blocked.
-    reason (str): reason behind santa decision to execute or block a process.
-    process_hash (str): SHA256 hash for the executed process.
+    certificate_common_name (str): certificate common name.
     certificate_hash (str): SHA256 hash for the certificate associated with the
         executed process.
-    certificate_common_name (str): certificate common name.
-    pid (str): process id for the process.
-    ppid (str): parent process id for the executed process.
-    uid (str): user id associated with the executed process.
-    user (str): user name associated with the executed process.
-    gid (str): group id associated with the executed process.
+    decision (str): if the process was allowed or blocked.
+    gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
+    long_reason (str): further explanation behind Santa decision to execute
+        or block a process.
     mode (str): Santa execution mode, for example Monitor or Lockdown.
-    process_path (str): process file path.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can sed to identify process identifier
+        rollovers.
+    ppid (str): parent process identifier for the executed process.
     process_arguments (str): executed process with its arguments.
+    process_hash (str): SHA256 hash for the executed process.
+    process_path (str): process file path.
+    reason (str): reason behind Santa decision to execute or block a process.
+    uid (str): user identifier associated with the executed process.
+    user (str): user name associated with the executed process.
   """
 
   DATA_TYPE = 'santa:execution'
@@ -41,21 +46,50 @@ class SantaExecutionEventData(events.EventData):
     """Initializes event data."""
     super(SantaExecutionEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.decision = None
-    self.reason = None
-    self.process_hash = None
-    self.certificate_hash = None
     self.certificate_common_name = None
-    self.quarantine_url = None
-    self.pid = None
-    self.ppid = None
-    self.uid = None
-    self.user = None
+    self.certificate_hash = None
+    self.decision = None
     self.gid = None
     self.group = None
+    self.long_reason = None
     self.mode = None
-    self.process_path = None
+    self.pid = None
+    self.pid_version = None
+    self.ppid = None
     self.process_arguments = None
+    self.process_hash = None
+    self.process_path = None
+    self.quarantine_url = None
+    self.reason = None
+    self.uid = None
+    self.user = None
+
+
+class SantaProcessExitEventData(events.EventData):
+  """Santa process exit event data.
+
+  Attributes:
+    action (str): action recorded by Santa.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can be used to identify process identifier
+        rollovers.
+    ppid (str): parent process identifier for the executed process.
+    uid (str): user identifier associated with the executed process.
+    gid (str): group identifier associated with the executed process.
+  """
+
+  DATA_TYPE = 'santa:process_exit'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SantaProcessExitEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.action = None
+    self.pid = None
+    self.pid_version = None
+    self.ppid = None
+    self.uid = None
+    self.gid = None
 
 
 class SantaFileSystemEventData(events.EventData):
@@ -65,13 +99,16 @@ class SantaFileSystemEventData(events.EventData):
     action (str): event type recorded by Santa.
     file_path (str): file path and name for WRITE/DELETE events.
     file_new_path (str): new file path and name for RENAME events.
-    pid (str): process id for the process.
-    ppid (str): parent process id for the executed process.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can be used to identify process identifier
+        rollovers.
+    ppid (str): parent process identifier for the executed process.
     process (str): process name.
     process_path (str): process file path.
-    uid (str): user id associated with the executed process.
+    uid (str): user identifier associated with the executed process.
     user (str): user name associated with the executed process.
-    gid (str): group id associated with the executed process.
+    gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
   """
 
@@ -84,6 +121,7 @@ class SantaFileSystemEventData(events.EventData):
     self.file_path = None
     self.file_new_path = None
     self.pid = None
+    self.pid_version = None
     self.ppid = None
     self.process = None
     self.process_path = None
@@ -127,7 +165,7 @@ class SantaMountEventData(events.EventData):
 
 
 class SantaParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses santa log files"""
+  """Parses a Santa log file."""
 
   NAME = 'santa'
   DATA_FORMAT = 'Santa log (santa.log) file'
@@ -142,11 +180,13 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
 
   _PYPARSING_COMPONENTS = {
       'action': pyparsing.Suppress('action=') +
-                _SKIP_SEP.setResultsName('action') +_SEP_TOKEN,
+                _SKIP_SEP.setResultsName('action') + _SEP_TOKEN,
       'decision': pyparsing.Suppress('decision=') +
                   _SKIP_SEP.setResultsName('decision') + _SEP_TOKEN,
       'reason': pyparsing.Suppress('reason=') +
                 _SKIP_SEP.setResultsName('reason') + _SEP_TOKEN,
+      'explain': pyparsing.Suppress('explain=') +
+                 _SKIP_SEP.setResultsName('explain') + _SEP_TOKEN,
       'process': pyparsing.Suppress('process=') +
                  _SKIP_SEP.setResultsName('process') + _SEP_TOKEN,
       'processpath': pyparsing.Suppress('processpath=') +
@@ -158,17 +198,22 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       'cert_cn': pyparsing.Suppress('cert_cn=') +
                  _SKIP_SEP.setResultsName('cert_cn') + _SEP_TOKEN,
       'quarantine_url': pyparsing.Suppress('quarantine_url=') +
-                        _SKIP_SEP.setResultsName('quarantine_url') + _SEP_TOKEN,
+                        _SKIP_SEP.setResultsName('quarantine_url') +
+                        _SEP_TOKEN,
       'pid': pyparsing.Suppress('pid=') + _SKIP_SEP.setResultsName('pid') +
              _SEP_TOKEN,
+      'pidversion': pyparsing.Suppress('pidversion=') +
+                    _SKIP_SEP.setResultsName(
+                        'pidversion') + _SEP_TOKEN,
       'ppid': pyparsing.Suppress('ppid=') + _SKIP_SEP.setResultsName('ppid') +
               _SEP_TOKEN,
       'uid': pyparsing.Suppress('uid=') + _SKIP_SEP.setResultsName('uid') +
              _SEP_TOKEN,
       'user': pyparsing.Suppress('user=') + _SKIP_SEP.setResultsName('user') +
               _SEP_TOKEN,
-      'gid': pyparsing.Suppress('gid=') + _SKIP_SEP.setResultsName('gid') +
-             _SEP_TOKEN,
+      'gid': pyparsing.Suppress('gid=') +
+             (_SKIP_SEP | _SKIP_END).setResultsName('gid') +
+             pyparsing.Optional(_SEP_TOKEN),
       'group': pyparsing.Suppress('group=') +
                (_SKIP_SEP | _SKIP_END).setResultsName('group') +
                pyparsing.Optional(_SEP_TOKEN),
@@ -198,8 +243,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       'dmg_path': pyparsing.Suppress('dmgpath=') +
                   _SKIP_SEP.setResultsName('dmg_path') + _SEP_TOKEN,
       'appearance': pyparsing.Suppress('appearance=') +
-                    _SKIP_END.setResultsName('appearance')
-  }
+                    _SKIP_END.setResultsName('appearance')}
 
   _PYPARSING_COMPONENTS['date'] = pyparsing.Combine(
       pyparsing.Suppress('[') +
@@ -221,6 +265,17 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
           '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
           'HAVE BEEN DISCARDED ***'))
 
+  _PROCESS_EXIT_LINE = (
+      _PYPARSING_COMPONENTS['date'].setResultsName('date') +
+      pyparsing.Suppress('I santad:') +
+      pyparsing.Suppress('action=') +
+      pyparsing.Literal('EXIT').setResultsName('action') + _SEP_TOKEN +
+      _PYPARSING_COMPONENTS['pid'] +
+      _PYPARSING_COMPONENTS['pidversion'] +
+      _PYPARSING_COMPONENTS['ppid'] +
+      _PYPARSING_COMPONENTS['uid'] +
+      _PYPARSING_COMPONENTS['gid'])
+
   _EXECUTION_LINE = (
       _PYPARSING_COMPONENTS['date'].setResultsName('date') +
       pyparsing.Suppress('I santad:') +
@@ -228,11 +283,13 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('EXEC').setResultsName('action') + _SEP_TOKEN +
       _PYPARSING_COMPONENTS['decision'] +
       _PYPARSING_COMPONENTS['reason'] +
+      pyparsing.Optional(_PYPARSING_COMPONENTS['explain']) +
       _PYPARSING_COMPONENTS['sha256'] +
       pyparsing.Optional(_PYPARSING_COMPONENTS['cert_sha256']) +
       pyparsing.Optional(_PYPARSING_COMPONENTS['cert_cn']) +
       pyparsing.Optional(_PYPARSING_COMPONENTS['quarantine_url']) +
       _PYPARSING_COMPONENTS['pid'] +
+      pyparsing.Optional(_PYPARSING_COMPONENTS['pidversion']) +
       _PYPARSING_COMPONENTS['ppid'] +
       _PYPARSING_COMPONENTS['uid'] +
       _PYPARSING_COMPONENTS['user'] +
@@ -248,11 +305,12 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Suppress('action=') +
       (pyparsing.Literal('WRITE') ^
        pyparsing.Literal('RENAME') ^
-       pyparsing.Literal('DELETE')).setResultsName('action') +
-      _SEP_TOKEN +
+       pyparsing.Literal('DELETE') ^
+       pyparsing.Literal('LINK')).setResultsName('action') + _SEP_TOKEN +
       _PYPARSING_COMPONENTS['path'] +
       pyparsing.Optional(_PYPARSING_COMPONENTS['newpath']) +
       _PYPARSING_COMPONENTS['pid'] +
+      pyparsing.Optional(_PYPARSING_COMPONENTS['pidversion']) +
       _PYPARSING_COMPONENTS['ppid'] +
       _PYPARSING_COMPONENTS['process'] +
       _PYPARSING_COMPONENTS['processpath'] +
@@ -287,6 +345,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
 
   LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
+      ('process_exit_line', _PROCESS_EXIT_LINE),
       ('file_system_event_line', _FILE_OPERATION_LINE),
       ('mount_line', _DISK_MOUNT_LINE),
       ('umount_line', _DISK_UMOUNT_LINE),
@@ -328,6 +387,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data = SantaExecutionEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
       event_data.decision = self._GetValueFromStructure(structure, 'decision')
+      event_data.long_reason = self._GetValueFromStructure(structure, 'explain')
       event_data.reason = self._GetValueFromStructure(structure, 'reason')
       event_data.process_hash = self._GetValueFromStructure(structure, 'sha256')
       event_data.certificate_hash = self._GetValueFromStructure(
@@ -337,6 +397,8 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data.quarantine_url = self._GetValueFromStructure(
           structure, 'quarantine_url')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.pid_version = self._GetValueFromStructure(
+          structure, 'pidversion')
       event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
       event_data.user = self._GetValueFromStructure(structure, 'user')
@@ -350,6 +412,19 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
 
+    if key == 'process_exit_line':
+      event_data = SantaProcessExitEventData()
+      event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.pid_version = self._GetValueFromStructure(
+          structure, 'pidversion')
+      event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
+      event_data.uid = self._GetValueFromStructure(structure, 'uid')
+      event_data.gid = self._GetValueFromStructure(structure, 'gid')
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_EXIT)
+
     elif key == 'file_system_event_line':
       event_data = SantaFileSystemEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
@@ -357,6 +432,8 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data.file_new_path = self._GetValueFromStructure(
           structure, 'newpath')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.pid_version = self._GetValueFromStructure(
+          structure, 'pidversion')
       event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
       event_data.process = self._GetValueFromStructure(structure, 'process')
       event_data.process_path = self._GetValueFromStructure(

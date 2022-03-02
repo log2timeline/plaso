@@ -8,8 +8,8 @@ Note:
 The AWS documentation is not clear about the meaning
 of the "target_port_list" field. The assumption is
 that it refers to a list of possible backend instances'
-IP addreses that could receive the client's request.
-This parser stores the "target_port_list"data in the
+IP addresses that could receive the client's request.
+This parser stores the "target_port_list" data in the
 "destination_list" attribute of an EventData object.
 """
 import pyparsing
@@ -208,7 +208,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     return structure_value.get(key_name)
 
   def _GetDateTime(self, parser_mediator, time_structure):
-    """Retrurns a dfdatetime object from a timestamp.
+    """Returns a dfdatetime object from a timestamp.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

@@ -108,7 +108,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
 
   # TODO: Check if there are other file types worth checking VirusTotal for.
-  DATA_TYPES = ['pe:compilation:compilation_time']
+  DATA_TYPES = ['pe', 'pe:compilation:compilation_time']
 
   NAME = 'virustotal'
 
