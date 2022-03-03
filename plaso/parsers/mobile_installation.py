@@ -100,6 +100,9 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
         and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
 
     if key != 'log_entry':
@@ -138,7 +141,7 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between
         parsers and other components, such as storage and dfvfs.
-     lines (str): one or more lines from the text file.
+      lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
