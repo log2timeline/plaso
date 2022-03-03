@@ -55,12 +55,16 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
     """Parses a log record structure and produces events.
     This function takes as an input a parsed pyparsing structure
     and produces an EventObject if possible from that structure.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
         and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
-      """
+
+    Raises:
+      ParseError: when the structure type is unknown.
+   """
 
     if key != 'log_entry':
       raise errors.ParseError(
