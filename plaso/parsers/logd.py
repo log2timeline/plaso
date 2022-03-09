@@ -15,6 +15,7 @@ from plaso.parsers import text_parser
 
 class LogdEventData(events.EventData):
   """logd event data
+
   Attributes:
     logger (str): process that submits the log event
     body (str): body of the event line
@@ -41,7 +42,7 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
   _TIMESTAMP = DATE_ELEMENTS + TIME_ELEMENTS
 
   _TIME_DELTA = pyparsing.Word(
-    pyparsing.nums + '+' + '-', exact=5)('time_delta')
+      pyparsing.nums + '+' + '-', exact=5)('time_delta')
 
   _LOGGER = pyparsing.SkipTo(':')('logger') + pyparsing.Suppress(': ')
 
@@ -58,7 +59,7 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -68,7 +69,7 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
 
     if key != 'log_entry':
       raise errors.ParseError(
-        'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     year = self._GetValueFromStructure(structure, 'year')
     month = self._GetValueFromStructure(structure, 'month')
@@ -90,22 +91,23 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-        year, month, day, hours, minutes, seconds),
-        time_zone_offset=time_offset)
+          year, month, day, hours, minutes, seconds),
+          time_zone_offset=time_offset)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
 
     event = time_events.DateTimeValuesEvent(
-      date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verifies that this is a mobile installation log file.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-        parsers and other components, such as storage and dfvfs.
+          parsers and other components, such as storage and dfvfs.
       line (str): one line from the text file.
     Returns:
       bool: True if this is the correct parser, False otherwise.
