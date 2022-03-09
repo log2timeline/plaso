@@ -86,3 +86,12 @@ message:
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'
+---
+type: 'conditional'
+data_type: 'ios:powerlog:application_usage'
+message:
+- 'Application: {bundle_identifier}'
+- 'Background Time: {background_time}'
+- 'On Screen Time: {screen_on_time}'
+short_message:
+- 'Application: {bundle_identifier}'
