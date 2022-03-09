@@ -139,7 +139,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       if positives > 0:
         return ['virustotal_detections_{0:d}'.format(positives)]
 
-      return ['virsutotal_no_detections']
+      return ['virustotal_no_detections']
 
     if response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
       return ['virustotal_analysis_pending']
