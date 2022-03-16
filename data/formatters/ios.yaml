@@ -90,7 +90,7 @@ short_message:
 type: 'conditional'
 data_type: 'mobile_installation:line'
 message:
-- 'Originator: {originator}'
+- 'Originating call: {originating_call}'
 - 'Body: {body}'
 short_message:
   - 'Body: {body}'
