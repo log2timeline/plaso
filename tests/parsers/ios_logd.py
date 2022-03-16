@@ -4,17 +4,17 @@
 
 import unittest
 
-from plaso.parsers import logd
+from plaso.parsers import ios_logd
 
 from tests.parsers import test_lib
 
 
-class LogdUnitTest(test_lib.ParserTestCase):
+class IOSysdiagnoseLogdUnitTest(test_lib.ParserTestCase):
   """Tests for the Logd log parser"""
 
   def testParseLog(self):
     """Tests the Parse function."""
-    parser = logd.LogdParser()
+    parser = ios_logd.IOSysdiagnoseLogdParser()
     storage_writer = self._ParseFile(['logd.0.log'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')

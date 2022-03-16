@@ -13,7 +13,7 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class LogdEventData(events.EventData):
+class IOSysdiagnoseLogdData(events.EventData):
   """logd event data
 
   Attributes:
@@ -21,20 +21,20 @@ class LogdEventData(events.EventData):
     body (str): body of the event line
   """
 
-  DATA_TYPE = "logd:line"
+  DATA_TYPE = "ios_sysdiagnose_logd:line"
 
   def __init__(self):
     """Initializes event data."""
-    super(LogdEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSysdiagnoseLogdData, self).__init__(data_type=self.DATA_TYPE)
     self.logger = None
     self.body = None
 
 
-class LogdParser(text_parser.PyparsingSingleLineTextParser):
+class IOSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
   """Parser for the logd.0.log file obtained from iOS Sysdiagnose file dumps."""
 
   NAME = 'logd.0.log'
-  DATA_FORMAT = 'logd log'
+  DATA_FORMAT = 'iOS sysdiagnose log file'
 
   DATE_ELEMENTS = text_parser.PyparsingConstants.DATE_ELEMENTS
   TIME_ELEMENTS = text_parser.PyparsingConstants.TIME_ELEMENTS
@@ -85,7 +85,7 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
     # to be provided as +300 minutes.
     time_offset = -1 * int(time_deta_hours) * 60 + int(time_delta[3:])
 
-    event_data = LogdEventData()
+    event_data = IOSysdiagnoseLogdData()
     event_data.logger = self._GetValueFromStructure(structure, 'logger')
     event_data.body = self._GetValueFromStructure(structure, 'body')
 
@@ -109,6 +109,7 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
       parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
       line (str): one line from the text file.
+
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
@@ -117,4 +118,4 @@ class LogdParser(text_parser.PyparsingSingleLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(LogdParser)
+manager.ParsersManager.RegisterParser(IOSysdiagnoseLogdParser)
