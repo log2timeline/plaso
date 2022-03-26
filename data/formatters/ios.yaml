@@ -85,4 +85,4 @@ message:
 - 'Logger: {logger}'
 - 'Body: {body}'
 short_message:
-  - 'Body: {body}'
+- 'Body: {body}'
