@@ -80,7 +80,7 @@ short_message:
 - 'Message: {text}'
 ---
 type: 'conditional'
-data_type: 'logd:line'
+data_type: 'ios:sysdiagnose:logd:line'
 message:
 - 'Logger: {logger}'
 - 'Body: {body}'
