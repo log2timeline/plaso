@@ -1,0 +1,76 @@
+2021-08-11 05:50:23-0700 logd_helper[85]: Migrating: "/private/var/db/diagnostics/timesync"
+2021-08-11 05:50:23-0700 logd_helper[85]: Migrating: "/private/var/db/uuidtext"
+2021-08-11 05:50:23-0700 logd[29]: libtrace_kic=1
+2021-08-11 05:50:23-0700 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-08-11 05:50:23-0700 logd_helper[85]: Harvesting: 69C34AD7-BA80-3EDB-9BE6-B04C08A27B88
+2021-08-11 05:50:23-0700 logd_helper[85]: Preferring in-memory shared cache 69C34AD7-BA80-3EDB-9BE6-B04C08A27B88
+2021-08-11 05:50:24-0700 logd_helper[85]: Requiring disk to collect CTF: 199CCDB0-92B0-3E6A-B09F-FFB6317244FA
+2021-08-11 05:50:25-0700 logd_helper[85]: Harvest Complete for 69C34AD7-BA80-3EDB-9BE6-B04C08A27B88: 0
+2021-08-11 05:50:25-0700 logd_helper[85]: Migrating: "/Library/Preferences/Logging"
+2021-08-11 05:50:25-0700 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-08-11 05:53:51-0700 logd[29]: #DECODE failed to resolve UUID: [pc:0xd20100f472a4 ns:0x04 type:0x00 flags:0x0708 main:CADF036C-36EC-3FA4-8EE2-4DD7E75F8EA1 pid:156]
+2021-08-11 09:02:08-0400 logd[29]: Time zone changed, updating file headers
+2021-08-11 11:54:38-0400 logd[29]: flush for power button
+2021-08-11 17:19:43-0400 logd[29]: No userlevel firehose clients left
+2021-08-19 07:40:35-0400 logd[29]: libtrace_kic=1
+2021-08-19 07:40:35-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-08-19 07:40:35-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-09-20 06:59:13-0400 logd[29]: No userlevel firehose clients left
+2021-09-20 15:55:30-0400 logd[29]: libtrace_kic=1
+2021-09-20 15:55:30-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-09-20 15:55:30-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-09-20 15:55:51-0400 logd[29]: No userlevel firehose clients left
+2021-10-13 07:43:10-0400 logd[29]: libtrace_kic=1
+2021-10-13 07:43:10-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-10-13 07:43:10-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for A2455D88-1271-334B-BF4A-C8F838EEA230
+2021-10-13 08:36:35-0400 logd[29]: No userlevel firehose clients left
+2021-10-13 08:41:01-0400 logd[31]: libtrace_kic=1
+2021-10-13 08:41:01-0400 logd[31]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-13 08:41:02-0400 logd[31]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-13 08:41:02-0400 logd_helper[90]: Harvesting: 9227BC73-2AF5-318F-AA62-DCBE2219DBC8
+2021-10-13 08:41:16-0400 logd_helper[90]: Harvest Complete for 9227BC73-2AF5-318F-AA62-DCBE2219DBC8: 0
+2021-10-13 09:58:06-0400 logd[31]: flush for power button
+2021-10-13 09:58:46-0400 logd[29]: libtrace_kic=1
+2021-10-13 09:58:46-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-13 09:58:47-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-13 20:34:02-0400 logd[29]: Unable to get path for 190
+2021-10-13 20:34:02-0400 logd[29]: Unable to get path for 270
+2021-10-13 20:34:02-0400 logd[29]: Unable to get path for 188
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Unable to get path for 244
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:02-0400 logd[29]: Error connecting to logd_helper: Connection invalid
+2021-10-13 20:34:04-0400 logd[29]: No userlevel firehose clients left
+2021-10-18 07:29:52-0400 logd[29]: libtrace_kic=1
+2021-10-18 07:29:52-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-18 07:29:52-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-20 08:13:15-0400 logd[29]: flush for power button
+2021-10-20 08:13:37-0400 logd[29]: flush for power button
+2021-10-20 08:14:12-0400 logd[29]: libtrace_kic=1
+2021-10-20 08:14:12-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-20 08:14:12-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-20 17:57:16-0400 logd[29]: No userlevel firehose clients left
+2021-10-25 07:05:22-0400 logd[29]: libtrace_kic=1
+2021-10-25 07:05:22-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-25 07:05:22-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-10-25 15:05:45-0400 logd[29]: Unable to get path for 101
+2021-10-25 15:05:46-0400 logd[29]: No userlevel firehose clients left
+2021-11-02 06:16:36-0400 logd[29]: libtrace_kic=1
+2021-11-02 06:16:36-0400 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-11-02 06:16:36-0400 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-11-02 16:32:52-0400 logd[29]: Unable to get path for 84
+2021-11-02 16:32:52-0400 logd[29]: Unable to get path for 84
+2021-11-02 16:32:53-0400 logd[29]: No userlevel firehose clients left
+2021-12-04 07:12:47-0500 logd[29]: libtrace_kic=1
+2021-12-04 07:12:47-0500 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-12-04 07:12:47-0500 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-12-05 18:42:04-0500 logd[29]: Unable to get path for 83
+2021-12-05 18:42:06-0500 logd[29]: No userlevel firehose clients left
+2021-12-16 05:24:40-0500 logd[29]: libtrace_kic=1
+2021-12-16 05:24:40-0500 logd[29]: _read_kernel_uuid calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-12-16 05:24:40-0500 logd[29]: _logd_read_kernel_info calling _logd_uuiddb_harvest_kernel for 2CA28BC3-F853-3C86-ADA5-76E313CD7CC8
+2021-12-16 05:54:59-0500 logd[29]: flush for power button
