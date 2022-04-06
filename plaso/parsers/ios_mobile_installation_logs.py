@@ -26,7 +26,7 @@ class MobileInstallationEventData(events.EventData):
     body (str): body of the event line
   """
 
-  DATA_TYPE = 'mobile_installation:line'
+  DATA_TYPE = 'ios:mobile_installation:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -40,7 +40,7 @@ class MobileInstallationEventData(events.EventData):
 class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS Mobile Installation logs."""
 
-  NAME = 'ios_mobile_installation.log'
+  NAME = 'ios:mobile_installation:log'
   DATA_FORMAT = 'iOS mobile installation logs'
 
   MONTHS = {
