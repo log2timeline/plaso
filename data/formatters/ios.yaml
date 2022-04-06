@@ -94,3 +94,11 @@ message:
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'
+---
+type: 'conditional'
+data_type: 'ios:lockdown:log:line'
+message:
+- 'Body: {body}'
+- 'Process Identifer: {process_identifier}'
+short_message:
+- 'Body: {body}'
