@@ -103,12 +103,6 @@ members:
   _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
       yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
 
-  _POINT3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('point3d')
-
-  _POINT3D_SIZE = _POINT3D.GetByteSize()
-
-  _SHAPE3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('shape3d')
-
   def testFormatPackedIPv4Address(self):
     """Tests the _FormatPackedIPv4Address function."""
     test_helper = dtfabric_helper.DtFabricHelper()
@@ -134,25 +128,25 @@ members:
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
-    test_helper._ReadData(file_object, 0, self._POINT3D_SIZE)
+    test_helper._ReadData(file_object, 0, 12)
 
     # Test with missing file-like object.
     with self.assertRaises(ValueError):
-      test_helper._ReadData(None, 0, self._POINT3D_SIZE)
+      test_helper._ReadData(None, 0, 12)
 
     # Test with file-like object with insufficient data.
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00')
 
     with self.assertRaises(errors.ParseError):
-      test_helper._ReadData(file_object, 0, self._POINT3D_SIZE)
+      test_helper._ReadData(file_object, 0, 12)
 
     # Test with file-like object that raises an IOError.
     file_object = ErrorBytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
     with self.assertRaises(errors.ParseError):
-      test_helper._ReadData(file_object, 0, self._POINT3D_SIZE)
+      test_helper._ReadData(file_object, 0, 12)
 
   # TODO: add tests for _ReadDefinitionFile
 
@@ -160,13 +154,15 @@ members:
     """Tests the _ReadStructureFromByteStream function."""
     test_helper = dtfabric_helper.DtFabricHelper()
 
+    data_type_map = self._DATA_TYPE_FABRIC.CreateDataTypeMap('point3d')
+
     test_helper._ReadStructureFromByteStream(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
-        self._POINT3D)
+        data_type_map)
 
     # Test with missing byte stream.
     with self.assertRaises(ValueError):
-      test_helper._ReadStructureFromByteStream(None, 0, self._POINT3D)
+      test_helper._ReadStructureFromByteStream(None, 0, data_type_map)
 
     # Test with missing data map type.
     with self.assertRaises(ValueError):
@@ -188,7 +184,8 @@ members:
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
-    test_helper._ReadStructureFromFileObject(file_object, 0, self._POINT3D)
+    data_type_map = self._DATA_TYPE_FABRIC.CreateDataTypeMap('point3d')
+    test_helper._ReadStructureFromFileObject(file_object, 0, data_type_map)
 
     file_object = io.BytesIO(
         b'\x03\x00\x00\x00'
@@ -196,7 +193,8 @@ members:
         b'\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00'
         b'\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00')
 
-    test_helper._ReadStructureFromFileObject(file_object, 0, self._SHAPE3D)
+    data_type_map = self._DATA_TYPE_FABRIC.CreateDataTypeMap('shape3d')
+    test_helper._ReadStructureFromFileObject(file_object, 0, data_type_map)
 
 
 if __name__ == '__main__':
