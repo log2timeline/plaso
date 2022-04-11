@@ -76,8 +76,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AzureApplicationGatewayAccessEventData, self).__init__(
-        data_type=self.DATA_TYPE
-    )
+        data_type=self.DATA_TYPE)
 
     self.instance_id = None
     self.client_ip = None
@@ -143,52 +142,42 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
         event_data.client_port = properties_json_log_entry.get('clientPort')
         event_data.http_method = properties_json_log_entry.get('httpMethod')
         event_data.original_request_uri_with_args = (
-            properties_json_log_entry.get('originalRequestUriWithArgs')
-        )
+            properties_json_log_entry.get('originalRequestUriWithArgs'))
         event_data.request_uri = properties_json_log_entry.get('requestUri')
         event_data.request_query = properties_json_log_entry.get('requestQuery')
         event_data.user_agent = properties_json_log_entry.get('userAgent')
         event_data.http_status = properties_json_log_entry.get('httpStatus')
         event_data.http_version = properties_json_log_entry.get('httpVersion')
         event_data.received_bytes = properties_json_log_entry.get(
-            'receivedBytes'
-        )
+            'receivedBytes')
         event_data.sent_bytes = properties_json_log_entry.get('sentBytes')
         event_data.client_response_time = properties_json_log_entry.get(
-            'clientResponseTime'
-        )
+            'clientResponseTime')
         event_data.time_taken = properties_json_log_entry.get('timeTaken')
         event_data.waf_evaluation_time = properties_json_log_entry.get(
-            'WAFEvaluationTime'
-        )
+            'WAFEvaluationTime')
         event_data.waf_mode = properties_json_log_entry.get('WAFMode')
         event_data.transaction_id = properties_json_log_entry.get(
-            'transactionId'
-        )
+            'transactionId')
         event_data.ssl_enabled = properties_json_log_entry.get('sslEnabled')
         event_data.ssl_cipher = properties_json_log_entry.get('sslCipher')
         event_data.ssl_protocol = properties_json_log_entry.get('sslProtocol')
         event_data.ssl_client_verify = properties_json_log_entry.get(
-            'sslClientVerify'
-        )
+            'sslClientVerify')
         event_data.ssl_client_certificate_fingerprint = (
-            properties_json_log_entry.get('sslClientCertificateFingerprint')
-        )
+            properties_json_log_entry.get('sslClientCertificateFingerprint'))
         event_data.ssl_client_certificate_issuer_name = (
-            properties_json_log_entry.get('sslClientCertificateIssuerName')
-        )
+            properties_json_log_entry.get('sslClientCertificateIssuerName'))
         event_data.server_routed = properties_json_log_entry.get('serverRouted')
         event_data.server_status = properties_json_log_entry.get('serverStatus')
         event_data.server_response_latency = properties_json_log_entry.get(
-            'serverResponseLatency'
-        )
+            'serverResponseLatency')
         event_data.original_host = properties_json_log_entry.get('originalHost')
         event_data.host = properties_json_log_entry.get('host')
       else:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse application gateway access log event:'
-            'missing properties field'
-        )
+            'missing properties field')
         continue
 
       try:
@@ -197,13 +186,11 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
             f'Unable to parse time string: {time_string} with error: '
-            f'{str(exception)}'
-        )
+            f'{str(exception)}')
         date_time = dfdatetime_semantic_time.InvalidTime()
 
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED
-      )
+          date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
@@ -220,8 +207,7 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
     # Trivial JSON format check: first character must be an open brace.
     if file_object.read(1) != b'{':
       raise errors.WrongParser(
-          'is not a valid JSON file, missing opening brace.'
-      )
+          'is not a valid JSON file, missing opening brace.')
     file_object.seek(0, os.SEEK_SET)
 
     text_file_object = text_file.TextFile(file_object)
@@ -240,8 +226,7 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
 
     if first_line_json.get('operationName') != "ApplicationGatewayAccess":
       raise errors.WrongParser(
-          'operationName is not ApplicationGatewayAccess.'
-      )
+          'operationName is not ApplicationGatewayAccess.')
 
     file_object.seek(0, os.SEEK_SET)
     self._ParseAzureApplicationGatewayAccess(parser_mediator, file_object)
