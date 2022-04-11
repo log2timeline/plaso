@@ -3,7 +3,7 @@
 
 import unittest
 
-from plaso.parsers import azure_applicationgatewayaccess
+from plaso.parsers import azure_application_gateway_access
 from tests.parsers import test_lib
 
 
@@ -83,7 +83,7 @@ class AzureApplicationGatewayAccessLogTest(test_lib.ParserTestCase):
     ]
     # pylint: enable=line-too-long
 
-    parser = azure_applicationgatewayaccess.AzureApplicationGatewayAccessParser() # pylint: disable=line-too-long
+    parser = azure_application_gateway_access.AzureApplicationGatewayAccessParser() # pylint: disable=line-too-long
     storage_writer = self._ParseFile(
       ['azure_application_gateway_access.json'], parser
     )

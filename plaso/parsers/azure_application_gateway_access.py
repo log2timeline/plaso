@@ -2,7 +2,7 @@
 """Parser for Azure application gateway access logging saved to a file."""
 
 import json
-import json.decoder as json_decoder
+from json.decoder import JSONDecodeError
 import os
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -118,9 +118,7 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
   _ENCODING = 'utf-8'
 
   def _ParseAzureApplicationGatewayAccess(self, parser_mediator, file_object):
-    """
-      Extract events from Azure application gateway access logging
-      in JSON-L format.
+    """ Extract events from Azure application gateway access logging.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
@@ -198,8 +196,8 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(time_string)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-          f'Unable to parse time string: {time_string} with error: '
-          f'{str(exception)}'
+            f'Unable to parse time string: {time_string} with error: '
+            f'{str(exception)}'
         )
         date_time = dfdatetime_semantic_time.InvalidTime()
 
@@ -231,7 +229,7 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
-    except json_decoder.JSONDecodeError:
+    except JSONDecodeError:
       raise errors.WrongParser('could not decode json.')
 
     if not first_line_json:

@@ -99,10 +99,10 @@ message:
 - 'originalHost: {original_host}'
 - 'host: {host}'
 short_message:
-- 'clientIP: {clientIP}'
-- 'httpMethod: {httpMethod}'
-- 'originalRequestUriWithArgs: {originalRequestUriWithArgs}'
-- 'httpStatus: {httpStatus}'
+- 'clientIP: {client_ip}'
+- 'httpMethod: {http_method}'
+- 'originalRequestUriWithArgs: {original_request_uri_with_args}'
+- 'httpStatus: {http_status}'
 ---
 type: 'basic'
 data_type: 'bash:history:command'
