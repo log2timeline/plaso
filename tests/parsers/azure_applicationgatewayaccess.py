@@ -15,76 +15,78 @@ class AzureApplicationGatewayAccessLogTest(test_lib.ParserTestCase):
 
     expected_timestamps = [
       '2021-10-14 22:17:11.000000',
-      '2021-10-14 22:17:12.000000'
+      '2021-10-14 22:17:12.000000',
     ]
 
     # pylint: disable=line-too-long
     expected_events = [
-        {
-          "instanceId": "appgw_2",
-          "clientIP": "185.42.129.24",
-          "clientPort": 45057,
-          "httpMethod": "GET",
-          "originalRequestUriWithArgs": "/",
-          "requestUri": "/",
-          "requestQuery": "",
-          "userAgent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36",
-          "httpStatus": 200,
-          "httpVersion": "HTTP/1.1",
-          "receivedBytes": 184,
-          "sentBytes": 466,
-          "clientResponseTime": 0,
-          "timeTaken": 0.034,
-          "WAFEvaluationTime": "0.000",
-          "WAFMode": "Detection",
-          "transactionId": "592d1649f75a8d480a3c4dc6a975309d",
-          "sslEnabled": "on",
-          "sslCipher": "ECDHE-RSA-AES256-GCM-SHA384",
-          "sslProtocol": "TLSv1.2",
-          "sslClientVerify": "NONE",
-          "sslClientCertificateFingerprint": "",
-          "sslClientCertificateIssuerName": "",
-          "serverRouted": "52.239.221.65:443",
-          "serverStatus": "200",
-          "serverResponseLatency": "0.028",
-          "originalHost": "20.110.30.194",
-          "host": "20.110.30.194"
+      {
+        "instance_id": "appgw_2",
+        "client_ip": "185.42.129.24",
+        "client_port": 45057,
+        "http_method": "GET",
+        "original_request_uri_with_args": "/",
+        "request_uri": "/",
+        "request_query": "",
+        "user_agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36",
+        "http_status": 200,
+        "http_version": "HTTP/1.1",
+        "received_bytes": 184,
+        "sent_bytes": 466,
+        "client_response_time": 0,
+        "time_taken": 0.034,
+        "waf_evaluation_time": "0.000",
+        "waf_mode": "Detection",
+        "transaction_id": "592d1649f75a8d480a3c4dc6a975309d",
+        "ssl_enabled": "on",
+        "ssl_cipher": "ECDHE-RSA-AES256-GCM-SHA384",
+        "ssl_protocol": "TLSv1.2",
+        "ssl_client_verify": "NONE",
+        "ssl_client_certificate_fingerprint": "",
+        "ssl_client_certificate_issuer_name": "",
+        "server_routed": "52.239.221.65:443",
+        "server_status": "200",
+        "server_response_latency": "0.028",
+        "original_host": "20.110.30.194",
+        "host": "20.110.30.194",
       },
       {
-        "instanceId": "appgw_2",
-        "clientIP": "185.42.129.24",
-        "clientPort": 45057,
-        "httpMethod": "GET",
-        "originalRequestUriWithArgs": "/",
-        "requestUri": "/",
-        "requestQuery": "",
-        "userAgent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36",
-        "httpStatus": 400,
-        "httpVersion": "HTTP/1.1",
-        "receivedBytes": 184,
-        "sentBytes": 466,
-        "clientResponseTime": 0,
-        "timeTaken": 0.034,
-        "WAFEvaluationTime": "0.000",
-        "WAFMode": "Detection",
-        "transactionId": "592d1649f75a8d480a3c4dc6a975309d",
-        "sslEnabled": "on",
-        "sslCipher": "ECDHE-RSA-AES256-GCM-SHA384",
-        "sslProtocol": "TLSv1.2",
-        "sslClientVerify": "NONE",
-        "sslClientCertificateFingerprint": "",
-        "sslClientCertificateIssuerName": "",
-        "serverRouted": "52.239.221.65:443",
-        "serverStatus": "200",
-        "serverResponseLatency": "0.028",
-        "originalHost": "20.110.30.194",
-        "host": "20.110.30.194"
-      }
+        "instance_id": "appgw_2",
+        "client_ip": "185.42.129.24",
+        "client_port": 45057,
+        "http_method": "GET",
+        "original_request_uri_with_args": "/",
+        "request_uri": "/",
+        "request_query": "",
+        "user_agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36",
+        "http_status": 400,
+        "http_version": "HTTP/1.1",
+        "received_bytes": 184,
+        "sent_bytes": 466,
+        "client_response_time": 0,
+        "time_taken": 0.034,
+        "waf_evaluation_time": "0.000",
+        "waf_mode": "Detection",
+        "transaction_id": "592d1649f75a8d480a3c4dc6a975309d",
+        "ssl_enabled": "on",
+        "ssl_cipher": "ECDHE-RSA-AES256-GCM-SHA384",
+        "ssl_protocol": "TLSv1.2",
+        "ssl_client_verify": "NONE",
+        "ssl_client_certificate_fingerprint": "",
+        "ssl_client_certificate_issuer_name": "",
+        "server_routed": "52.239.221.65:443",
+        "server_status": "200",
+        "server_response_latency": "0.028",
+        "original_host": "20.110.30.194",
+        "host": "20.110.30.194",
+      },
     ]
     # pylint: enable=line-too-long
 
-    parser = azure_applicationgatewayaccess.AzureApplicationGatewayAccessParser()
-    storage_writer = self._ParseFile(['azure_application_gateway_access.json'], parser)
+    parser = azure_applicationgatewayaccess.AzureApplicationGatewayAccessParser() # pylint: disable=line-too-long
+    storage_writer = self._ParseFile(
+      ['azure_application_gateway_access.json'], parser
+    )
 
     self.assertEqual(storage_writer.number_of_events, 2)
     self.assertEqual(storage_writer.number_of_extraction_warnings, 0)
@@ -92,7 +94,8 @@ class AzureApplicationGatewayAccessLogTest(test_lib.ParserTestCase):
 
     events = storage_writer.GetEvents()
     for event, expected_event, expected_timestamp in zip(
-        events, expected_events, expected_timestamps):
+      events, expected_events, expected_timestamps
+    ):
       self.CheckTimestamp(event.timestamp, expected_timestamp)
       self.CheckEventValues(storage_writer, event, expected_event)
 
