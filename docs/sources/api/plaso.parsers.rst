@@ -53,10 +53,26 @@ plaso.parsers.asl module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.aws\_cloudtrail module
+------------------------------------
+
+.. automodule:: plaso.parsers.aws_cloudtrail
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.aws\_elb\_access module
 -------------------------------------
 
 .. automodule:: plaso.parsers.aws_elb_access
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.azure\_activity\_log module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.azure_activity_log
    :members:
    :undoc-members:
    :show-inheritance:
@@ -225,6 +241,14 @@ plaso.parsers.interface module
 ------------------------------
 
 .. automodule:: plaso.parsers.interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.ios\_logd module
+------------------------------
+
+.. automodule:: plaso.parsers.ios_logd
    :members:
    :undoc-members:
    :show-inheritance:

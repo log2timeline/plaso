@@ -36,7 +36,7 @@ equivalent.
 
 For this you'll need to use a [development release](Releases-and-roadmap.md).
 
-Get a github and gmail account and enable 2-factor authentication.
+Get a GitHub and Gmail account and enable 2-factor authentication.
 
 To get started have a look at the [Developers guide](../developer/Developers-Guide.md).
 
