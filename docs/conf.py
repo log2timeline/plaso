@@ -93,6 +93,8 @@ linkcheck_ignore = [
     '(|[.][.]/)api/[^#]*#',
     '(|[.][.]/)developer/[^#]*#',
     '(|[.][.]/)user/[^#]*#',
+    # The docs.github.com are known to be flaky.
+    'https://docs.github.com/.*',
     'https://github.com/libyal/libsigscan/wiki/Internals#',
     'https://github.com/log2timeline/dfvfs/wiki#',
     'https://groups.google.com/forum/#',

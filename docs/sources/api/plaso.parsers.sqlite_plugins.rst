@@ -76,6 +76,14 @@ plaso.parsers.sqlite\_plugins.chrome\_history module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.dropbox module
+--------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.dropbox
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.firefox\_cookies module
 -----------------------------------------------------
 
