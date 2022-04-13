@@ -9,12 +9,12 @@ from plaso.parsers import ios_mobile_installation_logs
 from tests.parsers import test_lib
 
 
-class MobileInstallationUnitTest(test_lib.ParserTestCase):
+class IOSMobileInstallationUnitTest(test_lib.ParserTestCase):
   """Tests for the iOS Mobile Installation log parser"""
 
   def testParseLog(self):
     """Tests the Parse function"""
-    parser = ios_mobile_installation_logs.MobileInstallationParser()
+    parser = ios_mobile_installation_logs.IOSMobileInstallationParser()
     storage_writer = self._ParseFile(['mobile_installation.log.0'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
@@ -34,11 +34,11 @@ class MobileInstallationUnitTest(test_lib.ParserTestCase):
             'enumeratePluginKitPluginsInBundle:updatingPluginParentID:'
             'ensurePluginsAreExecutable:installProfiles:error:'
             'enumerator:',
-      'body': "Ignoring plugin at /System/Library/PrivateFrameworks/"
-        "AccessibilityUtilities.framework/PlugIns/"
-        "com.apple.accessibility.Accessibility.HearingAidsTapToRadar."
-        "appex due to validation issue(s). "
-        "See previous log messages for details."}
+        'body': "Ignoring plugin at /System/Library/PrivateFrameworks/"
+            "AccessibilityUtilities.framework/PlugIns/"
+            "com.apple.accessibility.Accessibility.HearingAidsTapToRadar."
+            "appex due to validation issue(s). "
+            "See previous log messages for details."}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
@@ -63,8 +63,7 @@ class MobileInstallationUnitTest(test_lib.ParserTestCase):
             '09000000 20030000 00000000 ... 00000000 '
             '000002a6 };\n} keyCount=22 keySample={ CFBundleName DTXcode '
             'DTSDKName DTSDKBuild '
-            'CFBundleDevelopmentRegion }'
-    }
+            'CFBundleDevelopmentRegion }'}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 

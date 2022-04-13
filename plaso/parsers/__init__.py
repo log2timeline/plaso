@@ -29,6 +29,7 @@ from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
 from plaso.parsers import iis
 from plaso.parsers import ios_logd
+from plaso.parsers import ios_mobile_installation_logs
 from plaso.parsers import java_idx
 from plaso.parsers import locate
 from plaso.parsers import mac_appfirewall
@@ -37,7 +38,6 @@ from plaso.parsers import mac_securityd
 from plaso.parsers import mac_wifi
 from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
-from plaso.parsers import ios_mobile_installation_logs
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer
 from plaso.parsers import ntfs

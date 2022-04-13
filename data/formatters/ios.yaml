@@ -80,17 +80,17 @@ short_message:
 - 'Message: {text}'
 ---
 type: 'conditional'
-data_type: 'ios:sysdiagnose:logd:line'
+data_type: 'ios:mobile_installation:line'
 message:
-- 'Logger: {logger}'
+- 'Originating call: {originating_call}'
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'
 ---
 type: 'conditional'
-data_type: 'ios:mobile_installation:line'
+data_type: 'ios:sysdiagnose:logd:line'
 message:
-- 'Originating call: {originating_call}'
+- 'Logger: {logger}'
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS mobile installation logs files obtained from iOS device.
-Based on the research by Alex Brignoni.
-See https://dfir.pubpub.org/pub/e5xlbw88/release/2 for the paper.
-Also https://github.com/abrignoni/iOS-Mobile-Installation-Logs-Parser."""
+"""Parser for iOS mobile installation logs files obtained from iOS device."""
 
 import pyparsing
 
@@ -16,28 +13,29 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class MobileInstallationEventData(events.EventData):
-  """Mobile Installation log event data
+class IOSMobileInstallationEventData(events.EventData):
+  """iOS Mobile Installation log event data
 
   Attributes:
-    process_identifier (str): process_identifier
-    severity (str): severity of the message
-    originating_call (str): call that created the entry
-    body (str): body of the event line
+    body (str): body of the event line.
+    originating_call (str): call that created the entry.
+    process_identifier (str): process_identifier.
+    severity (str): severity of the message.
   """
 
   DATA_TYPE = 'ios:mobile_installation:line'
 
   def __init__(self):
     """Initializes event data."""
-    super(MobileInstallationEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(
+        IOSMobileInstallationEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
+    self.originating_call = None
     self.process_identifier = None
     self.severity = None
-    self.originating_call = None
-    self.body = None
 
 
-class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
+class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS Mobile Installation logs."""
 
   NAME = 'ios:mobile_installation:log'
@@ -62,28 +60,39 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
   THREE_LETTERS = text_parser.PyparsingConstants.THREE_LETTERS
   TIME_ELEMENTS = text_parser.PyparsingConstants.TIME_ELEMENTS
 
-  _TIMESTAMP = (THREE_LETTERS.suppress() + THREE_LETTERS('month') +
-      ONE_OR_TWO_DIGITS('day') + TIME_ELEMENTS + FOUR_DIGITS('year'))
+  _TIMESTAMP = (
+      THREE_LETTERS.suppress() +
+      THREE_LETTERS.setResultsName('month') +
+      ONE_OR_TWO_DIGITS.setResultsName('day') + TIME_ELEMENTS +
+      FOUR_DIGITS.setResultsName('year'))
 
-  _ELEMENT_NUMBER = (pyparsing.Suppress('[') +
-      pyparsing.Word(pyparsing.nums)('process_identifier') +
+  _ELEMENT_NUMBER = (
+      pyparsing.Suppress('[') +
+      pyparsing.Word(pyparsing.nums).setResultsName('process_identifier') +
       pyparsing.Suppress(']'))
 
-  _ELEMENT_SEVERITY = (pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.alphanums)('severity') + pyparsing.Suppress('>'))
+  _ELEMENT_SEVERITY = (
+      pyparsing.Suppress('<') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('severity') +
+      pyparsing.Suppress('>'))
 
-  _ELEMENT_ID = (pyparsing.Suppress('(') +
-      pyparsing.Word(pyparsing.alphanums)('id') + pyparsing.Suppress(')'))
+  _ELEMENT_ID = (
+      pyparsing.Suppress('(') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
+      pyparsing.Suppress(')'))
 
-  _ELEMENT_ORIGINATOR = ((pyparsing.Suppress('+[') | pyparsing.Suppress('-[')) +
-      pyparsing.SkipTo(pyparsing.Literal(']'))('originating_call') +
+  _ELEMENT_ORIGINATOR = (
+      (pyparsing.Suppress('+[') | pyparsing.Suppress('-[')) +
+      pyparsing.SkipTo(pyparsing.Literal(']')).setResultsName(
+          'originating_call') +
       pyparsing.Suppress(']: '))
 
   _BODY_END = pyparsing.StringEnd() | _TIMESTAMP
 
-  _ELEMENT_BODY = pyparsing.SkipTo(_BODY_END)('body')
+  _ELEMENT_BODY = pyparsing.SkipTo(_BODY_END).setResultsName('body')
 
-  _LINE_GRAMMAR = (_TIMESTAMP + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
+  _LINE_GRAMMAR = (
+      _TIMESTAMP + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
       _ELEMENT_ID + _ELEMENT_ORIGINATOR + _ELEMENT_BODY +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
@@ -104,7 +113,6 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-
     if key != 'log_entry':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
@@ -116,7 +124,7 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
 
-    event_data = MobileInstallationEventData()
+    event_data = IOSMobileInstallationEventData()
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
     event_data.severity = self._GetValueFromStructure(structure, 'severity')
@@ -132,7 +140,7 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
       return
 
     event = time_events.DateTimeValuesEvent(
-      date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -152,4 +160,4 @@ class MobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(MobileInstallationParser)
+manager.ParsersManager.RegisterParser(IOSMobileInstallationParser)
