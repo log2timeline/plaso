@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for iOS powerlog database files. It can be obtained from
-an iOS sysdiagnose dump at <sysdiagnose_DATE_OS_DEVICE_BUILD>/logs/powerlogs
-/powerlog_YYYY-MM-DD_XXXXXXXX.PLSQL
-
-or from a physical acquisition at:
-/private/var/mobile/Library/BatteryLife/CurrentPowerlog.PLSQL
-Archives/powerlog_YYYY-MM-DD_XXXXXXXX.PLQSQL.gz
-
-Based on the research by Sarah Edwards
-(https://papers.put.as/papers/ios/2016/iOS_of_Sauron_04162016.pdf)
-"""
+"""SQLite parser plugin for iOS powerlog database files."""
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
@@ -29,7 +19,6 @@ class IOSPowerlogApplicationUsageEventData(events.EventData):
     screen_on_time (str): Number of seconds that the application ran in the
         foreground.
   """
-
   DATA_TYPE = 'ios:powerlog:application_usage'
 
   def __init__(self):
@@ -82,7 +71,6 @@ class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
-
     query_hash = hash(query)
 
     event_data = IOSPowerlogApplicationUsageEventData()
