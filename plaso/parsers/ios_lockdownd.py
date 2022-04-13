@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the logs of the iOS lockdown daemon. The file, lockdownd.log, can
- be obtained from iOS sysdiagnose dumps.
-<sysdiagnose_DATE_OS_DEVICE_BUILD>/logs/MobileLockdown/lockdownd.log
-Based on research by Mattia Epifani, Adrian Leong and Heather Mahalik
-https://www.rapidr.nl/wp-content/uploads/2019/05/iOS_Bug_Reporting_for_Forensic_Purposes_1.2.pdf"""
+"""Parser for the logs of the iOS lockdown daemon."""
 
 import pyparsing
 
@@ -35,7 +31,7 @@ class IOSLockdownLogData(events.EventData):
 
 
 class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for iOS lockdown daemon log files (lockdownd.log"""
+  """Parser for iOS lockdown daemon log files (ios_lockdownd.log"""
 
   NAME = 'ios:lockdownd:log'
   DATA_FORMAT = 'iOS lockdown daemon log'
@@ -79,7 +75,6 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-
     if key != 'log_entry':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))

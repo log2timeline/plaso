@@ -15,7 +15,7 @@ class IOSLockdownLogUnitTest(test_lib.ParserTestCase):
   def testParseLog(self):
     """Tests the Parse function."""
     parser = ios_lockdownd.IOSLockdownParser()
-    storage_writer = self._ParseFile(['lockdownd.log'], parser)
+    storage_writer = self._ParseFile(['ios_lockdownd.log'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 153)
