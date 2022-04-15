@@ -15,12 +15,12 @@ short_message:
 - 'from: {ip_address}'
 ---
 type: 'conditional'
-data_type: 'aws:cloudtrail:json'
+data_type: 'aws:cloudtrail:entry'
 message:
 - 'User {user_name}'
 - 'performed {event_name}'
 - 'on [{resources}]'
-- 'using access key {access_key_id}'
+- 'using access key {access_key}'
 - 'from IP address {source_ip}'
 short_message:
 - 'User {user_name}'
