@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*
-"""Tests for the GCP log file parser."""
+"""Tests for the JSON-L parser plugin for Google Cloud (GCP) log files."""
 
 import unittest
 
-from plaso.parsers import gcp_logging
+from plaso.parsers.jsonl_plugins import gcp_log
 
-from tests.parsers import test_lib
+from tests.parsers.jsonl_plugins import test_lib
 
 
-class GCPLoggingUnitTest(test_lib.ParserTestCase):
-  """Tests for the GCP log file parser."""
+class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
+  """Tests for the JSON-L parser plugin for Google Cloud (GCP) log files."""
 
-  def testParseFile(self):
-    """Test parsing of a GCP log file."""
-    parser = gcp_logging.GCPLogsParser()
-    storage_writer = self._ParseFile(['gcp_logging.jsonl'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = gcp_log.GCPLogJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(
+        ['gcp_logging.jsonl'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)

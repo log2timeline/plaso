@@ -5,10 +5,7 @@ from plaso.parsers import asl
 from plaso.parsers import android_app_usage
 from plaso.parsers import apache_access
 from plaso.parsers import apt_history
-from plaso.parsers import aws_cloudtrail
 from plaso.parsers import aws_elb_access
-from plaso.parsers import azure_activity_log
-from plaso.parsers import azure_application_gateway_access
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
 from plaso.parsers import bsm
@@ -24,12 +21,12 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
-from plaso.parsers import gcp_logging
 from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
 from plaso.parsers import iis
 from plaso.parsers import ios_logd
 from plaso.parsers import java_idx
+from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain
@@ -79,6 +76,7 @@ from plaso.parsers import zsh_extended_history
 from plaso.parsers import bencode_plugins
 from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
+from plaso.parsers import jsonl_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
 from plaso.parsers import sqlite_plugins

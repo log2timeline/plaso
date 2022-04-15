@@ -13,8 +13,14 @@ class ParserImportTest(test_lib.ImportCheckTestCase):
   """Tests that parser classes are imported correctly."""
 
   _IGNORABLE_FILES = frozenset([
-      'dtfabric_parser.py', 'dtfabric_plugin.py', 'logger.py', 'manager.py',
-      'presets.py', 'mediator.py', 'interface.py', 'plugins.py'])
+      'dtfabric_parser.py',
+      'dtfabric_plugin.py',
+      'interface.py',
+      'logger.py',
+      'manager.py',
+      'mediator.py',
+      'plugins.py',
+      'presets.py'])
 
   def testParsersImported(self):
     """Tests that all parsers are imported."""

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*
-"""Tests for the Azure Application Gateway Access logging parser."""
+"""Tests for the Azure Application Gateway Access log files parser."""
 
 import unittest
 
-from plaso.parsers import azure_application_gateway_access
-from tests.parsers import test_lib
+from plaso.parsers.jsonl_plugins import azure_application_gateway_log
+
+from tests.parsers.jsonl_plugins import test_lib
 
 
-class AzureApplicationGatewayAccessLogTest(test_lib.ParserTestCase):
-  """Tests for the Azure Application Gateway Access logging parser."""
+class AzureApplicationGatewayAccessLogJSONLPluginTest(
+    test_lib.JSONLPluginTestCase):
+  """Tests for the Azure Application Gateway Access log files parser."""
 
-  def testParseFile(self):
-    """Tests that Azure Application Gateway Access logs are correctly parsed."""
-    parser = (
-        azure_application_gateway_access.AzureApplicationGatewayAccessParser())
-    storage_writer = self._ParseFile(
-        ['azure_application_gateway_access.json'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin_module = azure_application_gateway_log
+    plugin = plugin_module.AzureApplicationGatewayAccessLogJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(
+        ['azure_application_gateway_access.json'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class to provide a parsing framework to plaso.
-
-This class contains a base framework class for parsing file-like objects, and
-also some implementations that extend it to provide a more comprehensive
-parser.
-"""
+"""Base parser for text formats."""
 
 import abc
 import codecs

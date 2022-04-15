@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Parser for Azure application gateway access log."""
-
-import json
-import os
-
-from json import decoder as json_decoder
+"""JSON-L parser plugin for Azure application gateway access log files."""
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
-from plaso.parsers import interface
+from plaso.parsers import jsonl_parser
+from plaso.parsers.jsonl_plugins import interface
 
 
 class AzureApplicationGatewayAccessEventData(events.EventData):
@@ -108,11 +101,11 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     self.waf_mode = None
 
 
-class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
-  """Parser for JSON-L Azure application gateway access log."""
+class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
+  """JSON-L parser plugin for Azure application gateway access log files."""
 
-  NAME = 'azure_application_gateway_access'
-  DATA_FORMAT = 'Azure application gateway access log'
+  NAME = 'azure_application_gateway_access_log'
+  DATA_FORMAT = 'Azure Application Gateway access log'
 
   _ENCODING = 'utf-8'
 
@@ -146,28 +139,13 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
       'WAFEvaluationTime': 'waf_evaluation_time',
       'WAFMode': 'waf_mode'}
 
-  def _GetJSONValue(self, json_dict, name):
-    """Retrieves a value from a JSON dict.
+  def _ParseRecord(self, parser_mediator, json_dict):
+    """Parses an Azure application gateway access log record.
 
     Args:
-      json_dict (dict): JSON dictionary.
-      name (str): name of the value to retrieve.
-
-    Returns:
-      object: value of the JSON log entry or None if not set.
-    """
-    json_value = json_dict.get(name)
-    if json_value == '':
-      json_value = None
-    return json_value
-
-  def _ParseAzureApplicationGatewayAccess(self, parser_mediator, json_dict):
-    """Extracts events from an Azure application gateway access log entry.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      json_dict (dict): JSON log entry dictionary.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      json_dict (dict): JSON dictionary of the log record.
     """
     timestamp = json_dict.get('timeStamp')
     if not timestamp:
@@ -199,47 +177,31 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an Azure application gateway access log file-object.
+  def CheckRequiredFormat(self, json_dict):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): a file-like object.
+      json_dict (dict): JSON dictionary of the log record.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
     """
-    # Trivial JSON format check: first character must be an open brace.
-    if file_object.read(1) != b'{':
-      raise errors.WrongParser(
-          'is not a valid JSON file, missing opening brace.')
+    operation_name = json_dict.get('operationName') or None
+    properties = json_dict.get('properties') or None
+    timestamp = json_dict.get('timeStamp') or None
 
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
+    if (None in (operation_name, properties, timestamp) or
+        operation_name != 'ApplicationGatewayAccess'):
+      return False
 
     try:
-      first_line = text_file_object.readline()
-      first_line_json = json.loads(first_line)
-    except json_decoder.JSONDecodeError:
-      raise errors.WrongParser('unable to decode JSON.')
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(timestamp)
+    except ValueError:
+      return False
 
-    if not first_line_json:
-      raise errors.WrongParser('missing JSON.')
-
-    if not first_line_json.get('properties'):
-      raise errors.WrongParser('no properties found in first line.')
-
-    if first_line_json.get('operationName') != 'ApplicationGatewayAccess':
-      raise errors.WrongParser(
-          'operationName is not ApplicationGatewayAccess.')
-
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
-
-    for line in text_file_object:
-      json_log_entry = json.loads(line)
-      self._ParseAzureApplicationGatewayAccess(parser_mediator, json_log_entry)
+    return True
 
 
-manager.ParsersManager.RegisterParser(AzureApplicationGatewayAccessParser)
+jsonl_parser.JSONLParser.RegisterPlugin(
+    AzureApplicationGatewayAccessLogJSONLPlugin)

@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*
-"""Tests for the Azure Activity logging parser."""
+"""Tests for the JSON-L parser plugin for Azure activity log files."""
 
 import unittest
 
-from plaso.parsers import azure_activity_log
-from tests.parsers import test_lib
+from plaso.parsers.jsonl_plugins import azure_activity_log
+
+from tests.parsers.jsonl_plugins import test_lib
 
 
-class AzureActivityLogTest(test_lib.ParserTestCase):
-  """Tests for the Azure Activity logging parser."""
+class AzureActivityLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
+  """Tests for the JSON-L parser plugin for Azure activity log files."""
 
-  def testParseFile(self):
-    """Test parsing of an Azure activity log file."""
-    parser = azure_activity_log.AzureActivityLogParser()
-    storage_writer = self._ParseFile(['azure_activity_log.jsonl'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = azure_activity_log.AzureActivityLogJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(
+        ['azure_activity_log.jsonl'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)

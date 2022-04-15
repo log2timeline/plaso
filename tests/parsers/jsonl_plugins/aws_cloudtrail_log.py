@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*
-"""Tests for the AWS CloudTrail log parser."""
+"""Tests for the JSON-L parser plugin for AWS CloudTrail log files."""
 
 import unittest
 
-from plaso.parsers import aws_cloudtrail
-from tests.parsers import test_lib
+from plaso.parsers.jsonl_plugins import aws_cloudtrail_log
+
+from tests.parsers.jsonl_plugins import test_lib
 
 
-class AWSCloudTrailTest(test_lib.ParserTestCase):
-  """Tests for the AWS CloudTrail log parser."""
+class AWSCloudTrailLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
+  """Tests for the JSON-L parser plugin for AWS CloudTrail log files."""
 
-  def testParseFile(self):
-    """Test parsing of AWS CloudTrail log file."""
-    parser = aws_cloudtrail.AWSCloudTrailParser()
-    storage_writer = self._ParseFile(['aws_cloudtrail.jsonl'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = aws_cloudtrail_log.AWSCloudTrailLogJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(
+        ['aws_cloudtrail.jsonl'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
