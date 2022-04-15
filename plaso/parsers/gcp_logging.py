@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Parser for GCP cloud logging saved to a file."""
+"""Parser for Google Cloud (GCP) log files."""
 
 import json
-from json.decoder import JSONDecodeError
 import os
+
+from json import decoder as json_decoder
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -18,31 +19,31 @@ from plaso.parsers import interface
 
 
 class GCPLogEventData(events.EventData):
-  """Google cloud logging event data.
+  """Google Cloud (GCP) logging event data.
 
   Attributes:
-    severity (str): the log entry severity.
-    user (str): the user principal performing the logged action.
-    action (str): the logged GCP action.
-    resource (str): the resource the action is being performed on.
-    text_payload (str): the textPayload for logs not using a json or proto
-      payload.
-    log_name (str): the logName for the log entry.
+    action (str): GCP action.
+    log_name (str): name of the log entry.
+    resource (str): resource the action is being performed on.
+    severity (str): log entry severity.
+    text_payload (str): text payload for logs not using a JSON or proto
+        payload.
+    user (str): user principal performing the logged action.
   """
 
-  DATA_TYPE = 'gcp:log:json'
+  DATA_TYPE = 'gcp:log:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(GCPLogEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.severity = None
-    self.user = None
+    super(GCPLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.resource = None
-    self.text_payload = None
     self.log_name = None
+    self.resource = None
+    self.severity = None
+    self.text_payload = None
+    self.user = None
 
+  # TODO: remove this, event data should be predefined.
   def AddEventAttributes(self, event_attributes):
     """Add extra event attributes parsed from GCP logs.
 
@@ -68,92 +69,111 @@ class GCPLogsParser(interface.FileObjectParser):
 
   _ENCODING = 'utf-8'
 
-  def _ParseGCPLog(self, parser_mediator, file_object):
-    """Extract events from GCP Logging saved to a file in JSON-L format.
+  _JSON_PAYLOAD_ATTRIBUTES = [
+      'container',
+      'event_subtype',
+      'event_type',
+      'filename',
+      'message']
+
+  _PROTO_PAYLOAD_ATTRIBUTES = [
+      'account_id'
+      'description',
+      'direction',
+      'email',
+      'member',
+      'name',
+      'targetTags']
+
+  # Ordered from least to most preferred value.
+  _ACTION_ATTRIBUTES = ['methodName', 'event_subtype']
+  _RESROUCE_ATTRIBUTES = ['resource_label_instance_id', 'resourceName']
+  _USER_ATTRIBUTES = ['principalEmail', 'user']
+
+  def _GetJSONValue(self, json_dict, name):
+    """Retrieves a value from a JSON dict.
+
+    Args:
+      json_dict (dict): JSON dictionary.
+      name (str): name of the value to retrieve.
+
+    Returns:
+      object: value of the JSON log entry or None if not set.
+    """
+    json_value = json_dict.get(name)
+    if json_value == '':
+      json_value = None
+    return json_value
+
+  def _ParseGCPLog(self, parser_mediator, json_dict):
+    """Extracts events from a GCP log entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+          and other components, such as storage and dfVFS.
+      json_dict (dict): JSON log entry dictionary.
     """
+    time_string = json_dict.get('timestamp')
+    if not time_string:
+      parser_mediator.ProduceExtractionWarning(
+          'Timestamp value missing from GCP log event')
+      return
 
-    text_file_object = text_file.TextFile(file_object)
+    event_data = GCPLogEventData()
+    event_attributes = {}
 
-    for line in text_file_object:
+    resource_json = json_dict.get('resource')
+    if resource_json:
+      labels_json = resource_json.get('labels')
+      if labels_json:
+        for attribute, value in labels_json.items():
+          plaso_attribute = 'resource_label_{0:s}'.format(attribute)
+          event_attributes[plaso_attribute] = value
 
-      json_log_entry = json.loads(line)
+    event_data.severity = self._GetJSONValue(json_dict, 'severity')
+    event_data.log_name = self._GetJSONValue(json_dict, 'logName')
 
-      time_string = json_log_entry.get('timestamp', None)
-      if time_string is None:
-        continue
+    json_payload = json_dict.get('jsonPayload')
+    if json_payload:
+      self._ParseJSONPayload(json_payload, event_attributes)
 
-      event_data = GCPLogEventData()
-      event_attributes = {}
+    proto_payload = json_dict.get('protoPayload')
+    if proto_payload:
+      self._ParseProtoPayload(proto_payload, event_attributes)
 
-      resource = json_log_entry.get('resource')
-      if resource:
-        labels = resource.get('labels')
-        if labels:
-          for attribute, value in labels.items():
-            plaso_attribute = 'resource_label_{0:s}'.format(attribute)
-            event_attributes[plaso_attribute] = value
+    # TODO: jsonPayload can also contain arbitrary fields so should be
+    # handled like textPayload if user, action or resource cannot be parsed.
+    text_payload = json_dict.get('textPayload')
+    if text_payload:
+      # Textpayload records can be anything, so we don't want to try to
+      # format them.
+      event_data.text_payload = text_payload
+    else:
+      for attribute in self._USER_ATTRIBUTES:
+        if attribute in event_attributes:
+          event_data.user = event_attributes[attribute]
 
-      severity = json_log_entry.get('severity')
-      if severity:
-        event_data.severity = severity
+      for attribute in self._ACTION_ATTRIBUTES:
+        if attribute in event_attributes:
+          event_data.action = event_attributes[attribute]
 
-      log_name = json_log_entry.get('logName')
-      if log_name:
-        event_data.log_name = log_name
+      for attribute in self._RESROUCE_ATTRIBUTES:
+        if attribute in event_attributes:
+          event_data.resource = event_attributes[attribute]
 
-      json_payload = json_log_entry.get('jsonPayload', None)
-      if json_payload:
-        self._ParseJSONPayload(json_payload, event_attributes)
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(time_string)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'Unable to parse written time string: {0:s} with error: '
+          '{1!s}').format(time_string, exception))
+      date_time = dfdatetime_semantic_time.InvalidTime()
 
-      proto_payload = json_log_entry.get('protoPayload', None)
-      if proto_payload:
-        self._ParseProtoPayload(proto_payload, event_attributes)
-
-      text_payload = json_log_entry.get('textPayload', None)
-
-      # TODO: jsonPayload can also contain arbitrary fields so should be
-      # handled like textPayload if user, action or resource cannot be parsed.
-      if text_payload:
-        # Textpayload records can be anything, so we don't want to try to
-        # format them.
-        event_data.text_payload = text_payload
-      else:
-        # Ordered from least to most preferred value
-        user_attributes = ['principalEmail', 'user']
-        for attribute in user_attributes:
-          if attribute in event_attributes:
-            event_data.user = event_attributes[attribute]
-
-        # Ordered from least to most preferred value
-        action_attributes = ['methodName', 'event_subtype']
-        for attribute in action_attributes:
-          if attribute in event_attributes:
-            event_data.action = event_attributes[attribute]
-
-        # Ordered from least to most preferred value
-        resource_attributes = ['resource_label_instance_id', 'resourceName']
-        for attribute in resource_attributes:
-          if attribute in event_attributes:
-            event_data.resource = event_attributes[attribute]
-
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(time_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'Unable to parse written time string: {0:s} with error: '
-            '{1!s}').format(time_string, exception))
-        date_time = dfdatetime_semantic_time.InvalidTime()
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      event_data.AddEventAttributes(event_attributes)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+    event_data.AddEventAttributes(event_attributes)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseProtoPayload(self, proto_payload, event_attributes):
     """Extracts information from a protoPayload field in a GCP log.
@@ -162,8 +182,8 @@ class GCPLogsParser(interface.FileObjectParser):
 
     Args:
       proto_payload (dict): the contents of a GCP protoPayload field.
-      event_attributes (dict): a dict representing event attributes to be added
-        to the event object.
+      event_attributes (dict[str, object]): event attributes to be added to
+          the event data.
     """
     authentication_info = proto_payload.get('authenticationInfo', None)
     if authentication_info:
@@ -207,17 +227,14 @@ class GCPLogsParser(interface.FileObjectParser):
     Args:
       request (dict): the contents of a GCP request field from a
           protoPayload field.
-      event_attributes (dict): a dict representing event attributes to be added
-        to the event object.
+      event_attributes (dict[str, object]): event attributes to be added to
+          the event data.
     """
-    request_attributes = [
-        'name', 'description', 'direction', 'member', 'targetTags', 'email',
-        'account_id'
-    ]
-    for attribute in request_attributes:
-      if attribute in request:
-        plaso_attribute = 'request_{0:s}'.format(attribute)
-        event_attributes[plaso_attribute] = request[attribute]
+    for attribute_name in self._PROTO_PAYLOAD_ATTRIBUTES:
+      attribute_value = request.get(attribute_name)
+      if attribute_value:
+        plaso_attribute = 'request_{0:s}'.format(attribute_name)
+        event_attributes[plaso_attribute] = attribute_value
 
     # Firewall specific attributes.
     if 'sourceRanges' in request:
@@ -253,24 +270,21 @@ class GCPLogsParser(interface.FileObjectParser):
       event_attributes (dict): a dict representing event attributes to be added
         to the event object.
     """
-    json_attributes = [
-        'event_type', 'event_subtype', 'container', 'filename', 'message'
-    ]
-    for attribute in json_attributes:
+    for attribute in self._JSON_PAYLOAD_ATTRIBUTES:
       if attribute in json_payload:
         event_attributes[attribute] = json_payload[attribute]
 
-    actor = json_payload.get('actor', {})
-    if actor:
-      if 'user' in actor:
-        event_attributes['user'] = actor['user']
+    actor_json = json_payload.get('actor')
+    if actor_json:
+      if 'user' in actor_json:
+        event_attributes['user'] = actor_json['user']
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses GCP logging saved to a file.
+    """Parses a GCP log file-object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
@@ -280,22 +294,25 @@ class GCPLogsParser(interface.FileObjectParser):
     if file_object.read(1) != b'{':
       raise errors.WrongParser(
           'is not a valid JSON file, missing opening brace.')
-    file_object.seek(0, os.SEEK_SET)
 
+    file_object.seek(0, os.SEEK_SET)
     text_file_object = text_file.TextFile(file_object)
 
-    first_line_json = None
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
-    except JSONDecodeError:
-      raise errors.WrongParser('could not decode json.')
-    file_object.seek(0, os.SEEK_SET)
+    except json_decoder.JSONDecodeError:
+      raise errors.WrongParser('could not decode JSON.')
 
-    if first_line_json and 'logName' in first_line_json:
-      self._ParseGCPLog(parser_mediator, file_object)
-    else:
+    if 'logName' not in first_line_json:
       raise errors.WrongParser('no logName field, not a GCP log entry.')
+
+    file_object.seek(0, os.SEEK_SET)
+    text_file_object = text_file.TextFile(file_object)
+
+    for line in text_file_object:
+      json_log_entry = json.loads(line)
+      self._ParseGCPLog(parser_mediator, json_log_entry)
 
 
 manager.ParsersManager.RegisterParser(GCPLogsParser)
