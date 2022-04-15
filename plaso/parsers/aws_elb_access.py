@@ -5,13 +5,13 @@ This parser is based on the log format documented at
 https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
 
 Note:
-The AWS documentation is not clear about the meaning
-of the "target_port_list" field. The assumption is
-that it refers to a list of possible backend instances'
-IP addresses that could receive the client's request.
-This parser stores the "target_port_list" data in the
-"destination_list" attribute of an EventData object.
+The AWS documentation is not clear about the meaning of the "target_port_list"
+field. The assumption is that it refers to a list of possible backend instances'
+IP addresses that could receive the client's request.  This parser stores the
+"target_port_list" data in the "destination_list" attribute of an EventData
+object.
 """
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -25,50 +25,50 @@ from plaso.parsers import text_parser
 
 
 class AWSELBEventData(events.EventData):
-  """AWS Elastic Load Balancer access log event data
+  """AWS Elastic Load Balancer access log event data.
 
   Attributes:
-    request_type (str): The type of request or connection.
-    resource_identifier (str): The resource ID of the load balancer.
-    source_ip_address (str): The IP address of the requesting source.
-    source_port (int): The port of the requesting source.
+    actions_executed (str): The actions taken when processing the request.
+    chosen_cert_arn (str): The ARN of the certificate
+        presented to the source.
+    classification (str): The classification for desync mitigation.
+    classification_reason (str): The classification reason code.
+    destination_group_arn (str): The Amazon Resource Name (ARN) of the
+        destination group.
     destination_ip_address (str): The IP address of the destination
         that processed this request.
+    destination_list (str): A space-delimited list of IP addresses
+        and ports for the destinations that processed this request.
     destination_port (int): The port of the destination that processed
         this request.
-    request_processing_time (str): The total duration from
-        the time the load balancer received the request until the
-        time it sent the request to a destination.
     destination_processing_time (str): The total duration from
         the time the load balancer sent the request to a destination until
         the destination started to send the response headers.
-    response_processing_time (str): The total processing duration.
     destination_status_code (int): The status code of the response
         from the destination.
-    received_bytes (int): The size of the request, in bytes, received from
-        the source.
-    sent_bytes (int): The size of the response, in bytes, sent to the source.
-    user_agent (str): A User-Agent string.
-    ssl_cipher (str): The SSL cipher of the HTTPS listener.
-    ssl_protocol (str): The SSL protocol of the HTTPS listener.
-    destination_group_arn (str): The Amazon Resource Name (ARN) of the
-        destination group.
-    trace_identifier (str): The contents of the X-Amzn-Trace-Id header.
+    destination_status_code_list (str): A space-delimited list of status codes.
     domain_name (str): The SNI domain provided by the
         source during the TLS handshake.
-    chosen_cert_arn (str): The ARN of the certificate
-        presented to the source.
-    matched_rule_priority (int): The priority value of the rule that
-        matched the request.
-    actions_executed (str): The actions taken when processing the request.
-    redirect_url (str): The URL of the redirect destination.
     error_reason (str): The error reason code, enclosed in
         double quotes.
-    destination_list (str): A space-delimited list of IP addresses
-        and ports for the destinations that processed this request.
-    destination_status_code_list (str): A space-delimited list of status codes.
-    classification (str): The classification for desync mitigation.
-    classification_reason (str): The classification reason code.
+    matched_rule_priority (int): The priority value of the rule that
+        matched the request.
+    received_bytes (int): The size of the request, in bytes, received from
+        the source.
+    redirect_url (str): The URL of the redirect destination.
+    request_processing_time (str): The total duration from
+        the time the load balancer received the request until the
+        time it sent the request to a destination.
+    request_type (str): The type of request or connection.
+    resource_identifier (str): The resource ID of the load balancer.
+    response_processing_time (str): The total processing duration.
+    sent_bytes (int): The size of the response, in bytes, sent to the source.
+    ssl_cipher (str): The SSL cipher of the HTTPS listener.
+    ssl_protocol (str): The SSL protocol of the HTTPS listener.
+    source_ip_address (str): The IP address of the requesting source.
+    source_port (int): The port of the requesting source.
+    trace_identifier (str): The contents of the X-Amzn-Trace-Id header.
+    user_agent (str): A User-Agent string.
   """
 
   DATA_TYPE = 'aws:elb:access'
@@ -76,35 +76,35 @@ class AWSELBEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AWSELBEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.request_type = None
-    self.resource_identifier = None
-    self.source_ip_address = None
-    self.source_port = None
-    self.destination_ip_address = None
-    self.destination_port = None
-    self.request_processing_time = None
-    self.destination_processing_time = None
-    self.response_processing_time = None
-    self.elb_status_code = None
-    self.destination_status_code = None
-    self.received_bytes = None
-    self.sent_bytes = None
-    self.request = None
-    self.user_agent = None
-    self.ssl_cipher = None
-    self.ssl_protocol = None
-    self.destination_group_arn = None
-    self.trace_identifier = None
-    self.domain_name = None
-    self.chosen_cert_arn = None
-    self.matched_rule_priority = None
     self.actions_executed = None
-    self.redirect_url = None
-    self.error_reason = None
-    self.destination_list = None
-    self.destination_status_code_list = None
+    self.chosen_cert_arn = None
     self.classification = None
     self.classification_reason = None
+    self.destination_group_arn = None
+    self.destination_ip_address = None
+    self.destination_list = None
+    self.destination_port = None
+    self.destination_processing_time = None
+    self.destination_status_code_list = None
+    self.destination_status_code = None
+    self.domain_name = None
+    self.elb_status_code = None
+    self.error_reason = None
+    self.matched_rule_priority = None
+    self.received_bytes = None
+    self.redirect_url = None
+    self.request = None
+    self.request_processing_time = None
+    self.request_type = None
+    self.resource_identifier = None
+    self.response_processing_time = None
+    self.sent_bytes = None
+    self.source_ip_address = None
+    self.source_port = None
+    self.ssl_cipher = None
+    self.ssl_protocol = None
+    self.trace_identifier = None
+    self.user_agent = None
 
 
 class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
@@ -217,7 +217,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     Returns:
       TimeElements: Time elements contain separate values for year, month,
-        day of month, hours, minutes and seconds.
+          day of month, hours, minutes and seconds.
     """
     date_time = None
     try:
