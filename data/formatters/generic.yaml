@@ -68,7 +68,7 @@ short_message:
 - 'on {resource_id}'
 ---
 type: 'conditional'
-data_type: 'azure:applicationgatewayaccess:json'
+data_type: 'azure:applicationgatewayaccess:entry'
 message:
 - 'instance: {instance_identifier}'
 - 'client IP address: {client_ip}'

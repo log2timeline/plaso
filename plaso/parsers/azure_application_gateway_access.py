@@ -72,7 +72,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     waf_mode (str): Value can be either Detection or Prevention.
   """
 
-  DATA_TYPE = 'azure:applicationgatewayaccess:json'
+  DATA_TYPE = 'azure:applicationgatewayaccess:entry'
 
   def __init__(self):
     """Initializes event data."""
