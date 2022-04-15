@@ -162,7 +162,7 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
     return json_value
 
   def _ParseAzureApplicationGatewayAccess(self, parser_mediator, json_dict):
-    """Parses events from an Azure application gateway access log.
+    """Extracts events from an Azure application gateway access log entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
