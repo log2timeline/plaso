@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: systemtime_structure
 type: format
 description: Windows SYSTEMTIME structure

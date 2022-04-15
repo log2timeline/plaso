@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: job
 type: format
 description: Windows Job file format

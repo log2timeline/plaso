@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: mru
 type: format
 description: Most recently used (MRU) formats

@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: utmp
 type: format
 description: Utmp login records format

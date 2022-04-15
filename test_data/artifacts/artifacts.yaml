@@ -1,5 +1,5 @@
 # Artifact definitions.
-
+---
 name: LinuxHostnameFile
 doc: Linux hostname file.
 sources:

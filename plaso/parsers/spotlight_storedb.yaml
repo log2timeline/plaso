@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: spotlight_store_db
 type: format
 description: Apple Spotlight store database file format

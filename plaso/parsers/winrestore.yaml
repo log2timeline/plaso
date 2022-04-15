@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: rp_log
 type: format
 description: Windows restore point log (rp.log) format

@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: asl
 type: format
 description: Apple System Log (ASL) file format

@@ -1,4 +1,4 @@
-# Filter file for log2timeline for triaging Windows systems.
+# Plaso filter file for triaging Windows systems.
 #
 # This file can be used by image_export or log2timeline to selectively export
 # few key files of a Windows system. This file will collect:
@@ -15,7 +15,7 @@
 # * Browser history: IE, Firefox and Chrome.
 # * Browser cookie files: IE.
 # * Flash cookies, or LSO/SOL files from the Flash player.
-#
+---
 description: File system metadata files.
 type: include
 path_separator: '\'

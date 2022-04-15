@@ -1,5 +1,5 @@
-# Android related event formatters.
-
+# Plaso Android related event formatters.
+---
 type: 'conditional'
 data_type: 'android:event:last_resume_time'
 message:

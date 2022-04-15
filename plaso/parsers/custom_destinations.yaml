@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: custom_destinations_jump_list
 type: format
 description: Custom destinations jump list format

@@ -1,5 +1,5 @@
-# Linux related event formatters.
-
+# Plaso Linux related event formatters.
+---
 type: 'conditional'
 data_type: 'apt:history:line'
 message:

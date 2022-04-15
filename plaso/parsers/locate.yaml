@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: locate_database
 type: format
 description: Locate (updatedb) database.
@@ -75,7 +77,7 @@ type: structure
 members:
 - name: type
   data_type: uint8
---- 
+---
 name: directory_entry_types
 type: enumeration
 description: Directory Entry types

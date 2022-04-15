@@ -1,5 +1,5 @@
-# Web browser related event formatters.
-
+# Plaso web browser related event formatters.
+---
 type: 'conditional'
 data_type: 'chrome:autofill:entry'
 message:

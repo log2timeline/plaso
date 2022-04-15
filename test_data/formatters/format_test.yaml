@@ -1,5 +1,5 @@
 # YAML-based formatters file for testing format features.
-
+---
 type: 'basic'
 data_type: 'test:event'
 message: '{text}'

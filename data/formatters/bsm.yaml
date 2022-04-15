@@ -1,5 +1,5 @@
-# Event formatters.
-
+# Plaso event formatters.
+---
 type: 'conditional'
 data_type: 'bsm:event'
 enumeration_helpers:

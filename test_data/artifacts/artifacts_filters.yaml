@@ -1,5 +1,5 @@
 # Artifact definitions.
-
+---
 name: TestGroupExport
 doc: Test Group
 sources:
