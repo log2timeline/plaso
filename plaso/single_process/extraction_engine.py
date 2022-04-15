@@ -8,7 +8,6 @@ import threading
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver
 
 from plaso.containers import counts
@@ -102,15 +101,6 @@ class SingleProcessEngine(engine.BaseEngine):
       self._processing_status.aborted = True
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
-
-    # We cannot recover from a CacheFullError and abort processing when
-    # it is raised.
-    except dfvfs_errors.CacheFullError:
-      # TODO: signal engine of failure.
-      self._abort = True
-      logger.error((
-          'ABORT: detected cache full error while processing '
-          'path spec: {0:s}').format(self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.

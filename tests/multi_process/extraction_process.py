@@ -4,7 +4,6 @@
 
 import unittest
 
-from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import fake_path_spec
 
 from plaso.containers import sessions
@@ -35,26 +34,6 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
          that are excluded from processing.
     """
     return
-
-
-class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
-  """Event extraction worker for testing failure."""
-
-  # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
-    """Processes a path specification.
-
-    Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
-      path_spec (dfvfs.PathSpec): path specification.
-      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-         that are excluded from processing.
-
-    Raises:
-      dfvfs_errors.CacheFullError: cache full error.
-    """
-    raise dfvfs_errors.CacheFullError()
 
 
 class WorkerProcessTest(test_lib.MultiProcessingTestCase):
@@ -141,12 +120,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       test_process._ProcessPathSpec(
           extraction_worker, parser_mediator, path_spec)
       self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
-
-      extraction_worker = TestFailureEventExtractionWorker()
-      test_process._ProcessPathSpec(
-          extraction_worker, parser_mediator, path_spec)
-      self.assertEqual(parser_mediator._number_of_extraction_warnings, 0)
-      self.assertTrue(test_process._abort)
 
       test_process._ProcessPathSpec(None, parser_mediator, path_spec)
       self.assertEqual(parser_mediator._number_of_extraction_warnings, 1)
