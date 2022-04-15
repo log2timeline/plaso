@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Parser for Azure application gateway access logging saved to a file."""
+"""Parser for Azure application gateway access log."""
 
 import json
-from json.decoder import JSONDecodeError
 import os
+
+from json import decoder as json_decoder
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -21,54 +22,54 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
   """Azure application gateway access log event data.
 
   Attributes:
-    instance_id (str): Application Gateway instance that served the request
-    client_ip (str): Originating IP for the request.
-    client_port (int): Originating port for the request.
+    client_ip (str): Client IP address of the request.
+    client_port (int): Client TCP/UDP port for the request.
+    client_response_time (int): Duration, in seconds, from the first byte of
+        a client request to be processed up to the first byte sent as response
+        to the client.
+    host (str): Address listed in the host header of the request. If rewritten
+        using header rewrite, contains the updated host name.
     http_method (str): HTTP method used by the request.
-    original_request_uri_with_args (str): This field contains the original
-        request URL
-    request_uri (str): URI of the received request.
-    request_query (str): Server-Routed: Back-end pool instance that was sent
-        the request.
-        X-AzureApplicationGateway-LOG-ID: Correlation ID used for the request.
-        It can be used to troubleshoot traffic issues on the back-end servers.
-        SERVER-STATUS: HTTP response code that Application Gateway received from
-        the back end.
-    user_agent (str): User agent from the HTTP request header.
-    http_status (int): HTTP status code returned to the client from
-        Application Gateway.
+    http_status (int): HTTP status code returned to the client from application
+        gateway.
     http_version (str): HTTP version of the request.
+    instance_identifier (str): Application gateway instance that served
+        the request.
+    original_host (str): Original request host name.
+    original_request_uri (str): Original request URL, including arguments.
     received_bytes (int): Size of packet received, in bytes.
+    request_query (str): Server-Routed: Back-end pool instance that was sent
+        the request. X-AzureApplicationGateway-LOG-ID: Correlation ID used for
+        the request. It can be used to troubleshoot traffic issues on
+        the back-end servers. SERVER-STATUS: HTTP response code that application
+        gateway received from the back-end.
+    request_uri (str): URI of the received request.
     sent_bytes (int): Size of packet sent, in bytes.
-    client_response_time (int): Length of time (in seconds) that it takes for
-        the first byte of a client request to be processed and the first byte
-        sent in the response to the client.
-    time_taken (double): Length of time (in seconds) that it takes for the
-        first byte of a client request to be processed and its last-byte
-        sent in the response to the client. It's important to note that the
-        Time-Taken field usually includes the time that the request and
-        response packets are traveling over the network.
-    waf_evaluation_time (str): Length of time (in seconds) that it takes for
-        the request to be processed by the WAF.
-    waf_mode (str): Value can be either Detection or Prevention
-    transaction_id (str): Unique identifier to correlate the request received
-        from the client
+    server_response_latency (str): Latency of the response (in seconds) from
+        the back-end server.
+    server_routed (str): The back-end server that application gateway routes
+        the request to.
+    server_status (str): HTTP status code of the back-end server.
+    ssl_cipher (str): Cipher suite being used for TLS communication.
+    ssl_client_certificate_fingerprint (str): Fingerprint of the SSL client
+        certificate.
+    ssl_client_certificate_issuer_name (str): Name of the issuer of the SSL
+        client certificate.
+    ssl_client_verify (str): TODO.
     ssl_enabled (str): Whether communication to the back-end pools used TLS.
         Valid values are on and off.
-    ssl_cipher (str): Cipher suite being used for TLS communication
-        (if TLS is enabled).
-    ssl_protocol (str): SSL/TLS protocol being used (if TLS is enabled).
-    ssl_client_verify (str):
-    ssl_client_certificate_fingerprint (str):
-    ssl_client_certificate_issuer_name (str):
-    server_routed (str): The backend server that application gateway routes
-        the request to.
-    server_status (str): HTTP status code of the backend server.
-    server_response_latency (str): Latency of the response (in seconds)
-        from the backend server.
-    original_host (str): This field contains the original request host name
-    host (str): Address listed in the host header of the request. If rewritten
-        using header rewrite, this field contains the updated host name
+    ssl_protocol (str): The SSL/TLS protocol used.
+    time_taken (double): Duration, in seconds, that it takes for the first byte
+        of a client request to be processed and its last-byte sent in
+        the response to the client. It's important to note that the Time-Taken
+        field usually includes the time that the request and response packets
+        are traveling over the network.
+    transaction_id (str): Unique identifier to correlate the request received
+        from the client
+    user_agent (str): User agent from the HTTP request header.
+    waf_evaluation_time (str): Duration, in seconds, that it takes for
+        the request to be processed by the WAF.
+    waf_mode (str): Value can be either Detection or Prevention.
   """
 
   DATA_TYPE = 'azure:applicationgatewayaccess:json'
@@ -77,128 +78,133 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     """Initializes event data."""
     super(AzureApplicationGatewayAccessEventData, self).__init__(
         data_type=self.DATA_TYPE)
-
-    self.instance_id = None
     self.client_ip = None
     self.client_port = None
+    self.client_response_time = None
+    self.host = None
     self.http_method = None
-    self.original_request_uri_with_args = None
-    self.request_uri = None
-    self.request_query = None
-    self.user_agent = None
     self.http_status = None
     self.http_version = None
+    self.instance_identifier = None
+    self.original_host = None
+    self.original_request_uri = None
     self.received_bytes = None
+    self.request_query = None
+    self.request_uri = None
     self.sent_bytes = None
-    self.client_response_time = None
-    self.time_taken = None
-    self.waf_evaluation_time = None
-    self.waf_mode = None
-    self.transaction_id = None
-    self.ssl_enabled = None
-    self.ssl_cipher = None
-    self.ssl_protocol = None
-    self.ssl_client_verify = None
-    self.ssl_client_certificate_fingerprint = None
-    self.ssl_client_certificate_issuer_name = None
+    self.server_response_latency = None
     self.server_routed = None
     self.server_status = None
-    self.server_response_latency = None
-    self.original_host = None
-    self.host = None
+    self.ssl_cipher = None
+    self.ssl_client_certificate_fingerprint = None
+    self.ssl_client_certificate_issuer_name = None
+    self.ssl_client_verify = None
+    self.ssl_enabled = None
+    self.ssl_protocol = None
+    self.time_taken = None
+    self.transaction_identifier = None
+    self.user_agent = None
+    self.waf_evaluation_time = None
+    self.waf_mode = None
 
 
 class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
-  """Parser for Azure application gateway access logs in JSON-L format."""
+  """Parser for JSON-L Azure application gateway access log."""
 
-  NAME = 'azure_applicationgatewayaccess'
-  DATA_FORMAT = 'Azure Application Gateway Access Logging'
+  NAME = 'azure_application_gateway_access'
+  DATA_FORMAT = 'Azure application gateway access log'
 
   _ENCODING = 'utf-8'
 
-  def _ParseAzureApplicationGatewayAccess(self, parser_mediator, file_object):
-    """ Extract events from Azure application gateway access logging.
+  _PROPERTIES = {
+      'clientIP': 'client_ip',
+      'clientPort': 'client_port',
+      'clientResponseTime': 'client_response_time',
+      'host': 'host',
+      'httpMethod': 'http_method',
+      'httpStatus': 'http_status',
+      'httpVersion': 'http_version',
+      'instanceId': 'instance_identifier',
+      'originalHost': 'original_host',
+      'originalRequestUriWithArgs': 'original_request_uri',
+      'receivedBytes': 'received_bytes',
+      'requestQuery': 'request_query',
+      'requestUri': 'request_uri',
+      'sentBytes': 'sent_bytes',
+      'serverResponseLatency': 'server_response_latency',
+      'serverRouted': 'server_routed',
+      'serverStatus': 'server_status',
+      'sslCipher': 'ssl_cipher',
+      'sslClientCertificateFingerprint': 'ssl_client_certificate_fingerprint',
+      'sslClientCertificateIssuerName': 'ssl_client_certificate_issuer_name',
+      'sslClientVerify': 'ssl_client_verify',
+      'sslEnabled': 'ssl_enabled',
+      'sslProtocol': 'ssl_protocol',
+      'timeTaken': 'time_taken',
+      'transactionId': 'transaction_identifier',
+      'userAgent': 'user_agent',
+      'WAFEvaluationTime': 'waf_evaluation_time',
+      'WAFMode': 'waf_mode'}
+
+  def _GetJSONValue(self, json_dict, name):
+    """Retrieves a value from a JSON dict.
+
+    Args:
+      json_dict (dict): JSON dictionary.
+      name (str): name of the value to retrieve.
+
+    Returns:
+      object: value of the JSON log entry or None if not set.
+    """
+    json_value = json_dict.get(name)
+    if json_value == '':
+      json_value = None
+    return json_value
+
+  def _ParseAzureApplicationGatewayAccess(self, parser_mediator, json_dict):
+    """Parses events from an Azure application gateway access log.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+          parsers and other components, such as storage and dfVFS.
+      json_dict (dict): JSON log entry dictionary.
     """
-    text_file_object = text_file.TextFile(file_object)
+    timestamp = json_dict.get('timeStamp')
+    if not timestamp:
+      parser_mediator.ProduceExtractionWarning(
+          'Timestamp value missing from application gateway access log event')
+      return
 
-    for line in text_file_object:
-      json_log_entry = json.loads(line)
+    properties_json_dict = json_dict.get('properties')
+    if not properties_json_dict:
+      parser_mediator.ProduceExtractionWarning(
+          'Properties value missing from application gateway access log event')
+      return
 
-      time_string = json_log_entry.get('timeStamp')
-      if not time_string:
-        continue
+    event_data = AzureApplicationGatewayAccessEventData()
+    for json_name, attribute_name in self._PROPERTIES.items():
+      attribute_value = self._GetJSONValue(properties_json_dict, json_name)
+      setattr(event_data, attribute_name, attribute_value)
 
-      if 'properties' in json_log_entry:
-        properties_json_log_entry = json_log_entry.get('properties')
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(timestamp)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'Unable to parse timestamp value: {0:s} with error: {1!s}'.format(
+              timestamp, exception))
+      date_time = dfdatetime_semantic_time.InvalidTime()
 
-        event_data = AzureApplicationGatewayAccessEventData()
-        event_data.instance_id = properties_json_log_entry.get('instanceId')
-        event_data.client_ip = properties_json_log_entry.get('clientIP')
-        event_data.client_port = properties_json_log_entry.get('clientPort')
-        event_data.http_method = properties_json_log_entry.get('httpMethod')
-        event_data.original_request_uri_with_args = (
-            properties_json_log_entry.get('originalRequestUriWithArgs'))
-        event_data.request_uri = properties_json_log_entry.get('requestUri')
-        event_data.request_query = properties_json_log_entry.get('requestQuery')
-        event_data.user_agent = properties_json_log_entry.get('userAgent')
-        event_data.http_status = properties_json_log_entry.get('httpStatus')
-        event_data.http_version = properties_json_log_entry.get('httpVersion')
-        event_data.received_bytes = properties_json_log_entry.get(
-            'receivedBytes')
-        event_data.sent_bytes = properties_json_log_entry.get('sentBytes')
-        event_data.client_response_time = properties_json_log_entry.get(
-            'clientResponseTime')
-        event_data.time_taken = properties_json_log_entry.get('timeTaken')
-        event_data.waf_evaluation_time = properties_json_log_entry.get(
-            'WAFEvaluationTime')
-        event_data.waf_mode = properties_json_log_entry.get('WAFMode')
-        event_data.transaction_id = properties_json_log_entry.get(
-            'transactionId')
-        event_data.ssl_enabled = properties_json_log_entry.get('sslEnabled')
-        event_data.ssl_cipher = properties_json_log_entry.get('sslCipher')
-        event_data.ssl_protocol = properties_json_log_entry.get('sslProtocol')
-        event_data.ssl_client_verify = properties_json_log_entry.get(
-            'sslClientVerify')
-        event_data.ssl_client_certificate_fingerprint = (
-            properties_json_log_entry.get('sslClientCertificateFingerprint'))
-        event_data.ssl_client_certificate_issuer_name = (
-            properties_json_log_entry.get('sslClientCertificateIssuerName'))
-        event_data.server_routed = properties_json_log_entry.get('serverRouted')
-        event_data.server_status = properties_json_log_entry.get('serverStatus')
-        event_data.server_response_latency = properties_json_log_entry.get(
-            'serverResponseLatency')
-        event_data.original_host = properties_json_log_entry.get('originalHost')
-        event_data.host = properties_json_log_entry.get('host')
-      else:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse application gateway access log event:'
-            'missing properties field')
-        continue
-
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(time_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            f'Unable to parse time string: {time_string} with error: '
-            f'{str(exception)}')
-        date_time = dfdatetime_semantic_time.InvalidTime()
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses Azure Application Gateway Access logging in JSON-L format.
+    """Parses an Azure application gateway access log file-object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
@@ -208,28 +214,32 @@ class AzureApplicationGatewayAccessParser(interface.FileObjectParser):
     if file_object.read(1) != b'{':
       raise errors.WrongParser(
           'is not a valid JSON file, missing opening brace.')
-    file_object.seek(0, os.SEEK_SET)
 
+    file_object.seek(0, os.SEEK_SET)
     text_file_object = text_file.TextFile(file_object)
 
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
-    except JSONDecodeError:
-      raise errors.WrongParser('could not decode json.')
+    except json_decoder.JSONDecodeError:
+      raise errors.WrongParser('unable to decode JSON.')
 
     if not first_line_json:
-      raise errors.WrongParser('no JSON found in file.')
+      raise errors.WrongParser('missing JSON.')
 
     if not first_line_json.get('properties'):
       raise errors.WrongParser('no properties found in first line.')
 
-    if first_line_json.get('operationName') != "ApplicationGatewayAccess":
+    if first_line_json.get('operationName') != 'ApplicationGatewayAccess':
       raise errors.WrongParser(
           'operationName is not ApplicationGatewayAccess.')
 
     file_object.seek(0, os.SEEK_SET)
-    self._ParseAzureApplicationGatewayAccess(parser_mediator, file_object)
+    text_file_object = text_file.TextFile(file_object)
+
+    for line in text_file_object:
+      json_log_entry = json.loads(line)
+      self._ParseAzureApplicationGatewayAccess(parser_mediator, json_log_entry)
 
 
 manager.ParsersManager.RegisterParser(AzureApplicationGatewayAccessParser)
