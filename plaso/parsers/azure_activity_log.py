@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Azure activity logging saved to a file."""
+"""Parser for Azure activity log files."""
 
 import json
 import json.decoder as json_decoder
@@ -21,117 +21,144 @@ class AzureActivityLogEventData(events.EventData):
   """Azure activity log event data.
 
   Attributes:
-    caller (str): The Azure identity associated with the log entry.
-    event_data_id (str): Event data ID for the log entry.
-    correlation_id (str): Correlation ID for the log entry.
-    event_name (str): The name of the event associated with the log
-      entry.
-    client_ip (str): The client IP address associated with the log entry.
-    level (str): The log level associated with the log entry.
-    resource_group (str): The resource group associated with the log entry.
-    resource_provider (str): The API service associated with the log entry.
-    resource_id (str): The resource associated with the log entry.
-    resource_type (str): The resource type associated with the log entry.
-    operation_id (str): Operation ID associated with the log entry.
-    operation_name (str): The operation name associated with the log entry.
-    subscription_id (str): The subscription ID associated with the log entry.
-    tenant_id (str): The tenant ID associated with the log entry.
+    caller (str): Azure identity.
+    client_ip (str): client IP address.
+    correlation_identifier (str): Correlation identifier.
+    event_data_identifier (str): Event data identifier.
+    event_name (str): name of the event.
+    level (str): log level.
+    operation_identifier (str): Operation identifier.
+    operation_name (str): operation name.
+    resource_group (str): resource group.
+    resource_identifier (str): resource.
+    resource_provider (str): API service.
+    resource_type (str): resource type.
+    subscription_identifier (str): subscription identifier.
+    tenant_identifier (str): tenant identifier.
   """
 
-  DATA_TYPE = 'azure:activitylog:json'
+  DATA_TYPE = 'azure:activitylog:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(AzureActivityLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.caller = None
-    self.event_data_id = None
-    self.correlation_id = None
-    self.event_name = None
     self.client_ip = None
+    self.correlation_identifier = None
+    self.event_data_identifier = None
+    self.event_name = None
     self.level = None
-    self.resource_group = None
-    self.resource_provider = None
-    self.resource_id = None
-    self.resource_type = None
-    self.operation_id = None
+    self.operation_identifier = None
     self.operation_name = None
-    self.subscription_id = None
-    self.tenant_id = None
+    self.resource_group = None
+    self.resource_identifier = None
+    self.resource_provider = None
+    self.resource_type = None
+    self.subscription_identifier = None
+    self.tenant_identifier = None
 
 
 class AzureActivityLogParser(interface.FileObjectParser):
-  """Parser for Azure activity logs saved in JSON-L format."""
+  """Parser for Azure activity log files."""
 
   NAME = 'azure_activitylog'
   DATA_FORMAT = 'Azure Activity Logging'
 
   _ENCODING = 'utf-8'
 
-  def _ParseAzureActivityLog(self, parser_mediator, file_object):
-    """Extract events from Azure activity logging in JSON-L format.
+  def _GetJSONValue(self, json_dict, name):
+    """Retrieves a value from a JSON dict.
+
+    Args:
+      json_dict (dict): JSON dictionary.
+      name (str): name of the value to retrieve.
+
+    Returns:
+      object: value of the JSON log entry or None if not set.
+    """
+    json_value = json_dict.get(name)
+    if json_value == '':
+      json_value = None
+    return json_value
+
+  def _ParseAzureActivityLog(self, parser_mediator, json_dict):
+    """Extracts events from an Azure activity log entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+          and other components, such as storage and dfVFS.
+      json_dict (dict): log entry JSON dictionary.
     """
-    text_file_object = text_file.TextFile(file_object)
+    time_string = json_dict.get('event_timestamp')
+    if not time_string:
+      parser_mediator.ProduceExtractionWarning(
+          'Event timestamp value missing from activity log entry')
+      return
 
-    for line in text_file_object:
-      json_log_entry = json.loads(line)
+    event_data = AzureActivityLogEventData()
+    event_data.caller = self._GetJSONValue(json_dict, 'caller')
+    event_data.event_data_identifier = self._GetJSONValue(
+        json_dict, 'event_data_id')
+    event_data.correlation_identifier = self._GetJSONValue(
+        json_dict, 'correlation_id')
 
-      time_string = json_log_entry.get('event_timestamp')
-      if not time_string:
-        continue
+    event_name_json = json_dict.get('event_name')
+    if event_name_json:
+      event_data.event_name = self._GetJSONValue(event_name_json, 'value')
 
-      event_data = AzureActivityLogEventData()
-      event_data.caller = json_log_entry.get('caller')
-      event_data.event_data_id = json_log_entry.get('event_data_id')
-      event_data.correlation_id = json_log_entry.get('correlation_id')
+    http_request_json = json_dict.get('http_request')
+    if http_request_json:
+      event_data.client_ip = self._GetJSONValue(
+        http_request_json, 'client_ip_address')
 
-      if 'event_name' in json_log_entry:
-        event_data.event_name = json_log_entry['event_name'].get('value')
+    event_data.level = self._GetJSONValue(json_dict, 'level')
+    event_data.resource_group = self._GetJSONValue(
+        json_dict, 'resource_group_name')
 
-      if 'http_request' in json_log_entry:
-        event_data.client_ip = json_log_entry['http_request'].get(
-          'client_ip_address')
-      event_data.level = json_log_entry.get('level')
-      event_data.resource_group = json_log_entry.get('resource_group_name')
+    resource_provider_name_json = json_dict.get('resource_provider_name')
+    if resource_provider_name_json:
+      event_data.resource_provider = self._GetJSONValue(
+          resource_provider_name_json, 'value')
 
-      if 'resource_provider_name' in json_log_entry:
-        event_data.resource_provider = (
-            json_log_entry['resource_provider_name'].get('value'))
-      event_data.resource_id = json_log_entry.get('resource_id')
+    event_data.resource_identifier = self._GetJSONValue(
+        json_dict, 'resource_id')
 
-      if 'resource_type' in json_log_entry:
-        event_data.resource_type = json_log_entry['resource_type'].get('value')
-      event_data.operation_id = json_log_entry.get('operation_id')
+    resource_type_json = json_dict.get('resource_type')
+    if resource_type_json:
+      event_data.resource_type = self._GetJSONValue(
+          resource_type_json, 'value')
 
-      if 'operation_name' in json_log_entry:
-        event_data.operation_name = json_log_entry['operation_name'].get(
-            'value')
-      event_data.subscription_id = json_log_entry.get('subscription_id')
-      event_data.tenant_id = json_log_entry.get('tenant_id')
+    event_data.operation_identifier = self._GetJSONValue(
+        json_dict, 'operation_id')
 
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(time_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            f'Unable to parse time string: {time_string} with error: '
-            f'{str(exception)}')
-        date_time = dfdatetime_semantic_time.InvalidTime()
+    operation_name_json = json_dict.get('operation_name')
+    if operation_name_json:
+      event_data.operation_name = self._GetJSONValue(
+          operation_name_json, 'value')
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data.subscription_identifier = self._GetJSONValue(
+        json_dict, 'subscription_id')
+    event_data.tenant_identifier = self._GetJSONValue(json_dict, 'tenant_id')
+
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(time_string)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'Unable to parse time string: {0:s} with error: {1!s}'.format(
+              time_string, exception))
+      date_time = dfdatetime_semantic_time.InvalidTime()
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses Azure activity logging saved in JSON-L format.
+    """Parses an Azure activity log file-object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
@@ -141,15 +168,15 @@ class AzureActivityLogParser(interface.FileObjectParser):
     if file_object.read(1) != b'{':
       raise errors.WrongParser(
           'is not a valid JSON file, missing opening brace.')
-    file_object.seek(0, os.SEEK_SET)
 
+    file_object.seek(0, os.SEEK_SET)
     text_file_object = text_file.TextFile(file_object)
 
     try:
       first_line = text_file_object.readline()
       first_line_json = json.loads(first_line)
     except json_decoder.JSONDecodeError:
-      raise errors.WrongParser('could not decode json.')
+      raise errors.WrongParser('could not decode JSON.')
 
     if not first_line_json:
       raise errors.WrongParser('no JSON found in file.')
@@ -159,7 +186,11 @@ class AzureActivityLogParser(interface.FileObjectParser):
           'no "subscription_id" field, not an Azure activity log entry.')
 
     file_object.seek(0, os.SEEK_SET)
-    self._ParseAzureActivityLog(parser_mediator, file_object)
+    text_file_object = text_file.TextFile(file_object)
+
+    for line in text_file_object:
+      json_log_entry = json.loads(line)
+      self._ParseAzureActivityLog(parser_mediator, json_log_entry)
 
 
 manager.ParsersManager.RegisterParser(AzureActivityLogParser)
