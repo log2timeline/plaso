@@ -114,8 +114,10 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
+    month_string = self._GetValueFromStructure(structure, 'month')
+
     year = self._GetValueFromStructure(structure, 'year')
-    month = self.MONTHS.get(self._GetValueFromStructure(structure, 'month'))
+    month = self.MONTHS.get(month_string)
     day = self._GetValueFromStructure(structure, 'day')
     hours = self._GetValueFromStructure(structure, 'hours')
     minutes = self._GetValueFromStructure(structure, 'minutes')
@@ -130,8 +132,8 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     event_data.body = self._GetValueFromStructure(structure, 'body')
 
     try:
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day, hours, minutes, seconds))
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=(year, month, day, hours, minutes, seconds))
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
