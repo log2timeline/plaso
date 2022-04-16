@@ -147,11 +147,10 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    timestamp = json_dict.get('timeStamp')
+    timestamp = self._GetJSONValue(json_dict, 'timeStamp')
     if not timestamp:
       parser_mediator.ProduceExtractionWarning(
           'Timestamp value missing from application gateway access log event')
-      return
 
     properties_json_dict = json_dict.get('properties')
     if not properties_json_dict:
