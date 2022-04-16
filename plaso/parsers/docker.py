@@ -7,7 +7,6 @@ import os
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -15,26 +14,6 @@ from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import interface
-
-
-class DockerJSONContainerLogEventData(events.EventData):
-  """Docker container's log event data.
-
-  Attributes:
-    container_id (str): identifier of the container (sha256).
-    log_line (str): log line.
-    log_source (str): log source.
-  """
-
-  DATA_TYPE = 'docker:json:container:log'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(DockerJSONContainerLogEventData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.container_id = None
-    self.log_line = None
-    self.log_source = None
 
 
 class DockerJSONContainerEventData(events.EventData):
@@ -258,48 +237,6 @@ class DockerJSONParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ParseContainerLogJSON(self, parser_mediator, file_object):
-    """Extract events from a Docker container log files.
-
-    The format is one JSON formatted log message per line.
-
-    The path of each container log file (which logs the container stdout and
-    stderr) is:
-    DOCKER_DIR/containers/<container_id>/<container_id>-json.log
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
-    """
-    container_id = self._GetIdentifierFromPath(parser_mediator)
-
-    text_file_object = text_file.TextFile(file_object)
-    for log_line in text_file_object:
-      json_log_line = json.loads(log_line)
-
-      time_string = json_log_line.get('time', None)
-      if time_string is None:
-        continue
-
-      event_data = DockerJSONContainerLogEventData()
-      event_data.container_id = container_id
-      event_data.log_line = json_log_line.get('log', None)
-      event_data.log_source = json_log_line.get('stream', None)
-
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(time_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'Unable to parse written time string: {0:s} with error: '
-            '{1!s}').format(time_string, exception))
-        date_time = dfdatetime_semantic_time.InvalidTime()
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses various Docker configuration and log files in JSON format.
 
@@ -335,11 +272,11 @@ class DockerJSONParser(interface.FileObjectParser):
         # the same way
         if split_path[-1] in ['config.json', 'config.v2.json']:
           self._ParseContainerConfigJSON(parser_mediator, file_object)
-        if json_file_path.endswith('-json.log'):
-          self._ParseContainerLogJSON(parser_mediator, file_object)
+
       elif 'graph' in split_path:
         if 'json' in split_path:
           self._ParseLayerConfigJSON(parser_mediator, file_object)
+
     except ValueError as exception:
       if exception == 'No JSON object could be decoded':
         raise errors.WrongParser(exception)
