@@ -27,27 +27,26 @@ class IOSMobileInstallationUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'timestamp': '2021-08-11 05:51:02.000000',
-        'process_identifier': '176',
-        'severity': 'err',
-        'originating_call': 'MILaunchServicesDatabaseGatherer '
+        'body': (
+            'Ignoring plugin at /System/Library/PrivateFrameworks/'
+            'AccessibilityUtilities.framework/PlugIns/'
+            'com.apple.accessibility.Accessibility.HearingAidsTapToRadar.'
+            'appex due to validation issue(s). '
+            'See previous log messages for details.'),
+        'originating_call': (
+            'MILaunchServicesDatabaseGatherer '
             'enumeratePluginKitPluginsInBundle:updatingPluginParentID:'
             'ensurePluginsAreExecutable:installProfiles:error:'
-            'enumerator:',
-        'body': "Ignoring plugin at /System/Library/PrivateFrameworks/"
-            "AccessibilityUtilities.framework/PlugIns/"
-            "com.apple.accessibility.Accessibility.HearingAidsTapToRadar."
-            "appex due to validation issue(s). "
-            "See previous log messages for details."}
+            'enumerator:'),
+        'process_identifier': '176',
+        'severity': 'err',
+        'timestamp': '2021-08-11 05:51:02.000000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
-        'timestamp': '2021-08-11 05:51:03.000000',
-        'process_identifier': '176',
-        'severity': 'err',
-        'originating_call': 'MIBundle _validateWithError:',
-        'body': '47: Failed to load Info.plist from bundle at path /System/'
+        'body': (
+            '47: Failed to load Info.plist from bundle at path /System/'
             'Library/PrivateFrameworks/'
             'CoreDuetContext.framework; Extra info about "/System/Library/'
             'PrivateFrameworks/'
@@ -63,7 +62,11 @@ class IOSMobileInstallationUnitTest(test_lib.ParserTestCase):
             '09000000 20030000 00000000 ... 00000000 '
             '000002a6 };\n} keyCount=22 keySample={ CFBundleName DTXcode '
             'DTSDKName DTSDKBuild '
-            'CFBundleDevelopmentRegion }'}
+            'CFBundleDevelopmentRegion }'),
+        'originating_call': 'MIBundle _validateWithError:',
+        'process_identifier': '176',
+        'severity': 'err',
+        'timestamp': '2021-08-11 05:51:03.000000'}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 

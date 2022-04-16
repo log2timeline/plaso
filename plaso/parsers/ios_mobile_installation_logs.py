@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS mobile installation logs files obtained from iOS device."""
+"""Parser for iOS mobile installation log files."""
 
 import pyparsing
 
@@ -14,7 +14,7 @@ from plaso.parsers import text_parser
 
 
 class IOSMobileInstallationEventData(events.EventData):
-  """iOS Mobile Installation log event data
+  """iOS mobile installation log event data.
 
   Attributes:
     body (str): body of the event line.
@@ -36,10 +36,10 @@ class IOSMobileInstallationEventData(events.EventData):
 
 
 class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for iOS Mobile Installation logs."""
+  """Parser for iOS mobile installation log files."""
 
   NAME = 'ios:mobile_installation:log'
-  DATA_FORMAT = 'iOS mobile installation logs'
+  DATA_FORMAT = 'iOS mobile installation log'
 
   MONTHS = {
       'Jan': 1,
@@ -99,10 +99,7 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
+    """Parses an iOS mobile installation log record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -145,7 +142,7 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is a mobile installation log file.
+    """Verifies that this is an iOS mobile installation log file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
@@ -155,7 +152,6 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-
     match_generator = self._LINE_GRAMMAR.scanString(lines, maxMatches=1)
     return bool(list(match_generator))
 
