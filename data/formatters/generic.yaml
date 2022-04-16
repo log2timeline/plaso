@@ -124,28 +124,28 @@ short_message:
 - 'Job Name: {job_name}'
 ---
 type: 'conditional'
+data_type: 'docker:container:configuration'
+message:
+- 'Action: {action}'
+- 'Container name: {container_name}'
+- 'Container identifier: {container_identifier}'
+separator: ', '
+short_message:
+- 'Action: {action}'
+- 'Container name: {container_name}'
+- 'Container identifier: {container_identifier}'
+---
+type: 'conditional'
 data_type: 'docker:container:log:entry'
 message:
 - 'Text: {log_line}'
-- 'Container ID: {container_identifier}'
+- 'Container identifier: {container_identifier}'
 - 'Source: {log_source}'
 separator: ', '
 short_message:
 - 'Text: {log_line}'
-- 'Container ID: {container_identifier}'
+- 'Container identifier: {container_identifier}'
 - 'Source: {log_source}'
----
-type: 'conditional'
-data_type: 'docker:json:container'
-message:
-- 'Action: {action}'
-- 'Container Name: {container_name}'
-- 'Container ID: {container_id}'
-separator: ', '
-short_message:
-- 'Action: {action}'
-- 'Container Name: {container_name}'
-- 'Container ID: {container_id}'
 ---
 type: 'conditional'
 data_type: 'docker:json:layer'
