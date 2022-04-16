@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the logs of the iOS lockdown daemon."""
+"""Parser for iOS lockdown daemon log files (ios_lockdownd.log)."""
 
 import pyparsing
 
@@ -31,7 +31,7 @@ class IOSLockdownLogData(events.EventData):
 
 
 class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for iOS lockdown daemon log files (ios_lockdownd.log"""
+  """Parser for iOS lockdown daemon log files (ios_lockdownd.log)."""
 
   NAME = 'ios:lockdownd:log'
   DATA_FORMAT = 'iOS lockdown daemon log'
@@ -60,7 +60,7 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
-  def ParseRecord(self, parser_mediator, key, structure: object):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     This function takes as an input a parsed pyparsing structure
@@ -79,7 +79,7 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    year = 2000 + self._GetValueFromStructure(structure, 'two_digit_year')
+    year = self._GetValueFromStructure(structure, 'two_digit_year')
     month = self._GetValueFromStructure(structure, 'month')
     day = self._GetValueFromStructure(structure, 'day_of_month')
     hours = self._GetValueFromStructure(structure, 'hours')
@@ -87,15 +87,18 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
     seconds = self._GetValueFromStructure(structure, 'seconds')
     microseconds = self._GetValueFromStructure(structure, 'microseconds')
 
+    body = self._GetValueFromStructure(structure, 'body')
+
     event_data = IOSLockdownLogData()
-    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.body = body.replace('\n', '').strip(' ')
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
 
     try:
+      time_elements_tuple = (
+          2000 + year, month, day, hours, minutes, seconds, microseconds)
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=(
-              year, month, day, hours, minutes, seconds, microseconds))
+          time_elements_tuple=time_elements_tuple)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning('unsupported date time value')
       return

@@ -27,19 +27,21 @@ class IOSLockdownLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'body': ' handle_get_value: AMPDevicesAgent attempting to get '
-                '[InternationalMobileSubscriberIdentity2]',
+        'body': (
+            'handle_get_value: AMPDevicesAgent attempting to get '
+            '[InternationalMobileSubscriberIdentity2]'),
         'process_identifier': '69',
         'timestamp': '2021-10-13 07:57:42.869324'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
-        'body': ' spawn_xpc_service_block_invoke: description of xpc reply: '
-                '<dictionary: 0x2029c5070> { count = 1, transaction: 0, voucher'
-                ' = 0x0, contents =\n	"XPCErrorDescription" => <string: '
-                '0x2029c5230> { length = 22, contents = "Connection '
-                'interrupted" }\n}',
+        'body': (
+            'spawn_xpc_service_block_invoke: description of xpc reply: '
+            '<dictionary: 0x2029c5070> { count = 1, transaction: 0, voucher'
+            ' = 0x0, contents =	"XPCErrorDescription" => <string: '
+            '0x2029c5230> { length = 22, contents = "Connection '
+            'interrupted" }}'),
         'process_identifier': '69',
         'timestamp': '2021-10-13 07:57:42.950704'}
 
