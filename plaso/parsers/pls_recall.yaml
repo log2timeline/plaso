@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: pls_recall
 type: format
 description: PL/SQL Recall file (PLSRecall.dat) format

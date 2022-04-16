@@ -1,5 +1,5 @@
-# Anti-virus related event formatters.
-
+# Plaso anti-virus related event formatters.
+---
 type: 'conditional'
 data_type: 'av:mcafee:accessprotectionlog'
 message:

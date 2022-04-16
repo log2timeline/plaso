@@ -1,5 +1,5 @@
-# Event formatters that are no longer used and kept for backwards compatibility.
-
+# Plaso event formatters that are no longer used and kept for backwards compatibility.
+---
 type: 'conditional'
 data_type: 'pe:compilation:compilation_time'
 message:

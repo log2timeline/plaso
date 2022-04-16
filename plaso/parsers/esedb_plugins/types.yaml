@@ -1,3 +1,5 @@
+# dtFabric format specification.
+---
 name: float32le
 type: floating-point
 description: 32-bit litte-endian single precision floating-point type

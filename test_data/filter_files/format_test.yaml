@@ -1,5 +1,5 @@
 # YAML-based filter file for testing format features.
-
+---
 description: Include filter with Linux paths.
 type: include
 paths:

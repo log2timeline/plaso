@@ -1,5 +1,5 @@
-# Mac-OS related event formatters.
-
+# Plaso Mac OS related event formatters.
+---
 type: 'conditional'
 data_type: 'imessage:event:chat'
 enumeration_helpers:

@@ -1,5 +1,5 @@
-# Event formatters.
-
+# Plaso event formatters.
+---
 type: 'conditional'
 data_type: 'apache:access'
 message:
@@ -341,11 +341,11 @@ short_message:
 type: 'conditional'
 data_type: 'googlelog:log'
 message:
-  - '{file_name}:'
-  - '{line_number}]'
-  - '{message}'
+- '{file_name}:'
+- '{line_number}]'
+- '{message}'
 short_message:
-  - '{message}'
+- '{message}'
 ---
 type: 'conditional'
 data_type: 'java:download:idx'

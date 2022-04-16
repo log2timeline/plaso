@@ -1,5 +1,5 @@
-# Windows related event formatters.
-
+# Plaso Windows related event formatters.
+---
 type: 'basic'
 data_type: 'ccleaner:configuration'
 message: '[{key_path}] {configuration}'
