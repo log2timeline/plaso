@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS powerlog database files."""
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
@@ -10,12 +11,12 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSPowerlogApplicationUsageEventData(events.EventData):
-  """iOS powerlog file application usage event data
+  """iOS powerlog file application usage event data.
 
   Attributes:
     background_time (str): Number of seconds that the application ran in the
         background.
-    bundle_identifier (str): Name of the application
+    bundle_identifier (str): Name of the application.
     screen_on_time (str): Number of seconds that the application ran in the
         foreground.
   """
@@ -31,8 +32,7 @@ class IOSPowerlogApplicationUsageEventData(events.EventData):
 
 
 class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for obtaining the application usage data from the iOS
-  powerlogs."""
+  """SQLite parser plugin for iOS powerlog database files."""
 
   NAME = 'ios_powerlog'
   DATA_FORMAT = 'iOS powerlog SQLite database (CurrentPowerlog.PLSQL) file'
@@ -63,11 +63,11 @@ class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
   # pylint: disable=unused-argument
   def ParseApplicationRunTime(
       self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a Application Run Time row
+    """Parses an Application Run Time row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -81,8 +81,7 @@ class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
     event_data.screen_on_time = self._GetRowValue(
         query_hash, row, 'ScreenOnTime')
 
-    timestamp = self._GetRowValue(
-        query_hash, row, 'timestamp')
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 
     date_time_stamp = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     start_event = time_events.DateTimeValuesEvent(

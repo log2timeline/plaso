@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for the iOS powerlog application usage plugin."""
+"""Tests for the SQLite parser plugin for iOS powerlog database files."""
 
 import unittest
 
@@ -9,11 +9,10 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class IOSPowerlogApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the iOS powerlog application usage plugin."""
+  """Tests for the SQLite parser plugin for iOS powerlog database files."""
 
   def testParse(self):
-    """Tests the ParseApplicationRunTime method of the
-    IOSPowerlogApplicationUsagePlugin class"""
+    """Tests the ParseApplicationRunTime method."""
     plugin = ios_powerlog.IOSPowerlogApplicationUsagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['powerlog_2021-12-16_05-54_84E2141B.PLSQL'], plugin)
@@ -29,15 +28,15 @@ class IOSPowerlogApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'background_time':  0.0,
-        'screen_on_time': 30.339694,
-        'bundle_identifier': 'com.apple.springboard.home-screen'}
+        'bundle_identifier': 'com.apple.springboard.home-screen',
+        'screen_on_time': 30.339694}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'background_time':  0.121086,
-        'screen_on_time': 0.0,
-        'bundle_identifier': 'com.apple.Spotlight'}
+        'bundle_identifier': 'com.apple.Spotlight',
+        'screen_on_time': 0.0}
 
     self.CheckEventValues(storage_writer, events[72], expected_event_values)
 
