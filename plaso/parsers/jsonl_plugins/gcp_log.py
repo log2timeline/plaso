@@ -12,15 +12,34 @@ from plaso.parsers.jsonl_plugins import interface
 
 
 class GCPLogEventData(events.EventData):
-  """Google Cloud (GCP) logging event data.
+  """Google Cloud (GCP) log event data.
 
   Attributes:
     action (str): GCP action.
+    container (str): TODO
+    event_subtype (str): TODO
+    event_type (str): TODO
+    filename (str): TODO
+    firewall_rules (list[str]): firewall rules.
+    firewall_source_ranges (list[str]): firewall source ranges.
     log_name (str): name of the log entry.
+    message (str): TODO
+    policy_deltas (list[str]): TODO
+    request_account_identifier (str): GCP account identifier of the request.
+    request_description (str): description of the request.
+    request_direction (str): direction of the request.
+    request_email (str): email address of the request.
+    request_member (str): member of the request.
+    request_metadata (list[str]): request metadata values.
+    request_name (str): name of the request.
+    request_target_tags (str): TODO
     resource (str): resource the action is being performed on.
+    resource_labels (list[str]): resource labels.
+    resource_name (str): name of the resource.
+    service_account_display_name (str): display name of the service account.
+    service_name (str): name of the servie.
     severity (str): log entry severity.
-    text_payload (str): text payload for logs not using a JSON or proto
-        payload.
+    text_payload (str): text payload for logs not using a JSON or proto payload.
     user (str): user principal performing the logged action.
   """
 
@@ -30,25 +49,31 @@ class GCPLogEventData(events.EventData):
     """Initializes event data."""
     super(GCPLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
+    self.container = None
+    self.event_subtype = None
+    self.event_type = None
+    self.filename = None
+    self.firewall_rules = None
+    self.firewall_source_ranges = None
     self.log_name = None
+    self.message = None
+    self.policy_deltas = None
+    self.request_account_identifier = None
+    self.request_description = None
+    self.request_direction = None
+    self.request_email = None
+    self.request_member = None
+    self.request_metadata = None
+    self.request_name = None
+    self.request_target_tags = None
     self.resource = None
+    self.resource_labels = None
+    self.resource_name = None
+    self.service_account_display_name = None
+    self.service_name = None
     self.severity = None
     self.text_payload = None
     self.user = None
-
-  # TODO: remove this, event data should be predefined.
-  def AddEventAttributes(self, event_attributes):
-    """Add extra event attributes parsed from GCP logs.
-
-    Extra attributes vary across log types and so must be dynamically added
-    depending on presence in the log entry.
-
-    Args:
-      event_attributes (dict): a dict of extra attributes to add to the
-          event.
-    """
-    for key,value in event_attributes.items():
-      setattr(self, key, value)
 
 
 class GCPLogJSONLPlugin(interface.JSONLPlugin):
@@ -59,130 +84,143 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
   _ENCODING = 'utf-8'
 
-  _JSON_PAYLOAD_ATTRIBUTES = [
-      'container',
-      'event_subtype',
-      'event_type',
-      'filename',
-      'message']
-
-  _PROTO_PAYLOAD_ATTRIBUTES = [
-      'account_id'
-      'description',
-      'direction',
-      'email',
-      'member',
-      'name',
-      'targetTags']
-
   # Ordered from least to most preferred value.
-  _ACTION_ATTRIBUTES = ['methodName', 'event_subtype']
   _RESROUCE_ATTRIBUTES = ['resource_label_instance_id', 'resourceName']
-  _USER_ATTRIBUTES = ['principalEmail', 'user']
 
-  def _ParseJSONPayload(self, json_payload, event_attributes):
+  def _ParseJSONPayload(self, json_dict, event_data):
     """Extracts information from a jsonPayload value.
 
     Args:
-      json_payload (dict): jsonPayload value.
-      event_attributes (dict): a dict representing event attributes to be added
-        to the event object.
+      json_dict (dict): JSON dictionary of the log record.
+      event_data (GCPLogEventData): event data.
     """
-    for attribute in self._JSON_PAYLOAD_ATTRIBUTES:
-      if attribute in json_payload:
-        event_attributes[attribute] = json_payload[attribute]
+    json_payload = self._GetJSONValue(json_dict, 'jsonPayload')
+    if not json_payload:
+      return
 
-    actor_json = json_payload.get('actor')
+    event_data.container = self._GetJSONValue(json_payload, 'container')
+    event_data.event_subtype = self._GetJSONValue(json_payload, 'event_subtype')
+    event_data.event_type = self._GetJSONValue(json_payload, 'event_type')
+    event_data.filename = self._GetJSONValue(json_payload, 'filename')
+    event_data.message = self._GetJSONValue(json_payload, 'message')
+
+    actor_json = self._GetJSONValue(json_payload, 'actor')
     if actor_json:
-      if 'user' in actor_json:
-        event_attributes['user'] = actor_json['user']
+      event_data.user = self._GetJSONValue(actor_json, 'user')
 
-  def _ParseProtoPayload(self, proto_payload, event_attributes):
-    """Extracts information from a protoPayload field in a GCP log.
-
-    protoPayload is set for all cloud audit events.
+  def _ParseProtoPayload(self, json_dict, event_data):
+    """Extracts information from a protoPayload value.
 
     Args:
-      proto_payload (dict): the contents of a GCP protoPayload field.
-      event_attributes (dict[str, object]): event attributes to be added to
-          the event data.
+      json_dict (dict): JSON dictionary of the log record.
+      event_data (GCPLogEventData): event data.
     """
-    authentication_info = proto_payload.get('authenticationInfo', None)
-    if authentication_info:
-      principal_email = authentication_info.get('principalEmail', None)
-      if principal_email:
-        event_attributes['principalEmail'] = principal_email
+    proto_payload = self._GetJSONValue(json_dict, 'protoPayload')
+    if not proto_payload:
+      return
 
-    request_metadata = proto_payload.get('requestMetadata', None)
-    if request_metadata:
-      for attribute, value in request_metadata.items():
-        plaso_attribute = 'requestMetadata_{0:s}'.format(attribute)
-        event_attributes[plaso_attribute] = str(value)
+    authentication_info = self._GetJSONValue(
+        proto_payload, 'authenticationInfo')
+    if authentication_info and not event_data.user:
+      event_data.user = self._GetJSONValue(
+          authentication_info, 'principalEmail')
 
-    proto_attributes = ['serviceName', 'methodName', 'resourceName']
-    for attribute in proto_attributes:
-      value = proto_payload.get(attribute, None)
-      if value:
-        event_attributes[attribute] = value
+    request_metadata = self._GetJSONValue(
+        proto_payload, 'requestMetadata', default_value={})
+    event_data.request_metadata = [
+        '{0:s}: {1!s}'.format(name, value)
+        for name, value in request_metadata.items()]
 
-    request = proto_payload.get('request', None)
-    if request:
-      self._ParseProtoPayloadRequest(request, event_attributes)
+    event_data.service_name = self._GetJSONValue(proto_payload, 'serviceName')
+    event_data.resource_name = self._GetJSONValue(proto_payload, 'resourceName')
 
-    service_data = proto_payload.get('serviceData', None)
-    if service_data:
-      policy_delta = service_data.get('policyDelta', None)
-      if policy_delta:
-        binding_deltas = policy_delta.get('bindingDeltas', [])
-        if binding_deltas:
-          policy_deltas = []
-          for bd in binding_deltas:
-            policy_deltas.append(
-                '{0:s} {1:s} with role {2:s}'.format(
-                    bd.get('action', ''), bd.get('member', ''),
-                    bd.get('role', '')))
-          event_attributes['policyDelta']  = ', '.join(policy_deltas)
+    method_name = self._GetJSONValue(proto_payload, 'methodName')
+    if method_name and not event_data.event_subtype:
+      event_data.event_subtype = method_name
 
-  def _ParseProtoPayloadRequest(self, request, event_attributes):
+    self._ParseProtoPayloadRequest(proto_payload, event_data)
+    self._ParseProtoPayloadServiceData(proto_payload, event_data)
+
+  def _ParseProtoPayloadRequest(self, json_dict, event_data):
     """Extracts information from the request field of a protoPayload field.
 
     Args:
-      request (dict): the contents of a GCP request field from a
-          protoPayload field.
-      event_attributes (dict[str, object]): event attributes to be added to
-          the event data.
+      json_dict (dict): JSON dictionary of the protoPayload value.
+      event_data (GCPLogEventData): event data.
     """
-    for attribute_name in self._PROTO_PAYLOAD_ATTRIBUTES:
-      attribute_value = request.get(attribute_name)
-      if attribute_value:
-        plaso_attribute = 'request_{0:s}'.format(attribute_name)
-        event_attributes[plaso_attribute] = attribute_value
+    request = self._GetJSONValue(json_dict, 'request')
+    if not request:
+      return
+
+    event_data.request_account_identifier = self._GetJSONValue(
+        request, 'account_id')
+    event_data.request_description = self._GetJSONValue(request, 'description')
+    event_data.request_direction = self._GetJSONValue(request, 'direction')
+    event_data.request_email = self._GetJSONValue(request, 'email')
+    event_data.request_member = self._GetJSONValue(request, 'member')
+    event_data.request_name = self._GetJSONValue(request, 'name')
+    event_data.request_target_tags = self._GetJSONValue(request, 'targetTags')
 
     # Firewall specific attributes.
-    if 'sourceRanges' in request:
-      source_ranges = ', '.join(request['sourceRanges'])
-      event_attributes['source_ranges'] = source_ranges
+    event_data.firewall_source_ranges = self._GetJSONValue(
+        request, 'sourceRanges')
 
-    if 'alloweds' in request:
-      for allowed in request['alloweds']:
-        attribute_name = 'allowed_{0:s}_ports'.format(allowed['IPProtocol'])
-        if 'ports' in allowed:
-          event_attributes[attribute_name] = allowed['ports']
-        else:
-          event_attributes[attribute_name] = 'all'
+    firewall_rules = []
 
-    if 'denieds' in request:
-      for denied in request['denieds']:
-        attribute_name = 'denied_{0:s}_ports'.format(denied['IPProtocol'])
-        if 'ports' in denied:
-          event_attributes[attribute_name] = denied['ports']
-        else:
-          event_attributes[attribute_name] = 'all'
+    alloweds = self._GetJSONValue(request, 'alloweds', default_value=[])
+    for allowed in alloweds:
+      ip_protocol = self._GetJSONValue(allowed, 'IPProtocol')
+      ports = self._GetJSONValue(allowed, 'ports', default_value='all')
+
+      firewall_rule = 'ALLOW: {0:s} {1!s}'.format(ip_protocol, ports)
+      firewall_rules.append(firewall_rule)
+
+    denieds = self._GetJSONValue(request, 'denieds', default_value=[])
+    for denied in denieds:
+      ip_protocol = self._GetJSONValue(denied, 'IPProtocol')
+      ports = self._GetJSONValue(denied, 'ports', default_value='all')
+
+      firewall_rule = 'DENY: {0:s} {1!s}'.format(ip_protocol, ports)
+      firewall_rules.append(firewall_rule)
+
+    event_data.firewall_rules = firewall_rules or None
 
     # Service account specific attributes
-    if 'service_account' in request:
-      service_account_name = request['service_account'].get('display_name')
-      event_attributes['service_account_display_name'] = service_account_name
+    service_account = self._GetJSONValue(request, 'service_account')
+    if service_account:
+      event_data.service_account_display_name = self._GetJSONValue(
+          service_account, 'display_name')
+
+  def _ParseProtoPayloadServiceData(self, json_dict, event_data):
+    """Extracts information from the serviceData in the protoPayload value.
+
+    Args:
+      json_dict (dict): JSON dictionary of the protoPayload value.
+      event_data (GCPLogEventData): event data.
+    """
+    service_data = self._GetJSONValue(json_dict, 'serviceData')
+    if not service_data:
+      return
+
+    policy_delta = self._GetJSONValue(service_data, 'policyDelta')
+    if not policy_delta:
+      return
+
+    policy_deltas = []
+
+    binding_deltas = self._GetJSONValue(
+        policy_delta, 'bindingDeltas', default_value=[])
+    for binding_delta_value in binding_deltas:
+      action = self._GetJSONValue(
+          binding_delta_value, 'action', default_value='')
+      member = self._GetJSONValue(
+          binding_delta_value, 'member', default_value='')
+      role = self._GetJSONValue(binding_delta_value, 'role', default_value='')
+
+      policy_delta = '{0:s} {1:s} with role {2:s}'.format(action, member, role)
+      policy_deltas.append(policy_delta)
+
+    event_data.policy_deltas = policy_deltas or None
 
   def _ParseRecord(self, parser_mediator, json_dict):
     """Parses a Google Cloud (GCP) log record.
@@ -192,53 +230,26 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    timestamp = json_dict.get('timestamp')
+    timestamp = self._GetJSONValue(json_dict, 'timestamp')
     if not timestamp:
       parser_mediator.ProduceExtractionWarning(
           'Timestamp value missing from GCP log event')
-      return
 
     event_data = GCPLogEventData()
-    event_attributes = {}
 
-    resource_json = json_dict.get('resource')
-    if resource_json:
-      labels_json = resource_json.get('labels')
-      if labels_json:
-        for attribute, value in labels_json.items():
-          plaso_attribute = 'resource_label_{0:s}'.format(attribute)
-          event_attributes[plaso_attribute] = value
+    resource = self._GetJSONValue(json_dict, 'resource')
+    if resource:
+      labels = self._GetJSONValue(resource, 'labels', default_value={})
+      event_data.resource_labels = [
+        '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
 
     event_data.severity = self._GetJSONValue(json_dict, 'severity')
     event_data.log_name = self._GetJSONValue(json_dict, 'logName')
 
-    json_payload = json_dict.get('jsonPayload')
-    if json_payload:
-      self._ParseJSONPayload(json_payload, event_attributes)
+    self._ParseJSONPayload(json_dict, event_data)
+    self._ParseProtoPayload(json_dict, event_data)
 
-    proto_payload = json_dict.get('protoPayload')
-    if proto_payload:
-      self._ParseProtoPayload(proto_payload, event_attributes)
-
-    # TODO: jsonPayload can also contain arbitrary fields so should be
-    # handled like textPayload if user, action or resource cannot be parsed.
-    text_payload = json_dict.get('textPayload')
-    if text_payload:
-      # Textpayload records can be anything, so we don't want to try to
-      # format them.
-      event_data.text_payload = text_payload
-    else:
-      for attribute in self._USER_ATTRIBUTES:
-        if attribute in event_attributes:
-          event_data.user = event_attributes[attribute]
-
-      for attribute in self._ACTION_ATTRIBUTES:
-        if attribute in event_attributes:
-          event_data.action = event_attributes[attribute]
-
-      for attribute in self._RESROUCE_ATTRIBUTES:
-        if attribute in event_attributes:
-          event_data.resource = event_attributes[attribute]
+    event_data.text_payload = self._GetJSONValue(json_dict, 'textPayload')
 
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
@@ -251,7 +262,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
-    event_data.AddEventAttributes(event_attributes)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def CheckRequiredFormat(self, json_dict):

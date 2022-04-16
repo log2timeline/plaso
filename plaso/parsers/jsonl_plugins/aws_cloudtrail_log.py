@@ -62,11 +62,10 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    event_time = json_dict.get('EventTime')
+    event_time = self._GetJSONValue(json_dict, 'EventTime')
     if not event_time:
       parser_mediator.ProduceExtractionWarning(
           'Event time value missing from CloudTrail log entry')
-      return
 
     event_data = AWSCloudTrailEventData()
     event_data.event_name = self._GetJSONValue(json_dict, 'EventName')
