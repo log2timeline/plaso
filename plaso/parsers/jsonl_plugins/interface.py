@@ -19,19 +19,21 @@ class JSONLPlugin(plugins.BasePlugin):
 
   NAME = 'jsonl_plugin'
 
-  def _GetJSONValue(self, json_dict, name):
+  def _GetJSONValue(self, json_dict, name, default_value=None):
     """Retrieves a value from a JSON dict.
 
     Args:
       json_dict (dict): JSON dictionary.
       name (str): name of the value to retrieve.
+      default_value (Optional[object]): default value to return if the value
+          is not set or empty.
 
     Returns:
       object: value of the JSON log entry or None if not set.
     """
-    json_value = json_dict.get(name)
+    json_value = json_dict.get(name, default_value)
     if json_value == '':
-      json_value = None
+      json_value = default_value
     return json_value
 
   @abc.abstractmethod

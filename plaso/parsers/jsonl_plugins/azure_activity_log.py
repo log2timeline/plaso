@@ -68,11 +68,10 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    event_timestamp = json_dict.get('event_timestamp')
+    event_timestamp = self._GetJSONValue(json_dict, 'event_timestamp')
     if not event_timestamp:
       parser_mediator.ProduceExtractionWarning(
           'Event timestamp value missing from activity log entry')
-      return
 
     event_data = AzureActivityLogEventData()
     event_data.caller = self._GetJSONValue(json_dict, 'caller')
