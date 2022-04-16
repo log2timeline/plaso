@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Parser for AWS CloudTrail log files."""
+"""JSON-L parser plugin for AWS CloudTrail log files."""
 
 import json
-import json.decoder as json_decoder
-import os
+
+from json import decoder as json_decoder
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
-from plaso.parsers import interface
+from plaso.parsers import jsonl_parser
+from plaso.parsers.jsonl_plugins import interface
 
 
 class AWSCloudTrailEventData(events.EventData):
@@ -48,39 +46,24 @@ class AWSCloudTrailEventData(events.EventData):
     self.user_name = None
 
 
-class AWSCloudTrailParser(interface.FileObjectParser):
-  """Parser for JSON-L AWS CloudTrail log files."""
+class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
+  """JSON-L parser plugin for AWS CloudTrail log files."""
 
-  NAME = 'aws_cloudtrail'
-  DATA_FORMAT = 'AWS CloudTrail log'
+  NAME = 'aws_cloudtrail_log'
+  DATA_FORMAT = 'AWS CloudTrail Log'
 
   _ENCODING = 'utf-8'
 
-  def _GetJSONValue(self, json_dict, name):
-    """Retrieves a value from a JSON dict.
-
-    Args:
-      json_dict (dict): JSON dictionary.
-      name (str): name of the value to retrieve.
-
-    Returns:
-      object: value of the JSON log entry or None if not set.
-    """
-    json_value = json_dict.get(name)
-    if json_value == '':
-      json_value = None
-    return json_value
-
-  def _ParseAWSCloudTrailLog(self, parser_mediator, json_dict):
-    """Extract events from an AWS CloudTrail log entry.
+  def _ParseRecord(self, parser_mediator, json_dict):
+    """Parses an AWS CloudTrail log record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      json_dict (dict): log entry JSON dictionary.
+      json_dict (dict): JSON dictionary of the log record.
     """
-    time_string = json_dict.get('EventTime')
-    if not time_string:
+    event_time = json_dict.get('EventTime')
+    if not event_time:
       parser_mediator.ProduceExtractionWarning(
           'Event time value missing from CloudTrail log entry')
       return
@@ -121,55 +104,39 @@ class AWSCloudTrailParser(interface.FileObjectParser):
 
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromDateTimeString(time_string)
+      date_time.CopyFromDateTimeString(event_time)
     except ValueError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'Unable to parse time string: {0:s} with error: {1!s}'.format(
-             time_string, exception))
+          'Unable to parse event time: {0:s} with error: {1!s}'.format(
+             event_time, exception))
       date_time = dfdatetime_semantic_time.InvalidTime()
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an AWS CloudTrail log file-object.
+  def CheckRequiredFormat(self, json_dict):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): a file-like object.
+      json_dict (dict): JSON dictionary of the log record.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
     """
-    # Trivial JSON format check: first character must be an open brace.
-    if file_object.read(1) != b'{':
-      raise errors.WrongParser(
-          'is not a valid JSON file, missing opening brace.')
+    cloud_trail_event = json_dict.get('CloudTrailEvent') or None
+    event_time = json_dict.get('EventTime') or None
 
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
+    if None in (cloud_trail_event, event_time):
+      return False
 
     try:
-      first_line = text_file_object.readline()
-      first_line_json = json.loads(first_line)
-    except json_decoder.JSONDecodeError:
-      raise errors.WrongParser('could not decode JSON.')
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromDateTimeString(event_time)
+    except ValueError:
+      return False
 
-    if not first_line_json:
-      raise errors.WrongParser('no JSON found in file.')
-
-    if 'CloudTrailEvent' not in first_line_json:
-      raise errors.WrongParser(
-          'no "CloudTrailEvent" field, not an AWS log entry.')
-
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
-
-    for line in text_file_object:
-      json_log_entry = json.loads(line)
-      self._ParseAWSCloudTrailLog(parser_mediator, json_log_entry)
+    return True
 
 
-manager.ParsersManager.RegisterParser(AWSCloudTrailParser)
+jsonl_parser.JSONLParser.RegisterPlugin(AWSCloudTrailLogJSONLPlugin)

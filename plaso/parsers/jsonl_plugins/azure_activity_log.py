@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Parser for Azure activity log files."""
-
-import json
-import json.decoder as json_decoder
-import os
+"""JSON-L parser plugin for Azure activity log files."""
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
-from plaso.parsers import interface
+from plaso.parsers import jsonl_parser
+from plaso.parsers.jsonl_plugins import interface
 
 
 class AzureActivityLogEventData(events.EventData):
@@ -58,39 +52,24 @@ class AzureActivityLogEventData(events.EventData):
     self.tenant_identifier = None
 
 
-class AzureActivityLogParser(interface.FileObjectParser):
-  """Parser for Azure activity log files."""
+class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
+  """JSON-L parser plugin for Azure activity log files."""
 
-  NAME = 'azure_activitylog'
-  DATA_FORMAT = 'Azure Activity Logging'
+  NAME = 'azure_activity_log'
+  DATA_FORMAT = 'Azure Activity Log'
 
   _ENCODING = 'utf-8'
 
-  def _GetJSONValue(self, json_dict, name):
-    """Retrieves a value from a JSON dict.
-
-    Args:
-      json_dict (dict): JSON dictionary.
-      name (str): name of the value to retrieve.
-
-    Returns:
-      object: value of the JSON log entry or None if not set.
-    """
-    json_value = json_dict.get(name)
-    if json_value == '':
-      json_value = None
-    return json_value
-
-  def _ParseAzureActivityLog(self, parser_mediator, json_dict):
-    """Extracts events from an Azure activity log entry.
+  def _ParseRecord(self, parser_mediator, json_dict):
+    """Parses an Azure activity log record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      json_dict (dict): log entry JSON dictionary.
+      json_dict (dict): JSON dictionary of the log record.
     """
-    time_string = json_dict.get('event_timestamp')
-    if not time_string:
+    event_timestamp = json_dict.get('event_timestamp')
+    if not event_timestamp:
       parser_mediator.ProduceExtractionWarning(
           'Event timestamp value missing from activity log entry')
       return
@@ -142,55 +121,39 @@ class AzureActivityLogParser(interface.FileObjectParser):
 
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(time_string)
+      date_time.CopyFromStringISO8601(event_timestamp)
     except ValueError as exception:
       parser_mediator.ProduceExtractionWarning(
           'Unable to parse time string: {0:s} with error: {1!s}'.format(
-              time_string, exception))
+              event_timestamp, exception))
       date_time = dfdatetime_semantic_time.InvalidTime()
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an Azure activity log file-object.
+  def CheckRequiredFormat(self, json_dict):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): a file-like object.
+      json_dict (dict): JSON dictionary of the log record.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
     """
-    # Trivial JSON format check: first character must be an open brace.
-    if file_object.read(1) != b'{':
-      raise errors.WrongParser(
-          'is not a valid JSON file, missing opening brace.')
+    event_timestamp = json_dict.get('event_timestamp') or None
+    subscription_identifier = json_dict.get('subscription_id') or None
 
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
+    if None in (event_timestamp, subscription_identifier):
+      return False
 
     try:
-      first_line = text_file_object.readline()
-      first_line_json = json.loads(first_line)
-    except json_decoder.JSONDecodeError:
-      raise errors.WrongParser('could not decode JSON.')
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(event_timestamp)
+    except ValueError:
+      return False
 
-    if not first_line_json:
-      raise errors.WrongParser('no JSON found in file.')
-
-    if 'subscription_id' not in first_line_json:
-      raise errors.WrongParser(
-          'no "subscription_id" field, not an Azure activity log entry.')
-
-    file_object.seek(0, os.SEEK_SET)
-    text_file_object = text_file.TextFile(file_object)
-
-    for line in text_file_object:
-      json_log_entry = json.loads(line)
-      self._ParseAzureActivityLog(parser_mediator, json_log_entry)
+    return True
 
 
-manager.ParsersManager.RegisterParser(AzureActivityLogParser)
+jsonl_parser.JSONLParser.RegisterPlugin(AzureActivityLogJSONLPlugin)
