@@ -4,17 +4,17 @@
 
 import unittest
 
-from plaso.parsers import ios_mobile_installation_logs
+from plaso.parsers import ios_mobile_installation_log
 
 from tests.parsers import test_lib
 
 
-class IOSMobileInstallationUnitTest(test_lib.ParserTestCase):
+class IOSMobileInstallationLogParserTest(test_lib.ParserTestCase):
   """Tests for the iOS Mobile Installation log parser"""
 
   def testParseLog(self):
     """Tests the Parse function"""
-    parser = ios_mobile_installation_logs.IOSMobileInstallationParser()
+    parser = ios_mobile_installation_log.IOSMobileInstallationLogParser()
     storage_writer = self._ParseFile(['mobile_installation.log.0'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')

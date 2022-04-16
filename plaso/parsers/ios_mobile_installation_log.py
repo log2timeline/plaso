@@ -35,7 +35,7 @@ class IOSMobileInstallationEventData(events.EventData):
     self.severity = None
 
 
-class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
+class IOSMobileInstallationLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS mobile installation log files."""
 
   NAME = 'ios:mobile_installation:log'
@@ -158,4 +158,4 @@ class IOSMobileInstallationParser(text_parser.PyparsingMultiLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(IOSMobileInstallationParser)
+manager.ParsersManager.RegisterParser(IOSMobileInstallationLogParser)
