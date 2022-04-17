@@ -6,6 +6,7 @@ android_app_usage | Parser for Android usage history (usage-history.xml) files.
 apache_access | Parser for Apache access log (access.log) files.
 apt_history | Parser for Advanced Packaging Tool (APT) History log files.
 asl_log | Parser for Apple System Log (ASL) files.
+aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 bencode | Parser for Bencoded files.
 binary_cookies | Parser for Safari Binary Cookie files.
@@ -15,7 +16,6 @@ chrome_preferences | Parser for Google Chrome Preferences files.
 cups_ipp | Parser for CUPS IPP files.
 custom_destinations | Parser for Custom destinations jump list (.customDestinations-ms) files.
 czip | Parser for Compound ZIP files.
-dockerjson | Parser for Docker configuration and log JSON files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.
 esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
@@ -23,10 +23,13 @@ firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or e
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
-gcplogging | Parser for Google Cloud Logging.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
+ios:lockdownd:log | Parser for iOS lockdown daemon log.
+ios:mobile_installation:log | Parser for iOS mobile installation log.
+ios_sysdiagnose_logd | Parser for iOS sysdiagnose logd files.
 java_idx | Parser for Java WebStart Cache IDX files.
+jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
 locate_database | Parser for Locate database file (updatedb).
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
@@ -98,6 +101,18 @@ file_history | Parser for Windows 8 File History ESE database files.
 msie_webcache | Parser for Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) files.
 srum | Parser for System Resource Usage Monitor (SRUM) ESE database files.
 
+### Parser plugins: jsonl
+
+Name | Description
+--- | ---
+aws_cloudtrail_log | Parser for AWS CloudTrail Log.
+azure_activity_log | Parser for Azure Activity Log.
+azure_application_gateway_access_log | Parser for Azure Application Gateway access log.
+docker_container_config | Parser for Docker container configuration files.
+docker_container_log | Parser for Docker container log files.
+docker_layer_config | Parser for Docker layer configuration files.
+gcp_log | Parser for Google Cloud (GCP) log.
+
 ### Parser plugins: olecf
 
 Name | Description
@@ -140,12 +155,14 @@ chrome_66_cookies | Parser for Google Chrome 66 and later cookies SQLite databas
 chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files.
 chrome_autofill | Parser for Google Chrome autofill SQLite database (Web Data) files.
 chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
+dropbox | Parser for Dropbox sync history database (sync_history.db) files.
 firefox_cookies | Parser for Mozilla Firefox cookies SQLite database files.
 firefox_downloads | Parser for Mozilla Firefox downloads SQLite database (downloads.sqlite) files.
 firefox_history | Parser for Mozilla Firefox history SQLite database (places.sqlite) files.
 google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
+ios_powerlog | Parser for iOS powerlog SQLite database (CurrentPowerlog.PLSQL) files.
 kik_messenger | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
 kodi | Parser for Kodi videos SQLite database (MyVideos.db) files.
 ls_quarantine | Parser for MacOS launch services quarantine events database SQLite database files.
@@ -218,7 +235,8 @@ winreg_default | Parser for Windows Registry data.
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
-linux | apt_history, bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
+dockerjson | jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config
+linux | apt_history, bash_history, bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
 macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
