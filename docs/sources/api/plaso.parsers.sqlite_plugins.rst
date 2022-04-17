@@ -140,6 +140,14 @@ plaso.parsers.sqlite\_plugins.interface module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.ios\_powerlog module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_powerlog
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.kik\_ios module
 ---------------------------------------------
 

@@ -11,6 +11,7 @@ Subpackages
    plaso.parsers.cookie_plugins
    plaso.parsers.czip_plugins
    plaso.parsers.esedb_plugins
+   plaso.parsers.jsonl_plugins
    plaso.parsers.olecf_plugins
    plaso.parsers.plist_plugins
    plaso.parsers.shared
@@ -53,26 +54,10 @@ plaso.parsers.asl module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.aws\_cloudtrail module
-------------------------------------
-
-.. automodule:: plaso.parsers.aws_cloudtrail
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.aws\_elb\_access module
 -------------------------------------
 
 .. automodule:: plaso.parsers.aws_elb_access
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.azure\_activity\_log module
------------------------------------------
-
-.. automodule:: plaso.parsers.azure_activity_log
    :members:
    :undoc-members:
    :show-inheritance:
@@ -141,14 +126,6 @@ plaso.parsers.czip module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.docker module
----------------------------
-
-.. automodule:: plaso.parsers.docker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.dpkg module
 -------------------------
 
@@ -205,14 +182,6 @@ plaso.parsers.fseventsd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.gcp\_logging module
----------------------------------
-
-.. automodule:: plaso.parsers.gcp_logging
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.gdrive\_synclog module
 ------------------------------------
 
@@ -245,6 +214,14 @@ plaso.parsers.interface module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.ios\_lockdownd module
+-----------------------------------
+
+.. automodule:: plaso.parsers.ios_lockdownd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.ios\_logd module
 ------------------------------
 
@@ -253,10 +230,26 @@ plaso.parsers.ios\_logd module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.ios\_mobile\_installation\_log module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.ios_mobile_installation_log
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.java\_idx module
 ------------------------------
 
 .. automodule:: plaso.parsers.java_idx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.jsonl\_parser module
+----------------------------------
+
+.. automodule:: plaso.parsers.jsonl_parser
    :members:
    :undoc-members:
    :show-inheritance:
