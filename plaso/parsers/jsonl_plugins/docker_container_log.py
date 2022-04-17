@@ -11,7 +11,7 @@ from plaso.parsers import jsonl_parser
 from plaso.parsers.jsonl_plugins import interface
 
 
-class DockerContaierLogEventData(events.EventData):
+class DockerContainerLogEventData(events.EventData):
   """Docker container log event data.
 
   Attributes:
@@ -24,7 +24,7 @@ class DockerContaierLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(DockerContaierLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(DockerContainerLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.container_identifier = None
     self.log_line = None
     self.log_source = None
@@ -33,7 +33,7 @@ class DockerContaierLogEventData(events.EventData):
 class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
   """JSON-L parser plugin for Docker container log files.
 
-  This parser handles per Docker container stdout/stderr output log stored in:
+  This parser handles per Docker container log files stored in:
   DOCKER_DIR/containers/<container_identifier>/<container_identifier>-json.log
   """
 
@@ -81,7 +81,7 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
 
     log_line = self._GetJSONValue(json_dict, 'log', default_value='')
 
-    event_data = DockerContaierLogEventData()
+    event_data = DockerContainerLogEventData()
     event_data.container_identifier = self._container_identifier
     # TODO: escape special characters in log line.
     event_data.log_line = log_line

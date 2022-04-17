@@ -13,47 +13,6 @@ from tests.parsers import test_lib
 class DockerJSONUnitTest(test_lib.ParserTestCase):
   """Tests for the Docker JSON parser."""
 
-  def testParseContainerConfig(self):
-    """Tests the _ParseContainerConfigJSON function."""
-    container_identifier = (
-        'e7d0b7ea5ccf08366e2b0c8afa2318674e8aefe802315378125d2bb83fe3110c')
-
-    parser = docker.DockerJSONParser()
-    path_segments = [
-        'docker', 'containers', container_identifier, 'config.json']
-    storage_writer = self._ParseFile(path_segments, parser)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 2)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
-
-    expected_event_values = {
-        'action': 'Container Started',
-        'container_id': container_identifier,
-        'container_name': 'e7d0b7ea5ccf',
-        'data_type': 'docker:json:container',
-        'date_time': '2016-01-07 16:49:08.674873'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'action': 'Container Created',
-        'container_id': container_identifier,
-        'container_name': 'e7d0b7ea5ccf',
-        'data_type': 'docker:json:container',
-        'date_time': '2016-01-07 16:49:08.507979'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
   def testParseLayerConfig(self):
     """Tests the _ParseLayerConfigJSON function."""
     layer_identifier = (
