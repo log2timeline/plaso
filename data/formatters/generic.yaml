@@ -126,36 +126,36 @@ short_message:
 type: 'conditional'
 data_type: 'docker:container:configuration'
 message:
-- 'Action: {action}'
-- 'Container name: {container_name}'
 - 'Container identifier: {container_identifier}'
+- 'Container name: {container_name}'
+- 'Action: {action}'
 separator: ', '
 short_message:
-- 'Action: {action}'
-- 'Container name: {container_name}'
 - 'Container identifier: {container_identifier}'
+- 'Container name: {container_name}'
+- 'Action: {action}'
 ---
 type: 'conditional'
 data_type: 'docker:container:log:entry'
 message:
-- 'Text: {log_line}'
 - 'Container identifier: {container_identifier}'
 - 'Source: {log_source}'
+- 'Text: {log_line}'
 separator: ', '
 short_message:
-- 'Text: {log_line}'
 - 'Container identifier: {container_identifier}'
 - 'Source: {log_source}'
+- 'Text: {log_line}'
 ---
 type: 'conditional'
-data_type: 'docker:json:layer'
+data_type: 'docker:layer:configuration'
 message:
+- 'Layer identifier: {layer_identifier}'
 - 'Command: {command}'
-- 'Layer ID: {layer_id}'
 separator: ', '
 short_message:
+- 'Layer identifier: {layer_identifier}'
 - 'Command: {command}'
-- 'Layer ID: {layer_id}'
 ---
 type: 'conditional'
 data_type: 'dropbox:sync_history:entry'

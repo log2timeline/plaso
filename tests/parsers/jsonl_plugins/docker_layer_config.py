@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Docker JSON parser."""
+"""Tests for the JSON-L parser plugin for Docker layer config files."""
 
 import unittest
 
 from plaso.lib import definitions
-from plaso.parsers import docker
+from plaso.parsers.jsonl_plugins import docker_layer_config
 
-from tests.parsers import test_lib
+from tests.parsers.jsonl_plugins import test_lib
 
 
-class DockerJSONUnitTest(test_lib.ParserTestCase):
-  """Tests for the Docker JSON parser."""
+class DockerLayerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
+  """Tests for the JSON-L parser plugin for Docker layer config files."""
 
-  def testParseLayerConfig(self):
-    """Tests the _ParseLayerConfigJSON function."""
+  def testProcess(self):
+    """Tests the Process function."""
     layer_identifier = (
         '3c9a9d7cc6a235eb2de58ca9ef3551c67ae42a991933ba4958d207b29142902b')
-
-    parser = docker.DockerJSONParser()
     path_segments = ['docker', 'graph', layer_identifier, 'json']
-    storage_writer = self._ParseFile(path_segments, parser)
+
+    plugin = docker_layer_config.DockerLayerConfigurationJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(path_segments, plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -39,9 +39,9 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'command': (
             '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
             '/etc/apt/sources.list'),
-        'data_type': 'docker:json:layer',
         'date_time': '2015-10-12 17:27:03.079273',
-        'layer_id': layer_identifier,
+        'data_type': 'docker:layer:configuration',
+        'layer_identifier': layer_identifier,
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

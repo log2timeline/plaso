@@ -25,6 +25,16 @@ short_message:
 - 'Source: {log_source}'
 ---
 type: 'conditional'
+data_type: 'docker:json:layer'
+message:
+- 'Command: {command}'
+- 'Layer ID: {layer_id}'
+separator: ', '
+short_message:
+- 'Command: {command}'
+- 'Layer ID: {layer_id}'
+---
+type: 'conditional'
 data_type: 'pe:compilation:compilation_time'
 message:
 - 'PE Type: {pe_type}'
