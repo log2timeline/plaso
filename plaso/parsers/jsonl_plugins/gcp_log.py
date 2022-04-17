@@ -82,8 +82,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'gcp_log'
   DATA_FORMAT = 'Google Cloud (GCP) log'
 
-  _ENCODING = 'utf-8'
-
   # Ordered from least to most preferred value.
   _RESROUCE_ATTRIBUTES = ['resource_label_instance_id', 'resourceName']
 

@@ -13,53 +13,6 @@ from tests.parsers import test_lib
 class DockerJSONUnitTest(test_lib.ParserTestCase):
   """Tests for the Docker JSON parser."""
 
-  def testParseContainerLog(self):
-    """Tests the _ParseContainerLogJSON function."""
-    container_identifier = (
-        'e7d0b7ea5ccf08366e2b0c8afa2318674e8aefe802315378125d2bb83fe3110c')
-
-    parser = docker.DockerJSONParser()
-    path_segments = [
-        'docker', 'containers', container_identifier, 'container-json.log']
-    storage_writer = self._ParseFile(path_segments, parser)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 10)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
-
-    expected_timestamps = [
-        '2016-01-07 16:49:10.000000',
-        '2016-01-07 16:49:10.200000',
-        '2016-01-07 16:49:10.230000',
-        '2016-01-07 16:49:10.237000',
-        '2016-01-07 16:49:10.237200',
-        '2016-01-07 16:49:10.237220',
-        '2016-01-07 16:49:10.237222',
-        '2016-01-07 16:49:10.237222', # losing sub microsec info
-        '2016-01-07 16:49:10.237222',
-        '2016-01-07 16:49:10.237222']
-
-    expected_event_values = {
-        'container_id': container_identifier,
-        'data_type': 'docker:json:container:log',
-        'log_line': (
-            '\x1b]0;root@e7d0b7ea5ccf: '
-            '/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n'),
-        'log_source': 'stdout'}
-
-    for index, event in enumerate(events):
-      self.CheckTimestamp(event.timestamp, expected_timestamps[index])
-      self.CheckEventValues(storage_writer, event, expected_event_values)
-
   def testParseContainerConfig(self):
     """Tests the _ParseContainerConfigJSON function."""
     container_identifier = (

@@ -52,8 +52,6 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'aws_cloudtrail_log'
   DATA_FORMAT = 'AWS CloudTrail Log'
 
-  _ENCODING = 'utf-8'
-
   def _ParseRecord(self, parser_mediator, json_dict):
     """Parses an AWS CloudTrail log record.
 

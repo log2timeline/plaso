@@ -1,6 +1,18 @@
 # Plaso event formatters that are no longer used and kept for backwards compatibility.
 ---
 type: 'conditional'
+data_type: 'docker:json:container:log'
+message:
+- 'Text: {log_line}'
+- 'Container ID: {container_id}'
+- 'Source: {log_source}'
+separator: ', '
+short_message:
+- 'Text: {log_line}'
+- 'Container ID: {container_id}'
+- 'Source: {log_source}'
+---
+type: 'conditional'
 data_type: 'pe:compilation:compilation_time'
 message:
 - 'PE Type: {pe_type}'

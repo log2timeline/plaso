@@ -58,8 +58,6 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'azure_activity_log'
   DATA_FORMAT = 'Azure Activity Log'
 
-  _ENCODING = 'utf-8'
-
   def _ParseRecord(self, parser_mediator, json_dict):
     """Parses an Azure activity log record.
 
@@ -80,11 +78,11 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
     event_data.correlation_identifier = self._GetJSONValue(
         json_dict, 'correlation_id')
 
-    event_name_json = json_dict.get('event_name')
+    event_name_json = self._GetJSONValue(json_dict, 'event_name')
     if event_name_json:
       event_data.event_name = self._GetJSONValue(event_name_json, 'value')
 
-    http_request_json = json_dict.get('http_request')
+    http_request_json = self._GetJSONValue(json_dict, 'http_request')
     if http_request_json:
       event_data.client_ip = self._GetJSONValue(
         http_request_json, 'client_ip_address')
@@ -93,7 +91,8 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
     event_data.resource_group = self._GetJSONValue(
         json_dict, 'resource_group_name')
 
-    resource_provider_name_json = json_dict.get('resource_provider_name')
+    resource_provider_name_json = self._GetJSONValue(
+        json_dict, 'resource_provider_name')
     if resource_provider_name_json:
       event_data.resource_provider = self._GetJSONValue(
           resource_provider_name_json, 'value')
@@ -101,7 +100,7 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
     event_data.resource_identifier = self._GetJSONValue(
         json_dict, 'resource_id')
 
-    resource_type_json = json_dict.get('resource_type')
+    resource_type_json = self._GetJSONValue(json_dict, 'resource_type')
     if resource_type_json:
       event_data.resource_type = self._GetJSONValue(
           resource_type_json, 'value')
@@ -109,7 +108,7 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
     event_data.operation_identifier = self._GetJSONValue(
         json_dict, 'operation_id')
 
-    operation_name_json = json_dict.get('operation_name')
+    operation_name_json = self._GetJSONValue(json_dict, 'operation_name')
     if operation_name_json:
       event_data.operation_name = self._GetJSONValue(
           operation_name_json, 'value')

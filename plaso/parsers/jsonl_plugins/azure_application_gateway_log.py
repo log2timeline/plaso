@@ -107,8 +107,6 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'azure_application_gateway_access_log'
   DATA_FORMAT = 'Azure Application Gateway access log'
 
-  _ENCODING = 'utf-8'
-
   _PROPERTIES = {
       'clientIP': 'client_ip',
       'clientPort': 'client_port',
