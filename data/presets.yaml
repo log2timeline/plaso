@@ -25,7 +25,9 @@ parsers:
 - bash_history
 - bencode
 - czip/oxml
-- dockerjson
+- jsonl/docker_container_config
+- jsonl/docker_container_log
+- jsonl/docker_layer_config
 - dpkg
 - filestat
 - gdrive_synclog
@@ -80,6 +82,13 @@ parsers:
 - utmpx
 - webhist
 - zsh_extended_history
+---
+name: dockerjson
+description: Preset for backwards compatibility of Docker JSON parser.
+parsers:
+- jsonl/docker_container_config
+- jsonl/docker_container_log
+- jsonl/docker_layer_config
 ---
 name: webhist
 description: Preset for Web history.

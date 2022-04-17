@@ -9,10 +9,14 @@ from dfvfs.helpers import text_file
 
 from plaso.lib import errors
 from plaso.parsers import interface
+from plaso.parsers import manager
 
 
 class JSONLParser(interface.FileObjectParser):
   """Base parser for line-based JSON (JSON-L) log formats."""
+
+  NAME = 'jsonl'
+  DATA_FORMAT = 'JSON-L log file'
 
   _ENCODING = 'utf-8'
 
@@ -65,3 +69,6 @@ class JSONLParser(interface.FileObjectParser):
 
       if plugin.CheckRequiredFormat(json_dict):
         plugin.Process(parser_mediator, file_object=file_object)
+
+
+manager.ParsersManager.RegisterParser(JSONLParser)

@@ -7,12 +7,12 @@ import unittest
 from plaso.containers import events
 from plaso.lib import definitions
 from plaso.parsers import bash_history
-from plaso.parsers import docker
 from plaso.parsers import dpkg
 from plaso.parsers import selinux
 from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers import zsh_extended_history
+from plaso.parsers.jsonl_plugins import docker_layer_config
 from plaso.parsers.syslog_plugins import cron
 
 from tests.data import test_lib
@@ -35,11 +35,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         bash_history.BashHistoryEventData, attribute_values_per_name,
         ['application_execution'])
 
-    # Test: data_type is 'docker:json:layer'
+    # Test: data_type is 'docker:layer:configuration'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        docker.DockerJSONLayerEventData, attribute_values_per_name,
-        ['application_execution'])
+        docker_layer_config.DockerLayerConfigurationEventData,
+        attribute_values_per_name, ['application_execution'])
 
     # Test: data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR
     #       audit_type is 'USER_CMD')

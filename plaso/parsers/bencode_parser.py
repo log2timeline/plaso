@@ -128,11 +128,11 @@ class BencodeFile(object):
 class BencodeParser(interface.FileObjectParser):
   """Parser for bencoded files."""
 
-  # Regex match for a bencode dictionary followed by a field size.
-  _BENCODE_RE = re.compile(b'd[0-9]')
-
   NAME = 'bencode'
   DATA_FORMAT = 'Bencoded file'
+
+  # Regex match for a bencode dictionary followed by a field size.
+  _BENCODE_RE = re.compile(b'd[0-9]')
 
   _plugin_classes = {}
 
