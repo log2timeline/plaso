@@ -15,5 +15,6 @@
 - [ ] Run integration tests
 - [ ] Promote pre-release to release
 - [ ] [Update pypi](https://github.com/log2timeline/l2tdocs/blob/main/process/PyPI.md)
+- [ ] Promote staging to stable
 - [ ] [Update docker image](https://github.com/log2timeline/l2tdocs/blob/main/process/Maintainers%20guide.md#updating-the-plasos-image-on-dockers-hub-to-the-latest-version-in-ppa)
 - [ ] Write and publish blog post
