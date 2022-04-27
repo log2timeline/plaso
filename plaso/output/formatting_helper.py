@@ -127,7 +127,7 @@ class FieldFormattingHelper(object):
           iso8601_string = ''.join([
               isoformat_string[:19], iso8601_string[19:-6],
               isoformat_string[-6:]])
-        except (OverflowError, TypeError, ValueError):
+        except (OSError, OverflowError, TypeError, ValueError):
           return 'Invalid'
 
     else:
@@ -158,7 +158,7 @@ class FieldFormattingHelper(object):
         iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
             iso8601_string[:19], fraction_of_second, iso8601_string[-6:])
 
-      except (OverflowError, TypeError, ValueError) as exception:
+      except (OSError, OverflowError, TypeError, ValueError) as exception:
         iso8601_string = '0000-00-00T00:00:00.000000+00:00'
         self._ReportEventError(event, event_data, (
             'unable to copy timestamp: {0!s} to a human readable date and '
@@ -460,7 +460,7 @@ class FieldFormattingHelper(object):
             datetime_object.hour, datetime_object.minute,
             datetime_object.second)
 
-      except (OverflowError, TypeError, ValueError):
+      except (OSError, OverflowError, TypeError, ValueError):
         hours, minutes, seconds = (None, None, None)
 
     if None in (hours, minutes, seconds):
