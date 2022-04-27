@@ -124,7 +124,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         month = datetime_object.month
         day_of_month = datetime_object.day
 
-      except (OverflowError, TypeError, ValueError):
+      except (OSError, OverflowError, TypeError, ValueError):
         year, month, day_of_month = (None, None, None)
 
     if None in (year, month, day_of_month):

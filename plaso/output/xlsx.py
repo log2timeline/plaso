@@ -74,7 +74,7 @@ class XLSXOutputModule(interface.OutputModule):
 
       return datetime_object.replace(tzinfo=None)
 
-    except (OverflowError, ValueError) as exception:
+    except (OSError, OverflowError, TypeError, ValueError) as exception:
       self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable date and time '
           'with error: {1!s}. Defaulting to: "ERROR"').format(
