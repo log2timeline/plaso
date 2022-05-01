@@ -11,7 +11,6 @@ Name | Description
 --- | ---
 dynamic | Output events to a delimiter (comma by default) separated value output format, that supports a dynamic selection of fields.
 elastic | Output events to an ElasticSearch database. Requires elasticsearch-py.
-elastic_ts | Output events to an ElasticSearch database for use with Timesketch. Requires elasticsearch-py. Solely intended to be used by Timesketch backend.
 json | Output events to JSON format.
 json_line | Output events to JSON line format.
 kml | Output events with geography data into a KML format.

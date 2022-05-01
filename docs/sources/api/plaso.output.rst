@@ -20,14 +20,6 @@ plaso.output.elastic module
    :undoc-members:
    :show-inheritance:
 
-plaso.output.elastic\_ts module
--------------------------------
-
-.. automodule:: plaso.output.elastic_ts
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.output.formatting\_helper module
 --------------------------------------
 

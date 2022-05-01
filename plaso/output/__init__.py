@@ -3,7 +3,6 @@
 
 from plaso.output import dynamic
 from plaso.output import elastic
-from plaso.output import elastic_ts
 from plaso.output import json_line
 from plaso.output import json_out
 from plaso.output import kml
