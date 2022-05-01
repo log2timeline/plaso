@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:

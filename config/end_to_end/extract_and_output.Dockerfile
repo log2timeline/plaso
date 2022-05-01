@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ARG GIT_REPOSITORY=https://github.com/log2timeline/plaso.git
