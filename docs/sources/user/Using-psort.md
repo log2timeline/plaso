@@ -41,8 +41,6 @@ $ psort.py -o list
 ******************************** Output Modules ********************************
    dynamic : Dynamic selection of fields for a separated value output format.
    elastic : Saves the events into an Elasticsearch database.
-elastic_ts : Saves the events into an Elasticsearch database for use with
-             Timesketch.
       json : Saves the events into a JSON format.
  json_line : Saves the events into a JSON line format.
        kml : Saves events with geography data into a KML format.
@@ -74,8 +72,6 @@ available, which would be displayed by the ``-o list`` switch:
 
 *************************** Disabled Output Modules ****************************
    elastic : Saves the events into an ElasticSearch database.
-elastic_ts : Saves the events into an Elasticsearch database for use with
-             Timesketch.
 --------------------------------------------------------------------------------
 ```
 
