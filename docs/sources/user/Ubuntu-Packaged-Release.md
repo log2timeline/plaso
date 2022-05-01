@@ -1,6 +1,6 @@
 # Installing Plaso on Ubuntu
 
-### Ubuntu 18.04 LTS (bionic) and 20.04 LTS (focal)
+### Ubuntu 20.04 LTS (focal) and 22.04 LTS (jammy)
 
 **Note that other versions of Ubuntu are not supported at this time.**
 
