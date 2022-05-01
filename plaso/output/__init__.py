@@ -2,7 +2,6 @@
 """This file imports Python modules that register output modules."""
 
 from plaso.output import dynamic
-from plaso.output import elastic
 from plaso.output import json_line
 from plaso.output import json_out
 from plaso.output import kml

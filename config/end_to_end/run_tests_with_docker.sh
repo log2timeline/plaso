@@ -73,12 +73,7 @@ do
 
 	# TODO: move custom test setup and teardown scripts to configuration parameter?
 
-	if [[ ${OUTPUT_FORMAT} == "elastic" ]];
-	then
-		# Install Elasticsearch 7 and give it 3 minutes to start-up before running the output end-to-end test.
-		COMMAND="./config/linux/ubuntu_install_elasticsearch7.sh && sleep 3m && ${COMMAND}";
-
-	elif [[ ${OUTPUT_FORMAT} == "opensearch" ]] || [[ ${OUTPUT_FORMAT} == "opensearch_ts" ]];
+	if [[ ${OUTPUT_FORMAT} == "opensearch" ]] || [[ ${OUTPUT_FORMAT} == "opensearch_ts" ]];
 	then
 		# Install OpenSearch and give it 3 minutes to start-up before running the output end-to-end test.
 		COMMAND="./config/linux/ubuntu_install_opensearch.sh && sleep 3m && ${COMMAND}";

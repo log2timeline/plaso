@@ -26,7 +26,6 @@ PYTHON_DEPENDENCIES = {
     'dfvfs': ('__version__', '20220414', None, True),
     'dfwinreg': ('__version__', '20211207', None, True),
     'dtfabric': ('__version__', '20220219', None, True),
-    'elasticsearch': ('__versionstr__', '7.0', '8.0', False),
     'future': ('__version__', '0.16.0', None, True),
     'lz4': ('__version__', '0.10.0', None, True),
     'opensearchpy': ('__versionstr__', '', None, False),

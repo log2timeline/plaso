@@ -12,8 +12,8 @@ class OutputImportTest(test_lib.ImportCheckTestCase):
 
   _IGNORABLE_FILES = frozenset([
       'formatting_helper.py', 'interface.py', 'logger.py', 'manager.py',
-      'mediator.py', 'shared_dsv.py', 'shared_elastic.py', 'shared_json.py',
-      'shared_opensearch.py', 'winevt_rc.py'])
+      'mediator.py', 'shared_dsv.py', 'shared_json.py', 'shared_opensearch.py',
+      'winevt_rc.py'])
 
   def testOutputModulesImported(self):
     """Tests that all output modules are imported."""
