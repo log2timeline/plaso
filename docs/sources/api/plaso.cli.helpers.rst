@@ -52,14 +52,6 @@ plaso.cli.helpers.dynamic\_output module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.elastic\_output module
-----------------------------------------
-
-.. automodule:: plaso.cli.helpers.elastic_output
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.event\_filters module
 ---------------------------------------
 

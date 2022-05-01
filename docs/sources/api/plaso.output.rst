@@ -12,14 +12,6 @@ plaso.output.dynamic module
    :undoc-members:
    :show-inheritance:
 
-plaso.output.elastic module
----------------------------
-
-.. automodule:: plaso.output.elastic
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.output.formatting\_helper module
 --------------------------------------
 
@@ -128,14 +120,6 @@ plaso.output.shared\_dsv module
 -------------------------------
 
 .. automodule:: plaso.output.shared_dsv
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.output.shared\_elastic module
------------------------------------
-
-.. automodule:: plaso.output.shared_elastic
    :members:
    :undoc-members:
    :show-inheritance:
