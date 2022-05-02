@@ -20,7 +20,6 @@ class AnalysisReportTest(shared_test_lib.BaseTestCase):
         'analysis_counter',
         'event_filter',
         'plugin_name',
-        'report_dict',
         'text',
         'time_compiled']
 

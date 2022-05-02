@@ -14,7 +14,6 @@ class AnalysisReport(interface.AttributeContainer):
     event_filter (str): event filter expression that was used when the analysis
         plugin was run.
     plugin_name (str): name of the analysis plugin that generated the report.
-    report_dict (dict[str]): ???
     text (str): report text.
     time_compiled (int): timestamp of the date and time the report was compiled.
   """
@@ -32,8 +31,6 @@ class AnalysisReport(interface.AttributeContainer):
     self.analysis_counter = None
     self.event_filter = None
     self.plugin_name = plugin_name
-    # TODO: kept for backwards compatibility.
-    self.report_dict = None
     # TODO: kept for backwards compatibility.
     self.text = text
     self.time_compiled = None
