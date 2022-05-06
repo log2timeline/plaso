@@ -645,6 +645,27 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['service_new'])
 
+  def testEventLogCleared(self):
+    """Tests the eventlog_cleared tagging rule."""
+    # Test: data_type is 'windows:evt:record' AND
+    #       source_name is 'Security' AND
+    #       event_identifier is 517
+    attribute_values_per_name = {
+        'event_identifier': [517],
+        'source_name': ['Security']}
+    self._CheckTaggingRule(
+        winevt.WinEvtRecordEventData, attribute_values_per_name,
+        ['eventlog_cleared'])
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Eventlog' AND
+    #       (event_identifier is 104 OR event_identifier is 1102)
+    attribute_values_per_name = {
+        'event_identifier': [104, 1102],
+        'source_name': ['Microsoft-Windows-Eventlog']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['eventlog_cleared'])
+
 
 if __name__ == '__main__':
   unittest.main()
