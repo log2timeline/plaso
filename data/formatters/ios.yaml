@@ -1,6 +1,25 @@
 # Plaso iOS related event formatters.
 ---
 type: 'conditional'
+data_type: 'ios:app_privacy:access'
+message:
+- 'Accessor Identifier: {accessor_identifier}'
+- 'Accessor Identifier Type: {accessor_identifier_type}'
+- 'Resource Category: {resource_category}'
+- 'Resource Identifier: {resource_identifier}'
+short_message:
+- 'Accessor Identifier: {accessor_identifier}'
+- 'Resource Category: {resource_category}'
+---
+type: 'conditional'
+data_type: 'ios:app_privacy:network'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Domain: {domain}'
+short_message:
+- 'Bundle Identifier: {bundle_identifier}'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
