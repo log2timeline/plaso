@@ -16,14 +16,13 @@ class IPSFileTest(test_lib.ParserTestCase):
 
   def testOpen(self):
     """Tests the Open function."""
-    ips_log_path = self._GetTestFilePath(
-        ['ips', 'application_crash_log.ips'])
+    ips_log_path = self._GetTestFilePath(['ips', 'application_crash_log.ips'])
     self._SkipIfPathNotExists(ips_log_path)
 
     ips_log_file = ips_parser.IPSFile()
 
-    with open(ips_log_path, 'r', encoding='utf-8') as ips_file_object:
-      ips_log_file.Open(ips_file_object)
+    with open(ips_log_path, 'r', encoding='utf-8') as file_object:
+      ips_log_file.Open(file_object)
 
       expected_header_keys = [
           'app_name', 'timestamp', 'app_version', 'slice_uuid', 'adam_id',

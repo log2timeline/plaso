@@ -37,7 +37,7 @@ class IPSFile(object):
         structured_content = yaml.safe_load(content.group(1))
         return structured_content
 
-      except (scanner.ScannerError, AttributeError):
+      except (AttributeError, scanner.ScannerError):
         return None
 
     return None

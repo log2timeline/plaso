@@ -36,9 +36,9 @@ class AppleCrashLogPluginTest(test_lib.IPSPluginTestCase):
         'parent_process_identifier': 1,
         'process_identifier': 3723,
         'process_launch': '2021-12-08 12:23:28.2790 -0500',
-        'process_path': '/private/var/containers/Bundle/Application/'
-                        '6C9C5A92-BC0D-476F-BCEF-8D4E0D5CAA40/AmongUs.app/'
-                        'AmongUs',
+        'process_path': (
+            '/private/var/containers/Bundle/Application/'
+            '6C9C5A92-BC0D-476F-BCEF-8D4E0D5CAA40/AmongUs.app/AmongUs'),
         'user_identifier': 501}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
