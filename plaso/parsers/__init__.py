@@ -25,6 +25,7 @@ from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
 from plaso.parsers import iis
+from plaso.parsers import ips_parser
 from plaso.parsers import ios_lockdownd
 from plaso.parsers import ios_logd
 from plaso.parsers import ios_sysdiag_log
@@ -79,6 +80,7 @@ from plaso.parsers import zsh_extended_history
 from plaso.parsers import bencode_plugins
 from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
+from plaso.parsers import ips_plugins
 from plaso.parsers import jsonl_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins

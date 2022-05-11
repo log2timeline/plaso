@@ -20,6 +20,29 @@ short_message:
 - 'Bundle Identifier: {bundle_identifier}'
 ---
 type: 'conditional'
+data_type: 'ios:ips:application_crash_log'
+message:
+- 'Application Name: {application_name}'
+- 'Application Version: {application_version}'
+- 'Bug Type: {bug_type}'
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Device Model: {device_model}'
+- 'Incident Identifier: {incident_identifier}'
+- 'OS Version: {os_version}'
+- 'Parent Process: {parent_process}'
+- 'Parent Process Identifier: {parent_process_identifier}'
+- 'Process Identifier: {process_identifier}'
+- 'Process Launch: {process_launch}'
+- 'Process Path: {process_path}'
+- 'User Identifier: {user_identifier}'
+short_message:
+- 'Application Name: {application_name}'
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Process Identifier: {process_identifier}'
+- 'Parent Process Identifier: {parent_process_identifier}'
+- 'Process Path: {process_path}'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
