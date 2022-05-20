@@ -75,7 +75,7 @@ class MicrosoftAuditLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-    'object_identifier': '0a454a7b-fbac-4329-a20c-72bad3bc5000',
+    'audit_record_identifier': '0a454a7b-fbac-4329-a20c-72bad3bc5000',
     'operation_name': 'UserLoggedIn',
     'organization_identifier': '5a0f38c6-710b-4503-92c0-3a9f6e00f726',
     'record_type': 15,
