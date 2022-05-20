@@ -39,8 +39,10 @@ class MicrosoftAuditLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'user_key': 'NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)',
         'user_type': 3,
         'workload': 'Exchange',
-        'object_identifier': 'sst5f.onmicrosoft.com\\952cae95-808b-4aa7-b783-a9151be9a05a',
-        'user_identifier': 'NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)',
+        'object_identifier':
+            'sst5f.onmicrosoft.com\\952cae95-808b-4aa7-b783-a9151be9a05a',
+        'user_identifier':
+            'NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)',
         'timestamp': '2022-05-07 12:55:53.000000'}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -67,7 +69,7 @@ class MicrosoftAuditLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'user_key': 'NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)',
         'user_type': 3,
         'workload': 'Exchange',
-        'user_identifier': 
+        'user_identifier':
             'NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)',
         'timestamp':'2022-05-07 12:56:24.000000'}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)

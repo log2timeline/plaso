@@ -54,7 +54,7 @@ class MicrosoftAuditLogEventData(events.EventData):
 class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
   """JSON-L parser plugin for Microsoft audit log files."""
 
-  NAME = 'microsoft_audit_log' 
+  NAME = 'microsoft_audit_log'
   DATA_FORMAT = 'Microsoft Audit Log'
 
   def _ParseRecord(self, parser_mediator, json_dict):
@@ -65,14 +65,14 @@ class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    
+
     creation_time = self._GetJSONValue(json_dict, 'CreationTime')
     if not creation_time:
       parser_mediator.ProduceExtractionWarning(
           'Creation time value missing from audit log entry')
-    
+
     event_data = MicrosoftAuditLogEventData()
-    
+
     event_data.audit_record_identifier = self._GetJSONValue(json_dict, 'Id')
     event_data.application_access_context = self._GetJSONValue(
         json_dict, 'AppAccessContext')
@@ -104,10 +104,10 @@ class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
 
   def CheckRequiredFormat(self, json_dict):
     """Check if the log record has the minimal structure required by the plugin.
-    
+
     Args:
       json_dict (dict): JSON dictionary of the log record
-      
+
     Returns:
       bool: True if this is the correct parsers, False otherwise.
     """
@@ -115,11 +115,11 @@ class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
     audit_record_identifier = json_dict.get('Id')
     organization_identifier = json_dict.get('OrganizationId', None)
     creation_time = json_dict.get('CreationTime', None)
-      
+
 
     if None in (audit_record_identifier, creation_time,
         organization_identifier):
-      return False 
+      return False
 
     try:
       date_time = dfdatetime_time_elements.TimeElements()
