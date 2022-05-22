@@ -112,7 +112,7 @@ class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
       bool: True if this is the correct parsers, False otherwise.
     """
 
-    audit_record_identifier = json_dict.get('Id')
+    audit_record_identifier = json_dict.get('Id', None)
     organization_identifier = json_dict.get('OrganizationId', None)
     creation_time = json_dict.get('CreationTime', None)
 
