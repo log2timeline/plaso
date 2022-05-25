@@ -17,6 +17,7 @@ from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import hangouts_messages
 from plaso.parsers.sqlite_plugins import imessage
+from plaso.parsers.sqlite_plugins import ios_netusage
 from plaso.parsers.sqlite_plugins import ios_powerlog
 from plaso.parsers.sqlite_plugins import kik_ios
 from plaso.parsers.sqlite_plugins import kodi
