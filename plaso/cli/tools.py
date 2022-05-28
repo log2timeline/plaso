@@ -134,7 +134,13 @@ class CLITool(object):
       elif memory_limit == 0:
         memory_limit = resource.RLIM_INFINITY
 
-      resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
+      try:
+        resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
+      except ValueError:
+        current_limit = resource.getrlimit(resource.RLIMIT_DATA)[0]
+        logger.warning(
+            'Unable to set memory limit to {0!s} '
+            'current limit is {1!s}.'.format(memory_limit, current_limit))
 
   def _GetPathSpecificationString(self, path_spec):
     """Retrieves a printable string representation of the path specification.
