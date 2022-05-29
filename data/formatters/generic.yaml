@@ -404,7 +404,7 @@ short_message:
 - 'Author: {author}'
 ---
 type: 'conditional'
-data_type: microsoft:auditlog:entry
+data_type: microsoft365:auditlog:entry
 message:
 - 'User {user_identifier}'
 - 'performed {operation_name}'

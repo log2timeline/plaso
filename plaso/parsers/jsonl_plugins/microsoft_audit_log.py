@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""JSON-L parser plugin for Microsoft 365 audit log files."""
+"""JSON-L parser plugin for Microsoft (Office) 365 audit log files."""
 
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
