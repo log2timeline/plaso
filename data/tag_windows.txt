@@ -126,3 +126,11 @@ registry_modified
 # Service Control Manager - Event ID 7045: A new service was installed in the system
 service_new
   data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045
+
+# Tags audit log cleared events
+# Security - Event ID 517:
+# Microsoft-Windows-Eventlog - Event ID 104:
+# Microsoft-Windows-Eventlog - Event ID 1102:
+eventlog_cleared
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 517
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Eventlog' AND (event_identifier is 104 OR event_identifier is 1102)
