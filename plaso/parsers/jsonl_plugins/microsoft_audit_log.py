@@ -13,7 +13,7 @@ from plaso.parsers.jsonl_plugins import interface
 
 
 class MicrosoftAuditLogEventData(events.EventData):
-  """Microsoft 365 audit log event data.
+  """Microsoft (Office) 365 audit log event data.
 
   Attributes:
     audit_record_identifier (str): audit record identifier.
@@ -52,13 +52,13 @@ class MicrosoftAuditLogEventData(events.EventData):
 
 
 class MicrosoftAuditLogJSONLPlugin(interface.JSONLPlugin):
-  """JSON-L parser plugin for Microsoft audit log files."""
+  """JSON-L parser plugin for Microsoft (Office) 365 audit log files."""
 
   NAME = 'microsoft_audit_log'
   DATA_FORMAT = 'Microsoft Audit Log'
 
   def _ParseRecord(self, parser_mediator, json_dict):
-    """Parses an Microsoft 365 audit log record.
+    """Parses a Microsoft (Office) 365 audit log record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
