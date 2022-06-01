@@ -128,6 +128,7 @@ class SQLitePlugin(plugins.BasePlugin):
             'with error: {2!s}').format(
                 index, callback.__name__, exception))
         # TODO: consider removing return.
+        print(index, callback.__name__, exception)
         return
 
       row_cache.add(row_hash)

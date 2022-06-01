@@ -18,6 +18,7 @@ from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import hangouts_messages
 from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_powerlog
+from plaso.parsers.sqlite_plugins import ios_screentime
 from plaso.parsers.sqlite_plugins import kik_ios
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
