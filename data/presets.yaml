@@ -23,6 +23,16 @@ parsers:
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
 ---
+name: ios
+description: Preset for iOS.
+parsers:
+- ios_lockdownd
+- ios_logd
+- ios_mobile_installation_log
+- sqlite/ios_powerlog
+- sqlite/kik_ios
+- sqlite/twitter_ios
+---
 name: linux
 description: Preset for Linux.
 operating_systems:
