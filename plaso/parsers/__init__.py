@@ -12,6 +12,7 @@ from plaso.parsers import bodyfile
 from plaso.parsers import bsm
 from plaso.parsers import chrome_cache
 from plaso.parsers import chrome_preferences
+from plaso.parsers import confluence_access
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
 from plaso.parsers import czip

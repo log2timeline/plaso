@@ -1,0 +1,1 @@
+[17/Jun/2021:12:57:26 +0200] 192.168.1.15 testuser http-nio-8080-exec-6 0:0:0:0:0:0:0:1 GET /index.action HTTP/1.1 200 1020ms 7881 http://localhost/ Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36
