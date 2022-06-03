@@ -61,6 +61,20 @@ short_message:
 - 'Application: {bundle_identifier}'
 ---
 type: 'conditional'
+data_type: 'ios:screentime:event'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Device Identifier: {device_identifier}'
+- 'Device Name: {device_name}'
+- 'Domain: {domain}'
+- 'Total Time: {total_time}'
+- 'User Family Name: {user_family_name}'
+- 'User Given Name: {user_given_name}'
+short_message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Domain: {domain}'
+---
+type: 'conditional'
 data_type: 'ios:sysdiagnose:logd:line'
 message:
 - 'Logger: {logger}'
