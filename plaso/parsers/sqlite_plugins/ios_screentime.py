@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Screen Time database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -21,7 +21,8 @@ class IOSScreenTimeEventData(events.EventData):
     total_time (int): Number of seconds where the application was in the
         foreground.
     user_family_name (str): Family name of the user.
-    user_given_name (str): Given name of the user."""
+    user_given_name (str): Given name of the user.
+  """
 
   DATA_TYPE = 'ios:screentime:event'
 
@@ -38,7 +39,11 @@ class IOSScreenTimeEventData(events.EventData):
 
 
 class IOSScreenTimePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for iOS Screen Time database files."""
+  """SQLite parser plugin for iOS Screen Time database files.
+
+  The Screen Time database is typically stored in:
+  RMAdminStore-Local.sqlite
+  """
 
   NAME = 'ios_screentime'
   DATA_FORMAT = 'iOS Screen Time SQLite database (RMAdminStore-Local.sqlite)'
@@ -68,8 +73,8 @@ class IOSScreenTimePlugin(interface.SQLitePlugin):
       LEFT JOIN ZUSAGEBLOCK ON ZUSAGECATEGORY.ZBLOCK = ZUSAGEBLOCK.Z_PK
       LEFT JOIN ZUSAGE ON ZUSAGEBLOCK.ZUSAGE = ZUSAGE.Z_PK
       LEFT JOIN ZCOREDEVICE ON ZUSAGE.ZDEVICE = ZCOREDEVICE.Z_PK
-      LEFT JOIN ZCOREUSER ON ZUSAGE.ZUSER = ZCOREUSER.Z_PK""",
-      'ParseScreenTimeRow')]
+      LEFT JOIN ZCOREUSER ON ZUSAGE.ZUSER = ZCOREUSER.Z_PK
+      """, 'ParseScreenTimeRow')]
 
   SCHEMAS = {
       'ZUSAGETIMEDITEM': (
@@ -119,7 +124,8 @@ class IOSScreenTimePlugin(interface.SQLitePlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       query (str): query that created the row.
-      row (sqlite3.Row): row."""
+      row (sqlite3.Row): row.
+    """
     query_hash = hash(query)
 
     event_data = IOSScreenTimeEventData()
@@ -136,9 +142,9 @@ class IOSScreenTimePlugin(interface.SQLitePlugin):
     event_data.user_given_name = self._GetRowValue(
         query_hash, row, 'ZGIVENNAME')
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZSTARTDATE') + 978307200
+    timestamp = self._GetRowValue(query_hash, row, 'ZSTARTDATE')
 
-    date_time_stamp = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
     start_event = time_events.DateTimeValuesEvent(
         date_time_stamp, definitions.TIME_DESCRIPTION_START)

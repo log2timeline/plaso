@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for the SQLite parser plugin for iOS powerlog database files."""
+"""Tests for the SQLite parser plugin for iOS Screen Time database files."""
 
 import unittest
 
