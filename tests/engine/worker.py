@@ -704,7 +704,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     yara_rule_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rule_path)
 
-    with open(yara_rule_path, 'r') as file_object:
+    with open(yara_rule_path, 'r', encoding='utf-8') as file_object:
       rule_string = file_object.read()
 
     extraction_worker = worker.EventExtractionWorker()

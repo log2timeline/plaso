@@ -133,12 +133,12 @@ class DependencyHelper(object):
 
     dependency_reader = DependencyDefinitionReader()
 
-    with open(dependencies_file, 'r') as file_object:
+    with open(dependencies_file, 'r', encoding='utf-8') as file_object:
       for dependency in dependency_reader.Read(file_object):
         self.dependencies[dependency.name] = dependency
 
     if os.path.exists(test_dependencies_file):
-      with open(test_dependencies_file, 'r') as file_object:
+      with open(test_dependencies_file, 'r', encoding='utf-8') as file_object:
         for dependency in dependency_reader.Read(file_object):
           self._test_dependencies[dependency.name] = dependency
 

@@ -101,7 +101,7 @@ class FishHistoryParser(interface.FileObjectParser):
       if not isinstance(last_executed, int):
         try:
           last_executed = int(last_executed, 10)
-        except (TypeError, ValueError) as exception:
+        except (TypeError, ValueError):
           parser_mediator.ProduceExtractionWarning(
               'Unsupported timestamp: {0!s} in history entry: {1:s}'.format(
                   last_executed, entry_index))

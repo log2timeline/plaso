@@ -223,6 +223,6 @@ class ParserPresetsManager(object):
     """
     self._definitions = {}
 
-    with open(path, 'r') as file_object:
+    with open(path, 'r', encoding='utf-8') as file_object:
       for preset_definition in self._ReadPresetsFromFileObject(file_object):
         self._definitions[preset_definition.name] = preset_definition

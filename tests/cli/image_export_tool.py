@@ -564,28 +564,29 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_json_data = [{
-          "sha256":
-          "553c231c45eda751710eabb479d08668f70464c14e60064190a7ec206f26b5f5",
-          "paths": ["bin" + os.path.sep + "bzcat"]
+          'sha256':
+          '553c231c45eda751710eabb479d08668f70464c14e60064190a7ec206f26b5f5',
+          'paths': [os.path.join('bin', 'bzcat')]
       }, {
-          "sha256":
-          "a106276270db8d3fe80a96dbb52f14f23f42a29bea12c68ac0f88d2e916471af",
-          "paths": ["bin" + os.path.sep + "echo", "home" + os.path.sep + "echo"]
+          'sha256':
+          'a106276270db8d3fe80a96dbb52f14f23f42a29bea12c68ac0f88d2e916471af',
+          'paths': [os.path.join('bin', 'echo'), os.path.join('home', 'echo')]
       }, {
-          "sha256":
-          "e21de6c5af94fa9d4e7f3295c8d25b93ab3d2d65982f5ef53c801669cc82dc47",
-          "paths": ["sbin" + os.path.sep + "visudo"]
+          'sha256':
+          'e21de6c5af94fa9d4e7f3295c8d25b93ab3d2d65982f5ef53c801669cc82dc47',
+          'paths': [os.path.join('sbin', 'visudo')]
       }, {
-          "sha256":
-          "129f4d0e36b38742fdfa8f1ea9a014818e4ce5c41d4a889435aecee58a1c7c39",
-          "paths": ["sbin" + os.path.sep + "tune2fs"]
+          'sha256':
+          '129f4d0e36b38742fdfa8f1ea9a014818e4ce5c41d4a889435aecee58a1c7c39',
+          'paths': [os.path.join('sbin', 'tune2fs')]
       }]
 
-      with open(os.path.join(temp_directory, 'hashes.json')) as json_file:
-        json_data = json.load(json_file)
+      hashes_file_path = os.path.join(temp_directory, 'hashes.json')
+      with open(hashes_file_path, 'r', encoding='utf-8') as file_object:
+        json_data = json.load(file_object)
 
-      json_data.sort(key=lambda d: d['sha256'])
-      expected_json_data.sort(key=lambda d: d['sha256'])
+      json_data.sort(key=lambda digest: digest['sha256'])
+      expected_json_data.sort(key=lambda digest: digest['sha256'])
       self.assertEqual(json_data, expected_json_data)
 
 
