@@ -69,8 +69,7 @@ class IOSSysdiagLogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
 
     expected_event_values = {
-        'body': (
-            'containermanagerd first boot cleanup complete'),
+        'body': 'containermanagerd first boot cleanup complete',
         'originating_call': '_containermanagerd_init_block_invoke',
         'process_identifier': '66',
         'severity': 'notice',

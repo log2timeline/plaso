@@ -35,6 +35,14 @@ short_message:
 - 'Layer ID: {layer_id}'
 ---
 type: 'conditional'
+data_type: 'ios:mobile_installation:line'
+message:
+- 'Originating call: {originating_call}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+---
+type: 'conditional'
 data_type: 'pe:compilation:compilation_time'
 message:
 - 'PE Type: {pe_type}'

@@ -27,8 +27,7 @@ class IOSSysdiagLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(
-        IOSSysdiagLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSSysdiagLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.originating_call = None
     self.process_identifier = None
