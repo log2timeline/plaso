@@ -81,8 +81,8 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
 
     else:
       parser_mediator.ProduceExtractionWarning(
-          "Event type {} is not supported by this plugin.".format(event_type))
-      event_data = None
+          "Unsupported event type: {0:s}.".format(event_type))
+      return
 
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
