@@ -186,7 +186,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       try:
         timestamp, event_data = self._ReadEntry(
             parser_mediator, file_object, file_offset)
-      except errors.ParseError as exception:
+      except errors.ParseError:
         break
 
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

@@ -70,7 +70,7 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     artifacts_path = getattr(options, 'artifact_definitions_path', None)
 
-    if ((not artifacts_path or not os.path.exists(artifacts_path)) and
+    if (not artifacts_path or not os.path.exists(artifacts_path)) and (
         configuration_object.data_location):
       artifacts_path = os.path.dirname(configuration_object.data_location)
       artifacts_path = os.path.join(artifacts_path, 'artifacts')

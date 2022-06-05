@@ -187,7 +187,7 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
           'No such OpenSearch mappings file: {0!s}.'.format(
               mappings_file_path))
 
-    with open(mappings_file_path, 'r') as file_object:
+    with open(mappings_file_path, 'r', encoding='utf-8') as file_object:
       mappings_json = json.load(file_object)
 
     output_module.SetMappings(mappings_json)

@@ -409,7 +409,7 @@ class TestLauncher(object):
       configuration_file (str): path of the configuration file.
     """
     self._test_definitions = []
-    with open(configuration_file) as file_object:
+    with open(configuration_file, 'r', encoding='utf-8') as file_object:
       test_definition_reader = TestDefinitionReader(
           self._tools_path, self._test_sources_path,
           self._test_references_path, self._test_results_path)
@@ -479,8 +479,9 @@ class StorageFileTestCase(TestCase):
             reference_output_file_path))
         return False
 
-      with open(reference_output_file_path, 'r') as reference_output_file:
-        with open(output_file_path, 'r') as output_file:
+      with open(reference_output_file_path, 'r',
+                encoding='utf8') as reference_output_file:
+        with open(output_file_path, 'r', encoding='utf8') as output_file:
           # Hack to remove paths in the output that are different when running
           # the tests under UNIX and Windows.
           reference_output_list = []
@@ -536,8 +537,8 @@ class StorageFileTestCase(TestCase):
         temp_directory, '{0:s}-pinfo.err'.format(test_definition.name))
     command = [self._pinfo_path, '--output-format', 'json', storage_file]
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -580,8 +581,8 @@ class StorageFileTestCase(TestCase):
     command = [
         self._pinfo_path, '--compare', reference_storage_file, storage_file]
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -648,8 +649,8 @@ class StorageFileTestCase(TestCase):
     command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -772,8 +773,8 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     command.extend(test_definition.profiling_options)
     command.extend(['--storage-file', storage_file, source_path])
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -970,8 +971,8 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     command.extend(['--status-view', 'none', '--unattended'])
     command.extend(test_definition.profiling_options)
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -1271,8 +1272,9 @@ class ImageExportTestCase(TestCase):
             reference_hashes_file_path))
         return False
 
-      with open(reference_hashes_file_path, 'r') as reference_hashes_file:
-        with open(hashes_file_path, 'r') as hashes_file:
+      with open(reference_hashes_file_path, 'r',
+                encoding='utf-8') as reference_hashes_file:
+        with open(hashes_file_path, 'r', encoding='utf-8') as hashes_file:
           reference_hashes_list = reference_hashes_file.readlines()
           hashes_list = hashes_file.readlines()
 
@@ -1318,9 +1320,10 @@ class ImageExportTestCase(TestCase):
             reference_hashes_json_file_path))
         return False
 
-      with open(reference_hashes_json_file_path, 'r') as (
-          reference_hashes_json_file):
-        with open(hashes_json_file_path, 'r') as hashes_json_file:
+      with open(reference_hashes_json_file_path, 'r',
+                encoding='utf-8') as reference_hashes_json_file:
+        with open(hashes_json_file_path, 'r',
+                  encoding='utf-8') as hashes_json_file:
           reference_hashes_list = reference_hashes_json_file.readlines()
 
           hashes_list = []
@@ -1429,8 +1432,8 @@ class ImageExportTestCase(TestCase):
     command.extend(test_definition.profiling_options)
     command.append(source_path)
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
+    with open(stdout_file, 'w', encoding='utf-8') as stdout:
+      with open(stderr_file, 'w', encoding='utf-8') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
@@ -2051,7 +2054,7 @@ def Main():
     return False
 
   tests = []
-  with open(options.config_file) as file_object:
+  with open(options.config_file, 'r', encoding='utf-8') as file_object:
     test_definition_reader = TestDefinitionReader(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=options.debug_output)

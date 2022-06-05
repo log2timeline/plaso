@@ -28,7 +28,7 @@ class YaraAnalyzerTest(shared_test_lib.BaseTestCase):
     yara_rules_path = self._GetTestFilePath(['rules.yara'])
     self._SkipIfPathNotExists(yara_rules_path)
 
-    with open(yara_rules_path, 'r') as file_object:
+    with open(yara_rules_path, 'r', encoding='utf-8') as file_object:
       return file_object.read()
 
   def testFileRuleParse(self):

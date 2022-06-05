@@ -56,7 +56,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       options.log_file = os.path.join(temp_directory, 'output.log')
       options.write = os.path.join(temp_directory, 'output.txt')
 
-      with open(options.write, 'w') as file_object:
+      with open(options.write, 'w', encoding='utf-8') as file_object:
         file_object.write('bogus')
 
       # Test when output file already exists.
@@ -103,7 +103,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      with open(options.write, 'w') as file_object:
+      with open(options.write, 'w', encoding='utf-8') as file_object:
         file_object.write('bogus')
 
       # Test when output file already exists.

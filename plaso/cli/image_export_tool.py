@@ -810,11 +810,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     json_data = []
 
     if not self._no_hashes:
-      with open(os.path.join(
-          self._destination_path, self._HASHES_FILENAME), 'w') as write_file:
+      hashes_file_path = os.path.join(
+          self._destination_path, self._HASHES_FILENAME)
+      with open(hashes_file_path, 'w', encoding='utf-8') as file_object:
         for sha256, paths in self._paths_by_hash.items():
           json_data.append({'sha256': sha256, 'paths': paths})
-        json.dump(json_data, write_file)
+        json.dump(json_data, file_object)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')
