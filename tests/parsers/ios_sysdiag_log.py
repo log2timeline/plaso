@@ -4,21 +4,21 @@
 
 import unittest
 
-from plaso.parsers import ios_mobile_installation_log
+from plaso.parsers import ios_sysdiag_log
 
 from tests.parsers import test_lib
 
 
-class IOSMobileInstallationLogParserTest(test_lib.ParserTestCase):
+class IOSSysdiagLogParserTest(test_lib.ParserTestCase):
   """Tests for the iOS Mobile Installation log parser"""
 
   def testParseLog(self):
     """Tests the Parse function"""
-    parser = ios_mobile_installation_log.IOSMobileInstallationLogParser()
-    storage_writer = self._ParseFile(['mobile_installation.log.0'], parser)
+    parser = ios_sysdiag_log.IOSSysdiagLogParser()
+    storage_writer = self._ParseFile(['ios_sysdiag.log'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 18)
+    self.assertEqual(number_of_events, 28)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -29,15 +29,13 @@ class IOSMobileInstallationLogParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'body': (
             'Ignoring plugin at /System/Library/PrivateFrameworks/'
-            'AccessibilityUtilities.framework/PlugIns/'
-            'com.apple.accessibility.Accessibility.HearingAidsTapToRadar.'
-            'appex due to validation issue(s). '
-            'See previous log messages for details.'),
+            'AccessibilityUtilities.framework/PlugIns/com.apple.accessibility.'
+            'Accessibility.HearingAidsTapToRadar.appex due to validation '
+            'issue(s). See previous log messages for details.'),
         'originating_call': (
-            'MILaunchServicesDatabaseGatherer '
+            '+[MILaunchServicesDatabaseGatherer '
             'enumeratePluginKitPluginsInBundle:updatingPluginParentID:'
-            'ensurePluginsAreExecutable:installProfiles:error:'
-            'enumerator:'),
+            'ensurePluginsAreExecutable:installProfiles:error:enumerator:]'),
         'process_identifier': '176',
         'severity': 'err',
         'timestamp': '2021-08-11 05:51:02.000000'}
@@ -63,12 +61,21 @@ class IOSMobileInstallationLogParserTest(test_lib.ParserTestCase):
             '000002a6 };\n} keyCount=22 keySample={ CFBundleName DTXcode '
             'DTSDKName DTSDKBuild '
             'CFBundleDevelopmentRegion }'),
-        'originating_call': 'MIBundle _validateWithError:',
+        'originating_call': '-[MIBundle _validateWithError:]',
         'process_identifier': '176',
         'severity': 'err',
         'timestamp': '2021-08-11 05:51:03.000000'}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)
+
+    expected_event_values = {
+        'body': 'containermanagerd first boot cleanup complete',
+        'originating_call': '_containermanagerd_init_block_invoke',
+        'process_identifier': '66',
+        'severity': 'notice',
+        'timestamp': '2021-01-17 11:20:29.000000'}
+
+    self.CheckEventValues(storage_writer, events[20], expected_event_values)
 
 
 if __name__ == '__main__':

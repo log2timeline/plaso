@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS mobile installation log files."""
+"""Parser for iOS sysdiag log files."""
 
 import pyparsing
 
@@ -13,8 +13,8 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class IOSMobileInstallationEventData(events.EventData):
-  """iOS mobile installation log event data.
+class IOSSysdiagLogEventData(events.EventData):
+  """iOS sysdiagnose log event data.
 
   Attributes:
     body (str): body of the event line.
@@ -23,23 +23,22 @@ class IOSMobileInstallationEventData(events.EventData):
     severity (str): severity of the message.
   """
 
-  DATA_TYPE = 'ios:mobile_installation:line'
+  DATA_TYPE = 'ios:sysdiag:log:line'
 
   def __init__(self):
     """Initializes event data."""
-    super(
-        IOSMobileInstallationEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSSysdiagLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.originating_call = None
     self.process_identifier = None
     self.severity = None
 
 
-class IOSMobileInstallationLogParser(text_parser.PyparsingMultiLineTextParser):
+class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS mobile installation log files."""
 
-  NAME = 'ios:mobile_installation:log'
-  DATA_FORMAT = 'iOS mobile installation log'
+  NAME = 'ios:sydiag:log'
+  DATA_FORMAT = 'iOS sysdiag log'
 
   MONTHS = {
       'Jan': 1,
@@ -81,15 +80,14 @@ class IOSMobileInstallationLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
       pyparsing.Suppress(')'))
 
-  _ELEMENT_ORIGINATOR = (
-      (pyparsing.Suppress('+[') | pyparsing.Suppress('-[')) +
-      pyparsing.SkipTo(pyparsing.Literal(']')).setResultsName(
-          'originating_call') +
-      pyparsing.Suppress(']: '))
+  _ELEMENT_ORIGINATOR = pyparsing.SkipTo(
+      pyparsing.Literal(': ')).setResultsName('originating_call')
 
   _BODY_END = pyparsing.StringEnd() | _TIMESTAMP
 
-  _ELEMENT_BODY = pyparsing.SkipTo(_BODY_END).setResultsName('body')
+  _ELEMENT_BODY = (
+      pyparsing.Optional(pyparsing.Suppress(pyparsing.Literal(': '))) +
+      pyparsing.SkipTo(_BODY_END).setResultsName('body'))
 
   _LINE_GRAMMAR = (
       _TIMESTAMP + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
@@ -123,7 +121,7 @@ class IOSMobileInstallationLogParser(text_parser.PyparsingMultiLineTextParser):
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
 
-    event_data = IOSMobileInstallationEventData()
+    event_data = IOSSysdiagLogEventData()
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
     event_data.severity = self._GetValueFromStructure(structure, 'severity')
@@ -158,4 +156,4 @@ class IOSMobileInstallationLogParser(text_parser.PyparsingMultiLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(IOSMobileInstallationLogParser)
+manager.ParsersManager.RegisterParser(IOSSysdiagLogParser)

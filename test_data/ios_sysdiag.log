@@ -18,3 +18,17 @@ Wed Aug 11 05:51:03 2021 [176] <err> (0x16bae7000) -[MIBundle _validateWithError
 Wed Aug 11 05:51:04 2021 [176] <notice> (0x16bae7000) -[MIContainer makeContainerLiveReplacingContainer:reason:waitForDeletion:withError:]: Made container live for com.apple.AppleMediaServices.FollowUpExtension at /private/var/mobile/Containers/Data/PluginKitPlugin/19375ED0-857C-4443-82C9-AF18585428D0
 Wed Aug 11 05:51:04 2021 [176] <notice> (0x16bae7000) -[MIContainer makeContainerLiveReplacingContainer:reason:waitForDeletion:withError:]: Made container live for com.apple.WorkflowKit.BackgroundShortcutRunner at /private/var/mobile/Containers/Data/PluginKitPlugin/DA5F4EF2-9E2F-4607-BECF-7EF4A5F216F4
 Wed Aug 11 05:51:04 2021 [176] <notice> (0x16bae7000) -[MIContainer makeContainerLiveReplacingContainer:reason:waitForDeletion:withError:]: Made container live for com.apple.WorkflowKit.ShortcutsIntents at /private/var/mobile/Containers/Data/PluginKitPlugin/3CC29067-C554-4202-855A-3D1E32FC259D
+Sun Jan 17 14:30:18 2021 [66] <notice> (0x16d0f7000) -[MCMCodeSigningMapping _onQueue_removeReferenceForGroupIdentifiers:ofType:commandQueue:]: Would have removed system group container references for (
+    "systemgroup.com.apple.configurationprofiles"
+)
+Sun Jan 17 14:30:18 2021 [66] <notice> (0x16d0f7000) -[MCMCodeSigningMapping _onQueue_removeReferenceForGroupIdentifiers:ofType:commandQueue:]: Would have removed system group container references for (
+    "systemgroup.com.apple.configurationprofiles"
+)
+Sun Jan 17 11:20:29 2021 [66] <notice> (0x16d183000) _containermanagerd_init_block_invoke: containermanagerd first boot cleanup complete
+Sun Jan 17 11:20:39 2021 [66] <notice> (0x16d20f000) _containermanagerd_init_block_invoke: containermanagerd cleanup complete
+Sun Jan 17 11:20:41 2021 [66] <err> (0x16d327000) server_get_process_containers: Invalid data container class for com.apple.mobilesafari: 0
+Sun Jan 17 11:20:41 2021 [66] <notice> (0x16d327000) server_get_process_containers: SB Type: 0, falling back to class: 2
+Fri Feb  5 18:03:23 2021 [1272] <notice> (0x16b663000) -[ACXRemoteAppList remoteDeviceConnected]_block_invoke: Remote device connected
+Mon Oct 25 07:05:03 2021 [145] <debug> (0x16d6d7000) MA: main: soc_generation: H11
+Mon Oct 25 07:05:03 2021 [145] <debug> (0x16d6d7000) MA: main: ____________________________________________________________________
+Wed Aug 11 05:51:27 2021 [178] <notice> (0x16cfbf000) -[MIFileManager _stageURLByCopying:toItemName:inStagingDir:stagingMode:settingUID:gid:hasSymlink:error:]_block_invoke: Preserving compressed bit on /private/var/containers/Shared/SystemGroup/systemgroup.com.apple.installcoordinationd/Library/InstallCoordination/PromiseStaging/C15EEEBC-6A1C-4A7A-A6E8-C9876BB32E92/Notes.app/PlugIns/com.apple.mobilenotes.WidgetExtension.appex/PlaceholderEntitlements.plist

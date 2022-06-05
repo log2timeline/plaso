@@ -44,7 +44,7 @@ short_message:
 - 'Body: {body}'
 ---
 type: 'conditional'
-data_type: 'ios:mobile_installation:line'
+data_type: 'ios:sysdiag:log:line'
 message:
 - 'Originating call: {originating_call}'
 - 'Body: {body}'
