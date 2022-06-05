@@ -404,6 +404,23 @@ short_message:
 - 'Author: {author}'
 ---
 type: 'conditional'
+data_type: microsoft365:auditlog:entry
+message:
+- 'User {user_identifier}'
+- 'performed {operation_name}'
+- 'from {client_ip}'
+- 'on {workload}'
+- 'Result Status: {result_status}'
+- 'Record Type: {record_type}'
+short_message:
+- 'User {user_identifier}'
+- 'performed {operation_name}'
+- 'from {client_ip}'
+- 'on {workload}'
+- 'Result Status: {result_status}'
+- 'Record Type: {record_type}'
+---
+type: 'conditional'
 data_type: 'networkminer:fileinfos:file'
 message:
 - 'Source IP: {source_ip}'
