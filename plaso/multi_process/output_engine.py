@@ -464,8 +464,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
-    output_module.SetStorageReader(storage_reader)
-
     if storage_reader.HasAttributeContainers('parser_count'):
       parsers_counter = {
           parser_count.name: parser_count.number_of_events

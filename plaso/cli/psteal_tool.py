@@ -346,7 +346,7 @@ class PstealTool(
           logger.warning('Unable to to set preferred language: {0!s}.'.format(
               preferred_language))
 
-      self._output_module.SetStorageReader(storage_reader)
+      self._output_mediator.SetStorageReader(storage_reader)
 
       # TODO: add single process output and formatting engine support.
       output_engine = (
