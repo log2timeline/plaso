@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ips file parser plugin for Apple Crash logs."""
+"""IPS file parser plugin for Apple Crash logs."""
 
 import pyparsing
 
@@ -51,11 +51,11 @@ class ApplicationCrashLogEventData(events.EventData):
     self.user_identifier = None
 
 
-class ApplicationCrashLogsPlugin(interface.IpsPlugin):
-  """Parses Apple Crash logs from ips file."""
+class ApplicationCrashLogsPlugin(interface.IPSPlugin):
+  """Parses Apple Crash logs from IPS file."""
 
   NAME = 'apple_crash_log'
-  DATA_FORMAT = 'ips application crash log'
+  DATA_FORMAT = 'IPS application crash log'
 
   REQUIRED_HEADER_KEYS = [
       'app_name', 'app_version', 'bug_type', 'bundleID', 'incident_id',
@@ -75,9 +75,9 @@ class ApplicationCrashLogsPlugin(interface.IpsPlugin):
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an ips log file.
+    """Extracts information from an IPS log file.
 
-    This is the main method that an ips plugin needs to implement.
+    This is the main method that an IPS plugin needs to implement.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -140,4 +140,4 @@ class ApplicationCrashLogsPlugin(interface.IpsPlugin):
     parser_mediator.ProduceEventWithEventData(start_event, event_data)
 
 
-ips_parser.IpsParser.RegisterPlugin(ApplicationCrashLogsPlugin)
+ips_parser.IPSParser.RegisterPlugin(ApplicationCrashLogsPlugin)

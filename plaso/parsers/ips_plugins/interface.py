@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Interface for ips log file parser plugins."""
+"""Interface for IPS log file parser plugins."""
 import abc
 
 from plaso.parsers import plugins
 
 
-class IpsPlugin(plugins.BasePlugin):
-  """ips file parser plugin."""
+class IPSPlugin(plugins.BasePlugin):
+  """IPS file parser plugin."""
 
   NAME = 'ips_plugin'
   DATA_FORMAT = 'ips log file'
@@ -19,7 +19,7 @@ class IpsPlugin(plugins.BasePlugin):
     the plugin.
 
     Args:
-      ips_file (IpsFile): the file for which the structure is checked.
+      ips_file (IPSFile): the file for which the structure is checked.
 
     Returns:
       bool: True if the file has the required keys defined by the plugin, or
@@ -52,7 +52,7 @@ class IpsPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      ips_file (Optional[IpsFile]): database.
+      ips_file (Optional[IPSFile]): database.
 
     Raises:
       ValueError: If the file value is missing.

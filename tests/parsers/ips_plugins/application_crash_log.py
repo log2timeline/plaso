@@ -9,12 +9,12 @@ from plaso.parsers import ips_parser
 from tests.parsers.ips_plugins import test_lib
 
 
-class AppleCrashLogPluginTest(test_lib.IpsPluginTestCase):
+class AppleCrashLogPluginTest(test_lib.IPSPluginTestCase):
   """Tests for ips log parser plugin for Apple Crash Log files."""
 
   def testProcess(self):
     """Tests the Process function."""
-    parser = ips_parser.IpsParser()
+    parser = ips_parser.IPSParser()
     storage_writer = self._ParseFile(
         ['ips', 'application_crash_log.ips'], parser)
 

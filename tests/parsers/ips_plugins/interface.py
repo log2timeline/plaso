@@ -9,8 +9,8 @@ from plaso.parsers.ips_plugins import interface
 from tests.parsers.ips_plugins import test_lib
 
 
-class TestIpsPlugin(interface.IpsPlugin):
-  """Ips plugin for test purposes."""
+class TestIPSPlugin(interface.IPSPlugin):
+  """IPS plugin for test purposes."""
 
   NAME = 'test'
   DATA_FORMAT = 'ips test log'
@@ -20,7 +20,7 @@ class TestIpsPlugin(interface.IpsPlugin):
 
   def __int__(self):
     """Initializes"""
-    super(TestIpsPlugin, self).__init__()
+    super(TestIPSPlugin, self).__init__()
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
@@ -31,21 +31,21 @@ class TestIpsPlugin(interface.IpsPlugin):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      ips_file (Optional[IpsFile]): database.
+      ips_file (Optional[IPSFile]): database.
 
     Raises:
       ValueError: If the file value is missing.
     """
 
 
-class IpsInterfaceTest(test_lib.IpsPluginTestCase):
+class IPSInterfaceTest(test_lib.IPSPluginTestCase):
   """Tests for the ips plugin interface"""
 
   def testCheckRequiredKeys(self):
     """Tests the CheckRequiredKeys function."""
-    plugin = TestIpsPlugin()
+    plugin = TestIPSPlugin()
 
-    _, ips_file = self._OpenIpsFile(['ips', 'application_crash_log.ips'])
+    _, ips_file = self._OpenIPSFile(['ips', 'application_crash_log.ips'])
 
     required_key_present = plugin.CheckRequiredKeys(ips_file)
     self.assertTrue(required_key_present)

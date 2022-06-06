@@ -11,8 +11,8 @@ from plaso.parsers import ips_plugins  # pylint: disable=unused-import
 from tests.parsers import test_lib
 
 
-class IpsFileTest(test_lib.ParserTestCase):
-  """Tests for the ips log file."""
+class IPSFileTest(test_lib.ParserTestCase):
+  """Tests for the IPS log file."""
 
   def testOpen(self):
     """Tests the Open function."""
@@ -20,17 +20,19 @@ class IpsFileTest(test_lib.ParserTestCase):
         ['ips', 'application_crash_log.ips'])
     self._SkipIfPathNotExists(ips_log_path)
 
-    ips_log_file = ips_parser.IpsFile()
+    ips_log_file = ips_parser.IPSFile()
 
-    with open(ips_log_path, 'r') as ips_file_object:
+    with open(ips_log_path, 'r', encoding='utf-8') as ips_file_object:
       ips_log_file.Open(ips_file_object)
 
-      assert list(ips_log_file.header.keys()) == [
+      expected_header_keys = [
           'app_name', 'timestamp', 'app_version', 'slice_uuid', 'adam_id',
           'build_version', 'platform', 'bundleID', 'share_with_app_devs',
           'is_first_party', 'bug_type', 'os_version', 'incident_id', 'name']
 
-      assert list(ips_log_file.content.keys()) == [
+      self.assertEqual(list(ips_log_file.header.keys()), expected_header_keys)
+
+      expected_content_keys = [
           'uptime', 'procLaunch', 'procRole', 'version', 'userID',
           'deployVersion', 'modelCode', 'procStartAbsTime', 'coalitionID',
           'osVersion', 'captureTime', 'incident', 'bug_type', 'pid',
@@ -40,15 +42,17 @@ class IpsFileTest(test_lib.ParserTestCase):
           'faultingThread', 'threads', 'usedImages', 'sharedCache', 'vmSummary',
           'legacyInfo', 'trialInfo']
 
+      self.assertEqual(list(ips_log_file.content.keys()), expected_content_keys)
 
-class IpsParserTest(test_lib.ParserTestCase):
-  """Tests for the ips file parser."""
+
+class IPSParserTest(test_lib.ParserTestCase):
+  """Tests for the IPS file parser."""
 
   # pylint: disable=protected-access
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser = ips_parser.IpsParser()
+    parser = ips_parser.IPSParser()
 
     number_of_plugins = len(parser._plugin_classes)
 

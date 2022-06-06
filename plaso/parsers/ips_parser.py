@@ -1,31 +1,32 @@
 # -*- coding: utf-8 -*-
-"""Parser for ips formatted log files. Each file is a single event."""
+"""Parser for IPS formatted log files. These files are used by Apple in iOS
+(15 and later) and MacOS (12 and later). Each file is a single event."""
 
 import json
 import re
 import yaml
 
-from yaml.scanner import ScannerError
+from yaml import scanner
 
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class IpsFile(object):
-  """ips log file"""
+class IPSFile(object):
+  """IPS log file"""
 
   def __init__(self):
-    """Initializes an ips log """
-    super(IpsFile, self).__init__()
+    """Initializes an IPS log"""
+    super(IPSFile, self).__init__()
     self.header = None
     self.content = None
 
   def GetContent(self, raw_content):
     """Extracts the header from the raw content into a json structure.
 
-      Agrs:
-        raw_content (str): content of the ips log as a string
+    Args:
+      raw_content (str): content of the IPS log as a string
     """
     if not isinstance(raw_content, str):
       return None
@@ -36,7 +37,7 @@ class IpsFile(object):
         structured_content = yaml.safe_load(content.group(1))
         return structured_content
 
-      except (ScannerError, AttributeError):
+      except (scanner.ScannerError, AttributeError):
         return None
 
     return None
@@ -45,7 +46,7 @@ class IpsFile(object):
     """Extracts the header from the raw content into a json structure.
 
       Agrs:
-        raw_content (str): content of the ips log as a string
+        raw_content (str): content of the IPS log as a string
     """
     if not isinstance(raw_content, str):
       return None
@@ -63,7 +64,7 @@ class IpsFile(object):
     return None
 
   def Open(self, file_object):
-    """Opens an ips log file.
+    """Opens an IPS log file.
 
       Args:
       file_object (dfvfs.FileIO): file-like object.
@@ -86,22 +87,22 @@ class IpsFile(object):
     self.content = self.GetContent(raw_content)
 
 
-class IpsParser(interface.FileEntryParser):
-  """Parses ips formatted log files."""
+class IPSParser(interface.FileEntryParser):
+  """Parses IPS formatted log files."""
 
   NAME = 'ips'
-  DATA_FORMAT = 'ips log file'
+  DATA_FORMAT = 'IPS log file'
 
   _plugin_classes = {}
 
   def _ParseFileEntryWithPlugin(
       self, parser_mediator, plugin, ips_file, display_name):
-    """Parses an ips log  file entry with a specific plugin.
+    """Parses an IPS log  file entry with a specific plugin.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      plugin (IpsPLlugin): ips parser plugin.
-      ips_file (IpsFile): ips file.
+      plugin (IPSPlugin): IPS parser plugin.
+      ips_file (IPSFile): IPS file.
       display_name (str): display name.
     """
     required_keys_exists = plugin.CheckRequiredKeys(ips_file)
@@ -119,17 +120,17 @@ class IpsParser(interface.FileEntryParser):
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
-          'plugin: {0:s} unable to parse ips file with error: '
+          'plugin: {0:s} unable to parse IPS file with error: '
           '{1!s}').format(plugin.NAME, exception))
 
   def ParseFileEntry(self, parser_mediator, file_entry):
-    """Parses an ips formatted log file entry.
+    """Parses an IPS formatted log file entry.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry to be parsed.
     """
-    ips_file = IpsFile()
+    ips_file = IPSFile()
     file_object = file_entry.GetFileObject()
 
     display_name = parser_mediator.GetDisplayName()
@@ -151,8 +152,8 @@ class IpsParser(interface.FileEntryParser):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse ips file with error: '
+            'plugin: {0:s} unable to parse IPS file with error: '
             '{1!s}').format(plugin.NAME, exception))
 
 
-manager.ParsersManager.RegisterParser(IpsParser)
+manager.ParsersManager.RegisterParser(IPSParser)

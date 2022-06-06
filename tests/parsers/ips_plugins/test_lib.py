@@ -6,10 +6,10 @@ from plaso.parsers import ips_parser
 from tests.parsers import test_lib
 
 
-class IpsPluginTestCase(test_lib.ParserTestCase):
+class IPSPluginTestCase(test_lib.ParserTestCase):
   """ips parser plugin test case."""
 
-  def _OpenIpsFile(self, path_segments):
+  def _OpenIPSFile(self, path_segments):
     """Opens an ips log file.
 
     Args:
@@ -27,7 +27,7 @@ class IpsPluginTestCase(test_lib.ParserTestCase):
 
     file_entry = self._GetTestFileEntry(path_segments)
 
-    ips_file = ips_parser.IpsFile()
+    ips_file = ips_parser.IPSFile()
     file_object = file_entry.GetFileObject()
 
     ips_file.Open(file_object)
