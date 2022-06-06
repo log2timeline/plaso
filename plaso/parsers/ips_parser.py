@@ -23,10 +23,13 @@ class IPSFile(object):
     self.content = None
 
   def GetContent(self, raw_content):
-    """Extracts the header from the raw content into a json structure.
+    """Extracts the header from the raw content into a JSON structure.
 
     Args:
       raw_content (str): content of the IPS log as a string
+
+    Returns:
+      structured_content: content in a JSON structure
     """
     if not isinstance(raw_content, str):
       return None
@@ -43,10 +46,13 @@ class IPSFile(object):
     return None
 
   def GetHeader(self, raw_content):
-    """Extracts the header from the raw content into a json structure.
+    """Extracts the header from the raw content into a JSON structure.
 
       Agrs:
         raw_content (str): content of the IPS log as a string
+
+      Return:
+        structured_header: header in a JSON structure
     """
     if not isinstance(raw_content, str):
       return None
