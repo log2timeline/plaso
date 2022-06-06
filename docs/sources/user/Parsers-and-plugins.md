@@ -10,6 +10,7 @@ aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 bencode | Parser for Bencoded files.
 binary_cookies | Parser for Safari Binary Cookie files.
+bodyfile | Parser for SleuthKit version 3 bodyfile.
 bsm_log | Parser for Basic Security Module (BSM) event auditing files.
 chrome_cache | Parser for Google Chrome or Chromium Cache files.
 chrome_preferences | Parser for Google Chrome Preferences files.
@@ -35,7 +36,6 @@ locate_database | Parser for Locate database file (updatedb).
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_keychain | Parser for MacOS keychain database files.
 mac_securityd | Parser for MacOS security daemon (securityd) log files.
-mactime | Parser for SleuthKit version 3 bodyfile.
 macwifi | Parser for MacOS Wifi log (wifi.log) files.
 mcafee_protection | Parser for McAfee Anti-Virus access protection log files.
 mft | Parser for NTFS $MFT metadata files.

@@ -34,6 +34,11 @@ short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
 ---
+type: 'basic'
+data_type: 'fs:mactime:line'
+message: '{filename}'
+short_message: '{filename}'
+---
 type: 'conditional'
 data_type: 'ios:mobile_installation:line'
 message:

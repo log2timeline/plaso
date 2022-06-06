@@ -8,6 +8,7 @@ from plaso.parsers import apt_history
 from plaso.parsers import aws_elb_access
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
+from plaso.parsers import bodyfile
 from plaso.parsers import bsm
 from plaso.parsers import chrome_cache
 from plaso.parsers import chrome_preferences
@@ -33,7 +34,6 @@ from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain
 from plaso.parsers import mac_securityd
 from plaso.parsers import mac_wifi
-from plaso.parsers import mactime
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer

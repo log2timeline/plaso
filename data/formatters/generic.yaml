@@ -173,7 +173,7 @@ message: 'Command executed: {command}'
 short_message: '{command}'
 ---
 type: 'basic'
-data_type: 'fs:mactime:line'
+data_type: 'fs:bodyfile:entry'
 message: '{filename}'
 short_message: '{filename}'
 ---

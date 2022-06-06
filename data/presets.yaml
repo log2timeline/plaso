@@ -16,6 +16,13 @@ parsers:
 - sqlite/chrome_66_cookies
 - sqlite/skype
 ---
+name: dockerjson
+description: Preset for backwards compatibility of Docker JSON parser.
+parsers:
+- jsonl/docker_container_config
+- jsonl/docker_container_log
+- jsonl/docker_layer_config
+---
 name: linux
 description: Preset for Linux.
 operating_systems:
@@ -83,12 +90,10 @@ parsers:
 - webhist
 - zsh_extended_history
 ---
-name: dockerjson
-description: Preset for backwards compatibility of Docker JSON parser.
+name: mactime
+description: Backward compatibility for mactime parser.
 parsers:
-- jsonl/docker_container_config
-- jsonl/docker_container_log
-- jsonl/docker_layer_config
+- bodyfile
 ---
 name: webhist
 description: Preset for Web history.

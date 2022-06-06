@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Sleuthkit (TSK) mactime bodyfile format.
+"""Parser for the Sleuthkit (TSK) bodyfile format.
 
 Sleuthkit version 3 format:
 MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
@@ -24,13 +24,14 @@ from plaso.parsers import manager
 
 
 # TODO: refactor to pass user_sid as an int.
-class MactimeEventData(events.EventData):
-  """Mactime event data.
+class BodyfileEventData(events.EventData):
+  """Bodyfile event data.
 
   Attributes:
     filename (str): name of the file.
     inode (int): "inode" of the file. Note that inode is an overloaded term
-        in the context of mactime and used for MFT entry index values as well.
+        in the context of a bodyfile and used for MFT entry index values as
+        well.
     md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
     mode_as_string (str): protection mode.
     offset (int): number of the corresponding line, from which the event data
@@ -41,11 +42,11 @@ class MactimeEventData(events.EventData):
     user_sid (str): user security identifier (SID).
   """
 
-  DATA_TYPE = 'fs:mactime:line'
+  DATA_TYPE = 'fs:bodyfile:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(MactimeEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(BodyfileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
     self.inode = None
     self.md5 = None
@@ -57,10 +58,10 @@ class MactimeEventData(events.EventData):
     self.user_sid = None
 
 
-class MactimeParser(interface.FileObjectParser):
+class BodyfileParser(interface.FileObjectParser):
   """SleuthKit bodyfile parser."""
 
-  NAME = 'mactime'
+  NAME = 'bodyfile'
   DATA_FORMAT = 'SleuthKit version 3 bodyfile'
 
   _INITIAL_FILE_OFFSET = 0
@@ -163,7 +164,7 @@ class MactimeParser(interface.FileObjectParser):
     return float_value
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a mactime bodyfile file-like object.
+    """Parses a bodyfile file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -173,8 +174,8 @@ class MactimeParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    # Note that we cannot use the DSVParser here since the mactime bodyfile
-    # format is not strict and clean file format.
+    # Note that we cannot use the DSVParser here since the bodyfile format is
+    # not strict and clean file format.
     line_reader = text_file.TextFile(
         file_object, encoding='UTF-8', end_of_line='\n')
 
@@ -227,7 +228,7 @@ class MactimeParser(interface.FileObjectParser):
             parser_mediator, values, 'user identifier (UID)', line_number)
 
         if uid_value is not None:
-          # Note that the user_sid attribute of MactimeEventData is expected to
+          # Note that the user_sid attribute of BodyfileEventData is expected to
           # be a string or None.
           uid_value = '{0:d}'.format(uid_value)
 
@@ -271,7 +272,7 @@ class MactimeParser(interface.FileObjectParser):
             ' -> ' in filename):
           filename, _, symbolic_link_target = filename.rpartition(' -> ')
 
-        event_data = MactimeEventData()
+        event_data = BodyfileEventData()
         event_data.filename = filename
         event_data.inode = inode_value
         event_data.md5 = md5_value
@@ -323,4 +324,4 @@ class MactimeParser(interface.FileObjectParser):
         break
 
 
-manager.ParsersManager.RegisterParser(MactimeParser)
+manager.ParsersManager.RegisterParser(BodyfileParser)
