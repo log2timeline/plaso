@@ -2,7 +2,6 @@
 """The multi-process extraction worker process."""
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver
 
@@ -287,13 +286,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
       extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
-
-    except dfvfs_errors.CacheFullError:
-      # TODO: signal engine of failure.
-      self._abort = True
-      logger.error((
-          'ABORT: detected cache full error while processing path spec: '
-          '{0:s}').format(self._current_display_name))
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
