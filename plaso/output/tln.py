@@ -23,17 +23,18 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'source': '_FormatSourceShort',
       'time': '_FormatTimestamp',
       'tz': '_FormatTimeZone',
-      'user': '_FormatUsername',
-  }
+      'user': '_FormatUsername'}
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
-  def _FormatDescription(self, event, event_data, event_data_stream):
+  def _FormatDescription(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a description field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -46,19 +47,21 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
           type in the event data.
     """
     date_time_string = self._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     timestamp_description = event.timestamp_desc or 'UNKNOWN'
 
-    message = self._FormatMessage(event, event_data, event_data_stream)
+    message = self._FormatMessage(
+        output_mediator, event, event_data, event_data_stream)
     message = message.replace(self._DESCRIPTION_FIELD_DELIMITER, ' ')
 
     return '{0:s}; {1:s}; {2:s}'.format(
         date_time_string, timestamp_description, message)
 
-  def _FormatNotes(self, event, event_data, event_data_stream):
+  def _FormatNotes(self, output_mediator, event, event_data, event_data_stream):
     """Formats a notes field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -66,12 +69,13 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
      Returns:
        str: formatted notes field.
     """
-    inode = self._FormatInode(event, event_data, event_data_stream)
+    inode = self._FormatInode(
+        output_mediator, event, event_data, event_data_stream)
 
     notes = getattr(event_data, 'notes', '')
     if not notes:
       display_name = self._FormatDisplayName(
-          event, event_data, event_data_stream)
+          output_mediator, event, event_data, event_data_stream)
       notes = 'File: {0:s}'.format(display_name)
 
       if inode != '-':
@@ -79,10 +83,12 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return notes
 
-  def _FormatTimestamp(self, event, event_data, event_data_stream):
+  def _FormatTimestamp(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a timestamp.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -96,6 +102,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       posix_timestamp, _ = divmod(event.timestamp, 1000000)
 
     return '{0:d}'.format(posix_timestamp or 0)
+
+  # pylint: enable=unused-argument
 
 
 class TLNOutputModule(shared_dsv.DSVOutputModule):
@@ -122,7 +130,7 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    field_formatting_helper = TLNFieldFormattingHelper(output_mediator)
+    field_formatting_helper = TLNFieldFormattingHelper()
     super(TLNOutputModule, self).__init__(
         output_mediator, field_formatting_helper, self._FIELD_NAMES,
         delimiter='|', header=self._HEADER)
@@ -157,7 +165,7 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    field_formatting_helper = TLNFieldFormattingHelper(output_mediator)
+    field_formatting_helper = TLNFieldFormattingHelper()
     super(L2TTLNOutputModule, self).__init__(
         output_mediator, field_formatting_helper, self._FIELD_NAMES,
         delimiter='|', header=self._HEADER)

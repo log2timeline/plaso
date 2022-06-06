@@ -48,19 +48,14 @@ class FieldFormattingHelper(object):
   # Maps the name of a field to callback function that formats the field value.
   _FIELD_FORMAT_CALLBACKS = {}
 
-  def __init__(self, output_mediator):
-    """Initializes a field formatting helper.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-    """
+  def __init__(self):
+    """Initializes a field formatting helper."""
     event_data_stream = events.EventDataStream()
 
     super(FieldFormattingHelper, self).__init__()
     self._callback_functions = {}
     self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
     self._event_tag_field_names = []
-    self._output_mediator = output_mediator
     self._source_mappings = {}
     self._winevt_resources_helper = None
 
@@ -75,10 +70,12 @@ class FieldFormattingHelper(object):
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
-  def _FormatDateTime(self, event, event_data, event_data_stream):
+  def _FormatDateTime(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a date and time field in ISO 8601 format.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -86,7 +83,7 @@ class FieldFormattingHelper(object):
     Returns:
       str: date and time field with time zone offset, semantic time.
     """
-    if self._output_mediator.dynamic_time and event.date_time:
+    if output_mediator.dynamic_time and event.date_time:
       iso8601_string = getattr(event.date_time, 'string', None)
       if iso8601_string:
         return iso8601_string
@@ -108,8 +105,7 @@ class FieldFormattingHelper(object):
       if iso8601_string[-1] == 'Z':
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
 
-      if (self._output_mediator.timezone != pytz.UTC or
-          date_time.time_zone_offset):
+      if output_mediator.timezone != pytz.UTC or date_time.time_zone_offset:
         # For output in a specific time zone overwrite the date, time in
         # seconds and time zone offset in the UTC ISO8601 string.
         year, month, day_of_month, hours, minutes, seconds = (
@@ -120,8 +116,7 @@ class FieldFormattingHelper(object):
               year, month, day_of_month, hours, minutes, seconds,
               tzinfo=pytz.UTC)
 
-          datetime_object = datetime_object.astimezone(
-              self._output_mediator.timezone)
+          datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
           isoformat_string = datetime_object.isoformat()
           iso8601_string = ''.join([
@@ -133,7 +128,7 @@ class FieldFormattingHelper(object):
     else:
       # For now check if event.timestamp is set, to mimic existing behavior of
       # using 0000-00-00T00:00:00.000000+00:00 for 0 timestamp values
-      if not self._output_mediator.dynamic_time and not event.timestamp:
+      if not output_mediator.dynamic_time and not event.timestamp:
         return '0000-00-00T00:00:00.000000+00:00'
 
       date_time = event.date_time
@@ -151,8 +146,7 @@ class FieldFormattingHelper(object):
         datetime_object = datetime.datetime(1970, 1, 1) + datetime.timedelta(
             seconds=number_of_seconds)
 
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
         iso8601_string = datetime_object.isoformat()
         iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
@@ -167,13 +161,15 @@ class FieldFormattingHelper(object):
 
     return iso8601_string
 
-  def _FormatDisplayName(self, event, event_data, event_data_stream):
+  def _FormatDisplayName(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats the display name.
 
     The display_name field can be set as an attribute to event_data otherwise
     it is derived from the path specification.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -188,20 +184,21 @@ class FieldFormattingHelper(object):
         path_spec = getattr(event_data, 'pathspec', None)
 
       if path_spec:
-        display_name = self._output_mediator.GetDisplayNameForPathSpec(
-            path_spec)
+        display_name = output_mediator.GetDisplayNameForPathSpec(path_spec)
       else:
         display_name = '-'
 
     return display_name
 
-  def _FormatFilename(self, event, event_data, event_data_stream):
+  def _FormatFilename(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats the filename.
 
     The filename field can be set as an attribute to event_data otherwise
     it is derived from the path specification.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -216,16 +213,18 @@ class FieldFormattingHelper(object):
         path_spec = getattr(event_data, 'pathspec', None)
 
       if path_spec:
-        filename = self._output_mediator.GetRelativePathForPathSpec(path_spec)
+        filename = output_mediator.GetRelativePathForPathSpec(path_spec)
       else:
         filename = '-'
 
     return filename
 
-  def _FormatHostname(self, event, event_data, event_data_stream):
+  def _FormatHostname(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a hostname field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -233,12 +232,13 @@ class FieldFormattingHelper(object):
     Returns:
       str: hostname field.
     """
-    return self._output_mediator.GetHostname(event_data)
+    return output_mediator.GetHostname(event_data)
 
-  def _FormatInode(self, event, event_data, event_data_stream):
+  def _FormatInode(self, output_mediator, event, event_data, event_data_stream):
     """Formats an inode field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -280,10 +280,11 @@ class FieldFormattingHelper(object):
 
     return inode
 
-  def _FormatMACB(self, event, event_data, event_data_stream):
+  def _FormatMACB(self, output_mediator, event, event_data, event_data_stream):
     """Formats a legacy MACB representation field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -291,12 +292,14 @@ class FieldFormattingHelper(object):
     Returns:
       str: MACB field.
     """
-    return self._output_mediator.GetMACBRepresentation(event, event_data)
+    return output_mediator.GetMACBRepresentation(event, event_data)
 
-  def _FormatMessage(self, event, event_data, event_data_stream):
+  def _FormatMessage(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a message field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -310,7 +313,7 @@ class FieldFormattingHelper(object):
       WrongFormatter: if the event data cannot be formatted by the message
           formatter.
     """
-    message_formatter = self._output_mediator.GetMessageFormatter(
+    message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((
@@ -322,14 +325,16 @@ class FieldFormattingHelper(object):
 
     if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
       event_values['message_string'] = self._FormatWindowsEventLogMessage(
-          event, event_data, event_data_stream)
+          output_mediator, event, event_data, event_data_stream)
 
     return message_formatter.GetMessage(event_values)
 
-  def _FormatMessageShort(self, event, event_data, event_data_stream):
+  def _FormatMessageShort(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a short message field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -343,7 +348,7 @@ class FieldFormattingHelper(object):
       WrongFormatter: if the event data cannot be formatted by the message
           formatter.
     """
-    message_formatter = self._output_mediator.GetMessageFormatter(
+    message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((
@@ -355,14 +360,16 @@ class FieldFormattingHelper(object):
 
     if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
       event_values['message_string'] = self._FormatWindowsEventLogMessage(
-          event, event_data, event_data_stream)
+          output_mediator, event, event_data, event_data_stream)
 
     return message_formatter.GetMessageShort(event_values)
 
-  def _FormatSource(self, event, event_data, event_data_stream):
+  def _FormatSource(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a source field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -375,7 +382,7 @@ class FieldFormattingHelper(object):
           type in the event data.
     """
     if not self._source_mappings:
-      self._ReadSourceMappings()
+      self._ReadSourceMappings(output_mediator)
 
     data_type = getattr(event_data, 'data_type', 'default')
     _, source = self._source_mappings.get(data_type, (None, None))
@@ -384,10 +391,12 @@ class FieldFormattingHelper(object):
 
     return source
 
-  def _FormatSourceShort(self, event, event_data, event_data_stream):
+  def _FormatSourceShort(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a short source field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -400,7 +409,7 @@ class FieldFormattingHelper(object):
           type in the event data.
     """
     if not self._source_mappings:
-      self._ReadSourceMappings()
+      self._ReadSourceMappings(output_mediator)
 
     data_type = getattr(event_data, 'data_type', None)
     source_short, _ = self._source_mappings.get(data_type, (None, None))
@@ -409,10 +418,11 @@ class FieldFormattingHelper(object):
 
     return source_short
 
-  def _FormatTag(self, event_tag):
+  def _FormatTag(self, output_mediator, event_tag):
     """Formats an event tag field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_tag (EventTag): event tag or None if not set.
 
     Returns:
@@ -423,10 +433,11 @@ class FieldFormattingHelper(object):
 
     return ' '.join(event_tag.labels)
 
-  def _FormatTime(self, event, event_data, event_data_stream):
+  def _FormatTime(self, output_mediator, event, event_data, event_data_stream):
     """Formats a time field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -447,14 +458,13 @@ class FieldFormattingHelper(object):
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if self._output_mediator.timezone != pytz.UTC:
+    if output_mediator.timezone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
 
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
         hours, minutes, seconds = (
             datetime_object.hour, datetime_object.minute,
@@ -471,10 +481,12 @@ class FieldFormattingHelper(object):
 
     return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
 
-  def _FormatTimeZone(self, event, event_data, event_data_stream):
+  def _FormatTimeZone(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a time zone field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -490,7 +502,7 @@ class FieldFormattingHelper(object):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
-    if self._output_mediator.timezone == pytz.UTC:
+    if output_mediator.timezone == pytz.UTC:
       return 'UTC'
 
     year, month, day_of_month, hours, minutes, seconds = (
@@ -501,7 +513,7 @@ class FieldFormattingHelper(object):
       # a time zone).
       datetime_object = datetime.datetime(
           year, month, day_of_month, hours, minutes, seconds)
-      return self._output_mediator.timezone.tzname(datetime_object)
+      return output_mediator.timezone.tzname(datetime_object)
 
     except (OverflowError, TypeError, ValueError):
       self._ReportEventError(event, event_data, (
@@ -510,10 +522,12 @@ class FieldFormattingHelper(object):
 
       return '-'
 
-  def _FormatUsername(self, event, event_data, event_data_stream):
+  def _FormatUsername(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats an username field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -521,12 +535,14 @@ class FieldFormattingHelper(object):
     Returns:
       str: username field.
     """
-    return self._output_mediator.GetUsername(event_data)
+    return output_mediator.GetUsername(event_data)
 
-  def _FormatWindowsEventLogMessage(self, event, event_data, event_data_stream):
+  def _FormatWindowsEventLogMessage(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a Windows Event Log message field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -535,8 +551,7 @@ class FieldFormattingHelper(object):
       str: Windows Event Log message field or None if not available.
     """
     if not self._winevt_resources_helper:
-      self._winevt_resources_helper = (
-          self._output_mediator.GetWinevtResourcesHelper())
+      self._winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
 
     message_string = None
     source_name = getattr(event_data, 'source_name', None)
@@ -560,13 +575,18 @@ class FieldFormattingHelper(object):
 
   # pylint: enable=unused-argument
 
-  def _ReadSourceMappings(self):
-    """Reads the source mappings from the sources.config data file."""
+  # TODO: move to mediator.
+  def _ReadSourceMappings(self, output_mediator):
+    """Reads the source mappings from the sources.config data file.
+
+    Args:
+      output_mediator (OutputMediator): output mediator.
+    """
     self._source_mappings = {}
 
     try:
       sources_data_file = os.path.join(
-          self._output_mediator.data_location, 'sources.config')
+          output_mediator.data_location, 'sources.config')
 
       with open(sources_data_file, encoding='utf8') as file_object:
         csv_reader = csv.reader(file_object, delimiter='\t')
@@ -602,10 +622,12 @@ class FieldFormattingHelper(object):
     logger.error(error_message)
 
   def GetFormattedField(
-      self, field_name, event, event_data, event_data_stream, event_tag):
+      self, output_mediator, field_name, event, event_data, event_data_stream,
+      event_tag):
     """Formats the specified field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       field_name (str): name of the field.
       event (EventObject): event.
       event_data (EventData): event data.
@@ -616,11 +638,12 @@ class FieldFormattingHelper(object):
       str: value of the field.
     """
     if field_name in self._event_tag_field_names:
-      return self._FormatTag(event_tag)
+      return self._FormatTag(output_mediator, event_tag)
 
     callback_function = self._callback_functions.get(field_name, None)
     if callback_function:
-      output_value = callback_function(event, event_data, event_data_stream)
+      output_value = callback_function(
+          output_mediator, event, event_data, event_data_stream)
     elif field_name in self._event_data_stream_field_names:
       output_value = getattr(event_data_stream, field_name, None)
     else:

@@ -48,7 +48,8 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
       else:
         event, event_data, event_data_stream, event_tag = event_macb_group[0]
         field_value = self._field_formatting_helper.GetFormattedField(
-            field_name, event, event_data, event_data_stream, event_tag)
+            self._output_mediator, field_name, event, event_data,
+            event_data_stream, event_tag)
 
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
@@ -85,10 +86,11 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
-  def _FormatDate(self, event, event_data, event_data_stream):
+  def _FormatDate(self, output_mediator, event, event_data, event_data_stream):
     """Formats a date field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -111,14 +113,13 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if self._output_mediator.timezone != pytz.UTC:
+    if output_mediator.timezone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
 
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
         year = datetime_object.year
         month = datetime_object.month
@@ -135,10 +136,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
 
-  def _FormatExtraAttributes(self, event, event_data, event_data_stream):
+  def _FormatExtraAttributes(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats an extra attributes field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -150,7 +153,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    message_formatter = self._output_mediator.GetMessageFormatter(
+    message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
       raise errors.NoFormatterFound((
@@ -188,10 +191,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return extra_attributes.replace('\n', '-').replace('\r', '')
 
-  def _FormatParser(self, event, event_data, event_data_stream):
+  def _FormatParser(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a parser field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -201,10 +206,11 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """
     return getattr(event_data, 'parser', '-')
 
-  def _FormatType(self, event, event_data, event_data_stream):
+  def _FormatType(self, output_mediator, event, event_data, event_data_stream):
     """Formats a type field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -214,10 +220,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """
     return getattr(event, 'timestamp_desc', '-')
 
-  def _FormatVersion(self, event, event_data, event_data_stream):
+  def _FormatVersion(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a version field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -247,7 +255,7 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     Args:
       output_mediator (OutputMediator): an output mediator.
     """
-    field_formatting_helper = L2TCSVFieldFormattingHelper(output_mediator)
+    field_formatting_helper = L2TCSVFieldFormattingHelper()
     event_formatting_helper = L2TCSVEventFormattingHelper(
         output_mediator, field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(

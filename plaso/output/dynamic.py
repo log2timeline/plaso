@@ -48,10 +48,11 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
-  def _FormatDate(self, event, event_data, event_data_stream):
+  def _FormatDate(self, output_mediator, event, event_data, event_data_stream):
     """Formats a date field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -74,14 +75,13 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if self._output_mediator.timezone != pytz.UTC:
+    if output_mediator.timezone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
 
-        datetime_object = datetime_object.astimezone(
-            self._output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
         year = datetime_object.year
         month = datetime_object.month
@@ -98,10 +98,12 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
 
-  def _FormatTimestampDescription(self, event, event_data, event_data_stream):
+  def _FormatTimestampDescription(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a timestamp description field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -131,7 +133,7 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
     Args:
       output_mediator (OutputMediator): an output mediator.
     """
-    field_formatting_helper = DynamicFieldFormattingHelper(output_mediator)
+    field_formatting_helper = DynamicFieldFormattingHelper()
     super(DynamicOutputModule, self).__init__(
         output_mediator, field_formatting_helper, self._DEFAULT_NAMES)
 

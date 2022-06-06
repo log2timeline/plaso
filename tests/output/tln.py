@@ -48,13 +48,13 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+    formatting_helper = tln.TLNFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     description_string = formatting_helper._FormatDescription(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     expected_description_string = (
         '2012-06-27T18:17:01.000000+00:00; '
@@ -66,12 +66,12 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatNotes(self):
     """Tests the _FormatNotes function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+    formatting_helper = tln.TLNFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     notes_string = formatting_helper._FormatNotes(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     self.assertEqual(
         notes_string, 'File: OS: /var/log/syslog.1 inode: 12345678')
@@ -79,12 +79,12 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def test_FormatTimestamp(self):
     """Tests the __FormatTimestamp function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = tln.TLNFieldFormattingHelper(output_mediator)
+    formatting_helper = tln.TLNFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     timestamp_string = formatting_helper._FormatTimestamp(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     self.assertEqual(timestamp_string, '1340821021')
 

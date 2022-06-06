@@ -39,20 +39,20 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatDate(self):
     """Tests the _FormatDate function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
+    formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
 
     output_mediator.SetTimeZone('Australia/Sydney')
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-28')
 
     output_mediator.SetTimeZone('UTC')
@@ -62,7 +62,7 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 600
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
 
     # Test with event.is_local_time
@@ -72,7 +72,7 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-28')
 
     # Test with event.timestamp
@@ -81,29 +81,29 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time = None
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '2012-06-27')
 
     event.timestamp = 0
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '0000-00-00')
 
     event.timestamp = -9223372036854775808
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '0000-00-00')
 
   def testFormatTimestampDescription(self):
     """Tests the _FormatTimestampDescription function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = dynamic.DynamicFieldFormattingHelper(output_mediator)
+    formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     timestamp_description_string = (
         formatting_helper._FormatTimestampDescription(
-            event, event_data, event_data_stream))
+            output_mediator, event, event_data, event_data_stream))
     self.assertEqual(timestamp_description_string, 'Metadata Modification Time')
 
 

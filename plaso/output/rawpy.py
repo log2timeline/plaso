@@ -22,8 +22,7 @@ class NativePythonEventFormattingHelper(
       output_mediator (OutputMediator): output mediator.
     """
     super(NativePythonEventFormattingHelper, self).__init__(output_mediator)
-    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
-        output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
   def _GetFormattedEventNativePython(
       self, event, event_data, event_data_stream, event_tag):
@@ -79,17 +78,20 @@ class NativePythonEventFormattingHelper(
 
     if 'display_name' not in event_attribute_names:
       attribute_value = self._field_formatting_helper.GetFormattedField(
-          'display_name', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'display_name', event, event_data,
+          event_data_stream, event_tag)
       event_attributes.append(('display_name', attribute_value))
 
     if 'filename' not in event_attribute_names:
       attribute_value = self._field_formatting_helper.GetFormattedField(
-          'filename', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'filename', event, event_data,
+          event_data_stream, event_tag)
       event_attributes.append(('filename', attribute_value))
 
     if 'inode' not in event_attribute_names:
       attribute_value = self._field_formatting_helper.GetFormattedField(
-          'inode', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'inode', event, event_data,
+          event_data_stream, event_tag)
       event_attributes.append(('inode', attribute_value))
 
     for attribute_name, attribute_value in sorted(event_attributes):

@@ -45,10 +45,12 @@ class SharedOpenSearchFieldFormattingHelper(
   # the check for unused arguments is disabled here.
   # pylint: disable=unused-argument
 
-  def _FormatDateTime(self, event, event_data, event_data_stream):
+  def _FormatDateTime(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a date and time field in ISO 8601 format.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -60,10 +62,11 @@ class SharedOpenSearchFieldFormattingHelper(
         timestamp=event.timestamp)
     return date_time.CopyToDateTimeStringISO8601()
 
-  def _FormatTag(self, event_tag):
+  def _FormatTag(self, output_mediator, event_tag):
     """Formats an event tag field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_tag (EventTag): event tag or None if not set.
 
     Returns:
@@ -71,10 +74,12 @@ class SharedOpenSearchFieldFormattingHelper(
     """
     return getattr(event_tag, 'labels', None) or []
 
-  def _FormatTimestamp(self, event, event_data, event_data_stream):
+  def _FormatTimestamp(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a timestamp field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -84,10 +89,12 @@ class SharedOpenSearchFieldFormattingHelper(
     """
     return event.timestamp
 
-  def _FormatTimestampDescription(self, event, event_data, event_data_stream):
+  def _FormatTimestampDescription(
+      self, output_mediator, event, event_data, event_data_stream):
     """Formats a timestamp description field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -100,10 +107,12 @@ class SharedOpenSearchFieldFormattingHelper(
   # pylint: enable=unused-argument
 
   def GetFormattedField(
-      self, field_name, event, event_data, event_data_stream, event_tag):
+      self, output_mediator, field_name, event, event_data, event_data_stream,
+      event_tag):
     """Formats the specified field.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       field_name (str): name of the field.
       event (EventObject): event.
       event_data (EventData): event data.
@@ -115,14 +124,15 @@ class SharedOpenSearchFieldFormattingHelper(
     """
     callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
     if callback_name == '_FormatTag':
-      return self._FormatTag(event_tag)
+      return self._FormatTag(output_mediator, event_tag)
 
     callback_function = None
     if callback_name:
       callback_function = getattr(self, callback_name, None)
 
     if callback_function:
-      output_value = callback_function(event, event_data, event_data_stream)
+      output_value = callback_function(
+          output_mediator, event, event_data, event_data_stream)
     elif hasattr(event_data_stream, field_name):
       output_value = getattr(event_data_stream, field_name, None)
     else:
@@ -164,8 +174,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     self._client = None
     self._event_documents = []
     self._field_names = self._DEFAULT_FIELD_NAMES
-    self._field_formatting_helper = SharedOpenSearchFieldFormattingHelper(
-        output_mediator)
+    self._field_formatting_helper = SharedOpenSearchFieldFormattingHelper()
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._host = None
     self._index_name = None
@@ -295,7 +304,8 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
       else:
         field_value = self._field_formatting_helper.GetFormattedField(
-            attribute_name, event, event_data, event_data_stream, event_tag)
+            self._output_mediator, attribute_name, event, event_data,
+            event_data_stream, event_tag)
 
       field_values[attribute_name] = self._SanitizeField(
           event_data.data_type, attribute_name, field_value)
