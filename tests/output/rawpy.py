@@ -21,6 +21,8 @@ from tests.output import test_lib
 class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
   """Tests for native Python output module event formatting helper."""
 
+  # pylint: disable=protected-access
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
           os.path.sep, os.path.join('cases', 'image.dd')))
@@ -37,6 +39,54 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
+
+  def testGetFormattedEventNativePython(self):
+    """Tests the _GetFormattedEventNativePython function."""
+    output_mediator = self._CreateOutputMediator()
+    event_formatting_helper = rawpy.NativePythonEventFormattingHelper(
+        output_mediator)
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    event_string = event_formatting_helper._GetFormattedEventNativePython(
+        event, event_data, event_data_stream, None)
+
+    if sys.platform.startswith('win'):
+      # The dict comparison is very picky on Windows hence we
+      # have to make sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath('\\{0:s}'.format(
+          os.path.join('cases', 'image.dd')))
+    else:
+      expected_os_location = '{0:s}{1:s}'.format(
+          os.path.sep, os.path.join('cases', 'image.dd'))
+
+    expected_event_string = (
+        '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
+        '+-+-+-+-+-+-\n'
+        '[Timestamp]:\n'
+        '  2012-06-27T18:17:01.000000+00:00\n'
+        '\n'
+        '[Pathspec]:\n'
+        '  type: OS, location: {0:s}\n'
+        '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
+        '\n'
+        '[Reserved attributes]:\n'
+        '  {{data_type}} test:output\n'
+        '  {{display_name}} TSK:/var/log/syslog.1\n'
+        '  {{filename}} /var/log/syslog.1\n'
+        '  {{hostname}} ubuntu\n'
+        '  {{inode}} 15\n'
+        '  {{username}} root\n'
+        '\n'
+        '[Additional attributes]:\n'
+        '  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+        'session\n'
+        ' closed for user root)\n').format(expected_os_location)
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(
+        event_string.split('\n'), expected_event_string.split('\n'))
 
   def testGetFormattedEvent(self):
     """Tests the GetFormattedEvent function."""

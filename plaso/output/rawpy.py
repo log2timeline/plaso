@@ -25,8 +25,9 @@ class NativePythonEventFormattingHelper(
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
         output_mediator)
 
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
+  def _GetFormattedEventNativePython(
+      self, event, event_data, event_data_stream, event_tag):
+    """Retrieves a native Python string representation of the event.
 
     Args:
       event (EventObject): event.
@@ -127,6 +128,21 @@ class NativePythonEventFormattingHelper(
     lines_of_text.append('')
 
     return '\n'.join(lines_of_text)
+
+  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+    """Retrieves a string representation of the event.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      str: string representation of the event.
+    """
+    return self._GetFormattedEventNativePython(
+        event, event_data, event_data_stream, event_tag)
 
 
 class NativePythonOutputModule(interface.TextFileOutputModule):
