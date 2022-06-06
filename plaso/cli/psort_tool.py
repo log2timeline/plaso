@@ -513,7 +513,7 @@ class PsortTool(
             preferred_language))
 
       self._output_mediator.SetTextPrepend(text_prepend)
-      self._output_module.SetStorageReader(storage_reader)
+      self._output_mediator.SetStorageReader(storage_reader)
 
       # TODO: add single process output and formatting engine support.
       output_engine = (

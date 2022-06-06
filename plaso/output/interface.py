@@ -63,14 +63,6 @@ class OutputModule(object):
     """Opens the output."""
     return
 
-  def SetStorageReader(self, storage_reader):
-    """Sets the storage reader.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    self._output_mediator.SetStorageReader(storage_reader)
-
   def WriteEvent(self, event, event_data, event_data_stream, event_tag):
     """Writes the event to the output.
 
