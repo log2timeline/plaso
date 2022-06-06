@@ -8,18 +8,17 @@ from plaso.parsers.sqlite_plugins import ios_netusage
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class IOSNetusageRoutePlugingTest(test_lib.SQLitePluginTestCase):
-  """Tests for the SQLite parser plugin for the route performance table of
-  iOS netusage database files."""
+class IOSNetusagePluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the SQLite parser plugin iOS netusage database files."""
 
   def testParseNetusageRouteRow(self):
     """Tests the ParseNetusageRouteRow method."""
-    plugin = ios_netusage.IOSNetusageRoutePlugin()
+    plugin = ios_netusage.IOSNetusagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['netusage.sqlite'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 49)
+    self.assertEqual(number_of_events, 384)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -47,19 +46,14 @@ class IOSNetusageRoutePlugingTest(test_lib.SQLitePluginTestCase):
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
-
-class IOSNetusageProcessPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the SQLite parser plugin for the live usage table of iOS netusage
-  database files."""
-
   def testParseNetusageProcessRow(self):
     """Tests the ParseNetusageProcessRow method."""
-    plugin = ios_netusage.IOSNetusageProcessPlugin()
+    plugin = ios_netusage.IOSNetusagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['netusage.sqlite'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 335)
+    self.assertEqual(number_of_events, 384)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -77,7 +71,7 @@ class IOSNetusageProcessPluginTest(test_lib.SQLitePluginTestCase):
         'wireless_wan_out': 938811,
         'timestamp': '2021-01-17 19:23:38.212656'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[50], expected_event_values)
 
     expected_event_values = {
         'process_name': 'imgurmobile',
@@ -89,7 +83,7 @@ class IOSNetusageProcessPluginTest(test_lib.SQLitePluginTestCase):
         'wireless_wan_out': 0,
         'timestamp': '2021-02-19 01:06:15.397861'}
 
-    self.CheckEventValues(storage_writer, events[327], expected_event_values)
+    self.CheckEventValues(storage_writer, events[376], expected_event_values)
 
 
 if __name__ == '__main__':

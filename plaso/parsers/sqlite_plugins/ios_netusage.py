@@ -60,18 +60,22 @@ class IOSNetusageProcessEventData(events.EventData):
     self.wireless_wan_out = None
 
 
-class IOSNetusageRoutePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for the route performance table of iOS netusage
-  database files."""
+class IOSNetusagePlugin(interface.SQLitePlugin):
+  """SQLite parser plugin iOS netusage database files. Obtains network usage and
+  process usage events."""
 
-  NAME = 'ios_netusage_route'
+  NAME = 'ios_netusage'
   DATA_FORMAT = 'iOS network usage SQLite database (netusage.sqlite) file'
 
   REQUIRED_STRUCTURE = {
       'ZLIVEROUTEPERF': frozenset([
           'ZTIMESTAMP', 'ZKIND', 'ZBYTESIN', 'ZBYTESOUT',
           'ZHASNETWORKATTACHMENT']),
-      'ZNETWORKATTACHMENT': frozenset(['Z_PK', 'ZIDENTIFIER', 'ZNETSIGNATURE'])}
+      'ZNETWORKATTACHMENT': frozenset(['Z_PK', 'ZIDENTIFIER', 'ZNETSIGNATURE']),
+      'ZLIVEUSAGE': frozenset([
+          'ZTIMESTAMP', 'ZWIFIIN', 'ZWIFIOUT', 'ZWWANIN', 'ZWWANOUT',
+          'ZWIREDIN', 'ZWIREDOUT', 'ZHASPROCESS']),
+      'ZPROCESS': frozenset(['Z_PK', 'ZPROCNAME'])}
 
   QUERIES = [
       ("""
@@ -85,7 +89,21 @@ class IOSNetusageRoutePlugin(interface.SQLitePlugin):
        FROM ZLIVEROUTEPERF
        LEFT JOIN ZNETWORKATTACHMENT 
        ON ZLIVEROUTEPERF.ZHASNETWORKATTACHMENT = ZNETWORKATTACHMENT.Z_PK""",
-       'ParseNetusageRouteRow')]
+       'ParseNetusageRouteRow'),
+      ("""
+         SELECT
+           ZLIVEUSAGE.ZTIMESTAMP,
+           ZPROCESS.ZPROCNAME,
+           ZLIVEUSAGE.ZWIFIIN,
+           ZLIVEUSAGE.ZWIFIOUT,
+           ZLIVEUSAGE.ZWWANIN,
+           ZLIVEUSAGE.ZWWANOUT,
+           ZLIVEUSAGE.ZWIREDIN,
+           ZLIVEUSAGE.ZWIREDOUT
+         FROM ZLIVEUSAGE 
+         LEFT JOIN ZPROCESS 
+         ON ZPROCESS.Z_PK = ZLIVEUSAGE.ZHASPROCESS""",
+       'ParseNetusageProcessRow')]
 
   SCHEMAS = {
       'ZLIVEROUTEPERF': (
@@ -106,7 +124,18 @@ class IOSNetusageRoutePlugin(interface.SQLitePlugin):
           'ZISLOWINTERNETUL INTEGER, ZKIND INTEGER, ZWASLASTFAILED INTEGER, '
           'ZFIRSTTIMESTAMP TIMESTAMP, ZOVERALLSTAYMEAN FLOAT, '
           'ZOVERALLSTAYVAR FLOAT, ZTIMESTAMP TIMESTAMP, ZVELO FLOAT, '
-          'ZIDENTIFIER VARCHAR, ZSERVICE VARCHAR, ZNETSIGNATURE BLOB )')}
+          'ZIDENTIFIER VARCHAR, ZSERVICE VARCHAR, ZNETSIGNATURE BLOB )'),
+      'ZLIVEUSAGE': (
+          'CREATE TABLE ZLIVEUSAGE ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
+          'Z_OPT INTEGER, ZKIND INTEGER, ZMETADATA INTEGER, ZTAG INTEGER, '
+          'ZHASPROCESS INTEGER, Z15_HASPROCESS INTEGER, ZALLFLOWS FLOAT, '
+          'ZBILLCYCLEEND TIMESTAMP, ZJUMBOFLOWS FLOAT, ZTIMESTAMP TIMESTAMP, '
+          'ZWIFIIN FLOAT, ZWIFIOUT FLOAT, ZWIREDIN FLOAT, ZWIREDOUT FLOAT, '
+          'ZWWANIN FLOAT, ZWWANOUT FLOAT, ZXIN FLOAT, ZXOUT FLOAT )'),
+      'ZPROCESS': (
+          'CREATE TABLE ZPROCESS ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
+          'Z_OPT INTEGER, ZFIRSTTIMESTAMP TIMESTAMP, ZTIMESTAMP TIMESTAMP, '
+          'ZBUNDLENAME VARCHAR, ZPROCNAME VARCHAR )')}
 
   REQUIRES_SCHEMA_MATCH = False
 
@@ -146,51 +175,6 @@ class IOSNetusageRoutePlugin(interface.SQLitePlugin):
 
     parser_mediator.ProduceEventWithEventData(start_event, event_data)
 
-
-class IOSNetusageProcessPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for the live usage table of iOS netusage
-  database files."""
-
-  NAME = 'ios_netusage_process'
-  DATA_FORMAT = 'iOS network usage SQLITE database, live usage table.'
-
-  REQUIRED_STRUCTURE = {
-      'ZLIVEUSAGE': frozenset([
-          'ZTIMESTAMP', 'ZWIFIIN', 'ZWIFIOUT', 'ZWWANIN', 'ZWWANOUT',
-          'ZWIREDIN', 'ZWIREDOUT', 'ZHASPROCESS']),
-      'ZPROCESS': frozenset(['Z_PK', 'ZPROCNAME'])}
-
-  QUERIES = [
-      ("""
-       SELECT
-         ZLIVEUSAGE.ZTIMESTAMP,
-         ZPROCESS.ZPROCNAME,
-         ZLIVEUSAGE.ZWIFIIN,
-         ZLIVEUSAGE.ZWIFIOUT,
-         ZLIVEUSAGE.ZWWANIN,
-         ZLIVEUSAGE.ZWWANOUT,
-         ZLIVEUSAGE.ZWIREDIN,
-         ZLIVEUSAGE.ZWIREDOUT
-       FROM ZLIVEUSAGE 
-       LEFT JOIN ZPROCESS 
-       ON ZPROCESS.Z_PK = ZLIVEUSAGE.ZHASPROCESS""",
-       'ParseNetusageProcessRow')]
-
-  SCHEMAS = {
-      'ZLIVEUSAGE': (
-          'CREATE TABLE ZLIVEUSAGE ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
-          'Z_OPT INTEGER, ZKIND INTEGER, ZMETADATA INTEGER, ZTAG INTEGER, '
-          'ZHASPROCESS INTEGER, Z15_HASPROCESS INTEGER, ZALLFLOWS FLOAT, '
-          'ZBILLCYCLEEND TIMESTAMP, ZJUMBOFLOWS FLOAT, ZTIMESTAMP TIMESTAMP, '
-          'ZWIFIIN FLOAT, ZWIFIOUT FLOAT, ZWIREDIN FLOAT, ZWIREDOUT FLOAT, '
-          'ZWWANIN FLOAT, ZWWANOUT FLOAT, ZXIN FLOAT, ZXOUT FLOAT )'),
-      'ZPROCESS': (
-          'CREATE TABLE ZPROCESS ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
-          'Z_OPT INTEGER, ZFIRSTTIMESTAMP TIMESTAMP, ZTIMESTAMP TIMESTAMP, '
-          'ZBUNDLENAME VARCHAR, ZPROCNAME VARCHAR )')}
-
-  REQUIRES_SCHEMA_MATCH = False
-
   # pylint: disable=unused-argument
   def ParseNetusageProcessRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -224,5 +208,4 @@ class IOSNetusageProcessPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(start_event, event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugins([
-    IOSNetusageRoutePlugin, IOSNetusageProcessPlugin])
+sqlite.SQLiteParser.RegisterPlugin(IOSNetusagePlugin)
