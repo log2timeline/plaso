@@ -54,7 +54,8 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     field_values = []
     for field_name in self._field_names:
       field_value = self._field_formatting_helper.GetFormattedField(
-          field_name, event, event_data, event_data_stream, event_tag)
+          self._output_mediator, field_name, event, event_data,
+          event_data_stream, event_tag)
 
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)

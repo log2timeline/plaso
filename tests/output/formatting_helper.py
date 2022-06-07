@@ -51,19 +51,19 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatDateTime(self):
     """Tests the _FormatDateTime function with dynamic time."""
     output_mediator = self._CreateOutputMediator(dynamic_time=True)
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     output_mediator.SetTimeZone('Europe/Amsterdam')
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
 
     output_mediator.SetTimeZone('UTC')
@@ -73,13 +73,13 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 120
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     event.date_time = dfdatetime_semantic_time.InvalidTime()
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, 'Invalid')
 
     # Test with event.is_local_time
@@ -89,26 +89,26 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
 
   def testFormatDateTimeWithoutDynamicTime(self):
     """Tests the _FormatDateTime function without dynamic time."""
     output_mediator = self._CreateOutputMediator(dynamic_time=False)
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     output_mediator.SetTimeZone('Europe/Amsterdam')
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T20:17:01.000000+02:00')
 
     output_mediator.SetTimeZone('UTC')
@@ -118,13 +118,13 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 120
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     event.date_time = dfdatetime_semantic_time.InvalidTime()
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
     # Test with event.is_local_time
@@ -134,7 +134,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T16:17:01.000000+00:00')
 
     # Test with event.timestamp
@@ -143,71 +143,72 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time = None
 
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '2012-06-27T18:17:01.000000+00:00')
 
     event.timestamp = 0
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
     event.timestamp = -9223372036854775808
     date_time_string = test_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_time_string, '0000-00-00T00:00:00.000000+00:00')
 
   def testFormatDisplayName(self):
     """Tests the _FormatDisplayName function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     display_name_string = test_helper._FormatDisplayName(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(display_name_string, 'FAKE:log/syslog.1')
 
   def testFormatFilename(self):
     """Tests the _FormatFilename function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     filename_string = test_helper._FormatFilename(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(filename_string, 'log/syslog.1')
 
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     hostname_string = test_helper._FormatHostname(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(hostname_string, 'ubuntu')
 
   def testFormatInode(self):
     """Tests the _FormatInode function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     inode_string = test_helper._FormatInode(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(inode_string, '-')
 
   def testFormatMACB(self):
     """Tests the _FormatMACB function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    macb_string = test_helper._FormatMACB(event, event_data, event_data_stream)
+    macb_string = test_helper._FormatMACB(
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(macb_string, '..C.')
 
   def testFormatMessage(self):
@@ -218,13 +219,13 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     message_string = test_helper._FormatMessage(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     expected_message_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -239,13 +240,13 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     message_short_string = test_helper._FormatMessageShort(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     expected_message_short_string = (
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
@@ -255,61 +256,61 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatSource(self):
     """Tests the _FormatSource function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     source_string = test_helper._FormatSource(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     self.assertEqual(source_string, 'Test log file')
 
   def testFormatSourceShort(self):
     """Tests the _FormatSourceShort function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     source_short_string = test_helper._FormatSourceShort(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     self.assertEqual(source_short_string, 'FILE')
 
   def testFormatTag(self):
     """Tests the _FormatTag function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
-    tag_string = test_helper._FormatTag(None)
+    tag_string = test_helper._FormatTag(output_mediator, None)
     self.assertEqual(tag_string, '-')
 
     event_tag = events.EventTag()
     event_tag.AddLabel('one')
     event_tag.AddLabel('two')
 
-    tag_string = test_helper._FormatTag(event_tag)
+    tag_string = test_helper._FormatTag(output_mediator, event_tag)
     self.assertEqual(tag_string, 'one two')
 
   def testFormatTime(self):
     """Tests the _FormatTime function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
 
     output_mediator.SetTimeZone('Europe/Amsterdam')
 
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '20:17:01')
 
     output_mediator.SetTimeZone('UTC')
@@ -319,7 +320,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 120
 
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
 
     # Test with event.is_local_time
@@ -329,7 +330,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '16:17:01')
 
     # Test with event.timestamp
@@ -338,36 +339,36 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time = None
 
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '18:17:01')
 
     event.timestamp = 0
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '--:--:--')
 
     event.timestamp = -9223372036854775808
     time_string = test_helper._FormatTime(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(time_string, '--:--:--')
 
   def testFormatTimeZone(self):
     """Tests the _FormatTimeZone function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     zone_string = test_helper._FormatTimeZone(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(zone_string, 'UTC')
 
     output_mediator.SetTimeZone('Europe/Amsterdam')
 
     zone_string = test_helper._FormatTimeZone(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(zone_string, 'CEST')
 
     output_mediator.SetTimeZone('UTC')
@@ -377,7 +378,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 120
 
     zone_string = test_helper._FormatTimeZone(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(zone_string, 'UTC')
 
     # Test with event.is_local_time
@@ -387,18 +388,18 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     zone_string = test_helper._FormatTimeZone(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(zone_string, 'UTC')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = formatting_helper.FieldFormattingHelper(output_mediator)
+    test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     username_string = test_helper._FormatUsername(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(username_string, '-')
 
   # TODO: add coverage for _ReportEventError
@@ -406,12 +407,12 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testGetFormattedField(self):
     """Tests the GetFormattedField function."""
     output_mediator = self._CreateOutputMediator()
-    test_helper = TestFieldFormattingHelper(output_mediator)
+    test_helper = TestFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     zone_string = test_helper.GetFormattedField(
-        'zone', event, event_data, event_data_stream, None)
+        output_mediator, 'zone', event, event_data, event_data_stream, None)
     self.assertEqual(zone_string, 'UTC')
 
 

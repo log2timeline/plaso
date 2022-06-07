@@ -45,8 +45,7 @@ class XLSXOutputModule(interface.OutputModule):
     super(XLSXOutputModule, self).__init__(output_mediator)
     self._column_widths = []
     self._current_row = 0
-    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
-        output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
     self._fields = self._DEFAULT_FIELDS
     self._sheet = None
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
@@ -162,7 +161,8 @@ class XLSXOutputModule(interface.OutputModule):
 
       else:
         field_value = self._field_formatting_helper.GetFormattedField(
-            field_name, event, event_data, event_data_stream, event_tag)
+            self._output_mediator, field_name, event, event_data,
+            event_data_stream, event_tag)
         field_value = self._SanitizeField(field_value)
 
       if (field_name == 'datetime' and

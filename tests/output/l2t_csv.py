@@ -53,20 +53,20 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatDate(self):
     """Tests the _FormatDate function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
+    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper()
 
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/27/2012')
 
     output_mediator.SetTimeZone('Australia/Sydney')
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/28/2012')
 
     output_mediator.SetTimeZone('UTC')
@@ -76,7 +76,7 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time._time_zone_offset = 600
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/27/2012')
 
     # Test with event.is_local_time
@@ -86,7 +86,7 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time.is_local_time = True
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/28/2012')
 
     # Test with event.timestamp
@@ -95,12 +95,12 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.date_time = None
 
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '06/27/2012')
 
     event.timestamp = -9223372036854775808
     date_string = formatting_helper._FormatDate(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(date_string, '00/00/0000')
 
   def testFormatExtraAttributes(self):
@@ -111,13 +111,13 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
+    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     extra_attributes_string = formatting_helper._FormatExtraAttributes(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     expected_extra_attributes_string = (
         'a_binary_field: binary; '
@@ -128,34 +128,34 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatParser(self):
     """Tests the _FormatParser function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
+    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     parser_string = formatting_helper._FormatParser(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(parser_string, 'test_parser')
 
   def testFormatType(self):
     """Tests the _FormatType function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
+    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     type_string = formatting_helper._FormatType(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(type_string, 'Content Modification Time')
 
   def testFormatVersion(self):
     """Tests the _FormatVersion function."""
     output_mediator = self._CreateOutputMediator()
-    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper(output_mediator)
+    formatting_helper = l2t_csv.L2TCSVFieldFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     version_string = formatting_helper._FormatVersion(
-        event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
     self.assertEqual(version_string, '2')
 
 

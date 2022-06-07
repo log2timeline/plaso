@@ -24,8 +24,7 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
       output_mediator (OutputMediator): an output mediator.
     """
     super(TestXMLEventFormattingHelper, self).__init__(output_mediator)
-    self._field_formatting_helper = formatting_helper.FieldFormattingHelper(
-        output_mediator)
+    self._field_formatting_helper = formatting_helper.FieldFormattingHelper()
 
   def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
@@ -41,7 +40,7 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """
     # pylint: disable=protected-access
     date_time_string = self._field_formatting_helper._FormatDateTime(
-        event, event_data, event_data_stream)
+        self._output_mediator, event, event_data, event_data_stream)
 
     return (
         '<Event>\n'

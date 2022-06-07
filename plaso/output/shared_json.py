@@ -21,8 +21,7 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       output_mediator (OutputMediator): output mediator.
     """
     super(JSONEventFormattingHelper, self).__init__(output_mediator)
-    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper(
-        output_mediator)
+    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
   def _WriteSerializedDict(
       self, event, event_data, event_data_stream, event_tag):
@@ -44,24 +43,28 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     display_name = event_data_json_dict.get('display_name', None)
     if display_name is None:
       display_name = self._field_formatting_helper.GetFormattedField(
-          'display_name', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'display_name', event, event_data,
+          event_data_stream, event_tag)
       event_data_json_dict['display_name'] = display_name
 
     filename = event_data_json_dict.get('filename', None)
     if filename is None:
       filename = self._field_formatting_helper.GetFormattedField(
-          'filename', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'filename', event, event_data,
+          event_data_stream, event_tag)
       event_data_json_dict['filename'] = filename
 
     inode = event_data_json_dict.get('inode', None)
     if inode is None:
       inode = self._field_formatting_helper.GetFormattedField(
-          'inode', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'inode', event, event_data,
+          event_data_stream, event_tag)
       event_data_json_dict['inode'] = inode
 
     try:
       message = self._field_formatting_helper.GetFormattedField(
-          'message', event, event_data, event_data_stream, event_tag)
+          self._output_mediator, 'message', event, event_data,
+          event_data_stream, event_tag)
       event_data_json_dict['message'] = message
     except (errors.NoFormatterFound, errors.WrongFormatter):
       pass
