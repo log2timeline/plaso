@@ -39,10 +39,10 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2012-05-25 15:59:43',
         'filename': '/a_directory/another_file',
+        'group_identifier': 5000,
         'inode': 16,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-        'user_gid': 5000,
-        'user_sid': '151107'}
+        'owner_identifier': '151107',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[25], expected_event_values)
 
@@ -50,10 +50,10 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2012-05-25 15:59:44',
         'filename': '/a_directory/another_file',
+        'group_identifier': 5000,
         'inode': 16,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
-        'user_gid': 5000,
-        'user_sid': '151107'}
+        'owner_identifier': '151107',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[26], expected_event_values)
 
@@ -61,11 +61,11 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2012-05-25 15:59:45',
         'filename': '/a_directory/another_file',
+        'group_identifier': 5000,
         'inode': 16,
         'mode_as_string': 'r/rrw-------',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
-        'user_gid': 5000,
-        'user_sid': '151107'}
+        'owner_identifier': '151107',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[27], expected_event_values)
 
@@ -73,10 +73,10 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2012-05-25 16:17:43',
         'filename': '/passwordz\r.txt',
+        'group_identifier': 5000,
         'inode': 26,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
-        'user_gid': 5000,
-        'user_sid': '151107'}
+        'owner_identifier': '151107',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
@@ -84,10 +84,10 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2019-11-16 09:27:58.189698048',
         'filename': '\\testdir2',
+        'group_identifier': None,
         'inode': 48,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-        'user_gid': None,
-        'user_sid': None}
+        'owner_identifier': None,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[50], expected_event_values)
 
@@ -95,11 +95,11 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2020-07-30 06:41:05.354067456',
         'filename': '/file|with|pipes',
+        'group_identifier': 0,
         'inode': 64,
         'mode_as_string': 'r/rrwxrwxrwx',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
-        'user_gid': 0,
-        'user_sid': '48'}
+        'owner_identifier': '48',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
     self.CheckEventValues(storage_writer, events[59], expected_event_values)
 
@@ -107,12 +107,12 @@ class BodyfileTest(test_lib.ParserTestCase):
         'data_type': 'fs:bodyfile:entry',
         'date_time': '2020-08-19 18:48:01',
         'filename': '/file_symboliclink1',
+        'group_identifier': 1000,
         'inode': 16,
         'mode_as_string': 'l/lrwxrwxrwx',
+        'owner_identifier': '1000',
         'symbolic_link_target': '/mnt/ext/testdir1/testfile1',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
-        'user_gid': 1000,
-        'user_sid': '1000'}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[68], expected_event_values)
 

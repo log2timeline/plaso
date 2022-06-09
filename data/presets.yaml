@@ -91,7 +91,7 @@ parsers:
 - zsh_extended_history
 ---
 name: mactime
-description: Backward compatibility for mactime parser.
+description: Backwards compatibility for mactime parser.
 parsers:
 - bodyfile
 ---

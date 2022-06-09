@@ -172,10 +172,16 @@ data_type: 'fish:history:command'
 message: 'Command executed: {command}'
 short_message: '{command}'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'fs:bodyfile:entry'
-message: '{filename}'
-short_message: '{filename}'
+message:
+- '{filename}'
+- 'Owner identifier: {owner_identifier}'
+- 'Group identifier: {group_identifier}'
+- 'Mode: {mode_as_string}'
+- 'MD5: {md5}'
+short_message:
+- '{filename}'
 ---
 type: 'conditional'
 data_type: 'fs:ntfs:usn_change'

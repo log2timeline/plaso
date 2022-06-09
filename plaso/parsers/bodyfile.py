@@ -23,12 +23,12 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-# TODO: refactor to pass user_sid as an int.
 class BodyfileEventData(events.EventData):
   """Bodyfile event data.
 
   Attributes:
     filename (str): name of the file.
+    group_identifier (int): group identifier (GID), equivalent to st_gid.
     inode (int): "inode" of the file. Note that inode is an overloaded term
         in the context of a bodyfile and used for MFT entry index values as
         well.
@@ -36,10 +36,9 @@ class BodyfileEventData(events.EventData):
     mode_as_string (str): protection mode.
     offset (int): number of the corresponding line, from which the event data
         was extracted.
+    owner_identifier (str): user identifier (UID or SID) of the owner.
     size (int): size of the file content.
     symbolic_link_target (str): path of the symbolic link target.
-    user_gid (int): user group identifier (GID).
-    user_sid (str): user security identifier (SID).
   """
 
   DATA_TYPE = 'fs:bodyfile:entry'
@@ -48,14 +47,14 @@ class BodyfileEventData(events.EventData):
     """Initializes event data."""
     super(BodyfileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
+    self.group_identifier = None
     self.inode = None
     self.md5 = None
     self.mode_as_string = None
     self.offset = None
+    self.owner_identifier = None
     self.size = None
     self.symbolic_link_target = None
-    self.user_gid = None
-    self.user_sid = None
 
 
 class BodyfileParser(interface.FileObjectParser):
@@ -228,8 +227,8 @@ class BodyfileParser(interface.FileObjectParser):
             parser_mediator, values, 'user identifier (UID)', line_number)
 
         if uid_value is not None:
-          # Note that the user_sid attribute of BodyfileEventData is expected to
-          # be a string or None.
+          # Note that the owner_identifier attribute of BodyfileEventData
+          # is expected to be a string or None.
           uid_value = '{0:d}'.format(uid_value)
 
         mode_as_string_value = values.pop(-1) or None
@@ -274,14 +273,14 @@ class BodyfileParser(interface.FileObjectParser):
 
         event_data = BodyfileEventData()
         event_data.filename = filename
+        event_data.group_identifier = gid_value
         event_data.inode = inode_value
         event_data.md5 = md5_value
         event_data.mode_as_string = mode_as_string_value
         event_data.offset = file_object.tell()
+        event_data.owner_identifier = uid_value
         event_data.size = size_value
         event_data.symbolic_link_target = symbolic_link_target
-        event_data.user_gid = gid_value
-        event_data.user_sid = uid_value
 
         if atime_value:
           date_time = self._GetDateTimeFromTimestamp(atime_value)
