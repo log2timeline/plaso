@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS netusage.sqlite database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -11,15 +11,14 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSNetusageRouteEventData(events.EventData):
-  """iOS netusage event data that describes how much data was sent and received
-  via a given connection.
+  """iOS netusage connection event data.
 
   Attributes:
     bytes_in (int): number of bytes received.
     bytes_out (int): number of bytes sent.
     network_identifier (str): name of network.
     network_signature (str): signature of network.
-    network_type (str): cellular or wifi.
+    network_type (int): integer indicating network type.
   """
   DATA_TYPE = 'ios:netusage:route'
 
@@ -34,8 +33,7 @@ class IOSNetusageRouteEventData(events.EventData):
 
 
 class IOSNetusageProcessEventData(events.EventData):
-  """iOS netusage event data that describes how much data a given process sent
-  and received.
+  """iOS netusage process event data.
 
   Attributes:
     process_name (str): name of the process.
@@ -61,8 +59,7 @@ class IOSNetusageProcessEventData(events.EventData):
 
 
 class IOSNetusagePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin iOS netusage database files. Obtains network usage and
-  process usage events."""
+  """SQLite parser plugin for iOS netusage database."""
 
   NAME = 'ios_netusage'
   DATA_FORMAT = 'iOS network usage SQLite database (netusage.sqlite) file'
@@ -103,7 +100,8 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
          FROM ZLIVEUSAGE 
          LEFT JOIN ZPROCESS 
          ON ZPROCESS.Z_PK = ZLIVEUSAGE.ZHASPROCESS""",
-       'ParseNetusageProcessRow')]
+      'ParseNetusageProcessRow')
+  ]
 
   SCHEMAS = {
       'ZLIVEROUTEPERF': (
@@ -159,17 +157,11 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
         query_hash, row, 'ZIDENTIFIER')
     event_data.network_signature = self._GetRowValue(
         query_hash, row, 'ZNETSIGNATURE')
-    zkind = self._GetRowValue(query_hash, row, 'ZKIND')
-    if zkind == 1:
-      event_data.network_type = 'wifi'
-    elif zkind == 2:
-      event_data.network_type = 'cellular'
-    else:
-      event_data.network_type = 'unknown'
+    event_data.network_type = self._GetRowValue(query_hash, row, 'ZKIND')
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP') + 978307200
+    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP')
 
-    date_time_stamp = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     start_event = time_events.DateTimeValuesEvent(
         date_time_stamp, definitions.TIME_DESCRIPTION_START)
 
@@ -199,9 +191,9 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
     event_data.wireless_wan_out = int(self._GetRowValue(
         query_hash, row, 'ZWWANOUT'))
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP') + 978307200
+    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP')
 
-    date_time_stamp = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     start_event = time_events.DateTimeValuesEvent(
         date_time_stamp, definitions.TIME_DESCRIPTION_START)
 

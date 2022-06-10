@@ -53,6 +53,12 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'ios:netusage:route'
+- input_attribute: 'network_type'
+  output_attribute: 'network_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'wifi'
+    2: 'cellular'
 message:
 - 'Bytes In: {bytes_in}'
 - 'Bytes Out: {bytes_out}'

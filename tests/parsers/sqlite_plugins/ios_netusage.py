@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for the SQLite parser plugin for iOS powerlog database files."""
+"""Tests for the SQLite parser plugin for iOS netusage database files."""
 
 import unittest
 
@@ -9,7 +9,7 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class IOSNetusagePluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the SQLite parser plugin iOS netusage database files."""
+  """Tests for the SQLite parser plugin for iOS netusage database files."""
 
   def testParseNetusageRouteRow(self):
     """Tests the ParseNetusageRouteRow method."""
@@ -31,7 +31,7 @@ class IOSNetusagePluginTest(test_lib.SQLitePluginTestCase):
         'bytes_out': 59786697,
         'network_identifier': 'Carrier-18005506',
         'network_signature': '353537613832343930343563356433642D33613937333034',
-        'network_type': 'cellular',
+        'network_type': 2,
         'timestamp': '2021-02-19 05:00:00.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -41,7 +41,7 @@ class IOSNetusagePluginTest(test_lib.SQLitePluginTestCase):
         'bytes_out': 42416,
         'network_identifier': 'CcookiesDcastleR5 Guest-f8:bb:bf:8d:b9:c9',
         'network_signature': 'D9BA0E7A16AECFFC9DD5E8DC19242A49F7B2567900000000',
-        'network_type': 'wifi',
+        'network_type': 1,
         'timestamp': '2021-02-19 05:00:00.000000'}
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
