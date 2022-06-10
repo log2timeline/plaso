@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Confluence access log (conf_access_log[DATE].log) file parser.
 
-Per the definitions in https://confluence.atlassian.com/doc/configure-access
--logs-1044780567.html
+Per the definitions in
+https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
 """
 
 import pyparsing
@@ -22,13 +22,13 @@ class ConfluenceAccessEventData(events.EventData):
 
   Attributes:
     forwarded_for (str): request X-FORWARDED-FOR header value.
-    http_request_method (str): http request method.
-    http_request_referer (str): http request referer header information.
-    http_request_uri (str): http request url.
-    http_request_user_agent (str): http request user agent header information.
-    http_response_bytes (int): http response bytes size without headers.
-    http_response_code (int): http response code from server.
-    http_version (str): http request version.
+    http_request_method (str): HTTP request method.
+    http_request_referer (str): HTTP request referer header information.
+    http_request_uri (str): HTTP request URI.
+    http_request_user_agent (str): HTTP request user agent header information.
+    http_response_bytes (int): HTTP response bytes size without headers.
+    http_response_code (int): HTTP response code from server.
+    http_version (str): HTTP request version.
     process_duration (int): time taken to process the request in milliseconds.
     remote_name (str): remote  hostname or IP address
     thread_name (str): name of the thread that handled the request.
@@ -120,11 +120,8 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.alphanums + "/-_.?=%&:+<>#~[]").setResultsName(
           'request_url'))
 
-  # datetime, username, current request thread name, remote host name or ip,
-  # first line of request, status code, time in ms, bytes sent, referer,
-  # user agent
-  # Defined in https://confluence.atlassian.com/confkb/audit-confluence-using
-  # -the-tomcat-valve-component-223216846.html
+  # Defined in
+  # https://confluence.atlassian.com/confkb/audit-confluence-using-the-tomcat-valve-component-223216846.html
   # format: "%t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{User-Agent}i"
   _PRE_711_FORMAT = (
       _DATE_TIME +
@@ -279,13 +276,12 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       user_agent = event_data.http_request_user_agent.strip()
       event_data.http_request_user_agent = user_agent
 
-    event_data.http_version = self._GetValueFromStructure(structure,
-                                                          'http_version')
+    event_data.http_version = self._GetValueFromStructure(
+        structure, 'http_version')
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # pylint: disable=unused-argument
-
+  # pylint: disable=unused-argument
   def VerifyStructure(self, parser_mediator, line):
     """Verifies that this is a confluence access log file.
 
