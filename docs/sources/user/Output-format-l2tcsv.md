@@ -22,7 +22,7 @@ Name | Description
 date | The date of the event(s), in the format of "MM/DD/YYYY" (n.b this might get changed in a future version to YYYY-MM-DD, but for now this will stay this way).
 time | time of day, expressed in a 24h format, HH:MM:SS (in future versions this may change to include ms values in the format of HH:MM:SS.ms).
 timezone | The name of the timezone used as the output timezone, or the chosen timezone of the input file if no output timezone was chosen.
-MACB | MACB or legacy meaning of the fields, mostly for compatibility with the mactime format.
+MACB | MACB or legacy meaning of the fields, mostly for compatibility with the output of the Sleuthkit mactime utility.
 source | Short name for the source. This may be something like LOG, WEBHIST, REG, etc. This field name should correspond to the type field in the TLN output format and describes the nature of the log format on a high level (all log files are marked as LOG, all registry as REG, etc.)
 sourcetype | More comprehensive description of the source. This field further describes the format, such as "Syslog" instead of simply "LOG", "NTUSER.DAT Registry" instead of "REG", etc.
 type | type of the timestamp itself, such as “Last Accessed”, “Last Written” or “Last modified”, etc.
