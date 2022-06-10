@@ -37,7 +37,7 @@ class IOSSysdiagLogEventData(events.EventData):
 class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS mobile installation log files."""
 
-  NAME = 'ios:sydiag:log'
+  NAME = 'ios_sysdiag_log'
   DATA_FORMAT = 'iOS sysdiag log'
 
   MONTHS = {
