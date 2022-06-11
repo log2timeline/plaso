@@ -97,7 +97,7 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name')
   )
 
-  _USER_AGENT = pyparsing.rest_of_line.setResultsName('user_agent')
+  _USER_AGENT = pyparsing.restOfLine.setResultsName('user_agent')
 
   _USER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '@' + pyparsing.alphanums + '.') |
@@ -105,7 +105,7 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('-')).setResultsName('user_name')
 
   _HTTP_METHOD = (
-      pyparsing.one_of(
+      pyparsing.oneOf(
           ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST',
               'PUT', 'TRACE'])).setResultsName('http_method')
 
