@@ -111,6 +111,22 @@ DATETIME(0)
 DATETIME("2020-12-23T12:34:56.789")
 ```
 
+### Path value helper
+
+The path helper is:
+```
+PATH(str)
+```
+
+It allows to check a path on a per path segment basis.
+
+For example the path helper:
+```
+path contains PATH('bin')
+```
+
+Will match `/usr/bin` and `/usr/local/bin` but not `/usr/local/sbin`.
+
 ## References
 
 * [log2timeline filtering 101](http://blog.kiddaland.net/2012/12/log2timeline-filtering-101.html)
