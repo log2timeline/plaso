@@ -31,6 +31,7 @@ parsers:
 - ios_sysdiag_log
 - jsonl/ios_application_privacy
 - sqlite/imessage
+- sqlite/ios_netusage
 - sqlite/ios_powerlog
 - sqlite/ios_screentime
 - sqlite/kik_ios
