@@ -61,23 +61,26 @@ class VimInfoFileParser():
       pyparsing.Literal('# hlsearch on (H) or off (h):') +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       pyparsing.Suppress(pyparsing.LineStart()) +
-      pyparsing.Word(pyparsing.alphanums + '~/').setResultsName('hlsearch') +  # TODO: this can only be h or H
+      pyparsing.Word('~/hH').setResultsName('hlsearch') +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
+  # TODO: https://github.com/vim/vim/blob/master/src/viminfo.c#L1525
   _SEARCH_PATTERN = (
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Literal('# Last Search Pattern:') +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       pyparsing.Suppress(pyparsing.LineStart()) +
-      pyparsing.Word(pyparsing.alphanums + '~/').setResultsName('search_pattern') +  # TODO: https://github.com/vim/vim/blob/424bcae1fb0f69e0aef5e0cf84fd771cf34a0fb7/src/viminfo.c#L1525
+      pyparsing.Word(pyparsing.alphanums + '~/').setResultsName(
+        'search_pattern') +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
+  # TODO: https://github.com/vim/vim/blob/master/src/viminfo.c#L1525
   _SUBSTITUTE_SEARCH_PATTERN = (
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Literal('# Last Substitute Search Pattern:') +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       pyparsing.Suppress(pyparsing.LineStart()) +
-      pyparsing.restOfLine.setResultsName('substitute_search_pattern') +  # TODO: https://github.com/vim/vim/blob/424bcae1fb0f69e0aef5e0cf84fd771cf34a0fb7/src/viminfo.c#L1525
+      pyparsing.restOfLine.setResultsName('substitute_search_pattern') +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   _SUBSTITUTE_STRING = (
@@ -395,7 +398,8 @@ class VimInfoParser(interface.FileObjectParser):
     filename = parser_mediator.GetFilename()
     if filename != self._FILENAME:
       raise errors.WrongParser(
-          'File name: {0} does not match the expected viminfo filename'.format(filename))
+          'File name: {0} does not match the expected viminfo filename'.format(
+              filename))
 
     file_size = file_object.get_size()
     if file_size <= 0:
