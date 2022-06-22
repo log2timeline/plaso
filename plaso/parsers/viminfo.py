@@ -144,7 +144,7 @@ class VimInfoFileParser():
 
   _SEARCH_STRING_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +  pyparsing.Literal('?') +
-      pyparsing.Word(pyparsing.alphas + '/:') +
+      pyparsing.restOfLine +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       _BAR_ITEM).setResultsName('search_string_items*')
 
@@ -198,6 +198,7 @@ class VimInfoFileParser():
       pyparsing.restOfLine() +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
+  # http://vimdoc.sourceforge.net/htmldoc/change.html#registers
   _REGISTERS_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Literal('"') +
@@ -328,7 +329,7 @@ class VimInfoFileParser():
     items = []
     for i, item in enumerate(self.parsed_data.get('filemarks_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'filename': item[3]})
+          {'index': i, 'timestamp': int(item[5][5]), 'filename': item[4]})
     return items
 
   def Jumplist(self):
@@ -336,7 +337,7 @@ class VimInfoFileParser():
     items = []
     for i, item in enumerate(self.parsed_data.get('jumplist_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'filename': item[3]})
+          {'index': i, 'timestamp': int(item[4][5]), 'filename': item[3]})
     return items
 
 
@@ -356,7 +357,6 @@ class VimInfoEventData(events.EventData):
     self.value = None
     self.filename = None
     self.item_number = None
-
 
 
 class VimInfoParser(interface.FileObjectParser):
@@ -397,9 +397,9 @@ class VimInfoParser(interface.FileObjectParser):
     """
     filename = parser_mediator.GetFilename()
     if filename != self._FILENAME:
-      raise errors.WrongParser(
-          'File name: {0} does not match the expected viminfo filename'.format(
-              filename))
+     raise errors.WrongParser(
+         'File name: {0} does not match the expected viminfo filename'.format(
+             filename))
 
     file_size = file_object.get_size()
     if file_size <= 0:
@@ -413,7 +413,8 @@ class VimInfoParser(interface.FileObjectParser):
     viminfo_data = file_object.read()
 
     try:
-      viminfo_file = VimInfoFileParser(file_data=viminfo_data)
+      file_data = viminfo_data.decode()
+      viminfo_file = VimInfoFileParser(file_data=file_data)
     except pyparsing.ParseException as exception:
       parser_mediator.ProduceExtractionWarning(
           'unable to parse Viminfo file with error: {0!s}', exception)
