@@ -397,9 +397,9 @@ class VimInfoParser(interface.FileObjectParser):
     """
     filename = parser_mediator.GetFilename()
     if filename != self._FILENAME:
-     raise errors.WrongParser(
-         'File name: {0} does not match the expected viminfo filename'.format(
-             filename))
+      raise errors.WrongParser(
+          'File name: {0} does not match the expected viminfo filename'.format(
+              filename))
 
     file_size = file_object.get_size()
     if file_size <= 0:
