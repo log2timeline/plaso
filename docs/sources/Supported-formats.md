@@ -53,6 +53,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * [Windows NT Registry File (REGF)](https://forensicswiki.xyz/wiki/index.php?title=Windows_NT_Registry_File_(REGF)) using [libregf](https://github.com/libyal/libregf)
 * [Windows Shortcut File (LNK) format](https://forensicswiki.xyz/wiki/index.php?title=LNK) using [liblnk](https://github.com/libyal/liblnk) (including shell item support)
 * [Windows XML Event Log (EVTX)](https://forensicswiki.xyz/wiki/index.php?title=Windows_XML_Event_Log_(EVTX)) using [libevtx](https://github.com/libyal/libevtx)
+* Viminfo files
 * Zsh history files
 
 ### Bencode file formats
