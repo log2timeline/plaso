@@ -56,15 +56,15 @@ $test
 
 # Jumplist (newest first):
 -'  123  0  ~\_vimrc
-|4,39,123,0,1234567896,"~\\_vimrc"
+|4,39,123,0,1234567898,"~\\_vimrc"
 -'  12  0  C:\Program Files (x86)\Vim\.vimrc
-|4,39,12,0,1234567897,"C:\\Program Files (x86)\\Vim\\.vimrc"
+|4,39,12,0,1234567899,"C:\\Program Files (x86)\\Vim\\.vimrc"
 
 # History of marks within files (newest to oldest):
 > ~\_vimrc
-	*	1234567896	0
+	*	1234567898	0
 	"	123	0
 
 > C:\Program Files (x86)\Vim\.vimrc
-	*	1234567897	0
+	*	1234567899	0
 	"	12	0

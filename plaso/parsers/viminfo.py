@@ -319,7 +319,7 @@ class VimInfoFileParser():
     items = []
     for item in self.parsed_data.get('registers_items', []):
       items.append({
-          'register': item[0],
+          'register': item[1],
           'timestamp': int(item[12]),
           'register_value': '\n'.join(item[4])})
     return items
@@ -482,7 +482,7 @@ class VimInfoParser(interface.FileObjectParser):
     for item in viminfo_file.Registers():
       event_data = VimInfoEventData()
       event_data.value = item['register_value']
-      event_data.type = 'Registers'
+      event_data.type = 'Register'
       event_data.item_number = item['register']
 
       timestamp = item['timestamp']
@@ -493,8 +493,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.Filemarks():
       event_data = VimInfoEventData()
-      event_data.filename = item['filename']
-      event_data.type = 'Filemark'
+      event_data.filename = item['filename'].strip()
+      event_data.type = 'File mark'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -505,7 +505,7 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.Jumplist():
       event_data = VimInfoEventData()
-      event_data.filename = item['filename']
+      event_data.filename = item['filename'].strip()
       event_data.type = 'Jumplist'
       event_data.item_number = item['index']
 
