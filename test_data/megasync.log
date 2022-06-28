@@ -1,0 +1,6 @@
+01/21-08:24:53.632228 7988 DBG  Activating transfer [megaclient.cpp:4092]
+01/21-08:24:53.632258 7988 INFO Transfer (UPLOAD) starting. File: sample.txt [megaapi_impl.cpp:16786]
+[repeated x1]
+01/21-08:24:54.985521 7988 DBG  Creating thumb/preview for C:\Test\Path\New directory\sample.txt [gfx.cpp:297]
+01/21-08:24:55.146229 7988 INFO Transfer (UPLOAD) finished. File: sample.txt [megaapi_impl.cpp:16370]
+[repeated x3]

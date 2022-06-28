@@ -91,6 +91,9 @@ Thanks to contributors (alphabetically based on last name):
     * USBStor
     * Win7 UserAssist
     * WinRar
+* Atte Niemi
+  * Parsers
+    * MEGASync
 * Patrik Nisen
   * For providing input for parsing the DestList stream for the automatic
     destinations OLECF plugin

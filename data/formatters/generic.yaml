@@ -389,6 +389,14 @@ short_message:
 - '{filename}'
 ---
 type: 'conditional'
+data_type: 'megasync:log:line'
+message:
+- '({log_level})'
+- '{message}'
+short_message:
+- '{message}'
+---
+type: 'conditional'
 data_type: 'metadata:openxml'
 message:
 - 'Creating App: {creating_app}'

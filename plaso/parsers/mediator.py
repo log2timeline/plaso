@@ -7,6 +7,7 @@ import time
 
 import pytz
 
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import artifacts
