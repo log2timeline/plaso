@@ -33,7 +33,7 @@ class IOSLockdownLogData(events.EventData):
 class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for iOS lockdown daemon log files (ios_lockdownd.log)."""
 
-  NAME = 'ios:lockdownd:log'
+  NAME = 'ios_lockdownd'
   DATA_FORMAT = 'iOS lockdown daemon log'
 
   TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS

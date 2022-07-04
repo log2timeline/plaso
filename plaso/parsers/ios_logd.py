@@ -33,7 +33,7 @@ class IOSSysdiagnoseLogdData(events.EventData):
 class IOSSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
   """Parser for iOS sysdiagnose logd files (logd.0.log)."""
 
-  NAME = 'ios_sysdiagnose_logd'
+  NAME = 'ios_logd'
   DATA_FORMAT = 'iOS sysdiagnose logd file'
 
   DATE_ELEMENTS = text_parser.PyparsingConstants.DATE_ELEMENTS
