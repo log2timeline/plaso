@@ -2,8 +2,6 @@
 """Parser for MEGASync log files.
 """
 
-from operator import truediv
-import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -32,7 +30,7 @@ class MEGASyncEventData(events.EventData):
     super(MEGASyncEventData, self).__init__(data_type=self.DATA_TYPE)
     self.log_level = None
     self.message = None
-  
+
 class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
   """Parses MEGASync log files"""
 
@@ -49,8 +47,8 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
   # Timestamp format is: mm/dd-hh:mm:ss.######
   # For example: 03/21-04:13:44.621454
   _TIMESTAMP = pyparsing.Group(
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') + 
-      _TWO_DIGITS.setResultsName('day') + pyparsing.Suppress('-') + 
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
+      _TWO_DIGITS.setResultsName('day') + pyparsing.Suppress('-') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS
   ).setResultsName('timestamp')
 
@@ -60,22 +58,22 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('CRIT') |
       pyparsing.Literal('ERR') |
       pyparsing.Literal('WARN') |
-      pyparsing.Literal('INFO') | 
-      pyparsing.Literal('DBG') | 
+      pyparsing.Literal('INFO') |
+      pyparsing.Literal('DBG') |
       pyparsing.Literal('DTL')
   ).setResultsName('log_level')
 
   _MESSAGE = (
-      pyparsing.White(ws=' ', min=1, max=2).suppress() + 
+      pyparsing.White(ws=' ', min=1, max=2).suppress() +
       pyparsing.restOfLine().setResultsName('message')
   )
 
   _LOG_LINE = _TIMESTAMP + _THREAD_NAME + _LOG_LEVEL + _MESSAGE
-  
+
   # Indicates that the last log line was repeated multiple times.
   _REPEAT_LINE = (
-      pyparsing.Suppress('[repeated x') + 
-      text_parser.PyparsingConstants.INTEGER + 
+      pyparsing.Suppress('[repeated x') +
+      text_parser.PyparsingConstants.INTEGER +
       pyparsing.Suppress("]")
   ).setResultsName("repeats")
 
@@ -99,17 +97,17 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
       month (int): month observed by the parser, where January is 1.
     """
-    # TODO: use timestamps of the Gzip file, not the file within the Gzip file as the
-    #       basis of estimation.
+    # TODO: use timestamps of the Gzip file, not the file
+    # within the Gzip file as the basis of estimation.
     if not self._year_use:
       self._year_use = mediator.GetEstimatedYear()
-      
-      # zlib (used by MEGASync to compress rotated-out log files) 
+
+      # zlib (used by MEGASync to compress rotated-out log files)
       # can generate Gzip files with empty modification timestamp.
       # This shouldn't be used as the estimated year.
       # MEGASync logs can't originate from 1970, so this is safe.
       if self._year_use == 1970:
-       self._year_use = mediator.GetCurrentYear()
+        self._year_use = mediator.GetCurrentYear()
     if not self._maximum_year:
       self._maximum_year = mediator.GetLatestYear()
 
@@ -118,10 +116,10 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     if self._last_month > month:
-        if self._year_use < self._maximum_year:
-          self._year_use += 1
+      if self._year_use < self._maximum_year:
+        self._year_use += 1
     self._last_month = month
-    
+
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a structure of tokens derived from a line of a text file.
@@ -136,20 +134,22 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    # TODO: consider handling repeat lines as well. Repeating lines 
+    # TODO: consider handling repeat lines as well. Repeating lines
     #       are mostly cURL-related debug lines, so likely not of much use.
     if key != "repeat":
       time_elements_tuple = self._GetValueFromStructure(structure, 'timestamp')
-      (month, day_of_month, hours, minutes, seconds, milliseconds) = time_elements_tuple
+      month, day_of_month, hours, minutes, seconds, milliseconds = (
+          time_elements_tuple)
 
       self._UpdateYear(parser_mediator, month)
 
       time_elements_tuple = (
-         self._year_use, month, day_of_month, hours, minutes, seconds, milliseconds
-      )
+          self._year_use,
+          month, day_of_month, hours, minutes, seconds, milliseconds)
 
       try:
-        timestamp = dfdatetime_time_elements.TimeElements(time_elements_tuple=time_elements_tuple)
+        timestamp = dfdatetime_time_elements.TimeElements(
+            time_elements_tuple=time_elements_tuple)
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
             'invalid timestamp: {0!s}'.format(time_elements_tuple)
@@ -167,14 +167,14 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
     """Verifies if a line from a text file is in the expected format.
 
     Args:
-    parser_mediator (ParserMediator): mediates interactions between parsers
-    and other components, such as storage and dfvfs.
-    line (str): line from a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): line from a text file.
 
     Returns:
-    bool: True if the line is in the expected format, False if not.
+      bool: True if the line is in the expected format, False if not.
     """
-    
+
     verified = False
     for _, line_structure in self.LINE_STRUCTURES:
       try:
