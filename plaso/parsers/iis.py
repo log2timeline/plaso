@@ -233,11 +233,16 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     if not self._IsText(line):
       raise errors.WrongParser('Not a text file, unable to proceed.')
 
-    four_lines = [line]
-    for i in range(3):
-      four_lines.extend([self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)])
+    # IIS log headers can appear in any order, so read them all in to verify the structure
+    headers = [line]
+    while line != '':
+      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
+      if line.startswith("#"):
+        headers.extend([line])
+      else:
+        break
 
-    if not self.VerifyStructure(parser_mediator, ''.join(four_lines)):
+    if not self.VerifyStructure(parser_mediator, ''.join(headers)):
       raise errors.WrongParser('Wrong file structure.')
 
     self._parser_mediator = parser_mediator
