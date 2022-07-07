@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows IIS Log file."""
 
-from unittest.util import _MAX_LENGTH
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
