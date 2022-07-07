@@ -166,6 +166,38 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
+  def testParseWithIIS10File(self):
+    """Tests the Parse function with an IIS 10 log file."""
+    parser = iis.WinIISParser()
+    storage_writer = self._ParseFile(['iis10.log'], parser)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'date_time': '2021-04-01 00:00:21',
+        'dest_ip': '111.111.111.111',
+        'dest_port': 80,
+        'http_method': 'GET',
+        'http_status': 200,
+        'requested_uri_stem': '/foo/bar/baz.asp',
+        'source_ip': '222.222.222.222',
+        'user_agent': (
+            'Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/537.36+(KHTML,+like+Gecko)'
+            '+Chrome/35.0.2309.372+Safari/537.36')}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 if __name__ == '__main__':
   unittest.main()

@@ -408,53 +408,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       line_structure = PyparsingLineStructure(key, expression)
       self._line_structures.append(line_structure)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a text file-like object using a pyparsing definition.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    if not self._line_structures:
-      raise errors.WrongParser(
-          'Line structure undeclared, unable to proceed.')
-
-    encoding = self._ENCODING or parser_mediator.codepage
-
-    # Use strict encoding error handling in the verification step so that
-    # a text parser does not generate extraction warning for encoding errors
-    # of unsupported files.
-    text_file_object = text_file.TextFile(file_object, encoding=encoding)
-
-    try:
-      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-    except UnicodeDecodeError:
-      raise errors.WrongParser(
-          'Not a text file or encoding not supported.')
-
-    if not line:
-      raise errors.WrongParser('Not a text file.')
-
-    if len(line) == self.MAX_LINE_LENGTH or len(
-        line) == self.MAX_LINE_LENGTH - 1:
-      logger.debug((
-          'Trying to read a line and reached the maximum allowed length of '
-          '{0:d}. The last few bytes of the line are: {1:s} [parser '
-          '{2:s}]').format(
-              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
-
-    if not self._IsText(line):
-      raise errors.WrongParser('Not a text file, unable to proceed.')
-
-    if not self.VerifyStructure(parser_mediator, line):
-      raise errors.WrongParser('Wrong file structure.')
-
-    self._parser_mediator = parser_mediator
-
+  def ParseLine(self, parser_mediator, file_object, encoding):
     text_file_object = text_file.TextFile(
         file_object, encoding=encoding, encoding_errors='text_parser_handler')
     line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
@@ -512,6 +466,55 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
             'unable to read and decode log line at offset {0:d}'.format(
                 self._current_offset))
         break
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      WrongParser: when the file cannot be parsed.
+    """
+    if not self._line_structures:
+      raise errors.WrongParser(
+          'Line structure undeclared, unable to proceed.')
+
+    encoding = self._ENCODING or parser_mediator.codepage
+
+    # Use strict encoding error handling in the verification step so that
+    # a text parser does not generate extraction warning for encoding errors
+    # of unsupported files.
+    text_file_object = text_file.TextFile(file_object, encoding=encoding)
+
+    try:
+      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
+    except UnicodeDecodeError:
+      raise errors.WrongParser(
+          'Not a text file or encoding not supported.')
+
+    if not line:
+      raise errors.WrongParser('Not a text file.')
+
+    if len(line) == self.MAX_LINE_LENGTH or len(
+        line) == self.MAX_LINE_LENGTH - 1:
+      logger.debug((
+          'Trying to read a line and reached the maximum allowed length of '
+          '{0:d}. The last few bytes of the line are: {1:s} [parser '
+          '{2:s}]').format(
+              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
+
+    if not self._IsText(line):
+      raise errors.WrongParser('Not a text file, unable to proceed.')
+
+    if not self.VerifyStructure(parser_mediator, line):
+      raise errors.WrongParser('Wrong file structure.')
+
+    self._parser_mediator = parser_mediator
+
+    self.ParseLine(parser_mediator, file_object, encoding)
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
