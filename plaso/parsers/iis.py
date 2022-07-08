@@ -233,7 +233,8 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     if not self._IsText(line):
       raise errors.WrongParser('Not a text file, unable to proceed.')
 
-    # IIS log headers can appear in any order, so read them all in to verify the structure
+    # IIS log headers can appear in any order,
+    # so read them all in to verify the structure
     headers = [line]
     while line != '':
       line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)

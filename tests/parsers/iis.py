@@ -194,7 +194,8 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'requested_uri_stem': '/foo/bar/baz.asp',
         'source_ip': '222.222.222.222',
         'user_agent': (
-            'Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/537.36+(KHTML,+like+Gecko)'
+            'Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/'
+            '537.36+(KHTML,+like+Gecko)'
             '+Chrome/35.0.2309.372+Safari/537.36')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

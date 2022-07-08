@@ -409,6 +409,17 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       self._line_structures.append(line_structure)
 
   def ParseLine(self, parser_mediator, file_object, encoding):
+    """Parses a line of text using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+      encoding (str): Encoding or codepage that should be used.
+
+    Raises:
+      WrongParser: when the file cannot be parsed.
+    """
     text_file_object = text_file.TextFile(
         file_object, encoding=encoding, encoding_errors='text_parser_handler')
     line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
