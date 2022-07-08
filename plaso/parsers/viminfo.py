@@ -345,7 +345,10 @@ class VimInfoEventData(events.EventData):
   """VimInfo event data.
 
   Attributes:
-    command (str): command that was executed.
+    type (str): the Vim history type.
+    value (str): the Vim history value.
+    filename (str): the name of the file that was opened/edited.
+    item_number (int): the nth item of the history type.
   """
 
   DATA_TYPE = 'viminfo:history'
