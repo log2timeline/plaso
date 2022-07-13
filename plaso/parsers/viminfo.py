@@ -275,43 +275,46 @@ class VimInfoFileParser():
   def CommandLineHistory(self):
     """Returns a list of command line history items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get('command_line_items', [])):
-      items.append({'index': i, 'timestamp': int(item[5]), 'command': item[1]})
+    for index, item in enumerate(
+        self.parsed_data.get('command_line_items', [])):
+      items.append(
+          {'index': index, 'timestamp': int(item[5]), 'command': item[1]})
     return items
 
   def SearchStringHistory(self):
     """Returns a list of search string history items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get('search_string_items', [])):
+    for index, item in enumerate(
+        self.parsed_data.get('search_string_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'search_string': item[1]})
+          {'index': index, 'timestamp': int(item[5]), 'search_string': item[1]})
     return items
 
   def ExpressionHistory(self):
     """Returns a list of expression history items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get(
+    for index, item in enumerate(self.parsed_data.get(
         'expression_history_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'expression': item[1]})
+          {'index': index, 'timestamp': int(item[5]), 'expression': item[1]})
     return items
 
   def InputLineHistory(self):
     """Returns a list of input line history items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get(
+    for index, item in enumerate(self.parsed_data.get(
         'input_line_history_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'input line': item[1]})
+          {'index': index, 'timestamp': int(item[5]), 'input line': item[1]})
     return items
 
   def DebugLineHistory(self):
     """Returns a list of debug line history items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get(
+    for index, item in enumerate(self.parsed_data.get(
         'debug_line_history_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5]), 'debug line': item[1]})
+          {'index': index, 'timestamp': int(item[5]), 'debug line': item[1]})
     return items
 
   def Registers(self):
@@ -327,17 +330,17 @@ class VimInfoFileParser():
   def Filemarks(self):
     """Returns a list of filemark items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get('filemarks_items', [])):
+    for index, item in enumerate(self.parsed_data.get('filemarks_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[5][5]), 'filename': item[4]})
+          {'index': index, 'timestamp': int(item[5][5]), 'filename': item[4]})
     return items
 
   def Jumplist(self):
     """Returns a list of jumplist items."""
     items = []
-    for i, item in enumerate(self.parsed_data.get('jumplist_items', [])):
+    for index, item in enumerate(self.parsed_data.get('jumplist_items', [])):
       items.append(
-          {'index': i, 'timestamp': int(item[4][5]), 'filename': item[3]})
+          {'index': index, 'timestamp': int(item[4][5]), 'filename': item[3]})
     return items
 
 
@@ -401,8 +404,8 @@ class VimInfoParser(interface.FileObjectParser):
     filename = parser_mediator.GetFilename()
     if filename != self._FILENAME:
       raise errors.WrongParser(
-          'File name: {0} does not match the expected viminfo filename'.format(
-              filename))
+          'File name: {0:s} does not match the expected viminfo '
+          'filename.'.format(filename))
 
     file_size = file_object.get_size()
     if file_size <= 0:
