@@ -236,3 +236,16 @@ message:
 - '{text}'
 short_message:
 - '{text}'
+---
+type: 'conditional'
+data_type: 'av:windows:defenderlog'
+message:
+- 'File Name: {filename}'
+- 'Hash: {sha256}'
+- 'User: {host_and_user}'
+- '{threatname}'
+- 'Process: {process}'
+- '{web_filename}'
+short_message:
+- '{filename}'
+- '{threatname}'
