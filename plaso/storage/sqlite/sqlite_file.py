@@ -111,7 +111,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
-  _READ_COMPATIBLE_FORMAT_VERSION = 20190309
+  _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
   # Container types to not create a table for.
   _NO_CREATE_TABLE_CONTAINER_TYPES = (
