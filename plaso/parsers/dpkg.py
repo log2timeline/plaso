@@ -171,8 +171,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED,
-        time_zone=parser_mediator.timezone
-        )
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
