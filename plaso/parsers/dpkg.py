@@ -154,6 +154,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
 
       date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
           year, month, day_of_month, hours, minutes, seconds))
+      date_time.is_local_time = True
 
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
@@ -169,7 +170,8 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
     event_data.body = body_text
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED)
+        date_time, definitions.TIME_DESCRIPTION_ADDED,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
