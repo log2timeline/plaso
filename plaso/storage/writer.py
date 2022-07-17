@@ -170,7 +170,7 @@ class StorageWriter(reader.StorageReader):
         self._store.UpdateAttributeContainer(existing_event_tag)
 
       if self._storage_type == definitions.STORAGE_TYPE_TASK:
-        self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT] += 1
+        self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT_TAG] += 1
 
   def Close(self):
     """Closes the storage writer.
