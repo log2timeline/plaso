@@ -19,7 +19,7 @@ class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
     plugin = ios_carplay.IOSCarPlayPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
-    
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
 
