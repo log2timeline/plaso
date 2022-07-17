@@ -554,11 +554,12 @@ class FieldFormattingHelper(object):
       self._winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
 
     message_string = None
+    provider_identifier = getattr(event_data, 'provider_identifier', None)
     source_name = getattr(event_data, 'source_name', None)
     message_identifier = getattr(event_data, 'message_identifier', None)
-    if source_name and message_identifier:
+    if (provider_identifier or source_name) and message_identifier:
       message_string_template = self._winevt_resources_helper.GetMessageString(
-          source_name, message_identifier)
+          provider_identifier, source_name, message_identifier)
       if message_string_template:
         string_values = [string or '' for string in event_data.strings]
         try:

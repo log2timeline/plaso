@@ -364,10 +364,13 @@ class WinevtResourcesHelper(object):
     self._windows_eventlog_providers = None
     self._winevt_database_reader = None
 
-  def _CacheMessageString(self, log_source, message_identifier, message_string):
+  def _CacheMessageString(
+      self, provider_identifier, log_source, message_identifier,
+      message_string):
     """Caches a specific message string.
 
     Args:
+      provider_identifier (str): EventLog provider identifier.
       log_source (str): EventLog source, such as "Application Error".
       message_identifier (int): message identifier.
       message_string (str): message string.
@@ -375,24 +378,43 @@ class WinevtResourcesHelper(object):
     if len(self._message_string_cache) >= self._MAXIMUM_CACHED_MESSAGE_STRINGS:
       self._message_string_cache.popitem(last=True)
 
-    lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
-    self._message_string_cache[lookup_key] = message_string
-    self._message_string_cache.move_to_end(lookup_key, last=False)
+    if provider_identifier:
+      lookup_key = '{0:s}:0x{1:08x}'.format(
+          provider_identifier, message_identifier)
+      self._message_string_cache[lookup_key] = message_string
+      self._message_string_cache.move_to_end(lookup_key, last=False)
 
-  def _GetCachedMessageString(self, log_source, message_identifier):
+    if log_source:
+      lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+      self._message_string_cache[lookup_key] = message_string
+      self._message_string_cache.move_to_end(lookup_key, last=False)
+
+  def _GetCachedMessageString(
+      self, provider_identifier, log_source, message_identifier):
     """Retrieves a specific cached message string.
 
     Args:
+      provider_identifier (str): EventLog provider identifier.
       log_source (str): EventLog source, such as "Application Error".
       message_identifier (int): message identifier.
 
     Returns:
       str: message string or None if not available.
     """
-    lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
-    message_string = self._message_string_cache.get(lookup_key, None)
+    message_string = None
+
+    if provider_identifier:
+      lookup_key = '{0:s}:0x{1:08x}'.format(
+          provider_identifier, message_identifier)
+      message_string = self._message_string_cache.get(lookup_key, None)
+
+    if not message_string and log_source:
+      lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+      message_string = self._message_string_cache.get(lookup_key, None)
+
     if message_string:
       self._message_string_cache.move_to_end(lookup_key, last=False)
+
     return message_string
 
   def _GetWinevtRcDatabaseReader(self):
@@ -443,7 +465,7 @@ class WinevtResourcesHelper(object):
         log_source, self.DEFAULT_LCID, message_identifier)
 
   def _ReadEnvironmentVariables(self, storage_reader):
-    """Reads the Windows EventLog message files.
+    """Reads the environment variables.
 
     Args:
       storage_reader (StorageReader): storage reader.
@@ -467,11 +489,13 @@ class WinevtResourcesHelper(object):
             message_file.GetIdentifier())
 
   def _ReadWindowsEventLogMessageString(
-      self, storage_reader, log_source, message_identifier):
+      self, storage_reader, provider_identifier, log_source,
+      message_identifier):
     """Reads an Windows EventLog message string.
 
     Args:
       storage_reader (StorageReader): storage reader.
+      provider_identifier (str): EventLog provider identifier.
       log_source (str): EventLog source, such as "Application Error".
       message_identifier (int): message identifier.
 
@@ -487,8 +511,17 @@ class WinevtResourcesHelper(object):
     if self._windows_eventlog_message_files is None:
       self._ReadWindowsEventLogMessageFiles(storage_reader)
 
-    provider = self._windows_eventlog_providers.get(
-        log_source.lower(), None)
+    provider = None
+
+    if provider_identifier:
+      lookup_key = provider_identifier.lower()
+      provider = self._windows_eventlog_providers.get(lookup_key, None)
+
+    if not provider:
+      lookup_key = log_source.lower()
+      provider = self._windows_eventlog_providers.get(lookup_key, None)
+
+    provider = self._windows_eventlog_providers.get(lookup_key, None)
     if not provider:
       return None
 
@@ -526,8 +559,8 @@ class WinevtResourcesHelper(object):
 
       if not message_strings:
         logger.error(
-            'No match for message: 0x{0:08x} of source: {1:s}'.format(
-                message_identifier, log_source))
+            'No match for message: 0x{0:08x} of provider: {1:s}'.format(
+                message_identifier, lookup_key))
 
     # TODO: add support for mappings in the WEVT_TEMPLATE PE/COFF resource
 
@@ -547,14 +580,19 @@ class WinevtResourcesHelper(object):
       for provider in storage_reader.GetAttributeContainers(
           'windows_eventlog_provider'):
 
+        if provider.identifier:
+          self._windows_eventlog_providers[provider.identifier] = provider
+
         for log_source in provider.log_sources:
           log_source = log_source.lower()
           self._windows_eventlog_providers[log_source] = provider
 
-  def GetMessageString(self, log_source, message_identifier):
+  def GetMessageString(
+      self, provider_identifier, log_source, message_identifier):
     """Retrieves a specific Windows EventLog message string.
 
     Args:
+      provider_identifier (str): EventLog provider identifier.
       log_source (str): EventLog source, such as "Application Error".
       message_identifier (int): message identifier.
 
@@ -562,18 +600,19 @@ class WinevtResourcesHelper(object):
       str: message string or None if not available.
     """
     message_string = self._GetCachedMessageString(
-        log_source, message_identifier)
+        provider_identifier, log_source, message_identifier)
     if not message_string:
       if self._storage_reader and self._storage_reader.HasAttributeContainers(
           'windows_eventlog_provider'):
         message_string = self._ReadWindowsEventLogMessageString(
-            self._storage_reader, log_source, message_identifier)
-
+            self._storage_reader, provider_identifier, log_source,
+            message_identifier)
       else:
         message_string = self._GetWinevtRcDatabaseMessageString(
             log_source, message_identifier)
 
       if message_string:
-        self._CacheMessageString(log_source, message_identifier, message_string)
+        self._CacheMessageString(
+            provider_identifier, log_source, message_identifier, message_string)
 
     return message_string
