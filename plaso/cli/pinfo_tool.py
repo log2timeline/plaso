@@ -1334,9 +1334,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           self._PrintExtractionWarningsDetails(storage_reader)
 
       warnings_by_path_spec = storage_counters.get(
-          'recovery_warnings_by_path_spec', collections.Counter())
+          'preprocessing_warnings_by_path_spec', collections.Counter())
       warnings_by_parser_chain = storage_counters.get(
-          'recovery_warnings_by_parser_chain', collections.Counter())
+          'preprocessing_warnings_by_parser_chain', collections.Counter())
 
       # TODO: print preprocessing warnings as part of JSON output format.
 
@@ -1346,6 +1346,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         if self._verbose or 'warnings' in self._sections:
           self._PrintPreprocessingWarningsDetails(storage_reader)
+
+      warnings_by_path_spec = storage_counters.get(
+          'recovery_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'recovery_warnings_by_parser_chain', collections.Counter())
 
       # TODO: print recovery warnings as part of JSON output format.
 
