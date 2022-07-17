@@ -96,7 +96,7 @@ class SQLiteStorageFile(interface.BaseStore):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
-  _FORMAT_VERSION = 20211121
+  _FORMAT_VERSION = 20220716
 
   # The earliest format version with a schema.
   _WITH_SCHEMA_FORMAT_VERSION = 20210621

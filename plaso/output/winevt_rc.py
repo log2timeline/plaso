@@ -547,11 +547,8 @@ class WinevtResourcesHelper(object):
       for provider in storage_reader.GetAttributeContainers(
           'windows_eventlog_provider'):
 
-        log_source = provider.log_source.lower()
-        self._windows_eventlog_providers[log_source] = provider
-
-        if provider.log_source_alias:
-          log_source = provider.log_source_alias.lower()
+        for log_source in provider.log_sources:
+          log_source = log_source.lower()
           self._windows_eventlog_providers[log_source] = provider
 
   def GetMessageString(self, log_source, message_identifier):

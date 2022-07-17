@@ -2,6 +2,7 @@
 """The preprocess mediator."""
 
 from plaso.containers import warnings
+from plaso.helpers.windows import eventlog_providers
 from plaso.preprocessors import logger
 
 
@@ -23,6 +24,8 @@ class PreprocessMediator(object):
     self._knowledge_base = knowledge_base
     self._session = session
     self._storage_writer = storage_writer
+    self._windows_eventlog_providers_helper = (
+        eventlog_providers.WindowsEventLogProvidersHelper())
     self._windows_eventlog_providers_by_identifier = {}
 
   @property
@@ -100,42 +103,28 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the Windows EventLog provider already exists.
     """
+    existing_provider = None
     provider_identifier = windows_eventlog_provider.identifier
 
-    existing_provider = self._knowledge_base.GetWindowsEventLogProvider(
-        windows_eventlog_provider.log_source)
-
-    if not existing_provider and provider_identifier:
+    if provider_identifier:
       existing_provider = self._windows_eventlog_providers_by_identifier.get(
           provider_identifier, None)
 
-      if existing_provider:
-        existing_provider.log_source_alias = existing_provider.log_source
-        existing_provider.log_source = windows_eventlog_provider.log_source
+    if not existing_provider:
+      existing_provider = self._knowledge_base.GetWindowsEventLogProvider(
+          windows_eventlog_provider.log_sources[0])
 
     if existing_provider:
-      if not existing_provider.category_message_files:
-        existing_provider.category_message_files = (
-            windows_eventlog_provider.category_message_files)
-
-      if not existing_provider.event_message_files:
-        existing_provider.event_message_files = (
-            windows_eventlog_provider.event_message_files)
-
-      if not existing_provider.identifier:
-        existing_provider.identifier = windows_eventlog_provider.identifier
-
-      if not existing_provider.log_type:
-        existing_provider.log_type = windows_eventlog_provider.log_type
-
-      if not existing_provider.parameter_message_files:
-        existing_provider.parameter_message_files = (
-            windows_eventlog_provider.parameter_message_files)
+      self._windows_eventlog_providers_helper.Merge(
+          existing_provider, windows_eventlog_provider)
 
       if self._storage_writer:
         self._storage_writer.UpdateAttributeContainer(existing_provider)
 
     else:
+      self._windows_eventlog_providers_helper.NormalizeMessageFiles(
+          windows_eventlog_provider)
+
       if self._storage_writer:
         self._storage_writer.AddAttributeContainer(windows_eventlog_provider)
 
