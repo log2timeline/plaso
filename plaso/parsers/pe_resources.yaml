@@ -58,3 +58,112 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: message_table_string.data_size - 4
+---
+name: wevt_event_provider_descriptor
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: provider_identifier
+  type: uuid
+- name: data_offset
+  data_type: uint32
+---
+name: wevt_instrumentation_manifest
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "CRIM"
+- name: data_size
+  data_type: uint32
+- name: major_version
+  data_type: uint16
+- name: minor_version
+  data_type: uint16
+- name: number_of_event_providers
+  data_type: uint32
+- name: event_provider_descriptors
+  type: sequence
+  element_data_type: wevt_event_provider_descriptor
+  number_of_elements: wevt_instrumentation_manifest.number_of_event_providers
+---
+name: wevt_provider_element_descriptor
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_offset
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+---
+name: wevt_event_provider
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "WEVT"
+- name: data_size
+  data_type: uint32
+- name: message_table_identifier
+  data_type: uint32
+- name: number_of_provider_element_descriptors
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: provider_element_descriptors
+  type: sequence
+  element_data_type: wevt_provider_element_descriptor
+  number_of_elements: wevt_event_provider.number_of_provider_element_descriptors
+---
+name: wevt_event_definition
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: identifier
+  data_type: uint16
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  elements_data_size: 6
+- name: keywords
+  type: stream
+  element_data_type: byte
+  elements_data_size: 8
+- name: message_identifier
+  data_type: uint32
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  elements_data_size: 28
+---
+name: wevt_event_definitions
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "EVNT"
+- name: data_size
+  data_type: uint32
+- name: number_of_definitions
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: definitions
+  type: sequence
+  element_data_type: wevt_event_definition
+  number_of_elements: wevt_event_definitions.number_of_definitions

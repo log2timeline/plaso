@@ -848,9 +848,64 @@ class WindowsServiceConfigurationArtifact(ArtifactAttributeContainer):
     self.start_type = start_type
 
 
+class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
+  """Windows WEVT_TEMPLATE event definition.
+
+  Attributes:
+    identifier (int): event identifier.
+    message_identifier (int): identifier of the event message.
+    provider_identifier (str): identifier of the EventLog provider, contains
+        a GUID.
+  """
+
+  CONTAINER_TYPE = 'windows_wevt_template_event'
+
+  SCHEMA = {
+      '_message_file_row_identifier': 'AttributeContainerIdentifier',
+      'identifier': 'int',
+      'message_identifier': 'int',
+      'provider_identifier': 'str'}
+
+  def __init__(
+      self, identifier=None, message_identifier=None, provider_identifier=None):
+    """Initializes a Windows WEVT_TEMPLATE event definition artifact.
+
+    Args:
+      identifier (Optional[int]): event identifier.
+      message_identifier (Optional[int]): identifier of the event message.
+      provider_identifier (Optional[str]): identifier of the EventLog provider,
+          contains a GUID.
+    """
+    super(WindowsWevtTemplateEvent, self).__init__()
+    self._message_file_identifier = None
+    self._message_file_row_identifier = None
+    self.identifier = identifier
+    self.message_identifier = message_identifier
+    self.provider_identifier = provider_identifier
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when
+          not set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
     TimeZoneArtifact, UserAccountArtifact, WindowsEventLogMessageFileArtifact,
     WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact,
-    WindowsMountedDeviceArtifact, WindowsServiceConfigurationArtifact])
+    WindowsMountedDeviceArtifact, WindowsServiceConfigurationArtifact,
+    WindowsWevtTemplateEvent])

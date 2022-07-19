@@ -252,10 +252,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       return
 
     message_table_resource = None
+    winevt_template_resource = None
     for resource in resources.entries:
-      if resource.id == 11:
-        message_table_resource = resource
-
       timestamp = getattr(resource.directory, 'TimeDateStamp', None)
       if timestamp:
         event_data.pe_attribute = 'DIRECTORY_ENTRY_RESOURCE: {0!s}'.format(
@@ -266,33 +264,30 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if not parser_mediator.extract_winevt_resources:
-      return
+      # Only extract message strings from the first message table resource.
+      if resource.id == 11 and not message_table_resource:
+        message_table_resource = resource
 
-    if (not message_table_resource or not message_table_resource.directory or
-        not message_table_resource.directory.entries or
-        not message_table_resource.directory.entries[0].directory):
-      return
+      # Need to cast resource.name name to a string since it is of type
+      # pefile.UnicodeStringWrapperPostProcessor and would fail the comparison
+      # with 'WEVT_TEMPLATE' otherwise.
+      elif (resource.name and str(resource.name) == 'WEVT_TEMPLATE' and
+            not winevt_template_resource):
+        winevt_template_resource = resource
 
-    # Only extract message strings from EventLog message files.
-    message_file = parser_mediator.GetWindowsEventLogMessageFile()
-    if not message_file:
-      return
+    if parser_mediator.extract_winevt_resources:
+      message_file = parser_mediator.GetWindowsEventLogMessageFile()
 
-    for entry in message_table_resource.directory.entries[0].directory.entries:
-      language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
-          entry.id)
-      if not language_tag or language_tag.lower() != parser_mediator.language:
-        continue
+      # Only extract message strings from EventLog message files.
+      if message_file and message_table_resource:
+        self._ParseMessageTableResource(
+            parser_mediator, pefile_object, message_file,
+            message_table_resource)
 
-      parser_mediator.AddWindowsEventLogMessageFile(message_file)
-
-      # TODO: use file offset?
-      offset = getattr(entry.data.struct, 'OffsetToData', None)
-      size = getattr(entry.data.struct, 'Size', None)
-      data = pefile_object.get_memory_mapped_image()[offset:offset + size]
-
-      self._ParseMessageTable(parser_mediator, message_file, entry.id, data)
+      if winevt_template_resource:
+        self._ParseWevtTemplateResource(
+            parser_mediator, pefile_object, message_file,
+            winevt_template_resource)
 
   def _ParseMessageTable(
       self, parser_mediator, message_file, language_identifier, data):
@@ -384,6 +379,145 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         parser_mediator.AddWindowsEventLogMessageString(message_string)
 
         message_identifier += 1
+
+  def _ParseMessageTableResource(
+      self, parser_mediator, pefile_object, message_file,
+      message_table_resource):
+    """Parses a message table resource.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      pefile_object (pefile.PE): pefile object.
+      message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
+          message file.
+      message_table_resource (pefile.ResourceDirEntryData): message table
+          resource.
+    """
+    if (not message_table_resource or not message_table_resource.directory or
+        not message_table_resource.directory.entries or
+        not message_table_resource.directory.entries[0].directory):
+      return
+
+    desired_language_tag = parser_mediator.language.lower()
+
+    for entry in message_table_resource.directory.entries[0].directory.entries:
+      language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
+          entry.id)
+      # TODO: add support for common language tag fallback.
+      if not language_tag or language_tag.lower() != desired_language_tag:
+        continue
+
+      parser_mediator.AddWindowsEventLogMessageFile(message_file)
+
+      # TODO: use file offset?
+      offset = getattr(entry.data.struct, 'OffsetToData', None)
+      size = getattr(entry.data.struct, 'Size', None)
+      data = pefile_object.get_memory_mapped_image()[offset:offset + size]
+
+      self._ParseMessageTable(parser_mediator, message_file, entry.id, data)
+
+  def _ParseWevtTemplate(self, parser_mediator, message_file, data):
+    """Parses a WEVT_TEMPLATE.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
+          message file.
+      data (bytes): message table data.
+
+    Raises:
+      ParseError: when the message table cannot be parsed.
+    """
+    message_file_identifier = message_file.GetIdentifier()
+
+    wevt_manifest_map = self._GetDataTypeMap('wevt_instrumentation_manifest')
+    wevt_event_provider_map = self._GetDataTypeMap('wevt_event_provider')
+    wevt_event_definitions_map = self._GetDataTypeMap('wevt_event_definitions')
+
+    try:
+      manifest = self._ReadStructureFromByteStream(
+          data, 0, wevt_manifest_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to read WEVT instrumentation manifest with error: '
+          '{0!s}').format(exception))
+
+    for event_provider_descriptor in manifest.event_provider_descriptors:
+      data_offset = event_provider_descriptor.data_offset
+      try:
+        event_provider = self._ReadStructureFromByteStream(
+            data[data_offset:], data_offset, wevt_event_provider_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError(
+            'Unable to read WEVT event provider with error: {0!s}'.format(
+                exception))
+
+      provider_identifier = '{{{0!s}}}'.format(
+          event_provider_descriptor.provider_identifier)
+
+      for provider_element_descriptor in (
+          event_provider.provider_element_descriptors):
+        data_offset = provider_element_descriptor.data_offset
+
+        # Only extract event definitions.
+        if data[data_offset:data_offset + 4] == b'EVNT':
+          try:
+            event_definitions = self._ReadStructureFromByteStream(
+                data[data_offset:], data_offset, wevt_event_definitions_map)
+          except (ValueError, errors.ParseError) as exception:
+            raise errors.ParseError((
+                'Unable to read WEVT event definitions with error: '
+                '{0!s}').format(exception))
+          for event_definition in event_definitions.definitions:
+            event_definition = artifacts.WindowsWevtTemplateEvent(
+                identifier=event_definition.identifier,
+                message_identifier=event_definition.message_identifier,
+                provider_identifier=provider_identifier)
+            event_definition.SetMessageFileIdentifier(message_file_identifier)
+
+            parser_mediator.AddWindowsWevtTemplateEvent(event_definition)
+
+  def _ParseWevtTemplateResource(
+      self, parser_mediator, pefile_object, message_file,
+      wevt_template_resource):
+    """Parses a WEVT_TEMPLATE resource.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      pefile_object (pefile.PE): pefile object.
+      message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
+          message file.
+      wevt_template_resource (pefile.ResourceDirEntryData): WEVT_TEMPLATE
+          resource.
+
+    Raises:
+      ParseError: when the message table cannot be parsed.
+    """
+    if (not wevt_template_resource or not wevt_template_resource.directory or
+        not wevt_template_resource.directory.entries or
+        not wevt_template_resource.directory.entries[0].directory):
+      return
+
+    desired_language_tag = parser_mediator.language.lower()
+
+    for entry in wevt_template_resource.directory.entries[0].directory.entries:
+      language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
+          entry.id)
+      # TODO: add support for common language tag fallback.
+      if not language_tag or language_tag.lower() != desired_language_tag:
+        continue
+
+      parser_mediator.AddWindowsEventLogMessageFile(message_file)
+
+      # TODO: use file offset?
+      offset = getattr(entry.data.struct, 'OffsetToData', None)
+      size = getattr(entry.data.struct, 'Size', None)
+      data = pefile_object.get_memory_mapped_image()[offset:offset + size]
+
+      self._ParseWevtTemplate(parser_mediator, message_file, data)
 
   @classmethod
   def GetFormatSpecification(cls):

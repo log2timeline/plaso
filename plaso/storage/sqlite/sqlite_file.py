@@ -143,6 +143,10 @@ class SQLiteStorageFile(interface.BaseStore):
           'windows_eventlog_message_file',
           '_message_file_identifier',
           '_message_file_row_identifier')],
+      'windows_wevt_template_event': [(
+          'windows_eventlog_message_file',
+          '_message_file_identifier',
+          '_message_file_row_identifier')],
       # 'windows_eventlog_provider': [(
       #     'system_configuration',
       #     '_system_configuration_identifier',
