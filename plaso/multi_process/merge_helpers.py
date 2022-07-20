@@ -126,7 +126,8 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
-      artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE)
+      artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
+      artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE)
 
   def __init__(self, task_storage_reader, task_identifier):
     """Initialize a helper for merging extraction task attribute containers.
