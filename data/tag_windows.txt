@@ -100,7 +100,7 @@ system_sleep
 
 # Tags system wake events.
 system_wake
-data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Power-Troubleshooter' AND event_identifier is '1'
+data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Power-Troubleshooter' AND event_identifier is 1
 
 # Tags auto run events.
 autorun
