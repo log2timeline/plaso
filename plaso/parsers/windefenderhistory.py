@@ -13,9 +13,9 @@ from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
-
 from plaso.parsers import interface
 from plaso.parsers import manager
+
 
 class WinDefenderHistoryEventData(events.EventData):
     """Windows Defender Detection History event data."""
@@ -24,23 +24,28 @@ class WinDefenderHistoryEventData(events.EventData):
 
     def __init__(self):
         """Initializes event data."""
-        super(WinDefenderHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+        super(WinDefenderHistoryEventData,
+              self).__init__(data_type=self.DATA_TYPE)
         self.sha256 = None
         self.filename = None
+        self.extra = None
+        self.container_filename = None
         self.web_filename = None
         self.threatname = None
         self.host_and_user = None
         self.process = None
 
-class WinDefenderHistoryParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+
+class WinDefenderHistoryParser(interface.FileObjectParser,
+                               dtfabric_helper.DtFabricHelper):
     """Parses the Windows Defender History Log."""
 
     NAME = 'windefenderhistory'
 
     _FILE_SIGNATURE = "Magic.Version"
 
-    _DEFINITION_FILE = os.path.join(
-        os.path.dirname(__file__), 'windefenderhistory.yml')
+    _DEFINITION_FILE = os.path.join(os.path.dirname(__file__),
+                                    'windefenderhistory.yml')
 
     def _ReadFileHeader(self, file_object):
         """Reads the file header.
@@ -76,8 +81,66 @@ class WinDefenderHistoryParser(interface.FileObjectParser, dtfabric_helper.DtFab
     def _ReadBlock(self, file_object, file_offset, extra_offset, map_name):
         data_type_map = self._GetDataTypeMap(map_name)
 
-        return self._ReadStructureFromFileObject(
-            file_object, file_offset+extra_offset, data_type_map)
+        return self._ReadStructureFromFileObject(file_object,
+                                                 file_offset + extra_offset,
+                                                 data_type_map)
+
+    def _ReadFileSection(self, file_object, size_so_far, offset, event_data,
+                         mediator):
+        file, file_size = self._ReadBlock(file_object, size_so_far, offset,
+                                          'file_section')
+        size_so_far += file_size
+
+        file_type = file.file_header.decode('windows-1252').replace('\x00', '')
+        if file_type == "containerfile":
+            event_data.container_filename = file.file_value
+        elif file_type == "webfile":
+            event_data.web_filename = file.file_value
+        elif file_type == "file":
+            event_data.filename = file.file_value
+        else:
+            event_data.extra = file.file_value
+
+        return event_data, size_so_far
+
+    def _ReadKVBlockLoop(self, file_object, size_so_far, event_data,
+                         date_time):
+        while True:
+            try:
+                tk, tk_size = self._ReadBlock(file_object, size_so_far, 0,
+                                              'kv_block_key')
+                if tk.key == '':
+                    break
+                size_so_far += tk_size
+                if tk.value_type == 6:
+                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0,
+                                                  'kv_block_string_value')
+                    size_so_far += tv_size
+                    if "filename" in tk.key.lower():
+                        event_data.filename = tv.value.rstrip('\x00')
+                    if "Sha256" in tk.key:
+                        event_data.sha256 = tv.value.rstrip('\x00')
+                elif tk.value_type == 3:  # Flag
+                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0,
+                                                  'kv_block_flags_value')
+                    size_so_far += tv_size
+                elif tk.value_type == 5:  # Bool
+                    size_so_far += 1
+                    continue
+                elif tk.value_type == 4:  # Date Time
+                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0,
+                                                  'kv_block_bytes_value')
+                    size_so_far += tv_size
+                    if "Time" in tk.key and date_time is None:
+                        date_time = tv.value  # Int tuple
+                else:  # Catch all
+                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0,
+                                                  'kv_block_bytes_value')
+                    size_so_far += tv_size
+            except errors.ParseError:
+                break
+
+        return event_data, size_so_far, date_time
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows Defender History file-like object.
@@ -91,78 +154,76 @@ class WinDefenderHistoryParser(interface.FileObjectParser, dtfabric_helper.DtFab
       WrongParser: when the file cannot be parsed.
     """
         try:
-            file_header, file_header_size = self._ReadFileHeader(file_object)
+            _, file_header_size = self._ReadFileHeader(file_object)
         except (ValueError, errors.ParseError) as e:
-            raise errors.WrongParser((
-                '[{0:s}] {1:s} is not a valid Windows Defender History file').format(
-                    self.NAME, parser_mediator.GetDisplayName()))
+            raise errors.WrongParser(
+                ('[{0:s}] {1:s} is not a valid Windows Defender History file'
+                 ).format(self.NAME, parser_mediator.GetDisplayName()))
 
         size_so_far = file_header_size
 
         event_data = WinDefenderHistoryEventData()
-
-        threat, threat_size = self._ReadBlock(file_object, size_so_far, 2, 'key_value_pair_with_colon')
-        size_so_far += threat_size
-
-        event_data.threatname = threat.value
-
-        _, phb_size = self._ReadBlock(file_object, size_so_far, 0, 'post_header_block')
-        size_so_far += phb_size
-
-        file, file_size = self._ReadBlock(file_object, size_so_far, -2, 'file_section')
-        size_so_far += file_size
-
-        event_data.filename = file.file_value
-
-        _, pfb_size = self._ReadBlock(file_object, size_so_far, 0, 'post_file_block')
-        size_so_far += pfb_size-1
-
         date_time = None
 
-        while True:
-            try:
-                tk, tk_size = self._ReadBlock(file_object, size_so_far, 0, 'kv_block_key')
-                if tk.key == '':
-                    break
-                size_so_far += tk_size
-                if tk.value_type == 6:
-                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0, 'kv_block_string_value')
-                    size_so_far += tv_size
-                    if "Sha256" in tk.key:
-                        event_data.sha256 = tv.value.rstrip('\x00')
-                elif tk.value_type == 3: # Flag
-                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0, 'kv_block_flags_value')
-                    size_so_far += tv_size
-                elif tk.value_type == 5: # Bool
-                    size_so_far += 1
-                    continue
-                elif tk.value_type == 4: # Date Time
-                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0, 'kv_block_bytes_value')
-                    size_so_far += tv_size
-                    if "Time" in tk.key:
-                        date_time = tv.value # Int tuple
-                else: # Catch all
-                    tv, tv_size = self._ReadBlock(file_object, size_so_far, 0, 'kv_block_bytes_value')
-                    size_so_far += tv_size
-            except errors.ParseError:
-                break
+        threat, threat_size = self._ReadBlock(file_object, size_so_far, 4,
+                                              'key_value_pair_with_colon')
+        size_so_far += threat_size
 
+        event_data.threatname = threat.key + ":" + threat.value
+
+        _, phb_size = self._ReadBlock(file_object, size_so_far, 0,
+                                      'post_header_block')
+        size_so_far += phb_size
+
+        event_data, size_so_far = self._ReadFileSection(
+            file_object, size_so_far, -2, event_data, parser_mediator)
+
+        # Potentially another file block directly after
         backup_size = size_so_far
         try:
-            _, phb_size = self._ReadBlock(file_object, size_so_far, -1, 'post_header_block')
+            _, phb_size = self._ReadBlock(file_object, size_so_far, 0,
+                                          'post_header_block')
             size_so_far += phb_size
-
-            file, file_size = self._ReadBlock(file_object, size_so_far, -3, 'file_section')
-            size_so_far += file_size
-            event_data.web_filename = file.file_value
+            event_data, size_so_far = self._ReadFileSection(
+                file_object, size_so_far, -2, event_data, parser_mediator)
         except errors.ParseError:
             size_so_far = backup_size
+            pass
 
-        _, pkvb_size = self._ReadBlock(file_object, size_so_far, 0,
+        _, pfb_size = self._ReadBlock(file_object, size_so_far, 0,
+                                      'post_file_block')
+        size_so_far += pfb_size - 5
+
+        event_data, size_so_far, date_time = self._ReadKVBlockLoop(
+            file_object, size_so_far, event_data, date_time)
+
+        backup_size = size_so_far
+        while True:
+            try:
+                _, phb_size = self._ReadBlock(file_object, size_so_far, -1,
+                                              'post_header_block')
+                size_so_far += phb_size
+
+                event_data, size_so_far = self._ReadFileSection(
+                    file_object, size_so_far, -3, event_data, parser_mediator)
+
+                _, pfb_size = self._ReadBlock(file_object, size_so_far, 0,
+                                              'post_file_block')
+                size_so_far += pfb_size - 5
+
+                event_data, size_so_far, date_time = self._ReadKVBlockLoop(
+                    file_object, size_so_far, event_data, date_time)
+                backup_size = size_so_far
+            except errors.ParseError:
+                size_so_far = backup_size
+                break
+
+        _, pkvb_size = self._ReadBlock(file_object, size_so_far, -1,
                                        'post_kv_block')
-        size_so_far += pkvb_size + 2
+        size_so_far += pkvb_size + 1
 
-        u, _ = self._ReadBlock(file_object, size_so_far, 1, 'user_and_process')
+        u, _ = self._ReadBlock(file_object, size_so_far, -4,
+                               'user_and_process')
 
         event_data.host_and_user = u.user
         event_data.process = u.process
@@ -171,5 +232,6 @@ class WinDefenderHistoryParser(interface.FileObjectParser, dtfabric_helper.DtFab
             self._CreateDateTime(date_time),
             definitions.TIME_DESCRIPTION_RECORDED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 manager.ParsersManager.RegisterParser(WinDefenderHistoryParser)

@@ -67,7 +67,7 @@ attributes:
 members:
 - name: attribute_length
   data_type: uint32
-- name: unknown1
+- name: key_type
   data_type: uint32
 - name: key
   type: string
@@ -116,23 +116,10 @@ members:
 - name: file_header
   type: stream
   element_data_type: byte
-  elements_data_size: file_section.file_header_length-2
-- name: webfilenull
-  type: stream
-  element_data_type: byte
-  elements_data_size: 2
-  condition: file_section.file_header[0] == 119 # w for webfile
-- name: containerfilenull
-  type: stream
-  element_data_type: byte
-  elements_data_size: 6
-  condition: file_section.file_header[0] == 99 # c for containerfile
-- name: filenull1
-  data_type: uint32
-  condition: file_section.file_header[0] == 102 # f for file
-- name: filenull2
-  data_type: uint32
-  condition: file_section.file_header[0] == 102
+  elements_data_size: file_section.file_header_length
+- name: padding
+  type: padding
+  alignment_size: 8
 - name: file_value_length
   data_type: uint32
 - name: file_value_type
@@ -156,7 +143,7 @@ members:
 - name: unknown1
   type: stream
   element_data_type: byte
-  elements_terminator: "\x2a"
+  elements_terminator: "\x54"
 ---
 name: kv_block_key
 type: structure
@@ -214,7 +201,7 @@ members:
 - name: block
   type: stream
   element_data_type: uint16
-  elements_terminator: "\x00\x2c"
+  elements_terminator: "\x15\x00"
 ---
 name: user_and_process
 type: structure
@@ -227,7 +214,8 @@ members:
   type: string
   encoding: utf-16-le
   element_data_type: wchar16
-  elements_data_size: user_and_process.user_size*2
+  elements_terminator: "\x00\x00"
+  # elements_data_size: user_and_process.user_size*2
 - name: padding
   type: stream
   element_data_type: uint16

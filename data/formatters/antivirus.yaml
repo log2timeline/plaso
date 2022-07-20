@@ -245,7 +245,9 @@ message:
 - 'User: {host_and_user}'
 - '{threatname}'
 - 'Process: {process}'
+- '{container_filename}'
 - '{web_filename}'
+- '{extra}'
 short_message:
 - '{filename}'
 - '{threatname}'
