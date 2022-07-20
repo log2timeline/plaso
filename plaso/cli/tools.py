@@ -199,8 +199,8 @@ class CLITool(object):
     """
     warning_text = 'WARNING: {0:s}'.format(warning_text)
     warning_text = textwrap.wrap(warning_text, 80)
-    print('\n'.join(warning_text))
-    print('')
+    print('\n'.join(warning_text), file=sys.stderr)
+    print('', file=sys.stderr)
 
     self._has_user_warning = True
 
