@@ -402,6 +402,9 @@ class LanguageTagHelper(object):
       'zu': 'Zulu',
       'zu-ZA': 'Zulu, South Africa'}
 
+  _LANGUAGE_PER_TAG_LOWER_CASE = {
+      tag.lower(): language for tag, language in _LANGUAGE_PER_TAG.items()}
+
   @classmethod
   def GetLanguages(cls):
     """Retrieveve the language tags with their description.
@@ -421,4 +424,4 @@ class LanguageTagHelper(object):
     Returns:
       bool: True if the string contains a language tag.
     """
-    return string in cls._LANGUAGE_PER_TAG
+    return string.lower() in cls._LANGUAGE_PER_TAG_LOWER_CASE

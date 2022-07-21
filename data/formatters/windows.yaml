@@ -131,29 +131,33 @@ enumeration_helpers:
 message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
 - 'Source Name: {source_name}'
-- 'Message string: {message_string}'
 - 'Strings: {strings}'
 - 'Computer Name: {computer_name}'
 - 'Severity: {severity}'
 - 'Record Number: {record_number}'
 - 'Event Type: {event_type}'
 - 'Event Category: {event_category}'
+- 'Message string: {message_string}'
 short_message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Source Name: {source_name}'
 - 'Strings: {strings}'
 ---
 type: 'conditional'
 data_type: 'windows:evtx:record'
 message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Provider identifier: {provider_identifier}'
 - 'Source Name: {source_name}'
-- 'Message string: {message_string}'
 - 'Strings: {strings}'
 - 'Computer Name: {computer_name}'
 - 'Record Number: {record_number}'
 - 'Event Level: {event_level}'
+- 'Message string: {message_string}'
 short_message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Provider identifier: {provider_identifier}'
+- 'Source Name: {source_name}'
 - 'Strings: {strings}'
 ---
 # TODO: Add more "elegant" formatting, as in transform ICMP code/type into

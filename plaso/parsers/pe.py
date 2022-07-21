@@ -276,18 +276,20 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         winevt_template_resource = resource
 
     if parser_mediator.extract_winevt_resources:
-      message_file = parser_mediator.GetWindowsEventLogMessageFile()
-
       # Only extract message strings from EventLog message files.
-      if message_file and message_table_resource:
-        self._ParseMessageTableResource(
-            parser_mediator, pefile_object, message_file,
-            message_table_resource)
+      message_file = parser_mediator.GetWindowsEventLogMessageFile()
+      if message_file:
+        parser_mediator.AddWindowsEventLogMessageFile(message_file)
 
-      if winevt_template_resource:
-        self._ParseWevtTemplateResource(
-            parser_mediator, pefile_object, message_file,
-            winevt_template_resource)
+        if message_table_resource:
+          self._ParseMessageTableResource(
+              parser_mediator, pefile_object, message_file,
+              message_table_resource)
+
+        if winevt_template_resource:
+          self._ParseWevtTemplateResource(
+              parser_mediator, pefile_object, message_file,
+              winevt_template_resource)
 
   def _ParseMessageTable(
       self, parser_mediator, message_file, language_identifier, data):
@@ -408,8 +410,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       if not language_tag or language_tag.lower() != desired_language_tag:
         continue
 
-      parser_mediator.AddWindowsEventLogMessageFile(message_file)
-
       # TODO: use file offset?
       offset = getattr(entry.data.struct, 'OffsetToData', None)
       size = getattr(entry.data.struct, 'Size', None)
@@ -509,8 +509,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       # TODO: add support for common language tag fallback.
       if not language_tag or language_tag.lower() != desired_language_tag:
         continue
-
-      parser_mediator.AddWindowsEventLogMessageFile(message_file)
 
       # TODO: use file offset?
       offset = getattr(entry.data.struct, 'OffsetToData', None)

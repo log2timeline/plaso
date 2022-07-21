@@ -529,6 +529,23 @@ class WinevtResourcesHelper(object):
         'windows_eventlog_message_string'):
       return None
 
+    # Map the event identifier to a message identifier as defined by the
+    # WEVT_TEMPLATE event definition.
+    if provider_identifier and storage_reader.HasAttributeContainers(
+        'windows_wevt_template_event'):
+      # TODO: add message_file_identifiers to filter_expression
+      filter_expression = (
+          'provider_identifier == "{0:s}" and identifier == {1:d}').format(
+              provider_identifier, message_identifier)
+      for event_definition in storage_reader.GetAttributeContainers(
+          'windows_wevt_template_event', filter_expression=filter_expression):
+        logger.debug(
+            'Message: 0x{0:08x} of provider: {1:s} maps to: 0x{2:08x}'.format(
+                message_identifier, provider_identifier,
+                event_definition.message_identifier))
+        message_identifier = event_definition.message_identifier
+        break
+
     message_file_identifiers = []
     for windows_path in provider.event_message_files or []:
       path, filename = path_helper.PathHelper.GetWindowsSystemPath(
@@ -543,12 +560,12 @@ class WinevtResourcesHelper(object):
 
     message_strings = []
     if message_file_identifiers:
+      # TODO: add message_file_identifiers to filter_expression
       filter_expression = (
           'language_identifier == {0:d} and '
           'message_identifier == {1:d}').format(
               self._lcid, message_identifier)
 
-      # TODO: add message_file_identifiers to filter_expression
       for message_string in storage_reader.GetAttributeContainers(
           'windows_eventlog_message_string',
           filter_expression=filter_expression):
@@ -561,8 +578,6 @@ class WinevtResourcesHelper(object):
         logger.error(
             'No match for message: 0x{0:08x} of provider: {1:s}'.format(
                 message_identifier, lookup_key))
-
-    # TODO: add support for mappings in the WEVT_TEMPLATE PE/COFF resource
 
     if message_strings:
       return message_strings[0].string
