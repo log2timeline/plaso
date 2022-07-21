@@ -695,6 +695,19 @@ short_source: 'LOG'
 source: 'PostgreSQL Log'
 ---
 type: 'conditional'
+data_type: 'powershell:transcript:event'
+message:
+- '{command} was executed'
+- 'by host application {host_application}'
+- 'as user {runas_user}'
+- 'in process {process_identifier}'
+short_message:
+- '{host_application} executed: '
+- '{command}'
+short_source: 'LOG'
+source: 'PowerShell Transcript Event'
+---
+type: 'conditional'
 data_type: 'santa:diskmount'
 message:
 - 'Santa {action}'
