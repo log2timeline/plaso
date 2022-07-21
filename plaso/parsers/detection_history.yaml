@@ -48,21 +48,6 @@ attributes:
   size: 8
   units: bytes
 ---
-name: defender_file_header
-type: structure
-attributes:
-  byte_order: little-endian
-members:
-- name: header_bytes
-  type: stream
-  element_data_type: byte
-  elements_data_size: 5
-  value: "\x08\x00\x00\x00\x08"
-- name: extra
-  type: stream
-  element_data_type: byte
-  elements_data_size: 11
----
 name: detection_history_value_base
 type: structure
 attributes:

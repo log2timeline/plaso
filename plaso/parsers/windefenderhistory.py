@@ -43,7 +43,6 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
 
     NAME = 'windefenderhistory'
 
-    _FILE_HEADER = b'\x08\x00\x00\x00\x08'
     _FILE_SIGNATURE = "Magic.Version"
 
     _VALUE_DESCRIPTIONS = [{
@@ -128,7 +127,7 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         Raises:
             ParseError: if the file header cannot be read.
         """
-        data_type_map = self._GetDataTypeMap('defender_file_header')
+        data_type_map = self._GetDataTypeMap('detection_history_value')
         header, header_size = self._ReadStructureFromFileObject(
             file_object, 0, data_type_map)
 
@@ -138,7 +137,7 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         signature, signature_size = self._ReadStructureFromFileObject(
             file_object, header_size + guid_size, data_type_map)
 
-        if header.header_bytes != self._FILE_HEADER and self._FILE_SIGNATURE not in signature.value_string:
+        if (header.data_size != 8 or header.data_type != 8) and self._FILE_SIGNATURE not in signature.value_string:
             raise errors.ParseError('Invalid header')
 
         return header_size + guid_size + signature_size
