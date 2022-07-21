@@ -137,7 +137,8 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         signature, signature_size = self._ReadStructureFromFileObject(
             file_object, header_size + guid_size, data_type_map)
 
-        if (header.data_size != 8 or header.data_type != 8) and self._FILE_SIGNATURE not in signature.value_string:
+        if (header.data_size != 8 or header.data_type != 8
+            ) and self._FILE_SIGNATURE not in signature.value_string:
             raise errors.ParseError('Invalid header')
 
         return header_size + guid_size + signature_size
@@ -301,7 +302,9 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
                 value_index = 0
 
             if (value_index_set, value_index) == (2, 5):
-                threat_attributes.update(self._ReadThreatTrackingData(value_object, file_offset + 8))
+                threat_attributes.update(
+                    self._ReadThreatTrackingData(value_object,
+                                                 file_offset + 8))
 
             else:
                 description = self._VALUE_DESCRIPTIONS[value_index_set].get(
@@ -318,7 +321,12 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
                 if description == "Resource type":
                     temp_resource_name = value_string
                 elif description == "Resource location" and temp_resource_name is not None:
-                    threat_attributes['Resources'].append({'Type': temp_resource_name, 'Location': value_string})
+                    threat_attributes['Resources'].append({
+                        'Type':
+                        temp_resource_name,
+                        'Location':
+                        value_string
+                    })
                     temp_resource_name = None
                 else:
                     threat_attributes[description] = value_string
@@ -326,32 +334,49 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
             value_index += 1
 
         event_data.threatname = threat_attributes.get('Threat name', 'UNKNOWN')
-        filenames = [x['Location'] for x in threat_attributes['Resources'] if x['Type'] == "file"]
+        filenames = [
+            x['Location'] for x in threat_attributes['Resources']
+            if x['Type'] == "file"
+        ]
         if len(filenames) > 0:
             event_data.filename = filenames[0]
         else:
             event_data.filename = 'UNKNOWN'
             if 'CONTEXT_DATA_FILENAME' in threat_attributes:
-                event_data.filename = threat_attributes['CONTEXT_DATA_FILENAME']
+                event_data.filename = threat_attributes[
+                    'CONTEXT_DATA_FILENAME']
             if 'CONTEXT_DATA_PROCESS_PPID' in threat_attributes:
-                event_data.filename += "," + threat_attributes['CONTEXT_DATA_PROCESS_PPID']
-        webfiles = [x['Location'] for x in threat_attributes['Resources'] if x['Type'] == "webfile"]
+                event_data.filename += "," + threat_attributes[
+                    'CONTEXT_DATA_PROCESS_PPID']
+        webfiles = [
+            x['Location'] for x in threat_attributes['Resources']
+            if x['Type'] == "webfile"
+        ]
         if len(webfiles) > 0:
             event_data.web_filename = ", ".join(webfiles)
-        containerfiles = [x['Location'] for x in threat_attributes['Resources'] if x['Type'] == "containerfile"]
+        containerfiles = [
+            x['Location'] for x in threat_attributes['Resources']
+            if x['Type'] == "containerfile"
+        ]
         if len(containerfiles) > 0:
             event_data.container_filename = ", ".join(containerfiles)
-        extrafiles = [x['Location'] for x in threat_attributes['Resources'] if "file" not in x['Type']]
+        extrafiles = [
+            x['Location'] for x in threat_attributes['Resources']
+            if "file" not in x['Type']
+        ]
         if len(extrafiles):
             event_data.extra = ", ".join(extrafiles)
-        event_data.sha256 = threat_attributes.get('ThreatTrackingSha256', 'UNKNOWN')
-        event_data.host_and_user = threat_attributes.get('Domain user1', 'UNKNOWN')
+        event_data.sha256 = threat_attributes.get('ThreatTrackingSha256',
+                                                  'UNKNOWN')
+        event_data.host_and_user = threat_attributes.get(
+            'Domain user1', 'UNKNOWN')
         event_data.process = threat_attributes.get('Process name', 'Unknown')
 
         event = time_events.DateTimeValuesEvent(
-            self._CreateDateTime(threat_attributes.get('ThreatTrackingStartTime', 0)),
+            self._CreateDateTime(
+                threat_attributes.get('ThreatTrackingStartTime', 0)),
             definitions.TIME_DESCRIPTION_RECORDED)
-        
+
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
