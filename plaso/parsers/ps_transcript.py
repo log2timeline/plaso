@@ -42,6 +42,7 @@ class PSTranscriptEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
+
     super(PSTranscriptEventData, self).__init__(data_type=self.DATA_TYPE)
     self.build_version = None
     self.clr_version = None
@@ -61,7 +62,7 @@ class PSTranscriptEventData(events.EventData):
 
 
 class PSTranscriptParser(interface.FileObjectParser):
-  """Parses events from Powershell transcript files."""
+  """Parses events from PowerShell transcript files."""
 
   NAME = 'ps_transcript'
 
@@ -101,6 +102,7 @@ class PSTranscriptParser(interface.FileObjectParser):
       header_data (PSTranscriptEventData): prefilled PSTranscriptEventData
           object with metainfos.
     """
+
     for transcript in transcripts:
       # create a copy of the pre-filled event object
       event_data = copy.deepcopy(header_data)
@@ -127,7 +129,7 @@ class PSTranscriptParser(interface.FileObjectParser):
                             int(timestamp_string[12:])
       try:
         start_time = dfdatetime_time_elements.TimeElements(
-        time_elements_tuple=time_elements_tuple)
+          time_elements_tuple=time_elements_tuple)
       except ValueError:
         parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '\
           'invalid - skipping malformed transcript'.format(time_elements_tuple))
@@ -143,7 +145,7 @@ class PSTranscriptParser(interface.FileObjectParser):
       event_data.command = command
       # finally create event if values have been set
       if (event is not None and event_data.command is not None and
-          event_data.command != ""):
+            event_data.command != ""):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       else:
         parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '\
@@ -161,10 +163,10 @@ class PSTranscriptParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+
     data = file_object.read(self._HEADER_READ_SIZE)
     if not data == b'\xef\xbb\xbf**********************':
-      raise errors.WrongParser(
-          'Not a PowerShell transcript file')
+      raise errors.WrongParser('Not a PowerShell transcript file')
 
     # The current offset of the file-like object needs to point at
     # the start of the file to parse the data correctly.
