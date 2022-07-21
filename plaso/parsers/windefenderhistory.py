@@ -19,7 +19,18 @@ from plaso.parsers import manager
 
 
 class WinDefenderHistoryEventData(events.EventData):
-    """Windows Defender Detection History event data."""
+    """Windows Defender Detection History event data.
+    
+    Attributes:
+        sha256(str): Hash of the file.
+        filename(str): Filename that the threat was detected in.
+        extra(str): Comma separated list of extra detection locations.
+        container_filename(str): If the detected file was in a container, its location.
+        web_filename(str): If the detected file was downloaded from the web, its URI.
+        threatname(str): The threat that was detected.
+        host_and_user(str): Endpoint name in DOMAIN\\USER format.
+        process(str): The process that cased the detection.
+    """
 
     DATA_TYPE = "av:windows:defenderlog"
 
@@ -123,7 +134,7 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
                                     'detection_history.yaml')
 
     def _ReadFileHeader(self, file_object):
-        """Reads the file header.
+        """Reads the beginning of the file to verify it's a Defender History log.
 
         Args:
             file_object (file): file-like object.
@@ -145,14 +156,14 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
             ) and self._FILE_SIGNATURE not in signature.value_string:
             raise errors.ParseError('Invalid header')
 
-        return header_size + guid_size + signature_size
-
     def _ReadThreatTrackingData(self, threat_tracking_data, file_offset):
         """Reads the threat tracking data.
+
         Args:
             threat_tracking_data (bytes): threat tracking data.
             file_offset (int): offset of the threat tracking data relative to
                 the start of the file.
+
         Raises:
             IOError: if the threat tracking data cannot be read.
         """
@@ -187,22 +198,18 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         """Reads the threat tracking header.
 
         Args:
-        threat_tracking_data (bytes): threat tracking data.
+            threat_tracking_data (bytes): threat tracking data.
 
         Returns:
-        threat_tracking_header: threat tracking header.
+            threat_tracking_header: threat tracking header.
 
         Raises:
-        IOError: if the threat tracking header cannot be read.
+            IOError: if the threat tracking header cannot be read.
         """
         data_type_map = self._GetDataTypeMap('threat_tracking_header')
 
         threat_tracking_header = self._ReadStructureFromByteStream(
             threat_tracking_data, 0, data_type_map)
-
-        if threat_tracking_header.header_size > 20:
-            # TODO: debug print additional data.
-            pass
 
         return threat_tracking_header
 
@@ -210,15 +217,15 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         """Reads the threat tracking value.
 
         Args:
-        threat_tracking_data (bytes): threat tracking data.
-        file_offset (int): offset of the threat tracking data relative to
-            the start of the file.
+            threat_tracking_data (bytes): threat tracking data.
+            file_offset (int): offset of the threat tracking data relative to
+                the start of the file.
 
         Returns:
-        tuple[threat_tracking_value, int]: threat tracking value and data size.
+            tuple[threat_tracking_value, int]: threat tracking value and data size.
 
         Raises:
-        IOError: if the threat tracking value cannot be read.
+            IOError: if the threat tracking value cannot be read.
         """
         data_type_map = self._GetDataTypeMap('threat_tracking_value')
 
@@ -230,6 +237,13 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
         return threat_tracking_value, context.byte_size
 
     def _CreateDateTime(self, date_time):
+        """Creates a date time value from the given string..
+        Args:
+            date_time (str): Date time string in nanoseconds since epoch.
+        
+        Returns:
+            dfdatetime.TimeElements: date time object.
+        """
         epoch = timedelta(microseconds=float(date_time / 10))
         dt = datetime(1601, 1, 1) + epoch
         te = dfdatetime_time_elements.TimeElements()
@@ -238,13 +252,16 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
 
     def _ReadValue(self, file_object, file_offset):
         """Reads the value.
+
         Args:
-        file_object (file): file-like object.
-        file_offset (int): offset of the value relative to the start of the file.
+            file_object (file): file-like object.
+            file_offset (int): offset of the value relative to the start of the file.
+
         Returns:
-        object: value.
+            object: value.
+
         Raises:
-        IOError: if the value cannot be read.
+            IOError: if the value cannot be read.
         """
         data_type_map = self._GetDataTypeMap('detection_history_value')
 
@@ -268,16 +285,16 @@ class WinDefenderHistoryParser(interface.FileObjectParser,
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows Defender History file-like object.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
+        Args:
+            parser_mediator (ParserMediator): mediates interactions between parsers
+                and other components, such as storage and dfvfs.
+            file_object (dfvfs.FileIO): file-like object.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
+        Raises:
+            WrongParser: when the file cannot be parsed.
+        """
         try:
-            file_header_size = self._ReadFileHeader(file_object)
+            self._ReadFileHeader(file_object)
         except (ValueError, errors.ParseError) as e:
             raise errors.WrongParser(
                 ('[{0:s}] {1:s} is not a valid Windows Defender History file'
