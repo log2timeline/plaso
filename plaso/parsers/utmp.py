@@ -2,6 +2,7 @@
 """Parser for Linux utmp files."""
 
 import os
+import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -174,6 +175,11 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not event_data.username and event_data.type != self._DEAD_PROCESS_TYPE:
       raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing username')
+
+    first_line_terminal_match = re.compile(r'^[a-z0-9/ ]+$')
+    if not first_line_terminal_match.match(event_data.terminal):
+      raise errors.WrongParser(
+          'Unable to parse first utmp entry with error: invalid terminal')
 
     if warning_strings:
       all_warnings = ', '.join(warning_strings)
