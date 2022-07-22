@@ -104,7 +104,7 @@ class WinDefenderHistoryParser(
         the start of the file.
 
     Returns:
-      threat_tracking (dict[str, str]): Mapping of threat tracking
+      dict[str, str]: Mapping of threat tracking
         keys to values.
 
     Raises:
