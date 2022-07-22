@@ -104,7 +104,7 @@ class WinDefenderHistoryParser(
         the start of the file.
 
     Returns:
-      threat_tracking (dict): Mapping of threat tracking
+      threat_tracking (dict[str, str]): Mapping of threat tracking
         keys to values.
 
     Raises:
@@ -146,7 +146,7 @@ class WinDefenderHistoryParser(
       threat_tracking_data (bytes): threat tracking data.
 
     Returns:
-      dict[str, str]: threat tracking header.
+      threat_tracking_header: threat tracking header.
 
     Raises:
       IOError: if the threat tracking header cannot be read.
