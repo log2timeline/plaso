@@ -12,7 +12,7 @@ from plaso.containers import time_events
 
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
-from plaso.lib import errors
+from plaso.lib import specification
 
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -21,34 +21,33 @@ from plaso.parsers import manager
 class WinDefenderHistoryEventData(events.EventData):
   """Windows Defender Detection History event data.
 
-    Attributes:
-        sha256(str): Hash of the file.
-        filename(str): Filename that the threat was detected in.
-        extra(str): Comma separated list of extra detection locations.
-        container_filename(str): If the detected file was in a container,
-            its location.
-        web_filename(str): If the detected file was downloaded from the web,
-            its URI.
-        threatname(str): The threat that was detected.
-        host_and_user(str): Endpoint name in DOMAIN\\USER format.
-        process(str): The process that cased the detection.
+  Attributes:
+    container_filename(str): If the detected file was in a container,
+      its location.
+    extra(str): Comma separated list of extra detection locations.
+    filename(str): Filename that the threat was detected in.
+    host_and_user(str): Endpoint name in DOMAIN\\USER format.
+    process(str): The process that cased the detection.
+    sha256(str): Hash of the file.
+    threat_name(str): The threat that was detected.
+    web_filename(str): If the detected file was downloaded from the web,
+      its URI.
   """
 
-  DATA_TYPE = "av:windows:defenderlog"
+  DATA_TYPE = 'av:defender:detection_history'
 
   def __init__(self):
     """Initializes event data."""
     super(WinDefenderHistoryEventData, self).__init__(
-        data_type=self.DATA_TYPE
-    )
-    self.sha256 = None
-    self.filename = None
-    self.extra = None
+        data_type=self.DATA_TYPE)
     self.container_filename = None
-    self.web_filename = None
-    self.threatname = None
+    self.extra = None
+    self.filename = None
     self.host_and_user = None
     self.process = None
+    self.sha256 = None
+    self.threat_name = None
+    self.web_filename = None
 
 
 class WinDefenderHistoryParser(
@@ -56,9 +55,9 @@ class WinDefenderHistoryParser(
 ):
   """Parses the Windows Defender History Log."""
 
-  NAME = "windefenderhistory"
+  NAME = 'windefenderhistory'
 
-  _FILE_SIGNATURE = "Magic.Version"
+  _FILE_SIGNATURE = 'Magic.Version:1.2'
 
   _VALUE_DESCRIPTIONS = [
       {0: "Threat identifier", 1: "Identifier"},
@@ -78,103 +77,37 @@ class WinDefenderHistoryParser(
       },
   ]
 
-  _CATEGORY_NAME = {
-      0: "INVALID",
-      1: "ADWARE",
-      2: "SPYWARE",
-      3: "PASSWORDSTEALER",
-      4: "TROJANDOWNLOADER",
-      5: "WORM",
-      6: "BACKDOOR",
-      7: "REMOTEACCESSTROJAN",
-      8: "TROJAN",
-      9: "EMAILFLOODER",
-      10: "KEYLOGGER",
-      11: "DIALER",
-      12: "MONITORINGSOFTWARE",
-      13: "BROWSERMODIFIER",
-      14: "COOKIE",
-      15: "BROWSERPLUGIN",
-      16: "AOLEXPLOIT",
-      17: "NUKER",
-      18: "SECURITYDISABLER",
-      19: "JOKEPROGRAM",
-      20: "HOSTILEACTIVEXCONTROL",
-      21: "SOFTWAREBUNDLER",
-      22: "STEALTHNOTIFIER",
-      23: "SETTINGSMODIFIER",
-      24: "TOOLBAR",
-      25: "REMOTECONTROLSOFTWARE",
-      26: "TROJANFTP",
-      27: "POTENTIALUNWANTEDSOFTWARE",
-      28: "ICQEXPLOIT",
-      29: "TROJANTELNET",
-      30: "EXPLOIT",
-      31: "FILESHARINGPROGRAM",
-      32: "MALWARE_CREATION_TOOL",
-      33: "REMOTE_CONTROL_SOFTWARE",
-      34: "TOOL",
-      36: "TROJAN_DENIALOFSERVICE",
-      37: "TROJAN_DROPPER",
-      38: "TROJAN_MASSMAILER",
-      39: "TROJAN_MONITORINGSOFTWARE",
-      40: "TROJAN_PROXYSERVER",
-      42: "VIRUS",
-      43: "KNOWN",
-      44: "UNKNOWN",
-      45: "SPP",
-      46: "BEHAVIOR",
-      47: "VULNERABILTIY",
-      48: "POLICY",
-      49: "EUS",
-      50: "RANSOM",
-      51: "ASR",
-  }
-
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), "detection_history.yaml"
+      os.path.dirname(__file__), 'detection_history.yaml'
   )
 
-  def _ReadFileHeader(self, file_object):
-    """Reads the beginning of the file to verify it's a Defender History log.
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
 
-      Args:
-          file_object (file): file-like object.
-
-      Raises:
-          ParseError: if the file header cannot be read.
+    Returns:
+      FormatSpecification: format specification.
     """
-    data_type_map = self._GetDataTypeMap("detection_history_value")
-    header, header_size = self._ReadStructureFromFileObject(
-        file_object, 0, data_type_map
-    )
-
-    data_type_map = self._GetDataTypeMap("detection_history_value")
-    _, guid_size = self._ReadStructureFromFileObject(
-        file_object, header_size, data_type_map
-    )
-    signature, _ = self._ReadStructureFromFileObject(
-        file_object, header_size + guid_size, data_type_map
-    )
-
-    if (
-        header.data_size != 8 or header.data_type != 8
-    ) and self._FILE_SIGNATURE not in signature.value_string:
-      raise errors.ParseError("Invalid header")
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(
+      b'M\x00a\x00g\x00i\x00c\x00.\x00V\x00e\x00r\x00s\x00i\x00o\x00n\x00:'
+      b'\x001\x00.\x002\x00',
+      offset=0x30)
+    return format_specification
 
   def _ReadThreatTrackingData(self, threat_tracking_data, file_offset):
     """Reads the threat tracking data.
 
-      Args:
-          threat_tracking_data (bytes): threat tracking data.
-          file_offset (int): offset of the threat tracking data relative to
-              the start of the file.
+    Args:
+      threat_tracking_data (bytes): threat tracking data.
+      file_offset (int): offset of the threat tracking data relative to
+          the start of the file.
 
-      Raises:
-          IOError: if the threat tracking data cannot be read.
+    Raises:
+      IOError: if the threat tracking data cannot be read.
     """
     threat_tracking = {}
-    data_type_map = self._GetDataTypeMap("uint32le")
+    data_type_map = self._GetDataTypeMap('uint32le')
 
     values_data_size = self._ReadStructureFromByteStream(
         threat_tracking_data, 0, data_type_map
@@ -190,14 +123,14 @@ class WinDefenderHistoryParser(
     values_data_end_offset = header.total_data_size
 
     while values_data_offset < values_data_end_offset:
-      ttv, data_size = self._ReadThreatTrackingValue(
+      threat_value, data_size = self._ReadThreatTrackingValue(
           threat_tracking_data[values_data_offset:],
           file_offset + values_data_offset,
       )
-      if hasattr(ttv, "value_string"):
-        threat_tracking[ttv.key_string] = ttv.value_string
-      if hasattr(ttv, "value_integer"):
-        threat_tracking[ttv.key_string] = ttv.value_integer
+      if hasattr(threat_value, 'value_string'):
+        threat_tracking[threat_value.key_string] = threat_value.value_string
+      if hasattr(threat_value, 'value_integer'):
+        threat_tracking[threat_value.key_string] = threat_value.value_integer
       values_data_offset += data_size
 
     return threat_tracking
@@ -205,16 +138,16 @@ class WinDefenderHistoryParser(
   def _ReadThreatTrackingHeader(self, threat_tracking_data):
     """Reads the threat tracking header.
 
-      Args:
-          threat_tracking_data (bytes): threat tracking data.
+    Args:
+      threat_tracking_data (bytes): threat tracking data.
 
-      Returns:
-          threat_tracking_header: threat tracking header.
+    Returns:
+      threat_tracking_header: threat tracking header.
 
-      Raises:
-          IOError: if the threat tracking header cannot be read.
+    Raises:
+      IOError: if the threat tracking header cannot be read.
     """
-    data_type_map = self._GetDataTypeMap("threat_tracking_header")
+    data_type_map = self._GetDataTypeMap('threat_tracking_header')
 
     threat_tracking_header = self._ReadStructureFromByteStream(
         threat_tracking_data, 0, data_type_map
@@ -225,19 +158,19 @@ class WinDefenderHistoryParser(
   def _ReadThreatTrackingValue(self, threat_tracking_data, file_offset):
     """Reads the threat tracking value.
 
-      Args:
-          threat_tracking_data (bytes): threat tracking data.
-          file_offset (int): offset of the threat tracking data relative to
-              the start of the file.
+    Args:
+      threat_tracking_data (bytes): threat tracking data.
+      file_offset (int): offset of the threat tracking data relative to
+          the start of the file.
 
-      Returns:
-          tuple[threat_tracking_value, int]: threat tracking value and
-            data size.
+    Returns:
+      tuple[threat_tracking_value, int]: threat tracking value and
+        data size.
 
-      Raises:
-          IOError: if the threat tracking value cannot be read.
+    Raises:
+      IOError: if the threat tracking value cannot be read.
     """
-    data_type_map = self._GetDataTypeMap("threat_tracking_value")
+    data_type_map = self._GetDataTypeMap('threat_tracking_value')
 
     context = dtfabric_data_maps.DataTypeMapContext()
 
@@ -248,12 +181,13 @@ class WinDefenderHistoryParser(
     return threat_tracking_value, context.byte_size
 
   def _CreateDateTime(self, date_time):
-    """Creates a date time value from the given string..
-      Args:
-          date_time (str): Date time string in nanoseconds since epoch.
+    """Creates a date time value from the given string.
 
-      Returns:
-          dfdatetime.TimeElements: date time object.
+    Args:
+      date_time (str): Date time string in nanoseconds since epoch.
+
+    Returns:
+      dfdatetime.TimeElements: date time object.
     """
     epoch = timedelta(microseconds=float(date_time / 10))
     dt = datetime(1601, 1, 1) + epoch
@@ -261,21 +195,24 @@ class WinDefenderHistoryParser(
     te.CopyFromDatetime(dt)
     return te
 
-  def _ReadValue(self, file_object, file_offset):
+  def _ReadValue(self, file_object, file_offset, parser_mediator):
     """Reads the value.
 
-      Args:
-          file_object (file): file-like object.
-          file_offset (int): offset of the value relative to the
-            start of the file.
+    Args:
+      file_object (file): file-like object.
+      file_offset (int): offset of the value relative to the
+        start of the file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
 
-      Returns:
-          object: value.
+    Returns:
+      object: value.
 
-      Raises:
-          IOError: if the value cannot be read.
+    Raises:
+      IOError: if the value cannot be read.
+      ParseError: when the value data type is unknown.
     """
-    data_type_map = self._GetDataTypeMap("detection_history_value")
+    data_type_map = self._GetDataTypeMap('detection_history_value')
 
     value, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, data_type_map
@@ -292,39 +229,34 @@ class WinDefenderHistoryParser(
       value_object = value.value_guid
     elif value.data_type == 0x00000028:
       value_object = value.data
+    else:
+      parser_mediator.ProduceExtractionWarning(
+          'unknown value data type: {0!s}'.format(value.data_type))
+      value_object = value.data
 
     return value_object
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Defender History file-like object.
 
-      Args:
-          parser_mediator (ParserMediator): mediates interactions between
-               parsers and other components, such as storage and dfvfs.
-          file_object (dfvfs.FileIO): file-like object.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between
+            parsers and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
-      Raises:
-          WrongParser: when the file cannot be parsed.
+    Raises:
+      WrongParser: when the file cannot be parsed.
     """
-    try:
-      self._ReadFileHeader(file_object)
-    except (ValueError, errors.ParseError):
-      raise errors.WrongParser(
-          (
-              "[{0:s}] {1:s} is not a valid Windows Defender History file"
-          ).format(self.NAME, parser_mediator.GetDisplayName())
-      )
-
     event_data = WinDefenderHistoryEventData()
     threat_attributes = {}
-    threat_attributes["Resources"] = []
+    threat_attributes['Resources'] = []
     value_tuples = []
-    temp_resource_name = ""
+    temp_resource_name = ''
 
     file_size = file_object.get_size()
     file_offset = 0
     while file_offset < file_size:
-      value_object = self._ReadValue(file_object, file_offset)
+      value_object = self._ReadValue(file_object, file_offset, parser_mediator)
       value_tuples.append((file_offset, value_object))
       file_offset = file_object.tell()
 
@@ -332,7 +264,7 @@ class WinDefenderHistoryParser(
     value_index = 0
 
     for file_offset, value_object in value_tuples:
-      if value_object == "Magic.Version:1.2":
+      if value_object == self._FILE_SIGNATURE:
         if value_index_set < 2:
           value_index_set += 1
         value_index = 0
@@ -345,25 +277,19 @@ class WinDefenderHistoryParser(
       else:
         description = self._VALUE_DESCRIPTIONS[value_index_set].get(
             value_index,
-            "UNKNOWN_{0:d}_{1:d}".format(value_index_set, value_index),
+            'UNKNOWN_{0:d}_{1:d}'.format(value_index_set, value_index),
         )
 
-        if (value_index_set, value_index) == (1, 4):
-          value_string = "{0!s} ({1:s})".format(
-              value_object,
-              self._CATEGORY_NAME.get(value_object, "UNKNOWN"),
-          )
-        else:
-          value_string = "{0!s}".format(value_object)
+        value_string = '{0!s}'.format(value_object)
 
-        if description == "Resource type":
+        if description == 'Resource type':
           temp_resource_name = value_string
         elif (
-            description == "Resource location"
+            description == 'Resource location'
             and temp_resource_name is not None
         ):
-          threat_attributes["Resources"].append(
-              {"Type": temp_resource_name, "Location": value_string}
+          threat_attributes['Resources'].append(
+              {'Type': temp_resource_name, 'Location': value_string}
           )
           temp_resource_name = None
         else:
@@ -371,54 +297,54 @@ class WinDefenderHistoryParser(
 
       value_index += 1
 
-    event_data.threatname = threat_attributes.get("Threat name", "UNKNOWN")
+    event_data.threat_name = threat_attributes.get('Threat name', 'UNKNOWN')
     filenames = [
-        x["Location"]
-        for x in threat_attributes["Resources"]
-        if x["Type"] == "file"
+        x['Location']
+        for x in threat_attributes['Resources']
+        if x['Type'] == 'file'
     ]
     if len(filenames) > 0:
       event_data.filename = filenames[0]
     else:
-      event_data.filename = "UNKNOWN"
-      if "CONTEXT_DATA_FILENAME" in threat_attributes:
-        event_data.filename = threat_attributes["CONTEXT_DATA_FILENAME"]
-      if "CONTEXT_DATA_PROCESS_PPID" in threat_attributes:
+      event_data.filename = 'UNKNOWN'
+      if 'CONTEXT_DATA_FILENAME' in threat_attributes:
+        event_data.filename = threat_attributes['CONTEXT_DATA_FILENAME']
+      if 'CONTEXT_DATA_PROCESS_PPID' in threat_attributes:
         event_data.filename += (
-            "," + threat_attributes["CONTEXT_DATA_PROCESS_PPID"]
+            ',' + threat_attributes['CONTEXT_DATA_PROCESS_PPID']
         )
     webfiles = [
-        x["Location"]
-        for x in threat_attributes["Resources"]
-        if x["Type"] == "webfile"
+        x['Location']
+        for x in threat_attributes['Resources']
+        if x['Type'] == 'webfile'
     ]
     if len(webfiles) > 0:
-      event_data.web_filename = ", ".join(webfiles)
+      event_data.web_filename = ', '.join(webfiles)
     containerfiles = [
-        x["Location"]
-        for x in threat_attributes["Resources"]
-        if x["Type"] == "containerfile"
+        x['Location']
+        for x in threat_attributes['Resources']
+        if x['Type'] == 'containerfile'
     ]
     if len(containerfiles) > 0:
-      event_data.container_filename = ", ".join(containerfiles)
+      event_data.container_filename = ', '.join(containerfiles)
     extrafiles = [
-        x["Location"]
-        for x in threat_attributes["Resources"]
-        if "file" not in x["Type"]
+        x['Location']
+        for x in threat_attributes['Resources']
+        if 'file' not in x['Type']
     ]
     if len(extrafiles):
-      event_data.extra = ", ".join(extrafiles)
+      event_data.extra = ', '.join(extrafiles)
     event_data.sha256 = threat_attributes.get(
-        "ThreatTrackingSha256", "UNKNOWN"
+        'ThreatTrackingSha256', 'UNKNOWN'
     )
     event_data.host_and_user = threat_attributes.get(
-        "Domain user1", "UNKNOWN"
+        'Domain user1', 'UNKNOWN'
     )
-    event_data.process = threat_attributes.get("Process name", "Unknown")
+    event_data.process = threat_attributes.get('Process name', 'Unknown')
 
     event = time_events.DateTimeValuesEvent(
         self._CreateDateTime(
-            threat_attributes.get("ThreatTrackingStartTime", 0)
+            threat_attributes.get('ThreatTrackingStartTime', 0)
         ),
         definitions.TIME_DESCRIPTION_RECORDED,
     )

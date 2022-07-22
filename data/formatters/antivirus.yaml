@@ -238,12 +238,12 @@ short_message:
 - '{text}'
 ---
 type: 'conditional'
-data_type: 'av:windows:defenderlog'
+data_type: 'av:defender:detection_history'
 message:
 - 'File Name: {filename}'
 - 'Hash: {sha256}'
 - 'User: {host_and_user}'
-- '{threatname}'
+- '{threat_name}'
 - 'Process: {process}'
 - '{container_filename}'
 - '{web_filename}'
