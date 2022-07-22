@@ -101,7 +101,11 @@ class WinDefenderHistoryParser(
     Args:
       threat_tracking_data (bytes): threat tracking data.
       file_offset (int): offset of the threat tracking data relative to
-          the start of the file.
+        the start of the file.
+
+    Returns:
+      threat_tracking (dict): Mapping of threat tracking
+        keys to values.
 
     Raises:
       IOError: if the threat tracking data cannot be read.
