@@ -146,7 +146,7 @@ class WinDefenderHistoryParser(
       threat_tracking_data (bytes): threat tracking data.
 
     Returns:
-      threat_tracking_header: threat tracking header.
+      dict[str, str]: threat tracking header.
 
     Raises:
       IOError: if the threat tracking header cannot be read.
