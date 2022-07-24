@@ -11,11 +11,11 @@ attributes:
   size: 1
   units: bytes
 ---
-name: uint32
+name: uint8
 type: integer
 attributes:
   format: unsigned
-  size: 4
+  size: 1
   units: bytes
 ---
 name: uint16
@@ -23,6 +23,13 @@ type: integer
 attributes:
   format: unsigned
   size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
   units: bytes
 ---
 name: message_table_header
@@ -132,20 +139,37 @@ attributes:
 members:
 - name: identifier
   data_type: uint16
-- name: unknown1
-  type: stream
-  element_data_type: byte
-  elements_data_size: 6
+# TODO: note that version, channel, level, opcode and task are part of an union.
+- name: version
+  data_type: uint8
+- name: channel
+  data_type: uint8
+- name: level
+  data_type: uint8
+- name: opcode
+  data_type: uint8
+- name: task
+  data_type: uint16
 - name: keywords
   type: stream
   element_data_type: byte
   elements_data_size: 8
 - name: message_identifier
   data_type: uint32
-- name: unknown2
+- name: template_offset
+  data_type: uint32
+- name: opcode_offset
+  data_type: uint32
+- name: level_offset
+  data_type: uint32
+- name: task_offset
+  data_type: uint32
+- name: unknown1
   type: stream
   element_data_type: byte
-  elements_data_size: 28
+  elements_data_size: 8
+- name: flags
+  data_type: uint32
 ---
 name: wevt_event_definitions
 type: structure

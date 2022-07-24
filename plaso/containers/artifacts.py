@@ -856,6 +856,7 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
     message_identifier (int): identifier of the event message.
     provider_identifier (str): identifier of the EventLog provider, contains
         a GUID.
+    version (int): event version.
   """
 
   CONTAINER_TYPE = 'windows_wevt_template_event'
@@ -864,10 +865,12 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
       '_message_file_row_identifier': 'AttributeContainerIdentifier',
       'identifier': 'int',
       'message_identifier': 'int',
-      'provider_identifier': 'str'}
+      'provider_identifier': 'str',
+      'version': 'int'}
 
   def __init__(
-      self, identifier=None, message_identifier=None, provider_identifier=None):
+      self, identifier=None, message_identifier=None, provider_identifier=None,
+      version=None):
     """Initializes a Windows WEVT_TEMPLATE event definition artifact.
 
     Args:
@@ -875,6 +878,7 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
       message_identifier (Optional[int]): identifier of the event message.
       provider_identifier (Optional[str]): identifier of the EventLog provider,
           contains a GUID.
+      version (Optional[int]): event version.
     """
     super(WindowsWevtTemplateEvent, self).__init__()
     self._message_file_identifier = None
@@ -882,6 +886,7 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
     self.identifier = identifier
     self.message_identifier = message_identifier
     self.provider_identifier = provider_identifier
+    self.version = version
 
   def GetMessageFileIdentifier(self):
     """Retrieves the identifier of the associated message file.
