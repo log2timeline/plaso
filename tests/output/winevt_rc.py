@@ -73,7 +73,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
 
     message_string = test_helper.GetMessageString(
         '{15a7a4f8-0072-4eab-abad-f98a4d666aed}',
-        'Microsoft-Windows-Dhcp-Client', 0xb00003ed)
+        'Microsoft-Windows-Dhcp-Client', 0xb00003ed, None)
     self.assertEqual(message_string, expected_message_string)
 
 
