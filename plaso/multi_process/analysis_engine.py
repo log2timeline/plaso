@@ -18,7 +18,6 @@ from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
-from plaso.storage import event_tag_index
 
 
 class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
@@ -59,7 +58,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._event_filter_expression = None
     self._event_labels_counter = None
     self._event_queues = {}
-    self._event_tag_index = event_tag_index.EventTagIndex()
     self._events_status = processing_status.EventsStatus()
     self._knowledge_base = None
     self._memory_profiler = None
@@ -125,8 +123,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         event_data_stream = None
 
       event_identifier = event.GetIdentifier()
-      event_tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_writer, event_identifier)
+      event_tag = storage_writer.GetEventTagByEventIdentifer(event_identifier)
 
       if event_filter:
         filter_match = event_filter.Match(

@@ -10,7 +10,6 @@ from plaso.lib import bufferlib
 from plaso.lib import definitions
 from plaso.multi_process import engine
 from plaso.multi_process import logger
-from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
 
 
@@ -224,7 +223,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     super(OutputAndFormattingMultiProcessEngine, self).__init__()
     # The export event heap is used to make sure the events are sorted in
     # a deterministic way.
-    self._event_tag_index = event_tag_index.EventTagIndex()
     self._events_status = processing_status.EventsStatus()
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
@@ -305,8 +303,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         event_data_stream = None
 
       event_identifier = event.GetIdentifier()
-      event_tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_reader, event_identifier)
+      event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
       if time_slice_range and event.timestamp != time_slice.event_timestamp:
         self._events_status.number_of_events_from_time_slice += 1
@@ -391,8 +388,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         continue
 
       event_identifier = event.GetIdentifier()
-      event_tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_reader, event_identifier)
+      event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
       if macb_group_identifier is None:
         if macb_group:

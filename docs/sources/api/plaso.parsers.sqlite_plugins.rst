@@ -140,10 +140,26 @@ plaso.parsers.sqlite\_plugins.interface module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.ios\_netusage module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_netusage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.ios\_powerlog module
 --------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.ios_powerlog
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.ios\_screentime module
+----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_screentime
    :members:
    :undoc-members:
    :show-inheritance:

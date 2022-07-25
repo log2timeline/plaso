@@ -60,11 +60,12 @@ class AttributeContainersManager(object):
     return list(cls._attribute_container_classes.keys())
 
   @classmethod
-  def GetSchema(cls, container_type):
+  def GetSchema(cls, container_type, schema_version=None):
     """Retrieves the schema of a registered attribute container.
 
     Args:
       container_type (str): attribute container type.
+      schema_version (Optional[int]): version of the schema.
 
     Returns:
       dict[str, str]: attribute container schema or an empty dictionary if
@@ -79,7 +80,13 @@ class AttributeContainersManager(object):
       raise ValueError('Unsupported container type: {0:s}'.format(
           container_type))
 
-    return getattr(container_class, 'SCHEMA', {})
+    schema = {}
+    if schema_version:
+      schema = getattr(
+          container_class, 'SCHEMA_{0:d}'.format(schema_version), {})
+    if not schema:
+      schema = getattr(container_class, 'SCHEMA', {})
+    return schema
 
   @classmethod
   def RegisterAttributeContainer(cls, attribute_container_class):

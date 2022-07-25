@@ -83,6 +83,5 @@ More details: [collection filters](Collection-Filters.md)
 Talk about:
 ```
 --data
---no_vss
 --vss_stores VSS_STORES
 ```

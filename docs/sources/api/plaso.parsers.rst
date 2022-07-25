@@ -78,6 +78,14 @@ plaso.parsers.bencode\_parser module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.bodyfile module
+-----------------------------
+
+.. automodule:: plaso.parsers.bodyfile
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.bsm module
 ------------------------
 
@@ -98,6 +106,14 @@ plaso.parsers.chrome\_preferences module
 ----------------------------------------
 
 .. automodule:: plaso.parsers.chrome_preferences
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.confluence\_access module
+---------------------------------------
+
+.. automodule:: plaso.parsers.confluence_access
    :members:
    :undoc-members:
    :show-inheritance:
@@ -230,10 +246,10 @@ plaso.parsers.ios\_logd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.ios\_mobile\_installation\_log module
----------------------------------------------------
+plaso.parsers.ios\_sysdiag\_log module
+--------------------------------------
 
-.. automodule:: plaso.parsers.ios_mobile_installation_log
+.. automodule:: plaso.parsers.ios_sysdiag_log
    :members:
    :undoc-members:
    :show-inheritance:
@@ -298,14 +314,6 @@ plaso.parsers.mac\_wifi module
 ------------------------------
 
 .. automodule:: plaso.parsers.mac_wifi
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.mactime module
-----------------------------
-
-.. automodule:: plaso.parsers.mactime
    :members:
    :undoc-members:
    :show-inheritance:

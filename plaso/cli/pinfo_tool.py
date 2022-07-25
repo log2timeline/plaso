@@ -518,10 +518,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    column_titles = ['Log source', 'Log type', 'Event message file(s)']
+    column_titles = [
+        'Identifier', 'Log source(s)', 'Log type(s)', 'Event message file(s)']
     self._GenerateReportHeader('winevt_providers', column_titles)
 
-    attribute_names = ['log_source', 'log_type', 'event_message_files']
+    attribute_names = [
+        'identifier', 'log_sources', 'log_types', 'event_message_files']
     entry_format_string = self._GenerateReportEntryFormatString(attribute_names)
 
     if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
@@ -534,9 +536,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             self._output_writer.Write(',\n')
 
         attribute_values = {
-            'event_message_files': artifact.event_message_files,
-            'log_source': artifact.log_sources[0],
-            'log_type': artifact.log_types[0]}
+            'identifier': artifact.identifier or '',
+            'event_message_files': artifact.event_message_files or [],
+            'log_sources': artifact.log_sources or [],
+            'log_types': artifact.log_types or []}
 
         self._output_writer.Write(entry_format_string.format(
             **attribute_values))
@@ -1334,9 +1337,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           self._PrintExtractionWarningsDetails(storage_reader)
 
       warnings_by_path_spec = storage_counters.get(
-          'recovery_warnings_by_path_spec', collections.Counter())
+          'preprocessing_warnings_by_path_spec', collections.Counter())
       warnings_by_parser_chain = storage_counters.get(
-          'recovery_warnings_by_parser_chain', collections.Counter())
+          'preprocessing_warnings_by_parser_chain', collections.Counter())
 
       # TODO: print preprocessing warnings as part of JSON output format.
 
@@ -1346,6 +1349,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         if self._verbose or 'warnings' in self._sections:
           self._PrintPreprocessingWarningsDetails(storage_reader)
+
+      warnings_by_path_spec = storage_counters.get(
+          'recovery_warnings_by_path_spec', collections.Counter())
+      warnings_by_parser_chain = storage_counters.get(
+          'recovery_warnings_by_parser_chain', collections.Counter())
 
       # TODO: print recovery warnings as part of JSON output format.
 

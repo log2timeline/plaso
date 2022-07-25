@@ -208,23 +208,32 @@ class ParserMediator(object):
     year, _, _ = date_time.GetDate()
     return year
 
-  def AddWindowsEventLogMessageFile(self, windows_eventlog_message_file):
+  def AddWindowsEventLogMessageFile(self, message_file):
     """Adds a Windows EventLog message file.
 
     Args:
-      windows_eventlog_message_file (WindowsEventLogMessageFileArtifact):
-          Windows EventLog message file.
+      message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
+          message file.
     """
-    self._storage_writer.AddAttributeContainer(windows_eventlog_message_file)
+    self._storage_writer.AddAttributeContainer(message_file)
 
-  def AddWindowsEventLogMessageString(self, windows_eventlog_message_string):
+  def AddWindowsEventLogMessageString(self, message_string):
     """Adds a Windows EventLog message string.
 
     Args:
-      windows_eventlog_message_string (WindowsEventLogMessageStringArtifact):
-          Windows EventLog message string.
+      message_string (WindowsEventLogMessageStringArtifact): Windows EventLog
+          message string.
     """
-    self._storage_writer.AddAttributeContainer(windows_eventlog_message_string)
+    self._storage_writer.AddAttributeContainer(message_string)
+
+  def AddWindowsWevtTemplateEvent(self, event_definition):
+    """Adds a Windows WEVT_TEMPLATE event definition.
+
+    Args:
+      event_definition (WindowsWevtTemplateEvent): Windows WEVT_TEMPLATE event
+          definition.
+    """
+    self._storage_writer.AddAttributeContainer(event_definition)
 
   def AppendToParserChain(self, plugin_or_parser):
     """Adds a parser or parser plugin to the parser chain.

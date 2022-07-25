@@ -300,7 +300,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             'found.').format(identifier_string, event_data_stream_lookup_key))
         return
 
-    elif container.CONTAINER_TYPE == 'windows_eventlog_message_string':
+    elif container.CONTAINER_TYPE in (
+        'windows_eventlog_message_string', 'windows_wevt_template_event'):
       message_file_identifier = container.GetMessageFileIdentifier()
       message_file_lookup_key = message_file_identifier.CopyToString()
 
@@ -315,11 +316,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         # TODO: store this as a merge warning so this is preserved
         # in the storage file.
+        if container.CONTAINER_TYPE == 'windows_eventlog_message_string':
+          description = 'Windows EventLog message string'
+        else:
+          description = 'WEVT_TEMPLATE event definition'
+
         logger.error((
-            'Unable to merge Windows EventLog message string attribute '
-            'container: {0:s} since corresponding Windows EventLog message '
-            'file: {1:s} could not be found.').format(
-                identifier_string, message_file_lookup_key))
+            'Unable to merge {0:s} attribute container: {1:s} since '
+            'corresponding Windows EventLog message file: {2:s} could not '
+            'be found.').format(
+                description, identifier_string, message_file_lookup_key))
         return
 
     lookup_key = None
