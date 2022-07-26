@@ -15,8 +15,8 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class PSTranscriptEventData(events.EventData):
-  """ PowerShell transcript event data.
+class PowerShellTranscriptEventData(events.EventData):
+  """PowerShell transcript event data.
 
   Attributes:
     build_version (str): Build number of current version.
@@ -38,12 +38,13 @@ class PSTranscriptEventData(events.EventData):
     username (str): User that executed command.
   """
 
-  DATA_TYPE = 'ps:transcript:event'
+  DATA_TYPE = 'powershell:transcript:event'
 
   def __init__(self):
     """Initializes event data."""
 
-    super(PSTranscriptEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(PowerShellTranscriptEventData,
+      self).__init__(data_type=self.DATA_TYPE)
     self.build_version = None
     self.clr_version = None
     self.command = None
@@ -61,10 +62,10 @@ class PSTranscriptEventData(events.EventData):
     self.ws_man_stack_version = None
 
 
-class PSTranscriptParser(interface.FileObjectParser):
+class PowerShellTranscriptParser(interface.FileObjectParser):
   """Parses events from PowerShell transcript files."""
 
-  NAME = 'ps_transcript'
+  NAME = 'powershell_transcript'
 
   DATA_FORMAT = 'PowerShell transcript event'
 
@@ -92,22 +93,22 @@ class PSTranscriptParser(interface.FileObjectParser):
 
   def CreateEventsFromTranscripts(self, transcripts, parser_mediator,
    header_data):
-    """ Get commandlines from transcripts
+    """Get commandlines from transcripts
 
     Args:
       transcripts (list): list of lists containing data for every transcript
           in a file.
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      header_data (PSTranscriptEventData): prefilled PSTranscriptEventData
-          object with metainfos.
+      header_data (PowerShellTranscriptEventData): prefilled
+          PowerShellTranscriptEventData object with metainfos.
     """
 
     for transcript in transcripts:
       # create a copy of the pre-filled event object
       event_data = copy.deepcopy(header_data)
       event = None
-      timestamp_pattern = re.compile(r": (\d{14})$")
+      timestamp_pattern = re.compile(r': (\d{14})$')
       # since the system language changes the description of the header fields
       # we have to go for the line numbers and regex match the timestamp
       if timestamp_pattern.search(transcript[2]):
@@ -117,8 +118,8 @@ class PSTranscriptParser(interface.FileObjectParser):
         timestamp_string = timestamp_pattern.search(transcript[1])[1]
         full_headers = False
       else:
-        parser_mediator.ProduceExtractionWarning('could not find timestamp in '\
-          'transcript {0!s} - skipping malformed transcript'.format(transcript))
+        parser_mediator.ProduceExtractionWarning('could not find timestamp in transcript {0!s}'
+          ' - skipping malformed transcript'.format(transcript))
         continue
       # Timestamp format is YYYYMMDDHHmmss
       time_elements_tuple = int(timestamp_string[:4]),\
@@ -131,7 +132,7 @@ class PSTranscriptParser(interface.FileObjectParser):
         start_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       except ValueError:
-        parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '\
+        parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '
           'invalid - skipping malformed transcript'.format(time_elements_tuple))
         continue
       start_time.is_local_time = True
@@ -139,16 +140,16 @@ class PSTranscriptParser(interface.FileObjectParser):
         definitions.TIME_DESCRIPTION_START)
       # we don't use line breaks here since they aren't displayed nicely in TS
       if full_headers:
-        command = "; ".join(transcript[18:len(transcript)])
+        command = '; '.join(transcript[18:len(transcript)])
       else:
-        command = "; ".join(transcript[3:len(transcript)])
+        command = '; '.join(transcript[3:len(transcript)])
       event_data.command = command
       # finally create event if values have been set
       if (event is not None and event_data.command is not None and
-            event_data.command != ""):
+            event_data.command != ''):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       else:
-        parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '\
+        parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
           'since relevant event values could not be set'.format(transcript))
 
 
@@ -179,13 +180,13 @@ class PSTranscriptParser(interface.FileObjectParser):
       line_bytes = file_bytes.split(b'\n')
     lines = [line.decode('utf-8') for line in line_bytes]
     sep_indices = []
-    header_data = PSTranscriptEventData()
+    header_data = PowerShellTranscriptEventData()
     for index, line in enumerate(lines):
       if index in self.LINE_INFO_DICT:
         param = self.LINE_INFO_DICT[index]
         splitted = line.split(': ')
         if len(splitted) != 2:
-          parser_mediator.ProduceExtractionWarning('line {0!s} seems invalid '\
+          parser_mediator.ProduceExtractionWarning('line {0!s} seems invalid '
             'or value empty - skipping header info: {1!s}'.format(line,
             self.LINE_INFO_DICT[index]))
           continue
@@ -210,4 +211,4 @@ class PSTranscriptParser(interface.FileObjectParser):
         transcripts.append(lines[start:len(lines)])
     self.CreateEventsFromTranscripts(transcripts, parser_mediator, header_data)
 
-manager.ParsersManager.RegisterParser(PSTranscriptParser)
+manager.ParsersManager.RegisterParser(PowerShellTranscriptParser)
