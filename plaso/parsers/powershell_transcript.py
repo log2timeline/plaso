@@ -118,8 +118,8 @@ class PowerShellTranscriptParser(interface.FileObjectParser):
         timestamp_string = timestamp_pattern.search(transcript[1])[1]
         full_headers = False
       else:
-        parser_mediator.ProduceExtractionWarning('could not find timestamp in transcript {0!s}'
-          ' - skipping malformed transcript'.format(transcript))
+        parser_mediator.ProduceExtractionWarning('could not find timestamp in '
+          'transcript {0!s} - skipping malformed transcript'.format(transcript))
         continue
       # Timestamp format is YYYYMMDDHHmmss
       time_elements_tuple = int(timestamp_string[:4]),\
