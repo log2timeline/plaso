@@ -4,3 +4,4 @@
 from plaso.parsers.esedb_plugins import file_history
 from plaso.parsers.esedb_plugins import msie_webcache
 from plaso.parsers.esedb_plugins import srum
+from plaso.parsers.esedb_plugins import ual

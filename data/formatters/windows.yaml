@@ -757,3 +757,53 @@ message:
 short_message:
 - '{device_path}'
 - 'Origin: {origin}'
+---
+type: 'conditional'
+data_type: 'windows:ual:clients'
+message:
+- 'Account: {authenticated_username}'
+- 'Source IP address: {address}'
+- 'Service GUID: {role_guid}'
+- 'Service name: {role_name}'
+- 'Total accesses: {total_accesses}'
+- 'Client name: {client_name}'
+- 'Tenant ID: {tenant_id}'
+short_message:
+- '{authenticated_username}'
+- 'Accessed: {role_name}'
+---
+type: 'conditional'
+data_type: 'windows:ual:dns'
+message:
+- 'Address: {address}'
+- 'Hostname: {hostname}'
+short_message:
+- 'Address: {address}'
+- 'Hostname: {hostname}'
+---
+type: 'conditional'
+data_type: 'windows:ual:role_access'
+message:
+- 'Role name: {role_name}'
+- 'Role GUID: {role_guid}'
+short_message:
+- 'Role name: {role_name}'
+---
+type: 'conditional'
+data_type: 'windows:ual:system_identity'
+message:
+- 'OS Build: {os_build_number}'
+- 'System domain name: {system_domain_name}'
+- 'System DNS hostname: {system_dns_hostname}'
+short_message:
+- '{system_domain_name}'
+- '{system_dns_hostname}'
+---
+type: 'conditional'
+data_type: 'windows:ual:virtualmachines'
+message:
+- 'BIOS GUID: {bios_guid}'
+- 'Serial number: {serial_number}'
+- 'VM GUID: {vm_guid}'
+short_message:
+- 'VM GUID: {vm_guid}'

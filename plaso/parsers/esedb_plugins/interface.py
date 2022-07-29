@@ -162,8 +162,9 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       return None
 
     if column_type == pyesedb.column_types.BOOLEAN:
-      # TODO: implement
-      raise ValueError('Boolean value support not implemented yet.')
+      if long_value:
+        raise ValueError('Long boolean value not supported.')
+      return record.get_value_data_as_bool(value_entry)
 
     if column_type in self.INTEGER_COLUMN_TYPES:
       if long_value:
@@ -179,10 +180,6 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       if long_value:
         return long_value.get_data_as_string()
       return record.get_value_data_as_string(value_entry)
-
-    if column_type == pyesedb.column_types.GUID:
-      # TODO: implement
-      raise ValueError('GUID value support not implemented yet.')
 
     if long_value:
       return long_value.get_data()
