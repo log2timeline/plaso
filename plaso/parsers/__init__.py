@@ -33,6 +33,8 @@ from plaso.parsers import olecf
 from plaso.parsers import opera
 from plaso.parsers import pe
 from plaso.parsers import plist
+from plaso.parsers import popcontest
+from plaso.parsers import postgresql
 from plaso.parsers import pls_recall
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
