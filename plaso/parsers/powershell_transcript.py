@@ -173,13 +173,16 @@ class PowerShellTranscriptParser(interface.FileObjectParser):
     # the start of the file to parse the data correctly.
     file_object.seek(0, os.SEEK_SET)
     file_bytes = file_object.read()
+
+    win_newline = b'\r\n'
+    lin_newline = b'\n'
     # If transcript file was opened in editor, line breaks may have been changed
-    if b'\r\n' in file_bytes:
-      line_bytes = file_bytes.split(b'\r\n')
+    if win_newline in file_bytes:
+      line_bytes = file_bytes.split(win_newline)
     else:
-      line_bytes = file_bytes.split(b'\n')
+      line_bytes = file_bytes.split(lin_newline)
     lines = [line.decode('utf-8') for line in line_bytes]
-    sep_indices = []
+    separator_indices = []
     header_data = PowerShellTranscriptEventData()
     for index, line in enumerate(lines):
       if index in self.LINE_INFO_DICT:
@@ -193,10 +196,10 @@ class PowerShellTranscriptParser(interface.FileObjectParser):
         # pre-fill data for later objects
         setattr(header_data, param, splitted[1])
       if line == self.SEPARATOR:
-        sep_indices.append(index)
+        separator_indices.append(index)
     # the file always starts with a transcript
     transcript_starts = [0]
-    for i, sep_index in enumerate(sep_indices):
+    for i, sep_index in enumerate(separator_indices):
       # every second separator marks a new transcript
       if i%2 != 0:
         transcript_starts.append(sep_index)
