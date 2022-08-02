@@ -534,6 +534,18 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['system_sleep'])
 
+  def testSystemWake(self):
+    """Tests the system_wake tagging rule."""
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Power-Troubleshooter' AND
+    #       event_identifier is 1
+    attribute_values_per_name = {
+        'event_identifier': [1],
+        'source_name': ['Microsoft-Windows-Power-Troubleshooter']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['system_wake'])
+
   def testAutorun(self):
     """Tests the autorun tagging rule."""
     # Test: data_type is 'windows:registry:boot_execute' AND
