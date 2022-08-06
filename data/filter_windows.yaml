@@ -15,7 +15,7 @@
 # * Browser history: IE, Firefox and Chrome.
 # * Browser cookie files: IE.
 # * Flash cookies, or LSO/SOL files from the Flash player.
-# * Windows User Access Logging (UAL) database logs.
+# * Windows User Access Logging (UAL) database.
 ---
 description: File system metadata files.
 type: include
@@ -75,7 +75,7 @@ paths:
 - '%SystemRoot%\\setupapi.log'
 - '%SystemRoot%\\System32\\LogFiles\\.+\\.+[.]txt'
 ---
-description: User Access Logging (UAL) database logs
+description: User Access Logging (UAL) database files.
 type: include
 path_separator: '\'
 paths:

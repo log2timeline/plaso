@@ -5,8 +5,7 @@ UAL is present in Windows Server editions starting with Server 2012.
 See: https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
 """
 
-from ipaddress import ip_address
-from uuid import UUID
+import ipaddress
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -61,11 +60,12 @@ class UserAccessLoggingDNSEventData(events.EventData):
   DATA_TYPE = 'windows:ual:dns'
 
   def __init__(self):
+    """Initializes event data."""
     super(UserAccessLoggingDNSEventData, self).__init__(
         data_type=self.DATA_TYPE)
-
     self.address = None
     self.hostname = None
+
 
 class UserAccessLoggingRoleAccessEventsData(events.EventData):
   """Windows User Access Logging ROLE_ACCESS table event data.
@@ -81,9 +81,9 @@ class UserAccessLoggingRoleAccessEventsData(events.EventData):
     """Initializes event data."""
     super(UserAccessLoggingRoleAccessEventsData, self).__init__(
         data_type=self.DATA_TYPE)
-
     self.role_guid = None
     self.role_name = None
+
 
 class UserAccessLoggingSystemIdentityEventdata(events.EventData):
   """Windows User Access Logging SYSTEM_IDENTITY table event data.
@@ -97,31 +97,33 @@ class UserAccessLoggingSystemIdentityEventdata(events.EventData):
   DATA_TYPE = 'windows:ual:system_identity'
 
   def __init__(self):
+    """Initializes event data."""
     super(UserAccessLoggingSystemIdentityEventdata, self).__init__(
         data_type=self.DATA_TYPE)
-
     self.os_build_number = None
     self.system_dns_hostname = None
     self.system_domain_name = None
+
 
 class UserAccessLoggingVirtualMachinesEventData(events.EventData):
   """Windows User Access Logging VIRTUALMACHINES table event data.
 
   Attributes:
     bios_guid (str): BIOS GUID.
-    serial_number(str): Serial number.
-    vm_guid(str): VM GUID.
+    serial_number (str): Serial number.
+    vm_guid (str): VM GUID.
   """
 
   DATA_TYPE = 'windows:ual:virtualmachines'
 
   def __init__(self):
+    """Initializes event data."""
     super(UserAccessLoggingVirtualMachinesEventData, self).__init__(
         data_type=self.DATA_TYPE)
-
     self.bios_guid = None
     self.serial_number = None
     self.vm_guid = None
+
 
 class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
   """Parses Windows User Access Logging ESE database file. """
@@ -130,41 +132,57 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
   DATA_FORMAT = 'Windows User Access Logging ESE database file'
 
   REQUIRED_TABLES = {
-    'CLIENTS': 'ParseClientsTable',
-    'DNS': 'ParseDNSTable',
-    'ROLE_ACCESS': 'ParseRoleAccessTable',
-    'VIRTUALMACHINES': 'ParseVirtualMachinesTable',
-  }
+      'CLIENTS': 'ParseClientsTable',
+      'DNS': 'ParseDNSTable',
+      'ROLE_ACCESS': 'ParseRoleAccessTable',
+      'VIRTUALMACHINES': 'ParseVirtualMachinesTable'}
 
   _CLIENTS_TABLE_VALUE_MAPPINGS = {
-    'Address': '_ConvertAddressValue',
-    'RoleGuid': '_ConvertGUIDBytesToString',
-    'TenantId': '_ConvertGUIDBytesToString'
-  }
+      'Address': '_ConvertIPAddressValue',
+      'RoleGuid': '_ConvertGUIDToString',
+      'TenantId': '_ConvertGUIDToString'}
 
   _DNS_TABLE_VALUE_MAPPINGS = {
-    'Address': '_ConvertDNSAddressValue'
-  }
+      'Address': '_ConvertDNSAddressValue'}
 
   _VIRTUALMACHINES_TABLE_VALUE_MAPPINGS = {
-    'BIOSGuid': '_ConvertGUIDBytesToString',
-    'VmGuid': '_ConvertGUIDBytesToString'
-  }
+      'BIOSGuid': '_ConvertGUIDToString',
+      'VmGuid': '_ConvertGUIDToString'}
 
   _ROLE_ACCESS_TABLE_VALUE_MAPPINGS = {
-    'RoleGuid': '_ConvertGUIDBytesToString'
-  }
+      'RoleGuid': '_ConvertGUIDToString'}
 
   _ROLE_IDS_TABLE_VALUE_MAPPINGS = {
-    'RoleGuid': '_ConvertGUIDBytesToString'
-  }
+      'RoleGuid': '_ConvertGUIDToString'}
 
   def __init__(self):
-    """Initializes a UAL ESE database file parser plugin."""
+    """Initializes an UAL ESE database file parser plugin."""
     super(UserAccessLoggingESEDBPlugin, self).__init__()
     self._role_mappings = {}
 
-  def _ConvertAddressValue(self, value):
+  def _ConvertDNSAddressValue(self, value):
+    """Converts the address column value of a DNS table into a string.
+
+    Args:
+      value (bytes): DNS address.
+
+    Returns:
+      str: string representation of the DNS address.
+    """
+    return value.replace(b'\x00', b'').decode('utf-8')
+
+  def _ConvertGUIDToString(self, value):
+    """Converts a GUID into a string representation.
+
+    Args:
+      value (uuid.UUID): a GUID value.
+
+    Returns:
+      str: string representation of the GUID.
+    """
+    return '{{{0!s}}}'.format(value).upper()
+
+  def _ConvertIPAddressValue(self, value):
     """Converts bytes representation of an IP to a string.
 
     Args:
@@ -173,44 +191,20 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
     Returns:
       str: string representation of the IP address.
     """
-    return str(ip_address(value))
-
-  def _ConvertDNSAddressValue(self, value):
-    """Converts the value stored in the Address
-        column of the DNS table into a string.
-
-    Args:
-      value (bytes): IP address.
-
-    Returns:
-      str: string representation of the IP address.
-    """
-    return value.replace(b'\x00', b'').decode('utf-8')
-
-
-  def _ConvertGUIDBytesToString(self, value):
-    """Converts bytes that represent a GUID into its string representation.
-
-    Args:
-      value (bytes): 16 bytes representing a GUID.
-
-    Returns:
-      str: string representation of the GUID.
-    """
-    return '{' + str(UUID(bytes_le=value)).upper() + '}'
+    return str(ipaddress.ip_address(value))
 
   def ParseClientsTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses a CLIENTS table.
 
-      Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        database (Optional[ESEDatabase]): ESE database.
-        table (Optional[pyesedb.table]): table.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
+      table (Optional[pyesedb.table]): table.
 
-      Raises:
-        ValueError: if the database or table value is missing.
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
       raise ValueError('Missing database value.')
@@ -252,7 +246,6 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       event_data.tenant_id = record_values.get('TenantId', None)
       event_data.total_accesses = record_values.get('TotalAccesses', None)
 
-
       last_access_timestamp = record_values.get('LastAccess', None)
       if last_access_timestamp:
         date_time = dfdatetime_filetime.Filetime(
@@ -273,14 +266,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses a ROLE_ACCESS table.
 
-      Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        database (Optional[ESEDatabase]): ESE database.
-        table (Optional[pyesedb.table]): table.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
+      table (Optional[pyesedb.table]): table.
 
-      Raises:
-        ValueError: if the database or table value is missing.
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
       raise ValueError('Missing database value.')
@@ -332,14 +325,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses a DNS table.
 
-      Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        database (Optional[ESEDatabase]): ESE database.
-        table (Optional[pyesedb.table]): table.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
+      table (Optional[pyesedb.table]): table.
 
-      Raises:
-        ValueError: if the database or table value is missing.
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
       raise ValueError('Missing database value.')
@@ -357,8 +350,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._DNS_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-          'Unable to retrieve record values from record: {0:d} '
-          'in table: {1:s}').format(record_index, table.name))
+            'Unable to retrieve record values from record: {0:d} '
+            'in table: {1:s}').format(record_index, table.name))
         continue
 
       event_data = UserAccessLoggingDNSEventData()
@@ -376,14 +369,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses a VIRTUALMACHINES table.
 
-      Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        database (Optional[ESEDatabase]): ESE database.
-        table (Optional[pyesedb.table]): table.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      database (Optional[ESEDatabase]): ESE database.
+      table (Optional[pyesedb.table]): table.
 
-      Raises:
-        ValueError: if the database or table value is missing.
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
       raise ValueError('Missing database value.')
@@ -401,8 +394,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._VIRTUALMACHINES_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-          'Unable to retrieve record values from record: {0:d} '
-          'in table: {1:s}').format(record_index, table.name))
+            'Unable to retrieve record values from record: {0:d} '
+            'in table: {1:s}').format(record_index, table.name))
         continue
 
       event_data = UserAccessLoggingVirtualMachinesEventData()
@@ -462,7 +455,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
     return system_identity_file_entry
 
   def _ProcessSystemInformationDatabase(self, parser_mediator, file_entry):
-    """ Process SystemIdentity.mdb and extract Role GUID -> Role name mappings.
+    """Process SystemIdentity.mdb and extract Role GUID -> Role name mappings.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -476,8 +469,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       database.Open(file_object)
     except (IOError, ValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open SystemInformation.mdb'
-          ' with error: {0!s}'.format(exception))
+          'unable to open SystemInformation.mdb with error: {0!s}'.format(
+              exception))
       return
 
     role_ids_table = database.GetTableByName('ROLE_IDS')
