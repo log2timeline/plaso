@@ -91,7 +91,7 @@ class WinDefenderHistoryParser(
     """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(
-        self._FILE_SIGNATURE.encode('utf-16-le'), offset=0x30)
+        cls._FILE_SIGNATURE.encode('utf-16-le'), offset=0x30)
     return format_specification
 
   def _ReadThreatTrackingData(self, threat_tracking_data, file_offset):
