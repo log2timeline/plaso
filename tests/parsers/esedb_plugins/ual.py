@@ -92,8 +92,8 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.CheckEventValues(storage_writer, events[41], expected_event_values)
 
-  def testConvertGUIDBytesToString(self):
-    """Tests GUID bytes to string conversion."""
+  def testConvertGUIDToString(self):
+    """Tests GUID to string conversion."""
     plugin = ual.UserAccessLoggingESEDBPlugin()
     guid_bytes = bytes.fromhex(
         'c9 8b 91 35 6d 19 ea 40 97 79 88 9d 79 b7 53 f0')
