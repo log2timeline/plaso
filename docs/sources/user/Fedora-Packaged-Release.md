@@ -1,6 +1,6 @@
 # Fedora Packaged Release
 
-### Fedora 33 and 34
+### Fedora 36
 
 **Note that other versions of Fedora are not supported at this time.**
 
