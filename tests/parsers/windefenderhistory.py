@@ -16,8 +16,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
     """Tests parsing a webfile Detection History file."""
     parser = windefenderhistory.WinDefenderHistoryParser()
     storage_writer = self._ParseFile([
-        'FC380697-A68D-4C94-B67F-9B6449039463'],
-    parser)
+        'FC380697-A68D-4C94-B67F-9B6449039463'], parser)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -49,8 +48,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
     """Tests parsing a containerfile Detection History file."""
     parser = windefenderhistory.WinDefenderHistoryParser()
     storage_writer = self._ParseFile([
-      '6AFE33A0-19BA-4FFF-892F-B700539D7D63'],
-    parser)
+      '6AFE33A0-19BA-4FFF-892F-B700539D7D63'], parser)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
