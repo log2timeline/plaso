@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Defender DetectionHistory files."""
 
-from datetime import datetime, timedelta
 import os
+
+from datetime import datetime
+from datetime import timedelta
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 from dfdatetime import time_elements as dfdatetime_time_elements
