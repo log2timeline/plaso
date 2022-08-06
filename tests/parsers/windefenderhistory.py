@@ -26,23 +26,21 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_event_values = {
+        'data_type': 'av:defender:detection_history',
+        'filename': 'C:\\Users\\testuser\\Downloads\\PotentiallyUnwanted.exe',
+        'host_and_user': 'FRYPTOP\\testuser',
+        'process': 'C:\\Windows\\explorer.exe',
+        'sha256': (
+            'd6f6c6b9fde37694e12b12009ad11ab9ec8dd0f193e7319c523933bdad8a50ad'),
+        'threat_name': 'PUA:Win32/EICAR_Test_File',
+        'web_filenames': [(
+            'C:\\Users\\testuser\\Downloads\\PotentiallyUnwanted.exe|'
+            'http://amtso.eicar.org/PotentiallyUnwanted.exe|'
+            'pid:19588,ProcessStart:133029415464710822')]}
+
     for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(
-          'C:\\Users\\testuser\\Downloads\\PotentiallyUnwanted.exe',
-          event_data.filename)
-      self.assertEqual(
-          'd6f6c6b9fde37694e12b12009ad11ab9ec8dd0f193e7319c523933bdad8a50ad',
-          event_data.sha256)
-      self.assertEqual('PUA:Win32/EICAR_Test_File', event_data.threat_name)
-      self.assertEqual(
-          'C:\\Users\\testuser\\Downloads\\PotentiallyUnwanted.exe|'
-          'http://amtso.eicar.org/PotentiallyUnwanted.exe|'
-          'pid:19588,ProcessStart:133029415464710822',
-          event_data.web_filename)
-      self.assertEqual('FRYPTOP\\testuser',
-          event_data.host_and_user)
-      self.assertEqual('C:\\Windows\\explorer.exe', event_data.process)
+      self.CheckEventValues(storage_writer, event, expected_event_values)
 
   def testContainerDetection(self):
     """Tests parsing a containerfile Detection History file."""
@@ -58,23 +56,24 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_event_values = {
+        'container_filenames': [
+            'C:\\Users\\testuser\\Downloads\\eicar_com.zip'],
+        'date_time': '2022-07-22 05:36:18.9094421',
+        'data_type': 'av:defender:detection_history',
+        'filename': 'C:\\Users\\testuser\\Downloads\\eicar_com.zip->eicar.com',
+        'host_and_user': 'FRYPTOP\\testuser',
+        'process': 'Unknown',
+        'sha256': (
+            '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f'),
+        'threat_name': 'Virus:DOS/EICAR_Test_File',
+        'web_filenames': [(
+            'C:\\Users\\testuser\\Downloads\\eicar_com.zip|'
+            'https://secure.eicar.org/eicar_com.zip|'
+            'pid:20580,ProcessStart:133029417782902463')]}
+
     for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(
-          'C:\\Users\\testuser\\Downloads\\eicar_com.zip->eicar.com',
-          event_data.filename)
-      self.assertEqual(
-        'C:\\Users\\testuser\\Downloads\\eicar_com.zip',
-        event_data.container_filename)
-      self.assertEqual(
-          '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f',
-          event_data.sha256)
-      self.assertEqual('Virus:DOS/EICAR_Test_File', event_data.threat_name)
-      self.assertEqual('FRYPTOP\\testuser',
-          event_data.host_and_user)
-      self.assertEqual('Unknown', event_data.process)
-      self.assertEqual('2022-07-22 05:36:18',
-          event.date_time.CopyToDateTimeString())
+      self.CheckEventValues(storage_writer, event, expected_event_values)
 
 
 if __name__ == '__main__':
