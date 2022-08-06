@@ -1,5 +1,5 @@
 docutils
-Markdown < 3.4
+Markdown
 pyparsing
 recommonmark
 sphinx >= 4.1.0
