@@ -177,8 +177,10 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       if long_value:
         # TODO: implement
         raise ValueError('Long GUID value not supported.')
-      value_data =  record.get_value_data(value_entry)
-      return uuid.UUID(bytes_le=value_data)
+      value_data = record.get_value_data(value_entry)
+      if value_data:
+        value_data = uuid.UUID(bytes_le=value_data)
+      return value_data
 
     if column_type in self.FLOATING_POINT_COLUMN_TYPES:
       if long_value:

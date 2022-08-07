@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """Parser for the Microsoft User Access Logging (UAL) ESE database.
 
-UAL is present in Windows Server editions starting with Server 2012.
-See: https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
+User Access Logging (UAL) is present in Windows Server editions starting with
+Window Server 2012.
+
+Also see:
+  https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
 """
 
 import ipaddress
+import uuid
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -22,66 +26,65 @@ class UserAccessLoggingClientsEventsData(events.EventData):
   """Windows User Access Logging CLIENTS table event data.
 
   Attributes:
-    address (str): source IP address.
     authenticated_username (str): domain/user account name
         performing the access.
     client_name (str): client name, use unknown.
-    days (List[int]): number of accesses for each day of the year.
-    role_guid (str): GUID of the service accessed.
+    role_identifier (str): identifier of the service accessed.
     role_name (str): Name of the service accessed.
-    tenant_id (str): unique GUID for a tenant client.
+    source_ip_address (str): source IP address.
+    tenant_identifier (str): unique identifier of a tenant client.
     total_accesses (int): Count of accesses for the year.
   """
 
-  DATA_TYPE = 'windows:ual:clients'
+  DATA_TYPE = 'windows:user_access_logging:clients'
 
   def __init__(self):
     """Initializes event data."""
     super(UserAccessLoggingClientsEventsData, self).__init__(
         data_type=self.DATA_TYPE)
 
-    self.address = None
     self.authenticated_username = None
     self.client_name = None
-    self.days = None
-    self.role_guid = None
+    self.role_identifier = None
     self.role_name = None
-    self.tenant_id = None
+    self.source_ip_address = None
+    self.tenant_identifier = None
     self.total_accesses = None
+
 
 class UserAccessLoggingDNSEventData(events.EventData):
   """Windows User Access Logging DNS table event data.
 
   Attributes:
-    address (str): IP address.
-    hostname (str): Hostname associated with the IP address.
+    hostname (str): Hostname.
+    ip_address (str): IP address.
   """
 
-  DATA_TYPE = 'windows:ual:dns'
+  DATA_TYPE = 'windows:user_access_logging:dns'
 
   def __init__(self):
     """Initializes event data."""
     super(UserAccessLoggingDNSEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.address = None
     self.hostname = None
+    self.ip_address = None
 
 
 class UserAccessLoggingRoleAccessEventsData(events.EventData):
   """Windows User Access Logging ROLE_ACCESS table event data.
 
   Attributes:
-    role_guid (str): Role GUID.
-    role_name (str): Role name associated with role GUID.
+    role_identifier (str): identifier of the role.
+    role_name (str): name of the role.
   """
 
-  DATA_TYPE = 'windows:ual:role_access'
+  DATA_TYPE = 'windows:user_access_logging:role_access'
 
   def __init__(self):
     """Initializes event data."""
     super(UserAccessLoggingRoleAccessEventsData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.role_guid = None
+    self.role_identifier = None
     self.role_name = None
 
 
@@ -89,18 +92,18 @@ class UserAccessLoggingSystemIdentityEventdata(events.EventData):
   """Windows User Access Logging SYSTEM_IDENTITY table event data.
 
   Attributes:
-    os_build_number (int): OS Build number.
+    operating_system_build (int): operating system build.
     system_dns_hostname (str): System hostname.
     system_domain_name (str): System domain name.
   """
 
-  DATA_TYPE = 'windows:ual:system_identity'
+  DATA_TYPE = 'windows:user_access_logging:system_identity'
 
   def __init__(self):
     """Initializes event data."""
     super(UserAccessLoggingSystemIdentityEventdata, self).__init__(
         data_type=self.DATA_TYPE)
-    self.os_build_number = None
+    self.operating_system_build = None
     self.system_dns_hostname = None
     self.system_domain_name = None
 
@@ -109,26 +112,26 @@ class UserAccessLoggingVirtualMachinesEventData(events.EventData):
   """Windows User Access Logging VIRTUALMACHINES table event data.
 
   Attributes:
-    bios_guid (str): BIOS GUID.
+    bios_identifier (str): BIOS identifier.
     serial_number (str): Serial number.
-    vm_guid (str): VM GUID.
+    vm_identifier (str): identifier of the virtual machine.
   """
 
-  DATA_TYPE = 'windows:ual:virtualmachines'
+  DATA_TYPE = 'windows:user_access_logging:virtual_machines'
 
   def __init__(self):
     """Initializes event data."""
     super(UserAccessLoggingVirtualMachinesEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.bios_guid = None
+    self.bios_identifier = None
     self.serial_number = None
-    self.vm_guid = None
+    self.vm_identifier = None
 
 
 class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
   """Parses Windows User Access Logging ESE database file. """
 
-  NAME = 'ual'
+  NAME = 'user_access_logging'
   DATA_FORMAT = 'Windows User Access Logging ESE database file'
 
   REQUIRED_TABLES = {
@@ -175,12 +178,13 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
     """Converts a GUID into a string representation.
 
     Args:
-      value (uuid.UUID): a GUID value.
+      value (bytes): a little-endian GUID value.
 
     Returns:
       str: string representation of the GUID.
     """
-    return '{{{0!s}}}'.format(value).upper()
+    guid_value = uuid.UUID(bytes_le=value)
+    return '{{{0!s}}}'.format(guid_value).lower()
 
   def _ConvertIPAddressValue(self, value):
     """Converts bytes representation of an IP to a string.
@@ -234,16 +238,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingClientsEventsData()
-      event_data.address = record_values.get('Address', None)
       event_data.authenticated_username = record_values.get(
           'AuthenticatedUserName', None)
       event_data.client_name = record_values.get('ClientName', None)
-      event_data.days = [record_values.get(f'Day{index}', 0)
-          for index in range(1,367)]
-      event_data.role_guid = record_values.get('RoleGuid', None)
+      event_data.role_identifier = record_values.get('RoleGuid', None)
       event_data.role_name = self._role_mappings.get(
-          event_data.role_guid, 'Unknown')
-      event_data.tenant_id = record_values.get('TenantId', None)
+          event_data.role_identifier, 'Unknown')
+      event_data.source_ip_address = record_values.get('Address', None)
+      event_data.tenant_identifier = record_values.get('TenantId', None)
       event_data.total_accesses = record_values.get('TotalAccesses', None)
 
       last_access_timestamp = record_values.get('LastAccess', None)
@@ -303,9 +305,9 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingRoleAccessEventsData()
-      event_data.role_guid = record_values.get('RoleGuid', None)
+      event_data.role_identifier = record_values.get('RoleGuid', None)
       event_data.role_name = self._role_mappings.get(
-          event_data.role_guid, 'Unknown')
+          event_data.role_identifier, 'Unknown')
 
       first_seen_timestamp = record_values.get('FirstSeen', None)
       if first_seen_timestamp:
@@ -355,8 +357,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingDNSEventData()
-      event_data.address = record_values.get('Address', None)
       event_data.hostname = record_values.get('HostName', None)
+      event_data.ip_address = record_values.get('Address', None)
 
       last_seen_timestamp = record_values.get('LastSeen', None)
       if last_seen_timestamp:
@@ -399,9 +401,9 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingVirtualMachinesEventData()
-      event_data.bios_guid = record_values.get('BIOSGuid', None)
+      event_data.bios_identifier = record_values.get('BIOSGuid', None)
       event_data.serial_number = record_values.get('SerialNumber', None)
-      event_data.vm_guid = record_values.get('VMGuid', None)
+      event_data.vm_identifier = record_values.get('VMGuid', None)
 
       creation_timestamp = record_values.get('CreationTime', None)
       if creation_timestamp:
@@ -417,7 +419,6 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             date_time, definitions.TIME_DESCRIPTION_LAST_ACTIVE)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-
   def _GetSystemIdentityDatabase(self, parser_mediator):
     """Locate SystemIdentity.mdb.
 
@@ -426,7 +427,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfVFS.
 
     Returns:
-      dfvfs.FileEntry: a file entry or None if the database can't be located.
+      dfvfs.FileEntry: a file entry or None if the database cannot be located.
     """
     file_entry = parser_mediator.GetFileEntry()
     file_system = file_entry.GetFileSystem()
@@ -561,7 +562,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingSystemIdentityEventdata()
-      event_data.os_build_number = record_values.get(
+      event_data.operating_system_build = record_values.get(
           'OSBuildNumber', None)
       event_data.system_dns_hostname = record_values.get(
           'SystemDNSHostName', None)

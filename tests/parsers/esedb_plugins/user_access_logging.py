@@ -2,10 +2,9 @@
 """Tests for the User Access Logging (UAL) ESE database file."""
 
 import unittest
-import uuid
 
 from plaso.lib import definitions
-from plaso.parsers.esedb_plugins import ual
+from plaso.parsers.esedb_plugins import user_access_logging
 
 from tests.parsers.esedb_plugins import test_lib
 
@@ -15,9 +14,13 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
   # pylint: disable=protected-access
 
+  _GUID_BYTES = bytes(bytearray([
+      0xc9, 0x8b, 0x91, 0x35, 0x6d, 0x19, 0xea, 0x40, 0x97, 0x79, 0x88, 0x9d,
+      0x79, 0xb7, 0x53, 0xf0]))
+
   def testProcessDatabase(self):
     """Tests processing the database"""
-    plugin = ual.UserAccessLoggingESEDBPlugin()
+    plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['{C519A76A-D9B5-4F85-B667-5FAC08E0E1B4}.mdb'], plugin)
 
@@ -38,7 +41,8 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'os_build_number': 17763,
+        'data_type': 'windows:user_access_logging:system_identity',
+        'operating_system_build': 17763,
         'system_dns_hostname': 'DC-1',
         'system_domain_name': 'WORKGROUP',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -46,62 +50,61 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'address': '::1',
         'authenticated_username': 'ual\\dc-1$',
         'client_name': None,
-        'days': [0 if i != 197 else 62 for i in range(1,367) ],
-        'role_guid': '{AD495FC3-0EAA-413D-BA7D-8B13FA7EC598}',
+        'data_type': 'windows:user_access_logging:clients',
+        'role_identifier': '{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}',
         'role_name': 'Active Directory Domain Services',
-        'tenant_id': '{3FACD7DC-85CC-495B-823F-6C96A9E1C40C}',
+        'source_ip_address': '::1',
+        'tenant_identifier': '{3facd7dc-85cc-495b-823f-6c96a9e1c40c}',
         'total_accesses': 62,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'role_guid': '{10A9226F-50EE-49D8-A393-9A501D47CE04}',
+        'data_type': 'windows:user_access_logging:role_access',
+        'role_identifier': '{10a9226f-50ee-49d8-a393-9a501d47ce04}',
         'role_name': 'File Server',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
-        'address': '10.0.11.10',
         'authenticated_username': 'ual\\hunter',
         'client_name': None,
-        'days': [0 if i != 197 else 2 for i in range(1,367) ],
-        'role_guid': '{10A9226F-50EE-49D8-A393-9A501D47CE04}',
+        'data_type': 'windows:user_access_logging:clients',
+        'role_identifier': '{10a9226f-50ee-49d8-a393-9a501d47ce04}',
         'role_name': 'File Server',
-        'tenant_id': '{00000000-0000-0000-0000-000000000000}',
+        'source_ip_address': '10.0.11.10',
+        'tenant_identifier': '{00000000-0000-0000-0000-000000000000}',
         'total_accesses': 2,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[30], expected_event_values)
 
     expected_event_values = {
-        'address': '10.0.10.10',
+        'data_type': 'windows:user_access_logging:dns',
         'hostname': 'dc-1',
+        'ip_address': '10.0.10.10',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SEEN}
 
     self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
     expected_event_values = {
-        'address': '10.0.11.10',
+        'data_type': 'windows:user_access_logging:dns',
         'hostname': 'XTOF-WKS',
+        'ip_address': '10.0.11.10',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SEEN}
 
     self.CheckEventValues(storage_writer, events[41], expected_event_values)
 
   def testConvertGUIDToString(self):
     """Tests GUID to string conversion."""
-    plugin = ual.UserAccessLoggingESEDBPlugin()
-    guid_bytes = bytes.fromhex(
-        'c9 8b 91 35 6d 19 ea 40 97 79 88 9d 79 b7 53 f0')
-    guid = uuid.UUID(bytes_le=guid_bytes)
+    plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
 
-    guid_string = plugin._ConvertGUIDToString(guid)
-    expected_guid_string = '{35918BC9-196D-40EA-9779-889D79B753F0}'
-    self.assertEqual(guid_string, expected_guid_string)
+    guid_string = plugin._ConvertGUIDToString(self._GUID_BYTES)
+    self.assertEqual(guid_string, '{35918bc9-196d-40ea-9779-889d79b753f0}')
 
 
 if __name__ == '__main__':
