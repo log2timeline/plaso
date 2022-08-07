@@ -42,7 +42,6 @@ class UserAccessLoggingClientsEventsData(events.EventData):
     """Initializes event data."""
     super(UserAccessLoggingClientsEventsData, self).__init__(
         data_type=self.DATA_TYPE)
-
     self.authenticated_username = None
     self.client_name = None
     self.role_identifier = None
