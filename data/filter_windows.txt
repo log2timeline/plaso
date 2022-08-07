@@ -47,7 +47,7 @@
 {systemroot}/inf/setupapi[.].+[.]log
 {systemroot}/setupapi.log
 {systemroot}/System32/LogFiles/.+/.+[.]txt
-# User Access Logging database
+# Windows User Access Logging (UAL) database
 {systemroot}/System32/LogFiles/Sum/.+[.]mdb
 # Windows artifacts.
 {systemroot}/Tasks/.+[.]job
