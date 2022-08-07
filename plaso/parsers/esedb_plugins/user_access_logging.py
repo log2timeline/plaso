@@ -523,11 +523,10 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             'in table: {1:s}').format(record_index, table.name))
         continue
 
-      guid = record_values.get('RoleGuid', None)
+      role_identifier = record_values.get('RoleGuid', None)
       role_name = record_values.get('RoleName', None)
-      if not guid or not role_name:
-        continue
-      self._role_mappings[guid] = role_name
+      if role_identifier and role_name:
+        self._role_mappings[role_identifier] = role_name
 
   def _ParseSystemIdentityTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
