@@ -71,7 +71,7 @@ class VimInfoFileParser():
       pyparsing.Suppress(pyparsing.LineEnd()) +
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Word(pyparsing.alphanums + '~/').setResultsName(
-        'search_pattern') +
+          'search_pattern') +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   # TODO: https://github.com/vim/vim/blob/master/src/viminfo.c#L1525
@@ -270,6 +270,11 @@ class VimInfoFileParser():
   ).parseWithTabs()
 
   def __init__(self, file_data):
+    """Initializes a new Viminfo parser.
+    
+    Args:
+      file_data (str): the string contents of a Viminfo file.
+    """
     self.parsed_data = self.VIMINFO_STRUCTURE.parse_string(file_data)
 
   def CommandLineHistory(self):
@@ -348,10 +353,10 @@ class VimInfoEventData(events.EventData):
   """VimInfo event data.
 
   Attributes:
-    type (str): the Vim history type.
-    value (str): the Vim history value.
     filename (str): the name of the file that was opened/edited.
-    item_number (int): the nth item of the history type.
+    item_number (int): the item number of the history type.
+    history_type (str): the Vim history type.
+    history_value (str): the Vim history value.
   """
 
   DATA_TYPE = 'viminfo:history'
@@ -359,11 +364,11 @@ class VimInfoEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(VimInfoEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.type = None
-    self.value = None
     self.filename = None
     self.item_number = None
-
+    self.history_type = None
+    self.history_value = None
+    
 
 class VimInfoParser(interface.FileObjectParser):
   """Parses events from Viminfo files."""
@@ -391,7 +396,7 @@ class VimInfoParser(interface.FileObjectParser):
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a plist file-like object.
+    """Parses a Viminfo file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -403,9 +408,9 @@ class VimInfoParser(interface.FileObjectParser):
     """
     filename = parser_mediator.GetFilename()
     if filename != self._FILENAME:
-      raise errors.WrongParser(
+      raise errors.WrongParser((
           'File name: {0:s} does not match the expected viminfo '
-          'filename.'.format(filename))
+          'filename.').format(filename))
 
     file_size = file_object.get_size()
     if file_size <= 0:
@@ -427,8 +432,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.CommandLineHistory():
       event_data = VimInfoEventData()
-      event_data.value = item['command']
-      event_data.type = 'Command Line History'
+      event_data.history_value = item['command']
+      event_data.history_type = 'Command Line History'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -439,8 +444,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.SearchStringHistory():
       event_data = VimInfoEventData()
-      event_data.value = item['search_string']
-      event_data.type = 'Search String History'
+      event_data.history_value = item['search_string']
+      event_data.history_type = 'Search String History'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -451,8 +456,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.ExpressionHistory():
       event_data = VimInfoEventData()
-      event_data.value = item['expression']
-      event_data.type = 'Expression History'
+      event_data.history_value = item['expression']
+      event_data.history_type = 'Expression History'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -463,8 +468,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.InputLineHistory():
       event_data = VimInfoEventData()
-      event_data.value = item['input line']
-      event_data.type = 'Input Line History'
+      event_data.history_value = item['input line']
+      event_data.history_type = 'Input Line History'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -475,8 +480,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.DebugLineHistory():
       event_data = VimInfoEventData()
-      event_data.value = item['debug line']
-      event_data.type = 'Debug Line History'
+      event_data.history_value = item['debug line']
+      event_data.history_type = 'Debug Line History'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -487,8 +492,8 @@ class VimInfoParser(interface.FileObjectParser):
 
     for item in viminfo_file.Registers():
       event_data = VimInfoEventData()
-      event_data.value = item['register_value']
-      event_data.type = 'Register'
+      event_data.history_value = item['register_value']
+      event_data.history_type = 'Register'
       event_data.item_number = item['register']
 
       timestamp = item['timestamp']
@@ -500,7 +505,7 @@ class VimInfoParser(interface.FileObjectParser):
     for item in viminfo_file.Filemarks():
       event_data = VimInfoEventData()
       event_data.filename = item['filename'].strip()
-      event_data.type = 'File mark'
+      event_data.history_type = 'File mark'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
@@ -512,7 +517,7 @@ class VimInfoParser(interface.FileObjectParser):
     for item in viminfo_file.Jumplist():
       event_data = VimInfoEventData()
       event_data.filename = item['filename'].strip()
-      event_data.type = 'Jumplist'
+      event_data.history_type = 'Jumplist'
       event_data.item_number = item['index']
 
       timestamp = item['timestamp']
