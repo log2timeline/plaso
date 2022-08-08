@@ -271,7 +271,7 @@ class VimInfoFileParser():
 
   def __init__(self, file_data):
     """Initializes a new Viminfo parser.
-    
+
     Args:
       file_data (str): the string contents of a Viminfo file.
     """
@@ -368,7 +368,7 @@ class VimInfoEventData(events.EventData):
     self.history_type = None
     self.history_value = None
     self.item_number = None
-    
+
 
 class VimInfoParser(interface.FileObjectParser):
   """Parses events from Viminfo files."""
