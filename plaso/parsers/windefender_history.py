@@ -52,7 +52,7 @@ class WinDefenderHistoryParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Parses the Windows Defender History Log."""
 
-  NAME = 'windefenderhistory'
+  NAME = 'windefender_history'
 
   _FILE_SIGNATURE = 'Magic.Version:1.2'
 
@@ -277,11 +277,10 @@ class WinDefenderHistoryParser(
         if threat_attribute['Type'] == 'file']
 
     if not filenames:
-      filename = threat_attributes.get('CONTEXT_DATA_FILENAME', 'UNKNOWN')
+      filename = threat_attributes.get('CONTEXT_DATA_FILENAME', None)
       process_ppid = threat_attributes.get('CONTEXT_DATA_PROCESS_PPID', None)
-      if process_ppid:
-        filename = ','.join([filename, process_ppid])
-      filenames = [filename]
+
+      filenames = [','.join(list(filter(None, [filename, process_ppid])))]
 
     web_files = [
         threat_attribute['Location']
@@ -302,10 +301,10 @@ class WinDefenderHistoryParser(
     event_data.additional_filenames = additional_filenames
     event_data.container_filenames = container_files
     event_data.filename = filenames[0]
-    event_data.host_and_user = threat_attributes.get('Domain user1', 'UNKNOWN')
-    event_data.process = threat_attributes.get('Process name', 'Unknown')
-    event_data.sha256 = threat_attributes.get('ThreatTrackingSha256', 'UNKNOWN')
-    event_data.threat_name = threat_attributes.get('Threat name', 'UNKNOWN')
+    event_data.host_and_user = threat_attributes.get('Domain user1', None)
+    event_data.process = threat_attributes.get('Process name', None)
+    event_data.sha256 = threat_attributes.get('ThreatTrackingSha256', None)
+    event_data.threat_name = threat_attributes.get('Threat name', None)
     event_data.web_filenames = web_files
 
     timestamp = threat_attributes.get('ThreatTrackingStartTime', 0)

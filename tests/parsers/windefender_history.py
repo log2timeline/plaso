@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.parsers import windefenderhistory
+from plaso.parsers import windefender_history
 
 from tests.parsers import test_lib
 
@@ -14,7 +14,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
 
   def testWebFileDetection(self):
     """Tests parsing a webfile Detection History file."""
-    parser = windefenderhistory.WinDefenderHistoryParser()
+    parser = windefender_history.WinDefenderHistoryParser()
     storage_writer = self._ParseFile([
         'FC380697-A68D-4C94-B67F-9B6449039463'], parser)
 
@@ -44,7 +44,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
 
   def testContainerDetection(self):
     """Tests parsing a containerfile Detection History file."""
-    parser = windefenderhistory.WinDefenderHistoryParser()
+    parser = windefender_history.WinDefenderHistoryParser()
     storage_writer = self._ParseFile([
       '6AFE33A0-19BA-4FFF-892F-B700539D7D63'], parser)
 

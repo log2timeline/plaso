@@ -62,7 +62,7 @@ from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import vsftpd
-from plaso.parsers import windefenderhistory
+from plaso.parsers import windefender_history
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
 from plaso.parsers import winfirewall
