@@ -354,9 +354,9 @@ class VimInfoEventData(events.EventData):
 
   Attributes:
     filename (str): the name of the file that was opened/edited.
-    item_number (int): the item number of the history type.
     history_type (str): the Vim history type.
     history_value (str): the Vim history value.
+    item_number (int): the item number of the history type.
   """
 
   DATA_TYPE = 'viminfo:history'
@@ -365,9 +365,9 @@ class VimInfoEventData(events.EventData):
     """Initializes event data."""
     super(VimInfoEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
-    self.item_number = None
     self.history_type = None
     self.history_value = None
+    self.item_number = None
     
 
 class VimInfoParser(interface.FileObjectParser):
