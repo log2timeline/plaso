@@ -10,6 +10,7 @@ object.
 Also see:
   https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
   https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-access-logs.html
 """
 
 import pyparsing
@@ -69,6 +70,51 @@ class AWSELBEventData(events.EventData):
     source_port (int): The port of the requesting source.
     trace_identifier (str): The contents of the X-Amzn-Trace-Id header.
     user_agent (str): A User-Agent string.
+    version (str): The version of the log entry.
+        (only for network load balancer logs)
+    listener (str): The resource ID of the TLS listener for the connection.
+        (only for network load balancer logs)
+    connection_time (str): The total time for the connection to complete, from
+        start to closure, in milliseconds.
+        (only for network load balancer logs)
+    handshake_time (str): The total time for the handshake to complete
+        after the TCP connection is established, including client-side delays,
+        in milliseconds. This time is included in the connection_time field.
+        (only for network load balancer logs)
+    incoming_tls_alert (str): The integer value of TLS alerts received by the
+        load balancer from the client, if present.
+        (only for network load balancer logs)
+    chosen_cert_serial (str): Reserved for future use.
+        This value is always set to -.
+        (only for network load balancer logs)
+    tls_named_group (str): Reserved for future use.
+        This value is always set to -.
+        (only for network load balancer logs)
+    tls_cipher (str): The cipher suite negotiated with the client, in OpenSSL
+        format. If TLS negotiation does not complete, this value is set to -.
+        (only for network load balancer logs)
+    tls_protocol_version (str): The TLS protocol negotiated with the client,
+        in string format. If TLS negotiation does not complete,
+        this value is set to -.
+        (only for network load balancer logs)
+    alpn_fe_protocol (str): The application protocol negotiated with the
+        client, in string format. If no ALPN policy is configured in the TLS
+        listener, no matching protocol is found, or no valid protocol list is
+        sent, this value is set to -.
+        (only for network load balancer logs)
+    alpn_be_protocol (str): The application protocol negotiated with the
+        target, in string format. If no ALPN policy is configured in the TLS
+        listener, no matching protocol is found, or no valid protocol list is
+        sent, this value is set to -.
+        (only for network load balancer logs)
+    alpn_client_preference_list (str): The value of the
+        application_layer_protocol_negotiation extension in the client hello
+        message. This value is URL-encoded. Each protocol is enclosed in double
+        quotes and protocols are separated by a comma. If no ALPN policy is
+        configured in the TLS listener, no valid client hello message is sent,
+        or the extension is not present, this value is set to -. The string is
+        truncated if it is longer than 256 bytes.
+        (only for network load balancer logs)
   """
 
   DATA_TYPE = 'aws:elb:access'
@@ -105,6 +151,18 @@ class AWSELBEventData(events.EventData):
     self.ssl_protocol = None
     self.trace_identifier = None
     self.user_agent = None
+    self.version = None
+    self.listener = None
+    self.connection_time = None
+    self.handshake_time = None
+    self.incoming_tls_alert = None
+    self.chosen_cert_serial = None
+    self.tls_named_group = None
+    self.tls_cipher = None
+    self.tls_protocol_version = None
+    self.alpn_fe_protocol = None
+    self.alpn_be_protocol = None
+    self.alpn_client_preference_list = None
 
 
 class AWSELBTextPlugin(interface.TextPlugin):
@@ -146,6 +204,14 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.Literal('Z'))
+
+  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = pyparsing.Combine(
+      pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2))
 
   # A log line is defined as in the AWS ELB documentation
   _LOG_LINE_APPLICATION = (
@@ -191,6 +257,31 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.quotedString.setResultsName(
           'classification_reason').setParseAction(pyparsing.removeQuotes))
 
+  _LOG_LINE_NETWORK = (
+      _WORD.setResultsName('request_type') +
+      _WORD.setResultsName('version') +
+      _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE.setResultsName('time') +
+      _WORD.setResultsName('resource_identifier') +
+      _WORD.setResultsName('listener') +
+      _CLIENT_IP_ADDRESS_PORT.setResultsName('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
+      _INTEGER.setResultsName('connection_time') +
+      _INTEGER.setResultsName('handshake_time') +
+      _INTEGER_NEGATIVE.setResultsName('received_bytes') +
+      _INTEGER_NEGATIVE.setResultsName('sent_bytes') +
+      _WORD.setResultsName('incoming_tls_alert') +
+      _WORD.setResultsName('chosen_cert_arn') +
+      _WORD.setResultsName('chosen_cert_serial') +
+      _WORD.setResultsName('tls_cipher') +
+      _WORD.setResultsName('tls_protocol_version') +
+      _WORD.setResultsName('tls_named_group') +
+      _WORD.setResultsName('domain_name') +
+      _WORD.setResultsName('alpn_fe_protocol') +
+      _WORD.setResultsName('alpn_be_protocol') +
+      (pyparsing.quotedString.setResultsName('alpn_client_preference_list')
+          .setParseAction(pyparsing.removeQuotes) | pyparsing.Literal('-')) | pyparsing.Literal('-')
+  )
+
   _LOG_LINE_CLASSIC = (
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
       _WORD.setResultsName('resource_identifier') +
@@ -212,6 +303,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [
       ('elb_application_accesslog', _LOG_LINE_APPLICATION),
+      ('elb_network_accesslog', _LOG_LINE_NETWORK),
       ('elb_classic_accesslog', _LOG_LINE_CLASSIC)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
@@ -350,6 +442,30 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'destination_list')
     if destination_list is not None:
         event_data.destination_list = destination_list.split()
+    event_data.version = self._GetValueFromStructure(
+        structure, 'version')
+    event_data.listener = self._GetValueFromStructure(
+        structure, 'listener')
+    event_data.connection_time = self._GetValueFromStructure(
+        structure, 'connection_time')
+    event_data.handshake_time = self._GetValueFromStructure(
+        structure, 'handshake_time')
+    event_data.incoming_tls_alert = self._GetValueFromStructure(
+        structure, 'incoming_tls_alert')
+    event_data.chosen_cert_serial = self._GetValueFromStructure(
+        structure, 'chosen_cert_serial')
+    event_data.tls_named_group = self._GetValueFromStructure(
+        structure, 'tls_named_group')
+    event_data.tls_cipher = self._GetValueFromStructure(
+        structure, 'tls_cipher')
+    event_data.tls_protocol_version = self._GetValueFromStructure(
+        structure, 'tls_protocol_version')
+    event_data.alpn_fe_protocol = self._GetValueFromStructure(
+        structure, 'alpn_fe_protocol')
+    event_data.alpn_be_protocol = self._GetValueFromStructure(
+        structure, 'alpn_be_protocol')
+    event_data.alpn_client_preference_list = self._GetValueFromStructure(
+        structure, 'alpn_client_preference_list')
 
     elb_response_sent_event = time_events.DateTimeValuesEvent(
         date_time_response_sent,
