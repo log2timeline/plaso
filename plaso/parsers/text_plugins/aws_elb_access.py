@@ -442,7 +442,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
     destination_list = self._GetValueFromStructure(
         structure, 'destination_list')
     if destination_list is not None:
-        event_data.destination_list = destination_list.split()
+      event_data.destination_list = destination_list.split()
     event_data.version = self._GetValueFromStructure(
         structure, 'version')
     event_data.listener = self._GetValueFromStructure(
@@ -477,11 +477,11 @@ class AWSELBTextPlugin(interface.TextPlugin):
     if key == 'elb_application_accesslog' and \
        date_time_request_received is not None:
 
-        elb_request_received_event = time_events.DateTimeValuesEvent(
-            date_time_request_received,
-            definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
-        parser_mediator.ProduceEventWithEventData(
-        elb_request_received_event, event_data)
+      elb_request_received_event = time_events.DateTimeValuesEvent(
+          date_time_request_received,
+          definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
+      parser_mediator.ProduceEventWithEventData(
+      elb_request_received_event, event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
