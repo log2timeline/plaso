@@ -236,3 +236,18 @@ message:
 - '{text}'
 short_message:
 - '{text}'
+---
+type: 'conditional'
+data_type: 'av:defender:detection_history'
+message:
+- 'File Name: {filename}'
+- 'Hash: {sha256}'
+- 'User: {host_and_user}'
+- '{threat_name}'
+- 'Process: {process}'
+- '{container_filenames}'
+- '{web_filenames}'
+- '{additional_filenames}'
+short_message:
+- '{filename}'
+- '{threat_name}'
