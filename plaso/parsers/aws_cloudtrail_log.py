@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""JSON-L parser plugin for AWS CloudTrail log files."""
+"""JSON-L parser plugin for AWS CloudTrail log files.
+
+This parser is based on the log format documented at
+https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html
+
+"""
 
 import json
 import os
@@ -7,8 +12,6 @@ import os
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
-
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.parsers import manager
@@ -96,7 +99,6 @@ class AWSCloudTrailLogParser(interface.FileObjectParser):
   NAME = 'aws_cloudtrail_log'
   DATA_FORMAT = 'AWS CloudTrail Log'
 
-  # source: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html
   _PROPERTIES = {
       'eventVersion': 'event_version',
       'eventSource': 'event_source',
@@ -132,7 +134,12 @@ class AWSCloudTrailLogParser(interface.FileObjectParser):
     'insightDetails': 'insight_details'
   }
 
-  REQUIRED_KEYS = frozenset(['eventVersion', 'userIdentity', 'eventSource', 'eventName', 'awsRegion'])
+  REQUIRED_KEYS = frozenset([
+    'eventVersion',
+    'userIdentity',
+    'eventSource',
+    'eventName',
+    'awsRegion'])
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an AWS CloudTrail log file.

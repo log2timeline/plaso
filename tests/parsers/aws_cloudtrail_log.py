@@ -31,6 +31,8 @@ class AWSCloudTrailLogParserTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
+    # pylint: disable=line-too-long
+
     expected_event_values = {
         "event_version": "1.0",
         "user_identity": '{"type": "IAMUser", "principalId": "EX_PRINCIPAL_ID", "arn": "arn:aws:iam::123456789012:user/Alice", "accessKeyId": "EXAMPLE_KEY_ID", "accountId": "123456789012", "userName": "Alice"}',
