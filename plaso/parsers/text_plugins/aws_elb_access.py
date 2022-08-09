@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for AWS ELB access logs.
 
-This parser is based on the log format documented at
-https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
-
-Note:
 The AWS documentation is not clear about the meaning of the "target_port_list"
 field. The assumption is that it refers to a list of possible backend instances'
-IP addresses that could receive the client's request.  This parser stores the
+IP addresses that could receive the client's request. This parser stores the
 "target_port_list" data in the "destination_list" attribute of an EventData
 object.
+
+Also see:
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
 """
 
 import pyparsing
@@ -117,15 +117,13 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _MAXIMUM_LINE_LENGTH = 3000
 
-  _BLANK = pyparsing.Literal('"-"')
+  _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
-  _QUOTE_INTEGER = (
-      pyparsing.OneOrMore('"') + text_parser.PyparsingConstants.INTEGER |
-      _BLANK)
-
   _INTEGER = text_parser.PyparsingConstants.INTEGER | _BLANK
+
+  _INTEGER_NEGATIVE = pyparsing.Word('-', pyparsing.nums) | _INTEGER
 
   _FLOAT = pyparsing.Word(pyparsing.nums + '.')
 
@@ -149,8 +147,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.Literal('Z'))
 
-  # A log line as defined by the AWS ELB documentation.
-  _LOG_LINE = (
+  # A log line is defined as in the AWS ELB documentation
+  _LOG_LINE_APPLICATION = (
       _WORD.setResultsName('request_type') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
       _WORD.setResultsName('resource_identifier') +
@@ -161,8 +159,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _FLOAT.setResultsName('response_processing_time') +
       _INTEGER.setResultsName('elb_status_code') +
       _INTEGER.setResultsName('destination_status_code') +
-      _INTEGER.setResultsName('received_bytes') +
-      _INTEGER.setResultsName('sent_bytes') +
+      _INTEGER_NEGATIVE.setResultsName('received_bytes') +
+      _INTEGER_NEGATIVE.setResultsName('sent_bytes') +
       pyparsing.quotedString.setResultsName('request')
           .setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName('user_agent')
@@ -193,7 +191,28 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.quotedString.setResultsName(
           'classification_reason').setParseAction(pyparsing.removeQuotes))
 
-  _LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
+  _LOG_LINE_CLASSIC = (
+      _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
+      _WORD.setResultsName('resource_identifier') +
+      _CLIENT_IP_ADDRESS_PORT.setResultsName('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
+      _FLOAT.setResultsName('request_processing_time') +
+      _FLOAT.setResultsName('destination_processing_time') +
+      _FLOAT.setResultsName('response_processing_time') +
+      _INTEGER.setResultsName('elb_status_code') +
+      _INTEGER.setResultsName('destination_status_code') +
+      _INTEGER_NEGATIVE.setResultsName('received_bytes') +
+      _INTEGER_NEGATIVE.setResultsName('sent_bytes') +
+      pyparsing.quotedString.setResultsName('request').setParseAction(
+          pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName('user_agent').setParseAction(
+          pyparsing.removeQuotes) +
+      _WORD.setResultsName('ssl_cipher') +
+      _WORD.setResultsName('ssl_protocol'))
+
+  _LINE_STRUCTURES = [
+      ('elb_application_accesslog', _LOG_LINE_APPLICATION),
+      ('elb_classic_accesslog', _LOG_LINE_CLASSIC)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -206,9 +225,12 @@ class AWSELBTextPlugin(interface.TextPlugin):
       key_name (str): key name to retrieve the value of.
 
     Returns:
-      object: value for the specified key.
+      object: value for the specified key or None if not available.
     """
     structure_value = self._GetValueFromStructure(structure, name)
+    if structure_value is None:
+      return None
+
     return structure_value.get(key_name)
 
   def _GetDateTime(self, parser_mediator, time_structure):
@@ -223,15 +245,17 @@ class AWSELBTextPlugin(interface.TextPlugin):
       TimeElements: Time elements contain separate values for year, month,
           day of month, hours, minutes and seconds.
     """
-    date_time = None
     try:
       date_time = dfdatetime_time_elements.TimeElements()
       date_time.CopyFromStringISO8601(time_structure)
+
+      return date_time
+
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_structure))
 
-    return date_time
+    return None
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -257,10 +281,12 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
     date_time_response_sent = self._GetDateTime(
         parser_mediator, time_response_sent)
-    date_time_request_received = self._GetDateTime(
-        parser_mediator, time_request_received)
 
-    if date_time_request_received is None or date_time_response_sent is None:
+    if time_request_received is not None:
+        date_time_request_received = self._GetDateTime(
+            parser_mediator, time_request_received)
+
+    if date_time_response_sent is None:
       return
 
     event_data = AWSELBEventData()
@@ -322,20 +348,20 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'classification_reason')
     destination_list = self._GetValueFromStructure(
         structure, 'destination_list')
-    event_data.destination_list = destination_list.split()
+    if destination_list is not None:
+        event_data.destination_list = destination_list.split()
 
     elb_response_sent_event = time_events.DateTimeValuesEvent(
         date_time_response_sent,
         definitions.TIME_DESCRIPTION_AWS_ELB_RESPONSE_SENT)
-
-    elb_request_received_event = time_events.DateTimeValuesEvent(
-        date_time_request_received,
-        definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
-
     parser_mediator.ProduceEventWithEventData(
         elb_response_sent_event, event_data)
 
-    parser_mediator.ProduceEventWithEventData(
+    if key == 'elb_application_accesslog' and date_time_request_received is not None:
+        elb_request_received_event = time_events.DateTimeValuesEvent(
+            date_time_request_received,
+            definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
+        parser_mediator.ProduceEventWithEventData(
         elb_request_received_event, event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
@@ -354,11 +380,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    try:
-      parsed_structure = self._LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
-      parsed_structure = None
-
+    _, _, parsed_structure = self._GetMatchingLineStructure(line)
     return bool(parsed_structure)
 
 
