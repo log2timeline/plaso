@@ -440,7 +440,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
     kwargs['location'] = file_system.JoinPath(path_segments)
 
     system_identity_file_path_spec = path_spec_factory.Factory.NewPathSpec(
-      file_entry.path_spec.TYPE_INDICATOR, **kwargs)
+        file_entry.path_spec.TYPE_INDICATOR, **kwargs)
 
     system_identity_file_entry = None
     try:
