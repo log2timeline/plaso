@@ -643,12 +643,13 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
   """Windows EventLog provider artifact attribute container.
 
   Attributes:
+    additional_identifier (str): additional identifier of the provider,
+        contains a GUID.
     category_message_files (list[str]): filenames of the category message files.
     event_message_files (list[str]): filenames of the event message files.
     identifier (str): identifier of the provider, contains a GUID.
-    log_source (str): name of the Windows EventLog source.
-    log_source_alias (str): alternate name of the Windows EventLog source.
-    log_type (str): Windows EventLog type.
+    log_sources (list[str]): names of the corresponding Event Log sources.
+    log_types (list[str]): Windows Event Log types.
     parameter_message_files (list[str]): filenames of the parameter message
         files.
   """
@@ -656,6 +657,17 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
   CONTAINER_TYPE = 'windows_eventlog_provider'
 
   SCHEMA = {
+      '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
+      'additional_identifier': 'str',
+      'category_message_files': 'List[str]',
+      'event_message_files': 'List[str]',
+      'identifier': 'str',
+      'log_sources': 'List[str]',
+      'log_types': 'List[str]',
+      'parameter_message_files': 'List[str]'}
+
+  # Older schema kept for backwards compatibility.
+  SCHEMA_20211121 = {
       '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
       'category_message_files': 'List[str]',
       'event_message_files': 'List[str]',
@@ -683,13 +695,80 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
           message files.
     """
     super(WindowsEventLogProviderArtifact, self).__init__()
-    self.category_message_files = category_message_files
-    self.event_message_files = event_message_files
+    self.additional_identifier = None
+    self.category_message_files = category_message_files or []
+    self.event_message_files = event_message_files or []
     self.identifier = identifier
-    self.log_source = log_source
-    self.log_source_alias = None
-    self.log_type = log_type
-    self.parameter_message_files = parameter_message_files
+    self.log_sources = []
+    self.log_types = []
+    self.parameter_message_files = parameter_message_files or []
+
+    if log_source:
+      self.log_sources.append(log_source)
+    if log_type:
+      self.log_types.append(log_type)
+
+  # Setters and getter for backwards compatibility of older schema.
+
+  @property
+  def log_source(self):
+    """str: name of the Windows EventLog source."""
+    try:
+      return self.log_sources[0]
+    except IndexError:
+      return None
+
+  @log_source.setter
+  def log_source(self, log_source):
+    """Sets the the Windows EventLog source.
+
+    Args:
+      log_source (str): name of the Windows EventLog source.
+    """
+    try:
+      self.log_sources[0] = log_source
+    except IndexError:
+      self.log_sources.append(log_source)
+
+  @property
+  def log_source_alias(self):
+    """str: alternate name of the Windows EventLog source."""
+    try:
+      return self.log_sources[1]
+    except IndexError:
+      return None
+
+  @log_source_alias.setter
+  def log_source_alias(self, log_source_alias):
+    """Sets the the Windows EventLog source.
+
+    Args:
+      log_source_alias (str): alternate name of the Windows EventLog source.
+    """
+    try:
+      self.log_sources[1] = log_source_alias
+    except IndexError:
+      self.log_sources.append(log_source_alias)
+
+  @property
+  def log_type(self):
+    """str: Windows EventLog type."""
+    try:
+      return self.log_types[0]
+    except IndexError:
+      return None
+
+  @log_type.setter
+  def log_type(self, log_type):
+    """Sets the the Windows EventLog type.
+
+    Args:
+      log_type (str): Windows EventLog type.
+    """
+    try:
+      self.log_types[0] = log_type
+    except IndexError:
+      self.log_types.append(log_type)
 
 
 class WindowsMountedDeviceArtifact(ArtifactAttributeContainer):
@@ -769,9 +848,69 @@ class WindowsServiceConfigurationArtifact(ArtifactAttributeContainer):
     self.start_type = start_type
 
 
+class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
+  """Windows WEVT_TEMPLATE event definition.
+
+  Attributes:
+    identifier (int): event identifier.
+    message_identifier (int): identifier of the event message.
+    provider_identifier (str): identifier of the EventLog provider, contains
+        a GUID.
+    version (int): event version.
+  """
+
+  CONTAINER_TYPE = 'windows_wevt_template_event'
+
+  SCHEMA = {
+      '_message_file_row_identifier': 'AttributeContainerIdentifier',
+      'identifier': 'int',
+      'message_identifier': 'int',
+      'provider_identifier': 'str',
+      'version': 'int'}
+
+  def __init__(
+      self, identifier=None, message_identifier=None, provider_identifier=None,
+      version=None):
+    """Initializes a Windows WEVT_TEMPLATE event definition artifact.
+
+    Args:
+      identifier (Optional[int]): event identifier.
+      message_identifier (Optional[int]): identifier of the event message.
+      provider_identifier (Optional[str]): identifier of the EventLog provider,
+          contains a GUID.
+      version (Optional[int]): event version.
+    """
+    super(WindowsWevtTemplateEvent, self).__init__()
+    self._message_file_identifier = None
+    self._message_file_row_identifier = None
+    self.identifier = identifier
+    self.message_identifier = message_identifier
+    self.provider_identifier = provider_identifier
+    self.version = version
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when
+          not set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
     EnvironmentVariableArtifact, HostnameArtifact, OperatingSystemArtifact,
     PathArtifact, SourceConfigurationArtifact, SystemConfigurationArtifact,
     TimeZoneArtifact, UserAccountArtifact, WindowsEventLogMessageFileArtifact,
     WindowsEventLogMessageStringArtifact, WindowsEventLogProviderArtifact,
-    WindowsMountedDeviceArtifact, WindowsServiceConfigurationArtifact])
+    WindowsMountedDeviceArtifact, WindowsServiceConfigurationArtifact,
+    WindowsWevtTemplateEvent])

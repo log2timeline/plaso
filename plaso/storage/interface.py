@@ -88,7 +88,8 @@ class BaseStore(object):
           no schema available.
     """
     try:
-      schema = self._containers_manager.GetSchema(container_type)
+      schema = self._containers_manager.GetSchema(
+          container_type, schema_version=self.format_version)
     except ValueError:
       schema = {}
 

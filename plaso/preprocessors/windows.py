@@ -412,6 +412,9 @@ class WindowsEventLogPublishersPlugin(
 
     provider_identifier = registry_key.name.lower()
 
+    if log_source:
+      log_source = log_source.lower()
+
     windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
         event_message_files=event_message_files, identifier=provider_identifier,
         log_source=log_source)
@@ -472,8 +475,14 @@ class WindowsEventLogSourcesPlugin(
       provider_identifier = provider_identifier.lower()
 
     key_path_segments = registry_key.path.split('\\')
+
     log_source = key_path_segments[-1]
+    if log_source:
+      log_source = log_source.lower()
+
     log_type = key_path_segments[-2]
+    if log_type:
+      log_type = log_type.lower()
 
     windows_event_log_provider = artifacts.WindowsEventLogProviderArtifact(
         category_message_files=category_message_files,

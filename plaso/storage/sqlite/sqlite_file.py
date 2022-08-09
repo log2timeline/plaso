@@ -96,7 +96,7 @@ class SQLiteStorageFile(interface.BaseStore):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
-  _FORMAT_VERSION = 20211121
+  _FORMAT_VERSION = 20220716
 
   # The earliest format version with a schema.
   _WITH_SCHEMA_FORMAT_VERSION = 20210621
@@ -111,7 +111,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
-  _READ_COMPATIBLE_FORMAT_VERSION = 20190309
+  _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
   # Container types to not create a table for.
   _NO_CREATE_TABLE_CONTAINER_TYPES = (
@@ -140,6 +140,10 @@ class SQLiteStorageFile(interface.BaseStore):
           '_event_identifier',
           '_event_row_identifier')],
       'windows_eventlog_message_string': [(
+          'windows_eventlog_message_file',
+          '_message_file_identifier',
+          '_message_file_row_identifier')],
+      'windows_wevt_template_event': [(
           'windows_eventlog_message_file',
           '_message_file_identifier',
           '_message_file_row_identifier')],

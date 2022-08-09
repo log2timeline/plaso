@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The storage reader."""
 
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.storage import logger
 
@@ -12,6 +13,7 @@ class StorageReader(object):
   _CONTAINER_TYPE_SESSION_CONFIGURATION = (
       sessions.SessionConfiguration.CONTAINER_TYPE)
   _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
   def __init__(self):
     """Initializes a storage reader."""
@@ -72,6 +74,31 @@ class StorageReader(object):
     """
     return self._store.GetAttributeContainers(
         container_type, filter_expression=filter_expression)
+
+  def GetEventTagByEventIdentifer(self, event_identifier):
+    """Retrieves the event tag of a specific event.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event attribute
+          container identifier.
+
+    Returns:
+      EventTag: event tag or None if the event has no event tag.
+    """
+    # TODO: change GetAttributeContainers to handle identifier attributes.
+    lookup_key = event_identifier.CopyToString()
+    filter_expression = '_event_row_identifier == "{0:s}"'.format(
+        lookup_key.split('.')[-1])
+    event_tags = list(self.GetAttributeContainers(
+        self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression))
+
+    if not event_tags:
+      return None
+
+    if len(event_tags) > 1:
+      logger.warning('More than 1 event tag returned.')
+
+    return event_tags[0]
 
   def GetFormatVersion(self):
     """Retrieves the format version of the underlying storage file.

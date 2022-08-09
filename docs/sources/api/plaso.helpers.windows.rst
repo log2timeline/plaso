@@ -4,6 +4,14 @@ plaso.helpers.windows package
 Submodules
 ----------
 
+plaso.helpers.windows.eventlog\_providers module
+------------------------------------------------
+
+.. automodule:: plaso.helpers.windows.eventlog_providers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.helpers.windows.known\_folders module
 -------------------------------------------
 

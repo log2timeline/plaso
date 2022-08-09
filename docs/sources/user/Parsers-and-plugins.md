@@ -14,6 +14,7 @@ bodyfile | Parser for SleuthKit version 3 bodyfile.
 bsm_log | Parser for Basic Security Module (BSM) event auditing files.
 chrome_cache | Parser for Google Chrome or Chromium Cache files.
 chrome_preferences | Parser for Google Chrome Preferences files.
+confluence_access | Parser for Confluence access log (access.log) files.
 cups_ipp | Parser for CUPS IPP files.
 custom_destinations | Parser for Custom destinations jump list (.customDestinations-ms) files.
 czip | Parser for Compound ZIP files.
@@ -26,9 +27,9 @@ fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
-ios:lockdownd:log | Parser for iOS lockdown daemon log.
-ios:mobile_installation:log | Parser for iOS mobile installation log.
-ios_sysdiagnose_logd | Parser for iOS sysdiagnose logd files.
+ios_lockdownd | Parser for iOS lockdown daemon log.
+ios_logd | Parser for iOS sysdiagnose logd files.
+ios_sysdiag_log | Parser for iOS sysdiag log.
 java_idx | Parser for Java WebStart Cache IDX files.
 jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
@@ -112,6 +113,8 @@ docker_container_config | Parser for Docker container configuration files.
 docker_container_log | Parser for Docker container log files.
 docker_layer_config | Parser for Docker layer configuration files.
 gcp_log | Parser for Google Cloud (GCP) log.
+ios_application_privacy | Parser for iOS Application Privacy report.
+microsoft_audit_log | Parser for Microsoft Audit Log.
 
 ### Parser plugins: olecf
 
@@ -162,8 +165,10 @@ firefox_history | Parser for Mozilla Firefox history SQLite database (places.sql
 google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
+ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
 ios_powerlog | Parser for iOS powerlog SQLite database (CurrentPowerlog.PLSQL) files.
-kik_messenger | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
+ios_screentime | Parser for iOS Screen Time SQLite database (RMAdminStore-Local.sqlite).
+kik_ios | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
 kodi | Parser for Kodi videos SQLite database (MyVideos.db) files.
 ls_quarantine | Parser for MacOS launch services quarantine events database SQLite database files.
 mac_document_versions | Parser for MacOS document revisions SQLite database files.
@@ -236,8 +241,10 @@ Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 dockerjson | jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config
+ios | ios_lockdownd, ios_logd, ios_sysdiag_log, jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios
 linux | apt_history, bash_history, bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
 macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
+mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | esedb, mft, win7

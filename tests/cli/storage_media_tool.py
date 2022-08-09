@@ -1208,17 +1208,19 @@ Test argument parser.
 {0:s}:
   --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
                         means that Volume Shadow Snapshots (VSS) are not
-                        processed.
+                        processed. WARNING: this option is deprecated use
+                        --vss_stores=none instead.
   --vss_only, --vss-only
                         Do not process the current volume if Volume Shadow
                         Snapshots (VSS) have been selected.
   --vss_stores VSS_STORES, --vss-stores VSS_STORES
-                        Define Volume Shadow Snapshots (VSS) (or stores that
-                        need to be processed. A range of stores can be defined
-                        as: "3..5". Multiple stores can be defined as: "1,3,5"
-                        (a list of comma separated values). Ranges and lists
-                        can also be combined as: "1,3..5". The first store is
-                        1. All stores can be defined as: "all".
+                        Define Volume Shadow Snapshots (VSS) (or stores) that
+                        need to be processed. A range of snapshots can be
+                        defined as: "3..5". Multiple snapshots can be defined
+                        as: "1,3,5" (a list of comma separated values). Ranges
+                        and lists can also be combined as: "1,3..5". The first
+                        snapshot is 1. All snapshots can be defined as: "all"
+                        and no snapshots as: "none".
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   def _GetTestScanNode(self, scan_context):

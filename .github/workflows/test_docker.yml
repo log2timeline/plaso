@@ -3,10 +3,10 @@ name: test_docker
 on: [push]
 jobs:
   test_fedora:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        version: ['34', '35']
+        version: ['36']
     container:
       image: registry.fedoraproject.org/fedora:${{ matrix.version }}
     steps:
@@ -37,10 +37,10 @@ jobs:
         python3 ./setup.py build
         python3 ./setup.py install
   test_ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        version: ['18.04', '20.04']
+        version: ['22.04']
     container:
       image: ubuntu:${{ matrix.version }}
     steps:

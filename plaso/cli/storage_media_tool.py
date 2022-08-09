@@ -394,7 +394,6 @@ class StorageMediaTool(tools.CLITool):
     self._mediator = StorageMediaToolMediator(
         input_reader=input_reader, output_writer=output_writer)
     self._partitions = None
-    self._process_vss = False
     self._source_path = None
     self._source_path_specs = []
     self._source_type = None
@@ -499,15 +498,17 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    vss_only = False
-    vss_stores = None
+    process_vss = not getattr(options, 'no_vss', False)
+    vss_only = getattr(options, 'vss_only', False)
+    vss_stores = getattr(options, 'vss_stores', None)
 
-    self._process_vss = not getattr(options, 'no_vss', False)
-    if self._process_vss:
-      vss_only = getattr(options, 'vss_only', False)
-      vss_stores = getattr(options, 'vss_stores', None)
+    if not process_vss:
+      vss_stores = 'none'
 
-    if vss_stores:
+      self._PrintUserWarning(
+          'The --no_vss option is deprecated use --vss_stores=none instead.')
+
+    if vss_stores and vss_stores != 'none':
       try:
         self._mediator.ParseVolumeIdentifiersString(vss_stores, prefix='vss')
       except ValueError:
@@ -569,7 +570,8 @@ class StorageMediaTool(tools.CLITool):
         '--no_vss', '--no-vss', dest='no_vss', action='store_true',
         default=False, help=(
             'Do not scan for Volume Shadow Snapshots (VSS). This means that '
-            'Volume Shadow Snapshots (VSS) are not processed.'))
+            'Volume Shadow Snapshots (VSS) are not processed. WARNING: this '
+            'option is deprecated use --vss_stores=none instead.'))
 
     argument_group.add_argument(
         '--vss_only', '--vss-only', dest='vss_only', action='store_true',
@@ -580,12 +582,12 @@ class StorageMediaTool(tools.CLITool):
     argument_group.add_argument(
         '--vss_stores', '--vss-stores', dest='vss_stores', action='store',
         type=str, default=None, help=(
-            'Define Volume Shadow Snapshots (VSS) (or stores that need to be '
-            'processed. A range of stores can be defined as: "3..5". '
-            'Multiple stores can be defined as: "1,3,5" (a list of comma '
+            'Define Volume Shadow Snapshots (VSS) (or stores) that need to be '
+            'processed. A range of snapshots can be defined as: "3..5". '
+            'Multiple snapshots can be defined as: "1,3,5" (a list of comma '
             'separated values). Ranges and lists can also be combined as: '
-            '"1,3..5". The first store is 1. All stores can be defined as: '
-            '"all".'))
+            '"1,3..5". The first snapshot is 1. All snapshots can be defined '
+            'as: "all" and no snapshots as: "none".'))
 
   def ScanSource(self, source_path):
     """Scans the source path for volume and file systems.
@@ -618,11 +620,12 @@ class StorageMediaTool(tools.CLITool):
     else:
       options.partitions = self._partitions
 
-    if not self._process_vss or (
-        self._unattended_mode and not self._vss_stores):
+    if not self._vss_stores and self._unattended_mode:
       options.snapshots = ['none']
     elif self._vss_stores == 'all':
       options.snapshots = ['all']
+    elif self._vss_stores == 'none':
+      options.snapshots = ['none']
     else:
       options.snapshots = self._vss_stores
 

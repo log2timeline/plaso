@@ -45,7 +45,7 @@ class KikIOSPlugin(interface.SQLitePlugin):
   kik.sqlite
   """
 
-  NAME = 'kik_messenger'
+  NAME = 'kik_ios'
   DATA_FORMAT = 'iOS Kik messenger SQLite database (kik.sqlite) file'
 
   REQUIRED_STRUCTURE = {
