@@ -47,6 +47,7 @@ from plaso.parsers import text_parser
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
+from plaso.parsers import viminfo
 from plaso.parsers import windefender_history
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
@@ -55,7 +56,6 @@ from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg_parser
 from plaso.parsers import winrestore
-from plaso.parsers import viminfo
 from plaso.parsers import zsh_extended_history
 
 # Register parser plugins.
