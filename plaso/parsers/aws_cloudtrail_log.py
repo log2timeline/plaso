@@ -71,17 +71,17 @@ class AWSCloudTrailEventData(events.EventData):
     self.request_parameters = None
     self.response_elements = None
     self.additional_event_data = None
-    self.request_id = None
-    self.event_id = None
+    self.request_identifier = None
+    self.event_identifier = None
     self.event_type = None
     self.api_version = None
     self.management_event = None
     self.read_only = None
     self.resources = None
-    self.recipient_account_id = None
+    self.recipient_account_identifier = None
     self.service_event_details = None
-    self.shared_event_id = None
-    self.vpc_endpoint_id = None
+    self.shared_event_identifier = None
+    self.vpc_endpoint_identifier = None
     self.event_category = None
     self.addendum = None
     self.session_credential_from_console = None
@@ -107,17 +107,17 @@ class AWSCloudTrailLogParser(interface.FileObjectParser):
       'errorCode': 'error_code',
       'errorMessage': 'error_message',
       'additionalEventData': 'additional_event_data',
-      'requestID': 'request_id',
-      'eventID': 'event_id',
+      'requestID': 'request_identifier',
+      'eventID': 'event_identifier',
       'eventType': 'event_type',
       'apiVersion': 'api_version',
       'managementEvent': 'management_event',
       'readOnly': 'read_only',
       'resources': 'resources',
-      'recipientAccountId': 'recipient_account_id',
+      'recipientAccountId': 'recipient_account_identifier',
       'serviceEventDetails': 'service_event_details',
-      'sharedEventID': 'shared_event_id',
-      'vpcEndpointId': 'vpc_endpoint_id',
+      'sharedEventID': 'shared_event_identifier',
+      'vpcEndpointId': 'vpc_endpoint_identifier',
       'eventCategory': 'event_category',
       'addendum': 'addendum',
       'sessionCredentialFromConsole': 'session_credential_from_console',

@@ -63,10 +63,10 @@ class AWSCloudTrailLogParserTest(test_lib.ParserTestCase):
         "event_version": "1.07",
         "timestamp": "2019-11-14 00:51:00.000000",
         "aws_region": "us-east-1",
-        "event_id": "EXAMPLE8-9621-4d00-b913-beca2EXAMPLE",
+        "event_identifier": "EXAMPLE8-9621-4d00-b913-beca2EXAMPLE",
         "event_type": "AwsCloudTrailInsight",
-        "recipient_account_id": "123456789012",
-        "shared_event_id": "EXAMPLE2-1729-42f1-b735-5d8c0EXAMPLE",
+        "recipient_account_identifier": "123456789012",
+        "shared_event_identifier": "EXAMPLE2-1729-42f1-b735-5d8c0EXAMPLE",
         "insight_details": '{"state": "Start", "eventSource": "ssm.amazonaws.com", "eventName": "UpdateInstanceInformation", "insightType": "ApiCallRateInsight", "insightContext": {"statistics": {"baseline": {"average": 85.4202380952}, "insight": {"average": 664}}}}',
         "event_category": "Insight"
     }
