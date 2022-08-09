@@ -15,6 +15,7 @@
 # * Browser history: IE, Firefox and Chrome.
 # * Browser cookie files: IE.
 # * Flash cookies, or LSO/SOL files from the Flash player.
+# * Windows User Access Logging (UAL) logs.
 #
 # File system metadata files.
 /[$]MFT
@@ -46,6 +47,8 @@
 {systemroot}/inf/setupapi[.].+[.]log
 {systemroot}/setupapi.log
 {systemroot}/System32/LogFiles/.+/.+[.]txt
+# Windows User Access Logging (UAL) database
+{systemroot}/System32/LogFiles/Sum/.+[.]mdb
 # Windows artifacts.
 {systemroot}/Tasks/.+[.]job
 {systemroot}/Appcompat/Programs/Recentfilecache[.]bcf

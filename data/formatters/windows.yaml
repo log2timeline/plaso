@@ -757,3 +757,53 @@ message:
 short_message:
 - '{device_path}'
 - 'Origin: {origin}'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:clients'
+message:
+- 'Account: {authenticated_username}'
+- 'Source IP address: {source_ip_address}'
+- 'Service identifier: {role_identifier}'
+- 'Service name: {role_name}'
+- 'Total accesses: {total_accesses}'
+- 'Client name: {client_name}'
+- 'Tenant identifier: {tenant_identifier}'
+short_message:
+- '{authenticated_username}'
+- 'Accessed: {role_name}'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:dns'
+message:
+- 'IP address: {ip_address}'
+- 'Hostname: {hostname}'
+short_message:
+- 'IP address: {ip_address}'
+- 'Hostname: {hostname}'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:role_access'
+message:
+- 'Role name: {role_name}'
+- 'Role identifier: {role_identifier}'
+short_message:
+- 'Role name: {role_name}'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:system_identity'
+message:
+- 'Operating system build: {operating_system_build}'
+- 'System domain name: {system_domain_name}'
+- 'System DNS hostname: {system_dns_hostname}'
+short_message:
+- '{system_domain_name}'
+- '{system_dns_hostname}'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:virtual_machines'
+message:
+- 'BIOS identifier: {bios_identifier}'
+- 'Serial number: {serial_number}'
+- 'VM identifier: {vm_identifier}'
+short_message:
+- 'VM identifier: {vm_identifier}'

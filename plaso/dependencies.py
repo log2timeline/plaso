@@ -33,7 +33,7 @@ PYTHON_DEPENDENCIES = {
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20220121', None, True),
     'pycreg': ('get_version()', '20200725', None, True),
-    'pyesedb': ('get_version()', '20150409', None, True),
+    'pyesedb': ('get_version()', '20220806', None, True),
     'pyevt': ('get_version()', '20191104', None, True),
     'pyevtx': ('get_version()', '20210424', None, True),
     'pyewf': ('get_version()', '20131210', None, True),
