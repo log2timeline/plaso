@@ -67,7 +67,8 @@ class AWSELBTextPluginTest(test_lib.TextPluginTestCase):
         'ssl_cipher': 'ECDHE-RSA-AES128-GCM-SHA256',
         'ssl_protocol': 'TLSv1.2',
         'timestamp': '2020-01-11 16:55:19.000000',
-        'trace_identifier': '"XXXXXXX"',
+        'trace_identifier': 'XXXXXXX',
+        'request_type': 'https',
         'user_agent': (
             'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; '
             'Trident/6.0)')}
@@ -104,7 +105,8 @@ class AWSELBTextPluginTest(test_lib.TextPluginTestCase):
         'ssl_cipher': 'ECDHE-RSA-AES128-GCM-SHA256',
         'ssl_protocol': 'TLSv1.2',
         'timestamp': '2020-01-11 16:55:20.000000',
-        'trace_identifier': '"XXXXXXX"',
+        'trace_identifier': 'XXXXXXX',
+        'request_type': 'https',
         'user_agent': (
             'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; '
             'Trident/6.0)')}

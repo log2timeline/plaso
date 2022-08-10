@@ -183,7 +183,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _INTEGER_NEGATIVE = pyparsing.Word('-', pyparsing.nums) | _INTEGER
 
-  _FLOAT = pyparsing.Word(pyparsing.nums + '.')
+  _FLOAT = pyparsing.Word(pyparsing.nums + '.') | pyparsing.Literal('-1')
 
   _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK
@@ -225,8 +225,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _FLOAT.setResultsName('response_processing_time') +
       _INTEGER.setResultsName('elb_status_code') +
       _INTEGER.setResultsName('destination_status_code') +
-      _INTEGER_NEGATIVE.setResultsName('received_bytes') +
-      _INTEGER_NEGATIVE.setResultsName('sent_bytes') +
+      _INTEGER.setResultsName('received_bytes') +
+      _INTEGER.setResultsName('sent_bytes') +
       pyparsing.quotedString.setResultsName('request')
           .setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName('user_agent')
@@ -234,12 +234,13 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _WORD.setResultsName('ssl_cipher') +
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('destination_group_arn') +
-      _WORD.setResultsName('trace_identifier') +
+      pyparsing.quotedString.setResultsName(
+          'trace_identifier').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
           'domain_name').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
           'chosen_cert_arn').setParseAction(pyparsing.removeQuotes) +
-      _INTEGER.setResultsName('matched_rule_priority') +
+      _INTEGER_NEGATIVE.setResultsName('matched_rule_priority') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('request_creation_time') +
       pyparsing.quotedString.setResultsName(
           'actions_executed').setParseAction(pyparsing.removeQuotes) +
@@ -267,8 +268,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
       _INTEGER.setResultsName('connection_time') +
       _INTEGER.setResultsName('handshake_time') +
-      _INTEGER_NEGATIVE.setResultsName('received_bytes') +
-      _INTEGER_NEGATIVE.setResultsName('sent_bytes') +
+      _INTEGER.setResultsName('received_bytes') +
+      _INTEGER.setResultsName('sent_bytes') +
       _WORD.setResultsName('incoming_tls_alert') +
       _WORD.setResultsName('chosen_cert_arn') +
       _WORD.setResultsName('chosen_cert_serial') +
@@ -308,6 +309,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       ('elb_classic_accesslog', _LOG_LINE_CLASSIC)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def _GetValueFromGroup(self, structure, name, key_name):
     """Retrieves a value from a Pyparsing.Group structure.
@@ -365,6 +368,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: when the structure type is unknown.
     """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
