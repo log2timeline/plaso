@@ -536,11 +536,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testSystemWake(self):
     """Tests the system_wake tagging rule."""
-    # Test: data_type is 'windows:evtx:record' AND
-    #       source_name is 'Microsoft-Windows-Power-Troubleshooter' AND
+    # Test: data_type is 'windows:evtx:record' AND (
+    #       provider_identifier is '{cdc05e28-c449-49c6-b9d2-88cf761644df}' OR
+    #       source_name is 'Microsoft-Windows-Power-Troubleshooter') AND
     #       event_identifier is 1
     attribute_values_per_name = {
         'event_identifier': [1],
+        'provider_identifier': ['{cdc05e28-c449-49c6-b9d2-88cf761644df}'],
         'source_name': ['Microsoft-Windows-Power-Troubleshooter']}
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
