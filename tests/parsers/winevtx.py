@@ -58,6 +58,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'data_type': 'windows:evtx:record',
         'event_identifier': 105,
         'event_level': 4,
+        'event_version': 0,
         'message_identifier': 105,
         'provider_identifier': '{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}',
         'record_number': 12049,
@@ -100,6 +101,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'date_time': '2012-03-14 04:17:38.2763402',
         'data_type': 'windows:evtx:record',
         'event_level': 4,
+        'event_version': 0,
         'record_number': 12050,
         'source_name': 'Service Control Manager',
         'strings': ['Windows Modules Installer', 'stopped', (

@@ -35,7 +35,7 @@ PYTHON_DEPENDENCIES = {
     'pycreg': ('get_version()', '20200725', None, True),
     'pyesedb': ('get_version()', '20220806', None, True),
     'pyevt': ('get_version()', '20191104', None, True),
-    'pyevtx': ('get_version()', '20210424', None, True),
+    'pyevtx': ('get_version()', '20220724', None, True),
     'pyewf': ('get_version()', '20131210', None, True),
     'pyfsapfs': ('get_version()', '20201107', None, True),
     'pyfsext': ('get_version()', '20220112', None, True),
