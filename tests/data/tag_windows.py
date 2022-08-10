@@ -542,7 +542,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     #       event_identifier is 1
     attribute_values_per_name = {
         'event_identifier': [1],
-        'provider_identifier': ['{cdc05e28-c449-49c6-b9d2-88cf761644df}'],
+        'provider_identifier': ['{cdc05e28-c449-49c6-b9d2-88cf761644df}']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['system_wake'])
+
+    attribute_values_per_name = {
+        'event_identifier': [1],
         'source_name': ['Microsoft-Windows-Power-Troubleshooter']}
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
