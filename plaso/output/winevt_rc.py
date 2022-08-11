@@ -410,10 +410,10 @@ class WinevtResourcesHelper(object):
     message_string = None
 
     if provider_identifier:
-      if event_version is not None:
-        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
       lookup_key = '{0:s}:0x{1:08x}'.format(
           provider_identifier, message_identifier)
+      if event_version is not None:
+        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
       message_string = self._message_string_cache.get(lookup_key, None)
 
     if not message_string and log_source:

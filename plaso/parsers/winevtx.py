@@ -21,6 +21,7 @@ class WinEvtxRecordEventData(events.EventData):
     computer_name (str): computer name stored in the event record.
     event_identifier (int): event identifier.
     event_level (int): event level.
+    event_version (int): event version.
     message_identifier (int): event message identifier.
     offset (int): offset of the EVTX record relative to the start of the file,
         from which the event data was extracted.
@@ -41,6 +42,7 @@ class WinEvtxRecordEventData(events.EventData):
     self.computer_name = None
     self.event_identifier = None
     self.event_level = None
+    self.event_version = None
     self.message_identifier = None
     self.offset = None
     self.provider_identifier = None
@@ -127,6 +129,7 @@ class WinEvtxParser(interface.FileObjectParser):
       event_data.provider_identifier = evtx_record.provider_identifier.lower()
 
     event_data.event_level = evtx_record.event_level
+    event_data.event_version = evtx_record.event_version
     event_data.source_name = evtx_record.source_name
 
     # Computer name is the value stored in the event record and does not
