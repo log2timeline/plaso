@@ -98,6 +98,10 @@ system_start
 system_sleep
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-Power' AND event_identifier is 42
 
+# Tags system wake events.
+system_wake
+  data_type is 'windows:evtx:record' AND (provider_identifier is '{cdc05e28-c449-49c6-b9d2-88cf761644df}' OR source_name is 'Microsoft-Windows-Power-Troubleshooter') AND event_identifier is 1
+
 # Tags auto run events.
 autorun
   data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
