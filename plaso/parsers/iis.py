@@ -4,11 +4,13 @@
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
+from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -188,6 +190,65 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
   # Log file are all extended ASCII encoded unless UTF-8 is explicitly enabled.
   _ENCODING = 'utf-8'
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      WrongParser: when the file cannot be parsed.
+    """
+    if not self._line_structures:
+      raise errors.WrongParser(
+          'Line structure undeclared, unable to proceed.')
+
+    encoding = self._ENCODING or parser_mediator.codepage
+
+    # Use strict encoding error handling in the verification step so that
+    # a text parser does not generate extraction warning for encoding errors
+    # of unsupported files.
+    text_file_object = text_file.TextFile(file_object, encoding=encoding)
+
+    try:
+      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
+    except UnicodeDecodeError:
+      raise errors.WrongParser(
+          'Not a text file or encoding not supported.')
+
+    if not line:
+      raise errors.WrongParser('Not a text file.')
+
+    if len(line) == self.MAX_LINE_LENGTH or len(
+        line) == self.MAX_LINE_LENGTH - 1:
+      logger.debug((
+          'Trying to read a line and reached the maximum allowed length of '
+          '{0:d}. The last few bytes of the line are: {1:s} [parser '
+          '{2:s}]').format(
+              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
+
+    if not self._IsText(line):
+      raise errors.WrongParser('Not a text file, unable to proceed.')
+
+    # IIS log headers can appear in any order,
+    # so read them all in to verify the structure
+    headers = [line]
+    while line != '':
+      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
+      if line.startswith("#"):
+        headers.extend([line])
+      else:
+        break
+
+    if not self.VerifyStructure(parser_mediator, ''.join(headers)):
+      raise errors.WrongParser('Wrong file structure.')
+
+    self._parser_mediator = parser_mediator
+
+    self.ParseLine(parser_mediator, file_object, encoding)
 
   def __init__(self):
     """Initializes a parser."""

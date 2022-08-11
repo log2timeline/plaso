@@ -190,6 +190,7 @@ class WinEvtxParser(interface.FileObjectParser):
       creation_time = None
 
     if creation_time:
+      date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)

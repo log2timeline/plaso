@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """This file imports Python modules that register parsers."""
 
-from plaso.parsers import asl
 from plaso.parsers import android_app_usage
 from plaso.parsers import apache_access
 from plaso.parsers import apt_history
+from plaso.parsers import asl
 from plaso.parsers import aws_elb_access
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
@@ -44,8 +44,8 @@ from plaso.parsers import olecf
 from plaso.parsers import opera
 from plaso.parsers import pe
 from plaso.parsers import plist
-from plaso.parsers import popcontest
 from plaso.parsers import pls_recall
+from plaso.parsers import popcontest
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
 from plaso.parsers import santa
@@ -57,12 +57,13 @@ from plaso.parsers import sophos_av
 from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
-from plaso.parsers import systemd_journal
 from plaso.parsers import syslog
+from plaso.parsers import systemd_journal
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import vsftpd
+from plaso.parsers import windefender_history
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
 from plaso.parsers import winfirewall

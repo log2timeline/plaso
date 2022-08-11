@@ -2,6 +2,7 @@
 """This file contains the interface for ESE database plugins."""
 
 import os
+import uuid
 
 import pyesedb
 
@@ -143,7 +144,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       value_entry (int): value entry.
 
     Returns:
-      object: value.
+      object: value or None if not available.
 
     Raises:
       ValueError: if the value is not supported.
@@ -162,13 +163,24 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       return None
 
     if column_type == pyesedb.column_types.BOOLEAN:
-      # TODO: implement
-      raise ValueError('Boolean value support not implemented yet.')
+      if long_value:
+        # TODO: implement
+        raise ValueError('Long boolean value not supported.')
+      return record.get_value_data_as_boolean(value_entry)
 
     if column_type in self.INTEGER_COLUMN_TYPES:
       if long_value:
         raise ValueError('Long integer value not supported.')
       return record.get_value_data_as_integer(value_entry)
+
+    if column_type == pyesedb.column_types.GUID:
+      if long_value:
+        # TODO: implement
+        raise ValueError('Long GUID value not supported.')
+      value_data = record.get_value_data(value_entry)
+      if value_data:
+        value_data = uuid.UUID(bytes_le=value_data)
+      return value_data
 
     if column_type in self.FLOATING_POINT_COLUMN_TYPES:
       if long_value:
@@ -179,10 +191,6 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       if long_value:
         return long_value.get_data_as_string()
       return record.get_value_data_as_string(value_entry)
-
-    if column_type == pyesedb.column_types.GUID:
-      # TODO: implement
-      raise ValueError('GUID value support not implemented yet.')
 
     if long_value:
       return long_value.get_data()
