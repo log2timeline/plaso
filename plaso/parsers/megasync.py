@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for MEGASync log files.
 """
-
-
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 import pyparsing
@@ -52,21 +50,20 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS
   ).setResultsName('timestamp')
 
-  _THREAD_NAME = text_parser.PyparsingConstants.INTEGER.suppress()
+  _THREAD_NAME = pyparsing.Word(pyparsing.printables)
 
   _LOG_LEVEL = (
-      pyparsing.Literal('CRIT') |
-      pyparsing.Literal('ERR') |
-      pyparsing.Literal('WARN') |
-      pyparsing.Literal('INFO') |
       pyparsing.Literal('DBG') |
-      pyparsing.Literal('DTL')
-  ).setResultsName('log_level')
+      pyparsing.Literal('INFO') |
+      pyparsing.Literal('WARN') |
+      pyparsing.Literal('DTL') |
+      pyparsing.Literal('ERR') |
+      pyparsing.Literal('CRIT')).setResultsName('log_level')
 
-  _MESSAGE = (
-      pyparsing.White(ws=' ', min=1, max=2).suppress() +
-      pyparsing.restOfLine().setResultsName('message')
-  )
+  _MESSAGE = (pyparsing.White(' ' ,min=1,max=2).suppress() +
+      pyparsing.restOfLine().setResultsName('message'))
+
+  _BASE_LOG_LINE = _TIMESTAMP + _THREAD_NAME
 
   _LOG_LINE = _TIMESTAMP + _THREAD_NAME + _LOG_LEVEL + _MESSAGE
 
@@ -77,9 +74,19 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Suppress("]")
   ).setResultsName("repeats")
 
+  _PROGRAM_START = pyparsing.Literal(
+      '----------------------------- program start -----------------------------')
+
   LINE_STRUCTURES = [
       ('line', _LOG_LINE),
       ('repeat', _REPEAT_LINE),
+      ('program_start', _PROGRAM_START)]
+
+  _LINES_OF_INTEREST = [
+    'Transfer (UPLOAD) finished',
+    'Transfer (UPLOAD) starting',
+    'Upload complete',
+    'Creating thumb/preview'
   ]
 
   def __init__(self):
@@ -97,7 +104,7 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
           and other components, such as storage and dfvfs.
       month (int): month observed by the parser, where January is 1.
     """
-    # TODO: use timestamps of the Gzip file, not the file
+    # TODO: Investigate using timestamps of the Gzip file, not the file
     # within the Gzip file as the basis of estimation.
     if not self._year_use:
       self._year_use = mediator.GetEstimatedYear()
@@ -134,21 +141,19 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    # TODO: consider handling repeat lines as well. Repeating lines
-    #       are mostly cURL-related debug lines, so likely not of much use.
-    if key != "repeat":
+    if key == 'line':
       time_elements_tuple = self._GetValueFromStructure(structure, 'timestamp')
-      month, day_of_month, hours, minutes, seconds, milliseconds = (
+      month, day_of_month, hours, minutes, seconds, microseconds = (
           time_elements_tuple)
 
       self._UpdateYear(parser_mediator, month)
 
       time_elements_tuple = (
           self._year_use,
-          month, day_of_month, hours, minutes, seconds, milliseconds)
+          month, day_of_month, hours, minutes, seconds, microseconds)
 
       try:
-        timestamp = dfdatetime_time_elements.TimeElements(
+        timestamp = dfdatetime_time_elements.TimeElementsInMicroseconds(
             time_elements_tuple=time_elements_tuple)
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
@@ -156,12 +161,18 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
         )
         return
 
-      event_data = MEGASyncEventData()
-      event_data.message = self._GetValueFromStructure(structure, 'message')
-      event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
-      event = time_events.DateTimeValuesEvent(
-          timestamp, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      log_message = self._GetValueFromStructure(structure, 'message')
+
+      for line in self._LINES_OF_INTEREST:
+        if log_message.startswith(line):
+          event_data = MEGASyncEventData()
+          event_data.message = log_message
+          event_data.log_level = self._GetValueFromStructure(
+              structure, 'log_level')
+          event = time_events.DateTimeValuesEvent(
+              timestamp, definitions.TIME_DESCRIPTION_RECORDED)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+          break
 
   def VerifyStructure(self, parser_mediator, line):
     """Verifies if a line from a text file is in the expected format.
