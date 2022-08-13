@@ -36,13 +36,8 @@ def PythonAST2SQL(ast_node):
     else:
       raise TypeError(ast_node)
 
-    if len(ast_node.values) != 2:
-      raise TypeError(ast_node)
-
-    sql_left = PythonAST2SQL(ast_node.values[0])
-    sql_right = PythonAST2SQL(ast_node.values[1])
-
-    return operand.join([sql_left, sql_right])
+    return operand.join([
+        PythonAST2SQL(ast_node_value) for ast_node_value in ast_node.values])
 
   if isinstance(ast_node, ast.Compare):
     if len(ast_node.ops) != 1:
