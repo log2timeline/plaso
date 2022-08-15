@@ -24,10 +24,6 @@ install:
 - sh: config/appveyor/install.sh
 
 build_script:
-# Note that bdist_msi will change the version number to work-around limitations
-# of the MSI version version numbering. Hence a MSI build is done separately
-# from building the wheel to not influence its version number.
-- cmd: "%PYTHON%\\python.exe setup.py bdist_msi"
 - cmd: "%PYTHON%\\python.exe setup.py bdist_wheel"
 
 test_script:
