@@ -224,6 +224,12 @@ plaso_long_description = (
     'purpose is to extract timestamps from various files found on typical '
     'computer systems and aggregate them.')
 
+command_classes = {'sdist_test_data': sdist}
+if BdistMSICommand:
+  command_classes['bdist_msi'] = BdistMSICommand
+if BdistRPMCommand:
+  command_classes['bdist_rpm'] = BdistRPMCommand
+
 setup(
     name='plaso',
     version=plaso.__version__,
@@ -234,10 +240,7 @@ setup(
     url='https://github.com/log2timeline/plaso',
     maintainer='Log2Timeline maintainers',
     maintainer_email='log2timeline-maintainers@googlegroups.com',
-    cmdclass={
-        'bdist_msi': BdistMSICommand,
-        'bdist_rpm': BdistRPMCommand,
-        'sdist_test_data': sdist},
+    cmdclass=command_classes,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
