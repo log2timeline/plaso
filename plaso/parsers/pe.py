@@ -471,16 +471,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 'Unable to read WEVT event definitions with error: '
                 '{0!s}').format(exception))
           for event_definition in event_definitions.definitions:
-            if event_definition.flags & 0x80:
-              event_version = event_definition.version
-            else:
-              event_version = None
-
             event_definition = artifacts.WindowsWevtTemplateEvent(
                 identifier=event_definition.identifier,
                 message_identifier=event_definition.message_identifier,
                 provider_identifier=provider_identifier,
-                version=event_version)
+                version=event_definition.version)
             event_definition.SetMessageFileIdentifier(message_file_identifier)
 
             parser_mediator.AddWindowsWevtTemplateEvent(event_definition)

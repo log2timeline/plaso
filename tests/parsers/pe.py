@@ -163,7 +163,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     self.assertEqual(
         attribute_containers[0].provider_identifier,
         '{67883bbc-d592-4d02-8e29-66907fcb07d6}')
-    self.assertIsNone(attribute_containers[0].version)
+    self.assertEqual(attribute_containers[0].version, 1)
 
 
 if __name__ == '__main__':

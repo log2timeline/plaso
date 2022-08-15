@@ -139,7 +139,6 @@ attributes:
 members:
 - name: identifier
   data_type: uint16
-# TODO: note that version, channel, level, opcode and task are part of an union.
 - name: version
   data_type: uint8
 - name: channel
