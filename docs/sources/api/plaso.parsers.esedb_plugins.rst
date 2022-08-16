@@ -36,6 +36,14 @@ plaso.parsers.esedb\_plugins.srum module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.esedb\_plugins.user\_access\_logging module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.esedb_plugins.user_access_logging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

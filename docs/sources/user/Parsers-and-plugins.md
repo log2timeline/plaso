@@ -71,6 +71,7 @@ usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata 
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
 vsftpd | Parser for vsftpd log files.
+windefender_history | Windows Defender scan DetectionHistory file
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
 winfirewall | Parser for Windows Firewall log files.
@@ -101,6 +102,7 @@ Name | Description
 file_history | Parser for Windows 8 File History ESE database files.
 msie_webcache | Parser for Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) files.
 srum | Parser for System Resource Usage Monitor (SRUM) ESE database files.
+user_access_logging | Parser for Windows User Access Logging ESE database files.
 
 ### Parser plugins: jsonl
 
@@ -246,7 +248,7 @@ linux | apt_history, bash_history, bencode, czip/oxml, jsonl/docker_container_co
 macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
-win7 | custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
+win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | esedb, mft, win7
 win_gen | bencode, czip/oxml, filestat, gdrive_synclog, lnk, mcafee_protection, olecf, pe, prefetch, setupapi, sccm, skydrive_log, skydrive_log_old, sqlite/google_drive, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt

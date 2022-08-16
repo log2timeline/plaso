@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Windows Defender DetectionHistory files."""
+"""Parser for Windows Defender scan DetectionHistory files."""
 
 import os
 
@@ -19,7 +19,7 @@ from plaso.parsers import manager
 
 
 class WinDefenderHistoryEventData(events.EventData):
-  """Windows Defender Detection History event data.
+  """Windows Defender scan DetectionHistory event data.
 
   Attributes:
     additional_filenames (list[str]): locations of additional detected files.
@@ -50,9 +50,10 @@ class WinDefenderHistoryEventData(events.EventData):
 
 class WinDefenderHistoryParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """Parses the Windows Defender History Log."""
+  """Parses a Windows Defender scan DetectionHistory file."""
 
   NAME = 'windefender_history'
+  DATA_FORMAT = 'Windows Defender scan DetectionHistory file'
 
   _FILE_SIGNATURE = 'Magic.Version:1.2'
 
