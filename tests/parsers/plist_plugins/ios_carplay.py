@@ -37,8 +37,7 @@ class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
       'date_time': '2020-04-12 13:55:51',
-      'desc': 'com.apple.mobilecal'
-      }
+      'desc': 'com.apple.mobilecal'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
