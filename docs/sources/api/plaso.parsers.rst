@@ -574,6 +574,14 @@ plaso.parsers.vsftpd module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.windefender\_history module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.windefender_history
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.winevt module
 ---------------------------
 
