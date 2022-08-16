@@ -7,6 +7,7 @@ import sqlite3
 
 from plaso.containers import artifacts
 from plaso.engine import path_helper
+from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
 from plaso.output import logger
 
@@ -354,9 +355,13 @@ class WinevtResourcesHelper(object):
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variable artifacts.
     """
+    language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
+        lcid or self.DEFAULT_LCID)
+
     super(WinevtResourcesHelper, self).__init__()
     self._data_location = data_location
     self._environment_variables = environment_variables or None
+    self._language_tag = language_tag.lower()
     self._lcid = lcid or self.DEFAULT_LCID
     self._message_string_cache = collections.OrderedDict()
     self._storage_reader = storage_reader
@@ -495,7 +500,8 @@ class WinevtResourcesHelper(object):
     if storage_reader.HasAttributeContainers('windows_eventlog_message_file'):
       for message_file in storage_reader.GetAttributeContainers(
           'windows_eventlog_message_file'):
-        self._windows_eventlog_message_files[message_file.windows_path] = (
+        path = message_file.path.lower()
+        self._windows_eventlog_message_files[path] = (
             message_file.GetIdentifier())
 
   def _ReadWindowsEventLogMessageString(
@@ -551,6 +557,7 @@ class WinevtResourcesHelper(object):
       if event_version is not None:
         filter_expression = '{0:s} and version == {1:d}'.format(
             filter_expression, event_version)
+
       for event_definition in storage_reader.GetAttributeContainers(
           'windows_wevt_template_event', filter_expression=filter_expression):
         logger.debug(
@@ -564,8 +571,18 @@ class WinevtResourcesHelper(object):
     for windows_path in provider.event_message_files or []:
       path, filename = path_helper.PathHelper.GetWindowsSystemPath(
           windows_path, self._environment_variables)
-      lookup_path = '\\'.join([path.lower(), filename.lower()])
+      path = path.lower()
+      filename = filename.lower()
 
+      lookup_path = '\\'.join([path, filename])
+      message_file_identifier = self._windows_eventlog_message_files.get(
+          lookup_path, None)
+      if message_file_identifier:
+        message_file_identifier = message_file_identifier.CopyToString()
+        message_file_identifiers.append(message_file_identifier)
+
+      mui_filename = '{0:s}.mui'.format(filename)
+      lookup_path = '\\'.join([path, self._language_tag, mui_filename])
       message_file_identifier = self._windows_eventlog_message_files.get(
           lookup_path, None)
       if message_file_identifier:
@@ -589,7 +606,7 @@ class WinevtResourcesHelper(object):
           message_strings.append(message_string)
 
       if not message_strings:
-        logger.error(
+        logger.debug(
             'No match for message: 0x{0:08x} of provider: {1:s}'.format(
                 message_identifier, lookup_key))
 
