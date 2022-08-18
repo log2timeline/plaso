@@ -567,8 +567,10 @@ class FieldFormattingHelper(object):
           message_string = message_string_template.format(*string_values)
         except (IndexError, TypeError) as exception:
           logger.error((
-              'Unable to format message string: "{0:s}" and strings: "{1:s}" '
-              'with error: {2!s}').format(
+              'Unable to format message: 0x{0:08x} of provider: {1:s} '
+              'template: "{2:s}" and strings: "{3:s}" with error: '
+              '{4!s}').format(
+                  message_identifier, provider_identifier or '',
                   message_string_template, ', '.join(string_values), exception))
           # Unable to create the message string.
           # TODO: consider returning the unformatted message string.

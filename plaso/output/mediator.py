@@ -302,7 +302,13 @@ class OutputMediator(object):
       WinevtResourcesHelper: Windows EventLog resources helper.
     """
     lcid = self._lcid or self._DEFAULT_LCID
-    environment_variables = self._knowledge_base.GetEnvironmentVariables()
+
+    if not self._storage_reader.HasAttributeContainers('environment_variable'):
+      environment_variables = []
+    else:
+      environment_variables = list(
+          self._storage_reader.GetAttributeContainers('environment_variable'))
+
     return winevt_rc.WinevtResourcesHelper(
         self._storage_reader, self.data_location, lcid, environment_variables)
 
