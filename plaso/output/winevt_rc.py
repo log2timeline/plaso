@@ -500,9 +500,13 @@ class WinevtResourcesHelper(object):
     if storage_reader.HasAttributeContainers('windows_eventlog_message_file'):
       for message_file in storage_reader.GetAttributeContainers(
           'windows_eventlog_message_file'):
-        path = message_file.path.lower()
-        self._windows_eventlog_message_files[path] = (
-            message_file.GetIdentifier())
+        path, filename = path_helper.PathHelper.GetWindowsSystemPath(
+            message_file.path, self._environment_variables)
+
+        lookup_path = '\\'.join([path, filename]).lower()
+        message_file_identifier = message_file.GetIdentifier()
+        self._windows_eventlog_message_files[lookup_path] = (
+            message_file_identifier)
 
   def _ReadWindowsEventLogMessageString(
       self, storage_reader, provider_identifier, log_source,
@@ -571,10 +575,8 @@ class WinevtResourcesHelper(object):
     for windows_path in provider.event_message_files or []:
       path, filename = path_helper.PathHelper.GetWindowsSystemPath(
           windows_path, self._environment_variables)
-      path = path.lower()
-      filename = filename.lower()
 
-      lookup_path = '\\'.join([path, filename])
+      lookup_path = '\\'.join([path, filename]).lower()
       message_file_identifier = self._windows_eventlog_message_files.get(
           lookup_path, None)
       if message_file_identifier:
@@ -582,38 +584,41 @@ class WinevtResourcesHelper(object):
         message_file_identifiers.append(message_file_identifier)
 
       mui_filename = '{0:s}.mui'.format(filename)
-      lookup_path = '\\'.join([path, self._language_tag, mui_filename])
+      lookup_path = '\\'.join([path, self._language_tag, mui_filename]).lower()
       message_file_identifier = self._windows_eventlog_message_files.get(
           lookup_path, None)
       if message_file_identifier:
         message_file_identifier = message_file_identifier.CopyToString()
         message_file_identifiers.append(message_file_identifier)
 
+    if not message_file_identifiers:
+      logger.warning(
+          'No message file for message: 0x{0:08x} of provider: {1:s}'.format(
+              message_identifier, lookup_key))
+      return None
+
     message_strings = []
-    if message_file_identifiers:
-      # TODO: add message_file_identifiers to filter_expression
-      filter_expression = (
-          'language_identifier == {0:d} and '
-          'message_identifier == {1:d}').format(
-              self._lcid, message_identifier)
+    # TODO: add message_file_identifiers to filter_expression
+    filter_expression = (
+        'language_identifier == {0:d} and '
+        'message_identifier == {1:d}').format(
+            self._lcid, message_identifier)
 
-      for message_string in storage_reader.GetAttributeContainers(
-          'windows_eventlog_message_string',
-          filter_expression=filter_expression):
-        identifier = message_string.GetMessageFileIdentifier()
-        identifier = identifier.CopyToString()
-        if identifier in message_file_identifiers:
-          message_strings.append(message_string)
+    for message_string in storage_reader.GetAttributeContainers(
+        'windows_eventlog_message_string',
+        filter_expression=filter_expression):
+      identifier = message_string.GetMessageFileIdentifier()
+      identifier = identifier.CopyToString()
+      if identifier in message_file_identifiers:
+        message_strings.append(message_string)
 
-      if not message_strings:
-        logger.debug(
-            'No match for message: 0x{0:08x} of provider: {1:s}'.format(
-                message_identifier, lookup_key))
+    if not message_strings:
+      logger.warning((
+          'No message string for message: 0x{0:08x} of provider: '
+          '{1:s}').format(message_identifier, lookup_key))
+      return None
 
-    if message_strings:
-      return message_strings[0].string
-
-    return None
+    return message_strings[0].string
 
   def _ReadWindowsEventLogProviders(self, storage_reader):
     """Reads the Windows EventLog providers.
