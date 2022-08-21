@@ -11,10 +11,11 @@ class WindowsRegistryValuesFormatterHelper(
 
   IDENTIFIER = 'windows_registry_values'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     values = event_values.get('values', None)

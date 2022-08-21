@@ -17,12 +17,14 @@ class WindowsRegistryValuesFormatterHelperTest(
     """Tests the FormatEventValues function."""
     formatter_helper = winreg.WindowsRegistryValuesFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'values': 'value1, value2'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['values'], 'value1, value2')
 
     event_values = {'values': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['values'], '(empty)')
 
 

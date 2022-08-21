@@ -110,6 +110,9 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'windows:evt:record'
+custom_helpers:
+- identifier: 'windows_eventlog_message'
+  output_attribute: 'message_string'
 enumeration_helpers:
 - input_attribute: 'event_type'
   output_attribute: 'event_type'
@@ -145,6 +148,9 @@ short_message:
 ---
 type: 'conditional'
 data_type: 'windows:evtx:record'
+custom_helpers:
+- identifier: 'windows_eventlog_message'
+  output_attribute: 'message_string'
 message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
 - 'Provider identifier: {provider_identifier}'

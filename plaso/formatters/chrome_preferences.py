@@ -11,10 +11,11 @@ class ChromePreferencesPrimaryURLFormatterHelper(
 
   IDENTIFIER = 'chrome_preferences_primary_url'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     primary_url = event_values.get('primary_url', None)
@@ -28,10 +29,11 @@ class ChromePreferencesSecondaryURLFormatterHelper(
 
   IDENTIFIER = 'chrome_preferences_secondary_url'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     # There appears to be an issue in either GURL.cc or

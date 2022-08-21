@@ -16,22 +16,24 @@ class MSIECFCachedPathFormatterHelperTest(test_lib.EventFormatterTestCase):
     """Tests the FormatEventValues function."""
     formatter_helper = msiecf.MSIECFCachedPathFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {
         'cached_filename': 'file',
         'cache_directory_name': 'directory'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['cached_file_path'], 'directory\\file')
 
     event_values = {
         'cached_filename': 'file',
         'cache_directory_name': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['cached_file_path'], 'file')
 
     event_values = {
         'cached_filename': None,
         'cache_directory_name': 'directory'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertNotIn('cached_file_path', event_values)
 
 
@@ -42,12 +44,14 @@ class MSIECFHTTPHeadersventFormatterHelperTest(test_lib.EventFormatterTestCase):
     """Tests the FormatEventValues function."""
     formatter_helper = msiecf.MSIECFHTTPHeadersventFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'http_headers': 'header1\r\nheader2'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['http_headers'], 'header1 - header2')
 
     event_values = {'http_headers': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertIsNone(event_values['http_headers'])
 
 

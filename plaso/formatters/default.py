@@ -18,10 +18,11 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
         data_type=self.DATA_TYPE, format_string=self.FORMAT_STRING,
         format_string_short=self.FORMAT_STRING_SHORT)
 
-  def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+  def FormatEventValues(self, output_mediator, event_values):
+    """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     # TODO: clean up the default formatter and add a test to make sure

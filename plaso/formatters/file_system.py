@@ -10,10 +10,11 @@ class NTFSFileReferenceFormatterHelper(interface.CustomEventFormatterHelper):
 
   IDENTIFIER = 'ntfs_file_reference'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     file_reference = event_values.get('file_reference', None)
@@ -28,10 +29,11 @@ class NTFSParentFileReferenceFormatterHelper(
 
   IDENTIFIER = 'ntfs_parent_file_reference'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     parent_file_reference = event_values.get('parent_file_reference', None)
@@ -45,10 +47,11 @@ class NTFSPathHintsFormatterHelper(interface.CustomEventFormatterHelper):
 
   IDENTIFIER = 'ntfs_path_hints'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     path_hints = event_values.get('path_hints', None)

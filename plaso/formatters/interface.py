@@ -21,10 +21,11 @@ class EventFormatterHelper(object):
   """Base class of helper for formatting event data."""
 
   @abc.abstractmethod
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
 
@@ -60,10 +61,11 @@ class BooleanEventFormatterHelper(EventFormatterHelper):
     self.value_if_false = value_if_false
     self.value_if_true = value_if_true
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
@@ -82,10 +84,11 @@ class CustomEventFormatterHelper(EventFormatterHelper):
   IDENTIFIER = ''
 
   @abc.abstractmethod
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
 
@@ -122,13 +125,14 @@ class EnumerationEventFormatterHelper(EventFormatterHelper):
     self.output_attribute = output_attribute
     self.values = values or {}
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     If default value is None and there is no corresponding enumeration value
     then the original value is used.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
@@ -169,10 +173,11 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
     self.output_attribute = output_attribute
     self.values = values or {}
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     input_value = event_values.get(self.input_attribute, None)
@@ -275,14 +280,15 @@ class EventFormatter(object):
     # string.strip().
     return message_string.replace('\r', '').replace('\n', '')
 
-  def FormatEventValues(self, event_values):
-    """Formats event values using the helpers.
+  def FormatEventValues(self, output_mediator, event_values):
+    """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     for helper in self.helpers:
-      helper.FormatEventValues(event_values)
+      helper.FormatEventValues(output_mediator, event_values)
 
   @abc.abstractmethod
   def GetFormatStringAttributeNames(self):

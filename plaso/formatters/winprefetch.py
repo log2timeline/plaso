@@ -11,10 +11,11 @@ class WindowsPrefetchPathHintsFormatterHelper(
 
   IDENTIFIER = 'windows_prefetch_path_hints'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     path_hints = event_values.get('path_hints', None)
@@ -28,10 +29,11 @@ class WindowsPrefetchVolumesStringFormatterHelper(
 
   IDENTIFIER = 'windows_prefetch_volumes_string'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     number_of_volumes = event_values.get('number_of_volumes', 0)

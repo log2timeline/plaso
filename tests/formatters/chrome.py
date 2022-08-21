@@ -17,27 +17,29 @@ class ChromeHistoryTypedCountFormatterHelperTest(
     """Tests the FormatEventValues function."""
     formatter_helper = chrome.ChromeHistoryTypedCountFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'typed_count': 0}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(
         event_values['url_typed_string'], '(URL not typed directly)')
 
     event_values = {'typed_count': 1}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(
         event_values['url_typed_string'], '(URL typed 1 time)')
 
     event_values = {'typed_count': 3}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(
         event_values['url_typed_string'], '(URL typed 3 times)')
 
     event_values = {'typed_count': -1}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['url_typed_string'], -1)
 
     event_values = {'typed_count': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertNotIn('url_typed_string', event_values)
 
 
