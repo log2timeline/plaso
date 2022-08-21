@@ -23,8 +23,10 @@ class BooleanEventFormatterHelperTest(test_lib.EventFormatterTestCase):
     """Tests the FormatEventValues function."""
     event_formatter_helper = interface.BooleanEventFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {}
-    event_formatter_helper.FormatEventValues(event_values)
+    event_formatter_helper.FormatEventValues(output_mediator, event_values)
 
 
 class EnumerationEventFormatterHelperTest(test_lib.EventFormatterTestCase):
@@ -39,8 +41,10 @@ class EnumerationEventFormatterHelperTest(test_lib.EventFormatterTestCase):
     """Tests the FormatEventValues function."""
     event_formatter_helper = interface.EnumerationEventFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {}
-    event_formatter_helper.FormatEventValues(event_values)
+    event_formatter_helper.FormatEventValues(output_mediator, event_values)
 
 
 class FlagsEventFormatterHelperTest(test_lib.EventFormatterTestCase):
@@ -59,12 +63,14 @@ class FlagsEventFormatterHelperTest(test_lib.EventFormatterTestCase):
         input_attribute='flags', output_attribute='test',
         values={1: 'flag1', 2: 'flag2'})
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'flags': 3}
-    event_formatter_helper.FormatEventValues(event_values)
+    event_formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['test'], 'flag1, flag2')
 
     event_values = {}
-    event_formatter_helper.FormatEventValues(event_values)
+    event_formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertNotIn('test', event_values)
 
 

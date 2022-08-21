@@ -17,12 +17,14 @@ class WindowsShortcutLinkedPathFormatterHelperTest(
     """Tests the FormatEventValues function."""
     formatter_helper = winlnk.WindowsShortcutLinkedPathFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {
         'local_path': 'local',
         'network_path': 'network',
         'relative_path': 'relative',
         'working_directory': 'cwd'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['linked_path'], 'local')
 
     event_values = {
@@ -30,7 +32,7 @@ class WindowsShortcutLinkedPathFormatterHelperTest(
         'network_path': 'network',
         'relative_path': 'relative',
         'working_directory': 'cwd'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['linked_path'], 'network')
 
     event_values = {
@@ -38,7 +40,7 @@ class WindowsShortcutLinkedPathFormatterHelperTest(
         'network_path': None,
         'relative_path': 'relative',
         'working_directory': 'cwd'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['linked_path'], 'cwd\\relative')
 
     event_values = {
@@ -46,7 +48,7 @@ class WindowsShortcutLinkedPathFormatterHelperTest(
         'network_path': None,
         'relative_path': 'relative',
         'working_directory': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['linked_path'], 'relative')
 
     event_values = {
@@ -54,7 +56,7 @@ class WindowsShortcutLinkedPathFormatterHelperTest(
         'network_path': None,
         'relative_path': None,
         'working_directory': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['linked_path'], 'Unknown')
 
 

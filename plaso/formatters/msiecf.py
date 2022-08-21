@@ -10,10 +10,11 @@ class MSIECFCachedPathFormatterHelper(interface.CustomEventFormatterHelper):
 
   IDENTIFIER = 'msiecf_cached_path'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     cached_file_path = event_values.get('cached_filename', None)
@@ -30,10 +31,11 @@ class MSIECFHTTPHeadersventFormatterHelper(
 
   IDENTIFIER = 'msiecf_http_headers'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     http_headers = event_values.get('http_headers', None)

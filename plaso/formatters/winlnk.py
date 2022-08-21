@@ -11,10 +11,11 @@ class WindowsShortcutLinkedPathFormatterHelper(
 
   IDENTIFIER = 'windows_shortcut_linked_path'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     linked_path = event_values.get('local_path', None)

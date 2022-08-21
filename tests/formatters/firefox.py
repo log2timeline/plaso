@@ -17,12 +17,14 @@ class FirefoxHistoryTypedCountFormatterHelperTest(
     """Tests the FormatEventValues function."""
     formatter_helper = firefox.FirefoxHistoryTypedCountFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'typed': '1'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['url_typed_string'], '(URL directly typed)')
 
     event_values = {'typed': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(
         event_values['url_typed_string'], '(URL not typed directly)')
 
@@ -35,12 +37,14 @@ class FirefoxHistoryURLHiddenFormatterHelperTest(
     """Tests the FormatEventValues function."""
     formatter_helper = firefox.FirefoxHistoryURLHiddenFormatterHelper()
 
+    output_mediator = self._CreateOutputMediator()
+
     event_values = {'hidden': '1'}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertEqual(event_values['url_hidden_string'], '(URL hidden)')
 
     event_values = {'hidden': None}
-    formatter_helper.FormatEventValues(event_values)
+    formatter_helper.FormatEventValues(output_mediator, event_values)
     self.assertNotIn('url_hidden_string', event_values)
 
 

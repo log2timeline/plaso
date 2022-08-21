@@ -57,7 +57,6 @@ class FieldFormattingHelper(object):
     self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
     self._event_tag_field_names = []
     self._source_mappings = {}
-    self._winevt_resources_helper = None
 
     for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items():
       if callback_name == '_FormatTag':
@@ -321,11 +320,7 @@ class FieldFormattingHelper(object):
           '{0:s}.').format(event_data.data_type))
 
     event_values = event_data.CopyToDict()
-    message_formatter.FormatEventValues(event_values)
-
-    if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
-      event_values['message_string'] = self._FormatWindowsEventLogMessage(
-          output_mediator, event, event_data, event_data_stream)
+    message_formatter.FormatEventValues(output_mediator, event_values)
 
     return message_formatter.GetMessage(event_values)
 
@@ -356,11 +351,7 @@ class FieldFormattingHelper(object):
           '{0:s}.').format(event_data.data_type))
 
     event_values = event_data.CopyToDict()
-    message_formatter.FormatEventValues(event_values)
-
-    if event_data.data_type in ('windows:evt:record', 'windows:evtx:record'):
-      event_values['message_string'] = self._FormatWindowsEventLogMessage(
-          output_mediator, event, event_data, event_data_stream)
+    message_formatter.FormatEventValues(output_mediator, event_values)
 
     return message_formatter.GetMessageShort(event_values)
 
@@ -536,46 +527,6 @@ class FieldFormattingHelper(object):
       str: username field.
     """
     return output_mediator.GetUsername(event_data)
-
-  def _FormatWindowsEventLogMessage(
-      self, output_mediator, event, event_data, event_data_stream):
-    """Formats a Windows Event Log message field.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: Windows Event Log message field or None if not available.
-    """
-    if not self._winevt_resources_helper:
-      self._winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
-
-    message_string = None
-    provider_identifier = getattr(event_data, 'provider_identifier', None)
-    source_name = getattr(event_data, 'source_name', None)
-    message_identifier = getattr(event_data, 'message_identifier', None)
-    event_version = getattr(event_data, 'event_version', None)
-    if (provider_identifier or source_name) and message_identifier:
-      message_string_template = self._winevt_resources_helper.GetMessageString(
-          provider_identifier, source_name, message_identifier, event_version)
-      if message_string_template:
-        string_values = [string or '' for string in event_data.strings]
-        try:
-          message_string = message_string_template.format(*string_values)
-        except (IndexError, TypeError) as exception:
-          logger.error((
-              'Unable to format message: 0x{0:08x} of provider: {1:s} '
-              'template: "{2:s}" and strings: "{3:s}" with error: '
-              '{4!s}').format(
-                  message_identifier, provider_identifier or '',
-                  message_string_template, ', '.join(string_values), exception))
-          # Unable to create the message string.
-          # TODO: consider returning the unformatted message string.
-
-    return message_string
 
   # pylint: enable=unused-argument
 

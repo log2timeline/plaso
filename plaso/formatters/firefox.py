@@ -11,10 +11,11 @@ class FirefoxHistoryTypedCountFormatterHelper(
 
   IDENTIFIER = 'firefox_history_typed_count'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     typed = event_values.get('typed', None)
@@ -32,10 +33,11 @@ class FirefoxHistoryURLHiddenFormatterHelper(
 
   IDENTIFIER = 'firefox_history_url_hidden'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     hidden = event_values.get('hidden', None)

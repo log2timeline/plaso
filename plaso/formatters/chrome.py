@@ -11,10 +11,11 @@ class ChromeHistoryTypedCountFormatterHelper(
 
   IDENTIFIER = 'chrome_history_typed_count'
 
-  def FormatEventValues(self, event_values):
+  def FormatEventValues(self, output_mediator, event_values):
     """Formats event values using the helper.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
     typed_count = event_values.get('typed_count', None)
