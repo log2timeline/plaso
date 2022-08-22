@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Parser for IPS formatted log files. These files are used by Apple in iOS
-(15 and later) and MacOS (12 and later). Each file is a single event."""
+"""Parser for IPS formatted log files.
+
+These files are used by Apple in iOS (15 and later) and MacOS (12 and later).
+Each file is a single event."""
 
 import json
 import re
 import yaml
 
-from yaml import scanner
+from yaml import scanner as yaml_scanner
 
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -14,45 +16,50 @@ from plaso.parsers import manager
 
 
 class IPSFile(object):
-  """IPS log file"""
+  """IPS log file.
+
+  Attributes:
+    content (dict[str, object]): JSON serialized IPS log file content.
+    header (dict[str, object]): JSON serialized IPS log file header.
+  """
 
   def __init__(self):
-    """Initializes an IPS log"""
+    """Initializes an IPS log file."""
     super(IPSFile, self).__init__()
-    self.header = None
     self.content = None
+    self.header = None
 
-  def GetContent(self, raw_content):
-    """Extracts the header from the raw content into a JSON structure.
+  def _GetContent(self, raw_content):
+    """Extracts content from the file.
 
     Args:
-      raw_content (str): content of the IPS log as a string
+      raw_content (str): content of the IPS log.
 
     Returns:
-      structured_content: content in a JSON structure
+      dict[str, object]: JSON serialized objects.
     """
     if not isinstance(raw_content, str):
       return None
 
     content = re.search('}\n({.+)', raw_content, re.DOTALL)
-    if content:
-      try:
-        structured_content = yaml.safe_load(content.group(1))
-        return structured_content
+    if not content:
+      return None
 
-      except (AttributeError, scanner.ScannerError):
-        return None
+    try:
+      structured_content = yaml.safe_load(content.group(1))
+    except (AttributeError, yaml_scanner.ScannerError):
+      structured_content = None
 
-    return None
+    return structured_content
 
-  def GetHeader(self, raw_content):
-    """Extracts the header from the raw content into a JSON structure.
+  def _GetHeader(self, raw_content):
+    """Extracts a header from the file.
 
-      Agrs:
-        raw_content (str): content of the IPS log as a string
+    Agrs:
+      raw_content (str): content of the IPS log.
 
-      Return:
-        structured_header: header in a JSON structure
+    Returns:
+      dict[str, object]: JSON serialized objects.
     """
     if not isinstance(raw_content, str):
       return None
@@ -72,13 +79,12 @@ class IPSFile(object):
   def Open(self, file_object):
     """Opens an IPS log file.
 
-      Args:
+    Args:
       file_object (dfvfs.FileIO): file-like object.
 
-      Raises:
-        ValueError: if the file object is missing.
+    Raises:
+      ValueError: if the file object is missing.
     """
-
     if not file_object:
       raise ValueError('Missing file object.')
 
@@ -89,8 +95,8 @@ class IPSFile(object):
       except ValueError:
         pass
 
-    self.header = self.GetHeader(raw_content)
-    self.content = self.GetContent(raw_content)
+    self.header = self._GetHeader(raw_content)
+    self.content = self._GetContent(raw_content)
 
 
 class IPSParser(interface.FileEntryParser):
@@ -103,7 +109,7 @@ class IPSParser(interface.FileEntryParser):
 
   def _ParseFileEntryWithPlugin(
       self, parser_mediator, plugin, ips_file, display_name):
-    """Parses an IPS log  file entry with a specific plugin.
+    """Parses an IPS log file entry with a specific plugin.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
