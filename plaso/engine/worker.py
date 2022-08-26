@@ -501,7 +501,12 @@ class EventExtractionWorker(object):
           'archive file: {1:s}').format(type_indicators, display_name))
 
     for type_indicator in type_indicators:
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_CPIO:
+        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_CPIO, location='/',
+            parent=path_spec)
+
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
         archive_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TAR, location='/',
             parent=path_spec)
