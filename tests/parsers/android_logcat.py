@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.containers import warnings
 from plaso.parsers import android_logcat
 
 from tests.parsers import test_lib
