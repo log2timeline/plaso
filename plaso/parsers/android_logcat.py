@@ -1,9 +1,9 @@
- -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 """This file contains a parser for Android logcat output."""
 
 import pyparsing
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -60,18 +60,16 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
   _ANDROID_THREADTIME_LINE = (
     _ANDROID_DATE_GROUP.setResultsName('date') +
     _ANDROID_TIME_GROUP.setResultsName('time') +
-    pyparsing.Word(pyparsing.nums).setsResultsName('pid') + 
-    pyparsing.Literal('-') +
+    pyparsing.Word(pyparsing.nums).setResultsName('pid') + 
     pyparsing.Word(pyparsing.nums).setResultsName('tid') +
-    pyparsing.Literal('/') + 
-    pyparsing.Word('VDIWEFS', exact=1).setResultsName('tag') +
-    pyparsing.Word(pyparsing.letters, exact=1).setResultsName('priority') +
-    pyparsing.Literal('/') +
+    pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+    pyparsing.Word(
+        pyparsing.printables, exclude_chars=':').setResultsName('tag') +
+    pyparsing.Suppress(': ') +
     pyparsing.restOfLine.setResultsName('message'))
 
   LINE_STRUCTURES = [
-    ('threadtime_line', _ANDROID_THREADTIME_LINE)
-  ]
+    ('threadtime_line', _ANDROID_THREADTIME_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -91,6 +89,15 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
       
+    new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+    date = self._GetValueFromStructure(structure, 'date')
+    time = self._GetValueFromStructure(structure, 'time')
+    try:
+      new_date_time.CopyFromStringISO8601(f'2022-{date}T{time}Z')
+    except ValueError as error:
+      parser_mediator.ProduceExtractionWarning(
+        'invalid date time value: {0:s}'.format(error))
+    
     if key == 'threadtime_line':
       event_data = AndroidLogcatEventData()
       event_data.message = self._GetValueFromStructure(structure, 'message')
@@ -98,3 +105,34 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       event_data.priority = self._GetValueFromStructure(structure, 'priority')
       event_data.tag = self._GetValueFromStructure(structure, 'tag')
       event_data.tid = self._GetValueFromStructure(structure, 'tid')
+
+      event = time_events.DateTimeValuesEvent(
+        new_date_time, definitions.TIME_DESCRIPTION_RECORDED)
+      
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  # pylint: disable=unused-argument
+  def VerifyStructure(self, parser_mediator, line):
+    """Verifies if a line from a text file is in the expected format.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): line from a text file.
+
+    Returns:
+      bool: True if the line is in the expected format, False if not.
+    """
+    for _, line_format in self.LINE_STRUCTURES:
+      try:
+        structure = line_format.parseString(line)
+      except pyparsing.ParseException:
+        logger.debug('Not a Android logcat format')
+        continue
+      if 'date' in structure and 'time' in structure and 'message' in structure:
+        return True
+    else:
+      return False
+
+
+manager.ParsersManager.RegisterParser(AndroidLogcatParser)
