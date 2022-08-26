@@ -1,0 +1,56 @@
+﻿**********************
+nStart der Windows PowerShell-Aufzeichnung
+Startzeit: 20220824122111
+Benutzername: DE\User
+RunAs-Benutzer: DE\User
+Konfigurationsname:
+Computer: MySystem (Microsoft Windows NT 10.0.19044.0)
+Hostanwendung: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Prozess-ID: 18716
+PSVersion: 5.1.19041.1682
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.1682
+BuildVersion: 10.0.19041.1682
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Die Aufzeichnung wurde gestartet. Die Ausgabedatei ist "C:\Users\User\Documents\PowerShell_transcript.MySystem.rvARGulQ.20220824122111.txt".
+PS C:\Users\User> whoami
+de\User
+PS C:\Users\User> echo $null >> filename
+PS C:\Users\User> ping 8.8.8.8
+
+Ping wird ausgeführt für 8.8.8.8 mit 32 Bytes Daten:
+Zeitüberschreitung der Anforderung.
+
+Ping-Statistik für 8.8.8.8:
+    Pakete: Gesendet = 1, Empfangen = 0, Verloren = 1
+    (100% Verlust),
+STRG-C
+PS C:\Users\User> TerminatingError(): "Die Pipeline wurde beendet."
+>> TerminatingError(): "Die Pipeline wurde beendet."
+PS C:\Users\User> Get-Content .\myfile.txt
+VERBOSE: Simple Test
+**********************
+Befehlsstartzeit: 20220824123114
+**********************
+PS C:\Users\User\Documents> ping 127.0.0.1 -n 5
+
+Ping wird ausgeführt für 127.0.0.1 mit 32 Bytes Daten:
+Antwort von 127.0.0.1: Bytes=32 Zeit<1ms TTL=128
+Antwort von 127.0.0.1: Bytes=32 Zeit<1ms TTL=128
+Antwort von 127.0.0.1: Bytes=32 Zeit<1ms TTL=128
+Antwort von 127.0.0.1: Bytes=32 Zeit=1ms TTL=128
+Antwort von 127.0.0.1: Bytes=32 Zeit<1ms TTL=128
+
+Ping-Statistik für 127.0.0.1:
+    Pakete: Gesendet = 5, Empfangen = 5, Verloren = 0
+    (0% Verlust),
+Ca. Zeitangaben in Millisek.:
+    Minimum = 0ms, Maximum = 1ms, Mittelwert = 0ms
+**********************
+Befehlsstartzeit: 20220824124237
+**********************
+PS C:\Users\User> rm .\filename

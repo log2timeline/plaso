@@ -163,6 +163,7 @@ parsers:
 - esedb/file_history
 - esedb/user_access_logging
 - olecf/olecf_automatic_destinations
+- powershell_transcript
 - recycle_bin
 - winevtx
 - win_gen

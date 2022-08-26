@@ -2,16 +2,14 @@
 """Parser for powershell transcript files."""
 
 import copy
-import os
-import re
+import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import interface
+from plaso.parsers import text_parser
 from plaso.parsers import manager
 
 
@@ -61,157 +59,285 @@ class PowerShellTranscriptEventData(events.EventData):
     self.version = None
     self.ws_man_stack_version = None
 
-
-class PowerShellTranscriptParser(interface.FileObjectParser):
+class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from PowerShell transcript files."""
 
   NAME = 'powershell_transcript'
 
   DATA_FORMAT = 'PowerShell transcript event'
 
-  _HEADER_READ_SIZE = 25
+  # PowerShell transcript lines can be very long.
+  MAX_LINE_LENGTH = 65536
 
-  # string that separates sections in transcript files
-  SEPARATOR = '**********************'
+  _SEPARATOR = '**********************'
 
-  # dictionary that maps line number to content - we have to use line numbers
-  # since different system languages use different 'titles'
-  LINE_INFO_DICT = {3:'username',
-                    4:'runas_user',
-                    5:'config_name',
-                    6:'machine',
-                    7:'host_application',
-                    8:'process_id',
-                    9:'version',
-                    10:'edition',
-                    11:'compatible_versions',
-                    12:'build_version',
-                    13:'clr_version',
-                    14:'ws_man_stack_version',
-                    15:'remoting_protocol_version',
-                    16:'serialization_version'}
+  _COLON = pyparsing.Literal(': ').suppress()
 
-  def CreateEventsFromTranscripts(self, transcripts, parser_mediator,
-   header_data):
-    """Get commandlines from transcripts
+  # key always start with an uppercase character
+  _METADATA_KEY = (pyparsing.Word(pyparsing.alphas.upper(), ' ' +
+    pyparsing.alphas) + _COLON)
+  # negative lookahead needed for correct identification
+  _METADATA_VALUE = (~_METADATA_KEY +
+    pyparsing.Word(pyparsing.printables, ' ' + pyparsing.printables))
+
+  _METADATA_LINE = (
+    _METADATA_KEY +
+    _COLON +
+    pyparsing.Optional(_METADATA_VALUE) +
+    pyparsing.LineEnd().suppress()
+  )
+
+  _TRANSCRIPT_LINE = (
+    ~_METADATA_LINE +
+    pyparsing.Word(' ' + '\t' + '\r' +
+      pyparsing.printables + pyparsing.alphas8bit +
+      pyparsing.punc8bit, exclude_chars='**********************') +
+    pyparsing.LineEnd().suppress()
+  )
+
+  _SEPARATOR_LINE = (
+    pyparsing.Literal(_SEPARATOR)
+    + pyparsing.LineEnd().suppress()
+  )
+
+  LINE_STRUCTURES = [
+      ('metadata_line', _METADATA_LINE),
+      ('separator_line', _SEPARATOR_LINE),
+      ('transcript_line', _TRANSCRIPT_LINE),
+  ]
+
+  # variables needed for further processing
+  is_first_line = True
+  found_first_separator = False
+  key_structure = []
+  base_event = None
+  parser_mediator = None
+
+  def _GetTimestampFromString(self, value):
+    """Parse a timestamp string an return a TimeElements event.
 
     Args:
-      transcripts (list): list of lists containing data for every transcript
-          in a file.
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      header_data (PowerShellTranscriptEventData): prefilled
-          PowerShellTranscriptEventData object with metainfos.
-    """
+      value (str): String containing a timestamp.
 
-    for transcript in transcripts:
-      # create a copy of the pre-filled event object
-      event_data = copy.deepcopy(header_data)
-      event = None
-      timestamp_pattern = re.compile(r': (\d{14})$')
-      # since the system language changes the description of the header fields
-      # we have to go for the line numbers and regex match the timestamp
-      if timestamp_pattern.search(transcript[2]):
-        timestamp_string = timestamp_pattern.search(transcript[2])[1]
-        full_headers = True
-      elif timestamp_pattern.search(transcript[1]):
-        timestamp_string = timestamp_pattern.search(transcript[1])[1]
-        full_headers = False
-      else:
-        parser_mediator.ProduceExtractionWarning('could not find timestamp in '
-          'transcript {0!s} - skipping malformed transcript'.format(transcript))
-        continue
-      # Timestamp format is YYYYMMDDHHmmss
-      time_elements_tuple = int(timestamp_string[:4]),\
-                            int(timestamp_string[4:6]),\
-                            int(timestamp_string[6:8]),\
-                            int(timestamp_string[8:10]),\
-                            int(timestamp_string[10:12]),\
-                            int(timestamp_string[12:])
+    Returns:
+      dfdatetime_time_elements.TimeElements: TimeElements, if string
+        was valid, None otherwise
+    """
+    if len(time_elements_tuple) == 14:
+      time_elements_tuple = int(value[:4]),\
+                              int(value[4:6]),\
+                              int(value[6:8]),\
+                              int(value[8:10]),\
+                              int(value[10:12]),\
+                              int(value[12:])
       try:
         start_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       except ValueError:
-        parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '
-          'invalid - skipping malformed transcript'.format(time_elements_tuple))
-        continue
-      start_time.is_local_time = True
-      event = time_events.DateTimeValuesEvent(start_time,
-        definitions.TIME_DESCRIPTION_START)
-      # we don't use line breaks here since they aren't displayed nicely in TS
-      if full_headers:
-        command = '; '.join(transcript[18:len(transcript)])
-      else:
-        command = '; '.join(transcript[3:len(transcript)])
-      event_data.command = command
-      # finally create event if values have been set
-      if (event is not None and event_data.command is not None and
-            event_data.command != ''):
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-      else:
-        parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
-          'since relevant event values could not be set'.format(transcript))
+        start_time = None
+    else:
+      start_time = None
+    return start_time
 
-
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an PowerShell transcript file-like object.
+  def _CreateEventFromTranscript(self, parser_mediator):
+    """Parse the transcript and return an PowerShell transcript event object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
+
+    Returns:
+      bool: True if event could be created, false otherwise.
+    """
+    # whenever we reach this point, one full transcript was detected
+    # and the next line will be a 'new first line' again
+    self.is_first_line = True
+    # create local key_structure for working
+    key_structure = self.key_structure.copy()
+    # reset class key_structure for next transcript
+    self.key_structure.clear()
+
+    new_event = PowerShellTranscriptEventData()
+    transcript_text = ''
+    metadata_lines = []
+    event_time = None
+    for key, structure in key_structure:
+      if key == 'transcript_line':
+        transcript_text = transcript_text + structure + '; '
+      if key == 'metadata_line':
+        metadata_lines.append(structure)
+    # transcript has a full header
+    # that means we can try to extract all header infos
+    if len(metadata_lines) > 1:
+      # counter needed for identification of line
+      counter = 0
+      for metadata in metadata_lines:
+        if ': ' in metadata:
+          value = metadata.split(': ')[1]
+        else:
+          value = None
+        # timestamp
+        if counter == 1:
+          start_time = self._GetTimestampFromString(value)
+          if start_time is None:
+            parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems'
+              ' invalid - skipping malformed transcript'.format(value))
+            return False
+          start_time.is_local_time = True
+          event_time = time_events.DateTimeValuesEvent(start_time,
+            definitions.TIME_DESCRIPTION_START)
+        # username
+        elif counter == 2:
+          new_event.username = value
+        # runas
+        elif counter == 3:
+          new_event.runas_user = value
+        # configuration
+        elif counter == 4:
+          new_event.config_name = value
+        # machine
+        elif counter == 5:
+          new_event.machine = value
+        # host application
+        elif counter == 6:
+          new_event.host_application = value
+        # process id
+        elif counter == 7:
+          new_event.process_id = value
+        # version
+        elif counter == 8:
+          new_event.version = value
+        # edition
+        elif counter == 9:
+          new_event.edition = value
+        # compatible version
+        elif counter == 10:
+          new_event.compatible_versions = value
+        # build version
+        elif counter == 11:
+          new_event.build_version = value
+        # clr version
+        elif counter == 12:
+          new_event.clr_version = value
+        # ws man stack version
+        elif counter == 13:
+          new_event.ws_man_stack_version = value
+        # remoting protocol version
+        elif counter == 14:
+          new_event.remoting_protocol_version = value
+        # serialization version
+        elif counter == 15:
+          new_event.serialization_version = value
+        counter += 1
+      # update base event for future use
+      self.base_event = copy.deepcopy(new_event)
+    # transcript with timestamp header
+    elif len(metadata_lines) == 1:
+      if self.base_event is None:
+        parser_mediator.ProduceExtractionWarning('initial transcript seems '
+          'to have missing headers - can not produce event')
+        return False
+      # since we don't have the full headers,
+      # we just copy the headers from the last full event...
+      new_event = copy.deepcopy(self.base_event)
+      if ': ' in metadata_lines[0]:
+        value = metadata_lines[0].split(': ')[1]
+      else:
+        value = None
+      # ... and overwrite the timestamp
+      start_time = self._GetTimestampFromString(value)
+      if start_time is None:
+        parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '
+          'invalid - skipping malformed transcript'.format(value))
+        return False
+      start_time.is_local_time = True
+      event_time = time_events.DateTimeValuesEvent(start_time,
+        definitions.TIME_DESCRIPTION_START)
+
+    if transcript_text == '':
+      parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
+          'since transcript text could not be set'.format(key_structure))
+      return False
+    new_event.command = transcript_text
+    # create event if at least the most relevant fields are set
+    if (event_time is not None and new_event.command is not None
+      and new_event.command != ''):
+      parser_mediator.ProduceEventWithEventData(event_time, new_event)
+    else:
+      parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
+        'relevant event values could not be set'.format(key_structure))
+      return False
+    return True
+
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parse the record and decide when a full transcript has been seen.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
 
     Raises:
-      WrongParser: when the file cannot be parsed.
+      ParseError: when the structure type is unknown.
     """
+    # the first line will always be a metadata line, however pyparsing grammar
+    # might misinterpret this since 'start-line' looks like a transcript line
+    if self.is_first_line and key != 'separator_line':
+      key = 'metadata_line'
+      self.is_first_line = False
 
-    data = file_object.read(self._HEADER_READ_SIZE)
-    if not data == b'\xef\xbb\xbf**********************':
-      raise errors.WrongParser('Not a PowerShell transcript file')
-
-    # The current offset of the file-like object needs to point at
-    # the start of the file to parse the data correctly.
-    file_object.seek(0, os.SEEK_SET)
-    file_bytes = file_object.read()
-
-    win_newline = b'\r\n'
-    lin_newline = b'\n'
-    # If transcript file was opened in editor, line breaks may have been changed
-    if win_newline in file_bytes:
-      line_bytes = file_bytes.split(win_newline)
+    # transcripts will begin/end at every second separator
+    # so we need to monitor for them
+    if self.found_first_separator is False and key == 'separator_line':
+      self.found_first_separator = True
+      self.key_structure.append((key, ' '.join(structure)))
+    # if 'second' separator is found, the current transcript
+    # is finished and we can create an event from it
+    elif self.found_first_separator is True and key == 'separator_line':
+      self.found_first_separator = False
+      # TODO: if the last transcript is not exited cleanly
+      # (i.e. there is no final separator), we miss the final transcript
+      # we would somehow need to know which line is the last one
+      # and call _CreateEventFromTranscript on it -- however I have not found
+      # a way to extract this information as a PyparsingMultiLineTextParser.
+      # pyparsing.StringEnd() did not match correctly
+      # __del__ will not be called in regular use cases
+      # tl;dr I currently have no idea how to fix this
+      self._CreateEventFromTranscript(parser_mediator)
     else:
-      line_bytes = file_bytes.split(lin_newline)
-    lines = [line.decode('utf-8') for line in line_bytes]
-    separator_indices = []
-    header_data = PowerShellTranscriptEventData()
-    for index, line in enumerate(lines):
-      if index in self.LINE_INFO_DICT:
-        param = self.LINE_INFO_DICT[index]
-        splitted = line.split(': ')
-        if len(splitted) != 2:
-          parser_mediator.ProduceExtractionWarning('line {0!s} seems invalid '
-            'or value empty - skipping header info: {1!s}'.format(line,
-            self.LINE_INFO_DICT[index]))
-          continue
-        # pre-fill data for later objects
-        setattr(header_data, param, splitted[1])
-      if line == self.SEPARATOR:
-        separator_indices.append(index)
-    # the file always starts with a transcript
-    transcript_starts = [0]
-    for i, sep_index in enumerate(separator_indices):
-      # every second separator marks a new transcript
-      if i%2 != 0:
-        transcript_starts.append(sep_index)
-    transcripts = []
-    for i, start in enumerate(transcript_starts):
-      # check we are not at the last transcript start
-      # and take lines until next start
-      if i != len(transcript_starts)-1:
-        transcripts.append(lines[start:transcript_starts[i+1]])
-      # for the last transcript we take the rest of the file
-      else:
-        transcripts.append(lines[start:len(lines)])
-    self.CreateEventsFromTranscripts(transcripts, parser_mediator, header_data)
+      # overwrite key, since a transcript_line can never be followed directly
+      # by a metadata_line (and vice versa) and the pyparsing could be wrong
+      # (since a transcript_line can basically contain everything)
+      if (key == 'metadata_line' and len(self.key_structure) > 0
+        and self.key_structure[-1][0] == 'transcript_line'):
+        key = 'transcript_line'
+      elif (key == 'transcript_line' and len(self.key_structure) > 0
+        and self.key_structure[-1][0] == 'metadata_line'):
+        key = 'metadata_line'
+      self.key_structure.append((key, ': '.join(structure)))
+
+  def VerifyStructure(self, parser_mediator, lines):
+    """Verifies whether content corresponds to an PowerShell transcript file.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      lines (str): one or more lines from the text file.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    if lines[:25] == 'ï»¿' + self._SEPARATOR:
+      if 'Windows PowerShell' in lines:
+        return True
+    return False
+
+  def __del__(self):
+    # to avoid overlapping transcripts in testcases
+    # not relevant in regular use since objects will be
+    # created empty
+    self.key_structure.clear()
 
 manager.ParsersManager.RegisterParser(PowerShellTranscriptParser)
