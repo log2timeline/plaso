@@ -90,11 +90,12 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    date = self._GetValueFromStructure(structure, 'date')
+    estimated_year = parser_mediator.GetEstimatedYear()
+    month_day = self._GetValueFromStructure(structure, 'date')
     time = self._GetValueFromStructure(structure, 'time')
     try:
-      # TODO: remove hard coded year and use preferred year argument
-      new_date_time.CopyFromStringISO8601(f'2022-{date}T{time}Z')
+      new_date_time.CopyFromStringISO8601(
+          f'{estimated_year}-{month_day}T{time}Z')
     except ValueError as error:
       parser_mediator.ProduceExtractionWarning(
         'invalid date time value: {0:s}'.format(error))

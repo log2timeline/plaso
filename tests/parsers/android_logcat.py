@@ -23,6 +23,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
+    # TODO: mock GetEstimatedYear?
     expected_event_values = {
       'date_time': '2022-01-01 01:02:03.123',
       'data_type': 'android:logcat',
