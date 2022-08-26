@@ -133,8 +133,8 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
         continue
       if 'date' in structure and 'time' in structure and 'message' in structure:
         return True
-    else:
-      return False
+    
+    return False
 
 
 manager.ParsersManager.RegisterParser(AndroidLogcatParser)
