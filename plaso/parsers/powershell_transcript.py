@@ -123,7 +123,7 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
       dfdatetime_time_elements.TimeElements: TimeElements, if string
         was valid, None otherwise
     """
-    if len(time_elements_tuple) == 14:
+    if len(value) == 14:
       time_elements_tuple = int(value[:4]),\
                               int(value[4:6]),\
                               int(value[6:8]),\
@@ -140,7 +140,7 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     return start_time
 
   def _CreateEventFromTranscript(self, parser_mediator):
-    """Parse the transcript and return an PowerShell transcript event object.
+    """Parse the transcript and return a PowerShell transcript event object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
