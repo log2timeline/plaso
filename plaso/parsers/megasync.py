@@ -63,8 +63,6 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
   _MESSAGE = (pyparsing.White(' ' ,min=1,max=2).suppress() +
       pyparsing.restOfLine().setResultsName('message'))
 
-  _BASE_LOG_LINE = _TIMESTAMP + _THREAD_NAME
-
   _LOG_LINE = _TIMESTAMP + _THREAD_NAME + _LOG_LEVEL + _MESSAGE
 
   # Indicates that the last log line was repeated multiple times.
@@ -75,7 +73,9 @@ class MEGASyncParser(text_parser.PyparsingSingleLineTextParser):
   ).setResultsName("repeats")
 
   _PROGRAM_START = pyparsing.Literal(
-      '----------------------------- program start -----------------------------')
+      '-----------------------------' \
+      ' program start ' \
+      '-----------------------------')
 
   LINE_STRUCTURES = [
       ('line', _LOG_LINE),
