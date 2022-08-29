@@ -51,7 +51,8 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
       'tid': None,
       'priority': 'I',
       'tag': 'CHRE',
-      'message': '@ 1210504.750: [ImuCal] [GYRO_RPS] (s0) Temp Intercept: -.001133, -.000088, -.001676'}
+      'message': '@ 1210504.750: [ImuCal] [GYRO_RPS] (s0) Temp Intercept: '
+          '-.001133, -.000088, -.001676'}
 
     self.CheckEventValues(storage_writer, events[13], expected_event_values)
 
