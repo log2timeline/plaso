@@ -10,8 +10,10 @@ In addition, support for the format modifiers
 - UTC | zone
 - year
 """
+import datetime
 
 import pyparsing
+import pytz
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -93,7 +95,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
            pyparsing.Word(pyparsing.nums).setResultsName('tid'))]) +
       pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
       pyparsing.Optional(pyparsing.Word(
-          pyparsing.printables + ' ', 
+          pyparsing.printables + ' ',
           exclude_chars=':').setResultsName('tag')) +
       pyparsing.Suppress(': ') +
       pyparsing.restOfLine.setResultsName('message'))
@@ -107,7 +109,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
       pyparsing.Suppress('/') +
       pyparsing.Word(
-          pyparsing.printables + ' ', 
+          pyparsing.printables + ' ',
           exclude_chars='(').setResultsName('tag') +
       pyparsing.Suppress('(') +
       pyparsing.Word(pyparsing.nums).setResultsName('pid') +
@@ -152,23 +154,27 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       parsed_time = self._GetValueFromStructure(structure, 'time')
       parsed_date = self._GetValueFromStructure(structure, 'date')
       parsed_timezone = self._GetValueFromStructure(structure, 'timezone')
+      if not parsed_timezone:
+        timezone = parser_mediator.timezone
+        parsed_timezone = datetime.datetime.now(timezone).strftime('%z')
 
-      # TODO: adjust for timezone
+      parsed_timezone = parsed_timezone[:3] + ':' + parsed_timezone[3:]
+
       if len(parsed_date) == 10:
-        date_format = f'{parsed_date}T{parsed_time}Z'
+        date_format = f'{parsed_date}T{parsed_time}{parsed_timezone}'
       else:
         estimated_year = parser_mediator.GetEstimatedYear()
-        date_format = f'{estimated_year}-{parsed_date}T{parsed_time}Z'
+        date_format = (f'{estimated_year}-{parsed_date}T'
+                       f'{parsed_time}{parsed_timezone}')
 
       new_date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      
+
       try:
         new_date_time.CopyFromStringISO8601(date_format)
       except ValueError as error:
         parser_mediator.ProduceExtractionWarning(
             'Invalid date time value: {0:s}'.format(error))
         return
-
       event_data = AndroidLogcatEventData()
       event_data.file_offset = self._current_offset
       event_data.message = self._GetValueFromStructure(structure, 'message')
@@ -179,7 +185,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
         event_data.tag = event_data.tag.strip()
       event_data.tid = self._GetValueFromStructure(structure, 'tid')
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
-      
+
       event = time_events.DateTimeValuesEvent(
           new_date_time, definitions.TIME_DESCRIPTION_RECORDED)
 
