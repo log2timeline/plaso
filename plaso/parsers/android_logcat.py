@@ -13,7 +13,6 @@ In addition, support for the format modifiers
 import datetime
 
 import pyparsing
-import pytz
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -52,6 +51,7 @@ class AndroidLogcatEventData(events.EventData):
     self.priority = None
     self.tag = None
     self.tid = None
+    self.uid = None
 
 
 class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
