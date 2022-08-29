@@ -28,8 +28,8 @@ class AndroidLogcatEventData(events.EventData):
   """Android logcat event data.
 
   Attributes:
-    message (str): the log message.
     file_offset (int): the file offset of where the log message was parsed.
+    message (str): the log message.
     pid (int): process identifier (PID) that created the logcat line.
     priority (str): a character in the set {V, D, I, W, E, F, S}, which is
         ordered from lowest to highest priority.
@@ -44,8 +44,8 @@ class AndroidLogcatEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AndroidLogcatEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.message = None
     self.file_offset = None
+    self.message = None
     self.pid = None
     self.priority = None
     self.tag = None
@@ -80,47 +80,52 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, exact=4))
 
   _ANDROID_THREADTIME_LINE = (
-    pyparsing.Or([
-        _ANDROID_FULL_DATE_GROUP,
-        _ANDROID_DATE_GROUP]).setResultsName('date') +
-    _ANDROID_TIME_GROUP.setResultsName('time') +
-    pyparsing.Optional(_ANDROID_TIME_ZONE).setResultsName('timezone') +
-    pyparsing.Word(pyparsing.nums).setResultsName('pid') +
-    pyparsing.Word(pyparsing.nums).setResultsName('tid') +
-    pyparsing.Optional(pyparsing.Word(pyparsing.nums).setResultsName('uid')) +
-    pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
-    pyparsing.Optional(pyparsing.Word(
-        pyparsing.printables + ' ', exclude_chars=':').setResultsName('tag')) +
-    pyparsing.Suppress(': ') +
-    pyparsing.restOfLine.setResultsName('message'))
+      pyparsing.Or([
+          _ANDROID_FULL_DATE_GROUP,
+          _ANDROID_DATE_GROUP]).setResultsName('date') +
+      _ANDROID_TIME_GROUP.setResultsName('time') +
+      pyparsing.Optional(_ANDROID_TIME_ZONE).setResultsName('timezone') +
+      pyparsing.Or([
+          (pyparsing.Word(pyparsing.nums).setResultsName('uid') +
+           pyparsing.Word(pyparsing.nums).setResultsName('pid') +
+           pyparsing.Word(pyparsing.nums).setResultsName('tid')),
+          (pyparsing.Word(pyparsing.nums).setResultsName('pid') +
+           pyparsing.Word(pyparsing.nums).setResultsName('tid'))]) +
+      pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+      pyparsing.Optional(pyparsing.Word(
+          pyparsing.printables + ' ', 
+          exclude_chars=':').setResultsName('tag')) +
+      pyparsing.Suppress(': ') +
+      pyparsing.restOfLine.setResultsName('message'))
 
   _ANDROID_TIME_LINE = (
-    pyparsing.Or([
-        _ANDROID_FULL_DATE_GROUP,
-        _ANDROID_DATE_GROUP]).setResultsName('date') +
-    _ANDROID_TIME_GROUP.setResultsName('time') +
-    pyparsing.Optional(_ANDROID_TIME_ZONE).setResultsName('timezone') +
-    pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
-    pyparsing.Suppress('/') +
-    pyparsing.Word(
-        pyparsing.printables + ' ', exclude_chars='(').setResultsName('tag') +
-    pyparsing.Suppress('(') +
-    pyparsing.Word(pyparsing.nums).setResultsName('pid') +
-    pyparsing.Optional(
-        pyparsing.Suppress(':') +
-        pyparsing.Word(pyparsing.nums).setResultsName('uid')) +
-    pyparsing.Suppress(')') +
-    pyparsing.Suppress(': ') +
-    pyparsing.restOfLine.setResultsName('message'))
+      pyparsing.Or([
+          _ANDROID_FULL_DATE_GROUP,
+          _ANDROID_DATE_GROUP]).setResultsName('date') +
+      _ANDROID_TIME_GROUP.setResultsName('time') +
+      pyparsing.Optional(_ANDROID_TIME_ZONE).setResultsName('timezone') +
+      pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+      pyparsing.Suppress('/') +
+      pyparsing.Word(
+          pyparsing.printables + ' ', 
+          exclude_chars='(').setResultsName('tag') +
+      pyparsing.Suppress('(') +
+      pyparsing.Word(pyparsing.nums).setResultsName('pid') +
+      pyparsing.Optional(
+          pyparsing.Suppress(':') +
+          pyparsing.Word(pyparsing.nums).setResultsName('uid')) +
+      pyparsing.Suppress(')') +
+      pyparsing.Suppress(': ') +
+      pyparsing.restOfLine.setResultsName('message'))
 
   _BEGINNING_LINE = (
       pyparsing.Suppress('--------- beginning of ') +
       pyparsing.oneOf(['main', 'kernel']))
 
   LINE_STRUCTURES = [
-    ('threadtime_line', _ANDROID_THREADTIME_LINE),
-    ('time_line', _ANDROID_TIME_LINE),
-    ('beginning_line', _BEGINNING_LINE)]
+      ('beginning_line', _BEGINNING_LINE),
+      ('threadtime_line', _ANDROID_THREADTIME_LINE),
+      ('time_line', _ANDROID_TIME_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -144,22 +149,24 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     if key in ('threadtime_line', 'time_line'):
-      new_date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      time = self._GetValueFromStructure(structure, 'time')
-      extracted_date = self._GetValueFromStructure(structure, 'date')
+      parsed_time = self._GetValueFromStructure(structure, 'time')
+      parsed_date = self._GetValueFromStructure(structure, 'date')
+      parsed_timezone = self._GetValueFromStructure(structure, 'timezone')
 
-      if len(extracted_date) == 10:
-        date_format = f'{extracted_date}T{time}Z'
+      # TODO: adjust for timezone
+      if len(parsed_date) == 10:
+        date_format = f'{parsed_date}T{parsed_time}Z'
       else:
         estimated_year = parser_mediator.GetEstimatedYear()
-        month_day = self._GetValueFromStructure(structure, 'date')
-        date_format = f'{estimated_year}-{month_day}T{time}Z'
+        date_format = f'{estimated_year}-{parsed_date}T{parsed_time}Z'
 
+      new_date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      
       try:
         new_date_time.CopyFromStringISO8601(date_format)
       except ValueError as error:
         parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0:s}'.format(error))
+            'Invalid date time value: {0:s}'.format(error))
         return
 
       event_data = AndroidLogcatEventData()
@@ -171,6 +178,8 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       if event_data.tag:
         event_data.tag = event_data.tag.strip()
       event_data.tid = self._GetValueFromStructure(structure, 'tid')
+      event_data.uid = self._GetValueFromStructure(structure, 'uid')
+      
       event = time_events.DateTimeValuesEvent(
           new_date_time, definitions.TIME_DESCRIPTION_RECORDED)
 

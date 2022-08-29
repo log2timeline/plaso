@@ -22,6 +22,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
+    # A default threadtime logcat line
     expected_event_values = {
       'data_type': 'android:logcat',
       'pid': '1234',
@@ -33,6 +34,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
     events[0].date_time.CopyToDateTimeString().endswith('-01-01 01:02:03.123')
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
+    # A default time logcat line
     expected_event_values = {
       'data_type': 'android:logcat',
       'pid': '190',
@@ -43,6 +45,29 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
 
     events[1].date_time.CopyToDateTimeString().endswith('-01-02 01:02:04.156')
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
+    expected_event_values = {
+      'date_time': '2022-01-02 17:20:09.171000',
+      'data_type': 'android:logcat',
+      'pid': '1885',
+      'tid': '3066' ,
+      'priority': 'E',
+      'tag': 'App',
+      'message': 'Bad call made by uid 1010158.'}
+
+    self.CheckEventValues(storage_writer, events[10], expected_event_values)
+
+    expected_event_values = {
+      'date_time': '2022-01-02 17:20:09.171997',
+      'data_type': 'android:logcat',
+      'pid': '1885',
+      'tid': '3066' ,
+      'priority': 'E',
+      'tag': 'App',
+      'uid': '1000',
+      'message': 'Bad call made by uid 1010158.'}
+
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
     expected_event_values = {
       'date_time': '2022-01-02 17:42:10.613472',
