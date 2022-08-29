@@ -1,2 +1,17 @@
+--------- beginning of main
 01-01 01:02:03.123  1234  1234 D Test: test message
+--------- beginning of kernel
 01-02 01:02:04.156 I/sometag(  190): Some other test message
+01-02 11:16:08.522     0     0 I         : Linux version something
+01-02 11:16:08.522     0     0 I Command line: no_timer_check clocksource=pit console=0 cma=296M@0-4G loop.max_part=7 ramoops.mem_address=0xff018000 ramoops.mem_size=0x10000 memmap=0x10000$0xff018000 printk.devkmsg=on bootconfig mac80211_hwsim.radios=0
+01-02 11:16:08.522     0     0 I x86/fpu : Supporting XSAVE feature 0x001: 'x87 floating point registers'
+01-02 11:16:08.522     0     0 I BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable
+01-02 11:16:26.064  1057  1057 W .gms.persisten: some message
+2022-01-02 17:20:08.875325 +1000  9346  9346 E ndroid.calendar: Not starting debugger since process cannot load the jdwp agent.
+2022-01-02 17:20:09.171  1885  3066 E App  : Bad call made by uid 1010158.
+2022-01-02 07:20:09.171 +0000  1885  3066 E App  : Bad call made by uid 1010158.
+2022-01-02 07:20:09.171 +0000  1000  1885  3066 E App  : Bad call made by uid 1010158.
+2022-01-02 17:20:09.171  1000  1885  3066 E App  : Bad call made by uid 1010158.
+2022-01-02 17:20:09.171997  1000  1885  3066 E AppOps  : Bad call made by uid 1010158.
+2022-01-02 17:42:10.613472 +1000 I/CHRE    ( 1080: 1179): @ 1210504.750: [ImuCal] [GYRO_RPS] (s0) Temp Intercept: -.001133, -.000088, -.001676
+2022-01-02 17:44:23.183801 +1000 I/CHRE    ( 1179): @ 1210637.317: [AR] ON => IDLE
