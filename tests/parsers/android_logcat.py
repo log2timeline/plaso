@@ -18,7 +18,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(['android_logcat.log'], parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
+    self.assertEqual(number_of_events, 2)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -33,6 +33,17 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
       'message': 'test message'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    expected_event_values = {
+      'date_time': '2022-01-02 01:02:04.156',
+      'data_type': 'android:logcat',
+      'pid': '190',
+      'tid': None,
+      'priority': 'I',
+      'tag': 'sometag',
+      'message': 'Some other test message'}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

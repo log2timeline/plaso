@@ -68,8 +68,21 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
     pyparsing.Suppress(': ') +
     pyparsing.restOfLine.setResultsName('message'))
 
+  _ANDROID_TIME_LINE = (
+    _ANDROID_DATE_GROUP.setResultsName('date') +
+    _ANDROID_TIME_GROUP.setResultsName('time') +
+    pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+    pyparsing.Literal('/') +
+    pyparsing.Word(pyparsing.printables, exclude_chars='(').setResultsName('tag') +
+    pyparsing.Suppress('(') +
+    pyparsing.Word(pyparsing.nums).setResultsName('pid') +
+    pyparsing.Suppress(')') +
+    pyparsing.Suppress(': ') +
+    pyparsing.restOfLine.setResultsName('message'))
+
   LINE_STRUCTURES = [
-    ('threadtime_line', _ANDROID_THREADTIME_LINE)]
+    ('threadtime_line', _ANDROID_THREADTIME_LINE),
+    ('time_line', _ANDROID_TIME_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -101,7 +114,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
         'invalid date time value: {0:s}'.format(error))
       return
 
-    if key == 'threadtime_line':
+    if key in ('threadtime_line', 'time_line'):
       event_data = AndroidLogcatEventData()
       event_data.message = self._GetValueFromStructure(structure, 'message')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
