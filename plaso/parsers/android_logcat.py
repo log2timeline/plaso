@@ -63,8 +63,8 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
     pyparsing.Word(pyparsing.nums).setResultsName('pid') +
     pyparsing.Word(pyparsing.nums).setResultsName('tid') +
     pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
-    pyparsing.Word(
-        pyparsing.printables, exclude_chars=':').setResultsName('tag') +
+    pyparsing.Optional(pyparsing.Word(
+        pyparsing.printables + ' ', exclude_chars=':').setResultsName('tag')) +
     pyparsing.Suppress(': ') +
     pyparsing.restOfLine.setResultsName('message'))
 
@@ -73,16 +73,22 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
     _ANDROID_TIME_GROUP.setResultsName('time') +
     pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
     pyparsing.Literal('/') +
-    pyparsing.Word(pyparsing.printables, exclude_chars='(').setResultsName('tag') +
+    pyparsing.Word(
+        pyparsing.printables + ' ', exclude_chars='(').setResultsName('tag') +
     pyparsing.Suppress('(') +
     pyparsing.Word(pyparsing.nums).setResultsName('pid') +
     pyparsing.Suppress(')') +
     pyparsing.Suppress(': ') +
     pyparsing.restOfLine.setResultsName('message'))
 
+  _BEGINNING_LINE = (
+      pyparsing.Suppress('--------- beginning of ') +
+      pyparsing.oneOf(['main', 'kernel']))
+
   LINE_STRUCTURES = [
     ('threadtime_line', _ANDROID_THREADTIME_LINE),
-    ('time_line', _ANDROID_TIME_LINE)]
+    ('time_line', _ANDROID_TIME_LINE),
+    ('beginning_line', _BEGINNING_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -102,19 +108,22 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    estimated_year = parser_mediator.GetEstimatedYear()
-    month_day = self._GetValueFromStructure(structure, 'date')
-    time = self._GetValueFromStructure(structure, 'time')
-    try:
-      new_date_time.CopyFromStringISO8601(
-          f'{estimated_year}-{month_day}T{time}Z')
-    except ValueError as error:
-      parser_mediator.ProduceExtractionWarning(
-        'invalid date time value: {0:s}'.format(error))
+    if key == 'beginning_line':
       return
 
     if key in ('threadtime_line', 'time_line'):
+      new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+      estimated_year = parser_mediator.GetEstimatedYear()
+      month_day = self._GetValueFromStructure(structure, 'date')
+      time = self._GetValueFromStructure(structure, 'time')
+      try:
+        new_date_time.CopyFromStringISO8601(
+            f'{estimated_year}-{month_day}T{time}Z')
+      except ValueError as error:
+        parser_mediator.ProduceExtractionWarning(
+          'invalid date time value: {0:s}'.format(error))
+        return
+
       event_data = AndroidLogcatEventData()
       event_data.message = self._GetValueFromStructure(structure, 'message')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
@@ -139,12 +148,16 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       bool: True if the line is in the expected format, False if not.
     """
-    for _, line_format in self.LINE_STRUCTURES:
+    for format_name, line_format in self.LINE_STRUCTURES:
       try:
         structure = line_format.parseString(line)
+
       except pyparsing.ParseException:
         logger.debug('Not a Android logcat format')
         continue
+
+      if format_name == 'beginning_line':
+        return True
       if 'date' in structure and 'time' in structure and 'message' in structure:
         return True
 
