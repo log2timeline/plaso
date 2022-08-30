@@ -112,10 +112,11 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
           pyparsing.printables + ' ',
           exclude_chars='(').setResultsName('tag') +
       pyparsing.Suppress('(') +
-      pyparsing.Word(pyparsing.nums).setResultsName('pid') +
-      pyparsing.Optional(
-          pyparsing.Suppress(':') +
-          pyparsing.Word(pyparsing.nums).setResultsName('uid')) +
+      pyparsing.Or([
+          pyparsing.Word(pyparsing.nums).setResultsName('pid'),
+          (pyparsing.Word(pyparsing.nums).setResultsName('uid') +
+           pyparsing.Suppress(':') +
+           pyparsing.Word(pyparsing.nums).setResultsName('pid'))]) +
       pyparsing.Suppress(')') +
       pyparsing.Suppress(': ') +
       pyparsing.restOfLine.setResultsName('message'))
@@ -175,6 +176,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
         parser_mediator.ProduceExtractionWarning(
             'Invalid date time value: {0:s}'.format(error))
         return
+
       event_data = AndroidLogcatEventData()
       event_data.file_offset = self._current_offset
       event_data.message = self._GetValueFromStructure(structure, 'message')
