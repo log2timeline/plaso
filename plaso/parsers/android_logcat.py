@@ -29,13 +29,13 @@ class AndroidLogcatEventData(events.EventData):
   """Android logcat event data.
 
   Attributes:
+    component_tag (str): the tag that indicates the system component from which the
+        logcat line originates.
     file_offset (int): the file offset of where the log message was parsed.
     message (str): the log message.
     pid (int): process identifier (PID) that created the logcat line.
     priority (str): a character in the set {V, D, I, W, E, F, S}, which is
         ordered from lowest to highest priority.
-    tag (str): the tag that indicates the system component from which the
-        logcat line originates.
     tid (int): thread identifier (TID) that created the logcat line.
     uid (int): the UID or Android ID of the logged process.
   """
@@ -45,11 +45,11 @@ class AndroidLogcatEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AndroidLogcatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.component_tag = None
     self.file_offset = None
     self.message = None
     self.pid = None
     self.priority = None
-    self.tag = None
     self.tid = None
     self.uid = None
 
@@ -182,9 +182,9 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
       event_data.message = self._GetValueFromStructure(structure, 'message')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.priority = self._GetValueFromStructure(structure, 'priority')
-      event_data.tag = self._GetValueFromStructure(structure, 'tag')
-      if event_data.tag:
-        event_data.tag = event_data.tag.strip()
+      event_data.component_tag = self._GetValueFromStructure(structure, 'tag')
+      if event_data.component_tag:
+        event_data.component_tag = event_data.component_tag.strip()
       event_data.tid = self._GetValueFromStructure(structure, 'tid')
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
 

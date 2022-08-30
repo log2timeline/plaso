@@ -45,7 +45,8 @@ short_message:
 type: 'conditional'
 data_type: 'android:logcat'
 message:
-- 'Message: {message}'
+- '{message}'
+- 'Component Tag: {component_tag}'
 - 'PID: {pid}'
 - 'TID: {tid}'
 - 'UID: {uid}'

@@ -30,7 +30,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1234',
         'tid': '1234',
         'priority': 'D',
-        'tag': 'threadtime',
+        'component_tag': 'threadtime',
         'message': 'test of default threadtime format'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -41,7 +41,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '190',
         'tid': None,
         'priority': 'I',
-        'tag': 'sometag',
+        'component_tag': 'sometag',
         'message': 'test of default time format'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -52,7 +52,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1885',
         'tid': '3066' ,
         'priority': 'E',
-        'tag': 'App',
+        'component_tag': 'App',
         'uid': None,
         'message': 'test of threadtime w/ UTC and year'}
 
@@ -64,7 +64,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1885',
         'tid': '3066' ,
         'priority': 'E',
-        'tag': 'App',
+        'component_tag': 'App',
         'uid': '1000',
         'message': 'test of threadtime w/ UTC, year and uid'}
 
@@ -76,7 +76,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1885',
         'tid': '3066' ,
         'priority': 'E',
-        'tag': 'App',
+        'component_tag': 'App',
         'uid': '1000',
         'message': 'test of threadtime w/ year, uid, usec'}
 
@@ -88,7 +88,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '9346',
         'tid': '9347' ,
         'priority': 'E',
-        'tag': 'AppTag',
+        'component_tag': 'AppTag',
         'uid': None,
         'message': 'test of threadtime w/ year, zone, usec'}
 
@@ -100,7 +100,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1179',
         'tid': None,
         'priority': 'I',
-        'tag': 'AppTag',
+        'component_tag': 'AppTag',
         'uid': '1080',
         'message': 'test of time w/ zone, uid, year'}
 
@@ -112,7 +112,7 @@ class AndroidLogcatUnitTest(test_lib.ParserTestCase):
         'pid': '1179',
         'tid': None,
         'priority': 'I',
-        'tag': 'AppTag',
+        'component_tag': 'AppTag',
         'uid': None,
         'message': 'test of time w/ zone, year'}
 
