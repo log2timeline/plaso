@@ -29,8 +29,8 @@ class AndroidLogcatEventData(events.EventData):
   """Android logcat event data.
 
   Attributes:
-    component_tag (str): the tag that indicates the system component from which the
-        logcat line originates.
+    component_tag (str): the tag that indicates the system component from which
+        the logcat line originates.
     file_offset (int): the file offset of where the log message was parsed.
     message (str): the log message.
     pid (int): process identifier (PID) that created the logcat line.
