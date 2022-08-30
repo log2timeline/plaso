@@ -43,6 +43,16 @@ short_message:
 - '{body}'
 ---
 type: 'conditional'
+data_type: 'android:logcat'
+message:
+- 'Message: {message}'
+- 'PID: {pid}'
+- 'TID: {tid}'
+- 'UID: {uid}'
+short_message:
+- '{message}'
+---
+type: 'conditional'
 data_type: 'android:messaging:sms'
 message:
 - 'Type: {sms_type}'
