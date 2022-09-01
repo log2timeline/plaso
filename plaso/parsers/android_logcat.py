@@ -123,7 +123,7 @@ class AndroidLogcatParser(text_parser.PyparsingSingleLineTextParser):
 
   _BEGINNING_LINE = (
       pyparsing.Suppress('--------- beginning of ') +
-      pyparsing.oneOf(['main', 'kernel']))
+      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']))
 
   LINE_STRUCTURES = [
       ('beginning_line', _BEGINNING_LINE),
