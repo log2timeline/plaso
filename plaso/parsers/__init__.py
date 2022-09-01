@@ -28,6 +28,7 @@ from plaso.parsers import mac_keychain
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer
+from plaso.parsers import nids_fast
 from plaso.parsers import ntfs
 from plaso.parsers import olecf
 from plaso.parsers import opera

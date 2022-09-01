@@ -462,6 +462,24 @@ short_message:
 - '{file_md5}'
 ---
 type: 'conditional'
+data_type: 'nids:fast:alert'
+message:
+- 'Message: {message}'
+- 'Source IP: {source_ip}'
+- 'Source Port: {source_port}'
+- 'Destination IP: {destination_ip}'
+- 'Destination Port: {destination_port}'
+- 'Protocol: {protocol}'
+- 'Classification: {classifciation}'
+- 'SID: {sid}'
+- 'Priority: {priority}'
+short_message:
+- 'Message: {message}'
+- 'Source-IP: {source_ip}'
+- 'Destination-IP: {destination_ip}'
+- 'Rule ID: {sid}'
+---
+type: 'conditional'
 data_type: 'olecf:dest_list:entry'
 enumeration_helpers:
 - input_attribute: 'pin_status'
