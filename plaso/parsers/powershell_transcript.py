@@ -33,7 +33,6 @@ class PowerShellTranscriptEventData(events.EventData):
     username (str): User that executed command.
     version (str): PowerShell version.
     ws_man_stack_version (str): WS-Management stack version
-    username (str): User that executed command.
   """
 
   DATA_TYPE = 'powershell:transcript:event'
@@ -42,7 +41,7 @@ class PowerShellTranscriptEventData(events.EventData):
     """Initializes event data."""
 
     super(PowerShellTranscriptEventData,
-      self).__init__(data_type=self.DATA_TYPE)
+          self).__init__(data_type=self.DATA_TYPE)
     self.build_version = None
     self.clr_version = None
     self.command = None
@@ -69,35 +68,39 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
   # PowerShell transcript lines can be very long.
   MAX_LINE_LENGTH = 65536
 
+  _ENCODING = 'utf-8-sig'
+
   _SEPARATOR = '**********************'
 
   _COLON = pyparsing.Literal(': ').suppress()
 
   # key always start with an uppercase character
   _METADATA_KEY = (pyparsing.Word(pyparsing.alphas.upper(), ' ' +
-    pyparsing.alphas) + _COLON)
+                   pyparsing.alphas) + _COLON)
   # negative lookahead needed for correct identification
   _METADATA_VALUE = (~_METADATA_KEY +
-    pyparsing.Word(pyparsing.printables, ' ' + pyparsing.printables))
+                     pyparsing.Word(pyparsing.printables,
+                                    ' ' + pyparsing.printables))
 
   _METADATA_LINE = (
-    _METADATA_KEY +
-    _COLON +
-    pyparsing.Optional(_METADATA_VALUE) +
-    pyparsing.LineEnd().suppress()
+      _METADATA_KEY +
+      _COLON +
+      pyparsing.Optional(_METADATA_VALUE) +
+      pyparsing.LineEnd().suppress()
   )
 
   _TRANSCRIPT_LINE = (
-    ~_METADATA_LINE +
-    pyparsing.Word(' ' + '\t' + '\r' +
-      pyparsing.printables + pyparsing.alphas8bit +
-      pyparsing.punc8bit, exclude_chars='**********************') +
-    pyparsing.LineEnd().suppress()
+      ~_METADATA_LINE +
+      pyparsing.Word(' ' + '\t' + '\r' +
+                     pyparsing.printables + pyparsing.alphas8bit +
+                     pyparsing.punc8bit,
+                     exclude_chars='**********************') +
+      pyparsing.LineEnd().suppress()
   )
 
   _SEPARATOR_LINE = (
-    pyparsing.Literal(_SEPARATOR)
-    + pyparsing.LineEnd().suppress()
+      pyparsing.Literal(_SEPARATOR) +
+      pyparsing.LineEnd().suppress()
   )
 
   LINE_STRUCTURES = [
@@ -106,12 +109,14 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
       ('transcript_line', _TRANSCRIPT_LINE),
   ]
 
-  # variables needed for further processing
-  is_first_line = True
-  found_first_separator = False
-  key_structure = []
-  base_event = None
-  parser_mediator = None
+  def __init__(self):
+    """Initializes instance attributes needed for processing."""
+    super(PowerShellTranscriptParser, self).__init__()
+    self.is_first_line = True
+    self.is_transcript_start = True
+    self.found_first_separator = False
+    self.key_structure = []
+    self.base_event = None
 
   def _GetTimestampFromString(self, value):
     """Parse a timestamp string an return a TimeElements event.
@@ -121,18 +126,20 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
 
     Returns:
       dfdatetime_time_elements.TimeElements: TimeElements, if string
-        was valid, None otherwise
+          was valid, None otherwise
     """
     if len(value) == 14:
-      time_elements_tuple = int(value[:4]),\
-                              int(value[4:6]),\
-                              int(value[6:8]),\
-                              int(value[8:10]),\
-                              int(value[10:12]),\
-                              int(value[12:])
+      time_elements_tuple = (
+          int(value[:4]),
+          int(value[4:6]),
+          int(value[6:8]),
+          int(value[8:10]),
+          int(value[10:12]),
+          int(value[12:]),
+      )
       try:
         start_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+            time_elements_tuple=time_elements_tuple)
       except ValueError:
         start_time = None
     else:
@@ -151,7 +158,7 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     """
     # whenever we reach this point, one full transcript was detected
     # and the next line will be a 'new first line' again
-    self.is_first_line = True
+    self.is_transcript_start = True
     # create local key_structure for working
     key_structure = self.key_structure.copy()
     # reset class key_structure for next transcript
@@ -164,7 +171,7 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     for key, structure in key_structure:
       if key == 'transcript_line':
         transcript_text = transcript_text + structure + '; '
-      if key == 'metadata_line':
+      elif key == 'metadata_line':
         metadata_lines.append(structure)
     # transcript has a full header
     # that means we can try to extract all header infos
@@ -180,12 +187,13 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
         if counter == 1:
           start_time = self._GetTimestampFromString(value)
           if start_time is None:
-            parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems'
-              ' invalid - skipping malformed transcript'.format(value))
+            parser_mediator.ProduceExtractionWarning(
+                'timestamp \"{0!s}\" seems invalid - skipping malformed '
+                'transcript'.format(value))
             return False
           start_time.is_local_time = True
-          event_time = time_events.DateTimeValuesEvent(start_time,
-            definitions.TIME_DESCRIPTION_START)
+          event_time = time_events.DateTimeValuesEvent(
+              start_time, definitions.TIME_DESCRIPTION_START)
         # username
         elif counter == 2:
           new_event.username = value
@@ -234,8 +242,9 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     # transcript with timestamp header
     elif len(metadata_lines) == 1:
       if self.base_event is None:
-        parser_mediator.ProduceExtractionWarning('initial transcript seems '
-          'to have missing headers - can not produce event')
+        parser_mediator.ProduceExtractionWarning(
+            'initial transcript seems to have missing headers'
+            ' - can not produce event')
         return False
       # since we don't have the full headers,
       # we just copy the headers from the last full event...
@@ -247,25 +256,28 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
       # ... and overwrite the timestamp
       start_time = self._GetTimestampFromString(value)
       if start_time is None:
-        parser_mediator.ProduceExtractionWarning('timestamp \"{0!s}\" seems '
-          'invalid - skipping malformed transcript'.format(value))
+        parser_mediator.ProduceExtractionWarning(
+            'timestamp \"{0!s}\" seems invalid - skipping malformed '
+            'transcript'.format(value))
         return False
       start_time.is_local_time = True
       event_time = time_events.DateTimeValuesEvent(start_time,
         definitions.TIME_DESCRIPTION_START)
 
     if transcript_text == '':
-      parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
-          'since transcript text could not be set'.format(key_structure))
+      parser_mediator.ProduceExtractionWarning(
+          'skipping transcript {0!s} - since transcript text could '
+          'not be set'.format(key_structure))
       return False
     new_event.command = transcript_text
     # create event if at least the most relevant fields are set
     if (event_time is not None and new_event.command is not None
-      and new_event.command != ''):
+        and new_event.command != ''):
       parser_mediator.ProduceEventWithEventData(event_time, new_event)
     else:
-      parser_mediator.ProduceExtractionWarning('skipping transcript {0!s} - '
-        'relevant event values could not be set'.format(key_structure))
+      parser_mediator.ProduceExtractionWarning(
+          'skipping transcript {0!s} - relevant event values could '
+          'not be set'.format(key_structure))
       return False
     return True
 
@@ -282,15 +294,21 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    # the first line will always be a metadata line, however pyparsing grammar
-    # might misinterpret this since 'start-line' looks like a transcript line
-    if self.is_first_line and key != 'separator_line':
-      key = 'metadata_line'
+    # skip the very first (separator) line since it does not contain any
+    # relevant info and will break our logic
+    if self.is_first_line:
       self.is_first_line = False
+      return
+    # the first line of a transcript will always be a metadata line, however
+    # pyparsing grammar might misinterpret this since 'start-line' looks like
+    # a transcript line
+    if self.is_transcript_start and key != 'separator_line':
+      key = 'metadata_line'
+      self.is_transcript_start = False
 
     # transcripts will begin/end at every second separator
     # so we need to monitor for them
-    if self.found_first_separator is False and key == 'separator_line':
+    elif self.found_first_separator is False and key == 'separator_line':
       self.found_first_separator = True
       self.key_structure.append((key, ' '.join(structure)))
     # if 'second' separator is found, the current transcript
@@ -311,12 +329,13 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
       # by a metadata_line (and vice versa) and the pyparsing could be wrong
       # (since a transcript_line can basically contain everything)
       if (key == 'metadata_line' and len(self.key_structure) > 0
-        and self.key_structure[-1][0] == 'transcript_line'):
+          and self.key_structure[-1][0] == 'transcript_line'):
         key = 'transcript_line'
       elif (key == 'transcript_line' and len(self.key_structure) > 0
-        and self.key_structure[-1][0] == 'metadata_line'):
+            and self.key_structure[-1][0] == 'metadata_line'):
         key = 'metadata_line'
-      self.key_structure.append((key, ': '.join(structure)))
+    self.key_structure.append((key, ': '.join(structure)))
+
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies whether content corresponds to an PowerShell transcript file.
@@ -329,15 +348,9 @@ class PowerShellTranscriptParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if lines[:25] == 'ï»¿' + self._SEPARATOR:
+    if lines[:22] == self._SEPARATOR and 'Windows PowerShell' in lines:
       if 'Windows PowerShell' in lines:
         return True
     return False
-
-  def __del__(self):
-    # to avoid overlapping transcripts in testcases
-    # not relevant in regular use since objects will be
-    # created empty
-    self.key_structure.clear()
 
 manager.ParsersManager.RegisterParser(PowerShellTranscriptParser)
