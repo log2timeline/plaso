@@ -241,7 +241,7 @@ class FileEntryParser(BaseParser):
     if not file_entry:
       raise errors.WrongParser('Invalid file entry')
 
-    parser_mediator.AppendToParserChain(self)
+    parser_mediator.AppendToParserChain(self.NAME)
     try:
       self.ParseFileEntry(parser_mediator, file_entry)
     finally:
@@ -283,7 +283,7 @@ class FileObjectParser(BaseParser):
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
 
-    parser_mediator.AppendToParserChain(self)
+    parser_mediator.AppendToParserChain(self.NAME)
     try:
       self.ParseFileObject(parser_mediator, file_object)
     finally:

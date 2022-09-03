@@ -235,7 +235,7 @@ class AutomaticDestinationsOLECFPlugin(
         else:
           display_name = '# {0:s}'.format(item.name)
 
-        parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
+        parser_mediator.AppendToParserChain(self._WINLNK_PARSER.NAME)
         try:
           item.seek(0, os.SEEK_SET)
           self._WINLNK_PARSER.ParseFileLNKFile(

@@ -47,6 +47,7 @@ class JSONLPluginTestCase(test_lib.ParserTestCase):
     required_format = plugin.CheckRequiredFormat(json_dict)
     self.assertTrue(required_format)
 
-    plugin.Process(parser_mediator, file_object=file_object)
+    parser_mediator.AppendToParserChain('jsonl')
+    plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
     return storage_writer

@@ -90,7 +90,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     parser_mediator.SetFileEntry(file_entry)
 
     # AppendToParserChain needs to be run after SetFileEntry.
-    parser_mediator.AppendToParserChain(plugin)
+    parser_mediator.AppendToParserChain(plugin.NAME)
 
     try:
       cache = sqlite.SQLiteCache()

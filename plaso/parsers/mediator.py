@@ -235,14 +235,14 @@ class ParserMediator(object):
     """
     self._storage_writer.AddAttributeContainer(event_definition)
 
-  def AppendToParserChain(self, plugin_or_parser):
+  def AppendToParserChain(self, name):
     """Adds a parser or parser plugin to the parser chain.
 
     Args:
-      plugin_or_parser (BaseParser): parser or parser plugin.
+      name (str): name of a parser or parser plugin.
     """
     self._cached_parser_chain = None
-    self._parser_chain_components.append(plugin_or_parser.NAME)
+    self._parser_chain_components.append(name)
 
   def ClearParserChain(self):
     """Clears the parser chain."""

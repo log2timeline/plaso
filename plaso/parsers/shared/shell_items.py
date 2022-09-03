@@ -192,7 +192,7 @@ class ShellItemsParser(object):
 
     shell_item_list = pyfwsi.item_list()
 
-    parser_mediator.AppendToParserChain(self)
+    parser_mediator.AppendToParserChain(self.NAME)
     try:
       shell_item_list.copy_from_byte_stream(
           byte_stream, ascii_codepage=codepage)

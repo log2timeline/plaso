@@ -112,7 +112,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     # parser chain argument is supplied.
     if parser_chain is None:
       # AppendToParserChain needs to be run after SetFileEntry.
-      parser_mediator.AppendToParserChain(plugin)
+      parser_mediator.AppendToParserChain(plugin.NAME)
 
     else:
       # In the rare case that a test is checking for a particular chain, we

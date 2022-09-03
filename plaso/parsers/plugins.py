@@ -68,7 +68,7 @@ class BasePlugin(object):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
     """
-    parser_mediator.AppendToParserChain(self)
+    parser_mediator.AppendToParserChain(self.NAME)
     try:
       self.Process(parser_mediator, **kwargs)
     finally:

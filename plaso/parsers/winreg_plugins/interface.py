@@ -344,7 +344,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     Raises:
       ValueError: If the Windows Registry key is not set.
     """
-    parser_mediator.AppendToParserChain(self)
+    parser_mediator.AppendToParserChain(self.NAME)
     try:
       self.Process(parser_mediator, registry_key, **kwargs)
     finally:
