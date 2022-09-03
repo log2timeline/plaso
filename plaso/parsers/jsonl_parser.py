@@ -35,12 +35,11 @@ class JSONLParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    encoding = self._ENCODING or parser_mediator.codepage
-
     # Use strict encoding error handling in the verification step so that
     # a JSON-L parser does not generate extraction warning for encoding errors
     # of unsupported files.
-    text_file_object = text_file.TextFile(file_object, encoding=encoding)
+    text_file_object = text_file.TextFile(
+        file_object, encoding=self._ENCODING or parser_mediator.codepage)
 
     try:
       line = text_file_object.readline(size=self._MAXIMUM_LINE_LENGTH)
@@ -68,7 +67,14 @@ class JSONLParser(interface.FileObjectParser):
         break
 
       if plugin.CheckRequiredFormat(json_dict):
-        plugin.Process(parser_mediator, file_object=file_object)
+        try:
+          plugin.UpdateChainAndProcess(
+              parser_mediator, file_object=file_object)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionWarning((
+              'plugin: {0:s} unable to parse JSON-L file with error: '
+              '{1!s}').format(plugin.NAME, exception))
 
 
 manager.ParsersManager.RegisterParser(JSONLParser)
