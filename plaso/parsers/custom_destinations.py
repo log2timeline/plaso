@@ -67,7 +67,7 @@ class CustomDestinationsParser(
       parser_mediator.ProduceExtractionWarning(message)
       return 0
 
-    parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
+    parser_mediator.AppendToParserChain(self._WINLNK_PARSER.NAME)
     try:
       lnk_file_object.seek(0, os.SEEK_SET)
       self._WINLNK_PARSER.ParseFileLNKFile(
