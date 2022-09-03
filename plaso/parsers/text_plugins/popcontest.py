@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Popularity Contest log file parser in plaso.
+"""Text parser plugin for popularity contest log files.
 
 Information updated 20 january 2014.
 From Debian Package Popularity Contest
@@ -89,8 +89,8 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class PopularityContestSessionEventData(events.EventData):
@@ -134,22 +134,24 @@ class PopularityContestEventData(events.EventData):
     self.record_tag = None
 
 
-class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse popularity contest log files."""
+class PopularityContestTextPlugin(interface.TextPlugin):
+  """Text parser plugin for popularity contest log files."""
 
   NAME = 'popularity_contest'
   DATA_FORMAT = 'Popularity Contest log file'
+
+  ENCODING = 'utf-8'
 
   _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(
       chr(character) for character in range(65536)
       if not chr(character).isspace())
 
-  MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
-  PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')
-  TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
+  _MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
+  _PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')
+  _TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
 
-  HEADER = (
+  _HEADER = (
       pyparsing.Literal('POPULARITY-CONTEST-').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
       pyparsing.Literal('TIME:').suppress() +
@@ -158,33 +160,30 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
 
-  FOOTER = (
+  _FOOTER = (
       pyparsing.Literal('END-POPULARITY-CONTEST-').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
       pyparsing.Literal('TIME:').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName('timestamp'))
 
-  LOG_LINE = (
+  _LOG_LINE = (
       text_parser.PyparsingConstants.INTEGER.setResultsName('atime') +
       text_parser.PyparsingConstants.INTEGER.setResultsName('ctime') +
-      (PACKAGE + TAG | PACKAGE + MRU + pyparsing.Optional(TAG)))
+      (_PACKAGE + _TAG | _PACKAGE + _MRU + pyparsing.Optional(_TAG)))
 
-  LINE_STRUCTURES = [
-      ('logline', LOG_LINE),
-      ('header', HEADER),
-      ('footer', FOOTER),
-  ]
+  _LINE_STRUCTURES = [
+      ('logline', _LOG_LINE),
+      ('header', _HEADER),
+      ('footer', _FOOTER)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
-
-  _ENCODING = 'UTF-8'
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Extracts events from a log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     # Required fields are <mru> and <atime> and we are not interested in
@@ -217,14 +216,17 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
           date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -264,24 +266,29 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Popularity Contest log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line was successfully parsed.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      self.HEADER.parseString(line)
-    except pyparsing.ParseException:
-      logger.debug('Not a Popularity Contest log file, invalid header')
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    return True
+    try:
+      parsed_structure = self._HEADER.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    return bool(parsed_structure)
 
 
-manager.ParsersManager.RegisterParser(PopularityContestParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    PopularityContestTextPlugin)

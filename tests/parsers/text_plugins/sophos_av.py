@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Sophos Anti-Virus log (SAV.txt) parser."""
+"""Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
 
 import unittest
 
-from plaso.parsers import sophos_av
+from plaso.parsers.text_plugins import sophos_av
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class SophosAVLogParserTest(test_lib.ParserTestCase):
-  """Tests for the Sophos Anti-Virus log (SAV.txt) parser."""
+class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = sophos_av.SophosAVLogParser()
-    storage_writer = self._ParseFile(['sav.txt'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = sophos_av.SophosAVLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['sav.txt'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)
@@ -27,6 +27,9 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -39,10 +42,11 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-  def testParseWithTimeZone(self):
-    """Tests the Parse function with a time zone."""
-    parser = sophos_av.SophosAVLogParser()
-    storage_writer = self._ParseFile(['sav.txt'], parser, timezone='CET')
+  def testProcessWithTimeZone(self):
+    """Tests the Process function with a time zone."""
+    plugin = sophos_av.SophosAVLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['sav.txt'], plugin, timezone='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)
@@ -54,6 +58,9 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 

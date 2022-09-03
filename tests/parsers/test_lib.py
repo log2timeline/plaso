@@ -54,7 +54,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
-      timezone (Optional[str]): timezone.
+      timezone (Optional[str]): time zone.
 
     Returns:
       ParserMediator: parser mediator.

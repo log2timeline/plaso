@@ -7,13 +7,13 @@ import unittest
 from plaso.containers import events
 from plaso.lib import definitions
 from plaso.parsers import bash_history
-from plaso.parsers import dpkg
-from plaso.parsers import selinux
 from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers import zsh_extended_history
 from plaso.parsers.jsonl_plugins import docker_layer_config
 from plaso.parsers.syslog_plugins import cron
+from plaso.parsers.text_plugins import dpkg
+from plaso.parsers.text_plugins import selinux
 
 from tests.data import test_lib
 

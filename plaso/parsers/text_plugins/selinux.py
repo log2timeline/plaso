@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains SELinux audit log (audit.log) file parser.
+"""Text parser plugin for SELinux audit log (audit.log) files.
 
-Information updated 16 january 2013.
-
-An example:
+audit.log log line example:
 
 type=AVC msg=audit(1105758604.519:420): avc: denied { getattr } for pid=5962
 comm="httpd" path="/home/auser/public_html" dev=sdb2 ino=921135
@@ -24,9 +22,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class SELinuxLogEventData(events.EventData):
@@ -48,13 +45,11 @@ class SELinuxLogEventData(events.EventData):
     self.pid = None
 
 
-class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for SELinux audit log (audit.log) files."""
+class SELinuxTextPlugin(interface.TextPlugin):
+  """Text parser plugin for SELinux audit log (audit.log) files."""
 
   NAME = 'selinux'
   DATA_FORMAT = 'SELinux audit log (audit.log) file'
-
-  _ENCODING = 'utf-8'
 
   _SELINUX_KEY_VALUE_GROUP = pyparsing.Group(
       pyparsing.Word(pyparsing.alphanums).setResultsName('key') +
@@ -97,17 +92,19 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       _SELINUX_MSG_GROUP +
       _SELINUX_BODY_GROUP)
 
-  LINE_STRUCTURES = [('line', _SELINUX_LOG_LINE)]
+  _LINE_STRUCTURES = [('line', _SELINUX_LOG_LINE)]
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a structure of tokens derived from a line of a text file.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -159,26 +156,28 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies if a line from a text file is in the expected format.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._SELINUX_LOG_LINE.parseString(line)
-    except pyparsing.ParseException as exception:
-      logger.debug(
-          'Unable to parse SELinux audit.log file with error: {0!s}'.format(
-              exception))
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    return 'type' in structure and 'msg' in structure
+    try:
+      parsed_structure = self._SELINUX_LOG_LINE.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = {}
+
+    return 'type' in parsed_structure and 'msg' in parsed_structure
 
 
-manager.ParsersManager.RegisterParser(SELinuxParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SELinuxTextPlugin)

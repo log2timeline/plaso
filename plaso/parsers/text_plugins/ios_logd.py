@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS sysdiagnose logd files (logd.0.log)."""
+"""Text parser plugin for iOS sysdiagnose logd files (logd.0.log)."""
 
 import pyparsing
 
@@ -9,8 +9,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class IOSSysdiagnoseLogdData(events.EventData):
@@ -30,16 +30,15 @@ class IOSSysdiagnoseLogdData(events.EventData):
     self.logger = None
 
 
-class IOSSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for iOS sysdiagnose logd files (logd.0.log)."""
+class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
+  """Text parser plugin for iOS sysdiagnose logd files (logd.0.log)."""
 
   NAME = 'ios_logd'
   DATA_FORMAT = 'iOS sysdiagnose logd file'
 
-  DATE_ELEMENTS = text_parser.PyparsingConstants.DATE_ELEMENTS
-  TIME_ELEMENTS = text_parser.PyparsingConstants.TIME_ELEMENTS
-
-  _TIMESTAMP = DATE_ELEMENTS + TIME_ELEMENTS
+  _TIMESTAMP = (
+      text_parser.PyparsingConstants.DATE_ELEMENTS +
+      text_parser.PyparsingConstants.TIME_ELEMENTS)
 
   _TIME_DELTA = pyparsing.Word(
       pyparsing.nums + '+' + '-', exact=5).setResultsName('time_delta')
@@ -51,9 +50,9 @@ class IOSSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
 
   _LINE_GRAMMAR = _TIMESTAMP + _TIME_DELTA + _LOGGER + _BODY
 
-  LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     This function takes as an input a parsed pyparsing structure
@@ -92,7 +91,7 @@ class IOSSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
       time_delta_hours = int(time_delta[:3], 10)
       time_delta_minutes = int(time_delta[3:], 10)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning('unsupported date time value')
+      parser_mediator.ProduceExtractionWarning('unsupported time delta value')
       return
 
     time_zone_offset = (time_delta_hours * -60) + time_delta_minutes
@@ -110,19 +109,29 @@ class IOSSysdiagnoseLogdParser(text_parser.PyparsingSingleLineTextParser):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies that this is an iOS sysdiagnose logd file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      line (str): one line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    match_generator = self._LINE_GRAMMAR.scanString(line, maxMatches=1)
-    return bool(list(match_generator))
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    try:
+      parsed_structure = self._LINE_GRAMMAR.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    return bool(parsed_structure)
 
 
-manager.ParsersManager.RegisterParser(IOSSysdiagnoseLogdParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    IOSSysdiagnoseLogdTextPlugin)

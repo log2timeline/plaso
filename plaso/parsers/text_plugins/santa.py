@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Santa log (santa.log) parser."""
+"""Text file parser plugin for Santa log files."""
 
 import re
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -9,8 +10,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class SantaExecutionEventData(events.EventData):
@@ -70,13 +71,13 @@ class SantaProcessExitEventData(events.EventData):
 
   Attributes:
     action (str): action recorded by Santa.
+    gid (str): group identifier associated with the executed process.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
         audit token. The version can be used to identify process identifier
         rollovers.
     ppid (str): parent process identifier for the executed process.
     uid (str): user identifier associated with the executed process.
-    gid (str): group identifier associated with the executed process.
   """
 
   DATA_TYPE = 'santa:process_exit'
@@ -85,11 +86,11 @@ class SantaProcessExitEventData(events.EventData):
     """Initializes event data."""
     super(SantaProcessExitEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
+    self.gid = None
     self.pid = None
     self.pid_version = None
     self.ppid = None
     self.uid = None
-    self.gid = None
 
 
 class SantaFileSystemEventData(events.EventData):
@@ -97,19 +98,19 @@ class SantaFileSystemEventData(events.EventData):
 
   Attributes:
     action (str): event type recorded by Santa.
-    file_path (str): file path and name for WRITE/DELETE events.
     file_new_path (str): new file path and name for RENAME events.
+    file_path (str): file path and name for WRITE/DELETE events.
+    gid (str): group identifier associated with the executed process.
+    group (str): group name associated with the executed process.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
         audit token. The version can be used to identify process identifier
         rollovers.
     ppid (str): parent process identifier for the executed process.
-    process (str): process name.
     process_path (str): process file path.
+    process (str): process name.
     uid (str): user identifier associated with the executed process.
     user (str): user name associated with the executed process.
-    gid (str): group identifier associated with the executed process.
-    group (str): group name associated with the executed process.
   """
 
   DATA_TYPE = 'santa:file_system_event'
@@ -118,8 +119,10 @@ class SantaFileSystemEventData(events.EventData):
     """Initializes event data."""
     super(SantaFileSystemEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.file_path = None
     self.file_new_path = None
+    self.file_path = None
+    self.gid = None
+    self.group = None
     self.pid = None
     self.pid_version = None
     self.ppid = None
@@ -127,8 +130,6 @@ class SantaFileSystemEventData(events.EventData):
     self.process_path = None
     self.uid = None
     self.user = None
-    self.gid = None
-    self.group = None
 
 
 class SantaMountEventData(events.EventData):
@@ -136,15 +137,15 @@ class SantaMountEventData(events.EventData):
 
   Attributes:
     action (str): event type recorded by Santa.
-    mount (str): disk mount point.
-    volume (str): disk volume name.
+    appearance (str): disk appearance date.
     bsd_name (str): disk BSD name.
-    fs (str): disk volume kind.
-    model (str): disk model.
-    serial (str): disk serial.
     bus (str): device protocol.
     dmg_path (str): DMG file path.
-    appearance (str): disk appearance date.
+    fs (str): disk volume kind.
+    model (str): disk model.
+    mount (str): disk mount point.
+    serial (str): disk serial.
+    volume (str): disk volume name.
   """
 
   DATA_TYPE = 'santa:diskmount'
@@ -153,26 +154,26 @@ class SantaMountEventData(events.EventData):
     """Initializes event data."""
     super(SantaMountEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.mount = None
-    self.volume = None
+    self.appearance = None
     self.bsd_name = None
-    self.fs = None
-    self.model = None
-    self.serial = None
     self.bus = None
     self.dmg_path = None
-    self.appearance = None
+    self.fs = None
+    self.model = None
+    self.mount = None
+    self.serial = None
+    self.volume = None
 
 
-class SantaParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses a Santa log file."""
+class SantaTextPlugin(interface.TextPlugin):
+  """Text file parser plugin for Santa log files."""
 
   NAME = 'santa'
   DATA_FORMAT = 'Santa log (santa.log) file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
-  MAX_LINE_LENGTH = 16384
+  _MAXIMUM_LINE_LENGTH = 3000
 
   _SEP_TOKEN = pyparsing.Suppress('|')
   _SKIP_SEP = pyparsing.SkipTo('|')
@@ -255,9 +256,6 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=3) + pyparsing.Literal('Z') +
       pyparsing.Suppress(']'))
-
-  _VERIFICATION_REGEX = re.compile(
-      r'^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] [EACWNID] santad:')
 
   _QUOTA_EXCEEDED_LINE = (
       _PYPARSING_COMPONENTS['date'] +
@@ -343,7 +341,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       _PYPARSING_COMPONENTS['volume'] +
       _PYPARSING_COMPONENTS['bsd_name'])
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
       ('process_exit_line', _PROCESS_EXIT_LINE),
       ('file_system_event_line', _FILE_OPERATION_LINE),
@@ -351,16 +349,22 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       ('umount_line', _DISK_UMOUNT_LINE),
       ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a matching entry.
+  _VERIFICATION_REGEX = re.compile(
+      r'^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] [EACWNID] santad:')
+
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): elements parsed from the file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -487,19 +491,23 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies that this is a santa log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from the text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    return re.match(self._VERIFICATION_REGEX, line) is not None
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    return bool(self._VERIFICATION_REGEX.match(line))
 
 
-manager.ParsersManager.RegisterParser(SantaParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SantaTextPlugin)

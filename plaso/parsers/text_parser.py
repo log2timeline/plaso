@@ -500,12 +500,34 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+    if self.NAME == 'text':
+      for plugin in self._plugins:
+        if parser_mediator.abort:
+          break
+
+        text_file_object = text_file.TextFile(
+            file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
+
+        if plugin.CheckRequiredFormat(parser_mediator, text_file_object):
+          try:
+            plugin.UpdateChainAndProcess(
+                parser_mediator, file_object=file_object)
+
+          except Exception as exception:  # pylint: disable=broad-except
+            parser_mediator.ProduceExtractionWarning((
+                'plugin: {0:s} unable to parse text file with error: '
+                '{1!s}').format(plugin.NAME, exception))
+
+      return
+
+    # TODO: remove after migrating text parsers to TextPlugin.
     encoding = self._ENCODING or parser_mediator.codepage
 
     # Use strict encoding error handling in the verification step so that
     # a text parser does not generate extraction warning for encoding errors
     # of unsupported files.
-    text_file_object = text_file.TextFile(file_object, encoding=encoding)
+    text_file_object = text_file.TextFile(
+        file_object, encoding=self._ENCODING or parser_mediator.codepage)
 
     try:
       line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
@@ -527,27 +549,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if not self._IsText(line):
       raise errors.WrongParser('Not a text file, unable to proceed.')
 
-    if self.NAME == 'text':
-      # TODO: have plugins indicate how many lines they need for format check.
-      lines = [line]
-
-      for plugin in self._plugins:
-        if parser_mediator.abort:
-          break
-
-        if plugin.CheckRequiredFormat(lines):
-          try:
-            plugin.UpdateChainAndProcess(
-                parser_mediator, file_object=file_object)
-
-          except Exception as exception:  # pylint: disable=broad-except
-            parser_mediator.ProduceExtractionWarning((
-                'plugin: {0:s} unable to parse text file with error: '
-                '{1!s}').format(plugin.NAME, exception))
-
-      return
-
-    # TODO: remove after migrating text parsers to TextPlugin.
     if not self._line_structures:
       raise errors.WrongParser(
           'Line structure undeclared, unable to proceed.')

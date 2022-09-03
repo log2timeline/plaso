@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for AWS ELB access logs.
+"""Text parser plugin for AWS ELB access logs.
 
 This parser is based on the log format documented at
 https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
@@ -20,8 +20,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class AWSELBEventData(events.EventData):
@@ -107,35 +107,36 @@ class AWSELBEventData(events.EventData):
     self.user_agent = None
 
 
-class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses an AWS ELB access log file."""
+class AWSELBTextPlugin(interface.TextPlugin):
+  """Text parser plugin for AWS ELB access log files."""
 
   NAME = 'aws_elb_access'
   DATA_FORMAT = 'AWS ELB Access log file'
-  MAX_LINE_LENGTH = 3000
-  _ENCODING = 'utf-8'
 
-  BLANK = pyparsing.Literal('"-"')
+  ENCODING = 'utf-8'
 
-  _WORD = pyparsing.Word(pyparsing.printables) | BLANK
+  _BLANK = pyparsing.Literal('"-"')
+
+  _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
   _QUOTE_INTEGER = (
-      pyparsing.OneOrMore('"') + text_parser.PyparsingConstants.INTEGER | BLANK)
+      pyparsing.OneOrMore('"') + text_parser.PyparsingConstants.INTEGER |
+      _BLANK)
 
-  _INTEGER = text_parser.PyparsingConstants.INTEGER | BLANK
+  _INTEGER = text_parser.PyparsingConstants.INTEGER | _BLANK
 
   _FLOAT = pyparsing.Word(pyparsing.nums + '.')
 
   _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
-      text_parser.ConvertTokenToInteger) | BLANK
+      text_parser.ConvertTokenToInteger) | _BLANK
 
   _CLIENT_IP_ADDRESS_PORT = pyparsing.Group(
       text_parser.PyparsingConstants.IP_ADDRESS('source_ip_address') +
-          pyparsing.Suppress(':') + _PORT('source_port') | BLANK)
+          pyparsing.Suppress(':') + _PORT('source_port') | _BLANK)
 
   _DESTINATION_IP_ADDRESS_PORT = pyparsing.Group(
       text_parser.PyparsingConstants.IP_ADDRESS('destination_ip_address') +
-          pyparsing.Suppress(':') + _PORT('destination_port') | BLANK)
+          pyparsing.Suppress(':') + _PORT('destination_port') | _BLANK)
 
   _DATE_TIME_ISOFORMAT_STRING = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
@@ -146,7 +147,7 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.Literal('Z'))
 
-  # A log line is defined as in the AWS ELB documentation
+  # A log line as defined by the AWS ELB documentation.
   _LOG_LINE = (
       _WORD.setResultsName('request_type') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
@@ -188,10 +189,11 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.quotedString.setResultsName(
           'classification').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'classification_reason').setParseAction(pyparsing.removeQuotes)
-  )
+          'classification_reason').setParseAction(pyparsing.removeQuotes))
 
-  LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
+  _LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
+
+  _MAXIMUM_LINE_LENGTH = 3000
 
   def _GetValueFromGroup(self, structure, name, key_name):
     """Retrieves a value from a Pyparsing.Group structure.
@@ -229,17 +231,20 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
 
     return date_time
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unsupported.
+      ParseError: when the structure type is unknown.
     """
     if key != 'elb_accesslog':
       raise errors.ParseError(
@@ -331,23 +336,28 @@ class AWSELBParser(text_parser.PyparsingSingleLineTextParser):
     parser_mediator.ProduceEventWithEventData(
         elb_request_received_event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a valid AWS ELB access log.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line was successfully parsed.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._LOG_LINE.parseString(line)
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    try:
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
-      structure = None
+      parsed_structure = None
 
-    return bool(structure)
+    return bool(parsed_structure)
 
 
-manager.ParsersManager.RegisterParser(AWSELBParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(AWSELBTextPlugin)

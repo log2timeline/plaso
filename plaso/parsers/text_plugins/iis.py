@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Parser for Windows IIS Log file."""
+"""Text parser plugin for Microsoft IIS log files."""
 
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
-from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class IISEventData(events.EventData):
@@ -71,13 +69,17 @@ class IISEventData(events.EventData):
     self.user_agent = None
 
 
-class WinIISParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses a Microsoft IIS log file."""
+class WinIISTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Microsoft IIS log files."""
 
   NAME = 'winiis'
   DATA_FORMAT = 'Microsoft IIS log file'
 
-  MAX_LINE_LENGTH = 800
+  # Log file are all extended ASCII encoded unless UTF-8 is explicitly enabled.
+  # TODO: fix
+  ENCODING = 'utf-8'
+
+  _MAXIMUM_LINE_LENGTH = 800
 
   BLANK = pyparsing.Literal('-')
   WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
@@ -181,78 +183,15 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('comment', COMMENT),
       ('logline', LOG_LINE_6_0)]
 
-  # Define a signature value for the log file.
-  _SIGNATURE = '#Software: Microsoft Internet Information Services'
-
-  # Log file are all extended ASCII encoded unless UTF-8 is explicitly enabled.
-  _ENCODING = 'utf-8'
-
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a text file-like object using a pyparsing definition.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    if not self._line_structures:
-      raise errors.WrongParser(
-          'Line structure undeclared, unable to proceed.')
-
-    encoding = self._ENCODING or parser_mediator.codepage
-
-    # Use strict encoding error handling in the verification step so that
-    # a text parser does not generate extraction warning for encoding errors
-    # of unsupported files.
-    text_file_object = text_file.TextFile(file_object, encoding=encoding)
-
-    try:
-      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-    except UnicodeDecodeError:
-      raise errors.WrongParser(
-          'Not a text file or encoding not supported.')
-
-    if not line:
-      raise errors.WrongParser('Not a text file.')
-
-    if len(line) == self.MAX_LINE_LENGTH or len(
-        line) == self.MAX_LINE_LENGTH - 1:
-      logger.debug((
-          'Trying to read a line and reached the maximum allowed length of '
-          '{0:d}. The last few bytes of the line are: {1:s} [parser '
-          '{2:s}]').format(
-              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
-
-    if not self._IsText(line):
-      raise errors.WrongParser('Not a text file, unable to proceed.')
-
-    # IIS log headers can appear in any order,
-    # so read them all in to verify the structure
-    headers = [line]
-    while line != '':
-      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-      if line.startswith("#"):
-        headers.extend([line])
-      else:
-        break
-
-    if not self.VerifyStructure(parser_mediator, ''.join(headers)):
-      raise errors.WrongParser('Wrong file structure.')
-
-    self._parser_mediator = parser_mediator
-
-    self.ParseLines(parser_mediator, file_object, encoding)
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def __init__(self):
     """Initializes a parser."""
-    super(WinIISParser, self).__init__()
+    super(WinIISTextPlugin, self).__init__()
     self._day_of_month = None
     self._month = None
     self._year = None
@@ -379,19 +318,22 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in ('comment', 'logline'):
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -400,30 +342,40 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'comment':
       self._ParseComment(parser_mediator, structure)
 
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is an IIS log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      line (str): line from a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line was successfully parsed.
+      bool: True if this is the correct parser, False otherwise.
     """
-    self._SetLineStructures(self.LINE_STRUCTURES)
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    found_signature = False
+    while line and line[0] == '#':
+      if line.startswith('#Software: Microsoft Internet Information Services'):
+        found_signature = True
+        break
+
+      try:
+        line = self._ReadLineOfText(text_file_object)
+      except UnicodeDecodeError:
+        break
 
     self._day_of_month = None
     self._month = None
     self._year = None
 
-    # TODO: Examine other versions of the file format and if this parser should
-    # support them. For now just checking if it contains the IIS header.
-    if self._SIGNATURE in line:
-      return True
+    self._SetLineStructures(self._LINE_STRUCTURES)
 
-    return False
+    return found_signature
 
 
-manager.ParsersManager.RegisterParser(WinIISParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(WinIISTextPlugin)

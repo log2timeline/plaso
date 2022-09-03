@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sophos Anti-Virus log (SAV.txt) parser.
+"""Text parser plugin for Sophos anti-virus logs (SAV.txt) files.
 
 References
   https://support.sophos.com/support/s/article/KB-000033745?language=en_US
@@ -13,16 +13,15 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class SophosAVLogEventData(events.EventData):
-  """Sophos Anti-Virus log event data.
+  """Sophos anti-virus log event data.
 
   Attributes:
-    text (str): Sophos Anti-Virus log message.
+    text (str): Sophos anti-virus log message.
   """
 
   DATA_TYPE = 'sophos:av:log'
@@ -33,15 +32,15 @@ class SophosAVLogEventData(events.EventData):
     self.text = None
 
 
-class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses Anti-Virus logs (SAV.txt) files."""
+class SophosAVLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Sophos anti-virus logs (SAV.txt) files."""
 
   NAME = 'sophos_av'
-  DATA_FORMAT = 'Sophos Anti-Virus log file (SAV.txt) file'
+  DATA_FORMAT = 'Sophos anti-virus log file (SAV.txt) file'
 
-  _ENCODING = 'utf-16-le'
+  ENCODING = 'utf-16-le'
 
-  MAX_LINE_LENGTH = 4096
+  _MAXIMUM_LINE_LENGTH = 4096
 
   _DATE_ELEMENTS = (
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
@@ -59,16 +58,14 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
-  LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-  ]
+  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
@@ -101,15 +98,17 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -120,39 +119,41 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
 
     self._ParseLogLine(parser_mediator, structure)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Sophos Anti-Virus log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      line (str): line from a text file.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logger.debug('Not a Sophos Anti-Virus log file')
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    # Expect spaces at position 9 and 16.
-    if ' ' not in (line[8], line[15]):
-      logger.debug('Not a Sophos Anti-Virus log file')
+    # There should be spaces at position 9 and 16.
+    if len(line) < 16 or ' ' not in (line[8], line[15]):
       return False
 
-    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     try:
-      dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+      parsed_structure = self._LOG_LINE.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    if not parsed_structure:
+      return False
+
+    date_time_value = self._GetValueFromStructure(parsed_structure, 'date_time')
+    try:
+      dfdatetime_time_elements.TimeElements(time_elements_tuple=date_time_value)
     except ValueError:
-      logger.debug((
-          'Not a Sophos Anti-Virus log file, invalid date and time: '
-          '{0!s}').format(time_elements_tuple))
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(SophosAVLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SophosAVLogTextPlugin)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Windows Setupapi log files.
+"""Text parser plugin for Windows SetupAPI log files.
 
 The format is documented at:
 https://docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi-text-logs
@@ -13,13 +13,12 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
-class SetupapiLogEventData(events.EventData):
-  """Setupapi log event data.
+class SetupAPILogEventData(events.EventData):
+  """SetupAPI log event data.
 
   Attributes:
     entry_type (str): log entry type, for examaple "Device Install -
@@ -32,18 +31,16 @@ class SetupapiLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SetupapiLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(SetupAPILogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
     self.exit_status = None
 
 
-class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses events from Windows Setupapi log files."""
+class SetupAPILogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Windows SetupAPI log files."""
 
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
-
-  _ENCODING = 'utf-8'
 
   _SLASH = pyparsing.Literal('/').suppress()
 
@@ -59,8 +56,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS +
       pyparsing.Word('.,', exact=1).suppress() +
-      _THREE_DIGITS
-  )
+      _THREE_DIGITS)
 
   # Disable pylint due to long URLs for documenting structures.
   # pylint: disable=line-too-long
@@ -128,7 +124,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   # pylint: enable=line-too-long
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('ignorable_line', _BOOT_SESSION_LINE),
       ('ignorable_line', _LOG_HEADER_END),
       ('ignorable_line', _LOG_HEADER_START),
@@ -140,17 +136,17 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       ('section_start', _SECTION_HEADER_START)]
 
   def __init__(self):
-    """Initializes a setupapi parser."""
-    super(SetupapiLogParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(SetupAPILogTextPlugin, self).__init__()
     self._last_end_time = None
     self._last_entry_type = None
 
   def _GetTimeElements(self, time_structure):
-    """Builds time elements from a setupapi time_stamp field.
+    """Builds time elements from a SetupAPI time_stamp field.
 
     Args:
       time_structure (pyparsing.ParseResults): structure of tokens derived from
-          a setupapi time_stamp field.
+          a SetupAPI time_stamp field.
 
     Returns:
       dfdatetime.TimeElements: date and time extracted from the value or None
@@ -159,22 +155,24 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_structure)
-      # Setupapi logs store date and time values in local time.
+      # SetupAPI logs store date and time values in local time.
       date_time.is_local_time = True
       return date_time
 
     except ValueError:
       return None
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a log entry.
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -195,14 +193,14 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
             'invalid date time value: {0!s}'.format(time_structure))
         return
 
-      event_data = SetupapiLogEventData()
+      event_data = SetupAPILogEventData()
       event_data.entry_type = self._last_entry_type
 
       event = time_events.DateTimeValuesEvent(
           start_time, definitions.TIME_DESCRIPTION_START,
           time_zone=parser_mediator.timezone)
 
-      # Create event for the start of the setupapi section
+      # Create event for the start of the SetupAPI section
       parser_mediator.ProduceEventWithEventData(event, event_data)
       return
 
@@ -221,7 +219,7 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
       exit_status = self._GetValueFromStructure(
           structure, 'exit_status')
       if self._last_end_time:
-        event_data = SetupapiLogEventData()
+        event_data = SetupAPILogEventData()
         event_data.entry_type = self._last_entry_type
         event_data.exit_status = exit_status
         event = time_events.DateTimeValuesEvent(
@@ -236,27 +234,32 @@ class SetupapiLogParser(text_parser.PyparsingSingleLineTextParser):
     raise errors.ParseError(
         'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Windows Setupapi log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      self._LOG_HEADER_START.parseString(line)
-      # Reset stored values for parsing a new file.
-      self._last_end_time = None
-      self._last_entry_type = None
-    except pyparsing.ParseException as exception:
-      logger.debug('Not a Windows Setupapi log file: {0!s}'.format(exception))
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    return True
+    # Reset stored values for parsing a new file.
+    self._last_end_time = None
+    self._last_entry_type = None
+
+    try:
+      parsed_structure = self._LOG_HEADER_START.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    return bool(parsed_structure)
 
 
-manager.ParsersManager.RegisterParser(SetupapiLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SetupAPILogTextPlugin)

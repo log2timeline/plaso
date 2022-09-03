@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for Santa log parser."""
+"""Tests for Santa log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import santa
+from plaso.parsers.text_plugins import santa
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class SantaUnitTest(test_lib.ParserTestCase):
-  """Tests for Santa log parser."""
+class SantaTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for Santa log text parser plugin."""
 
-  def testParseLegacyFormat(self):
-    """Tests the Parse function on the legacy Santa log format."""
-    parser = santa.SantaParser()
-    storage_writer = self._ParseFile(['santa.log'], parser)
+  def testProcessWithLegacyFormat(self):
+    """Tests the Process function with the legacy Santa log format."""
+    plugin = santa.SantaTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['santa.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 208)
@@ -28,8 +28,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which parser generates events is nondeterministic hence
-    # we sort the events.
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Execution event with quarantine URL.
@@ -89,10 +89,10 @@ class SantaUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[35], expected_event_values)
 
-  def testParseCurrentFormat(self):
-    """Tests Parse function on the current Santa log format."""
-    parser = santa.SantaParser()
-    storage_writer = self._ParseFile(['santa2.log'], parser)
+  def testProcessWithCurrentFormat(self):
+    """Tests the Process function with the current Santa log format."""
+    plugin = santa.SantaTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['santa2.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)
@@ -105,8 +105,8 @@ class SantaUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which parser generates events is nondeterministic hence
-    # we sort the events.
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # File rename operation event log

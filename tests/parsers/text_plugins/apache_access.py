@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for Apache access log parser."""
+"""Tests for Apache access log text parser plugin."""
 
 import unittest
 
@@ -10,8 +10,8 @@ from plaso.parsers.text_plugins import apache_access
 from tests.parsers.text_plugins import test_lib
 
 
-class ApacheAccessUnitTest(test_lib.TextPluginTestCase):
-  """Tests for Apache access log parser."""
+class ApacheAccessTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for Apache access log text parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
@@ -29,8 +29,8 @@ class ApacheAccessUnitTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which parser generates events is nondeterministic hence
-    # we sort the events.
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.

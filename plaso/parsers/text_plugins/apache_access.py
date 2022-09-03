@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text file parser plugin for Apache access log (access.log) files.
+"""Text parser plugin for Apache access log (access.log) files.
 
 Parser based on the two default apache formats, common and combined log format
 defined in https://httpd.apache.org/docs/2.4/logs.html
@@ -51,10 +51,12 @@ class ApacheAccessEventData(events.EventData):
 
 
 class ApacheAccessTextPlugin(interface.TextPlugin):
-  """Text file parser plugin for Apache access log (access.log) files."""
+  """Text parser plugin for Apache access log (access.log) files."""
 
   NAME = 'apache_access'
   DATA_FORMAT = 'Apache access log (access.log) file'
+
+  _MAXIMUM_LINE_LENGTH = 2048
 
   _MONTH_DICT = {
       'jan': 1,
@@ -166,15 +168,12 @@ class ApacheAccessTextPlugin(interface.TextPlugin):
       _RESPONSE_BYTES +
       _REFERER +
       _USER_AGENT +
-      pyparsing.lineEnd()
-  )
+      pyparsing.lineEnd())
 
   _LINE_STRUCTURES = [
       ('combined_log_format', _COMBINED_LOG_FORMAT_LINE),
       ('common_log_format', _COMMON_LOG_FORMAT_LINE),
       ('vhost_combined_log_format', _VHOST_COMBINED_LOG_FORMAT)]
-
-  _MAXIMUM_LINE_LENGTH = 2048
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -227,13 +226,16 @@ class ApacheAccessTextPlugin(interface.TextPlugin):
         time_zone_offset=time_zone_offset)
 
   def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a matching entry.
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfVFS.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): elements parsed from the file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -281,35 +283,34 @@ class ApacheAccessTextPlugin(interface.TextPlugin):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def CheckRequiredFormat(self, lines):
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      lines (list[str]): lines from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    for line_structure in self._line_structures:
-      try:
-        parsed_structure = line_structure.ParseString(lines[0])
-      except pyparsing.ParseException:
-        parsed_structure = None
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
 
-      if not parsed_structure:
-        continue
+    _, _, parsed_structure = self._GetMatchingLineStructure(line)
+    if not parsed_structure:
+      return False
 
-      date_time_string = self._GetValueFromStructure(
-          parsed_structure, 'date_time')
-      try:
-        date_time = self._GetDateTime(date_time_string)
-      except ValueError:
-        date_time = None
+    date_time_string = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+    try:
+      self._GetDateTime(date_time_string)
+    except ValueError:
+      return False
 
-      if date_time:
-        return True
-
-    return False
+    return True
 
 
 text_parser.PyparsingSingleLineTextParser.RegisterPlugin(ApacheAccessTextPlugin)

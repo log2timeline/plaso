@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Advanced Packaging Tool (APT) History log parser."""
+"""Tests for the Advanced Packaging Tool (APT) History log text plugin."""
 
 import unittest
 
-from plaso.lib import errors
-from plaso.parsers import apt_history
+from plaso.parsers.text_plugins import apt_history
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class APTHistoryLogUnitTest(test_lib.ParserTestCase):
-  """Tests for the APT History log parser.
+class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the APT History log text parser plugin."""
 
-  Since APT History logs record in local time, these tests assume that the local
-  timezone is set to UTC.
-  """
-
-  def testParseLog(self):
-    """Tests the Parse function on apt_history.log."""
-    parser = apt_history.APTHistoryLogParser()
-    storage_writer = self._ParseFile(['apt_history.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = apt_history.APTHistoryLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['apt_history.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
@@ -32,6 +27,9 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -216,11 +214,11 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
-  def testParseLogWithTimeZone(self):
-    """Tests the Parse function on apt_history.log with a time zone."""
-    parser = apt_history.APTHistoryLogParser()
-    storage_writer = self._ParseFile(
-        ['apt_history.log'], parser, timezone='CET')
+  def testProcessWithTimeZone(self):
+    """Tests the Process function with a time zone."""
+    plugin = apt_history.APTHistoryLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['apt_history.log'], plugin, timezone='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
@@ -233,6 +231,9 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
+
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
@@ -241,12 +242,6 @@ class APTHistoryLogUnitTest(test_lib.ParserTestCase):
         'timestamp': '2019-07-10 14:38:08.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-  def testParseInvalidLog(self):
-    """Tests the Parse function on a non APT History log."""
-    parser = apt_history.APTHistoryLogParser()
-    with self.assertRaises(errors.WrongParser):
-      self._ParseFile(['setupapi.dev.log'], parser)
 
 
 if __name__ == '__main__':

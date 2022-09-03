@@ -27,7 +27,6 @@ name: ios
 description: Preset for iOS.
 parsers:
 - ios_lockdownd
-- ios_logd
 - ios_sysdiag_log
 - jsonl/ios_application_privacy
 - sqlite/imessage
@@ -36,32 +35,33 @@ parsers:
 - sqlite/ios_screentime
 - sqlite/kik_ios
 - sqlite/twitter_ios
+- text/ios_logd
 ---
 name: linux
 description: Preset for Linux.
 operating_systems:
 - {family: Linux}
 parsers:
-- apt_history
 - bash_history
 - bencode
 - czip/oxml
 - jsonl/docker_container_config
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
-- dpkg
 - filestat
 - gdrive_synclog
 - googlelog
 - olecf
 - pls_recall
-- popularity_contest
-- selinux
 - sqlite/google_drive
 - sqlite/skype
 - sqlite/zeitgeist
 - syslog
 - systemd_journal
+- text/apt_history
+- text/dpkg
+- text/popularity_contest
+- text/selinux
 - utmp
 - vsftpd
 - webhist
@@ -85,7 +85,6 @@ parsers:
 - gdrive_synclog
 - mac_appfirewall_log
 - mac_keychain
-- mac_securityd
 - macwifi
 - olecf
 - plist
@@ -99,6 +98,7 @@ parsers:
 - sqlite/mackeeper_cache
 - sqlite/mac_knowledgec
 - sqlite/skype
+- text/mac_securityd
 - syslog
 - utmpx
 - webhist
@@ -145,13 +145,13 @@ parsers:
 - olecf
 - pe
 - prefetch
-- setupapi
 - sccm
 - skydrive_log
 - skydrive_log_old
 - sqlite/google_drive
 - sqlite/skype
 - symantec_scanlog
+- text/setupapi
 - usnjrnl
 - webhist
 - winfirewall

@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Setupapi log parser."""
+"""Tests for the Windows SetupAPI log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import setupapi
+from plaso.parsers.text_plugins import setupapi
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class SetupapiLogUnitTest(test_lib.ParserTestCase):
-  """Tests for the Windows Setupapi log parser.
+class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Windows SetupAPI log text parser plugin."""
 
-  Since Setupapi logs record in local time, these tests assume that the local
-  timezone is set to UTC.
-  """
-
-  def testParseDevLog(self):
-    """Tests the Parse function on setupapi.dev.log."""
-    parser = setupapi.SetupapiLogParser()
-    storage_writer = self._ParseFile(['setupapi.dev.log'], parser)
+  def testProcessWithDevLog(self):
+    """Tests the Process function with setupapi.dev.log."""
+    plugin = setupapi.SetupAPILogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['setupapi.dev.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 388)
@@ -32,7 +28,9 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
+    events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'date_time': '2015-11-22 17:59:28.110',
@@ -44,7 +42,7 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
         'date_time': '2016-10-05 11:16:03.747',
         'data_type': 'setupapi:log:line'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
         'date_time': '2016-10-05 11:16:16.471',
@@ -53,7 +51,7 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
             'Device Install (Hardware initiated) - SWD\\IP_TUNNEL_VBUS'
             '\\Teredo_Tunnel_Device')}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
         'date_time': '2016-10-12 03:36:30.998',
@@ -76,10 +74,11 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[386], expected_event_values)
 
-  def testParseSetupLog(self):
-    """Tests the Parse function on setupapi.setup.log."""
-    parser = setupapi.SetupapiLogParser()
-    storage_writer = self._ParseFile(['setupapi.setup.log'], parser)
+  def testProcessWithSetupLog(self):
+    """Tests the Process function with setupapi.setup.log."""
+    plugin = setupapi.SetupAPILogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['setupapi.setup.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 32)
@@ -92,7 +91,9 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
+    events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'date_time': '2015-11-22 17:53:16.599',
@@ -104,14 +105,14 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
         'date_time': '2015-11-22 17:53:28.973',
         'data_type': 'setupapi:log:line'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'date_time': '2015-11-22 17:53:29.305',
         'data_type': 'setupapi:log:line',
         'entry_type': 'Setup Plug and Play Device Install'}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
         'date_time': '2015-11-22 17:53:43.429',
@@ -121,7 +122,7 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
             '\\{97ebaacc-95bd-11d0-a3ea-00a0c9223196}'
             '\\{53172480-4791-11D0-A5D6-28DB04C10000}')}
 
-    self.CheckEventValues(storage_writer, events[14], expected_event_values)
+    self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
     expected_event_values = {
         'date_time': '2015-11-22 17:57:17.502',
@@ -132,11 +133,11 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[30], expected_event_values)
 
-  def testParseSetupLogWithTimeZone(self):
-    """Tests the Parse function on setupapi.setup.log with a time zone."""
-    parser = setupapi.SetupapiLogParser()
-    storage_writer = self._ParseFile(
-        ['setupapi.setup.log'], parser, timezone='CET')
+  def testProcessWithSetupLogAndTimeZone(self):
+    """Tests the Process function with setupapi.setup.log and a time zone."""
+    plugin = setupapi.SetupAPILogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['setupapi.setup.log'], plugin, timezone='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 32)
@@ -149,7 +150,9 @@ class SetupapiLogUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
+    # The order in which the text parser plugin generates events is
+    # nondeterministic hence we sort the events.
+    events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
         'date_time': '2015-11-22 17:53:16.599',

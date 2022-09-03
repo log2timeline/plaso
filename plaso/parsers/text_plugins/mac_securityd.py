@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parses MacOS security daemon (securityd) log files.
+"""Text parser plugin for MacOS security daemon (securityd) log files.
 
 Also see:
   https://opensource.apple.com/source/Security/Security-55471/sec/securityd
@@ -13,9 +13,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class MacOSSecuritydLogEventData(events.EventData):
@@ -27,8 +26,8 @@ class MacOSSecuritydLogEventData(events.EventData):
     level (str): priority level.
     message (str): message.
     security_api (str): name of securityd function.
-    sender_pid (int): process identifier of the sender.
     sender (str): name of the sender.
+    sender_pid (int): process identifier of the sender.
   """
 
   DATA_TYPE = 'mac:securityd:line'
@@ -45,21 +44,36 @@ class MacOSSecuritydLogEventData(events.EventData):
     self.sender_pid = None
 
 
-class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses MacOS security daemon (securityd) log files."""
+class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for MacOS security daemon (securityd) log files."""
 
   NAME = 'mac_securityd'
   DATA_FORMAT = 'MacOS security daemon (securityd) log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
+
   _DEFAULT_YEAR = 2012
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
-  SECURITYD_LINE = (
+  _SECURITYD_LINE = (
       DATE_TIME.setResultsName('date_time') +
       pyparsing.CharsNotIn('[').setResultsName('sender') +
       pyparsing.Literal('[').suppress() +
@@ -78,19 +92,19 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           'caller')) + pyparsing.Literal(']:').suppress() +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
 
-  REPEATED_LINE = (
+  _REPEATED_LINE = (
       DATE_TIME.setResultsName('date_time') +
       pyparsing.Literal('--- last message repeated').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName('times') +
       pyparsing.Literal('time ---').suppress())
 
-  LINE_STRUCTURES = [
-      ('logline', SECURITYD_LINE),
-      ('repeated', REPEATED_LINE)]
+  _LINE_STRUCTURES = [
+      ('logline', _SECURITYD_LINE),
+      ('repeated', _REPEATED_LINE)]
 
   def __init__(self):
-    """Initializes a parser."""
-    super(MacOSSecuritydLogParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(MacOSSecuritydLogTextPlugin, self).__init__()
     self._last_month = None
     self._previous_structure = None
     self._year_use = 0
@@ -130,7 +144,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
       key (str): name of the parsed structure.
@@ -186,15 +200,17 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -205,35 +221,39 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
     self._ParseLogLine(parser_mediator, structure, key)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a securityd log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    try:
+      parsed_structure = self._SECURITYD_LINE.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    if not parsed_structure:
+      return False
+
     self._last_month = 0
     self._year_use = parser_mediator.GetEstimatedYear()
 
-    try:
-      structure = self.SECURITYD_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logger.debug('Not a MacOS securityd log file')
-      return False
-
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
+    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
 
     try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug(
-          'Not a MacOS securityd log file, invalid date and time: {0!s}'.format(
-              time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]
@@ -241,4 +261,5 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(MacOSSecuritydLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    MacOSSecuritydLogTextPlugin)

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Popularity Contest (popcontest) parser."""
+"""Tests for the Popularity Contest (popcontest) text parser plugin."""
 
 import unittest
 
 from plaso.lib import definitions
-from plaso.parsers import popcontest
+from plaso.parsers.text_plugins import popcontest
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class PopularityContestUnitTest(test_lib.ParserTestCase):
-  """Tests for the popcontest parser."""
+class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Popularity Contest (popcontest) text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = popcontest.PopularityContestParser()
-    storage_writer = self._ParseFile(['popcontest1.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = popcontest.PopularityContestTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['popcontest1.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 22)
@@ -28,6 +28,9 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 

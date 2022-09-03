@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows IIS log parser."""
+"""Tests for the Windows IIS log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import iis
+from plaso.parsers.text_plugins import iis
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class WinIISUnitTest(test_lib.ParserTestCase):
-  """Tests for the Windows IIS parser."""
+class WinIISTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Windows IIS text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function with an IIS 6 log file."""
-    parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis6.log'], parser)
+  def testProcessWithIIS6Log(self):
+    """Tests the Process function with an IIS 6 log file."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['iis6.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 12)
@@ -27,6 +27,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -74,10 +77,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
-  def testParseWithIIS7SQLIFile(self):
-    """Tests the Parse function with an IIS 7 log file with SQLI."""
-    parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis7_sqli.log'], parser)
+  def testProcessWithIIS7LogAndSQLI(self):
+    """Tests the Process function with an IIS 7 log file with SQLI."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['iis7_sqli.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
@@ -89,6 +92,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -107,10 +113,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-  def testParseWithIIS7OWAFile(self):
-    """Tests the Parse function with an IIS 7 OWA log file."""
-    parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis7_owa.log'], parser)
+  def testProcessWithIIS7OWALog(self):
+    """Tests the Process function with an IIS 7 OWA log file."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['iis7_owa.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -122,6 +128,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -140,10 +149,11 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-  def testParseWithoutDate(self):
-    """Tests the Parse function with logs without a date column."""
-    parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis_without_date.log'], parser)
+  def testProcessWithoutDate(self):
+    """Tests the Process function with logs without a date column."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['iis_without_date.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 11)
@@ -156,6 +166,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
+
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
@@ -166,10 +179,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
-  def testParseWithIIS10File(self):
-    """Tests the Parse function with an IIS 10 log file."""
-    parser = iis.WinIISParser()
-    storage_writer = self._ParseFile(['iis10.log'], parser)
+  def testProcessWithIIS10Log(self):
+    """Tests the Process function with an IIS 10 log file."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['iis10.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -181,6 +194,9 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -199,6 +215,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
             '+Chrome/35.0.2309.372+Safari/537.36')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()

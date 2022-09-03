@@ -62,7 +62,7 @@ class TextPlugin(plugins.BasePlugin):
   NAME = 'text_plugin'
   DATA_FORMAT = 'Text file'
 
-  _ENCODING = None
+  ENCODING = None
 
   _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
 
@@ -89,9 +89,7 @@ class TextPlugin(plugins.BasePlugin):
 
     codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
 
-    for key, expression in self._LINE_STRUCTURES:
-      line_structure = PyparsingLineStructure(key, expression)
-      self._line_structures.append(line_structure)
+    self._SetLineStructures(self._LINE_STRUCTURES)
 
   def _EncodingErrorHandler(self, exception):
     """Encoding error handler.
@@ -118,6 +116,24 @@ class TextPlugin(plugins.BasePlugin):
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return (escaped, exception.start + 1)
 
+  def _GetMatchingLineStructure(self, line):
+    """Retrieves the first matching line structure.
+
+    Args:
+      line (str): line.
+
+    Returns:
+      tuple[int, PyparsingLineStructure, pyparsing.ParseResults]: matching line
+          structure, its index in _line_structures, and resulting parsed
+          structure, or None if no matching line structure was found.
+    """
+    for index, line_structure in enumerate(self._line_structures):
+      parsed_structure = line_structure.ParseString(line)
+      if parsed_structure:
+        return index, line_structure, parsed_structure
+
+    return None, None, None
+
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
 
@@ -142,36 +158,6 @@ class TextPlugin(plugins.BasePlugin):
 
     return value
 
-  def _ReadLine(self, text_file_object, max_len=None, depth=0):
-    """Reads a line from a text file.
-
-    Args:
-      text_file_object (dfvfs.TextFile): text file.
-      max_len (Optional[int]): maximum number of bytes a single line can take,
-          where None means all remaining bytes should be read.
-      depth (Optional[int]): number of new lines the parser encountered.
-
-    Returns:
-      str: single line read from the file-like object, or the maximum number of
-          characters, if max_len defined and line longer than the defined size.
-
-    Raises:
-      UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding and encoding errors is set to strict.
-    """
-    line = text_file_object.readline(size=max_len)
-
-    if not line:
-      return ''
-
-    if line in self._EMPTY_LINES:
-      if depth == self._MAXIMUM_NUMBER_OF_EMPTY_LINES:
-        return ''
-
-      return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
-
-    return line
-
   def _ParseLines(self, parser_mediator, text_file_object):
     """Parses lines of text using a pyparsing definition.
 
@@ -179,11 +165,8 @@ class TextPlugin(plugins.BasePlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       text_file_object (dfvfs.TextFile): text file.
-
-    Raises:
-      WrongParser: when the file cannot be parsed.
     """
-    line = self._ReadLine(text_file_object, max_len=self._MAXIMUM_LINE_LENGTH)
+    line = self._ReadLineOfText(text_file_object)
 
     consecutive_line_failures = 0
     # Set the offset to the beginning of the file.
@@ -193,15 +176,9 @@ class TextPlugin(plugins.BasePlugin):
       if parser_mediator.abort:
         break
 
-      index = None
-      line_structure = None
-      parsed_structure = None
-
       # Try to parse the line using all the line structures.
-      for index, line_structure in enumerate(self._line_structures):
-        parsed_structure = line_structure.ParseString(line)
-        if parsed_structure:
-          break
+      index, line_structure, parsed_structure = self._GetMatchingLineStructure(
+          line)
 
       if parsed_structure:
         try:
@@ -225,15 +202,15 @@ class TextPlugin(plugins.BasePlugin):
         consecutive_line_failures += 1
         if (consecutive_line_failures >
             self._MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-          raise errors.WrongParser(
+          parser_mediator.ProduceExtractionWarning(
               'more than {0:d} consecutive failures to parse lines.'.format(
                   self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
+          break
 
       self._current_offset = text_file_object.get_offset()
 
       try:
-        line = self._ReadLine(
-            text_file_object, max_len=self._MAXIMUM_LINE_LENGTH)
+        line = self._ReadLineOfText(text_file_object)
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(
@@ -256,6 +233,7 @@ class TextPlugin(plugins.BasePlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
+    # TODO: use a callback per line structure name.
     self._ParseRecord(parser_mediator, line_structure.name, parsed_structure)
 
     line_structure.weight += 1
@@ -278,14 +256,58 @@ class TextPlugin(plugins.BasePlugin):
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
 
+  def _ReadLineOfText(self, text_file_object, depth=0):
+    """Reads a line of text.
+
+    Args:
+      text_file_object (dfvfs.TextFile): text file.
+      depth (Optional[int]): number of new lines the parser encountered.
+
+    Returns:
+      str: single line read from the file-like object, or the maximum number of
+          characters.
+
+    Raises:
+      UnicodeDecodeError: if the text cannot be decoded using the specified
+          encoding and encoding errors is set to strict.
+    """
+    line = text_file_object.readline(size=self._MAXIMUM_LINE_LENGTH)
+    if not line:
+      return ''
+
+    if line in self._EMPTY_LINES:
+      if depth == self._MAXIMUM_NUMBER_OF_EMPTY_LINES:
+        return ''
+
+      return self._ReadLineOfText(text_file_object, depth=depth + 1)
+
+    return line
+
+  def _SetLineStructures(self, line_structures):
+    """Sets the line structures.
+
+    Args:
+      line_structures ([(str, pyparsing.ParserElement)]): tuples of pyparsing
+          expressions to parse a line and their names.
+    """
+    self._line_structures = []
+    for key, expression in line_structures:
+      line_structure = PyparsingLineStructure(key, expression)
+      self._line_structures.append(line_structure)
+
   @abc.abstractmethod
-  def CheckRequiredFormat(self, lines):
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      lines (list[str]): lines from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
@@ -310,7 +332,7 @@ class TextPlugin(plugins.BasePlugin):
       file_object.seek(0, os.SEEK_SET)
 
       text_file_object = text_file.TextFile(
-          file_object, encoding=self._ENCODING or parser_mediator.codepage,
+          file_object, encoding=self.ENCODING or parser_mediator.codepage,
           encoding_errors='text_parser_handler')
 
       self._current_offset = 0

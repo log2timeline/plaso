@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Debian package manager log (dpkg.log) files.
+"""Text parser plugin for Debian package manager log (dpkg.log) files.
 
 Information updated 02 September 2016.
 
@@ -32,9 +32,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class DpkgEventData(events.EventData):
@@ -52,13 +51,13 @@ class DpkgEventData(events.EventData):
     self.body = None
 
 
-class DpkgParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for Debian package manager log (dpkg.log) files."""
+class DpkgTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Debian package manager log (dpkg.log) files."""
 
   NAME = 'dpkg'
   DATA_FORMAT = 'Debian package manager log (dpkg.log) file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   _DPKG_STARTUP = 'startup'
   _DPKG_STATUS = 'status'
@@ -123,21 +122,26 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
           _DPKG_ACTION_BODY,
           _DPKG_CONFFILE_BODY]).setResultsName('body'))
 
-  LINE_STRUCTURES = [('line', _DPKG_LOG_LINE)]
+  _LINE_STRUCTURES = [('line', _DPKG_LOG_LINE)]
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a structure of tokens derived from a line of a text file.
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'line':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -174,25 +178,28 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies if a line from a text file is in the expected format.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      line (str): line from a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._DPKG_LOG_LINE.parseString(line)
-    except pyparsing.ParseException as exception:
-      logger.debug(
-          'Unable to parse Debian dpkg.log file with error: {0!s}'.format(
-              exception))
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    return 'date_time' in structure and 'body' in structure
+    try:
+      parsed_structure = self._DPKG_LOG_LINE.parseString(line)
+    except pyparsing.ParseException:
+      return False
+
+    return 'date_time' in parsed_structure and 'body' in parsed_structure
 
 
-manager.ParsersManager.RegisterParser(DpkgParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(DpkgTextPlugin)

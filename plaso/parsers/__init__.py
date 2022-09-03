@@ -2,9 +2,7 @@
 """This file imports Python modules that register parsers."""
 
 from plaso.parsers import android_app_usage
-from plaso.parsers import apt_history
 from plaso.parsers import asl
-from plaso.parsers import aws_elb_access
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
 from plaso.parsers import bodyfile
@@ -15,7 +13,6 @@ from plaso.parsers import confluence_access
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
 from plaso.parsers import czip
-from plaso.parsers import dpkg
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
@@ -23,16 +20,13 @@ from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
-from plaso.parsers import iis
 from plaso.parsers import ios_lockdownd
-from plaso.parsers import ios_logd
 from plaso.parsers import ios_sysdiag_log
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
 from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain
-from plaso.parsers import mac_securityd
 from plaso.parsers import mac_wifi
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
@@ -43,15 +37,10 @@ from plaso.parsers import opera
 from plaso.parsers import pe
 from plaso.parsers import plist
 from plaso.parsers import pls_recall
-from plaso.parsers import popcontest
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
-from plaso.parsers import santa
 from plaso.parsers import sccm
-from plaso.parsers import selinux
-from plaso.parsers import setupapi
 from plaso.parsers import skydrivelog
-from plaso.parsers import sophos_av
 from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
 from plaso.parsers import symantec

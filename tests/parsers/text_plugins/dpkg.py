@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
-"""Tests for the dpkg.Log parser."""
+"""Tests for the dpkg.log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import dpkg
+from plaso.parsers.text_plugins import dpkg
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class DpkgParserTest(test_lib.ParserTestCase):
-  """Tests for the Dpkg Log parser."""
+class DpkgTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the dpkg log text parser plugin."""
 
-  def testParse(self):
-    """Tests for the Parse method."""
-    parser = dpkg.DpkgParser()
-    storage_writer = self._ParseFile(['dpkg.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = dpkg.DpkgTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['dpkg.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)
@@ -27,6 +27,9 @@ class DpkgParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -57,19 +60,6 @@ class DpkgParserTest(test_lib.ParserTestCase):
         'date_time': '2016-08-09 04:57:14'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-  def testVerification(self):
-    """Tests for the VerifyStructure method"""
-    mediator = None
-    parser = dpkg.DpkgParser()
-
-    valid_lines = (
-        '2016-08-09 04:57:14 status half-installed base-passwd:amd64 3.5.33')
-    self.assertTrue(parser.VerifyStructure(mediator, valid_lines))
-
-    invalid_lines = (
-        '2016-08-09 04:57:14 X status half-installed base-passwd:amd64 3.5.33')
-    self.assertFalse(parser.VerifyStructure(mediator, invalid_lines))
 
 
 if __name__ == '__main__':
