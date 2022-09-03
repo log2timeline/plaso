@@ -5,18 +5,18 @@
 import unittest
 
 from plaso.containers import warnings
-from plaso.parsers import apache_access
+from plaso.parsers.text_plugins import apache_access
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class ApacheAccessUnitTest(test_lib.ParserTestCase):
+class ApacheAccessUnitTest(test_lib.TextPluginTestCase):
   """Tests for Apache access log parser."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = apache_access.ApacheAccessParser()
-    storage_writer = self._ParseFile(['access.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = apache_access.ApacheAccessTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['access.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)
@@ -78,7 +78,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
         'unable to parse log line: "46.118.127.106 - - [20/May/2015:12:05:17 '
         '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589')
     self.assertEqual(test_warning.message, expected_message)
-    self.assertEqual(test_warning.parser_chain, 'apache_access')
+    self.assertEqual(test_warning.parser_chain, 'text/apache_access')
 
     # Test vhost_combined log format event.
     expected_event_values = {

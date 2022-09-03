@@ -248,7 +248,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
 
     self._parser_mediator = parser_mediator
 
-    self.ParseLine(parser_mediator, file_object, encoding)
+    self.ParseLines(parser_mediator, file_object, encoding)
 
   def __init__(self):
     """Initializes a parser."""

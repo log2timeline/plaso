@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Apache access log (access.log) file parser.
+"""Text file parser plugin for Apache access log (access.log) files.
 
 Parser based on the two default apache formats, common and combined log format
 defined in https://httpd.apache.org/docs/2.4/logs.html
@@ -13,8 +13,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class ApacheAccessEventData(events.EventData):
@@ -50,13 +50,25 @@ class ApacheAccessEventData(events.EventData):
     self.user_name = None
 
 
-class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
-  """Apache access log (access.log) file parser."""
+class ApacheAccessTextPlugin(interface.TextPlugin):
+  """Text file parser plugin for Apache access log (access.log) files."""
 
   NAME = 'apache_access'
   DATA_FORMAT = 'Apache access log (access.log) file'
 
-  MAX_LINE_LENGTH = 2048
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   # Date format [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
@@ -157,12 +169,14 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.lineEnd()
   )
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('combined_log_format', _COMBINED_LOG_FORMAT_LINE),
       ('common_log_format', _COMMON_LOG_FORMAT_LINE),
       ('vhost_combined_log_format', _VHOST_COMBINED_LOG_FORMAT)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _MAXIMUM_LINE_LENGTH = 2048
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _GetDateTime(self, structure):
     """Retrieves the date and time from a date and time values structure.
@@ -212,12 +226,12 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
         time_elements_tuple=time_elements_tuple,
         time_zone_offset=time_zone_offset)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+        and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
@@ -267,19 +281,35 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies that this is an apache access log file.
+  def CheckRequiredFormat(self, lines):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
-      line (str): line from the text file.
+      lines (list[str]): lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    return max([parser.matches(line) for _, parser in self.LINE_STRUCTURES])
+    for line_structure in self._line_structures:
+      try:
+        parsed_structure = line_structure.ParseString(lines[0])
+      except pyparsing.ParseException:
+        parsed_structure = None
+
+      if not parsed_structure:
+        continue
+
+      date_time_string = self._GetValueFromStructure(
+          parsed_structure, 'date_time')
+      try:
+        date_time = self._GetDateTime(date_time_string)
+      except ValueError:
+        date_time = None
+
+      if date_time:
+        return True
+
+    return False
 
 
-manager.ParsersManager.RegisterParser(ApacheAccessParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(ApacheAccessTextPlugin)

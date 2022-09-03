@@ -2,7 +2,6 @@
 """This file imports Python modules that register parsers."""
 
 from plaso.parsers import android_app_usage
-from plaso.parsers import apache_access
 from plaso.parsers import apt_history
 from plaso.parsers import asl
 from plaso.parsers import aws_elb_access
@@ -58,6 +57,7 @@ from plaso.parsers import sqlite
 from plaso.parsers import symantec
 from plaso.parsers import syslog
 from plaso.parsers import systemd_journal
+from plaso.parsers import text_parser
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
@@ -75,7 +75,7 @@ from plaso.parsers import xchatlog
 from plaso.parsers import xchatscrollback
 from plaso.parsers import zsh_extended_history
 
-# Register plugins.
+# Register parser plugins.
 from plaso.parsers import bencode_plugins
 from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
@@ -84,6 +84,7 @@ from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
 from plaso.parsers import sqlite_plugins
 from plaso.parsers import syslog_plugins
+from plaso.parsers import text_plugins
 from plaso.parsers import winreg_plugins
 
 # These modules do not register parsers themselves, but contain super classes
