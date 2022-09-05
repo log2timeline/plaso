@@ -462,7 +462,7 @@ short_message:
 - '{file_md5}'
 ---
 type: 'conditional'
-data_type: 'nids:fast:alert'
+data_type: 'nids:alert:fast'
 message:
 - 'Message: {message}'
 - 'Source IP: {source_ip}'

@@ -43,7 +43,7 @@ class NIDSFastAlertEventData(events.EventData):
       destination_port (int): optional destination port number,
     """
 
-    DATA_TYPE = "nids:fast:alert"
+    DATA_TYPE = "nids:alert:fast"
 
     def __init__(self):
         """Initializes event data."""
@@ -60,9 +60,9 @@ class NIDSFastAlertEventData(events.EventData):
 
 
 class NIDSFastParser(tp.PyparsingSingleLineTextParser):
-    """NIDS fast.log parser."""
+    """NIDS alert data parser for fast format (alert_fast.txt and fast.log)."""
 
-    NAME = "fast_alert_log"
+    NAME = "nids:alert:fast"
     DATA_FORMAT = "NIDS fast alert log"
 
     _FASTLOG_VERIFICATION_PATTERN = (
