@@ -207,7 +207,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
       + pyparsing.Suppress(pyparsing.lineEnd())
   )
 
-  LINE_STRUCTURES = [('nids_fast_alert', _FASTLOG_LINE)]
+  LINE_STRUCTURES = [('nids:alert:fast', _FASTLOG_LINE)]
 
   def __init__(self):
     """Initializes a parser."""
@@ -250,7 +250,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'nids_fast_alert':
+    if key != 'nids:alert:fast':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key)
       )
