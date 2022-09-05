@@ -4,18 +4,19 @@
 
 import unittest
 
-from plaso.parsers import xchatscrollback
+from plaso.parsers.text_plugins import xchatscrollback
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class XChatScrollbackUnitTest(test_lib.ParserTestCase):
+class XChatScrollbackLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the xchatscrollback log parser."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = xchatscrollback.XChatScrollbackParser()
-    storage_writer = self._ParseFile(['xchatscrollback.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = xchatscrollback.XChatScrollbackLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['xchatscrollback.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
@@ -27,6 +28,9 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 

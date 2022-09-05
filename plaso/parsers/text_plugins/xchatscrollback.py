@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains XChat scrollback log file parser in plaso.
+"""Text parser plugin for XChat scrollback log files.
 
 Information updated 06 September 2013.
 
@@ -42,9 +42,10 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class XChatScrollbackEventData(events.EventData):
@@ -64,13 +65,13 @@ class XChatScrollbackEventData(events.EventData):
     self.text = None
 
 
-class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses XChat scrollback log files."""
+class XChatScrollbackLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for XChat scrollback log files."""
 
   NAME = 'xchatscrollback'
   DATA_FORMAT = 'XChat scrollback log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   # Define how a log line should look like.
   LOG_LINE = (
@@ -80,9 +81,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   LOG_LINE.parseWithTabs()
 
   # Define the available log line structures.
-  LINE_STRUCTURES = [
-      ('logline', LOG_LINE),
-  ]
+  _LINE_STRUCTURES = [('logline', LOG_LINE)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   # Define for the stripping phase.
   STRIPPER = (
@@ -125,21 +126,27 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     text = text.replace('\t', ' ')
     return nickname, text
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
-    if key != 'logline':
-      logger.warning(
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
-      return
 
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
+
     try:
       timestamp = int(timestamp, 10)
     except (TypeError, ValueError):
@@ -162,31 +169,36 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a XChat scrollback log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line was successfully parsed.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self.LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
-      logger.debug('Not a XChat scrollback log file')
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+    try:
+      parsed_structure = self.LOG_LINE.parseString(line)
+    except pyparsing.ParseException:
+      return False
+
+    timestamp = self._GetValueFromStructure(parsed_structure, 'timestamp')
+
     try:
       int(timestamp, 10)
     except (TypeError, ValueError):
-      logger.debug('Not a XChat scrollback log file, invalid timestamp.')
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(XChatScrollbackParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    XChatScrollbackLogTextPlugin)

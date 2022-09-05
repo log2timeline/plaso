@@ -55,8 +55,6 @@ from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg_parser
 from plaso.parsers import winrestore
-from plaso.parsers import xchatlog
-from plaso.parsers import xchatscrollback
 from plaso.parsers import zsh_extended_history
 
 # Register parser plugins.

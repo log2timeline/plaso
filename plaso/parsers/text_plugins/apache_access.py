@@ -50,7 +50,7 @@ class ApacheAccessEventData(events.EventData):
     self.user_name = None
 
 
-class ApacheAccessTextPlugin(interface.TextPlugin):
+class ApacheAccessLogTextPlugin(interface.TextPlugin):
   """Text parser plugin for Apache access log (access.log) files."""
 
   NAME = 'apache_access'
@@ -313,4 +313,5 @@ class ApacheAccessTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(ApacheAccessTextPlugin)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    ApacheAccessLogTextPlugin)

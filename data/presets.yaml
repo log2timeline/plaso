@@ -63,10 +63,10 @@ parsers:
 - text/popularity_contest
 - text/selinux
 - text/vsftpd
+- text/xchatlog
+- text/xchatscrollback
 - utmp
 - webhist
-- xchatlog
-- xchatscrollback
 - zsh_extended_history
 ---
 name: macos

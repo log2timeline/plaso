@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-# There's a backslash in the module docstring, so as not to confuse Sphinx.
-# pylint: disable=anomalous-backslash-in-string
-"""This file contains XChat log file parser in plaso.
+"""Text parser plugin for XChat log files.
 
 Information updated 24 July 2013.
 
@@ -30,9 +28,10 @@ the year bug, since the parser will not manage that transition.
 Moreover the strftime is locale-dependent, so month names, footer and
 headers can change, even inside the same log file. Being said that, the
 following will be the main logic used to parse the log files (note that
-the first header *must be* '\*\*\*\* BEGIN ...' otherwise file will be skipped).
+the first header *must be* '\\*\\*\\*\\* BEGIN ...' otherwise file will be
+skipped).
 
-1) Check for '\*\*\*\*'
+1) Check for '\\*\\*\\*\\*'
 1.1) If 'BEGIN LOGGING AT' (English)
 1.1.1) Extract the YEAR
 1.1.2) Generate new event start logging
@@ -44,7 +43,7 @@ the first header *must be* '\*\*\*\* BEGIN ...' otherwise file will be skipped).
 1.3) If not BEGIN|END we are facing a different language
 and we don't now which language!
 If parsing is True, set parsing=False and log debug
-2) Not '\*\*\*\*' so we are parsing a line
+2) Not '\\*\\*\\*\\*' so we are parsing a line
 2.1) If parsing = True, try to parse line and generate event
 2.2) If parsing = False, skip until next good header is found
 
@@ -58,11 +57,11 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class XChatLogEventData(events.EventData):
@@ -82,16 +81,30 @@ class XChatLogEventData(events.EventData):
     self.text = None
 
 
-class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parse XChat log files."""
+class XChatLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for XChat log files."""
 
   NAME = 'xchatlog'
   DATA_FORMAT = 'XChat log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   _WEEKDAY = pyparsing.Group(
       pyparsing.Keyword('Sun') |
@@ -136,14 +149,16 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Optional(_NICKNAME) +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('logline', _LOG_LINE),
       ('header', _HEADER),
       ('header_signature', _HEADER_SIGNATURE)]
 
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
   def __init__(self):
-    """Initializes a parser."""
-    super(XChatLogParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(XChatLogTextPlugin, self).__init__()
     self._last_month = 0
     self._xchat_year = None
 
@@ -264,20 +279,22 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in ('header', 'header_signature', 'logline'):
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -290,36 +307,37 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
-      # is found. Stop parsing is done setting xchat_year to 0.
-      # Note that the code assumes that LINE_STRUCTURES will be used in the
-      # exact order as defined!
+      # is found. Stop parsing is done by setting xchat_year to 0.
       logger.warning('Unknown locale header.')
       self._xchat_year = 0
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a XChat log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._HEADER.parseString(line)
-    except pyparsing.ParseException as exception:
-      logger.debug('Unable to parse XChat log file with error: {0!s}'.format(
-          exception))
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
       return False
 
-    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    try:
+      parsed_structure = self._HEADER.parseString(line)
+    except pyparsing.ParseException:
+      return False
+
+    time_elements_tuple = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
     try:
       _, month, day, hours, minutes, seconds, year = time_elements_tuple
     except TypeError:
-      logger.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
-          time_elements_tuple))
       return False
 
     month = self._MONTH_DICT.get(month.lower(), 0)
@@ -330,11 +348,9 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
-          time_elements_tuple))
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(XChatLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(XChatLogTextPlugin)

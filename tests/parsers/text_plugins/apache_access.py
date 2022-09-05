@@ -10,12 +10,12 @@ from plaso.parsers.text_plugins import apache_access
 from tests.parsers.text_plugins import test_lib
 
 
-class ApacheAccessTextPluginTest(test_lib.TextPluginTestCase):
+class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Apache access log text parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
-    plugin = apache_access.ApacheAccessTextPlugin()
+    plugin = apache_access.ApacheAccessLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
         ['apache_access.log'], plugin)
 

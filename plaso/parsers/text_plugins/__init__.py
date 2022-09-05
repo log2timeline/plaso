@@ -18,3 +18,5 @@ from plaso.parsers.text_plugins import setupapi
 from plaso.parsers.text_plugins import sophos_av
 from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import winfirewall
+from plaso.parsers.text_plugins import xchatlog
+from plaso.parsers.text_plugins import xchatscrollback
