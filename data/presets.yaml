@@ -147,11 +147,11 @@ parsers:
 - prefetch
 - sccm
 - skydrive_log
-- skydrive_log_old
 - sqlite/google_drive
 - sqlite/skype
 - symantec_scanlog
 - text/setupapi
+- text/skydrive_log_old
 - text/winfirewall
 - usnjrnl
 - webhist
