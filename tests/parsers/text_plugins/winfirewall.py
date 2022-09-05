@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows firewall log parser."""
+"""Tests for the Windows firewall log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import winfirewall
+from plaso.parsers.text_plugins import winfirewall
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class WinFirewallParserTest(test_lib.ParserTestCase):
-  """Tests for the Windows firewall log parser."""
+class WinFirewallLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Windows firewall log text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = winfirewall.WinFirewallParser()
-    storage_writer = self._ParseFile(['firewall.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = winfirewall.WinFirewallLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['firewall.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 15)
@@ -27,6 +27,9 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -60,10 +63,11 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
-  def testParseWithTimeZone(self):
-    """Tests the Parse function with a time zone."""
-    parser = winfirewall.WinFirewallParser()
-    storage_writer = self._ParseFile(['firewall.log'], parser, timezone='CET')
+  def testProcessWithTimeZone(self):
+    """Tests the Process function with a time zone."""
+    plugin = winfirewall.WinFirewallLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['firewall.log'], plugin, timezone='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 15)
@@ -75,6 +79,9 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetSortedEvents())
 

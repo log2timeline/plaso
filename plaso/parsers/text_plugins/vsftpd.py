@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for vsftpd Logs."""
+"""Text parser pluginf for vsftpd log files."""
 
 import pyparsing
 
@@ -7,11 +7,10 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
+from plaso.lib import errors
 from plaso.parsers import text_parser
-from plaso.parsers import manager
+from plaso.parsers.text_plugins import interface
 
 
 class VsftpdEventData(events.EventData):
@@ -29,11 +28,25 @@ class VsftpdEventData(events.EventData):
     self.text = None
 
 
-class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses a vsftpd log."""
+class VsftpdLogTextPlugin(interface.TextPlugin):
+  """Text parser pluginf for vsftpd log files."""
 
   NAME = 'vsftpd'
   DATA_FORMAT = 'vsftpd log file'
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   _DATETIME_ELEMENTS = (
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('day') +
@@ -54,7 +67,9 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
-  LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -82,7 +97,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
         parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfvfs.
+            and other components, such as storage and dfVFS.
         structure (pyparsing.ParseResults): structure of tokens derived from
             a line of a text file.
     """
@@ -104,55 +119,60 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
+
     Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfvfs.
-        key (str): identifier of the structure of tokens.
-        structure (pyparsing.ParseResults): structure of tokens derived from
-            a line of a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-        ParseError: when the structure type is unknown.
+      ParseError: when the structure type is unknown.
     """
-    if key != 'logline':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     self._ParseLogLine(parser_mediator, structure)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a vsftpd log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        line (str): line from a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-        bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._LOG_LINE.parseString(line)
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    if line and (' [pid ' not in line or ': Client ' not in line):
+      return False
+
+    try:
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 
-    if (' [pid ' not in line) or (': Client ' not in line):
-      return False
+    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
 
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
     try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug((
-          'Not a vsftpd log file, invalid date and time: '
-          '{0!s}').format(time_elements_tuple))
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(VsftpdLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(VsftpdLogTextPlugin)

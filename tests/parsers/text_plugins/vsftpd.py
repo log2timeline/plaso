@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the vsftpd parser."""
+"""Tests for the vsftpd text parser plugin."""
 
 import unittest
 
-from plaso.parsers import vsftpd
+from plaso.parsers.text_plugins import vsftpd
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class VsftpdLogParserTest(test_lib.ParserTestCase):
-  """Tests for the vsftpd parser."""
+class VsftpdLogTextPluginText(test_lib.TextPluginTestCase):
+  """Tests for the vsftpd text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = vsftpd.VsftpdLogParser()
-    storage_writer = self._ParseFile(['vsftpd.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = vsftpd.VsftpdLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['vsftpd.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 25)
@@ -27,6 +27,9 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -40,10 +43,11 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
-  def testParseWithTimeZone(self):
-    """Tests the Parse function with a time zone."""
-    parser = vsftpd.VsftpdLogParser()
-    storage_writer = self._ParseFile(['vsftpd.log'], parser, timezone='CET')
+  def testProcessWithTimeZone(self):
+    """Tests the Process function with a time zone."""
+    plugin = vsftpd.VsftpdLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['vsftpd.log'], plugin, timezone='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 25)
@@ -55,6 +59,9 @@ class VsftpdLogParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 

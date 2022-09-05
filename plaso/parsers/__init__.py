@@ -47,11 +47,9 @@ from plaso.parsers import text_parser
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
-from plaso.parsers import vsftpd
 from plaso.parsers import windefender_history
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
-from plaso.parsers import winfirewall
 from plaso.parsers import winjob
 from plaso.parsers import winlnk
 from plaso.parsers import winprefetch
@@ -76,4 +74,3 @@ from plaso.parsers import winreg_plugins
 # These modules do not register parsers themselves, but contain super classes
 # used by parsers in other modules.
 # from plaso.parsers import dsv_parser
-# from plaso.parsers import text_parser

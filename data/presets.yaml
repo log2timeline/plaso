@@ -62,8 +62,8 @@ parsers:
 - text/dpkg
 - text/popularity_contest
 - text/selinux
+- text/vsftpd
 - utmp
-- vsftpd
 - webhist
 - xchatlog
 - xchatscrollback
@@ -152,9 +152,9 @@ parsers:
 - sqlite/skype
 - symantec_scanlog
 - text/setupapi
+- text/winfirewall
 - usnjrnl
 - webhist
-- winfirewall
 - winjob
 - winreg
 ---

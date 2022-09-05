@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Windows Firewall Log file."""
+"""Text parser plugin for Windows Firewall Log files."""
 
 import pytz
 
@@ -9,10 +9,10 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
+from plaso.lib import errors
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class WinFirewallEventData(events.EventData):
@@ -58,13 +58,13 @@ class WinFirewallEventData(events.EventData):
     self.tcp_win = None
 
 
-class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the Windows Firewall Log file."""
+class WinFirewallLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Windows Firewall Log files."""
 
   NAME = 'winfirewall'
   DATA_FORMAT = 'Windows Firewall log file'
 
-  _ENCODING = 'ascii'
+  ENCODING = 'ascii'
 
   # TODO: Add support for custom field names. Currently this parser only
   # supports the default fields, which are:
@@ -107,13 +107,15 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       _WORD.setResultsName('info') +
       _WORD.setResultsName('path'))
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
       ('logline', _LOG_LINE)]
 
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
   def __init__(self):
-    """Initializes a Windows Firewall Log file parser."""
-    super(WinFirewallParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(WinFirewallLogTextPlugin, self).__init__()
     self._software = None
     self._use_local_timezone = False
     self._version = None
@@ -190,20 +192,22 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_WRITTEN, time_zone=time_zone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in ('comment', 'logline'):
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -213,22 +217,27 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
 
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a firewall log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
-    # TODO: Examine other versions of the file format and if this parser should
-    # support them.
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    # TODO: Examine other versions of the file format and if this parser
+    # supports them.
     stripped_line = line.rstrip()
     return stripped_line == '#Version: 1.5'
 
 
-manager.ParsersManager.RegisterParser(WinFirewallParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    WinFirewallLogTextPlugin)
