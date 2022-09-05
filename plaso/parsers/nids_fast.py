@@ -43,7 +43,7 @@ class NIDSFastAlertEventData(events.EventData):
     destination_port (int): optional destination port number,
   """
 
-  DATA_TYPE = "nids:alert:fast"
+  DATA_TYPE = 'nids:alert:fast'
 
   def __init__(self):
     """Initializes event data."""
@@ -62,8 +62,8 @@ class NIDSFastAlertEventData(events.EventData):
 class NIDSFastParser(tp.PyparsingSingleLineTextParser):
   """NIDS alert data parser for fast format (alert_fast.txt and fast.log)."""
 
-  NAME = "nids:alert:fast"
-  DATA_FORMAT = "NIDS fast alert log"
+  NAME = 'nids:alert:fast'
+  DATA_FORMAT = 'NIDS fast alert log'
 
   _FASTLOG_VERIFICATION_PATTERN = (
       # Date regex
@@ -120,94 +120,94 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
   _VERIFICATION_REGEX = re.compile(_FASTLOG_VERIFICATION_PATTERN)
 
   _PYPARSING_COMPONENTS = {
-      "year": tp.PyparsingConstants.TWO_DIGITS.setResultsName("year"),
-      "month": tp.PyparsingConstants.TWO_DIGITS.setResultsName("month"),
-      "day": tp.PyparsingConstants.TWO_DIGITS.setResultsName("day"),
-      "hour": tp.PyparsingConstants.TWO_DIGITS.setResultsName("hour"),
-      "minute": tp.PyparsingConstants.TWO_DIGITS.setResultsName("minute"),
-      "second": tp.PyparsingConstants.TWO_DIGITS.setResultsName("second"),
-      "fractional_seconds": pyparsing.Word(pyparsing.nums).setResultsName(
-          "fractional_seconds"
+      'year': tp.PyparsingConstants.TWO_DIGITS.setResultsName('year'),
+      'month': tp.PyparsingConstants.TWO_DIGITS.setResultsName('month'),
+      'day': tp.PyparsingConstants.TWO_DIGITS.setResultsName('day'),
+      'hour': tp.PyparsingConstants.TWO_DIGITS.setResultsName('hour'),
+      'minute': tp.PyparsingConstants.TWO_DIGITS.setResultsName('minute'),
+      'second': tp.PyparsingConstants.TWO_DIGITS.setResultsName('second'),
+      'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
+          'fractional_seconds'
       ),
-      "sid": pyparsing.Combine(
+      'sid': pyparsing.Combine(
           tp.PyparsingConstants.INTEGER
-          + ":"
+          + ':'
           + tp.PyparsingConstants.INTEGER
-          + ":"
+          + ':'
           + tp.PyparsingConstants.INTEGER
-      ).setResultsName("sid"),
-      "message": pyparsing.Combine(
+      ).setResultsName('sid'),
+      'message': pyparsing.Combine(
           pyparsing.OneOrMore(
               pyparsing.Word(pyparsing.printables, exclude_chars='["')
               | pyparsing.White(" ", max=2)
           )
-      ).set_results_name("message"),
-      "cls": pyparsing.Regex("[^]]*").setResultsName("cls"),
-      "pri": tp.PyparsingConstants.INTEGER.setResultsName("pri"),
-      "prot": pyparsing.Word(pyparsing.alphanums).setResultsName("prot"),
-      "src_ip": tp.PyparsingConstants.IP_ADDRESS.setResultsName("src_ip"),
-      "src_port": tp.PyparsingConstants.INTEGER.setResultsName("src_port"),
-      "dst_ip": tp.PyparsingConstants.IP_ADDRESS.setResultsName("dst_ip"),
-      "dst_port": tp.PyparsingConstants.INTEGER.setResultsName("dst_port"),
+      ).set_results_name('message'),
+      'cls': pyparsing.Regex('[^]]*').setResultsName('cls'),
+      'pri': tp.PyparsingConstants.INTEGER.setResultsName('pri'),
+      'prot': pyparsing.Word(pyparsing.alphanums).setResultsName('prot'),
+      'src_ip': tp.PyparsingConstants.IP_ADDRESS.setResultsName('src_ip'),
+      'src_port': tp.PyparsingConstants.INTEGER.setResultsName('src_port'),
+      'dst_ip': tp.PyparsingConstants.IP_ADDRESS.setResultsName('dst_ip'),
+      'dst_port': tp.PyparsingConstants.INTEGER.setResultsName('dst_port'),
   }
-  _PYPARSING_COMPONENTS["md"] = (
-      _PYPARSING_COMPONENTS["month"]
-      + pyparsing.Suppress("/")
-      + _PYPARSING_COMPONENTS["day"]
+  _PYPARSING_COMPONENTS['md'] = (
+      _PYPARSING_COMPONENTS['month']
+      + pyparsing.Suppress('/')
+      + _PYPARSING_COMPONENTS['day']
   )
-  _PYPARSING_COMPONENTS["ymd"] = (
-      _PYPARSING_COMPONENTS["year"]
-      + pyparsing.Suppress("/")
-      + _PYPARSING_COMPONENTS["md"]
+  _PYPARSING_COMPONENTS['ymd'] = (
+      _PYPARSING_COMPONENTS['year']
+      + pyparsing.Suppress('/')
+      + _PYPARSING_COMPONENTS['md']
   )
 
-  _PYPARSING_COMPONENTS["date"] = (
-      (_PYPARSING_COMPONENTS["ymd"] | _PYPARSING_COMPONENTS["md"])
+  _PYPARSING_COMPONENTS['date'] = (
+      (_PYPARSING_COMPONENTS['ymd'] | _PYPARSING_COMPONENTS['md'])
       + pyparsing.Suppress(tp.PyparsingConstants.HYPHEN)
-      + _PYPARSING_COMPONENTS["hour"]
-      + pyparsing.Suppress(":")
-      + _PYPARSING_COMPONENTS["minute"]
-      + pyparsing.Suppress(":")
-      + _PYPARSING_COMPONENTS["second"]
-      + pyparsing.Suppress(".")
-      + _PYPARSING_COMPONENTS["fractional_seconds"]
+      + _PYPARSING_COMPONENTS['hour']
+      + pyparsing.Suppress(':')
+      + _PYPARSING_COMPONENTS['minute']
+      + pyparsing.Suppress(':')
+      + _PYPARSING_COMPONENTS['second']
+      + pyparsing.Suppress('.')
+      + _PYPARSING_COMPONENTS['fractional_seconds']
   )
 
   _FASTLOG_LINE = (
-      _PYPARSING_COMPONENTS["date"]
-      + pyparsing.Suppress("[**] [")
-      + _PYPARSING_COMPONENTS["sid"]
-      + pyparsing.Suppress("] ")
+      _PYPARSING_COMPONENTS['date']
+      + pyparsing.Suppress('[**] [')
+      + _PYPARSING_COMPONENTS['sid']
+      + pyparsing.Suppress('] ')
       + pyparsing.Optional(pyparsing.Suppress('"'))
-      + _PYPARSING_COMPONENTS["message"]
+      + _PYPARSING_COMPONENTS['message']
       + pyparsing.Optional(pyparsing.Suppress('"'))
-      + pyparsing.Suppress("[**]")
+      + pyparsing.Suppress('[**]')
       + pyparsing.Optional(
-          pyparsing.Suppress(pyparsing.Literal("[Classification:"))
-          + _PYPARSING_COMPONENTS["cls"]
-          + pyparsing.Suppress("]")
+          pyparsing.Suppress(pyparsing.Literal('[Classification:'))
+          + _PYPARSING_COMPONENTS['cls']
+          + pyparsing.Suppress(']')
       )
       + pyparsing.Optional(
-          pyparsing.Suppress("[Priority:")
-          + _PYPARSING_COMPONENTS["pri"]
-          + pyparsing.Suppress("]")
+          pyparsing.Suppress('[Priority:')
+          + _PYPARSING_COMPONENTS['pri']
+          + pyparsing.Suppress(']')
       )
-      + pyparsing.Suppress("{")
-      + _PYPARSING_COMPONENTS["prot"]
-      + pyparsing.Suppress("}")
-      + _PYPARSING_COMPONENTS["src_ip"]
+      + pyparsing.Suppress('{')
+      + _PYPARSING_COMPONENTS['prot']
+      + pyparsing.Suppress('}')
+      + _PYPARSING_COMPONENTS['src_ip']
       + pyparsing.Optional(
-          pyparsing.Suppress(":") + _PYPARSING_COMPONENTS["src_port"]
+          pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['src_port']
       )
-      + pyparsing.Suppress("->")
-      + _PYPARSING_COMPONENTS["dst_ip"]
+      + pyparsing.Suppress('->')
+      + _PYPARSING_COMPONENTS['dst_ip']
       + pyparsing.Optional(
-          pyparsing.Suppress(":") + _PYPARSING_COMPONENTS["dst_port"]
+          pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['dst_port']
       )
       + pyparsing.Suppress(pyparsing.lineEnd())
   )
 
-  LINE_STRUCTURES = [("nids_fast_alert", _FASTLOG_LINE)]
+  LINE_STRUCTURES = [('nids_fast_alert', _FASTLOG_LINE)]
 
   def __init__(self):
     """Initializes a parser."""
@@ -250,22 +250,22 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != "nids_fast_alert":
+    if key != 'nids_fast_alert':
       raise errors.ParseError(
-          "Unable to parse record, unknown structure: {0:s}".format(key)
+          'Unable to parse record, unknown structure: {0:s}'.format(key)
       )
 
-    month = self._GetValueFromStructure(structure, "month")
-    year = self._GetValueFromStructure(structure, "year")
+    month = self._GetValueFromStructure(structure, 'month')
+    year = self._GetValueFromStructure(structure, 'year')
 
     if month != 0:
       self._UpdateYear(parser_mediator, month)
 
     year = year + 2000 if year else self._year_use
-    day = self._GetValueFromStructure(structure, "day")
-    hours = self._GetValueFromStructure(structure, "hour")
-    minutes = self._GetValueFromStructure(structure, "minute")
-    seconds = self._GetValueFromStructure(structure, "second")
+    day = self._GetValueFromStructure(structure, 'day')
+    hours = self._GetValueFromStructure(structure, 'hour')
+    minutes = self._GetValueFromStructure(structure, 'minute')
+    seconds = self._GetValueFromStructure(structure, 'second')
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
 
@@ -276,29 +276,29 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          "invalid date time value: {0!s}".format(time_elements_tuple)
+          'invalid date time value: {0!s}'.format(time_elements_tuple)
       )
       return
 
     event_data = NIDSFastAlertEventData()
-    event_data.rule_id = self._GetValueFromStructure(structure, "sid")
+    event_data.rule_id = self._GetValueFromStructure(structure, 'sid')
     event_data.message = str(
-        self._GetValueFromStructure(structure, "message")
+        self._GetValueFromStructure(structure, 'message')
     ).strip()
-    event_data.priority = self._GetValueFromStructure(structure, "pri")
+    event_data.priority = self._GetValueFromStructure(structure, 'pri')
     event_data.classification = self._GetValueFromStructure(
-        structure, "cls"
+        structure, 'cls'
     )
-    event_data.protocol = self._GetValueFromStructure(structure, "prot")
-    event_data.source_ip = self._GetValueFromStructure(structure, "src_ip")
+    event_data.protocol = self._GetValueFromStructure(structure, 'prot')
+    event_data.source_ip = self._GetValueFromStructure(structure, 'src_ip')
     event_data.source_port = self._GetValueFromStructure(
-        structure, "src_port"
+        structure, 'src_port'
     )
     event_data.destination_ip = self._GetValueFromStructure(
-        structure, "dst_ip"
+        structure, 'dst_ip'
     )
     event_data.destination_port = self._GetValueFromStructure(
-        structure, "dst_port"
+        structure, 'dst_port'
     )
 
     event = time_events.DateTimeValuesEvent(
