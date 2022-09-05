@@ -471,7 +471,7 @@ message:
 - 'Destination Port: {destination_port}'
 - 'Protocol: {protocol}'
 - 'Classification: {classifciation}'
-- 'SID: {sid}'
+- 'Rule ID: {rule_id}'
 - 'Priority: {priority}'
 short_message:
 - 'Message: {message}'

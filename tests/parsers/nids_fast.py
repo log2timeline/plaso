@@ -52,7 +52,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '{}-12-28 12:55:38'.format(test_year),
-        'sid': '1:366:11',
+        'rule_id': '1:366:11',
         'message': 'PROTOCOL-ICMP PING Unix',
         'classification': None,
         'priority': 3,
@@ -71,7 +71,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '{}-12-28 12:55:38'.format(test_year),
-        'sid': '1:408:8',
+        'rule_id': '1:408:8',
         'message': 'PROTOCOL-ICMP Echo Reply',
         'classification': 'Misc activity',
         #'priority': None,
@@ -94,7 +94,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '{}-01-02 11:30:23'.format(test_year),
-        'sid': '1:648:18',
+        'rule_id': '1:648:18',
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
         'classification': 'Executable code was detected',
         'priority': 1,
@@ -117,7 +117,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '{}-02-04 23:41:31'.format(test_year),
-        'sid': '1:20035:1000',
+        'rule_id': '1:20035:1000',
         'message': 'MALWARE-CNC outbound connection',
         'classification': 'Attempted Information Leak',
         'priority': 1,
@@ -168,7 +168,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '2010-05-10 10:08:59',
-        'sid': '1:2009187:4',
+        'rule_id': '1:2009187:4',
         'message': ('ET WEB_CLIENT ACTIVEX iDefense ' +
         'COMRaider ActiveX Control Arbitrary File Deletion'),
         'classification': 'Web Application Attack',
@@ -190,7 +190,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '2021-12-28 12:55:38',
-        'sid': '1:366:11',
+        'rule_id': '1:366:11',
         'message': 'PROTOCOL-ICMP PING Unix',
         'classification': None,
         'priority': 3,
@@ -210,7 +210,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '2021-12-28 12:55:38',
-        'sid': '1:408:8',
+        'rule_id': '1:408:8',
         'message': 'PROTOCOL-ICMP Echo Reply',
         'classification': 'Misc activity',
         'priority': None,
@@ -233,7 +233,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '2022-01-02 11:30:23',
-        'sid': '1:648:18',
+        'rule_id': '1:648:18',
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
         'classification': 'Executable code was detected',
         'priority': 1,
@@ -256,7 +256,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'nids:alert:fast',
         'date_time': '2022-02-04 23:41:31',
-        'sid': '1:20035:1000',
+        'rule_id': '1:20035:1000',
         'message': 'MALWARE-CNC outbound connection',
         'classification': 'Attempted Information Leak',
         'priority': 1,

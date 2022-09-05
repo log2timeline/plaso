@@ -48,7 +48,7 @@ class NIDSFastAlertEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super(NIDSFastAlertEventData, self).__init__(data_type=self.DATA_TYPE)
-        self.sid = None
+        self.rule_id = None
         self.message = None
         self.priority = None
         self.classification = None
@@ -258,7 +258,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
             return
 
         event_data = NIDSFastAlertEventData()
-        event_data.sid = self._GetValueFromStructure(structure, "sid")
+        event_data.rule_id = self._GetValueFromStructure(structure, "sid")
         event_data.message = str(
             self._GetValueFromStructure(structure, "message")
         ).strip()
