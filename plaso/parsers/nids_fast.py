@@ -129,13 +129,13 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
       'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
           'fractional_seconds'
       ),
-      'sid': pyparsing.Combine(
+      'rule_id': pyparsing.Combine(
           tp.PyparsingConstants.INTEGER
           + ':'
           + tp.PyparsingConstants.INTEGER
           + ':'
           + tp.PyparsingConstants.INTEGER
-      ).setResultsName('sid'),
+      ).setResultsName('rule_id'),
       'message': pyparsing.Combine(
           pyparsing.OneOrMore(
               pyparsing.Word(pyparsing.printables, exclude_chars='["')
@@ -176,7 +176,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
   _FASTLOG_LINE = (
       _PYPARSING_COMPONENTS['date']
       + pyparsing.Suppress('[**] [')
-      + _PYPARSING_COMPONENTS['sid']
+      + _PYPARSING_COMPONENTS['rule_id']
       + pyparsing.Suppress('] ')
       + pyparsing.Optional(pyparsing.Suppress('"'))
       + _PYPARSING_COMPONENTS['message']
@@ -281,7 +281,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
       return
 
     event_data = NIDSFastAlertEventData()
-    event_data.rule_id = self._GetValueFromStructure(structure, 'sid')
+    event_data.rule_id = self._GetValueFromStructure(structure, 'rule_id')
     event_data.message = str(
         self._GetValueFromStructure(structure, 'message')
     ).strip()
