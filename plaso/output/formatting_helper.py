@@ -138,8 +138,17 @@ class FieldFormattingHelper(object):
       number_of_seconds, fraction_of_second = (
           date_time.CopyToPosixTimestampWithFractionOfSecond())
       fraction_of_second = fraction_of_second or 0
-      while fraction_of_second > 1000000:
-        fraction_of_second, _ = divmod(fraction_of_second, 10)
+
+      if fraction_of_second >= 0:
+        while fraction_of_second > 1000000:
+          fraction_of_second, _ = divmod(fraction_of_second, 10)
+
+      else:
+        while fraction_of_second < -1000000:
+          fraction_of_second, _ = divmod(fraction_of_second, 10)
+
+        number_of_seconds -= 1
+        fraction_of_second += 1000000
 
       try:
         datetime_object = datetime.datetime(1970, 1, 1) + datetime.timedelta(
