@@ -83,9 +83,7 @@ parsers:
 - filestat
 - fseventsd
 - gdrive_synclog
-- mac_appfirewall_log
 - mac_keychain
-- macwifi
 - olecf
 - plist
 - spotlight_storedb
@@ -98,7 +96,9 @@ parsers:
 - sqlite/mackeeper_cache
 - sqlite/mac_knowledgec
 - sqlite/skype
+- text/mac_appfirewall_log
 - text/mac_securityd
+- text/mac_wifi
 - syslog
 - utmpx
 - webhist

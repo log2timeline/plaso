@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for MacOS Application firewall log (appfirewall.log) files."""
+"""Text plugin for MacOS Application firewall log (appfirewall.log) files."""
 
 import pyparsing
 
@@ -9,9 +9,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class MacAppFirewallLogEventData(events.EventData):
@@ -37,26 +36,40 @@ class MacAppFirewallLogEventData(events.EventData):
     self.status = None
 
 
-class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
-  """Parser for MacOS Application firewall log (appfirewall.log) files."""
+class MacAppFirewallTextPlugin(interface.TextPlugin):
+  """Text plugin for MacOS Application firewall log (appfirewall.log) files."""
 
   NAME = 'mac_appfirewall_log'
   DATA_FORMAT = 'MacOS Application firewall log (appfirewall.log) file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   # Define how a log line should look like.
   # Example: 'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] '
   #          '<Info>: Dropbox: Allow (in:0 out:2)'
   # INFO: process_name is going to have a white space at the beginning.
 
-  DATE_TIME = pyparsing.Group(
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
+
+  _DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
-  FIREWALL_LINE = (
-      DATE_TIME.setResultsName('date_time') +
+  _FIREWALL_LINE = (
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
       pyparsing.Word(pyparsing.printables).setResultsName('agent') +
       pyparsing.Literal('<').suppress() +
@@ -69,19 +82,21 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
 
-  REPEATED_LINE = (
-      DATE_TIME.setResultsName('date_time') +
+  _REPEATED_LINE = (
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.Literal('---').suppress() +
       pyparsing.CharsNotIn('---').setResultsName('process_name') +
       pyparsing.Literal('---').suppress())
 
-  LINE_STRUCTURES = [
-      ('logline', FIREWALL_LINE),
-      ('repeated', REPEATED_LINE)]
+  _LINE_STRUCTURES = [
+      ('logline', _FIREWALL_LINE),
+      ('repeated', _REPEATED_LINE)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser."""
-    super(MacAppFirewallParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(MacAppFirewallTextPlugin, self).__init__()
     self._last_month = 0
     self._previous_structure = None
     self._year_use = 0
@@ -121,7 +136,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): identifier of the structure of tokens.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
@@ -162,70 +177,65 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in ('logline', 'repeated'):
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     self._ParseLogLine(parser_mediator, structure, key)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Mac AppFirewall log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    try:
+      parsed_structure = self._FIREWALL_LINE.parseString(line)
+    except pyparsing.ParseException:
+      return False
+
+    action = self._GetValueFromStructure(parsed_structure, 'action')
+    if action != 'creating /var/log/appfirewall.log':
+      return False
+
+    status = self._GetValueFromStructure(parsed_structure, 'status')
+    if status != 'Error':
+      return False
+
     self._last_month = 0
     self._year_use = parser_mediator.GetEstimatedYear()
 
-    try:
-      structure = self.FIREWALL_LINE.parseString(line)
-    except pyparsing.ParseException as exception:
-      logger.debug((
-          'Unable to parse file as a Mac AppFirewall log file with error: '
-          '{0!s}').format(exception))
-      return False
-
-    action = self._GetValueFromStructure(structure, 'action')
-    if action != 'creating /var/log/appfirewall.log':
-      logger.debug(
-          'Not a Mac AppFirewall log file, invalid action: {0!s}'.format(
-              action))
-      return False
-
-    status = self._GetValueFromStructure(structure, 'status')
-    if status != 'Error':
-      logger.debug(
-          'Not a Mac AppFirewall log file, invalid status: {0!s}'.format(
-              status))
-      return False
-
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
+    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
 
     try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug((
-          'Not a Mac AppFirewall log file, invalid date and time: '
-          '{0!s}').format(time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]
@@ -233,4 +243,5 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(MacAppFirewallParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    MacAppFirewallTextPlugin)

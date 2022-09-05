@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for Mac AppFirewall log file parser."""
+"""Tests for the Mac AppFirewall log file text parser plugin."""
 
 import unittest
 
-from plaso.parsers import mac_appfirewall
+from plaso.parsers.text_plugins import mac_appfirewall
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class MacAppFirewallUnitTest(test_lib.ParserTestCase):
-  """Tests for Mac AppFirewall log file parser."""
+class MacAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Mac AppFirewall log file text parser plugin."""
 
-  def testParseFile(self):
-    """Test parsing of a Mac Wifi log file."""
-    parser = mac_appfirewall.MacAppFirewallParser()
-    knowledge_base_values = {'year': 2013}
-    storage_writer = self._ParseFile(
-        ['appfirewall.log'], parser,
-        knowledge_base_values=knowledge_base_values)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = mac_appfirewall.MacAppFirewallTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['appfirewall.log'], plugin, knowledge_base_values={'year': 2013})
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 47)
@@ -30,6 +28,9 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 

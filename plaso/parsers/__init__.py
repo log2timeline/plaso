@@ -9,7 +9,6 @@ from plaso.parsers import bodyfile
 from plaso.parsers import bsm
 from plaso.parsers import chrome_cache
 from plaso.parsers import chrome_preferences
-from plaso.parsers import confluence_access
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
 from plaso.parsers import czip
@@ -25,9 +24,7 @@ from plaso.parsers import ios_sysdiag_log
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
-from plaso.parsers import mac_appfirewall
 from plaso.parsers import mac_keychain
-from plaso.parsers import mac_wifi
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Confluence access log (conf_access_log[DATE].log) file parser.
+"""Text plugin for Confluence access log (conf_access_log[DATE].log) files.
 
 Per the definitions in
 https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
@@ -13,8 +13,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class ConfluenceAccessEventData(events.EventData):
@@ -54,16 +54,30 @@ class ConfluenceAccessEventData(events.EventData):
     self.user_name = None
 
 
-class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
-  """Confluence access log (conf_access_log[DATE].log) file parser."""
+class ConfluenceAccessTextPlugin(interface.TextPlugin):
+  """Text plugin for Confluence access log (conf_access_log[DATE].log) files."""
 
   NAME = 'confluence_access'
   DATA_FORMAT = 'Confluence access log (access.log) file'
 
-  MAX_LINE_LENGTH = 2048
+  _MAXIMUM_LINE_LENGTH = 2048
 
   # Default pattern is %t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{
   # User-Agent}i
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   # Date format [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
@@ -94,8 +108,7 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
           'referer'))
 
   _THREAD_NAME = (
-      pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name')
-  )
+      pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name'))
 
   _USER_AGENT = pyparsing.restOfLine.setResultsName('user_agent')
 
@@ -137,8 +150,7 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER +
-      _USER_AGENT
-  )
+      _USER_AGENT)
 
   # Post 7.11
   # %t %{X-Forwarded-For}i %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{
@@ -160,15 +172,13 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER +
-      _USER_AGENT
-  )
+      _USER_AGENT)
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('pre_711_format', _PRE_711_FORMAT),
-      ('post_711_format', _POST_711_FORMAT)
-  ]
+      ('post_711_format', _POST_711_FORMAT)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _GetDateTime(self, structure):
     """Retrieves the date and time from a date and time values structure.
@@ -218,14 +228,17 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
         time_elements_tuple=time_elements_tuple,
         time_zone_offset=time_zone_offset)
 
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a matching entry.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): elements parsed from the file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -281,19 +294,26 @@ class ConfluenceAccessParser(text_parser.PyparsingSingleLineTextParser):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, line):
-    """Verifies that this is a confluence access log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
-      line (str): line from the text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    return max([parser.matches(line) for _, parser in self.LINE_STRUCTURES])
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    _, _, parsed_structure = self._GetMatchingLineStructure(line)
+
+    return bool(parsed_structure)
 
 
-manager.ParsersManager.RegisterParser(ConfluenceAccessParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
+    ConfluenceAccessTextPlugin)

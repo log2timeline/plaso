@@ -1,79 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Mac wifi.log parser."""
+"""Tests for the Mac wifi.log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import mac_wifi
+from plaso.parsers.text_plugins import mac_wifi
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class MacWifiUnitTest(test_lib.ParserTestCase):
-  """Tests for the Mac wifi.log parser."""
+class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Mac wifi.log text parser plugin."""
 
-  def testParseTurnedOver(self):
-    """Tests the Parse function."""
-    parser = mac_wifi.MacWifiLogParser()
-    knowledge_base_values = {'year': 2017}
-    storage_writer = self._ParseFile(
-        ['wifi_turned_over.log'], parser,
-        knowledge_base_values=knowledge_base_values)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 6)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
-
-    expected_event_values = {
-        'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 00:10:15.000',
-        'text': 'test-macbookpro newsyslog[50498]: logfile turned over'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_text = (
-        '<kernel> wl0: powerChange: *** '
-        'BONJOUR/MDNS OFFLOADS ARE NOT RUNNING.')
-
-    expected_event_values = {
-        'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 00:11:02.378',
-        'text': expected_text}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 07:41:01.371',
-        'text': (
-            '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.')}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 07:41:02.207',
-        'text': (
-            '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
-            'enable_5G:1, profile_5G:0')}
-
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
-
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = mac_wifi.MacWifiLogParser()
-    knowledge_base_values = {'year': 2013}
-    storage_writer = self._ParseFile(
-        ['wifi.log'], parser, knowledge_base_values=knowledge_base_values)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = mac_wifi.MacWifiLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['wifi.log'], plugin, knowledge_base_values={'year': 2013})
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
@@ -85,6 +28,9 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
 
     events = list(storage_writer.GetEvents())
 
@@ -147,6 +93,63 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         'date_time': '2014-01-01 01:12:17.311'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
+
+  def testProcessWithTurnedOverLog(self):
+    """Tests the Process function with a turned over log file."""
+    plugin = mac_wifi.MacWifiLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['wifi_turned_over.log'], plugin, knowledge_base_values={'year': 2017})
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 6)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # TODO: sort events.
+    # events = list(storage_writer.GetSortedEvents())
+
+    events = list(storage_writer.GetEvents())
+
+    expected_event_values = {
+        'data_type': 'mac:wifilog:line',
+        'date_time': '2017-01-02 00:10:15.000',
+        'text': 'test-macbookpro newsyslog[50498]: logfile turned over'}
+
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+
+    expected_text = (
+        '<kernel> wl0: powerChange: *** '
+        'BONJOUR/MDNS OFFLOADS ARE NOT RUNNING.')
+
+    expected_event_values = {
+        'data_type': 'mac:wifilog:line',
+        'date_time': '2017-01-02 00:11:02.378',
+        'text': expected_text}
+
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'mac:wifilog:line',
+        'date_time': '2017-01-02 07:41:01.371',
+        'text': (
+            '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.')}
+
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'mac:wifilog:line',
+        'date_time': '2017-01-02 07:41:02.207',
+        'text': (
+            '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
+            'enable_5G:1, profile_5G:0')}
+
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 
 if __name__ == '__main__':

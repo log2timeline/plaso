@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parses for MacOS Wifi log (wifi.log) files."""
+"""Text parser plugin for MacOS Wifi log (wifi.log) files."""
 
 import re
 
@@ -11,9 +11,8 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class MacWifiLogEventData(events.EventData):
@@ -39,13 +38,13 @@ class MacWifiLogEventData(events.EventData):
     self.text = None
 
 
-class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses MacOS Wifi log (wifi.log) files."""
+class MacWifiLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin MacOS Wifi log (wifi.log) files."""
 
-  NAME = 'macwifi'
+  NAME = 'mac_wifi'
   DATA_FORMAT = 'MacOS Wifi log (wifi.log) file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
   THREE_LETTERS = text_parser.PyparsingConstants.THREE_LETTERS
@@ -66,6 +65,20 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
           pyparsing.Literal('airportd') + pyparsing.CharsNotIn('>'),
           joinString='', adjacent=True).setResultsName('agent') +
       pyparsing.Literal('>'))
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   _DATE_TIME = pyparsing.Group(
       THREE_LETTERS.setResultsName('day_of_week') +
@@ -108,17 +121,17 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
           joinString=' ', adjacent=False).setResultsName('text'))
 
   # Define the available log line structures.
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('header', _MAC_WIFI_HEADER),
       ('turned_over_header', _MAC_WIFI_TURNED_OVER_HEADER),
       ('known_function_logline', _MAC_WIFI_KNOWN_FUNCTION_LINE),
       ('logline', _MAC_WIFI_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser."""
-    super(MacWifiLogParser, self).__init__()
+    """Initializes a text parser plugin."""
+    super(MacWifiLogTextPlugin, self).__init__()
     self._last_month = 0
     self._year_use = 0
 
@@ -135,8 +148,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     # TODO: replace "x in y" checks by startswith if possible.
     if 'airportdProcessDLILEvent' in action:
-      interface = text.split()[0]
-      return 'Interface {0:s} turn up.'.format(interface)
+      network_interface = text.split()[0]
+      return 'Interface {0:s} turn up.'.format(network_interface)
 
     if 'doAutoJoin' in action:
       match = self._CONNECTED_RE.match(text)
@@ -243,15 +256,17 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -262,48 +277,47 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     self._ParseLogLine(parser_mediator, key, structure)
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a Mac Wifi log file.
+  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+    """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): line from a text file.
+          and other components, such as storage and dfVFS.
+      text_file_object (dfvfs.TextFile): text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
+    try:
+      line = self._ReadLineOfText(text_file_object)
+    except UnicodeDecodeError:
+      return False
+
+    try:
+      key = 'header'
+      parsed_structure = self._MAC_WIFI_HEADER.parseString(line)
+    except pyparsing.ParseException:
+      parsed_structure = None
+
+    if not parsed_structure:
+      try:
+        key = 'turned_over_header'
+        parsed_structure = self._MAC_WIFI_TURNED_OVER_HEADER.parseString(line)
+      except pyparsing.ParseException:
+        parsed_structure = None
+
+    if not parsed_structure:
+      return False
+
     self._last_month = 0
     self._year_use = parser_mediator.GetEstimatedYear()
 
-    key = 'header'
-
-    try:
-      structure = self._MAC_WIFI_HEADER.parseString(line)
-    except pyparsing.ParseException:
-      structure = None
-
-    if not structure:
-      key = 'turned_over_header'
-
-      try:
-        structure = self._MAC_WIFI_TURNED_OVER_HEADER.parseString(line)
-      except pyparsing.ParseException:
-        structure = None
-
-    if not structure:
-      logger.debug('Not a Mac Wifi log file')
-      return False
-
-    time_elements_tuple = self._GetTimeElementsTuple(key, structure)
+    time_elements_tuple = self._GetTimeElementsTuple(key, parsed_structure)
 
     try:
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug(
-          'Not a Mac Wifi log file, invalid date and time: {0!s}'.format(
-              time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]
@@ -311,4 +325,4 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(MacWifiLogParser)
+text_parser.PyparsingSingleLineTextParser.RegisterPlugin(MacWifiLogTextPlugin)

@@ -2,6 +2,7 @@
 """Parser for vsftpd Logs."""
 
 import pyparsing
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
@@ -53,9 +54,7 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
-  LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-  ]
+  LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -77,7 +76,6 @@ class VsftpdLogParser(text_parser.PyparsingSingleLineTextParser):
     _, month, day_of_month, hours, minutes, seconds, year = time_elements_tuple
     month = self._MONTH_DICT.get(month.lower(), 0)
     return (year, month, day_of_month, hours, minutes, seconds)
-
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.

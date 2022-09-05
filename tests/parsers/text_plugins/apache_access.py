@@ -16,7 +16,8 @@ class ApacheAccessTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = apache_access.ApacheAccessTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['access.log'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['apache_access.log'], plugin)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)
