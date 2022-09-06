@@ -115,6 +115,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  _MAXIMUM_LINE_LENGTH = 3000
+
   _BLANK = pyparsing.Literal('"-"')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
@@ -193,7 +195,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
 
-  _MAXIMUM_LINE_LENGTH = 3000
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _GetValueFromGroup(self, structure, name, key_name):
     """Retrieves a value from a Pyparsing.Group structure.
@@ -246,7 +248,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'elb_accesslog':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 

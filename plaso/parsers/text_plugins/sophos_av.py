@@ -60,6 +60,8 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
@@ -113,7 +115,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'logline':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 

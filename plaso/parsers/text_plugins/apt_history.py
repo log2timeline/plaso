@@ -43,6 +43,9 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  # APT History log lines can be very long.
+  _MAXIMUM_LINE_LENGTH = 65536
+
   _HYPHEN = text_parser.PyparsingConstants.HYPHEN
 
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
@@ -84,9 +87,6 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       ('record_start', _RECORD_START),
       ('record_body', _RECORD_BODY),
       ('record_end', _RECORD_END)]
-
-  # APT History log lines can be very long.
-  _MAXIMUM_LINE_LENGTH = 65536
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
