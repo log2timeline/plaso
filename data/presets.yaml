@@ -151,7 +151,7 @@ parsers:
 - sqlite/skype
 - symantec_scanlog
 - text/setupapi
-- text/skydrive_log_old
+- text/skydrive_log_v1
 - text/winfirewall
 - usnjrnl
 - webhist
