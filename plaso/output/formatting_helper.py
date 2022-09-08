@@ -4,6 +4,7 @@
 import abc
 import csv
 import datetime
+import math
 import os
 import pytz
 
@@ -125,31 +126,37 @@ class FieldFormattingHelper(object):
           return 'Invalid'
 
     else:
+      if not event.date_time or event.date_time.is_local_time:
+        timestamp = event.timestamp
+      else:
+        timestamp, fraction_of_second = (
+            event.date_time.CopyToPosixTimestampWithFractionOfSecond())
+
+        fraction_of_second = (fraction_of_second or 0) * 100000
+        while fraction_of_second <= -1000000 or fraction_of_second >= 1000000:
+          fraction_of_second /= 10
+
+        timestamp = (timestamp or 0) * 1000000
+        if fraction_of_second < 0:
+          timestamp += math.floor(fraction_of_second)
+        else:
+          timestamp += math.ceil(fraction_of_second)
+
       # For now check if event.timestamp is set, to mimic existing behavior of
       # using 0000-00-00T00:00:00.000000+00:00 for 0 timestamp values
-      if not output_mediator.dynamic_time and not event.timestamp:
+      if not timestamp:
         return '0000-00-00T00:00:00.000000+00:00'
-
-      date_time = event.date_time
-      if not date_time or date_time.is_local_time:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=event.timestamp)
-
-      number_of_seconds, fraction_of_second = (
-          date_time.CopyToPosixTimestampWithFractionOfSecond())
-      fraction_of_second = fraction_of_second or 0
-      while fraction_of_second > 1000000:
-        fraction_of_second, _ = divmod(fraction_of_second, 10)
 
       try:
         datetime_object = datetime.datetime(1970, 1, 1) + datetime.timedelta(
-            seconds=number_of_seconds)
+            microseconds=timestamp)
 
         datetime_object = datetime_object.astimezone(output_mediator.timezone)
 
         iso8601_string = datetime_object.isoformat()
         iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
-            iso8601_string[:19], fraction_of_second, iso8601_string[-6:])
+            iso8601_string[:19], datetime_object.microsecond,
+            iso8601_string[-6:])
 
       except (OSError, OverflowError, TypeError, ValueError) as exception:
         iso8601_string = '0000-00-00T00:00:00.000000+00:00'
