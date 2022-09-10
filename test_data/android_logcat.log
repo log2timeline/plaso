@@ -1,0 +1,10 @@
+--------- beginning of main
+01-01 01:02:03.123  1234  1234 D threadtime: test of default threadtime format
+--------- beginning of kernel
+01-02 01:02:04.156 I/sometag(  190): test of default time format
+2022-01-02 01:20:03.171 +0000  1885  3066 E App  : test of threadtime w/ UTC and year
+2022-01-02 01:20:03.171 +0000  1000  1885  3066 E App  : test of threadtime w/ UTC, year and uid
+2022-01-02 01:20:07.171997  1000  1885  3066 E App  : test of threadtime w/ year, uid, usec
+2022-01-02 11:20:07.171997 +1000  9346  9347 E AppTag : test of threadtime w/ year, zone, usec
+2022-01-02 11:42:10.613472 +1000 I/AppTag    ( 1080: 1179): test of time w/ zone, uid, year
+2022-01-02 11:44:23.183801 +1000 I/AppTag    ( 1179): test of time w/ zone, year

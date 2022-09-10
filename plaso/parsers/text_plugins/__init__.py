@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Imports for the text parser."""
 
+from plaso.parsers.text_plugins import android_logcat
 from plaso.parsers.text_plugins import apache_access
 from plaso.parsers.text_plugins import apt_history
 from plaso.parsers.text_plugins import aws_elb_access
