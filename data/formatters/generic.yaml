@@ -477,7 +477,7 @@ short_message:
 - 'Message: {message}'
 - 'Source-IP: {source_ip}'
 - 'Destination-IP: {destination_ip}'
-- 'Rule ID: {sid}'
+- 'Rule ID: {rule_id}'
 ---
 type: 'conditional'
 data_type: 'olecf:dest_list:entry'
