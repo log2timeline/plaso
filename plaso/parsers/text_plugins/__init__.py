@@ -16,6 +16,7 @@ from plaso.parsers.text_plugins import santa
 from plaso.parsers.text_plugins import selinux
 from plaso.parsers.text_plugins import setupapi
 from plaso.parsers.text_plugins import skydrivelog1
+from plaso.parsers.text_plugins import snort_fastlog
 from plaso.parsers.text_plugins import sophos_av
 from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import winfirewall
