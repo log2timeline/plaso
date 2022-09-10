@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for AWS ELB access logs.
 
-This parser is based on the log format documented at
-https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
-
-Note:
 The AWS documentation is not clear about the meaning of the "target_port_list"
 field. The assumption is that it refers to a list of possible backend instances'
-IP addresses that could receive the client's request.  This parser stores the
+IP addresses that could receive the client's request. This parser stores the
 "target_port_list" data in the "destination_list" attribute of an EventData
 object.
+
+Also see:
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-access-logs.html
 """
 
 import pyparsing
@@ -29,10 +30,34 @@ class AWSELBEventData(events.EventData):
 
   Attributes:
     actions_executed (str): The actions taken when processing the request.
+    alpn_back_end_protocol (str): The application protocol negotiated with
+        the target, in string format. If no ALPN policy is configured in
+        the TLS listener, no matching protocol is found, or no valid protocol
+        list is sent, this value is set to -.
+        (only for network load balancer logs)
+    alpn_client_preference_list (str): The value of the
+        application_layer_protocol_negotiation extension in the client hello
+        message. This value is URL-encoded. Each protocol is enclosed in double
+        quotes and protocols are separated by a comma. If no ALPN policy is
+        configured in the TLS listener, no valid client hello message is sent,
+        or the extension is not present, this value is set to -. The string is
+        truncated if it is longer than 256 bytes.
+        (only for network load balancer logs)
+    alpn_front_end_protocol (str): The application protocol negotiated with
+        the client, in string format. If no ALPN policy is configured in
+        the TLS listener, no matching protocol is found, or no valid protocol
+        list is sent, this value is set to -.
+        (only for network load balancer logs)
     chosen_cert_arn (str): The ARN of the certificate
         presented to the source.
+    chosen_cert_serial (str): Reserved for future use.
+        This value is always set to -.
+        (only for network load balancer logs)
     classification (str): The classification for desync mitigation.
     classification_reason (str): The classification reason code.
+    connection_time (str): The total time for the connection to complete, from
+        start to closure, in milliseconds.
+        (only for network load balancer logs)
     destination_group_arn (str): The Amazon Resource Name (ARN) of the
         destination group.
     destination_ip_address (str): The IP address of the destination
@@ -51,6 +76,15 @@ class AWSELBEventData(events.EventData):
         source during the TLS handshake.
     error_reason (str): The error reason code, enclosed in
         double quotes.
+    handshake_time (str): The total time for the handshake to complete
+        after the TCP connection is established, including client-side delays,
+        in milliseconds. This time is included in the connection_time field.
+        (only for network load balancer logs)
+    incoming_tls_alert (str): The integer value of TLS alerts received by the
+        load balancer from the client, if present.
+        (only for network load balancer logs)
+    listener (str): The resource ID of the TLS listener for the connection.
+        (only for network load balancer logs)
     matched_rule_priority (int): The priority value of the rule that
         matched the request.
     received_bytes (int): The size of the request, in bytes, received from
@@ -67,8 +101,20 @@ class AWSELBEventData(events.EventData):
     ssl_protocol (str): The SSL protocol of the HTTPS listener.
     source_ip_address (str): The IP address of the requesting source.
     source_port (int): The port of the requesting source.
+    tls_cipher (str): The cipher suite negotiated with the client, in OpenSSL
+        format. If TLS negotiation does not complete, this value is set to -.
+        (only for network load balancer logs)
+    tls_named_group (str): Reserved for future use.
+        This value is always set to -.
+        (only for network load balancer logs)
+    tls_protocol_version (str): The TLS protocol negotiated with the client,
+        in string format. If TLS negotiation does not complete,
+        this value is set to -.
+        (only for network load balancer logs)
     trace_identifier (str): The contents of the X-Amzn-Trace-Id header.
     user_agent (str): A User-Agent string.
+    version (str): The version of the log entry.
+        (only for network load balancer logs)
   """
 
   DATA_TYPE = 'aws:elb:access'
@@ -77,9 +123,14 @@ class AWSELBEventData(events.EventData):
     """Initializes event data."""
     super(AWSELBEventData, self).__init__(data_type=self.DATA_TYPE)
     self.actions_executed = None
+    self.alpn_back_end_protocol = None
+    self.alpn_client_preference_list = None
+    self.alpn_front_end_protocol = None
     self.chosen_cert_arn = None
+    self.chosen_cert_serial = None
     self.classification = None
     self.classification_reason = None
+    self.connection_time = None
     self.destination_group_arn = None
     self.destination_ip_address = None
     self.destination_list = None
@@ -90,6 +141,9 @@ class AWSELBEventData(events.EventData):
     self.domain_name = None
     self.elb_status_code = None
     self.error_reason = None
+    self.handshake_time = None
+    self.incoming_tls_alert = None
+    self.listener = None
     self.matched_rule_priority = None
     self.received_bytes = None
     self.redirect_url = None
@@ -103,8 +157,12 @@ class AWSELBEventData(events.EventData):
     self.source_port = None
     self.ssl_cipher = None
     self.ssl_protocol = None
+    self.tls_cipher = None
+    self.tls_named_group = None
+    self.tls_protocol_version = None
     self.trace_identifier = None
     self.user_agent = None
+    self.version = None
 
 
 class AWSELBTextPlugin(interface.TextPlugin):
@@ -117,17 +175,16 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _MAXIMUM_LINE_LENGTH = 3000
 
-  _BLANK = pyparsing.Literal('"-"')
+  _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
-  _QUOTE_INTEGER = (
-      pyparsing.OneOrMore('"') + text_parser.PyparsingConstants.INTEGER |
-      _BLANK)
+  _UNSIGNED_INTEGER = text_parser.PyparsingConstants.INTEGER | _BLANK
 
-  _INTEGER = text_parser.PyparsingConstants.INTEGER | _BLANK
+  _SIGNED_INTEGER = pyparsing.Word('-', pyparsing.nums) | _UNSIGNED_INTEGER
 
-  _FLOAT = pyparsing.Word(pyparsing.nums + '.')
+  _FLOATING_POINT = (
+      pyparsing.Word(pyparsing.nums + '.') | pyparsing.Literal('-1'))
 
   _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK
@@ -149,33 +206,42 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.Literal('Z'))
 
-  # A log line as defined by the AWS ELB documentation.
-  _LOG_LINE = (
+  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = pyparsing.Combine(
+      pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2))
+
+  # A log line is defined as in the AWS ELB documentation
+  _LOG_LINE_APPLICATION = (
       _WORD.setResultsName('request_type') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
       _WORD.setResultsName('resource_identifier') +
       _CLIENT_IP_ADDRESS_PORT.setResultsName('source_ip_port') +
       _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
-      _FLOAT.setResultsName('request_processing_time') +
-      _FLOAT.setResultsName('destination_processing_time') +
-      _FLOAT.setResultsName('response_processing_time') +
-      _INTEGER.setResultsName('elb_status_code') +
-      _INTEGER.setResultsName('destination_status_code') +
-      _INTEGER.setResultsName('received_bytes') +
-      _INTEGER.setResultsName('sent_bytes') +
-      pyparsing.quotedString.setResultsName('request')
-          .setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('user_agent')
-          .setParseAction(pyparsing.removeQuotes) +
+      _FLOATING_POINT.setResultsName('request_processing_time') +
+      _FLOATING_POINT.setResultsName('destination_processing_time') +
+      _FLOATING_POINT.setResultsName('response_processing_time') +
+      _UNSIGNED_INTEGER.setResultsName('elb_status_code') +
+      _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
+      _UNSIGNED_INTEGER.setResultsName('received_bytes') +
+      _UNSIGNED_INTEGER.setResultsName('sent_bytes') +
+      pyparsing.quotedString.setResultsName('request').setParseAction(
+          pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName('user_agent').setParseAction(
+          pyparsing.removeQuotes) +
       _WORD.setResultsName('ssl_cipher') +
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('destination_group_arn') +
-      _WORD.setResultsName('trace_identifier') +
+      pyparsing.quotedString.setResultsName(
+          'trace_identifier').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
           'domain_name').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
           'chosen_cert_arn').setParseAction(pyparsing.removeQuotes) +
-      _INTEGER.setResultsName('matched_rule_priority') +
+      _SIGNED_INTEGER.setResultsName('matched_rule_priority') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('request_creation_time') +
       pyparsing.quotedString.setResultsName(
           'actions_executed').setParseAction(pyparsing.removeQuotes) +
@@ -193,7 +259,55 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.quotedString.setResultsName(
           'classification_reason').setParseAction(pyparsing.removeQuotes))
 
-  _LINE_STRUCTURES = [('elb_accesslog', _LOG_LINE)]
+  _LOG_LINE_NETWORK = (
+      _WORD.setResultsName('request_type') +
+      _WORD.setResultsName('version') +
+      _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE.setResultsName('time') +
+      _WORD.setResultsName('resource_identifier') +
+      _WORD.setResultsName('listener') +
+      _CLIENT_IP_ADDRESS_PORT.setResultsName('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
+      _UNSIGNED_INTEGER.setResultsName('connection_time') +
+      _UNSIGNED_INTEGER.setResultsName('handshake_time') +
+      _UNSIGNED_INTEGER.setResultsName('received_bytes') +
+      _UNSIGNED_INTEGER.setResultsName('sent_bytes') +
+      _WORD.setResultsName('incoming_tls_alert') +
+      _WORD.setResultsName('chosen_cert_arn') +
+      _WORD.setResultsName('chosen_cert_serial') +
+      _WORD.setResultsName('tls_cipher') +
+      _WORD.setResultsName('tls_protocol_version') +
+      _WORD.setResultsName('tls_named_group') +
+      _WORD.setResultsName('domain_name') +
+      _WORD.setResultsName('alpn_front_end_protocol') +
+      _WORD.setResultsName('alpn_back_end_protocol') +
+      (pyparsing.quotedString.setResultsName(
+          'alpn_client_preference_list').setParseAction(
+              pyparsing.removeQuotes) | pyparsing.Literal('-')) |
+          pyparsing.Literal('-'))
+
+  _LOG_LINE_CLASSIC = (
+      _DATE_TIME_ISOFORMAT_STRING.setResultsName('time') +
+      _WORD.setResultsName('resource_identifier') +
+      _CLIENT_IP_ADDRESS_PORT.setResultsName('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_PORT.setResultsName('destination_ip_port') +
+      _FLOATING_POINT.setResultsName('request_processing_time') +
+      _FLOATING_POINT.setResultsName('destination_processing_time') +
+      _FLOATING_POINT.setResultsName('response_processing_time') +
+      _UNSIGNED_INTEGER.setResultsName('elb_status_code') +
+      _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
+      _SIGNED_INTEGER.setResultsName('received_bytes') +
+      _SIGNED_INTEGER.setResultsName('sent_bytes') +
+      pyparsing.quotedString.setResultsName('request').setParseAction(
+          pyparsing.removeQuotes) +
+      pyparsing.quotedString.setResultsName('user_agent').setParseAction(
+          pyparsing.removeQuotes) +
+      _WORD.setResultsName('ssl_cipher') +
+      _WORD.setResultsName('ssl_protocol'))
+
+  _LINE_STRUCTURES = [
+      ('elb_application_accesslog', _LOG_LINE_APPLICATION),
+      ('elb_network_accesslog', _LOG_LINE_NETWORK),
+      ('elb_classic_accesslog', _LOG_LINE_CLASSIC)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -206,9 +320,12 @@ class AWSELBTextPlugin(interface.TextPlugin):
       key_name (str): key name to retrieve the value of.
 
     Returns:
-      object: value for the specified key.
+      object: value for the specified key or None if not available.
     """
     structure_value = self._GetValueFromStructure(structure, name)
+    if structure_value is None:
+      return None
+
     return structure_value.get(key_name)
 
   def _GetDateTime(self, parser_mediator, time_structure):
@@ -216,22 +333,24 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+        and other components, such as storage and dfVFS.
       time_structure (str): a timestamp string of the event.
 
     Returns:
       TimeElements: Time elements contain separate values for year, month,
           day of month, hours, minutes and seconds.
     """
-    date_time = None
     try:
       date_time = dfdatetime_time_elements.TimeElements()
       date_time.CopyFromStringISO8601(time_structure)
+
+      return date_time
+
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_structure))
 
-    return date_time
+    return None
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -252,16 +371,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_response_sent = structure.get('time')
-    time_request_received = structure.get('request_creation_time')
-
-    date_time_response_sent = self._GetDateTime(
-        parser_mediator, time_response_sent)
-    date_time_request_received = self._GetDateTime(
-        parser_mediator, time_request_received)
-
-    if date_time_request_received is None or date_time_response_sent is None:
-      return
+    destination_list = self._GetValueFromStructure(
+        structure, 'destination_list')
+    if destination_list:
+      destination_list = destination_list.split()
 
     event_data = AWSELBEventData()
     event_data.request_type = self._GetValueFromStructure(
@@ -288,10 +401,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'destination_status_code')
     event_data.received_bytes = self._GetValueFromStructure(
         structure, 'received_bytes')
-    event_data.sent_bytes = self._GetValueFromStructure(
-        structure, 'sent_bytes')
-    event_data.request = self._GetValueFromStructure(
-        structure, 'request')
+    event_data.sent_bytes = self._GetValueFromStructure(structure, 'sent_bytes')
+    event_data.request = self._GetValueFromStructure(structure, 'request')
     event_data.user_agent = self._GetValueFromStructure(
         structure, 'user_agent')
     event_data.ssl_cipher = self._GetValueFromStructure(
@@ -320,23 +431,42 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'classification')
     event_data.classification_reason = self._GetValueFromStructure(
         structure, 'classification_reason')
-    destination_list = self._GetValueFromStructure(
-        structure, 'destination_list')
-    event_data.destination_list = destination_list.split()
+    event_data.destination_list = destination_list
+    event_data.version = self._GetValueFromStructure(structure, 'version')
+    event_data.listener = self._GetValueFromStructure(structure, 'listener')
+    event_data.connection_time = self._GetValueFromStructure(
+        structure, 'connection_time')
+    event_data.handshake_time = self._GetValueFromStructure(
+        structure, 'handshake_time')
+    event_data.incoming_tls_alert = self._GetValueFromStructure(
+        structure, 'incoming_tls_alert')
+    event_data.chosen_cert_serial = self._GetValueFromStructure(
+        structure, 'chosen_cert_serial')
+    event_data.tls_named_group = self._GetValueFromStructure(
+        structure, 'tls_named_group')
+    event_data.tls_cipher = self._GetValueFromStructure(structure, 'tls_cipher')
+    event_data.tls_protocol_version = self._GetValueFromStructure(
+        structure, 'tls_protocol_version')
+    event_data.alpn_front_end_protocol = self._GetValueFromStructure(
+        structure, 'alpn_front_end_protocol')
+    event_data.alpn_back_end_protocol = self._GetValueFromStructure(
+        structure, 'alpn_back_end_protocol')
+    event_data.alpn_client_preference_list = self._GetValueFromStructure(
+        structure, 'alpn_client_preference_list')
 
-    elb_response_sent_event = time_events.DateTimeValuesEvent(
-        date_time_response_sent,
-        definitions.TIME_DESCRIPTION_AWS_ELB_RESPONSE_SENT)
+    time_response_sent = structure.get('time')
+    if time_response_sent:
+      date_time = self._GetDateTime(parser_mediator, time_response_sent)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_RESPONSE_SENT)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    elb_request_received_event = time_events.DateTimeValuesEvent(
-        date_time_request_received,
-        definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
-
-    parser_mediator.ProduceEventWithEventData(
-        elb_response_sent_event, event_data)
-
-    parser_mediator.ProduceEventWithEventData(
-        elb_request_received_event, event_data)
+    time_request_received = structure.get('request_creation_time')
+    if time_request_received:
+      date_time = self._GetDateTime(parser_mediator, time_request_received)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_REQUEST_RECEIVED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -354,11 +484,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    try:
-      parsed_structure = self._LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
-      parsed_structure = None
-
+    _, _, parsed_structure = self._GetMatchingLineStructure(line)
     return bool(parsed_structure)
 
 
