@@ -23,8 +23,10 @@ import re
 
 import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
-from plaso.containers import events, time_events
-from plaso.lib import definitions, errors
+from plaso.containers import events
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
