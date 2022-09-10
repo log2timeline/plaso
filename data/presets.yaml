@@ -16,12 +16,22 @@ parsers:
 - sqlite/chrome_66_cookies
 - sqlite/skype
 ---
+name: apt_history
+description: Preset for backwards compatibility of apt_history text parser plugin.
+parsers:
+- text/apt_history
+---
 name: dockerjson
 description: Preset for backwards compatibility of Docker JSON parser.
 parsers:
 - jsonl/docker_container_config
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
+---
+name: dpkg
+description: Preset for backwards compatibility of dpkg text parser plugin.
+parsers:
+- text/dpkg
 ---
 name: ios
 description: Preset for iOS.
@@ -35,6 +45,11 @@ parsers:
 - sqlite/ios_screentime
 - sqlite/kik_ios
 - sqlite/twitter_ios
+- text/ios_logd
+---
+name: ios_logd
+description: Preset for backwards compatibility of ios_logd text parser plugin.
+parsers:
 - text/ios_logd
 ---
 name: linux
@@ -104,10 +119,50 @@ parsers:
 - webhist
 - zsh_extended_history
 ---
+name: mac_appfirewall_log
+description: Preset for backwards compatibility of mac_appfirewall_log text parser plugin.
+parsers:
+- text/mac_appfirewall_log
+---
+name: mac_securityd
+description: Preset for backwards compatibility of mac_securityd text parser plugin.
+parsers:
+- text/mac_securityd
+---
 name: mactime
 description: Backwards compatibility for mactime parser.
 parsers:
 - bodyfile
+---
+name: macwifi
+description: Preset for backwards compatibility of macwifi text parser plugin.
+parsers:
+- text/mac_wifi
+---
+name: popularity_contest
+description: Preset for backwards compatibility of popularity_contest text parser plugin.
+parsers:
+- text/popularity_contest
+---
+name: selinux
+description: Preset for backwards compatibility of selinux text parser plugin.
+parsers:
+- text/selinux
+---
+name: setupapi
+description: Preset for backwards compatibility of setupapi text parser plugin.
+parsers:
+- text/setupapi
+---
+name: skydrive_log_old
+description: Preset for backwards compatibility of skydrive_log_old text parser plugin.
+parsers:
+- text/skydrive_log_v1
+---
+name: vsftpd
+description: Preset for backwards compatibility of vsftpd text parser plugin.
+parsers:
+- text/vsftpd
 ---
 name: webhist
 description: Preset for Web history.
@@ -178,6 +233,11 @@ parsers:
 - mft
 - win7
 ---
+name: winfirewall
+description: Preset for backwards compatibility of winfirewall text parser plugin.
+parsers:
+- text/winfirewall
+---
 name: winxp
 description: Preset for Windows 2000, Windows XP and Windows 2003.
 operating_systems:
@@ -196,3 +256,13 @@ parsers:
 - esedb
 - mft
 - winxp
+---
+name: xchatlog
+description: Preset for backwards compatibility of xchatlog text parser plugin.
+parsers:
+- text/xchatlog
+---
+name: xchatscrollback
+description: Preset for backwards compatibility of xchatscrollback text parser plugin.
+parsers:
+- text/xchatscrollback

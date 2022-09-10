@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for Sophos anti-virus logs (SAV.txt) files.
 
-References
+Also see:
   https://support.sophos.com/support/s/article/KB-000033745?language=en_US
 """
 

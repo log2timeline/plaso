@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Text plugin for Confluence access log (conf_access_log[DATE].log) files.
 
-Per the definitions in
-https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
+Also see:
+  https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
 """
 
 import pyparsing

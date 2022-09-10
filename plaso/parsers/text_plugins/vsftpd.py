@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser pluginf for vsftpd log files."""
+"""Text parser plugin for vsftpd log files."""
 
 import pyparsing
 
@@ -29,7 +29,7 @@ class VsftpdEventData(events.EventData):
 
 
 class VsftpdLogTextPlugin(interface.TextPlugin):
-  """Text parser pluginf for vsftpd log files."""
+  """Text parser plugin for vsftpd log files."""
 
   NAME = 'vsftpd'
   DATA_FORMAT = 'vsftpd log file'
