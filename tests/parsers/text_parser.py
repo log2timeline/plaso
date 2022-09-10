@@ -21,6 +21,8 @@ class TestPyparsingSingleLineTextParser(
     text_parser.PyparsingSingleLineTextParser):
   """Single line PyParsing-based text parser for testing purposes."""
 
+  NAME = 'test'
+
   _ENCODING = 'utf-8'
 
   _LINE = pyparsing.Regex('.*') + pyparsing.lineEnd()

@@ -11,6 +11,7 @@ from dfvfs.helpers import text_file
 from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import logger
+from plaso.parsers import manager
 
 
 # TODO: determine if this method should be merged with PyParseIntCast.
@@ -176,6 +177,9 @@ class PyparsingLineStructure(object):
 class PyparsingSingleLineTextParser(interface.FileObjectParser):
   """Single line text parser interface based on pyparsing."""
 
+  NAME = 'text'
+  DATA_FORMAT = 'Single-line text log file'
+
   # The actual structure, this needs to be defined by each parser.
   # This is defined as a list of tuples so that more than a single line
   # structure can be defined. That way the parser can support more than a
@@ -220,6 +224,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       'nov': 11,
       'dec': 12}
 
+  _plugin_classes = {}
+
   def __init__(self):
     """Initializes a parser."""
     super(PyparsingSingleLineTextParser, self).__init__()
@@ -232,6 +238,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if self.LINE_STRUCTURES:
       self._SetLineStructures(self.LINE_STRUCTURES)
 
+  # TODO: remove after migrating text parsers to TextPlugin.
   def _EncodingErrorHandler(self, exception):
     """Encoding error handler.
 
@@ -257,6 +264,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return (escaped, exception.start + 1)
 
+  # TODO: remove after migrating text parsers to TextPlugin.
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
 
@@ -340,6 +348,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     return False
 
+  # TODO: remove after migrating text parsers to TextPlugin.
   def _ReadLine(self, text_file_object, max_len=None, depth=0):
     """Reads a line from a text file.
 
@@ -376,7 +385,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       index (int): index of the line structure in the run-time list of line
           structures.
       line_structure (PyparsingLineStructure): line structure.
@@ -396,6 +405,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         self._line_structures[index] = self._line_structures[index - 1]
         self._line_structures[index - 1] = line_structure
 
+  # TODO: remove after migrating text parsers to TextPlugin.
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
 
@@ -408,12 +418,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       line_structure = PyparsingLineStructure(key, expression)
       self._line_structures.append(line_structure)
 
-  def ParseLine(self, parser_mediator, file_object, encoding):
-    """Parses a line of text using a pyparsing definition.
+  # TODO: remove after migrating text parsers to TextPlugin.
+  def ParseLines(self, parser_mediator, file_object, encoding):
+    """Parses lines of text using a pyparsing definition.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
       encoding (str): Encoding or codepage that should be used.
 
@@ -483,22 +494,40 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    if not self._line_structures:
-      raise errors.WrongParser(
-          'Line structure undeclared, unable to proceed.')
+    if self.NAME == 'text':
+      for plugin in self._plugins:
+        if parser_mediator.abort:
+          break
 
+        text_file_object = text_file.TextFile(
+            file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
+
+        if plugin.CheckRequiredFormat(parser_mediator, text_file_object):
+          try:
+            plugin.UpdateChainAndProcess(
+                parser_mediator, file_object=file_object)
+
+          except Exception as exception:  # pylint: disable=broad-except
+            parser_mediator.ProduceExtractionWarning((
+                'plugin: {0:s} unable to parse text file with error: '
+                '{1!s}').format(plugin.NAME, exception))
+
+      return
+
+    # TODO: remove after migrating text parsers to TextPlugin.
     encoding = self._ENCODING or parser_mediator.codepage
 
     # Use strict encoding error handling in the verification step so that
     # a text parser does not generate extraction warning for encoding errors
     # of unsupported files.
-    text_file_object = text_file.TextFile(file_object, encoding=encoding)
+    text_file_object = text_file.TextFile(
+        file_object, encoding=self._ENCODING or parser_mediator.codepage)
 
     try:
       line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
@@ -520,13 +549,18 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if not self._IsText(line):
       raise errors.WrongParser('Not a text file, unable to proceed.')
 
+    if not self._line_structures:
+      raise errors.WrongParser(
+          'Line structure undeclared, unable to proceed.')
+
     if not self.VerifyStructure(parser_mediator, line):
       raise errors.WrongParser('Wrong file structure.')
 
     self._parser_mediator = parser_mediator
 
-    self.ParseLine(parser_mediator, file_object, encoding)
+    self.ParseLines(parser_mediator, file_object, encoding)
 
+  # TODO: remove after migrating text parsers to TextPlugin.
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -536,11 +570,22 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
 
+  # TODO: remove after migrating text parsers to TextPlugin.
+  @classmethod
+  def SupportsPlugins(cls):
+    """Determines if a parser supports plugins.
+
+    Returns:
+      bool: True if the parser supports plugins.
+    """
+    return cls.NAME in ('syslog', 'text')
+
+  # TODO: remove after migrating text parsers to TextPlugin.
   @abc.abstractmethod
   def VerifyStructure(self, parser_mediator, line):
     """Verify the structure of the file and return boolean based on that check.
@@ -550,7 +595,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       line (str): single line from the text file.
 
     Returns:
@@ -696,7 +741,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
@@ -795,7 +840,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
@@ -809,9 +854,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+
+
+manager.ParsersManager.RegisterParser(PyparsingSingleLineTextParser)

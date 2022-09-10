@@ -57,7 +57,7 @@ class GooglelogParserTest(test_lib.ParserTestCase):
     parser = google_logging.GoogleLogParser()
     knowledge_base_values = {'year': 2020}
 
-    invalid_file_name = 'access.log'
+    invalid_file_name = 'apache_access.log'
     invalid_file_path = self._GetTestFilePath([invalid_file_name])
     self._SkipIfPathNotExists(invalid_file_path)
 
