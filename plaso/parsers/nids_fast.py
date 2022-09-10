@@ -67,7 +67,7 @@ class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'nids:alert:fast'
   DATA_FORMAT = 'NIDS fast alert log'
 
-  _FASTLOG_VERIFICATION_PATTERN = (
+  _VERIFICATION_REGEX = re.compile(
       # Date regex
       r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*'
       # Separator ([**])
@@ -119,7 +119,7 @@ class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
       # Optional destination port
       r'(:\d*)?$'
   )
-  _VERIFICATION_REGEX = re.compile(_FASTLOG_VERIFICATION_PATTERN)
+
 
   _PYPARSING_COMPONENTS = {
       'year': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
