@@ -470,14 +470,14 @@ message:
 - 'Destination IP: {destination_ip}'
 - 'Destination Port: {destination_port}'
 - 'Protocol: {protocol}'
-- 'Rule ID: {rule_id}'
 - 'Classification: {classification}'
+- 'Rule Identifier: {rule_id}'
 - 'Priority: {priority}'
 short_message:
 - 'Message: {message}'
-- 'Rule ID: {rule_id}'
 - 'Source IP: {source_ip}'
 - 'Destination IP: {destination_ip}'
+- 'Rule Identifier: {rule_id}'
 ---
 type: 'conditional'
 data_type: 'olecf:dest_list:entry'
