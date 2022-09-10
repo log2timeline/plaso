@@ -333,7 +333,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+        and other components, such as storage and dfVFS.
       time_structure (str): a timestamp string of the event.
 
     Returns:
@@ -371,18 +371,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_response_sent = structure.get('time')
-    time_request_received = structure.get('request_creation_time')
-
-    date_time_response_sent = self._GetDateTime(
-        parser_mediator, time_response_sent)
-
-    if time_request_received is not None:
-      date_time_request_received = self._GetDateTime(
-          parser_mediator, time_request_received)
-
-    if date_time_response_sent is None:
-      return
+    destination_list = self._GetValueFromStructure(
+        structure, 'destination_list')
+    if destination_list:
+      destination_list = destination_list.split()
 
     event_data = AWSELBEventData()
     event_data.request_type = self._GetValueFromStructure(
@@ -409,10 +401,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'destination_status_code')
     event_data.received_bytes = self._GetValueFromStructure(
         structure, 'received_bytes')
-    event_data.sent_bytes = self._GetValueFromStructure(
-        structure, 'sent_bytes')
-    event_data.request = self._GetValueFromStructure(
-        structure, 'request')
+    event_data.sent_bytes = self._GetValueFromStructure(structure, 'sent_bytes')
+    event_data.request = self._GetValueFromStructure(structure, 'request')
     event_data.user_agent = self._GetValueFromStructure(
         structure, 'user_agent')
     event_data.ssl_cipher = self._GetValueFromStructure(
@@ -441,14 +431,9 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'classification')
     event_data.classification_reason = self._GetValueFromStructure(
         structure, 'classification_reason')
-    destination_list = self._GetValueFromStructure(
-        structure, 'destination_list')
-    if destination_list is not None:
-      event_data.destination_list = destination_list.split()
-    event_data.version = self._GetValueFromStructure(
-        structure, 'version')
-    event_data.listener = self._GetValueFromStructure(
-        structure, 'listener')
+    event_data.destination_list = destination_list
+    event_data.version = self._GetValueFromStructure(structure, 'version')
+    event_data.listener = self._GetValueFromStructure(structure, 'listener')
     event_data.connection_time = self._GetValueFromStructure(
         structure, 'connection_time')
     event_data.handshake_time = self._GetValueFromStructure(
@@ -459,8 +444,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
         structure, 'chosen_cert_serial')
     event_data.tls_named_group = self._GetValueFromStructure(
         structure, 'tls_named_group')
-    event_data.tls_cipher = self._GetValueFromStructure(
-        structure, 'tls_cipher')
+    event_data.tls_cipher = self._GetValueFromStructure(structure, 'tls_cipher')
     event_data.tls_protocol_version = self._GetValueFromStructure(
         structure, 'tls_protocol_version')
     event_data.alpn_front_end_protocol = self._GetValueFromStructure(
@@ -470,19 +454,19 @@ class AWSELBTextPlugin(interface.TextPlugin):
     event_data.alpn_client_preference_list = self._GetValueFromStructure(
         structure, 'alpn_client_preference_list')
 
-    elb_response_sent_event = time_events.DateTimeValuesEvent(
-        date_time_response_sent,
-        definitions.TIME_DESCRIPTION_AWS_ELB_RESPONSE_SENT)
-    parser_mediator.ProduceEventWithEventData(
-        elb_response_sent_event, event_data)
+    time_response_sent = structure.get('time')
+    if time_response_sent:
+      date_time = self._GetDateTime(parser_mediator, time_response_sent)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_RESPONSE_SENT)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if (key == 'elb_application_accesslog' and
-        date_time_request_received is not None):
-      elb_request_received_event = time_events.DateTimeValuesEvent(
-          date_time_request_received,
-          definitions.TIME_DESCRIPTION_AWS_ELB_REQUEST_RECEIVED)
-      parser_mediator.ProduceEventWithEventData(
-      elb_request_received_event, event_data)
+    time_request_received = structure.get('request_creation_time')
+    if time_request_received:
+      date_time = self._GetDateTime(parser_mediator, time_request_received)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_REQUEST_RECEIVED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
