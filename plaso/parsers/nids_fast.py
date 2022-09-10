@@ -149,7 +149,7 @@ class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
               pyparsing.Word(pyparsing.printables, exclude_chars='["')
               | pyparsing.White(" ", max=2)
           )
-      ).set_results_name('message'),
+      ).setResultsName('message'),
       'cls': pyparsing.Regex('[^]]*').setResultsName(
            'cls'),
       'pri': text_parser.PyparsingConstants.INTEGER.setResultsName(
