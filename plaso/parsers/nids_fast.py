@@ -35,7 +35,7 @@ class NIDSFastAlertEventData(events.EventData):
   """Fast log event data.
 
   Attributes:
-    sid (str): identifier of the rule that triggered the alert,
+    rule_id (str): identifier of the rule that triggered the alert,
     message (str): message associated with the alert,
     priority (int): optional integer ranging from 1 (high) to 4 (very low),
     classification (str): optional classification of the alert,
