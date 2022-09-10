@@ -26,7 +26,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events, time_events
 from plaso.lib import definitions, errors
 from plaso.parsers import manager
-from plaso.parsers import text_parser as tp
+from plaso.parsers import text_parser
 
 
 class NIDSFastAlertEventData(events.EventData):
@@ -59,7 +59,7 @@ class NIDSFastAlertEventData(events.EventData):
     self.destination_port = None
 
 
-class NIDSFastParser(tp.PyparsingSingleLineTextParser):
+class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
   """NIDS alert data parser for fast format (alert_fast.txt and fast.log)."""
 
   NAME = 'nids:alert:fast'
@@ -120,21 +120,27 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
   _VERIFICATION_REGEX = re.compile(_FASTLOG_VERIFICATION_PATTERN)
 
   _PYPARSING_COMPONENTS = {
-      'year': tp.PyparsingConstants.TWO_DIGITS.setResultsName('year'),
-      'month': tp.PyparsingConstants.TWO_DIGITS.setResultsName('month'),
-      'day': tp.PyparsingConstants.TWO_DIGITS.setResultsName('day'),
-      'hour': tp.PyparsingConstants.TWO_DIGITS.setResultsName('hour'),
-      'minute': tp.PyparsingConstants.TWO_DIGITS.setResultsName('minute'),
-      'second': tp.PyparsingConstants.TWO_DIGITS.setResultsName('second'),
+      'year': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'year'),
+      'month': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'month'),
+      'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'day'),
+      'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'hour'),
+      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'minute'),
+      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'second'),
       'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
           'fractional_seconds'
       ),
       'rule_id': pyparsing.Combine(
-          tp.PyparsingConstants.INTEGER
+          text_parser.PyparsingConstants.INTEGER
           + ':'
-          + tp.PyparsingConstants.INTEGER
+          + text_parser.PyparsingConstants.INTEGER
           + ':'
-          + tp.PyparsingConstants.INTEGER
+          + text_parser.PyparsingConstants.INTEGER
       ).setResultsName('rule_id'),
       'message': pyparsing.Combine(
           pyparsing.OneOrMore(
@@ -142,13 +148,20 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
               | pyparsing.White(" ", max=2)
           )
       ).set_results_name('message'),
-      'cls': pyparsing.Regex('[^]]*').setResultsName('cls'),
-      'pri': tp.PyparsingConstants.INTEGER.setResultsName('pri'),
-      'prot': pyparsing.Word(pyparsing.alphanums).setResultsName('prot'),
-      'src_ip': tp.PyparsingConstants.IP_ADDRESS.setResultsName('src_ip'),
-      'src_port': tp.PyparsingConstants.INTEGER.setResultsName('src_port'),
-      'dst_ip': tp.PyparsingConstants.IP_ADDRESS.setResultsName('dst_ip'),
-      'dst_port': tp.PyparsingConstants.INTEGER.setResultsName('dst_port'),
+      'cls': pyparsing.Regex('[^]]*').setResultsName(
+           'cls'),
+      'pri': text_parser.PyparsingConstants.INTEGER.setResultsName(
+           'pri'),
+      'prot': pyparsing.Word(pyparsing.alphanums).setResultsName(
+           'prot'),
+      'src_ip': text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
+          'src_ip'),
+      'src_port': text_parser.PyparsingConstants.INTEGER.setResultsName(
+          'src_port'),
+      'dst_ip': text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
+          'dst_ip'),
+      'dst_port': text_parser.PyparsingConstants.INTEGER.setResultsName(
+          'dst_port'),
   }
   _PYPARSING_COMPONENTS['md'] = (
       _PYPARSING_COMPONENTS['month']
@@ -163,7 +176,7 @@ class NIDSFastParser(tp.PyparsingSingleLineTextParser):
 
   _PYPARSING_COMPONENTS['date'] = (
       (_PYPARSING_COMPONENTS['ymd'] | _PYPARSING_COMPONENTS['md'])
-      + pyparsing.Suppress(tp.PyparsingConstants.HYPHEN)
+      + pyparsing.Suppress(text_parser.PyparsingConstants.HYPHEN)
       + _PYPARSING_COMPONENTS['hour']
       + pyparsing.Suppress(':')
       + _PYPARSING_COMPONENTS['minute']
