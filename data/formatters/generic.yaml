@@ -723,6 +723,24 @@ short_message:
 - '[{action_type}]'
 ---
 type: 'conditional'
+data_type: 'snort:fastlog:alert'
+message:
+- 'Message: {message}'
+- 'Source IP: {source_ip}'
+- 'Source Port: {source_port}'
+- 'Destination IP: {destination_ip}'
+- 'Destination Port: {destination_port}'
+- 'Protocol: {protocol}'
+- 'Classification: {classification}'
+- 'Rule: {rule_identifier}'
+- 'Priority: {priority}'
+short_message:
+- 'Message: {message}'
+- 'Source-IP: {source_ip}'
+- 'Destination-IP: {destination_ip}'
+- 'Rule: {rule_identifier}'
+---
+type: 'conditional'
 data_type: 'syslog:comment'
 message:
 - '{body}'

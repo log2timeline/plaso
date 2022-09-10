@@ -1,0 +1,4 @@
+12/28-12:55:38.765402 [**] [1:366:11] "PROTOCOL-ICMP PING Unix" [**] [Priority: 3] {ICMP} 2001:df1:c200:c:0:0:0:35 -> 2001:4860:4860:0:0:0:0:8888
+12/28-12:55:38.885027 [**] [1:408:8] "PROTOCOL-ICMP Echo Reply" [**] [Classification: Misc activity] {ICMP} 2001:4860:4860:0:0:0:0:8888 -> 2001:df1:c200:c:0:0:0:35
+01/02-11:30:23.358639 [**] [1:648:18] "INDICATOR-SHELLCODE x86 NOOP" [**] [Classification: Executable code was detected] [Priority: 1] {TCP} 10.6.6.254:80 -> 10.6.6.103:60884
+02/04-23:41:31.115933 [**] [1:20035:1000] "MALWARE-CNC outbound connection" [**] [Classification: Attempted Information Leak] [Priority: 1] {TCP} 2001:df1:c200:c:0:0:0:35:60884 -> 2001:4860:4860:0:0:0:0:8888:80
