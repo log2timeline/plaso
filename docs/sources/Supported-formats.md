@@ -160,6 +160,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * SELinux audit logs
 * Windows SetupAPI log file
 * SkyDrive single-line log and error log files
+* Snort3/Suricata fast-log alert log (fast.log) file
 * Sophos anti-virus logs (SAV.txt) file
 * vsftpd log file
 * Windows Firewall log file

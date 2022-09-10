@@ -121,6 +121,9 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       # Optional destination port
       r'(:\d*)?$')
 
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+      text_parser.PyParseIntCast)
+
   _DATE_MONTH_DAY = (
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +
       pyparsing.Suppress('/') +
@@ -139,7 +142,7 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') +
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
       pyparsing.Suppress('.') +
-      pyparsing.Word(pyparsing.nums).setResultsName('fraction_of_second'))
+      _SIX_DIGITS.setResultsName('fraction_of_second'))
 
   _MESSAGE = pyparsing.Combine(pyparsing.OneOrMore(
       pyparsing.Word(pyparsing.printables, excludeChars='["') |
@@ -185,8 +188,6 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     """Initializes a parser."""
     super(SnortFastLogTextPlugin, self).__init__()
     self._last_month = 0
-    self._maximum_year = 0
-    self._plugin_by_reporter = {}
     self._year_use = 0
 
   def _UpdateYear(self, parser_mediator, month):
@@ -199,8 +200,6 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     """
     if not self._year_use:
       self._year_use = parser_mediator.GetEstimatedYear()
-    if not self._maximum_year:
-      self._maximum_year = parser_mediator.GetLatestYear()
 
     if not self._last_month:
       self._last_month = month
@@ -235,22 +234,25 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     hours = self._GetValueFromStructure(structure, 'hours')
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
+    fraction_of_second = self._GetValueFromStructure(
+        structure, 'fraction_of_second')
 
     if month != 0:
       self._UpdateYear(parser_mediator, month)
 
-    if year:
+    if year is not None:
       year += 2000
     else:
       year = self._year_use
 
-    # TODO: what about fraction_of_second
-    time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+    time_elements_tuple = (
+        year, month, day_of_month, hours, minutes, seconds, fraction_of_second)
 
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
+
     except (ValueError, TypeError):
       parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_tuple))
@@ -272,10 +274,8 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
         structure, 'dst_port')
 
     event = time_events.DateTimeValuesEvent(
-        date_time,
-        definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone,
-    )
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
@@ -293,6 +293,9 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       line = self._ReadLineOfText(text_file_object)
     except UnicodeDecodeError:
       return False
+
+    self._last_month = 0
+    self._year_use = 0
 
     return bool(self._VERIFICATION_REGEX.match(line))
 
