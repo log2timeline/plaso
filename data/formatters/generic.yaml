@@ -731,7 +731,7 @@ message:
 - 'Destination IP: {destination_ip}'
 - 'Destination Port: {destination_port}'
 - 'Protocol: {protocol}'
-- 'Classification: {classifciation}'
+- 'Classification: {classification}'
 - 'Rule: {rule_identifier}'
 - 'Priority: {priority}'
 short_message:
