@@ -145,6 +145,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 ### Text log file formats
 
+* Android logcat file
 * Apache access log (access.log) file
 * Advanced Packaging Tool (APT) History log file
 * [Amazon Web Services Elastic Load Balancer access logs](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-log-file-format)

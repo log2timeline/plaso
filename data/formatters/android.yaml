@@ -48,8 +48,8 @@ message:
 - '{message}'
 - 'Component Tag: {component_tag}'
 - 'PID: {pid}'
-- 'TID: {tid}'
-- 'UID: {uid}'
+- 'Thread: {thread_identifier}'
+- 'User identifier: {user_identifier}'
 short_message:
 - '{message}'
 ---
