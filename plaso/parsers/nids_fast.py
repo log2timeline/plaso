@@ -45,7 +45,7 @@ class NIDSFastAlertEventData(events.EventData):
     destination_port (int): optional destination port number,
   """
 
-  DATA_TYPE = 'nids:alert:fast'
+  DATA_TYPE = 'snort:alert:fast'
 
   def __init__(self):
     """Initializes event data."""
@@ -64,7 +64,7 @@ class NIDSFastAlertEventData(events.EventData):
 class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
   """NIDS alert data parser for fast format (alert_fast.txt and fast.log)."""
 
-  NAME = 'nids:alert:fast'
+  NAME = 'snort:alert:fast'
   DATA_FORMAT = 'NIDS fast alert log'
 
   _VERIFICATION_REGEX = re.compile(
@@ -222,7 +222,7 @@ class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
       + pyparsing.Suppress(pyparsing.lineEnd())
   )
 
-  LINE_STRUCTURES = [('nids:alert:fast', _FASTLOG_LINE)]
+  LINE_STRUCTURES = [('snort:alert:fast', _FASTLOG_LINE)]
 
   def __init__(self):
     """Initializes a parser."""
@@ -265,7 +265,7 @@ class NIDSFastParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'nids:alert:fast':
+    if key != 'snort:alert:fast':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key)
       )

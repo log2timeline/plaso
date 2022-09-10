@@ -50,7 +50,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # 2001:4860:4860::8888
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '{}-12-28 12:55:38'.format(test_year),
         'rule_id': '1:366:11',
         'message': 'PROTOCOL-ICMP PING Unix',
@@ -69,7 +69,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # Reply" [**] [Classification: Misc activity] [Priority: 3]
     # {ICMP} 8.8.8.8 -> 192.168.178.179
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '{}-12-28 12:55:38'.format(test_year),
         'rule_id': '1:408:8',
         'message': 'PROTOCOL-ICMP Echo Reply',
@@ -92,7 +92,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     test_year += 1
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '{}-01-02 11:30:23'.format(test_year),
         'rule_id': '1:648:18',
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
@@ -115,7 +115,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # 10.6.6.254:80
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '{}-02-04 23:41:31'.format(test_year),
         'rule_id': '1:20035:1000',
         'message': 'MALWARE-CNC outbound connection',
@@ -166,7 +166,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # [Priority: 3] {TCP} 11.11.232.144:80 -> 192.168.1.4:56068
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '2010-05-10 10:08:59',
         'rule_id': '1:2009187:4',
         'message': ('ET WEB_CLIENT ACTIVEX iDefense ' +
@@ -188,7 +188,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # 2001:4860:4860::8888
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '2021-12-28 12:55:38',
         'rule_id': '1:366:11',
         'message': 'PROTOCOL-ICMP PING Unix',
@@ -208,7 +208,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # {ICMP} 8.8.8.8 -> 192.168.178.179
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '2021-12-28 12:55:38',
         'rule_id': '1:408:8',
         'message': 'PROTOCOL-ICMP Echo Reply',
@@ -231,7 +231,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     test_year += 1
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '2022-01-02 11:30:23',
         'rule_id': '1:648:18',
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
@@ -254,7 +254,7 @@ class NIDSFastTest(test_lib.ParserTestCase):
     # 10.6.6.254:80
 
     expected_event_values = {
-        'data_type': 'nids:alert:fast',
+        'data_type': 'snort:alert:fast',
         'date_time': '2022-02-04 23:41:31',
         'rule_id': '1:20035:1000',
         'message': 'MALWARE-CNC outbound connection',
