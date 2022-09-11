@@ -180,4 +180,4 @@ class SELinuxTextPlugin(interface.TextPlugin):
     return 'type' in parsed_structure and 'msg' in parsed_structure
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SELinuxTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(SELinuxTextPlugin)

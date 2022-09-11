@@ -133,5 +133,4 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    IOSSysdiagnoseLogdTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(IOSSysdiagnoseLogdTextPlugin)

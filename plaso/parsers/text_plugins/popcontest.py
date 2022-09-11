@@ -290,5 +290,4 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    PopularityContestTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(PopularityContestTextPlugin)

@@ -313,5 +313,4 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    ApacheAccessLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(ApacheAccessLogTextPlugin)

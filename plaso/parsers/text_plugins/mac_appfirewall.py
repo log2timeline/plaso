@@ -243,5 +243,4 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    MacAppFirewallTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(MacAppFirewallTextPlugin)

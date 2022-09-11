@@ -510,4 +510,4 @@ class SantaTextPlugin(interface.TextPlugin):
     return bool(self._VERIFICATION_REGEX.match(line))
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SantaTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(SantaTextPlugin)

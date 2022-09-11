@@ -353,4 +353,4 @@ class XChatLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(XChatLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(XChatLogTextPlugin)

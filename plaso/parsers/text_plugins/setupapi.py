@@ -262,4 +262,4 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SetupAPILogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(SetupAPILogTextPlugin)

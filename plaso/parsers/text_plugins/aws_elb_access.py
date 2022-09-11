@@ -488,4 +488,4 @@ class AWSELBTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(AWSELBTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(AWSELBTextPlugin)

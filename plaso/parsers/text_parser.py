@@ -174,8 +174,8 @@ class PyparsingLineStructure(object):
     return None
 
 
-class PyparsingSingleLineTextParser(interface.FileObjectParser):
-  """Single-line text parser interface based on pyparsing."""
+class SingleLineTextParser(interface.FileObjectParser):
+  """Single-line text parser."""
 
   NAME = 'text'
   DATA_FORMAT = 'Single-line text log file'
@@ -629,4 +629,4 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     """
 
 
-manager.ParsersManager.RegisterParser(PyparsingSingleLineTextParser)
+manager.ParsersManager.RegisterParser(SingleLineTextParser)
