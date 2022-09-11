@@ -149,7 +149,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         'file_reference': 0x1000000000000,
         'is_allocated': True,
         'path_hints': ['\\$MFT'],
-        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
@@ -273,7 +273,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
         'filename': 'Nieuw - Tekstdocument.txt',
         'file_reference': 0x100000000001e,
         'parent_file_reference': 0x5000000000005,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION,
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
         'update_reason_flags': 0x00000100}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

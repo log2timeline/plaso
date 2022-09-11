@@ -232,7 +232,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     if entry_modification_time is not None:
       date_time = self._GetDateTime(entry_modification_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
+          date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseObjectIDAttribute(
@@ -446,7 +446,7 @@ class NTFSUsnJrnlParser(
             timestamp=usn_record.update_date_time)
 
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
+          date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       usn_record_data = usn_change_journal.read_usn_record()

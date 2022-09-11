@@ -87,14 +87,14 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
   _TEST_EVENTS = [
       {'data_type': 'test:event',
        'timestamp': 5134324321,
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION},
       {'data_type': 'test:event',
        'display_name': '/dev/none',
        'filename': '/dev/none',
        'parser': 'TestEvent',
        'text': 'text',
        'timestamp': 2345871286,
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
        'var': {'Issue': False, 'Closed': True}}]
 
   def testNumberOfEvents(self):
@@ -191,7 +191,7 @@ class OutputAndFormattingMultiProcessEngineTest(
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       {'data_type': 'test:event',
        'timestamp': 5134324321,
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION},
       {'data_type': 'test:event',
        'timestamp': 5134324321,
        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
@@ -206,7 +206,7 @@ class OutputAndFormattingMultiProcessEngineTest(
        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS},
       {'data_type': 'test:event',
        'timestamp': 5134324322,
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION},
       {'data_type': 'test:event',
        'timestamp': 5134324322,
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
@@ -220,7 +220,7 @@ class OutputAndFormattingMultiProcessEngineTest(
       {'data_type': 'test:event',
        'timestamp': 5134324322,
        'text': 'Another text',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION},
       {'data_type': 'test:event',
        'text': 'Another text',
        'timestamp': 5134324322,

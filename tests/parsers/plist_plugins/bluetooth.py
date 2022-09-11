@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Bluetooth plist plugin."""
+"""Tests for the MacOS Bluetooth plist plugin."""
 
 import unittest
 
@@ -9,20 +9,17 @@ from plaso.parsers.plist_plugins import bluetooth
 from tests.parsers.plist_plugins import test_lib
 
 
-class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
-  """Tests for the Bluetooth plist plugin."""
+class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the MacOS Bluetooth plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = 'plist_binary'
-    plist_name = 'com.apple.bluetooth.plist'
-
-    plugin = bluetooth.BluetoothPlugin()
+    plugin = bluetooth.MacOSBluetoothPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin, [test_file_name], plist_name)
+        plugin, ['plist_binary'], 'com.apple.bluetooth.plist')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 14)
+    self.assertEqual(number_of_events, 12)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -37,13 +34,14 @@ class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'plist:key',
+        'data_type': 'macos:bluetooth:entry',
         'date_time': '2012-11-02 01:13:17.324095',
-        'desc': 'Paired:True Name:Apple Magic Trackpad 2',
-        'key': '44-00-00-00-00-04',
-        'root': '/DeviceCache'}
+        'device_identifier': '44-00-00-00-00-04',
+        'device_name': 'Apple Magic Trackpad 2',
+        'is_paired': True,
+        'timestamp_desc': 'Last Inquiry Update Time'}
 
-    self.CheckEventValues(storage_writer, events[10], expected_event_values)
+    self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
 
 if __name__ == '__main__':

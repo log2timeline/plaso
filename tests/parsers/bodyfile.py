@@ -65,7 +65,7 @@ class BodyfileTest(test_lib.ParserTestCase):
         'inode': 16,
         'mode_as_string': 'r/rrw-------',
         'owner_identifier': '151107',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[27], expected_event_values)
 
@@ -76,7 +76,7 @@ class BodyfileTest(test_lib.ParserTestCase):
         'group_identifier': 5000,
         'inode': 26,
         'owner_identifier': '151107',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[38], expected_event_values)
 
@@ -99,7 +99,7 @@ class BodyfileTest(test_lib.ParserTestCase):
         'inode': 64,
         'mode_as_string': 'r/rrwxrwxrwx',
         'owner_identifier': '48',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[59], expected_event_values)
 

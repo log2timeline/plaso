@@ -1,17 +1,34 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for Airport plist files."""
+"""Plist parser plugin for MacOS Airport plist files."""
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import plist_event
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class AirportPlugin(interface.PlistPlugin):
+class MacOSAirportEventData(events.EventData):
+  """MacOS airport event data.
+
+  Attributes:
+    security_type (str): WiFI security type.
+    ssid (str): WiFI SSID.
+  """
+
+  DATA_TYPE = 'macos:airport:entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MacOSAirportEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.security_type = None
+    self.ssid = None
+
+
+class MacOSAirportPlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for Airport plist files."""
 
   NAME = 'airport'
@@ -28,33 +45,24 @@ class AirportPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    if 'RememberedNetworks' not in match:
-      return
+    for plist_key in match.get('RememberedNetworks', []):
+      event_data = MacOSAirportEventData()
+      event_data.security_type = plist_key.get('SecurityType', None)
+      event_data.ssid = plist_key.get('SSIDString', None)
 
-    for wifi in match['RememberedNetworks']:
-      ssid = wifi.get('SSIDString', 'UNKNOWN_SSID')
-      security_type = wifi.get('SecurityType', 'UNKNOWN_SECURITY_TYPE')
-
-      event_data = plist_event.PlistTimeEventData()
-      event_data.desc = (
-          '[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
-              ssid, security_type)
-      event_data.key = 'item'
-      event_data.root = '/RememberedNetworks'
-
-      datetime_value = wifi.get('LastConnected', None)
-      if datetime_value:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromDatetime(datetime_value)
-      else:
+      datetime_value = plist_key.get('LastConnected', None)
+      if not datetime_value:
         date_time = dfdatetime_semantic_time.NotSet()
+      else:
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromDatetime(datetime_value)
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-plist.PlistParser.RegisterPlugin(AirportPlugin)
+plist.PlistParser.RegisterPlugin(MacOSAirportPlistPlugin)

@@ -39,7 +39,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root) Invalid character -> \ud801'),
        'timestamp': '2012-06-27 18:17:01',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
   def _GetSheetRows(self, filename):
     """Parses the contents of the first sheet of an XLSX document.

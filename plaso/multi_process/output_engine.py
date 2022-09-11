@@ -133,8 +133,8 @@ class PsortEventHeap(object):
 
     if event.timestamp_desc in (
         definitions.TIME_DESCRIPTION_LAST_ACCESS,
-        definitions.TIME_DESCRIPTION_CHANGE,
         definitions.TIME_DESCRIPTION_CREATION,
+        definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
         definitions.TIME_DESCRIPTION_MODIFICATION):
       macb_group_identifier = content_identifier
     else:

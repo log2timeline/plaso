@@ -156,7 +156,7 @@ class OutputMediator(object):
             'atime', definitions.TIME_DESCRIPTION_LAST_ACCESS):
           return_characters[1] = 'A'
         elif description in (
-            'ctime', definitions.TIME_DESCRIPTION_CHANGE):
+            'ctime', definitions.TIME_DESCRIPTION_METADATA_MODIFICATION):
           return_characters[2] = 'C'
         elif description in (
             'crtime', definitions.TIME_DESCRIPTION_CREATION):
@@ -194,9 +194,8 @@ class OutputMediator(object):
       return '...B'
 
     # Metadata modification.
-    if event.timestamp_desc in [
-        definitions.TIME_DESCRIPTION_CHANGE,
-        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION]:
+    if event.timestamp_desc == (
+        definitions.TIME_DESCRIPTION_METADATA_MODIFICATION):
       return '..C.'
 
     return '....'
@@ -233,7 +232,8 @@ class OutputMediator(object):
       macb_representation.append('.')
 
     if ('ctime' in timestamp_descriptions or
-        definitions.TIME_DESCRIPTION_CHANGE in timestamp_descriptions):
+        definitions.TIME_DESCRIPTION_METADATA_MODIFICATION in (
+            timestamp_descriptions)):
       macb_representation.append('C')
     else:
       macb_representation.append('.')

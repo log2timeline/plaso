@@ -291,7 +291,7 @@ class BodyfileParser(interface.FileObjectParser):
         if ctime_value:
           date_time = self._GetDateTimeFromTimestamp(ctime_value)
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_CHANGE)
+              date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         if crtime_value:

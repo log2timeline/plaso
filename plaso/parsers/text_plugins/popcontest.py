@@ -213,7 +213,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     if change_time:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=change_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
+          date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):

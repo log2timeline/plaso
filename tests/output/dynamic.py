@@ -26,7 +26,7 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE},
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION},
       {'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
@@ -34,7 +34,7 @@ class DynamicFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-28 00:17:01',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
   def testFormatDate(self):
     """Tests the _FormatDate function."""
@@ -120,7 +120,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
+       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""

@@ -109,11 +109,6 @@ short_message:
 - 'Format version: {format_version}'
 - '{is_dirty_string}'
 ---
-type: 'basic'
-data_type: 'macosx:application_usage'
-message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
-short_message: '{application} ({count} time(s))'
----
 type: 'conditional'
 data_type: 'mac:document_versions:file'
 message:
@@ -123,46 +118,6 @@ message:
 - 'by {user_sid}'
 short_message:
 - 'Stored a document version of [{name}]'
----
-type: 'conditional'
-data_type: 'macos:fseventsd:record'
-flags_helpers:
-- input_attribute: 'flags'
-  output_attribute: 'flag_values'
-  # The include header sys/fsevents.h defines various FSE constants, e.g.
-  # #define FSE_CREATE_FILE          0
-  # The flag values correspond to: FLAG = 1 << CONSTANT
-  values:
-    0x00000000: 'None'
-    0x00000001: 'Created'
-    0x00000002: 'Removed'
-    0x00000004: 'InodeMetadataModified'
-    0x00000008: 'Renamed'
-    0x00000010: 'Modified'
-    0x00000020: 'Exchange'
-    0x00000040: 'FinderInfoModified'
-    0x00000080: 'DirectoryCreated'
-    0x00000100: 'PermissionChanged'
-    0x00000200: 'ExtendedAttributeModified'
-    0x00000400: 'ExtendedAttributeRemoved'
-    0x00001000: 'DocumentRevision'
-    0x00004000: 'ItemCloned'
-    0x00080000: 'LastHardLinkRemoved'
-    0x00100000: 'IsHardLink'
-    0x00400000: 'IsSymbolicLink'
-    0x00800000: 'IsFile'
-    0x01000000: 'IsDirectory'
-    0x02000000: 'Mount'
-    0x04000000: 'Unmount'
-    0x20000000: 'EndOfTransaction'
-message:
-- '{path}'
-- 'Flag Values: {flag_values}'
-- 'Flags: 0x{flags:08x}'
-- 'Event Identifier: {event_identifier}'
-short_message:
-- '{path}'
-- '{flag_values}'
 ---
 type: 'conditional'
 data_type: 'mac:keychain:application'
@@ -199,15 +154,6 @@ message:
 - 'Duration: {duration}'
 short_message:
 - 'Safari: {url}'
----
-type: 'conditional'
-data_type: 'macosx:lsquarantine'
-message:
-- '[{agent}]'
-- 'Downloaded: {url}'
-- '<{data}>'
-short_message:
-- '{url}'
 ---
 type: 'conditional'
 data_type: 'mac:notes:note'
@@ -258,34 +204,6 @@ short_message:
 - 'Action: {action}'
 ---
 type: 'conditional'
-data_type: 'mackeeper:cache'
-message:
-- '{description}'
-- '<{event_type}>'
-- ':'
-- '{text}'
-- '['
-- 'URL: {url}'
-- 'Event ID: {record_id}'
-- 'Room: {room}'
-- ']'
-short_message:
-- '<{event_type}>'
-- '{text}'
----
-type: 'conditional'
-data_type: 'plist:key'
-message:
-- '{root}/'
-- '{key}'
-- ' {desc}'
-separator: ''
-short_message:
-- '{root}/'
-- '{key}'
-- ' {desc}'
----
-type: 'conditional'
 data_type: 'mac:utmpx:event'
 enumeration_helpers:
 - input_attribute: 'type'
@@ -317,6 +235,93 @@ short_message:
 - 'Status: {status}'
 ---
 type: 'conditional'
+data_type: 'mackeeper:cache'
+message:
+- '{description}'
+- '<{event_type}>'
+- ':'
+- '{text}'
+- '['
+- 'URL: {url}'
+- 'Event ID: {record_id}'
+- 'Room: {room}'
+- ']'
+short_message:
+- '<{event_type}>'
+- '{text}'
+---
+type: 'basic'
+data_type: 'macos:airport:entry'
+message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
+short_message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
+---
+type: 'basic'
+data_type: 'macos:apple_account:entry'
+message: 'Apple account: {account_name} ({first_name} {last_name})'
+short_message: 'Apple account: {account_name} ({first_name} {last_name})'
+---
+type: 'conditional'
+data_type: 'macos:bluetooth:entry'
+message:
+- 'Identifier: {device_identifier}'
+- 'Name: {device_name}'
+- 'Paired: {is_paired}'
+short_message:
+- 'Identifier: {device_identifier}'
+- 'Name: {device_name}'
+- 'Paired: {is_paired}'
+---
+type: 'conditional'
+data_type: 'macos:fseventsd:record'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  # The include header sys/fsevents.h defines various FSE constants, e.g.
+  # #define FSE_CREATE_FILE          0
+  # The flag values correspond to: FLAG = 1 << CONSTANT
+  values:
+    0x00000000: 'None'
+    0x00000001: 'Created'
+    0x00000002: 'Removed'
+    0x00000004: 'InodeMetadataModified'
+    0x00000008: 'Renamed'
+    0x00000010: 'Modified'
+    0x00000020: 'Exchange'
+    0x00000040: 'FinderInfoModified'
+    0x00000080: 'DirectoryCreated'
+    0x00000100: 'PermissionChanged'
+    0x00000200: 'ExtendedAttributeModified'
+    0x00000400: 'ExtendedAttributeRemoved'
+    0x00001000: 'DocumentRevision'
+    0x00004000: 'ItemCloned'
+    0x00080000: 'LastHardLinkRemoved'
+    0x00100000: 'IsHardLink'
+    0x00400000: 'IsSymbolicLink'
+    0x00800000: 'IsFile'
+    0x01000000: 'IsDirectory'
+    0x02000000: 'Mount'
+    0x04000000: 'Unmount'
+    0x20000000: 'EndOfTransaction'
+message:
+- '{path}'
+- 'Flag Values: {flag_values}'
+- 'Flags: 0x{flags:08x}'
+- 'Event Identifier: {event_identifier}'
+short_message:
+- '{path}'
+- '{flag_values}'
+---
+type: 'basic'
+data_type: 'macos:install_history:entry'
+message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
+short_message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
+---
+type: 'basic'
+data_type: 'macos:launchd:entry'
+message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
+short_message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
+---
+type: 'conditional'
 data_type: 'macos:tcc_entry'
 enumeration_helpers:
 - input_attribute: 'allowed'
@@ -333,6 +338,32 @@ message:
 short_message:
 - '{service}:'
 - '{client}'
+---
+type: 'basic'
+data_type: 'macosx:application_usage'
+message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
+short_message: '{application} ({count} time(s))'
+---
+type: 'conditional'
+data_type: 'macosx:lsquarantine'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+---
+type: 'conditional'
+data_type: 'plist:key'
+message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+separator: ''
+short_message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
 ---
 type: 'conditional'
 data_type: 'spotlight:metadata_item'
