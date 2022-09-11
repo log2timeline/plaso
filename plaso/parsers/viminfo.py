@@ -496,8 +496,9 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       self._ParseFilemarksHistory(parser_mediator, structure)
     elif key == 'jumplist_history':
       self._ParseJumplistHistory(parser_mediator, structure)
-    #elif key == 'history_marks_history':
-    #  self._ParseHistoryMarksHistory(self, parser_mediator, structure)
+    # TODO(sydp): add support for history marks history lines
+    # elif key == 'history_marks_history':
+    #   self._ParseHistoryMarksHistory(self, parser_mediator, structure)
 
   # pylint: disable=unused-argument
   def VerifyStructure(self, parser_mediator, lines):
