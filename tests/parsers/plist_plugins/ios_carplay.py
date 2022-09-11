@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the ios carplay plist plugin."""
+"""Tests for the iOS Car Play Application plist plugin."""
 
 import unittest
 
@@ -10,7 +10,7 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the ios carplay plist plugin."""
+  """Tests for the iOS Car Play Application plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
@@ -36,8 +36,8 @@ class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-      'date_time': '2020-04-12 13:55:51',
-      'desc': 'com.apple.mobilecal'}
+        'date_time': '2020-04-12 13:55:51.255235072',
+        'desc': 'com.apple.mobilecal'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
