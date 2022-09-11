@@ -26,6 +26,7 @@ from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
 from plaso.parsers import mac_keychain
 from plaso.parsers import mcafeeav
+from plaso.parsers import megasync
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer
 from plaso.parsers import ntfs
