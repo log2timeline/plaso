@@ -9,7 +9,7 @@ from plaso.parsers import viminfo
 from tests.parsers import test_lib
 
 
-class ViminfoUnitTest(test_lib.ParserTestCase):
+class ViminfoParserTest(test_lib.ParserTestCase):
   """Tests for the Viminfo parser."""
 
   # pylint: disable=protected-access
