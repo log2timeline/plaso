@@ -174,320 +174,13 @@ class PyparsingLineStructure(object):
     return None
 
 
-class PyparsingSingleLineTextParser(interface.FileObjectParser):
-  """Single line text parser interface based on pyparsing."""
+class SingleLineTextParser(interface.FileObjectParser):
+  """Single-line text parser."""
 
   NAME = 'text'
   DATA_FORMAT = 'Single-line text log file'
 
-  # The actual structure, this needs to be defined by each parser.
-  # This is defined as a list of tuples so that more than a single line
-  # structure can be defined. That way the parser can support more than a
-  # single type of log entry, despite them all having in common the constraint
-  # that each log entry is a single line.
-  # The tuple should have two entries, a key and a structure. This is done to
-  # keep the structures in an order of priority/preference.
-  # The key is a comment or an identification that is passed to the ParseRecord
-  # function so that the developer can identify which structure got parsed.
-  # The value is the actual pyparsing structure.
-  LINE_STRUCTURES = []
-
-  # In order for the tool to not read too much data into a buffer to evaluate
-  # whether or not the parser is the right one for this file or not we
-  # specifically define a maximum amount of bytes a single line can occupy. This
-  # constant can be overwritten by implementations if their format might have a
-  # longer line than 400 bytes.
-  MAX_LINE_LENGTH = 400
-
-  # The maximum number of consecutive lines that don't match known line
-  # structures to encounter before aborting parsing.
-  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
-
-  _ENCODING = None
-
-  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
-
-  # Allow for a maximum of 40 empty lines before we bail out.
-  _MAXIMUM_DEPTH = 40
-
-  _MONTH_DICT = {
-      'jan': 1,
-      'feb': 2,
-      'mar': 3,
-      'apr': 4,
-      'may': 5,
-      'jun': 6,
-      'jul': 7,
-      'aug': 8,
-      'sep': 9,
-      'oct': 10,
-      'nov': 11,
-      'dec': 12}
-
   _plugin_classes = {}
-
-  def __init__(self):
-    """Initializes a parser."""
-    super(PyparsingSingleLineTextParser, self).__init__()
-    self._current_offset = 0
-    self._line_structures = []
-    self._parser_mediator = None
-
-    codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
-
-    if self.LINE_STRUCTURES:
-      self._SetLineStructures(self.LINE_STRUCTURES)
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  def _EncodingErrorHandler(self, exception):
-    """Encoding error handler.
-
-    Args:
-      exception [UnicodeDecodeError]: exception.
-
-    Returns:
-      tuple[str, int]: replacement string and a position where encoding should
-          continue.
-
-    Raises:
-      TypeError: if exception is not of type UnicodeDecodeError.
-    """
-    if not isinstance(exception, UnicodeDecodeError):
-      raise TypeError('Unsupported exception type.')
-
-    if self._parser_mediator:
-      self._parser_mediator.ProduceExtractionWarning(
-          'error decoding 0x{0:02x} at offset: {1:d}'.format(
-              exception.object[exception.start],
-              self._current_offset + exception.start))
-
-    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
-    return (escaped, exception.start + 1)
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  def _GetValueFromStructure(self, structure, name, default_value=None):
-    """Retrieves a token value from a Pyparsing structure.
-
-    This method ensures the token value is set to the default value when
-    the token is not present in the structure. Instead of returning
-    the Pyparsing default value of an empty byte stream (b'').
-
-    Args:
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-      name (str): name of the token.
-      default_value (Optional[object]): default value.
-
-    Returns:
-      object: value in the token or default value if the token is not available
-          in the structure.
-    """
-    value = structure.get(name, default_value)
-    if isinstance(value, pyparsing.ParseResults) and not value:
-      # Ensure the return value is not an empty pyparsing.ParseResults otherwise
-      # serialization will fail.
-      return None
-
-    return value
-
-  # Pylint is confused by the formatting of the bytes_in argument.
-  # pylint: disable=missing-param-doc,missing-type-doc
-  def _IsText(self, bytes_in, encoding=None):
-    """Examine the bytes in and determine if they are indicative of text.
-
-    Parsers need quick and at least semi reliable method of discovering whether
-    or not a particular byte stream is text or resembles text or not. This can
-    be used in text parsers to determine if a file is a text file or not for
-    instance.
-
-    The method assumes the byte sequence is either ASCII, UTF-8, UTF-16 or
-    method supplied character encoding. Otherwise it will make the assumption
-    the byte sequence is not text, but a byte sequence.
-
-    Args:
-      bytes_in (bytes|str): byte stream to examine.
-      encoding (Optional[str]): encoding to test, if not defined ASCII and
-          UTF-8 are tried.
-
-    Returns:
-      bool: True if the bytes stream contains text.
-    """
-    # TODO: Improve speed and accuracy of this method.
-    # Start with the assumption we are dealing with text.
-    is_text = True
-
-    if isinstance(bytes_in, str):
-      return is_text
-
-    # Check if this is ASCII text string.
-    for value in bytes_in:
-      if not 31 < value < 128:
-        is_text = False
-        break
-
-    # We have an ASCII string.
-    if is_text:
-      return is_text
-
-    # Check if this is UTF-8
-    try:
-      bytes_in.decode('utf-8')
-      return True
-
-    except UnicodeDecodeError:
-      pass
-
-    if encoding:
-      try:
-        bytes_in.decode(encoding)
-        return True
-
-      except LookupError:
-        logger.error('Unsupported encoding: {0:s}'.format(encoding))
-      except UnicodeDecodeError:
-        pass
-
-    return False
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  def _ReadLine(self, text_file_object, max_len=None, depth=0):
-    """Reads a line from a text file.
-
-    Args:
-      text_file_object (dfvfs.TextFile): text file.
-      max_len (Optional[int]): maximum number of bytes a single line can take,
-          where None means all remaining bytes should be read.
-      depth (Optional[int]): number of new lines the parser encountered.
-
-    Returns:
-      str: single line read from the file-like object, or the maximum number of
-          characters, if max_len defined and line longer than the defined size.
-
-    Raises:
-      UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding and encoding errors is set to strict.
-    """
-    line = text_file_object.readline(size=max_len)
-
-    if not line:
-      return ''
-
-    if line in self._EMPTY_LINES:
-      if depth == self._MAXIMUM_DEPTH:
-        return ''
-
-      return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
-
-    return line
-
-  def _ParseLineStructure(
-      self, parser_mediator, index, line_structure, parsed_structure):
-    """Parses a line structure and produces events.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      index (int): index of the line structure in the run-time list of line
-          structures.
-      line_structure (PyparsingLineStructure): line structure.
-      parsed_structure (pyparsing.ParseResults): tokens from a string parsed
-          with pyparsing.
-
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    self.ParseRecord(parser_mediator, line_structure.name, parsed_structure)
-
-    line_structure.weight += 1
-
-    if index:
-      previous_weight = self._line_structures[index - 1].weight
-      if previous_weight and line_structure.weight > previous_weight:
-        self._line_structures[index] = self._line_structures[index - 1]
-        self._line_structures[index - 1] = line_structure
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  def _SetLineStructures(self, line_structures):
-    """Sets the line structures.
-
-    Args:
-      line_structures ([(str, pyparsing.ParserElement)]): tuples of pyparsing
-          expressions to parse a line and their names.
-    """
-    self._line_structures = []
-    for key, expression in line_structures:
-      line_structure = PyparsingLineStructure(key, expression)
-      self._line_structures.append(line_structure)
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  def ParseLines(self, parser_mediator, file_object, encoding):
-    """Parses lines of text using a pyparsing definition.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
-      encoding (str): Encoding or codepage that should be used.
-
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    text_file_object = text_file.TextFile(
-        file_object, encoding=encoding, encoding_errors='text_parser_handler')
-    line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-
-    consecutive_line_failures = 0
-    # Set the offset to the beginning of the file.
-    self._current_offset = 0
-    # Read every line in the text file.
-    while line:
-      if parser_mediator.abort:
-        break
-
-      index = None
-      line_structure = None
-      parsed_structure = None
-
-      # Try to parse the line using all the line structures.
-      for index, line_structure in enumerate(self._line_structures):
-        parsed_structure = line_structure.ParseString(line)
-        if parsed_structure:
-          break
-
-      if parsed_structure:
-        try:
-          self._ParseLineStructure(
-              parser_mediator, index, line_structure, parsed_structure)
-          consecutive_line_failures = 0
-
-        except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse record: {0:s} with error: {1!s}'.format(
-                  line_structure.name, exception))
-
-      else:
-        if len(line) > 80:
-          line = '{0:s}...'.format(line[:77])
-
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line: "{0:s}" at offset: {1:d}'.format(
-                line, self._current_offset))
-
-        consecutive_line_failures += 1
-        if (consecutive_line_failures >
-            self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-          raise errors.WrongParser(
-              'more than {0:d} consecutive failures to parse lines.'.format(
-                  self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
-
-      self._current_offset = text_file_object.get_offset()
-
-      try:
-        line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-      except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to read and decode log line at offset {0:d}'.format(
-                self._current_offset))
-        break
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
@@ -500,107 +193,22 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    if self.NAME == 'text':
-      for plugin in self._plugins:
-        if parser_mediator.abort:
-          break
+    for plugin in self._plugins:
+      if parser_mediator.abort:
+        break
 
-        text_file_object = text_file.TextFile(
-            file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
+      text_file_object = text_file.TextFile(
+          file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
 
-        if plugin.CheckRequiredFormat(parser_mediator, text_file_object):
-          try:
-            plugin.UpdateChainAndProcess(
-                parser_mediator, file_object=file_object)
+      if plugin.CheckRequiredFormat(parser_mediator, text_file_object):
+        try:
+          plugin.UpdateChainAndProcess(
+              parser_mediator, file_object=file_object)
 
-          except Exception as exception:  # pylint: disable=broad-except
-            parser_mediator.ProduceExtractionWarning((
-                'plugin: {0:s} unable to parse text file with error: '
-                '{1!s}').format(plugin.NAME, exception))
-
-      return
-
-    # TODO: remove after migrating text parsers to TextPlugin.
-    encoding = self._ENCODING or parser_mediator.codepage
-
-    # Use strict encoding error handling in the verification step so that
-    # a text parser does not generate extraction warning for encoding errors
-    # of unsupported files.
-    text_file_object = text_file.TextFile(
-        file_object, encoding=self._ENCODING or parser_mediator.codepage)
-
-    try:
-      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
-    except UnicodeDecodeError:
-      raise errors.WrongParser(
-          'Not a text file or encoding not supported.')
-
-    if not line:
-      raise errors.WrongParser('Not a text file.')
-
-    if len(line) == self.MAX_LINE_LENGTH or len(
-        line) == self.MAX_LINE_LENGTH - 1:
-      logger.debug((
-          'Trying to read a line and reached the maximum allowed length of '
-          '{0:d}. The last few bytes of the line are: {1:s} [parser '
-          '{2:s}]').format(
-              self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
-
-    if not self._IsText(line):
-      raise errors.WrongParser('Not a text file, unable to proceed.')
-
-    if not self._line_structures:
-      raise errors.WrongParser(
-          'Line structure undeclared, unable to proceed.')
-
-    if not self.VerifyStructure(parser_mediator, line):
-      raise errors.WrongParser('Wrong file structure.')
-
-    self._parser_mediator = parser_mediator
-
-    self.ParseLines(parser_mediator, file_object, encoding)
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  @abc.abstractmethod
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  @classmethod
-  def SupportsPlugins(cls):
-    """Determines if a parser supports plugins.
-
-    Returns:
-      bool: True if the parser supports plugins.
-    """
-    return cls.NAME in ('syslog', 'text')
-
-  # TODO: remove after migrating text parsers to TextPlugin.
-  @abc.abstractmethod
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify the structure of the file and return boolean based on that check.
-
-    This function should read enough text from the text file to confirm
-    that the file is the correct one for this particular parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      line (str): single line from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionWarning((
+              'plugin: {0:s} unable to parse text file with error: '
+              '{1!s}').format(plugin.NAME, exception))
 
 
 class EncodedTextReader(object):
@@ -710,15 +318,172 @@ class EncodedTextReader(object):
     self.lines = self.lines[number_of_characters:]
 
 
-class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
-  """Multi line text parser interface based on pyparsing."""
+class PyparsingMultiLineTextParser(interface.FileObjectParser):
+  """Multi-line text parser interface based on pyparsing."""
 
   BUFFER_SIZE = 2048
+
+  # The actual structure, this needs to be defined by each parser.
+  # This is defined as a list of tuples so that more than a single line
+  # structure can be defined. That way the parser can support more than a
+  # single type of log entry, despite them all having in common the constraint
+  # that each log entry is a single line.
+  # The tuple should have two entries, a key and a structure. This is done to
+  # keep the structures in an order of priority/preference.
+  # The key is a comment or an identification that is passed to the ParseRecord
+  # function so that the developer can identify which structure got parsed.
+  # The value is the actual pyparsing structure.
+  LINE_STRUCTURES = []
+
+  # In order for the tool to not read too much data into a buffer to evaluate
+  # whether or not the parser is the right one for this file or not we
+  # specifically define a maximum amount of bytes a single line can occupy. This
+  # constant can be overwritten by implementations if their format might have a
+  # longer line than 400 bytes.
+  MAX_LINE_LENGTH = 400
+
+  # The maximum number of consecutive lines that don't match known line
+  # structures to encounter before aborting parsing.
+  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
+
+  _ENCODING = None
+
+  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
+
+  # Allow for a maximum of 40 empty lines before we bail out.
+  _MAXIMUM_DEPTH = 40
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   def __init__(self):
     """Initializes a parser."""
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
+    self._current_offset = 0
+    self._line_structures = []
+    self._parser_mediator = None
+
+    codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
+
+    if self.LINE_STRUCTURES:
+      self._SetLineStructures(self.LINE_STRUCTURES)
+
+  def _EncodingErrorHandler(self, exception):
+    """Encoding error handler.
+
+    Args:
+      exception [UnicodeDecodeError]: exception.
+
+    Returns:
+      tuple[str, int]: replacement string and a position where encoding should
+          continue.
+
+    Raises:
+      TypeError: if exception is not of type UnicodeDecodeError.
+    """
+    if not isinstance(exception, UnicodeDecodeError):
+      raise TypeError('Unsupported exception type.')
+
+    if self._parser_mediator:
+      self._parser_mediator.ProduceExtractionWarning(
+          'error decoding 0x{0:02x} at offset: {1:d}'.format(
+              exception.object[exception.start],
+              self._current_offset + exception.start))
+
+    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
+    return (escaped, exception.start + 1)
+
+  def _GetValueFromStructure(self, structure, name, default_value=None):
+    """Retrieves a token value from a Pyparsing structure.
+
+    This method ensures the token value is set to the default value when
+    the token is not present in the structure. Instead of returning
+    the Pyparsing default value of an empty byte stream (b'').
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      object: value in the token or default value if the token is not available
+          in the structure.
+    """
+    value = structure.get(name, default_value)
+    if isinstance(value, pyparsing.ParseResults) and not value:
+      # Ensure the return value is not an empty pyparsing.ParseResults otherwise
+      # serialization will fail.
+      return None
+
+    return value
+
+  def _ParseLineStructure(
+      self, parser_mediator, index, line_structure, parsed_structure):
+    """Parses a line structure and produces events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      index (int): index of the line structure in the run-time list of line
+          structures.
+      line_structure (PyparsingLineStructure): line structure.
+      parsed_structure (pyparsing.ParseResults): tokens from a string parsed
+          with pyparsing.
+
+    Raises:
+      ParseError: if the structure cannot be parsed.
+    """
+    self.ParseRecord(parser_mediator, line_structure.name, parsed_structure)
+
+    line_structure.weight += 1
+
+    if index:
+      previous_weight = self._line_structures[index - 1].weight
+      if previous_weight and line_structure.weight > previous_weight:
+        self._line_structures[index] = self._line_structures[index - 1]
+        self._line_structures[index - 1] = line_structure
+
+  def _ReadLine(self, text_file_object, max_len=None, depth=0):
+    """Reads a line from a text file.
+
+    Args:
+      text_file_object (dfvfs.TextFile): text file.
+      max_len (Optional[int]): maximum number of bytes a single line can take,
+          where None means all remaining bytes should be read.
+      depth (Optional[int]): number of new lines the parser encountered.
+
+    Returns:
+      str: single line read from the file-like object, or the maximum number of
+          characters, if max_len defined and line longer than the defined size.
+
+    Raises:
+      UnicodeDecodeError: if the text cannot be decoded using the specified
+          encoding and encoding errors is set to strict.
+    """
+    line = text_file_object.readline(size=max_len)
+
+    if not line:
+      return ''
+
+    if line in self._EMPTY_LINES:
+      if depth == self._MAXIMUM_DEPTH:
+        return ''
+
+      return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
+
+    return line
 
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
@@ -749,6 +514,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """
     if not self._line_structures:
       raise errors.WrongParser('Missing line structures.')
+
+    self._parser_mediator = parser_mediator
 
     encoding = self._ENCODING or parser_mediator.codepage
     text_reader = EncodedTextReader(
@@ -862,4 +629,4 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """
 
 
-manager.ParsersManager.RegisterParser(PyparsingSingleLineTextParser)
+manager.ParsersManager.RegisterParser(SingleLineTextParser)

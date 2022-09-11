@@ -261,5 +261,4 @@ class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    MacOSSecuritydLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(MacOSSecuritydLogTextPlugin)

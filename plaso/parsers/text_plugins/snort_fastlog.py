@@ -300,4 +300,4 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     return bool(self._VERIFICATION_REGEX.match(line))
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SnortFastLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(SnortFastLogTextPlugin)

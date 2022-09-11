@@ -202,4 +202,4 @@ class DpkgTextPlugin(interface.TextPlugin):
     return 'date_time' in parsed_structure and 'body' in parsed_structure
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(DpkgTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(DpkgTextPlugin)

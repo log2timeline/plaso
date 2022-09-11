@@ -225,4 +225,4 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(SkyDriveLog1TextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(SkyDriveLog1TextPlugin)

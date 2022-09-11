@@ -200,5 +200,4 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    XChatScrollbackLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(XChatScrollbackLogTextPlugin)

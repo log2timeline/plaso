@@ -378,4 +378,4 @@ class WinIISTextPlugin(interface.TextPlugin):
     return found_signature
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(WinIISTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(WinIISTextPlugin)

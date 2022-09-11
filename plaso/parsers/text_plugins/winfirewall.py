@@ -239,5 +239,4 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     return stripped_line == '#Version: 1.5'
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    WinFirewallLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(WinFirewallLogTextPlugin)

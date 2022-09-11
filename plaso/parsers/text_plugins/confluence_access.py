@@ -315,5 +315,4 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    ConfluenceAccessTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(ConfluenceAccessTextPlugin)

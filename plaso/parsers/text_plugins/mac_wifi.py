@@ -325,4 +325,4 @@ class MacWifiLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(MacWifiLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(MacWifiLogTextPlugin)

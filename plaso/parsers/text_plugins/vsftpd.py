@@ -175,4 +175,4 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(VsftpdLogTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(VsftpdLogTextPlugin)

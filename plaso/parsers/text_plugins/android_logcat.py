@@ -227,5 +227,4 @@ class AndroidLogcatTextPlugin(interface.TextPlugin):
             'message' in parsed_structure)
 
 
-text_parser.PyparsingSingleLineTextParser.RegisterPlugin(
-    AndroidLogcatTextPlugin)
+text_parser.SingleLineTextParser.RegisterPlugin(AndroidLogcatTextPlugin)
