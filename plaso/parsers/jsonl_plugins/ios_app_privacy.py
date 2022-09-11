@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS application privacy reports."""
+"""JSON-L parser plugin for iOS application privacy report files."""
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -50,7 +50,7 @@ class IOSAppPrivacyNetworkEvent(events.EventData):
 
 
 class IOSAppPrivacPlugin(interface.JSONLPlugin):
-  """JSON-L parser plugin for iOS application privacy report."""
+  """JSON-L parser plugin for iOS application privacy report files."""
 
   NAME = 'ios_application_privacy'
   DATA_FORMAT = 'iOS Application Privacy report'

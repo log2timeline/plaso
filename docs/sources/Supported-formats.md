@@ -16,10 +16,8 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 ### File formats
 
-* [Amazon Web Services CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
 * Android usage history (usage-history.xml) file
 * Apple System Log (ASL)
-* [Azure Activity logs](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
 * [Basic Security Module (BSM)](https://forensicswiki.xyz/wiki/index.php?title=Basic_Security_Module_(BSM)_file_format)
 * Bencode files
 * [Chrome Disk Cache Format](https://forensicswiki.xyz/wiki/index.php?title=Chrome_Disk_Cache_Format)
@@ -78,6 +76,17 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) file
 * System Resource Usage Monitor (SRUM) ESE database file
 * Windows 8 File History ESE database file
+
+### JSON-L File formats
+
+* [Amazon Web Services CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
+* [Azure Activity logs](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
+* Azure application gateway access log file
+* Docker container configuration file
+* Docker container log file
+* Google Cloud (GCP) log file
+* Apple iOS application privacy report file
+* Microsoft (Office) 365 audit log file
 
 ### OLE Compound File formats
 
