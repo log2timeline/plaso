@@ -12,14 +12,15 @@ from dfvfs.helpers import text_file as dfvfs_text_file
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
+from plaso.lib import errors
 from plaso.parsers import text_parser
 
 from tests.parsers import test_lib
 
 
-class TestPyparsingSingleLineTextParser(
-    text_parser.PyparsingSingleLineTextParser):
-  """Single line PyParsing-based text parser for testing purposes."""
+class TestPyparsingMultiLineTextParser(
+    text_parser.PyparsingMultiLineTextParser):
+  """Multi-line PyParsing-based text parser for testing purposes."""
 
   NAME = 'test'
 
@@ -43,7 +44,7 @@ class TestPyparsingSingleLineTextParser(
     """
     return
 
-  def VerifyStructure(self, parser_mediator, line):
+  def VerifyStructure(self, parser_mediator, lines):
     """Verify the structure of the file and return boolean based on that check.
 
     This function should read enough text from the text file to confirm
@@ -51,8 +52,8 @@ class TestPyparsingSingleLineTextParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+          and other components, such as storage and dfVFS.
+      lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
@@ -102,9 +103,15 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
 
 
 class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
-  """Tests for the single line PyParsing-based text parser."""
+  """Tests for the single-line PyParsing-based text parser."""
 
-  # pylint: disable=attribute-defined-outside-init,protected-access
+  # TODO: add tests for ParseFileObject
+
+
+class PyparsingMultiLineTextParserTest(test_lib.ParserTestCase):
+  """Tests for the multi-line PyParsing-based text parser."""
+
+  # pylint: disable=protected-access
 
   def _EncodingErrorHandler(self, exception):
     """Encoding error handler.
@@ -121,32 +128,15 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     if not isinstance(exception, UnicodeDecodeError):
       raise TypeError('Unsupported exception type.')
 
+    # pylint: disable=attribute-defined-outside-init
     self._encoding_errors.append(
         (exception.start, exception.object[exception.start]))
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return (escaped, exception.start + 1)
 
-  def testIsText(self):
-    """Tests the _IsText function."""
-    test_parser = TestPyparsingSingleLineTextParser()
+  # TODO: add tests for _GetValueFromStructure
 
-    bytes_in = b'this is My Weird ASCII and non whatever string.'
-    self.assertTrue(test_parser._IsText(bytes_in))
-
-    bytes_in = 'Plaso Síar Og Raðar Þessu'
-    self.assertTrue(test_parser._IsText(bytes_in))
-
-    bytes_in = b'\x01\\62LSO\xFF'
-    self.assertFalse(test_parser._IsText(bytes_in))
-
-    bytes_in = b'T\x00h\x00i\x00s\x00\x20\x00'
-    self.assertTrue(test_parser._IsText(bytes_in))
-
-    bytes_in = b'Ascii\x00'
-    self.assertTrue(test_parser._IsText(bytes_in))
-
-    bytes_in = b'Ascii Open then...\x00\x99\x23'
-    self.assertFalse(test_parser._IsText(bytes_in))
+  # TODO: add tests for _ParseLineStructure
 
   def testReadLine(self):
     """Tests the _ReadLine function."""
@@ -157,7 +147,7 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
+    test_parser = TestPyparsingMultiLineTextParser()
     test_text_file = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
     line = test_parser._ReadLine(test_text_file)
     self.assertEqual(line, 'This is another file.')
@@ -167,7 +157,7 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
+    test_parser = TestPyparsingMultiLineTextParser()
     test_text_file = dfvfs_text_file.TextFile(file_object, encoding='utf8')
     with self.assertRaises(UnicodeDecodeError):
       test_parser._ReadLine(test_text_file)
@@ -177,12 +167,13 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
+    test_parser = TestPyparsingMultiLineTextParser()
     test_text_file = dfvfs_text_file.TextFile(
         file_object, encoding='utf8', encoding_errors='replace')
     line = test_parser._ReadLine(test_text_file)
     self.assertEqual(line, 'This is an\ufffdther file.')
 
+    # pylint: disable=attribute-defined-outside-init
     self._encoding_errors = []
     codecs.register_error('test_handler', self._EncodingErrorHandler)
 
@@ -191,7 +182,7 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
+    test_parser = TestPyparsingMultiLineTextParser()
     test_text_file = dfvfs_text_file.TextFile(
         file_object, encoding='utf8', encoding_errors='test_handler')
     line = test_parser._ReadLine(test_text_file)
@@ -211,7 +202,7 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
+    test_parser = TestPyparsingMultiLineTextParser()
     test_parser.ParseFileObject(parser_mediator, file_object)
 
     # The test parser does not generate events.
@@ -234,20 +225,10 @@ class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
-    test_parser = TestPyparsingSingleLineTextParser()
-    test_parser.ParseFileObject(parser_mediator, file_object)
+    test_parser = TestPyparsingMultiLineTextParser()
 
-    # The test parser does not generate events.
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 1)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
+    with self.assertRaises(errors.WrongParser):
+      test_parser.ParseFileObject(parser_mediator, file_object)
 
 
 if __name__ == '__main__':
