@@ -1,17 +1,38 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for launchd plist files."""
+"""Plist parser plugin for MacOS launchd plist files."""
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso.containers import plist_event
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class LaunchdPlugin(interface.PlistPlugin):
-  """Plist parser plugin for launchd plist files.
+class MacOSLaunchdEventData(events.EventData):
+  """MacOS launchd event data.
+
+  Attributes:
+    name (str): name.
+    group_name (str): name of the group.
+    program (str): program and arguments.
+    user_name (str): name of the user.
+  """
+
+  DATA_TYPE = 'macos:launchd:entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MacOSLaunchdEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.name = None
+    self.group_name = None
+    self.program = None
+    self.user_name = None
+
+
+class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
+  """Plist parser plugin for MacOS launchd plist files.
 
   Further details about fields within the key:
     Label:
@@ -40,12 +61,11 @@ class LaunchdPlugin(interface.PlistPlugin):
   # ~/Library/LaunchAgents
 
   PLIST_KEYS = frozenset([
+      'GroupName',
       'Label',
       'Program',
       'ProgramArguments',
-      'UserName',
-      'GroupName',
-  ])
+      'UserName'])
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
@@ -56,22 +76,16 @@ class LaunchdPlugin(interface.PlistPlugin):
         and other components, such as storage and dfvfs.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
+    program = top_level.get('Program', None)
+    program_arguments = top_level.get('ProgramArguments', None)
+    if program and program_arguments:
+      program = ' '.join([program, ' '.join(program_arguments)])
 
-    label = top_level.get('Label')
-    command = top_level.get('Program', '')
-    program_arguments = top_level.get('ProgramArguments')
-    for argument in program_arguments:
-      command += " %s" % argument
-
-    user_name = top_level.get('UserName')
-    group_name = top_level.get('GroupName')
-
-    event_data = plist_event.PlistTimeEventData()
-    event_data.desc = ('Launchd service config {0:s} points to {1:s} with '
-                       'user:{2:s} group:{3:s}').format(label, command,
-                                                        user_name, group_name)
-    event_data.key = 'launchdServiceConfig'
-    event_data.root = '/'
+    event_data = MacOSLaunchdEventData()
+    event_data.group_name = top_level.get('GroupName')
+    event_data.name = top_level.get('Label')
+    event_data.program = program
+    event_data.user_name = top_level.get('UserName')
 
     date_time = dfdatetime_semantic_time.NotSet()
     event = time_events.DateTimeValuesEvent(
@@ -80,4 +94,4 @@ class LaunchdPlugin(interface.PlistPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-plist.PlistParser.RegisterPlugin(LaunchdPlugin)
+plist.PlistParser.RegisterPlugin(MacOSLaunchdPlistPlugin)

@@ -1,16 +1,36 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Apple Account plist files."""
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import plist_event
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class AppleAccountPlugin(interface.PlistPlugin):
+class AppleAccountEventData(events.EventData):
+  """Apple account event data.
+
+  Attributes:
+    account_name (str): name of the account.
+    first_name (str): first name.
+    last_name (str): last name.
+  """
+
+  DATA_TYPE = 'macos:apple_account:entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(AppleAccountEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.account_name = None
+    self.first_name = None
+    self.last_name = None
+
+
+class AppleAccountPlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for Apple Account plist files.
 
   Further details about fields within the key:
@@ -37,55 +57,44 @@ class AppleAccountPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     accounts = match.get('Accounts', {})
-    for name_account, account in accounts.items():
-      first_name = account.get('FirstName', '<FirstName>')
-      last_name = account.get('LastName', '<LastName>')
-      general_description = '{0:s} ({1:s} {2:s})'.format(
-          name_account, first_name, last_name)
-
-      event_data = plist_event.PlistTimeEventData()
-      event_data.key = name_account
-      event_data.root = '/Accounts'
+    for account_name, account in accounts.items():
+      event_data = AppleAccountEventData()
+      event_data.account_name = account_name
+      event_data.first_name = account.get('FirstName', None)
+      event_data.last_name = account.get('LastName', None)
 
       datetime_value = account.get('CreationDate', None)
-      if datetime_value:
-        event_data.desc = 'Configured Apple account {0:s}'.format(
-            general_description)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      if not datetime_value:
+        date_time = dfdatetime_semantic_time.NotSet()
+      else:
+        date_time = dfdatetime_time_elements.TimeElements()
         date_time.CopyFromDatetime(datetime_value)
 
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = account.get('LastSuccessfulConnect', None)
       if datetime_value:
-        event_data.desc = 'Connected Apple account {0:s}'.format(
-            general_description)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time = dfdatetime_time_elements.TimeElements()
         date_time.CopyFromDatetime(datetime_value)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+            date_time, definitions.TIME_DESCRIPTION_CONNECTION_ESTABLISHED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = account.get('ValidationDate', None)
       if datetime_value:
-        event_data.desc = 'Last validation Apple account {0:s}'.format(
-            general_description)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time = dfdatetime_time_elements.TimeElements()
         date_time.CopyFromDatetime(datetime_value)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+            date_time, definitions.TIME_DESCRIPTION_VALIDATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-plist.PlistParser.RegisterPlugin(AppleAccountPlugin)
+plist.PlistParser.RegisterPlugin(AppleAccountPlistPlugin)

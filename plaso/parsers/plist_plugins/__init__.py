@@ -2,7 +2,7 @@
 """Imports for the plist parser plugins."""
 
 from plaso.parsers.plist_plugins import airport
-from plaso.parsers.plist_plugins import appleaccount
+from plaso.parsers.plist_plugins import apple_account
 from plaso.parsers.plist_plugins import bluetooth
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.plist_plugins import install_history

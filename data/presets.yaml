@@ -84,6 +84,16 @@ parsers:
 - webhist
 - zsh_extended_history
 ---
+name: mac_appfirewall_log
+description: Preset for backwards compatibility of mac_appfirewall_log text parser plugin.
+parsers:
+- text/mac_appfirewall_log
+---
+name: mac_securityd
+description: Preset for backwards compatibility of mac_securityd text parser plugin.
+parsers:
+- text/mac_securityd
+---
 name: macos
 description: Preset for MacOS.
 operating_systems:
@@ -118,16 +128,6 @@ parsers:
 - utmpx
 - webhist
 - zsh_extended_history
----
-name: mac_appfirewall_log
-description: Preset for backwards compatibility of mac_appfirewall_log text parser plugin.
-parsers:
-- text/mac_appfirewall_log
----
-name: mac_securityd
-description: Preset for backwards compatibility of mac_securityd text parser plugin.
-parsers:
-- text/mac_securityd
 ---
 name: mactime
 description: Backwards compatibility for mactime parser.

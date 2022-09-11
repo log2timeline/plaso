@@ -79,7 +79,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
         'mru': '/usr/bin/empathy',
         'package': 'empathy',
         'record_tag': 'RECENT-CTIME',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 

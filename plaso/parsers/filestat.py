@@ -171,7 +171,8 @@ class FileStatParser(interface.FileEntryParser):
 
     if file_entry.change_time:
       event = time_events.DateTimeValuesEvent(
-          file_entry.change_time, definitions.TIME_DESCRIPTION_CHANGE)
+          file_entry.change_time,
+          definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if file_entry.deletion_time:

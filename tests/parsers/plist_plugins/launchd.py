@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the launchd plist plugin."""
+"""Tests for the MacOS launchd plist plugin."""
 
 import unittest
 
@@ -9,14 +9,14 @@ from plaso.parsers.plist_plugins import launchd
 from tests.parsers.plist_plugins import test_lib
 
 
-class LaunchdPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the launchd plist plugin."""
+class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the MacOS launchd plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'launchd.plist'
 
-    plugin = launchd.LaunchdPlugin()
+    plugin = launchd.MacOSLaunchdPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -34,13 +34,12 @@ class LaunchdPluginTest(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'plist:key',
+        'data_type': 'macos:launchd:entry',
         'date_time': 'Not set',
-        'desc': (
-            'Launchd service config com.foobar.test points to /Test --flag '
-            'arg1 with user:nobody group:nobody'),
-        'key': 'launchdServiceConfig',
-        'root': '/'}
+        'group_name': 'nobody',
+        'name': 'com.foobar.test',
+        'program': '/Test --flag arg1',
+        'user_name': 'nobody'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

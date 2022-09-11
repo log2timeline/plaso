@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the airport plist plugin."""
+"""Tests for the MacOS Airport plist plugin."""
 
 import unittest
 
@@ -9,14 +9,14 @@ from plaso.parsers.plist_plugins import airport
 from tests.parsers.plist_plugins import test_lib
 
 
-class AirportPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the airport plist plugin."""
+class MacOSAirportPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the MacOS Airport plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.airport.preferences.plist'
 
-    plugin = airport.AirportPlugin()
+    plugin = airport.MacOSAirportPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -35,18 +35,11 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = [
-        1375144166000000, 1386874984000000, 1386949546000000, 1386950747000000]
-    timestamps = sorted([event.timestamp for event in events])
-    self.assertEqual(timestamps, expected_timestamps)
-
     expected_event_values = {
-        'data_type': 'plist:key',
-        'desc': (
-            '[WiFi] Connected to network: <europa> using security '
-            'WPA/WPA2 Personal'),
-        'key': 'item',
-        'root': '/RememberedNetworks'}
+        'data_type': 'macos:airport:entry',
+        'date_time': '2013-07-30 00:29:26',
+        'security_type': 'WPA/WPA2 Personal',
+        'ssid': 'europa'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
