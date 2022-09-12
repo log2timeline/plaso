@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for TimeMachine plist files."""
+"""Plist parser plugin for MacOS TimeMachine plist files."""
 
 import os
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import plist_event
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
@@ -14,9 +14,27 @@ from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class TimeMachinePlugin(
+class MacOSTimeMachineBackupEventData(events.EventData):
+  """MacOS TimeMachine backup event data.
+
+  Attributes:
+    backup_alias (str): alias of the backup.
+    destination_identifier (str): identifier of the destination volume.
+  """
+
+  DATA_TYPE = 'macos:time_machine:backup'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MacOSTimeMachineBackupEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.backup_alias = None
+    self.destination_identifier = None
+
+
+class MacOSTimeMachinePlistPlugin(
     interface.PlistPlugin, dtfabric_helper.DtFabricHelper):
-  """Plist parser plugin for TimeMachine plist files.
+  """Plist parser plugin for MacOS TimeMachine plist files.
 
   Further details about the extracted fields:
     DestinationID:
@@ -30,7 +48,7 @@ class TimeMachinePlugin(
   """
 
   NAME = 'time_machine'
-  DATA_FORMAT = 'TimeMachine plist file'
+  DATA_FORMAT = 'MacOS TimeMachine plist file'
 
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('com.apple.TimeMachine.plist')])
@@ -38,11 +56,11 @@ class TimeMachinePlugin(
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'timemachine.yaml')
+      os.path.dirname(__file__), 'time_machine.yaml')
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
-    """Extracts relevant TimeMachine entries.
+    """Extracts relevant MacOS TimeMachine entries.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -53,26 +71,20 @@ class TimeMachinePlugin(
 
     destinations = match.get('Destinations', [])
     for destination in destinations:
-      backup_alias_data = destination.get('BackupAlias', b'')
-      try:
-        backup_alias = self._ReadStructureFromByteStream(
-            backup_alias_data, 0, backup_alias_map)
-        alias = backup_alias.string
+      event_data = MacOSTimeMachineBackupEventData()
+      event_data.destination_identifier = destination.get('DestinationID', None)
 
-      except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse backup alias value with error: {0!s}'.format(
-                exception))
-        alias = 'Unknown alias'
+      backup_alias_data = destination.get('BackupAlias', None)
+      if backup_alias_data:
+        try:
+          backup_alias = self._ReadStructureFromByteStream(
+              backup_alias_data, 0, backup_alias_map)
+          event_data.backup_alias = backup_alias.string
 
-      destination_identifier = (
-          destination.get('DestinationID', None) or 'Unknown device')
-
-      event_data = plist_event.PlistTimeEventData()
-      event_data.desc = 'TimeMachine Backup in {0:s} ({1:s})'.format(
-          alias, destination_identifier)
-      event_data.key = 'item/SnapshotDates'
-      event_data.root = '/Destinations'
+        except (ValueError, TypeError, errors.ParseError) as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse backup alias value with error: {0!s}'.format(
+                  exception))
 
       snapshot_dates = destination.get('SnapshotDates', [])
       for datetime_value in snapshot_dates:
@@ -80,8 +92,8 @@ class TimeMachinePlugin(
         date_time.CopyFromDatetime(datetime_value)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-plist.PlistParser.RegisterPlugin(TimeMachinePlugin)
+plist.PlistParser.RegisterPlugin(MacOSTimeMachinePlistPlugin)

@@ -330,6 +330,11 @@ short_message:
 - 'Last update: MacOS {system_version}'
 - 'Recommended updates: {recommended_updates}'
 ---
+type: 'basic'
+data_type: 'macos:time_machine:backup'
+message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+---
 type: 'conditional'
 data_type: 'macos:tcc_entry'
 enumeration_helpers:

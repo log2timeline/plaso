@@ -96,18 +96,19 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 ### Property list (plist) formats
 
-* Airport plist file
+* MacOS Airport plist file
 * Apple account information plist file
-* Bluetooth plist file
+* MacOS Bluetooth plist file
+* Apple iOS Car Play Application plist file
 * iPod, iPad and iPhone plist file
-* Launchd plist file
+* MacOS Launchd plist file
 * MacOS installation history plist file
 * MacOS software update plist file
 * MacOS user plist file
 * [Safari history plist file](https://forensicswiki.xyz/wiki/index.php?title=Apple_Safari)
 * Spotlight searched terms plist file
 * Spotlight volume configuration plist file
-* TimeMachine plist file
+* MacOS TimeMachine plist file
 
 ### SQLite database file formats
 
