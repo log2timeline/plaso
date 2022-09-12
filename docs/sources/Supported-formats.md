@@ -105,7 +105,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * MacOS software update plist file
 * MacOS user plist file
 * [Safari history plist file](https://forensicswiki.xyz/wiki/index.php?title=Apple_Safari)
-* Spotlight plist file
+* Spotlight searched terms plist file
 * Spotlight volume configuration plist file
 * TimeMachine plist file
 

@@ -11,7 +11,7 @@ from plaso.parsers.plist_plugins import launchd
 from plaso.parsers.plist_plugins import mac_user
 from plaso.parsers.plist_plugins import safari
 from plaso.parsers.plist_plugins import software_update
-from plaso.parsers.plist_plugins import spotlight
+from plaso.parsers.plist_plugins import spotlight_searched_terms
 from plaso.parsers.plist_plugins import spotlight_volume
 from plaso.parsers.plist_plugins import timemachine
 from plaso.parsers.plist_plugins import default
