@@ -282,16 +282,15 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   LINE_STRUCTURES = [
-    ('command_line_history', _COMMAND_LINE_HISTORY),
-    ('search_string_history', _SEARCH_STRING_HISTORY),
-    ('expression_history', _EXPRESSION_HISTORY),
-    ('input_line_history', _INPUT_LINE_HISTORY),
-    ('debug_line_history', _DEBUG_LINE_HISTORY),
-    ('registers_history', _REGISTERS_HISTORY),
-    ('filemarks_history', _FILEMARKS_HISTORY),
-    ('jumplist_history', _JUMPLIST_HISTORY),
-    ('history_marks_history', _HISTORY_MARKS_HISTORY),
-  ]
+      ('command_line_history', _COMMAND_LINE_HISTORY),
+      ('search_string_history', _SEARCH_STRING_HISTORY),
+      ('expression_history', _EXPRESSION_HISTORY),
+      ('input_line_history', _INPUT_LINE_HISTORY),
+      ('debug_line_history', _DEBUG_LINE_HISTORY),
+      ('registers_history', _REGISTERS_HISTORY),
+      ('filemarks_history', _FILEMARKS_HISTORY),
+      ('jumplist_history', _JUMPLIST_HISTORY),
+      ('history_marks_history', _HISTORY_MARKS_HISTORY)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -300,7 +299,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a command line history
     """
@@ -321,7 +320,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a search string history
     """
@@ -342,7 +341,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match an expression history
     """
@@ -363,7 +362,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match an input line history
     """
@@ -384,7 +383,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a debug line history
     """
@@ -405,7 +404,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a Register history
     """
@@ -426,7 +425,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a Filemarks history
     """
@@ -447,7 +446,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           lines of text that match a JumpList history
     """
@@ -468,7 +467,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
@@ -506,17 +505,18 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _ = self._PREAMBLE.parseString(lines)
+      self._PREAMBLE.parseString(lines)
     except pyparsing.ParseException:
       return False
 
     return True
+
 
 manager.ParsersManager.RegisterParser(VimInfoParser)
