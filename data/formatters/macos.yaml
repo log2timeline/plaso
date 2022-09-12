@@ -330,6 +330,11 @@ short_message:
 - 'Last update: MacOS {system_version}'
 - 'Recommended updates: {recommended_updates}'
 ---
+type: 'basic'
+data_type: 'macos:time_machine:backup'
+message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+---
 type: 'conditional'
 data_type: 'macos:tcc_entry'
 enumeration_helpers:
@@ -393,3 +398,13 @@ message:
 - '{content_type}'
 short_message:
 - '{file_name}'
+---
+type: 'basic'
+data_type: 'spotlight_searched_terms:entry'
+message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+short_message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+---
+type: 'basic'
+data_type: 'spotlight_volume_configuration:store'
+message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'
+short_message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'

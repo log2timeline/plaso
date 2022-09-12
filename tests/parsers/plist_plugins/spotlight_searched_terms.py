@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the spotlight plist plugin."""
+"""Tests for the Spotlight searched terms plist plugin."""
 
 import unittest
 
-from plaso.parsers.plist_plugins import spotlight
+from plaso.lib import definitions
+from plaso.parsers.plist_plugins import spotlight_searched_terms
 
 from tests.parsers.plist_plugins import test_lib
 
 
-class SpotlightPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the spotlight plist plugin."""
+class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the Spotlight searched terms plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.spotlight.plist'
 
-    plugin = spotlight.SpotlightPlugin()
+    plugin = spotlight_searched_terms.SpotlightSearchedTermsPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -35,21 +36,13 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = [
-        1375236414408299, 1376696381196456, 1379937262090907, 1380942616952360,
-        1386111811136094, 1386951868185478, 1387822901900938, 1388331212005130,
-        1389056477460443]
-    timestamps = sorted([event.timestamp for event in events])
-
-    self.assertEqual(timestamps, expected_timestamps)
-
     expected_event_values = {
-        'data_type': 'plist:key',
-        'desc': (
-            'Spotlight term searched "gr" associate to Grab '
-            '(/Applications/Utilities/Grab.app)'),
-        'key': 'gr',
-        'root': '/UserShortcuts'}
+        'data_type': 'spotlight_searched_terms:entry',
+        'date_time': '2013-12-23 18:21:41.900938',
+        'display_name': 'Grab',
+        'path': '/Applications/Utilities/Grab.app',
+        'search_term': 'gr',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_USED}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
