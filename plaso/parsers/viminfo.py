@@ -7,8 +7,8 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
