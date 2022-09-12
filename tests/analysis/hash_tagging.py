@@ -15,15 +15,19 @@ from plaso.lib import definitions
 from tests.analysis import test_lib
 
 
-class TestHashAnalyzer(hash_tagging.HashAnalyzer):
-  """Hash analyzer for testing."""
+class TestHashTaggingAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
+  """Hash tagging analysis plugin for testing."""
 
-  SUPPORTED_HASHES = ['md5', 'sha256']
+  DATA_TYPES = frozenset(['fs:stat', 'fs:stat:ntfs'])
+
+  SUPPORTED_HASHES = frozenset(['md5', 'sha256'])
+
+  NAME = 'hash_tagging_test'
 
   _TEST_HASH_SET = frozenset([
       '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff'])
 
-  def Analyze(self, hashes):
+  def _Analyze(self, hashes):
     """Analyzes a list of hashes.
 
     Args:
@@ -39,18 +43,6 @@ class TestHashAnalyzer(hash_tagging.HashAnalyzer):
       hash_analyses.append(hash_analysis)
 
     return hash_analyses
-
-
-class TestHashTaggingAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
-  """Hash tagging analysis plugin for testing."""
-
-  DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
-
-  NAME = 'hash_tagging_test'
-
-  def __init__(self):
-    """Initializes a test hash tagging analysis plugin."""
-    super(TestHashTaggingAnalysisPlugin, self).__init__(TestHashAnalyzer)
 
   def _GenerateLabels(self, hash_information):
     """Generates a labels that will be used in the event tag.
