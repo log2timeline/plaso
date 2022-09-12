@@ -3,7 +3,7 @@ name: test_docker
 on: [push]
 jobs:
   test_fedora:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         version: ['36']
@@ -37,7 +37,7 @@ jobs:
         python3 ./setup.py build
         python3 ./setup.py install
   test_ubuntu:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         version: ['22.04']

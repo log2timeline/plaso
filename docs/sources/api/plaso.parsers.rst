@@ -17,6 +17,7 @@ Subpackages
    plaso.parsers.shared
    plaso.parsers.sqlite_plugins
    plaso.parsers.syslog_plugins
+   plaso.parsers.text_plugins
    plaso.parsers.winreg_plugins
 
 Submodules
@@ -30,34 +31,10 @@ plaso.parsers.android\_app\_usage module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.apache\_access module
------------------------------------
-
-.. automodule:: plaso.parsers.apache_access
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.apt\_history module
----------------------------------
-
-.. automodule:: plaso.parsers.apt_history
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.asl module
 ------------------------
 
 .. automodule:: plaso.parsers.asl
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.aws\_elb\_access module
--------------------------------------
-
-.. automodule:: plaso.parsers.aws_elb_access
    :members:
    :undoc-members:
    :show-inheritance:
@@ -110,14 +87,6 @@ plaso.parsers.chrome\_preferences module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.confluence\_access module
----------------------------------------
-
-.. automodule:: plaso.parsers.confluence_access
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.cups\_ipp module
 ------------------------------
 
@@ -138,14 +107,6 @@ plaso.parsers.czip module
 -------------------------
 
 .. automodule:: plaso.parsers.czip
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.dpkg module
--------------------------
-
-.. automodule:: plaso.parsers.dpkg
    :members:
    :undoc-members:
    :show-inheritance:
@@ -214,14 +175,6 @@ plaso.parsers.google\_logging module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.iis module
-------------------------
-
-.. automodule:: plaso.parsers.iis
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.interface module
 ------------------------------
 
@@ -234,14 +187,6 @@ plaso.parsers.ios\_lockdownd module
 -----------------------------------
 
 .. automodule:: plaso.parsers.ios_lockdownd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.ios\_logd module
-------------------------------
-
-.. automodule:: plaso.parsers.ios_logd
    :members:
    :undoc-members:
    :show-inheritance:
@@ -286,34 +231,10 @@ plaso.parsers.logger module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.mac\_appfirewall module
--------------------------------------
-
-.. automodule:: plaso.parsers.mac_appfirewall
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.mac\_keychain module
 ----------------------------------
 
 .. automodule:: plaso.parsers.mac_keychain
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.mac\_securityd module
------------------------------------
-
-.. automodule:: plaso.parsers.mac_securityd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.mac\_wifi module
-------------------------------
-
-.. automodule:: plaso.parsers.mac_wifi
    :members:
    :undoc-members:
    :show-inheritance:
@@ -414,14 +335,6 @@ plaso.parsers.plugins module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.popcontest module
--------------------------------
-
-.. automodule:: plaso.parsers.popcontest
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.presets module
 ----------------------------
 
@@ -446,14 +359,6 @@ plaso.parsers.safari\_cookies module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.santa module
---------------------------
-
-.. automodule:: plaso.parsers.santa
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.sccm module
 -------------------------
 
@@ -462,34 +367,10 @@ plaso.parsers.sccm module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.selinux module
-----------------------------
-
-.. automodule:: plaso.parsers.selinux
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.setupapi module
------------------------------
-
-.. automodule:: plaso.parsers.setupapi
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.skydrivelog module
 --------------------------------
 
 .. automodule:: plaso.parsers.skydrivelog
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sophos\_av module
--------------------------------
-
-.. automodule:: plaso.parsers.sophos_av
    :members:
    :undoc-members:
    :show-inheritance:
@@ -566,14 +447,6 @@ plaso.parsers.utmpx module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.vsftpd module
----------------------------
-
-.. automodule:: plaso.parsers.vsftpd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.windefender\_history module
 -----------------------------------------
 
@@ -594,14 +467,6 @@ plaso.parsers.winevtx module
 ----------------------------
 
 .. automodule:: plaso.parsers.winevtx
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.winfirewall module
---------------------------------
-
-.. automodule:: plaso.parsers.winfirewall
    :members:
    :undoc-members:
    :show-inheritance:
@@ -642,22 +507,6 @@ plaso.parsers.winrestore module
 -------------------------------
 
 .. automodule:: plaso.parsers.winrestore
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.xchatlog module
------------------------------
-
-.. automodule:: plaso.parsers.xchatlog
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.xchatscrollback module
-------------------------------------
-
-.. automodule:: plaso.parsers.xchatscrollback
    :members:
    :undoc-members:
    :show-inheritance:

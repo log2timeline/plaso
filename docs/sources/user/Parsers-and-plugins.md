@@ -3,10 +3,7 @@
 Name | Description
 --- | ---
 android_app_usage | Parser for Android usage history (usage-history.xml) files.
-apache_access | Parser for Apache access log (access.log) files.
-apt_history | Parser for Advanced Packaging Tool (APT) History log files.
 asl_log | Parser for Apple System Log (ASL) files.
-aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 bencode | Parser for Bencoded files.
 binary_cookies | Parser for Safari Binary Cookie files.
@@ -14,11 +11,9 @@ bodyfile | Parser for SleuthKit version 3 bodyfile.
 bsm_log | Parser for Basic Security Module (BSM) event auditing files.
 chrome_cache | Parser for Google Chrome or Chromium Cache files.
 chrome_preferences | Parser for Google Chrome Preferences files.
-confluence_access | Parser for Confluence access log (access.log) files.
 cups_ipp | Parser for CUPS IPP files.
 custom_destinations | Parser for Custom destinations jump list (.customDestinations-ms) files.
 czip | Parser for Compound ZIP files.
-dpkg | Parser for Debian package manager log (dpkg.log) files.
 esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
 firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or earlier).
@@ -28,16 +23,12 @@ fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) file
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
 ios_lockdownd | Parser for iOS lockdown daemon log.
-ios_logd | Parser for iOS sysdiagnose logd files.
 ios_sysdiag_log | Parser for iOS sysdiag log.
 java_idx | Parser for Java WebStart Cache IDX files.
 jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
 locate_database | Parser for Locate database file (updatedb).
-mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_keychain | Parser for MacOS keychain database files.
-mac_securityd | Parser for MacOS security daemon (securityd) log files.
-macwifi | Parser for MacOS Wifi log (wifi.log) files.
 mcafee_protection | Parser for McAfee Anti-Virus access protection log files.
 mft | Parser for NTFS $MFT metadata files.
 msiecf | Parser for Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) files.
@@ -48,38 +39,28 @@ opera_typed_history | Parser for Opera typed history (typed_history.xml) files.
 pe | Parser for Portable Executable (PE) files.
 plist | Parser for Property list (plist) files.
 pls_recall | 
-popularity_contest | Parser for Popularity Contest log files.
 prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
 rplog | Parser for Windows Restore Point log (rp.log) files.
-santa | Parser for Santa log (santa.log) files.
 sccm | Parser for System Center Configuration Manager (SCCM) client log files.
-selinux | Parser for SELinux audit log (audit.log) files.
-setupapi | Parser for Windows SetupAPI log files.
 skydrive_log | Parser for OneDrive (or SkyDrive) log files.
-skydrive_log_old | Parser for OneDrive (or SkyDrive) old log files.
-sophos_av | Parser for Sophos Anti-Virus log file (SAV.txt) files.
 spotlight_storedb | Parser for Apple Spotlight store database (store.db) files.
 sqlite | Parser for SQLite database files.
 symantec_scanlog | Parser for AV Corporate Edition and Endpoint Protection log files.
 syslog | Parser for System log (syslog) files.
 systemd_journal | Parser for Systemd journal files.
+text | Parser for Single-line text log files.
 trendmicro_url | Parser for Trend Micro Office Web Reputation log files.
 trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
 usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
-vsftpd | Parser for vsftpd log files.
-windefender_history | Windows Defender scan DetectionHistory file
+windefender_history | Parser for Windows Defender scan DetectionHistory files.
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
-winfirewall | Parser for Windows Firewall log files.
-winiis | Parser for Microsoft IIS log files.
 winjob | Parser for Windows Scheduled Task job (or at-job) files.
 winreg | Parser for Windows NT Registry (REGF) files.
-xchatlog | Parser for XChat log files.
-xchatscrollback | Parser for XChat scrollback log files.
 zsh_extended_history | Parser for ZSH extended history files.
 
 ### Parser plugins: bencode
@@ -133,10 +114,11 @@ Name | Description
 --- | ---
 airport | Parser for Airport plist files.
 apple_id | Parser for Apple account information plist files.
+ios_carplay | Parser for iOS Car Play Application plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
 macos_software_update | Parser for MacOS software update plist files.
-macosx_bluetooth | Parser for Bluetooth plist files.
+macosx_bluetooth | Parser for MacOS Bluetooth plist files.
 macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
@@ -196,6 +178,33 @@ Name | Description
 cron | Parser for Cron syslog line.
 ssh | Parser for SSH syslog line.
 
+### Parser plugins: text
+
+Name | Description
+--- | ---
+android_logcat | Parser for Android logcat files.
+apache_access | Parser for Apache access log (access.log) files.
+apt_history | Parser for Advanced Packaging Tool (APT) History log files.
+aws_elb_access | Parser for AWS ELB Access log files.
+confluence_access | Parser for Confluence access log (access.log) files.
+dpkg | Parser for Debian package manager log (dpkg.log) files.
+ios_logd | Parser for iOS sysdiagnose logd files.
+mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
+mac_securityd | Parser for MacOS security daemon (securityd) log files.
+mac_wifi | Parser for MacOS Wifi log (wifi.log) files.
+popularity_contest | Parser for Popularity Contest log files.
+santa | Parser for Santa log (santa.log) files.
+selinux | Parser for SELinux audit log (audit.log) files.
+setupapi | Parser for Windows SetupAPI log files.
+skydrive_log_v1 | Parser for OneDrive (or SkyDrive) version 1 log files.
+snort:fastlog:alert | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
+sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
+vsftpd | Parser for vsftpd log files.
+winfirewall | Parser for Windows Firewall log files.
+winiis | Parser for Microsoft IIS log files.
+xchatlog | Parser for XChat log files.
+xchatscrollback | Parser for XChat scrollback log files.
+
 ### Parser plugins: winreg
 
 Name | Description
@@ -242,15 +251,29 @@ winreg_default | Parser for Windows Registry data.
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
+apt_history | text/apt_history
 dockerjson | jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config
-ios | ios_lockdownd, ios_logd, ios_sysdiag_log, jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios
-linux | apt_history, bash_history, bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, dpkg, filestat, gdrive_synclog, googlelog, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, vsftpd, webhist, xchatlog, xchatscrollback, zsh_extended_history
-macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
+dpkg | text/dpkg
+ios | ios_lockdownd, ios_sysdiag_log, jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_logd
+ios_logd | text/ios_logd
+linux | bash_history, bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, gdrive_synclog, googlelog, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, text/apt_history, text/dpkg, text/popularity_contest, text/selinux, text/vsftpd, text/xchatlog, text/xchatscrollback, utmp, webhist, zsh_extended_history
+mac_appfirewall_log | text/mac_appfirewall_log
+mac_securityd | text/mac_securityd
+macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, syslog, utmpx, webhist, zsh_extended_history
 mactime | bodyfile
+macwifi | text/mac_wifi
+popularity_contest | text/popularity_contest
+selinux | text/selinux
+setupapi | text/setupapi
+skydrive_log_old | text/skydrive_log_v1
+vsftpd | text/vsftpd
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | esedb, mft, win7
-win_gen | bencode, czip/oxml, filestat, gdrive_synclog, lnk, mcafee_protection, olecf, pe, prefetch, setupapi, sccm, skydrive_log, skydrive_log_old, sqlite/google_drive, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
+win_gen | bencode, czip/oxml, filestat, gdrive_synclog, lnk, mcafee_protection, olecf, pe, prefetch, sccm, skydrive_log, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/setupapi, text/skydrive_log_v1, text/winfirewall, usnjrnl, webhist, winjob, winreg
+winfirewall | text/winfirewall
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | esedb, mft, winxp
+xchatlog | text/xchatlog
+xchatscrollback | text/xchatscrollback
 

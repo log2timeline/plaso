@@ -12,10 +12,10 @@ plaso.parsers.plist\_plugins.airport module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.appleaccount module
-------------------------------------------------
+plaso.parsers.plist\_plugins.apple\_account module
+--------------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.appleaccount
+.. automodule:: plaso.parsers.plist_plugins.apple_account
    :members:
    :undoc-members:
    :show-inheritance:
@@ -52,6 +52,14 @@ plaso.parsers.plist\_plugins.interface module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.plist\_plugins.ios\_carplay module
+------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.ios_carplay
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.plist\_plugins.ipod module
 ----------------------------------------
 
@@ -68,10 +76,10 @@ plaso.parsers.plist\_plugins.launchd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.macuser module
--------------------------------------------
+plaso.parsers.plist\_plugins.mac\_user module
+---------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.macuser
+.. automodule:: plaso.parsers.plist_plugins.mac_user
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,10 +92,10 @@ plaso.parsers.plist\_plugins.safari module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.softwareupdate module
---------------------------------------------------
+plaso.parsers.plist\_plugins.software\_update module
+----------------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.softwareupdate
+.. automodule:: plaso.parsers.plist_plugins.software_update
    :members:
    :undoc-members:
    :show-inheritance:
