@@ -282,7 +282,12 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   LINE_STRUCTURES = [
+      ('preamble', _PREAMBLE),
       ('command_line_history', _COMMAND_LINE_HISTORY),
+      ('hlsearch', _HLSEARCH),
+      ('search_pattern', _SEARCH_PATTERN),
+      ('substitute_search', _SUBSTITUTE_SEARCH_PATTERN),
+      ('substitute_string', _SUBSTITUTE_STRING),
       ('search_string_history', _SEARCH_STRING_HISTORY),
       ('expression_history', _EXPRESSION_HISTORY),
       ('input_line_history', _INPUT_LINE_HISTORY),

@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.parsers import viminfo
+from plaso.containers import warnings
 
 from tests.parsers import test_lib
 
@@ -22,9 +23,20 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
 
+    extraction_warnings = list(storage_writer.GetAttributeContainers(
+        warnings.ExtractionWarning.CONTAINER_TYPE))
+
+    self.assertEqual(
+        extraction_warnings[0].message,
+        'unable to parse log line: \'> ~\\\\_vimrc\'')
+    self.assertEqual(
+        extraction_warnings[3].message,
+        'unable to parse log line: '
+        '\'> C:\\\\Program Files (x86)\\\\Vim\\\\.vimrc\'')
+
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
+    self.assertEqual(number_of_warnings, 6)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
