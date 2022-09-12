@@ -73,7 +73,7 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+        and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     program = top_level.get('Program', None)

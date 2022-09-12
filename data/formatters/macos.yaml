@@ -322,6 +322,15 @@ message: 'Launchd service config {name} points to {program} with user:{user} gro
 short_message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
 ---
 type: 'conditional'
+data_type: 'macos:software_updata:entry'
+message:
+- 'Last update: MacOS {system_version}'
+- 'Recommended updates: {recommended_updates}'
+short_message:
+- 'Last update: MacOS {system_version}'
+- 'Recommended updates: {recommended_updates}'
+---
+type: 'conditional'
 data_type: 'macos:tcc_entry'
 enumeration_helpers:
 - input_attribute: 'allowed'
@@ -338,6 +347,18 @@ message:
 short_message:
 - '{service}:'
 - '{client}'
+---
+type: 'conditional'
+data_type: 'macos:user:entry'
+message:
+- 'User: {username} ({user_identifier})'
+- 'Full name: {fullname}'
+- 'Home directory: {home_directory}'
+- 'Number of failed login attempts: {number_of_failed_login_attempts}'
+- 'Password hash: {password_hash}'
+short_message:
+- 'User: {username} ({user_identifier})'
+- 'Full name: {fullname}'
 ---
 type: 'basic'
 data_type: 'macosx:application_usage'

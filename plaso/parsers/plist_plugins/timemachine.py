@@ -46,7 +46,7 @@ class TimeMachinePlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     backup_alias_map = self._GetDataTypeMap('timemachine_backup_alias')

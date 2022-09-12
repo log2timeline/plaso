@@ -30,7 +30,7 @@ class IOSCarPlayPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     event_data = plist_event.PlistTimeEventData()
