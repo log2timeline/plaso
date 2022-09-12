@@ -81,26 +81,6 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
     self.assertEqual(parsed_line[-1], 'This is a comment.')
     self.assertEqual(len(parsed_line), 2)
 
-  def testConstantIPv4(self):
-    """Tests parsing with the IPV4_ADDRESS constant."""
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
-            '123.51.234.52'))
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
-            '255.254.23.1'))
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('1.1.34.2'))
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('a.1.34.258')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('.34.258')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('34.258')
-
 
 class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
   """Tests for the single-line PyParsing-based text parser."""
