@@ -6,7 +6,6 @@ import pyparsing
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import syslog
-from plaso.parsers import text_parser
 from plaso.parsers.syslog_plugins import interface
 
 
@@ -63,9 +62,12 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
   _AUTHENTICATION_METHOD = (
       pyparsing.Keyword('password') | pyparsing.Keyword('publickey'))
 
+  _IP_ADDRESS = (
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address)
+
   _PYPARSING_COMPONENTS = {
-      'address': text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
-          'address'),
+      'address': _IP_ADDRESS.setResultsName('address'),
       'authentication_method': _AUTHENTICATION_METHOD.setResultsName(
           'authentication_method'),
       'fingerprint': pyparsing.Combine(

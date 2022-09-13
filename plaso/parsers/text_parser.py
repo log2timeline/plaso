@@ -76,10 +76,6 @@ class PyparsingConstants(object):
   # Numbers.
   INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
 
-  IPV4_ADDRESS = pyparsing.pyparsing_common.ipv4_address
-  IPV6_ADDRESS = pyparsing.pyparsing_common.ipv6_address
-  IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
-
   # TODO: deprecate and remove, use THREE_LETTERS instead.
   # TODO: fix Python 3 compatibility of .uppercase and .lowercase.
   # pylint: disable=no-member

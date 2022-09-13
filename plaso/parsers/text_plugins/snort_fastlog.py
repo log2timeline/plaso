@@ -28,6 +28,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import regular_expressions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -69,80 +70,46 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
   NAME = 'snort:fastlog:alert'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
-  _VERIFICATION_REGEX = re.compile(
-      # Date regex
-      r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*'
-      # Separator ([**])
-      r'\[\*\*\]\s*'
-      # Rule identifier
-      r'\[\d*:\d*:\d*\]\s*'
-      # Message
-      r'"?.*\"?\s*\[\*\*\]\s*'
-      # Optional Classification
-      r'(\[Classification:\s.*\])?\s*'
-      # Optional Priority
-      r'(\[Priority\:\s*\d{1}\])?\s*'
-      # Procotol
-      r'\{\w+\}\s*'
-      # Source IPv6 address
-      r'((([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:'
-      r'|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}'
-      r'(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[ 0-9a-fA-F]{1,4})'
-      r'{1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4} |([0-9a-fA-F]'
-      r'{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((: [0-9a-fA-F]'
-      r'{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4})'
-      r'{0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2 [0-4]'
-      r'|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}'
-      r'[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}'
-      r'[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))'
-      # Source IPv4 address
-      r'|(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?'
-      r'[0-9][0-9]?)\.(25[0-5] |2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|'
-      r'2[0-4][0-9]|[01]?[0-9][0-9]?))'
-      # Optional source port
-      r'(:\d*)?\s*'
-      # Separator '->'
-      r'\-\>\s*'
-      # Destination IPv6-address
-      r'((([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:'
-      r'|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}'
-      r'(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[ 0-9a-fA-F]{1,4})'
-      r'{1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4} |([0-9a-fA-F]'
-      r'{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((: [0-9a-fA-F]'
-      r'{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4})'
-      r'{0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2 [0-4]'
-      r'|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}'
-      r'[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}'
-      r'[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))'
-      # Destination IPv4 address
-      r'|(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?'
-      r'[0-9][0-9]?)\.(25[0-5] |2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|'
-      r'2[0-4][0-9]|[01]?[0-9][0-9]?))'
-      # Optional destination port
-      r'(:\d*)?$')
+  _VERIFICATION_REGEX = re.compile(''.join([
+      # Date: "MM/DD" and "YY/MM/DD"
+      r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*',
+      r'\[\*\*\]\s*',  # Separator ([**])
+      r'\[\d*:\d*:\d*\]\s*',  # Rule identifier
+      r'"?.*\"?\s*\[\*\*\]\s*',  # Message
+      r'(\[Classification:\s.*\])?\s*',  # Optional Classification
+      r'(\[Priority\:\s*\d{1}\])?\s*',  # Optional Priority
+      r'\{\w+\}\s*',  # Procotol
+      regular_expressions.IP_ADDRESS,  # Source IPv4 or IPv6 address
+      r'(:\d*)?\s*',  # Optional TCP/UDP source port
+      r'\-\>\s*',  # Separator '->'
+      regular_expressions.IP_ADDRESS,  # Destination IPv4 or IPv6 address
+      r'(:\d*)?$']))  # Optional TCP/UDP destination port
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
 
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
       text_parser.PyParseIntCast)
 
   _DATE_MONTH_DAY = (
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +
-      pyparsing.Suppress('/') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day_of_month'))
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
+      _TWO_DIGITS.setResultsName('day_of_month'))
 
   _DATE_YEAR_MONTH_DAY = (
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('year') +
-      pyparsing.Suppress('/') + _DATE_MONTH_DAY)
+      _TWO_DIGITS.setResultsName('year') + pyparsing.Suppress('/') +
+      _DATE_MONTH_DAY)
 
   _DATE_TIME = (
       (_DATE_YEAR_MONTH_DAY | _DATE_MONTH_DAY) +
       pyparsing.Suppress(text_parser.PyparsingConstants.HYPHEN) +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
-      pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
-      pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
-      pyparsing.Suppress('.') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
       _SIX_DIGITS.setResultsName('fraction_of_second'))
+
+  _IP_ADDRESS = (
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address)
 
   _MESSAGE = pyparsing.Combine(pyparsing.OneOrMore(
       pyparsing.Word(pyparsing.printables, excludeChars='["') |
@@ -169,15 +136,17 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress('{') +
       pyparsing.Word(pyparsing.alphanums).setResultsName('protocol') +
       pyparsing.Suppress('}') +
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('src_ip') +
+      _IP_ADDRESS.setResultsName('source_ip_address') +
       pyparsing.Optional(
           pyparsing.Suppress(':') +
-          text_parser.PyparsingConstants.INTEGER.setResultsName('src_port')) +
+          text_parser.PyparsingConstants.INTEGER.setResultsName(
+              'source_port')) +
       pyparsing.Suppress('->') +
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('dst_ip') +
+      _IP_ADDRESS.setResultsName('destination_ip_address') +
       pyparsing.Optional(
           pyparsing.Suppress(':') +
-          text_parser.PyparsingConstants.INTEGER.setResultsName('dst_port')) +
+          text_parser.PyparsingConstants.INTEGER.setResultsName(
+              'destination_port')) +
       pyparsing.Suppress(pyparsing.lineEnd()))
 
   _LINE_STRUCTURES = [('fastlog_line', _FASTLOG_LINE)]
@@ -267,11 +236,14 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     event_data.classification = self._GetValueFromStructure(
         structure, 'classification')
     event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
-    event_data.source_ip = self._GetValueFromStructure(structure, 'src_ip')
-    event_data.source_port = self._GetValueFromStructure( structure, 'src_port')
-    event_data.destination_ip = self._GetValueFromStructure(structure, 'dst_ip')
+    event_data.source_ip = self._GetValueFromStructure(
+        structure, 'source_ip_address')
+    event_data.source_port = self._GetValueFromStructure(
+        structure, 'source_port')
+    event_data.destination_ip = self._GetValueFromStructure(
+        structure, 'destination_ip_address')
     event_data.destination_port = self._GetValueFromStructure(
-        structure, 'dst_port')
+        structure, 'destination_port')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN,
