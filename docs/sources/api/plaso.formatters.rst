@@ -84,6 +84,14 @@ plaso.formatters.shell\_items module
    :undoc-members:
    :show-inheritance:
 
+plaso.formatters.winevt module
+------------------------------
+
+.. automodule:: plaso.formatters.winevt
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.formatters.winlnk module
 ------------------------------
 
