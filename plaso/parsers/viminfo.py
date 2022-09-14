@@ -42,9 +42,11 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = 'utf-8'
 
+  _FILENAME = '.viminfo'
+
   BUFFER_SIZE = 16384
 
-  _FILENAME = '.viminfo'
+  INTEGER = text_parser.PyparsingConstants.INTEGER
 
   _HEADER_1 = (
       pyparsing.Suppress(pyparsing.LineStart()) +
@@ -125,7 +127,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Word(pyparsing.nums, exact=1) + pyparsing.Suppress(',') +
       pyparsing.Word(pyparsing.nums, exact=1) + pyparsing.Suppress(',') +
       pyparsing.Word(pyparsing.nums, exact=10) +  pyparsing.Suppress(',') +
-      pyparsing.Optional(pyparsing.Word(pyparsing.nums)) +
+      pyparsing.Optional(INTEGER) +
       pyparsing.Suppress(',') +
       pyparsing.restOfLine + pyparsing.Suppress(pyparsing.LineEnd()))
 
@@ -137,12 +139,12 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
   _REGISTER_ITEM = (
       pyparsing.Suppress(pyparsing.LineStart()) +  pyparsing.Literal('|') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
       pyparsing.Word(pyparsing.nums, exact=10) + pyparsing.Suppress(',') +
       pyparsing.Group(
           pyparsing.restOfLine +
@@ -151,10 +153,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
   _FILEMARK_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +  pyparsing.Literal('|') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
+      INTEGER + pyparsing.Suppress(',') +
       pyparsing.Word(pyparsing.nums, exact=10) + pyparsing.Suppress(',') +
       pyparsing.restOfLine +pyparsing.Suppress(pyparsing.LineEnd()))
 
@@ -231,12 +233,12 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
   _REGISTERS_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Literal('"') +
-      pyparsing.Or([pyparsing.Word(pyparsing.nums),
+      pyparsing.Or([INTEGER,
                     pyparsing.Word(pyparsing.printables)]) +
       pyparsing.Suppress(pyparsing.White('\t')) +
       pyparsing.Or(['CHAR', 'LINE', 'BLOCK']) +
       pyparsing.Suppress(pyparsing.White('\t')) +
-      pyparsing.Word(pyparsing.nums) + pyparsing.Suppress(pyparsing.LineEnd()) +
+      INTEGER + pyparsing.Suppress(pyparsing.LineEnd()) +
       pyparsing.Group(pyparsing.ZeroOrMore(_REGISTERS_CONTENT)) +
       _REGISTER_ITEM).setResultsName('registers_items*')
 
@@ -248,9 +250,9 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
   _FILEMARKS_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +  pyparsing.Literal('\'') +
-      pyparsing.Word(pyparsing.nums) +
-      pyparsing.Word(pyparsing.nums) +
-      pyparsing.Word(pyparsing.nums) +
+      INTEGER +
+      INTEGER +
+      INTEGER +
       pyparsing.restOfLine +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       _FILEMARK_ITEM).setResultsName('filemarks_items*')
@@ -264,8 +266,8 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
   _JUMPLIST_ITEM = pyparsing.Group(
       pyparsing.Suppress(pyparsing.LineStart()) +
       pyparsing.Word('-\'') +
-      pyparsing.Word(pyparsing.nums) +
-      pyparsing.Word(pyparsing.nums) +
+      INTEGER +
+      INTEGER +
       pyparsing.restOfLine +
       pyparsing.Suppress(pyparsing.LineEnd()) +
       _FILEMARK_ITEM).setResultsName('jumplist_items*')
@@ -314,7 +316,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Command Line History'
       event_data.item_number = index
 
-      timestamp = int(item[5])
+      timestamp = item[5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -335,7 +337,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Search String History'
       event_data.item_number = index
 
-      timestamp = int(item[5])
+      timestamp = item[5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -356,7 +358,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Expression History'
       event_data.item_number = index
 
-      timestamp = int(item[5])
+      timestamp = item[5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -377,7 +379,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Input Line History'
       event_data.item_number = index
 
-      timestamp = int(item[5])
+      timestamp = item[5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -398,7 +400,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Debug Line History'
       event_data.item_number = index
 
-      timestamp = int(item[5])
+      timestamp = item[5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -419,7 +421,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Register'
       event_data.item_number = item[1]
 
-      timestamp = int(item[12])
+      timestamp = item[12]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -440,7 +442,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'File mark'
       event_data.item_number = index
 
-      timestamp = int(item[5][5])
+      timestamp = item[5][5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
@@ -461,7 +463,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Jumplist'
       event_data.item_number = index
 
-      timestamp = int(item[4][5])
+      timestamp = item[4][5]
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)

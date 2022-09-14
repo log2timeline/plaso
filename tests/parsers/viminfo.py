@@ -20,9 +20,12 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     parser = viminfo.VimInfoParser()
     storage_writer = self._ParseFile(['.viminfo'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 10)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 6)
 
+    # The extraction warnings are due to the last 6 lines of the test file.
+    # These are the "history marks" which are currently not parsed.
     extraction_warnings = list(storage_writer.GetAttributeContainers(
         warnings.ExtractionWarning.CONTAINER_TYPE))
 
@@ -35,12 +38,11 @@ class ViminfoParserTest(test_lib.ParserTestCase):
         '\'> C:\\\\Program Files (x86)\\\\Vim\\\\.vimrc\'')
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 6)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 10)
 
     events = list(storage_writer.GetEvents())
 
@@ -85,7 +87,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
         'data_type': 'viminfo:history',
         'history_type': 'Register',
         'history_value': 'test register',
-        'item_number': '0'}
+        'item_number': 0}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
@@ -94,7 +96,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
         'data_type': 'viminfo:history',
         'history_type': 'Register',
         'history_value': 'test multiline register1\ntest multiline register2',
-        'item_number': '1'}
+        'item_number': 1}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
