@@ -52,16 +52,16 @@ class ExtractionConfiguration(interface.AttributeContainer):
   These settings are primarily used by the extraction worker.
 
   Attributes:
+    archive_types_string (str): comma separated archive types for which embedded
+        file entries should be processed.
     extract_winevt_resources (bool): True if Windows EventLog resources should
         be extracted.
     hasher_file_size_limit (int): maximum file size that hashers
         should process, where 0 or None represents unlimited.
-    hasher_names_string (str): comma separated string of names
-        of hashers to use during processing.
-    process_archives (bool): True if archive files should be
-        scanned for file entries.
-    process_compressed_streams (bool): True if file content in
-        compressed streams should be processed.
+    hasher_names_string (str): comma separated names of hashers to use during
+        processing.
+    process_compressed_streams (bool): True if file content in compressed
+        streams should be processed.
     yara_rules_string (str): Yara rule definitions.
   """
   CONTAINER_TYPE = 'extraction_configuration'
@@ -69,10 +69,10 @@ class ExtractionConfiguration(interface.AttributeContainer):
   def __init__(self):
     """Initializes an extraction configuration object."""
     super(ExtractionConfiguration, self).__init__()
+    self.archive_types_string = None
     self.extract_winevt_resources = True
     self.hasher_file_size_limit = None
     self.hasher_names_string = None
-    self.process_archives = False
     self.process_compressed_streams = True
     self.yara_rules_string = None
 

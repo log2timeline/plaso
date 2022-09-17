@@ -1,16 +1,35 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Spotlight volume configuration plist files."""
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import plist_event
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class SpotlightVolumePlugin(interface.PlistPlugin):
+class SpotlightVolumeConfigurationEventData(events.EventData):
+  """Spotlight volume configuration event data.
+
+  Attributes:
+    partial_path (str): part of the path.
+    volume_identifier (str): identifier of the volume.
+  """
+
+  DATA_TYPE = 'spotlight_volume_configuration:store'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SpotlightVolumeConfigurationEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.partial_path = None
+    self.volume_identifier = None
+
+
+class SpotlightVolumeConfigurationPlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for Spotlight volume configuration plist files."""
 
   NAME = 'spotlight_volume'
@@ -27,29 +46,25 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     stores = match.get('Stores', {})
-    for volume_name, volume in stores.items():
+    for volume_identifier, volume in stores.items():
+      event_data = SpotlightVolumeConfigurationEventData()
+      event_data.partial_path = volume.get('PartialPath', None)
+      event_data.volume_identifier = volume_identifier
+
       datetime_value = volume.get('CreationDate', None)
       if not datetime_value:
-        continue
-
-      partial_path = volume['PartialPath']
-
-      event_data = plist_event.PlistTimeEventData()
-      event_data.desc = 'Spotlight Volume {0:s} ({1:s}) activated.'.format(
-          volume_name, partial_path)
-      event_data.key = ''
-      event_data.root = '/Stores'
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromDatetime(datetime_value)
+        date_time = dfdatetime_semantic_time.NotSet()
+      else:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromDatetime(datetime_value)
 
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-plist.PlistParser.RegisterPlugin(SpotlightVolumePlugin)
+plist.PlistParser.RegisterPlugin(SpotlightVolumeConfigurationPlistPlugin)

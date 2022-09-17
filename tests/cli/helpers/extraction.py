@@ -31,7 +31,8 @@ Test argument parser.
   --process_archives, --process-archives
                         Process file entries embedded within archive files,
                         such as archive.tar and archive.zip. This can make
-                        processing significantly slower.
+                        processing significantly slower. WARNING: this option
+                        is deprecated use --archives=tar,zip instead.
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.

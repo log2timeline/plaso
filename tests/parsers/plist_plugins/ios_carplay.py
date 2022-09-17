@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the iOS Car Play Application plist plugin."""
+"""Tests for the Apple iOS Car Play application plist plugin."""
 
 import unittest
 
+from plaso.lib import definitions
 from plaso.parsers.plist_plugins import ios_carplay
 
 from tests.parsers.plist_plugins import test_lib
 
 
-class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the iOS Car Play Application plist plugin."""
+class IOSCarPlayPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the Apple iOS Car Play application plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.CarPlayApp.plist'
 
-    plugin = ios_carplay.IOSCarPlayPlugin()
+    plugin = ios_carplay.IOSCarPlayPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -36,8 +37,10 @@ class IOSCarPlayPluginTest(test_lib.PlistPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
+        'application_identifier': 'com.apple.mobilecal',
+        'data_type': 'ios:carplay:history:entry',
         'date_time': '2020-04-12 13:55:51.255235072',
-        'desc': 'com.apple.mobilecal'}
+        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_USED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

@@ -9,14 +9,14 @@ on:
     - main
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
         - python-version: '3.8'
           toxenv: 'docs'
     container:
-      image: ubuntu:20.04
+      image: ubuntu:22.04
     steps:
     - uses: actions/checkout@v2
     - name: Set up container

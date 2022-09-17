@@ -4,19 +4,20 @@
 
 import unittest
 
+from plaso.lib import definitions
 from plaso.parsers.plist_plugins import spotlight_volume
 
 from tests.parsers.plist_plugins import test_lib
 
 
-class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
+class SpotlightVolumeConfigurationPlistPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Spotlight Volume configuration plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'VolumeConfiguration.plist'
 
-    plugin = spotlight_volume.SpotlightVolumePlugin()
+    plugin = spotlight_volume.SpotlightVolumeConfigurationPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -35,18 +36,12 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_timestamps = [1369657656000000, 1372139683000000]
-    timestamps = sorted([event.timestamp for event in events])
-
-    self.assertEqual(timestamps, expected_timestamps)
-
     expected_event_values = {
-        'data_type': 'plist:key',
-        'desc': (
-            'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD '
-            '(/.MobileBackups) activated.'),
-        'key': '',
-        'root': '/Stores'}
+        'data_type': 'spotlight_volume_configuration:store',
+        'date_time': '2013-06-25 05:54:43.000000',
+        'partial_path': '/.MobileBackups',
+        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'volume_identifier': '4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

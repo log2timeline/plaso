@@ -97,6 +97,10 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.SkipTo('" ').setResultsName('http_request') +
       pyparsing.Suppress('"'))
 
+  _IP_ADDRESS = (
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address)
+
   _PORT_NUMBER = text_parser.PyparsingConstants.INTEGER.setResultsName(
       'port_number')
 
@@ -130,7 +134,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b"
   _COMMON_LOG_FORMAT_LINE = (
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _IP_ADDRESS.setResultsName('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +
@@ -142,7 +146,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
   _COMBINED_LOG_FORMAT_LINE = (
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _IP_ADDRESS.setResultsName('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +
@@ -159,7 +163,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _SERVER_NAME +
       pyparsing.Suppress(':') +
       _PORT_NUMBER +
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
+      _IP_ADDRESS.setResultsName('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +

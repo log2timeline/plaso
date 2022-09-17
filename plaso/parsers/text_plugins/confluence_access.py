@@ -99,6 +99,10 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
               pyparsing.nums, exact=4)).setResultsName('time_offset') +
       pyparsing.Suppress(']')).setResultsName('date_time')
 
+  _IP_ADDRESS = (
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address)
+
   _RESPONSE_BYTES = (
       pyparsing.Literal('-') |
       text_parser.PyparsingConstants.INTEGER).setResultsName('response_bytes')
@@ -123,8 +127,9 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
               'PUT', 'TRACE'])).setResultsName('http_method')
 
   _REMOTE_NAME = (
-      (text_parser.PyparsingConstants.IP_ADDRESS | pyparsing.Word(
-          pyparsing.alphanums + '-' + '.')).setResultsName('remote_name'))
+      _IP_ADDRESS |
+      pyparsing.Word(pyparsing.alphanums + '-' + '.')).setResultsName(
+          'remote_name')
 
   _HTTP_VERSION = (
       pyparsing.Word(pyparsing.alphanums + "/.").setResultsName('http_version'))
@@ -158,8 +163,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   # Post 7.11
   _POST_711_FORMAT = (
       _DATE_TIME +
-      text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
-          'forwarded_for') +
+      _IP_ADDRESS.setResultsName('forwarded_for') +
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
