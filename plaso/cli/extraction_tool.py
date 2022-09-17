@@ -50,10 +50,10 @@ class ExtractionTool(
     list_time_zones (bool): True if the time zones should be listed.
   """
 
+  _BYTES_IN_A_MIB = 1024 * 1024
+
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
-
-  _BYTES_IN_A_MIB = 1024 * 1024
 
   _PRESETS_FILE_NAME = 'presets.yaml'
 
@@ -61,6 +61,11 @@ class ExtractionTool(
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
+
+  _SUPPORTED_ARCHIVE_TYPES = {
+      'modi': 'MacOS disk image (.dmg) file',
+      'tar': 'tape archive (.tar) file',
+      'zip': 'ZIP archive (.zip) file'}
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes an CLI tool.
@@ -762,10 +767,11 @@ class ExtractionTool(
     """Lists information about supported archive types."""
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Name', 'Description'],
-        title='Archive types')
+        title='Archive and storage media image types')
 
-    table_view.AddRow(['tar', 'TAR archive'])
-    table_view.AddRow(['zip', 'ZIP archive'])
+    for name, description in sorted(self._SUPPORTED_ARCHIVE_TYPES):
+      table_view.AddRow([name, description])
+
     table_view.Write(self._output_writer)
 
   def ListLanguageTags(self):

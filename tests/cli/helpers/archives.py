@@ -23,15 +23,15 @@ usage: cli_helper.py [--archives TYPES]
 Test argument parser.
 
 {0:s}:
-  --archives TYPES  Define a list of archive types for which to process
-                    embedded file entries, such as TAR (archive.tar) or ZIP
-                    (archive.zip). This is a comma separated list where each
-                    entry is the name of an archive type, such as "tar,zip".
-                    "all" indicates that all archive types should be enabled.
-                    "none" disables processing file entries embedded in
-                    archives. Use "--archives list" to list the available
-                    archive types. WARNING: this can make processing
-                    significantly slower.
+  --archives TYPES  Define a list of archive and storage media image types for
+                    which to process embedded file entries, such as TAR
+                    (archive.tar) or ZIP (archive.zip). This is a comma
+                    separated list where each entry is the name of an archive
+                    type, such as "tar,zip". "all" indicates that all archive
+                    types should be enabled. "none" disables processing file
+                    entries embedded in archives. Use "--archives list" to
+                    list the available archive types. WARNING: this can make
+                    processing significantly slower.
 """.format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):

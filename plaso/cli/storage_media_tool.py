@@ -7,7 +7,7 @@ import os
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.analyzer import cs_analyzer_helper
 from dfvfs.helpers import command_line as dfvfs_command_line
-from dfvfs.helpers import volume_scanner
+from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.volume import apfs_volume_system
@@ -27,7 +27,8 @@ except KeyError:
   pass
 
 
-class StorageMediaToolVolumeScannerOptions(volume_scanner.VolumeScannerOptions):
+class StorageMediaToolVolumeScannerOptions(
+    dfvfs_volume_scanner.VolumeScannerOptions):
   """Volume scanner options used by the storage media tool.
 
   Attributes:
@@ -159,7 +160,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
     return not process_current_volume or process_current_volume == 'yes'
 
 
-class StorageMediaToolVolumeScanner(volume_scanner.VolumeScanner):
+class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
   """Volume scanner used by the storage media tool."""
 
   def __init__(self, mediator=None):
@@ -639,10 +640,10 @@ class StorageMediaTool(tools.CLITool):
     else:
       mediator = self._mediator
 
-    volume_scanner_object = StorageMediaToolVolumeScanner(mediator=mediator)
+    volume_scanner = StorageMediaToolVolumeScanner(mediator=mediator)
 
     try:
-      base_path_specs = volume_scanner_object.GetBasePathSpecs(
+      base_path_specs = volume_scanner.GetBasePathSpecs(
           source_path, options=options)
     except dfvfs_errors.ScannerError as exception:
       raise errors.SourceScannerError(exception)
@@ -652,7 +653,6 @@ class StorageMediaTool(tools.CLITool):
           'No supported file system found in source.')
 
     # pylint: disable=protected-access
-    self._credential_configurations = (
-        volume_scanner_object._credential_configurations)
+    self._credential_configurations = volume_scanner._credential_configurations
     self._source_path_specs = base_path_specs
-    self._source_type = volume_scanner_object.source_type
+    self._source_type = volume_scanner.source_type
