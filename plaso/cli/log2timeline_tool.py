@@ -3,7 +3,6 @@
 
 import argparse
 import sys
-import time
 import textwrap
 
 import plaso
@@ -13,7 +12,6 @@ from plaso import output  # pylint: disable=unused-import
 
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
-from plaso.cli import logger
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import definitions
@@ -28,6 +26,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_archive_types (bool): True if the archive types should be listed.
     list_hashers (bool): True if the hashers should be listed.
     list_parsers_and_plugins (bool): True if the parsers and plugins should
         be listed.
@@ -77,6 +76,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
 
     self.dependencies_check = True
+    self.list_archive_types = False
     self.list_hashers = False
     self.list_parsers_and_plugins = False
     self.list_profilers = False
@@ -147,7 +147,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         'extraction arguments')
 
     argument_helper_names = [
-        'artifact_filters', 'extraction', 'filter_file', 'hashers',
+        'archives', 'artifact_filters', 'extraction', 'filter_file', 'hashers',
         'parsers', 'yara_rules']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
@@ -235,12 +235,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           'optimal for the typically non-ASCII characters that need to be '
           'parsed and processed. This will most likely result in an error.'))
 
-    if self._process_archives:
-      logger.warning(
-          'Scanning archive files currently can cause deadlock. Continue at '
-          'your own risk.')
-      time.sleep(5)
-
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
@@ -275,12 +269,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ReadParserPresetsFromFile()
 
     # Check the list options first otherwise required options will raise.
-    argument_helper_names = ['hashers', 'parsers', 'profiling']
+    argument_helper_names = ['archives', 'hashers', 'parsers', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
     self._ParseExtractionOptions(options)
 
+    self.list_archive_types = self._archive_types_string == 'list'
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
     self.list_profilers = self._profilers == 'list'
@@ -293,9 +288,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
-    if (self.list_hashers or self.list_language_tags or
-        self.list_parsers_and_plugins or self.list_profilers or
-        self.list_time_zones or self.show_info or self.show_troubleshooting):
+    if (self.list_archive_types or self.list_hashers or
+        self.list_language_tags or self.list_parsers_and_plugins or
+        self.list_profilers or self.list_time_zones or self.show_info or
+        self.show_troubleshooting):
       return
 
     self._ParseInformationalOptions(options)

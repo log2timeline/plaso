@@ -76,8 +76,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def _TestProcessPathSpec(
       self, storage_writer, path_spec, expected_event_counters,
-      extraction_worker=None, knowledge_base_values=None,
-      process_archives=False):
+      archive_types_string=None, extraction_worker=None,
+      knowledge_base_values=None):
     """Tests processing a path specification.
 
     Args:
@@ -85,11 +85,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       path_spec (dfvfs.PathSpec): path specification.
       expected_event_counters (dict[str, int|list[int]]): expected event
           counters per event data type.
+      archive_types_string (Optional[str]): comma separated archive types for
+          which embedded file entries should be processed.
       extraction_worker (Optional[EventExtractorWorker]): worker to process the
           path specification. If None, a new worker will be created.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      process_archives (Optional[bool]): whether archive files should be
-          processed.
     """
     session = sessions.Session()
 
@@ -105,7 +105,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     if not extraction_worker:
       configuration = configurations.ExtractionConfiguration()
-      configuration.process_archives = process_archives
+      configuration.archive_types_string = archive_types_string
 
       extraction_worker = worker.EventExtractionWorker()
       extraction_worker.SetExtractionConfiguration(configuration)
@@ -593,7 +593,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
-        knowledge_base_values=knowledge_base_values, process_archives=True)
+        archive_types_string='tar,zip',
+        knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpecCompressedArchive(self):
     """Tests the ProcessPathSpec function on a compressed archive file."""
@@ -635,7 +636,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
-        knowledge_base_values=knowledge_base_values, process_archives=True)
+        archive_types_string='tar,zip',
+        knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""

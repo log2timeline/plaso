@@ -48,6 +48,10 @@ def Main():
     return False
 
   have_list_option = False
+  if tool.list_archive_types:
+    tool.ListArchiveTypes()
+    have_list_option = True
+
   if tool.list_hashers:
     tool.ListHashers()
     have_list_option = True

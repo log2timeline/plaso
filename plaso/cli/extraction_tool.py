@@ -73,6 +73,7 @@ class ExtractionTool(
     """
     super(ExtractionTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._archive_types_string = 'none'
     self._artifacts_registry = None
     self._buffer_size = 0
     self._command_line_arguments = None
@@ -87,6 +88,7 @@ class ExtractionTool(
     self._preferred_year = None
     self._presets_file = None
     self._presets_manager = parsers_presets.ParserPresetsManager()
+    # Kept for backwards compatibility.
     self._process_archives = False
     self._process_compressed_streams = True
     self._process_memory_limit = None
@@ -145,6 +147,7 @@ class ExtractionTool(
       ProcessingConfiguration: extraction processing configuration.
     """
     configuration = configurations.ProcessingConfiguration()
+    configuration.extraction.archive_types_string = self._archive_types_string
     configuration.artifact_filters = self._artifact_filters
     configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
@@ -153,7 +156,6 @@ class ExtractionTool(
     configuration.extraction.extract_winevt_resources = (
         self._extract_winevt_resources)
     configuration.extraction.hasher_names_string = self._hasher_names_string
-    configuration.extraction.process_archives = self._process_archives
     configuration.extraction.process_compressed_streams = (
         self._process_compressed_streams)
     configuration.extraction.yara_rules_string = self._yara_rules_string
@@ -356,6 +358,13 @@ class ExtractionTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['language'])
 
+    if self._process_archives:
+      self._archive_types_string = 'tar,zip'
+
+      self._PrintUserWarning(
+          'The --process_archives option is deprecated use --archives=tar,zip '
+          'instead.')
+
     # TODO: add preferred encoding
 
     self.list_language_tags = self._preferred_language == 'list'
@@ -489,7 +498,7 @@ class ExtractionTool(
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      if not self._process_archives or not is_archive:
+      if self._archive_types_string == 'none' or not is_archive:
         single_process_mode = True
 
     if single_process_mode:
@@ -748,6 +757,16 @@ class ExtractionTool(
 
     self._status_view.PrintExtractionSummary(
         processing_status, number_of_extraction_warnings)
+
+  def ListArchiveTypes(self):
+    """Lists information about supported archive types."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Archive types')
+
+    table_view.AddRow(['tar', 'TAR archive'])
+    table_view.AddRow(['zip', 'ZIP archive'])
+    table_view.Write(self._output_writer)
 
   def ListLanguageTags(self):
     """Lists the language tags."""
