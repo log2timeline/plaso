@@ -36,7 +36,8 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
         action='store_true', default=False, help=(
             'Process file entries embedded within archive files, such as '
             'archive.tar and archive.zip. This can make processing '
-            'significantly slower.'))
+            'significantly slower. WARNING: this option is deprecated use '
+            '--archives=tar,zip instead.'))
 
     argument_group.add_argument(
         '--skip_compressed_streams', '--skip-compressed-streams',

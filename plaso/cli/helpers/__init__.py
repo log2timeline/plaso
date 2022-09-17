@@ -2,6 +2,7 @@
 """This file imports Python modules that register CLI helpers."""
 
 from plaso.cli.helpers import analysis_plugins
+from plaso.cli.helpers import archives
 from plaso.cli.helpers import artifact_definitions
 from plaso.cli.helpers import artifact_filters
 from plaso.cli.helpers import data_location

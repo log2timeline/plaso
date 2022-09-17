@@ -24,7 +24,6 @@ from plaso.storage import factory as storage_factory
 
 class PstealTool(
     extraction_tool.ExtractionTool,
-    tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
@@ -39,6 +38,7 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_archive_types (bool): True if the archive types should be listed.
     list_hashers (bool): True if the hashers should be listed.
     list_output_modules (bool): True if information about the output modules
         should be shown.
@@ -96,6 +96,7 @@ class PstealTool(
     self._use_time_slicer = False
 
     self.dependencies_check = True
+    self.list_archive_types = False
     self.list_hashers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
@@ -139,7 +140,7 @@ class PstealTool(
     extraction_group = argument_parser.add_argument_group(
         'extraction arguments')
 
-    argument_helper_names = ['extraction', 'hashers', 'parsers']
+    argument_helper_names = ['archives', 'extraction', 'hashers', 'parsers']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
@@ -233,12 +234,13 @@ class PstealTool(
     # and output_time_zone options.
     self._ParseOutputOptions(options)
 
-    argument_helper_names = ['artifact_definitions', 'hashers', 'parsers']
+    argument_helper_names = ['archives', 'hashers', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
     self._ParseExtractionOptions(options)
 
+    self.list_archive_types = self._archive_types_string == 'list'
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
@@ -247,9 +249,9 @@ class PstealTool(
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     # Check the list options first otherwise required options will raise.
-    if (self.list_hashers or self.list_language_tags or
-        self.list_parsers_and_plugins or self.list_time_zones or
-        self.show_troubleshooting):
+    if (self.list_archive_types or self.list_hashers or
+        self.list_language_tags or self.list_parsers_and_plugins or
+        self.list_time_zones or self.show_troubleshooting):
       return
 
     # Check output modules after the other listable options, otherwise
@@ -263,7 +265,8 @@ class PstealTool(
 
     self._ParseInformationalOptions(options)
 
-    argument_helper_names = ['extraction', 'status_view']
+    argument_helper_names = [
+        'artifact_definitions', 'extraction', 'status_view']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 

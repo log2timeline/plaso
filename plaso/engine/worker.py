@@ -113,13 +113,13 @@ class EventExtractionWorker(object):
     self._abort = False
     self._analyzers = []
     self._analyzers_profiler = None
+    self._archive_types = []
     self._event_extractor = extractors.EventExtractor(
         force_parser=force_parser,
         parser_filter_expression=parser_filter_expression)
     self._force_parser = force_parser
     self._hasher_file_size_limit = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
-    self._process_archives = None
     self._process_compressed_streams = None
     self._processing_profiler = None
 
@@ -501,12 +501,14 @@ class EventExtractionWorker(object):
           'archive file: {1:s}').format(type_indicators, display_name))
 
     for type_indicator in type_indicators:
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
+      if ('tar' in self._archive_types and
+          type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR):
         archive_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TAR, location='/',
             parent=path_spec)
 
-      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_ZIP:
+      elif ('zip' in self._archive_types and
+            type_indicator == dfvfs_definitions.TYPE_INDICATOR_ZIP):
         archive_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_ZIP, location='/',
             parent=path_spec)
@@ -755,7 +757,7 @@ class EventExtractionWorker(object):
       archive_types = self._GetArchiveTypes(mediator, path_spec)
 
     if archive_types:
-      if self._process_archives:
+      if self._archive_types:
         self._ProcessArchiveTypes(mediator, path_spec, archive_types)
 
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
@@ -799,6 +801,20 @@ class EventExtractionWorker(object):
 
       self._event_extractor.ParseMetadataFile(
           mediator, file_entry, data_stream.name)
+
+  def _SetArchiveTypes(self, archive_types_string):
+    """Sets the archive types.
+
+    Args:
+      archive_types_string (str): comma separated archive types for
+          which embedded file entries should be processed.
+    """
+    if not archive_types_string or archive_types_string == 'none':
+      return
+
+    self._archive_types = [
+        archive_type.lower()
+        for archive_type in archive_types_string.split(',')]
 
   def _SetHashers(self, hasher_names_string):
     """Sets the hasher names.
@@ -888,9 +904,9 @@ class EventExtractionWorker(object):
     Args:
       configuration (ExtractionConfiguration): extraction configuration.
     """
+    self._SetArchiveTypes(configuration.archive_types_string)
     self._hasher_file_size_limit = configuration.hasher_file_size_limit
     self._SetHashers(configuration.hasher_names_string)
-    self._process_archives = configuration.process_archives
     self._process_compressed_streams = configuration.process_compressed_streams
     self._SetYaraRules(configuration.yara_rules_string)
 
