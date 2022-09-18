@@ -82,9 +82,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       text_parser.ConvertTokenToInteger) | _BLANK
 
   _IP_ADDRESS = (
-      text_parser.PyparsingConstants.IPV4_ADDRESS |
-      text_parser.PyparsingConstants.IPV6_ADDRESS |
-      _BLANK)
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address | _BLANK)
 
   _PORT_NUMBER = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK

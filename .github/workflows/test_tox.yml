@@ -9,12 +9,10 @@ on:
     - main
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-        - python-version: '3.6'
-          toxenv: 'py36'
         - python-version: '3.7'
           toxenv: 'py37'
         - python-version: '3.8'
@@ -26,7 +24,7 @@ jobs:
         - python-version: '3.8'
           toxenv: 'lint'
     container:
-      image: ubuntu:20.04
+      image: ubuntu:22.04
     steps:
     - uses: actions/checkout@v2
     - name: Set up container

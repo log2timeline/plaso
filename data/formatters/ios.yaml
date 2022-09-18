@@ -20,6 +20,13 @@ short_message:
 - 'Bundle Identifier: {bundle_identifier}'
 ---
 type: 'conditional'
+data_type: 'ios:carplay:history:entry'
+message:
+- 'Application identifier: {application_identifier}'
+short_message:
+- 'Application identifier: {application_identifier}'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
