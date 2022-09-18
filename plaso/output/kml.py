@@ -18,10 +18,12 @@ from plaso.output import rawpy
 class KMLEventFormattingHelper(rawpy.NativePythonEventFormattingHelper):
   """Keyhole Markup Language (KML) XML event formatting helper."""
 
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -33,7 +35,7 @@ class KMLEventFormattingHelper(rawpy.NativePythonEventFormattingHelper):
     event_identifier = event.GetIdentifier()
 
     description_text = self._GetFormattedEventNativePython(
-        event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     placemark_xml_element = ElementTree.Element('Placemark')
 
@@ -52,9 +54,9 @@ class KMLEventFormattingHelper(rawpy.NativePythonEventFormattingHelper):
         event_data.longitude, event_data.latitude)
 
     # Note that ElementTree.tostring() will appropriately escape the input data.
-    xml_string = ElementTree.tostring(placemark_xml_element)
+    output_text = ElementTree.tostring(placemark_xml_element)
 
-    return codecs.decode(xml_string, self._output_mediator.encoding)
+    return codecs.decode(output_text, output_mediator.encoding)
 
 
 class KMLOutputModule(interface.TextFileOutputModule):
@@ -69,7 +71,7 @@ class KMLOutputModule(interface.TextFileOutputModule):
     Args:
       output_mediator (OutputMediator): an output mediator.
     """
-    event_formatting_helper = KMLEventFormattingHelper(output_mediator)
+    event_formatting_helper = KMLEventFormattingHelper()
     super(KMLOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
 
@@ -86,7 +88,8 @@ class KMLOutputModule(interface.TextFileOutputModule):
     longitude = getattr(event_data, 'longitude', None)
     if None not in (latitude, longitude):
       output_text = self._event_formatting_helper.GetFormattedEvent(
-          event, event_data, event_data_stream, event_tag)
+          self._output_mediator, event, event_data, event_data_stream,
+          event_tag)
       self.WriteText(output_text)
 
   def WriteHeader(self):

@@ -19,8 +19,7 @@ class JSONOutputModule(interface.TextFileOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    event_formatting_helper = shared_json.JSONEventFormattingHelper(
-        output_mediator)
+    event_formatting_helper = shared_json.JSONEventFormattingHelper()
     super(JSONOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
     self._event_counter = 0
@@ -35,7 +34,7 @@ class JSONOutputModule(interface.TextFileOutputModule):
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, event_tag)
+        self._output_mediator, event, event_data, event_data_stream, event_tag)
 
     if self._event_counter != 0:
       self.WriteText(', ')

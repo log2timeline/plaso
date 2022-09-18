@@ -23,8 +23,7 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    event_formatting_helper = shared_json.JSONEventFormattingHelper(
-        output_mediator)
+    event_formatting_helper = shared_json.JSONEventFormattingHelper()
     super(JSONLineOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
 
@@ -38,7 +37,7 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, event_tag)
+        self._output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.WriteLine(output_text)
 

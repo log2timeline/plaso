@@ -22,10 +22,12 @@ from plaso.output import shared_dsv
 class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
   """L2T CSV output module event formatting helper."""
 
-  def GetFormattedEventMACBGroup(self, event_macb_group):
+  # pylint: disable=missing-type-doc
+  def GetFormattedEventMACBGroup(self, output_mediator, event_macb_group):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
           EventTag]]): group of events with identical timestamps, attributes
           and values.
@@ -39,17 +41,16 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
     field_values = []
     for field_name in self._field_names:
       if field_name == 'MACB':
-        field_value = (
-            self._output_mediator.GetMACBRepresentationFromDescriptions(
-                timestamp_descriptions))
+        field_value = output_mediator.GetMACBRepresentationFromDescriptions(
+            timestamp_descriptions)
       elif field_name == 'type':
         # TODO: fix timestamp description in source.
         field_value = '; '.join(timestamp_descriptions)
       else:
         event, event_data, event_data_stream, event_tag = event_macb_group[0]
         field_value = self._field_formatting_helper.GetFormattedField(
-            self._output_mediator, field_name, event, event_data,
-            event_data_stream, event_tag)
+            output_mediator, field_name, event, event_data, event_data_stream,
+            event_tag)
 
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
@@ -79,8 +80,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'timezone': '_FormatTimeZone',
       'type': '_FormatType',
       'user': '_FormatUsername',
-      'version': '_FormatVersion',
-  }
+      'version': '_FormatVersion'}
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
@@ -257,7 +257,7 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     """
     field_formatting_helper = L2TCSVFieldFormattingHelper()
     event_formatting_helper = L2TCSVEventFormattingHelper(
-        output_mediator, field_formatting_helper, self._FIELD_NAMES)
+        field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
 
@@ -270,7 +270,7 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
           and values.
     """
     output_text = self._event_formatting_helper.GetFormattedEventMACBGroup(
-        event_macb_group)
+        self._output_mediator, event_macb_group)
 
     self.WriteLine(output_text)
 

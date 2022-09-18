@@ -43,13 +43,12 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testGetFormattedEventNativePython(self):
     """Tests the _GetFormattedEventNativePython function."""
     output_mediator = self._CreateOutputMediator()
-    event_formatting_helper = rawpy.NativePythonEventFormattingHelper(
-        output_mediator)
+    event_formatting_helper = rawpy.NativePythonEventFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     event_string = event_formatting_helper._GetFormattedEventNativePython(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
@@ -91,13 +90,12 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testGetFormattedEvent(self):
     """Tests the GetFormattedEvent function."""
     output_mediator = self._CreateOutputMediator()
-    event_formatting_helper = rawpy.NativePythonEventFormattingHelper(
-        output_mediator)
+    event_formatting_helper = rawpy.NativePythonEventFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     event_string = event_formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

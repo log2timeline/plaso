@@ -8,18 +8,15 @@ from plaso.output import interface
 class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
   """Delimiter separated values output module event formatting helper."""
 
-  def __init__(
-      self, output_mediator, field_formatting_helper, field_names,
-      field_delimiter=','):
+  def __init__(self, field_formatting_helper, field_names, field_delimiter=','):
     """Initializes a delimiter separated values event formatting helper.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
       field_formatting_helper (FieldFormattingHelper): field formatting helper.
       field_names (list[str]): names of the fields to output.
       field_delimiter (Optional[str]): field delimiter.
     """
-    super(DSVEventFormattingHelper, self).__init__(output_mediator)
+    super(DSVEventFormattingHelper, self).__init__()
     self._field_delimiter = field_delimiter
     self._field_names = field_names
     self._field_formatting_helper = field_formatting_helper
@@ -39,10 +36,12 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       return field.replace(self._field_delimiter, ' ')
     return field
 
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -54,8 +53,8 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     field_values = []
     for field_name in self._field_names:
       field_value = self._field_formatting_helper.GetFormattedField(
-          self._output_mediator, field_name, event, event_data,
-          event_data_stream, event_tag)
+          output_mediator, field_name, event, event_data, event_data_stream,
+          event_tag)
 
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
@@ -104,8 +103,7 @@ class DSVOutputModule(interface.TextFileOutputModule):
           generate a header from the field names.
     """
     event_formatting_helper = DSVEventFormattingHelper(
-        output_mediator, field_formatting_helper, names,
-        field_delimiter=delimiter)
+        field_formatting_helper, names, field_delimiter=delimiter)
     super(DSVOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
     self._header = header

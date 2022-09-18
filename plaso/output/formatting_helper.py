@@ -19,20 +19,13 @@ from plaso.output import logger
 class EventFormattingHelper(object):
   """Output module event formatting helper."""
 
-  def __init__(self, output_mediator):
-    """Initializes an event formatting helper.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-    """
-    super(EventFormattingHelper, self).__init__()
-    self._output_mediator = output_mediator
-
   @abc.abstractmethod
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.

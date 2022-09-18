@@ -47,7 +47,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    formatting_helper = shared_json.JSONEventFormattingHelper(output_mediator)
+    formatting_helper = shared_json.JSONEventFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -99,7 +99,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         'username': 'root',
     }
     json_dict = formatting_helper._WriteSerializedDict(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(json_dict, expected_json_dict)
 
@@ -111,7 +111,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    formatting_helper = shared_json.JSONEventFormattingHelper(output_mediator)
+    formatting_helper = shared_json.JSONEventFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -143,7 +143,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
             expected_os_location)
 
     json_string = formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(json_string, expected_json_string)
 
