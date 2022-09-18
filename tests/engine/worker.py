@@ -676,8 +676,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     storage_writer = fake_writer.FakeStorageWriter()
 
+    # Typically there are 4 filestat events, but there can be 5 on platforms
+    # that support os.stat_result st_birthtime.
     expected_event_counters = {
-        'fs:stat': 4}
+        'fs:stat': [4, 5]}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
@@ -685,7 +687,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_values=knowledge_base_values)
 
     expected_event_counters = {
-        'fs:stat': 50}
+        'fs:stat': [50, 51]}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
