@@ -157,8 +157,7 @@ class DependencyHelper(object):
     """
     module_object = self._ImportPythonModule(dependency.name)
     if not module_object:
-      status_message = 'missing: {0:s}'.format(dependency.name)
-      return False, status_message
+      return False, f'missing: {dependency.name:s}'
 
     if not dependency.version_property:
       return True, dependency.name
@@ -196,13 +195,11 @@ class DependencyHelper(object):
         module_version = version_method()
 
     if not module_version:
-      status_message = (
-          'unable to determine version information for: {0:s}').format(
-              module_name)
-      return False, status_message
+      return False, (
+          f'unable to determine version information for: {module_name:s}')
 
     # Make sure the module version is a string.
-    module_version = '{0!s}'.format(module_version)
+    module_version = f'{module_version!s}'
 
     # Split the version string and convert every digit into an integer.
     # A string compare of both version strings will yield an incorrect result.
@@ -217,42 +214,38 @@ class DependencyHelper(object):
       module_version_map = list(
           map(int, self._VERSION_SPLIT_REGEX.split(module_version)))
     except ValueError:
-      status_message = 'unable to parse module version: {0:s} {1:s}'.format(
-          module_name, module_version)
-      return False, status_message
+      return False, (
+          f'unable to parse module version: {module_name:s} {module_version:s}')
 
     if minimum_version:
       try:
         minimum_version_map = list(
             map(int, self._VERSION_SPLIT_REGEX.split(minimum_version)))
       except ValueError:
-        status_message = 'unable to parse minimum version: {0:s} {1:s}'.format(
-            module_name, minimum_version)
-        return False, status_message
+        return False, (
+            f'unable to parse minimum version: {module_name:s} '
+            f'{minimum_version:s}')
 
       if module_version_map < minimum_version_map:
-        status_message = (
-            '{0:s} version: {1!s} is too old, {2!s} or later required').format(
-                module_name, module_version, minimum_version)
-        return False, status_message
+        return False, (
+            f'{module_name:s} version: {module_version!s} is too old, '
+            f'{minimum_version!s} or later required')
 
     if maximum_version:
       try:
         maximum_version_map = list(
             map(int, self._VERSION_SPLIT_REGEX.split(maximum_version)))
       except ValueError:
-        status_message = 'unable to parse maximum version: {0:s} {1:s}'.format(
-            module_name, maximum_version)
-        return False, status_message
+        return False, (
+            f'unable to parse maximum version: {module_name:s} '
+            f'{maximum_version:s}')
 
       if module_version_map > maximum_version_map:
-        status_message = (
-            '{0:s} version: {1!s} is too recent, {2!s} or earlier '
-            'required').format(module_name, module_version, maximum_version)
-        return False, status_message
+        return False, (
+            f'{module_name:s} version: {module_version!s} is too recent, '
+            f'{maximum_version!s} or earlier required')
 
-    status_message = '{0:s} version: {1!s}'.format(module_name, module_version)
-    return True, status_message
+    return True, f'{module_name:s} version: {module_version!s}'
 
   def _ImportPythonModule(self, module_name):
     """Imports a Python module.
@@ -292,10 +285,10 @@ class DependencyHelper(object):
       else:
         status_indicator = '[FAILURE]'
 
-      print('{0:s}\t{1:s}'.format(status_indicator, status_message))
+      print(f'{status_indicator:s}\t{status_message:s}')
 
     elif verbose_output:
-      print('[OK]\t\t{0:s}'.format(status_message))
+      print(f'[OK]\t\t{status_message:s}')
 
   def CheckDependencies(self, verbose_output=True):
     """Checks the availability of the dependencies.
@@ -349,7 +342,8 @@ class DependencyHelper(object):
         continue
 
       result, status_message = self._CheckPythonModule(dependency)
-      if not result:
+
+      if not result and not dependency.is_optional:
         check_result = False
 
       self._PrintCheckDependencyStatus(

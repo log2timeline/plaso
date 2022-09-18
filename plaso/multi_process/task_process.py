@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Base class for a process tha handles tasks used in multi-processing."""
+"""Base class for a process that handles tasks used in multi-processing."""
 
 import os
-
-import redis
 
 from plaso.lib import definitions
 from plaso.multi_process import base_process
 from plaso.storage import factory as storage_factory
-from plaso.storage.redis import redis_store
+
+try:
+  # pylint: disable=ungrouped-imports
+  import redis
+  from plaso.storage.redis import redis_store
+except ModuleNotFoundError:
+  redis = None
+  redis_store = None
 
 
 class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
@@ -50,7 +55,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       IOError: if the SQLite task storage file cannot be renamed.
       OSError: if the SQLite task storage file cannot be renamed.
     """
-    if task.storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if task.storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
       url = redis_store.RedisStore.DEFAULT_REDIS_URL
       redis_client = redis.from_url(url=url, socket_timeout=60)
       redis_client.client_setname('task_process')
