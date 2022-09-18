@@ -316,8 +316,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Command Line History'
       event_data.item_number = index
 
-      timestamp = item[5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -337,8 +336,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Search String History'
       event_data.item_number = index
 
-      timestamp = item[5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -358,8 +356,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Expression History'
       event_data.item_number = index
 
-      timestamp = item[5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -379,8 +376,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Input Line History'
       event_data.item_number = index
 
-      timestamp = item[5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -400,8 +396,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Debug Line History'
       event_data.item_number = index
 
-      timestamp = item[5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -421,8 +416,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Register'
       event_data.item_number = item[1]
 
-      timestamp = item[12]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[12])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -442,8 +436,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'File mark'
       event_data.item_number = index
 
-      timestamp = item[5][5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5][5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -463,8 +456,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_type = 'Jumplist'
       event_data.item_number = index
 
-      timestamp = item[4][5]
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[4][5])
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_RECORDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
