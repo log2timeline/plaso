@@ -52,6 +52,9 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
             output_mediator, field_name, event, event_data, event_data_stream,
             event_tag)
 
+      if field_value is None:
+        field_value = '-'
+
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
 

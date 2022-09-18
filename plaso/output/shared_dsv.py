@@ -17,6 +17,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_delimiter (Optional[str]): field delimiter.
     """
     super(DSVEventFormattingHelper, self).__init__()
+    self._custom_fields = {}
     self._field_delimiter = field_delimiter
     self._field_names = field_names
     self._field_formatting_helper = field_formatting_helper
@@ -56,6 +57,12 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
           output_mediator, field_name, event, event_data, event_data_stream,
           event_tag)
 
+      if field_value is None and field_name in self._custom_fields:
+        field_value = self._custom_fields.get(field_name, None)
+
+      if field_value is None:
+        field_value = '-'
+
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
 
@@ -76,6 +83,16 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_names (list[str]): names of additional fields to output.
     """
     self._field_names.extend(field_names)
+
+  def SetCustomFields(self, field_names_and_values):
+    """Sets the names and values of custom fields to output.
+
+    Args:
+      field_names_and_values (list[tuple[str, str]]): names and values of
+          custom fields to output.
+    """
+    self._custom_fields = dict(field_names_and_values)
+    self._field_names.extend(self._custom_fields.keys())
 
   def SetFieldDelimiter(self, field_delimiter):
     """Sets the field delimiter.
@@ -123,6 +140,15 @@ class DSVOutputModule(interface.TextFileOutputModule):
       field_names (list[str]): names of additional fields to output.
     """
     self._event_formatting_helper.SetAdditionalFields(field_names)
+
+  def SetCustomFields(self, field_names_and_values):
+    """Sets the names and values of custom fields to output.
+
+    Args:
+      field_names_and_values (list[tuple[str, str]]): names and values of
+          custom fields to output.
+    """
+    self._event_formatting_helper.SetCustomFields(field_names_and_values)
 
   def SetFieldDelimiter(self, field_delimiter):
     """Sets the field delimiter.
