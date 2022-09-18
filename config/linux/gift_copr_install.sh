@@ -16,6 +16,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libewf-python3
                       libfsapfs-python3
                       libfsext-python3
+                      libfsfat-python3
                       libfshfs-python3
                       libfsntfs-python3
                       libfsxfs-python3
@@ -98,6 +99,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libfsapfs-python3-debuginfo
                     libfsext-debuginfo
                     libfsext-python3-debuginfo
+                    libfsfat-debuginfo
+                    libfsfat-python3-debuginfo
                     libfshfs-debuginfo
                     libfshfs-python3-debuginfo
                     libfsntfs-debuginfo

@@ -63,6 +63,7 @@ class ExtractionTool(
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
 
   _SUPPORTED_ARCHIVE_TYPES = {
+      'iso9660': 'ISO-9660 disk image (.iso) file',
       'modi': 'MacOS disk image (.dmg) file',
       'tar': 'tape archive (.tar) file',
       'zip': 'ZIP archive (.zip) file'}
