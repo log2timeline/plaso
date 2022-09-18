@@ -51,13 +51,6 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         action='store', default=cls._DEFAULT_FLUSH_INTERVAL, metavar='INTERVAL',
         help='Events to queue up before bulk insert to OpenSearch.')
 
-    default_fields = ', '.join(cls._DEFAULT_FIELDS)
-    argument_group.add_argument(
-        '--additional_fields', '--additional-fields', dest='additional_fields',
-        type=str, action='store', default='', help=(
-            'Defines extra fields to be included in the output, in addition to '
-            'the default fields, which are {0:s}.'.format(default_fields)))
-
     argument_group.add_argument(
         '--opensearch-server', '--opensearch_server', '--server', dest='server',
         type=str, action='store', default=cls._DEFAULT_SERVER,
@@ -126,12 +119,6 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
 
-    fields = ','.join(cls._DEFAULT_FIELDS)
-    additional_fields = cls._ParseStringOption(options, 'additional_fields')
-
-    if additional_fields:
-      fields = ','.join([fields, additional_fields])
-
     mappings_file_path = cls._ParseStringOption(options, 'opensearch_mappings')
     opensearch_user = cls._ParseStringOption(options, 'opensearch_user')
     opensearch_password = cls._ParseStringOption(options, 'opensearch_password')
@@ -163,8 +150,6 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     output_module.SetIndexName(index_name)
     output_module.SetFlushInterval(flush_interval)
-    output_module.SetFields([
-        field_name.strip() for field_name in fields.split(',')])
 
     output_module.SetUsername(opensearch_user)
     output_module.SetPassword(opensearch_password)

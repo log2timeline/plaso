@@ -123,6 +123,8 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
   DESCRIPTION = (
       'Dynamic selection of fields for a separated value output format.')
 
+  SUPPORTS_ADDITIONAL_FIELDS = True
+
   _DEFAULT_NAMES = [
       'datetime', 'timestamp_desc', 'source', 'source_long', 'message',
       'parser', 'display_name', 'tag']

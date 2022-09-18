@@ -14,9 +14,9 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = 'output'
   DESCRIPTION = 'Argument helper for the dynamic output module.'
 
-  _DEFAULT_FIELDS = [
+  _DEFAULT_FIELDS = ','.join([
       'datetime', 'timestamp_desc', 'source', 'source_long',
-      'message', 'parser', 'display_name', 'tag']
+      'message', 'parser', 'display_name', 'tag'])
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -29,18 +29,10 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    default_fields = ','.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
         '--fields', dest='fields', type=str, action='store',
-        default=default_fields, help=(
+        default=cls._DEFAULT_FIELDS, help=(
             'Defines which fields should be included in the output.'))
-
-    default_fields = ', '.join(cls._DEFAULT_FIELDS)
-    argument_group.add_argument(
-        '--additional_fields', '--additional-fields', dest='additional_fields',
-        type=str, action='store', default='', help=(
-            'Defines extra fields to be included in the output, in addition to '
-            'the default fields, which are {0:s}.'.format(default_fields)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-renamed
@@ -58,16 +50,10 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Output module is not an instance of DynamicOutputModule')
 
-    default_fields = ','.join(cls._DEFAULT_FIELDS)
     fields = cls._ParseStringOption(
-        options, 'fields', default_value=default_fields)
+        options, 'fields', default_value=cls._DEFAULT_FIELDS)
 
-    additional_fields = cls._ParseStringOption(options, 'additional_fields')
-    if additional_fields:
-      fields = ','.join([fields, additional_fields])
-
-    output_module.SetFields([
-        field_name.strip() for field_name in fields.split(',')])
+    output_module.SetFields([name.strip() for name in fields.split(',')])
 
 
 manager.ArgumentHelperManager.RegisterHelper(DynamicOutputArgumentsHelper)

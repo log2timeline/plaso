@@ -19,16 +19,10 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
-                     [--additional_fields ADDITIONAL_FIELDS]
 
 Test argument parser.
 
 {0:s}:
-  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
-                        Defines extra fields to be included in the output, in
-                        addition to the default fields, which are datetime,
-                        timestamp_desc, source, source_long, message, parser,
-                        display_name, tag.
   --fields FIELDS       Defines which fields should be included in the output.
   -o FORMAT, --output_format FORMAT, --output-format FORMAT
                         The output format. Use "-o list" to see a list of

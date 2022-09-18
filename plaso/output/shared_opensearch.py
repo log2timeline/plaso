@@ -148,6 +148,8 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
   NAME = 'opensearch_shared'
 
+  SUPPORTS_ADDITIONAL_FIELDS = True
+
   _DEFAULT_FLUSH_INTERVAL = 1000
 
   # Number of seconds to wait before a request to OpenSearch is timed out.
@@ -366,13 +368,13 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     self._client = None
 
-  def SetFields(self, field_names):
-    """Sets the names of the fields to output.
+  def SetAdditionalFields(self, field_names):
+    """Sets the names of additional fields to output.
 
     Args:
-      field_names (list[str]): names of the fields to output.
+      field_names (list[str]): names of additional fields to output.
     """
-    self._field_names = field_names
+    self._field_names.extend(field_names)
 
   def SetFlushInterval(self, flush_interval):
     """Sets the flush interval.
