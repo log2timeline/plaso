@@ -7,6 +7,8 @@ import re
 import time
 
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
+from dfvfs.helpers import source_scanner as dfvfs_source_scanner
+from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -20,6 +22,65 @@ from plaso.engine import extractors
 from plaso.engine import logger
 from plaso.lib import definitions
 from plaso.lib import errors
+
+
+class EventExtractionWorkerVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
+  """Volume scanner used by the event extraction worker."""
+
+  # TODO: remove after updating to dfVFS >= 20220917
+  def _ScanSourcePathSpec(self, source_path_spec):
+    """Scans the source path specification for supported formats.
+
+    Args:
+      source_path_spec (dfvfs.PathSpec): source path specification.
+
+    Returns:
+      SourceScannerContext: source scanner context.
+
+    Raises:
+      dfvfs.ScannerError: if the source path does not exists, or if the source
+          path is not a file or directory, or if the format of or within
+          the source file is not supported.
+    """
+    scan_context = dfvfs_source_scanner.SourceScannerContext()
+    scan_context.AddScanNode(source_path_spec, None)
+
+    try:
+      self._source_scanner.Scan(scan_context)
+    except (ValueError, dfvfs_errors.BackEndError) as exception:
+      raise dfvfs_errors.ScannerError(
+          'Unable to scan source with error: {0!s}'.format(exception))
+
+    return scan_context
+
+  def GetBasePathSpecs(self, source_path_spec, options=None):  # pylint: disable=arguments-renamed
+    """Determines the base path specifications.
+
+    Args:
+      source_path_spec (dfvfs.PathSpec): source path specification.
+      options (Optional[VolumeScannerOptions]): volume scanner options. If None
+          the default volume scanner options are used, which are defined in the
+          VolumeScannerOptions class.
+
+    Returns:
+      list[PathSpec]: path specifications.
+
+    Raises:
+      dfvfs.ScannerError: if the source path does not exists, or if the source
+          path is not a file or directory, or if the format of or within
+          the source file is not supported.
+    """
+    if not options:
+      options = dfvfs_volume_scanner.VolumeScannerOptions()
+      options.partitions = ['all']
+      options.scan_mode = options.SCAN_MODE_ALL
+      options.snapshots = ['none']
+      options.snapshots_only = False
+      options.volumes = ['all']
+
+    scan_context = self._ScanSourcePathSpec(source_path_spec)
+
+    return self._GetBasePathSpecs(scan_context, options)
 
 
 class EventExtractionWorker(object):
@@ -433,6 +494,31 @@ class EventExtractionWorker(object):
 
     return type_indicators
 
+  def _GetStorageMediaImageTypes(self, mediator, path_spec):
+    """Determines if a data stream contains a storage media image such as: ISO.
+
+    Args:
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      path_spec (dfvfs.PathSpec): path specification of the data stream.
+
+    Returns:
+      list[str]: dfVFS archive type indicators found in the data stream.
+    """
+    try:
+      type_indicators = (
+          dfvfs_analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
+              path_spec, resolver_context=mediator.resolver_context))
+    except IOError as exception:
+      type_indicators = []
+
+      warning_message = (
+          'analyzer failed to determine storage media image type indicators '
+          'with error: {0!s}').format(exception)
+      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
+
+    return type_indicators
+
   def _GetCompressedStreamTypes(self, mediator, path_spec):
     """Determines if a data stream contains a compressed stream such as: gzip.
 
@@ -497,32 +583,25 @@ class EventExtractionWorker(object):
     if number_of_type_indicators > 1:
       display_name = mediator.GetDisplayName()
       logger.debug((
-          'Found multiple format type indicators: {0:s} for '
-          'archive file: {1:s}').format(type_indicators, display_name))
+          'Found multiple format type indicators: {0:s} for archive file: '
+          '{1:s}').format(type_indicators, display_name))
 
     for type_indicator in type_indicators:
-      if ('tar' in self._archive_types and
-          type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR):
-        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TAR, location='/',
-            parent=path_spec)
-
-      elif ('zip' in self._archive_types and
-            type_indicator == dfvfs_definitions.TYPE_INDICATOR_ZIP):
-        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_ZIP, location='/',
-            parent=path_spec)
-
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
+        process_archive = 'tar' in self._archive_types
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_ZIP:
+        process_archive = 'zip' in self._archive_types
       else:
-        archive_path_spec = None
+        process_archive = False
 
-        warning_message = (
-            'unsupported archive format type indicator: {0:s}').format(
-                type_indicator)
-        mediator.ProduceExtractionWarning(
-            warning_message, path_spec=path_spec)
+        warning_message = 'unsupported archive format: {0:s}'.format(
+            type_indicator)
+        mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
 
-      if archive_path_spec:
+      if process_archive:
+        archive_path_spec = path_spec_factory.Factory.NewPathSpec(
+            type_indicator, location='/', parent=path_spec)
+
         try:
           path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
               [archive_path_spec], resolver_context=mediator.resolver_context)
@@ -542,6 +621,78 @@ class EventExtractionWorker(object):
           warning_message = (
               'unable to process archive file with error: {0!s}').format(
                   exception)
+          mediator.ProduceExtractionWarning(
+              warning_message, path_spec=generated_path_spec)
+
+  def _ProcessStorageMediaImageTypes(
+      self, mediator, path_spec, type_indicators):
+    """Processes a data stream containing storage media image types.
+
+    Args:
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      path_spec (dfvfs.PathSpec): path specification.
+      type_indicators(list[str]): dfVFS archive type indicators found in
+          the data stream.
+    """
+    number_of_type_indicators = len(type_indicators)
+    if number_of_type_indicators == 0:
+      return
+
+    self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
+
+    if number_of_type_indicators > 1:
+      display_name = mediator.GetDisplayName()
+      logger.debug((
+          'Found multiple format type indicators: {0:s} for storage media '
+          'file: {1:s}').format(type_indicators, display_name))
+
+    for type_indicator in type_indicators:
+      storage_media_image_path_spec = None
+      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_MODI:
+        if 'modi' in self._archive_types:
+          storage_media_image_path_spec = path_spec_factory.Factory.NewPathSpec(
+              type_indicator, parent=path_spec)
+      else:
+        warning_message = (
+            'unsupported storage media image format: {0:s}').format(
+                type_indicator)
+        mediator.ProduceExtractionWarning(
+            warning_message, path_spec=path_spec)
+
+      if storage_media_image_path_spec:
+        volume_scanner = EventExtractionWorkerVolumeScanner()
+
+        try:
+          base_path_specs = volume_scanner.GetBasePathSpecs(
+              storage_media_image_path_spec)
+        except dfvfs_errors.ScannerError as exception:
+          warning_message = (
+              'unable to scan storage media image with error: {0!s}').format(
+                  exception)
+          mediator.ProduceExtractionWarning(
+              warning_message, path_spec=storage_media_image_path_spec)
+          continue
+
+        try:
+          path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+              base_path_specs, resolver_context=mediator.resolver_context)
+
+          for generated_path_spec in path_spec_generator:
+            if self._abort:
+              break
+
+            event_source = event_sources.FileEntryEventSource(
+                file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
+                path_spec=generated_path_spec)
+            mediator.ProduceEventSource(event_source)
+
+            self.last_activity_timestamp = time.time()
+
+        except (IOError, errors.MaximumRecursionDepth) as exception:
+          warning_message = (
+              'unable to process storage media image file with error: '
+              '{0!s}').format(exception)
           mediator.ProduceExtractionWarning(
               warning_message, path_spec=generated_path_spec)
 
@@ -748,6 +899,7 @@ class EventExtractionWorker(object):
 
     archive_types = []
     compressed_stream_types = []
+    storage_media_image_types = []
 
     if self._process_compressed_streams:
       compressed_stream_types = self._GetCompressedStreamTypes(
@@ -755,6 +907,10 @@ class EventExtractionWorker(object):
 
     if not compressed_stream_types:
       archive_types = self._GetArchiveTypes(mediator, path_spec)
+
+    if not compressed_stream_types and not archive_types:
+      storage_media_image_types = self._GetStorageMediaImageTypes(
+          mediator, path_spec)
 
     if archive_types:
       if self._archive_types:
@@ -768,6 +924,11 @@ class EventExtractionWorker(object):
     elif compressed_stream_types:
       self._ProcessCompressedStreamTypes(
           mediator, path_spec, compressed_stream_types)
+
+    elif storage_media_image_types:
+      if self._archive_types:
+        self._ProcessStorageMediaImageTypes(
+            mediator, path_spec, storage_media_image_types)
 
     else:
       self._ExtractContentFromDataStream(

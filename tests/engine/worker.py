@@ -639,6 +639,61 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         archive_types_string='tar,zip',
         knowledge_base_values=knowledge_base_values)
 
+  def testProcessPathSpecDMG(self):
+    """Tests the ProcessPathSpec function on a DMG."""
+    knowledge_base_values = {'year': 2016}
+
+    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_MODI, parent=path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
+        parent=path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_HFS, location='/',
+        parent=path_spec)
+    storage_writer = fake_writer.FakeStorageWriter()
+
+    expected_event_counters = {
+        'fs:stat': 39}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        knowledge_base_values=knowledge_base_values)
+
+  def testProcessPathSpecTarWithDMG(self):
+    """Tests the ProcessPathSpec function on a TAR with a DMG."""
+    knowledge_base_values = {'year': 2016}
+
+    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg.tar'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    storage_writer = fake_writer.FakeStorageWriter()
+
+    # Typically there are 4 filestat events, but there can be 5 on platforms
+    # that support os.stat_result st_birthtime.
+    expected_event_counters = {
+        'fs:stat': [4, 5]}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        archive_types_string='tar',
+        knowledge_base_values=knowledge_base_values)
+
+    expected_event_counters = {
+        'fs:stat': [50, 51]}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        archive_types_string='modi,tar',
+        knowledge_base_values=knowledge_base_values)
+
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
     knowledge_base_values = {'year': 2016}
@@ -651,7 +706,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_VMDK, parent=path_spec)
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
+        dfvfs_definitions.TYPE_INDICATOR_EXT, location='/',
         parent=path_spec)
     storage_writer = fake_writer.FakeStorageWriter()
 

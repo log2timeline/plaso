@@ -13,7 +13,7 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'archives'
   DESCRIPTION = 'Archive command line arguments.'
 
-  _SUPPORTED_ARCHIVE_TYPES = frozenset(['tar', 'zip'])
+  _SUPPORTED_ARCHIVE_TYPES = frozenset(['modi', 'tar', 'zip'])
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -29,14 +29,14 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--archives', dest='archives', type=str, action='store', default='none',
         metavar='TYPES', help=(
-            'Define a list of archive types for which to process embedded file '
-            'entries, such as TAR (archive.tar) or ZIP (archive.zip). This is '
-            'a comma separated list where each entry is the name of an archive '
-            'type, such as "tar,zip". "all" indicates that all archive types '
-            'should be enabled. "none" disables processing file entries '
-            'embedded in archives. Use "--archives list" to list the available '
-            'archive types. WARNING: this can make processing significantly '
-            'slower.'))
+            'Define a list of archive and storage media image types for which '
+            'to process embedded file entries, such as TAR (archive.tar) or '
+            'ZIP (archive.zip). This is a comma separated list where each '
+            'entry is the name of an archive type, such as "tar,zip". "all" '
+            'indicates that all archive types should be enabled. "none" '
+            'disables processing file entries embedded in archives. Use '
+            '"--archives list" to list the available archive types. WARNING: '
+            'this can make processing significantly slower.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
