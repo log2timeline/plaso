@@ -4,16 +4,21 @@
 
 import unittest
 
-import fakeredis
-import redis
+try:
+  # pylint: disable=ungrouped-imports
+  import fakeredis
+  import redis
+  from plaso.storage.redis import reader
+except ModuleNotFoundError:
+  redis = None
 
 from plaso.containers import sessions
 from plaso.containers import tasks
-from plaso.storage.redis import reader
 
 from tests.storage import test_lib
 
 
+@unittest.skipIf(redis is None, 'missing redis support')
 class RedisStorageReaderTest(test_lib.StorageTestCase):
   """Tests for the Redis storage file reader."""
 

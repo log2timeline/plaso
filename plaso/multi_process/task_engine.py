@@ -5,12 +5,17 @@ import os
 import shutil
 import tempfile
 
-import redis
-
 from plaso.lib import definitions
 from plaso.multi_process import engine
 from plaso.storage import factory as storage_factory
-from plaso.storage.redis import redis_store
+
+try:
+  # pylint: disable=ungrouped-imports
+  import redis
+  from plaso.storage.redis import redis_store
+except ModuleNotFoundError:
+  redis = None
+  redis_store = None
 
 
 class TaskMultiProcessEngine(engine.MultiProcessEngine):
@@ -294,7 +299,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       IOError: if the temporary path for the SQLite task storage already exists.
       OSError: if the temporary path for the SQLite task storage already exists.
     """
-    if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if task_storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
       url = redis_store.RedisStore.DEFAULT_REDIS_URL
       self._redis_client = redis.from_url(url=url, socket_timeout=60)
       self._redis_client.client_setname('task_engine')

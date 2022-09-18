@@ -2,11 +2,17 @@
 """This file contains the storage factory class."""
 
 from plaso.lib import definitions
-from plaso.storage.redis import reader as redis_reader
-from plaso.storage.redis import writer as redis_writer
+
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import sqlite_file
 from plaso.storage.sqlite import writer as sqlite_writer
+
+try:
+  from plaso.storage.redis import reader as redis_reader
+  from plaso.storage.redis import writer as redis_writer
+except ModuleNotFoundError:
+  redis_reader = None
+  redis_writer = None
 
 
 class StorageFactory(object):
@@ -58,7 +64,7 @@ class StorageFactory(object):
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_writer.SQLiteStorageFileWriter()
 
-    if storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_writer:
       return redis_writer.RedisStorageWriter()
 
     return None
@@ -95,7 +101,7 @@ class StorageFactory(object):
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_reader.SQLiteStorageFileReader(path)
 
-    if storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_reader:
       return redis_reader.RedisStorageReader(
           task.session_identifier, task.identifier)
 
@@ -116,7 +122,7 @@ class StorageFactory(object):
       return sqlite_writer.SQLiteStorageFileWriter(
           storage_type=definitions.STORAGE_TYPE_TASK)
 
-    if storage_format == definitions.STORAGE_FORMAT_REDIS:
+    if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_writer:
       return redis_writer.RedisStorageWriter(
           storage_type=definitions.STORAGE_TYPE_TASK)
 
