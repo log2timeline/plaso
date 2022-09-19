@@ -53,12 +53,12 @@ class KMLEventFormattingHelper(test_lib.OutputModuleTestCase):
   def testGetFormattedEvent(self):
     """Tests the GetFormattedEvent function."""
     output_mediator = self._CreateOutputMediator()
-    event_formatting_helper = kml.KMLEventFormattingHelper(output_mediator)
+    event_formatting_helper = kml.KMLEventFormattingHelper()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1]))
     event_string = event_formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()

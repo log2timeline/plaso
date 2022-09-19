@@ -17,19 +17,17 @@ from tests.output import test_lib
 class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
   """XML output module event formatting helper for testing."""
 
-  def __init__(self, output_mediator):
-    """Initializes a dynamic selected delimiter separated values output module.
-
-    Args:
-      output_mediator (OutputMediator): an output mediator.
-    """
-    super(TestXMLEventFormattingHelper, self).__init__(output_mediator)
+  def __init__(self):
+    """Initializes a XML event formatting helper."""
+    super(TestXMLEventFormattingHelper, self).__init__()
     self._field_formatting_helper = formatting_helper.FieldFormattingHelper()
 
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -40,7 +38,7 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """
     # pylint: disable=protected-access
     date_time_string = self._field_formatting_helper._FormatDateTime(
-        self._output_mediator, event, event_data, event_data_stream)
+        output_mediator, event, event_data, event_data_stream)
 
     return (
         '<Event>\n'
@@ -92,7 +90,7 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    event_formatting_helper = TestXMLEventFormattingHelper(output_mediator)
+    event_formatting_helper = TestXMLEventFormattingHelper()
     output_module = TestXMLOutputModule(
         output_mediator, event_formatting_helper)
     output_module._file_object = test_file_object

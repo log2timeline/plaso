@@ -38,8 +38,7 @@ class SharedOpenSearchFieldFormattingHelper(
       'source_short': '_FormatSourceShort',
       'tag': '_FormatTag',
       'timestamp': '_FormatTimestamp',
-      'timestamp_desc': '_FormatTimestampDescription',
-  }
+      'timestamp_desc': '_FormatTimestampDescription'}
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.

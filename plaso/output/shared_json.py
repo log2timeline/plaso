@@ -14,20 +14,17 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
-  def __init__(self, output_mediator):
-    """Initializes a JSON output module event formatting helper.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-    """
-    super(JSONEventFormattingHelper, self).__init__(output_mediator)
+  def __init__(self):
+    """Initializes a JSON output module event formatting helper."""
+    super(JSONEventFormattingHelper, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
   def _WriteSerializedDict(
-      self, event, event_data, event_data_stream, event_tag):
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes an event, event data and event tag to serialized form.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -43,28 +40,28 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     display_name = event_data_json_dict.get('display_name', None)
     if display_name is None:
       display_name = self._field_formatting_helper.GetFormattedField(
-          self._output_mediator, 'display_name', event, event_data,
-          event_data_stream, event_tag)
+          output_mediator, 'display_name', event, event_data, event_data_stream,
+          event_tag)
       event_data_json_dict['display_name'] = display_name
 
     filename = event_data_json_dict.get('filename', None)
     if filename is None:
       filename = self._field_formatting_helper.GetFormattedField(
-          self._output_mediator, 'filename', event, event_data,
-          event_data_stream, event_tag)
+          output_mediator, 'filename', event, event_data, event_data_stream,
+          event_tag)
       event_data_json_dict['filename'] = filename
 
     inode = event_data_json_dict.get('inode', None)
     if inode is None:
       inode = self._field_formatting_helper.GetFormattedField(
-          self._output_mediator, 'inode', event, event_data,
-          event_data_stream, event_tag)
+          output_mediator, 'inode', event, event_data, event_data_stream,
+          event_tag)
       event_data_json_dict['inode'] = inode
 
     try:
       message = self._field_formatting_helper.GetFormattedField(
-          self._output_mediator, 'message', event, event_data,
-          event_data_stream, event_tag)
+          output_mediator, 'message', event, event_data, event_data_stream,
+          event_tag)
       event_data_json_dict['message'] = message
     except (errors.NoFormatterFound, errors.WrongFormatter):
       pass
@@ -92,10 +89,12 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
 
     return event_json_dict
 
-  def GetFormattedEvent(self, event, event_data, event_data_stream, event_tag):
+  def GetFormattedEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
+      output_mediator (OutputMediator): output mediator.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -105,6 +104,6 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       str: string representation of the event.
     """
     json_dict = self._WriteSerializedDict(
-        event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     return json.dumps(json_dict, sort_keys=True)

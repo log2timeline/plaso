@@ -190,7 +190,7 @@ class TextFileOutputModule(OutputModule):
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        event, event_data, event_data_stream, event_tag)
+        self._output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.WriteLine(output_text)
 
