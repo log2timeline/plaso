@@ -20,6 +20,7 @@ class XLSXOutputModule(interface.OutputModule):
   DESCRIPTION = 'Excel Spreadsheet (XLSX) output'
 
   SUPPORTS_ADDITIONAL_FIELDS = True
+  SUPPORTS_CUSTOM_FIELDS = True
 
   WRITES_OUTPUT_FILE = True
 
@@ -47,6 +48,7 @@ class XLSXOutputModule(interface.OutputModule):
     super(XLSXOutputModule, self).__init__(output_mediator)
     self._column_widths = []
     self._current_row = 0
+    self._custom_fields = {}
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
     self._field_names = self._DEFAULT_FIELDS
     self._sheet = None
@@ -140,6 +142,16 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._field_names.extend(field_names)
 
+  def SetCustomFields(self, field_names_and_values):
+    """Sets the names and values of custom fields to output.
+
+    Args:
+      field_names_and_values (list[tuple[str, str]]): names and values of
+          custom fields to output.
+    """
+    self._custom_fields = dict(field_names_and_values)
+    self._field_names.extend(self._custom_fields.keys())
+
   def SetFields(self, field_names):
     """Sets the names of the fields to output.
 
@@ -173,14 +185,20 @@ class XLSXOutputModule(interface.OutputModule):
         field_value = self._field_formatting_helper.GetFormattedField(
             self._output_mediator, field_name, event, event_data,
             event_data_stream, event_tag)
-        field_value = self._SanitizeField(field_value)
 
-      if (field_name == 'datetime' and
-          isinstance(field_value, datetime.datetime)):
+      if field_value is None and field_name in self._custom_fields:
+        field_value = self._custom_fields.get(field_name, None)
+
+      if field_value is None:
+        field_value = '-'
+
+      if isinstance(field_value, datetime.datetime):
         self._sheet.write_datetime(
             self._current_row, column_index, field_value)
         column_width = len(self._timestamp_format) + 2
       else:
+        field_value = self._SanitizeField(field_value)
+
         self._sheet.write(self._current_row, column_index, field_value)
         column_width = len(field_value) + 2
 

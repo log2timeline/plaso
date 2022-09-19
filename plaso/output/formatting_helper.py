@@ -590,7 +590,7 @@ class FieldFormattingHelper(object):
       event_tag (EventTag): event tag.
 
     Returns:
-      str: value of the field.
+      str: value of the field or None if not available.
     """
     if field_name in self._event_tag_field_names:
       return self._FormatTag(output_mediator, event_tag)
@@ -604,10 +604,7 @@ class FieldFormattingHelper(object):
     else:
       output_value = getattr(event_data, field_name, None)
 
-    if output_value is None:
-      output_value = '-'
-
-    elif not isinstance(output_value, str):
+    if output_value is not None and not isinstance(output_value, str):
       output_value = '{0!s}'.format(output_value)
 
     return output_value

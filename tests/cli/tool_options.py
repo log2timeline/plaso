@@ -135,23 +135,35 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
-                       [--dynamic_time] [--output_time_zone TIME_ZONE]
+                       [--custom_fields CUSTOM_FIELDS] [--dynamic_time]
+                       [--output_time_zone TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
   --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines additional fields to be included in the output
-                        besides the default fields. Output formats that
-                        support this are: dynamic, opensearch and xlsx.
+                        besides the default fields. Multiple additional field
+                        names can be defined as a list of comma separated
+                        values. Output formats that support additional fields
+                        are: dynamic, opensearch and xlsx.
+  --custom_fields CUSTOM_FIELDS, --custom-fields CUSTOM_FIELDS
+                        Defines custom fields to be included in the output
+                        besides the default fields. A custom field is defined
+                        as "name:value". Multiple custom field names can be
+                        defined as list of comma separated values. Note that
+                        regular fields will are favoured above custom fields
+                        with same name. Output formats that support this are:
+                        dynamic, opensearch and xlsx.
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
-                        Output formats that support this are: dynamic
+                        Output formats that support dynamic time are: dynamic
   --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
-                        output, if supported by the output format. Output
-                        formats that support this are: dynamic and l2t_csv.
-                        Use "list" to see a list of available time zones.
+                        output, if supported by the output format. Use "list"
+                        to see a list of available time zones. Output formats
+                        that support an output time zone are: dynamic and
+                        l2t_csv.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   def testGetOutputModulesInformation(self):

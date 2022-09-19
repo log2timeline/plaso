@@ -109,6 +109,7 @@ class OutputModuleOptions(object):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
     self._output_additional_fields = []
+    self._output_custom_fields = []
     self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
@@ -165,6 +166,7 @@ class OutputModuleOptions(object):
       raise RuntimeError(
           'Unable to create output module with error: {0!s}'.format(
               exception))
+
     if output_module.WRITES_OUTPUT_FILE:
       if not self._output_filename:
         raise errors.BadConfigOption(
@@ -205,6 +207,13 @@ class OutputModuleOptions(object):
           'output module: {0:s} does not support additional fields'.format(
               self._output_format))
 
+    if output_module.SUPPORTS_CUSTOM_FIELDS:
+      output_module.SetCustomFields(self._output_custom_fields)
+    elif self._output_custom_fields:
+      self._PrintUserWarning(
+          'output module: {0:s} does not support custom fields'.format(
+              self._output_format))
+
     return output_module
 
   def _GetOutputModulesInformation(self):
@@ -228,11 +237,20 @@ class OutputModuleOptions(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    output_additional_fields = self.ParseStringOption(
-        options, 'additional_fields')
+    additional_fields = self.ParseStringOption(options, 'additional_fields')
+    if additional_fields:
+      self._output_additional_fields = additional_fields.split(',')
 
-    if output_additional_fields:
-      self._output_additional_fields = output_additional_fields.split(',')
+    custom_fields = self.ParseStringOption(options, 'custom_fields')
+    if custom_fields:
+      for custom_field in custom_fields.split(','):
+        try:
+          name, value = custom_field.split(':')
+        except ValueError:
+          raise errors.BadConfigOption(
+              'Unsupported custom field: {0:s}'.format(custom_field))
+
+        self._output_custom_fields.append((name, value))
 
     self._output_dynamic_time = getattr(options, 'dynamic_time', False)
 
@@ -309,14 +327,25 @@ class OutputModuleOptions(object):
         '--additional_fields', '--additional-fields', dest='additional_fields',
         type=str, action='store', default='', help=(
             'Defines additional fields to be included in the output besides '
-            'the default fields. Output formats that support this are: '
-            'dynamic, opensearch and xlsx.'))
+            'the default fields. Multiple additional field names can be '
+            'defined as a list of comma separated values. Output formats that '
+            'support additional fields are: dynamic, opensearch and xlsx.'))
+
+    argument_group.add_argument(
+        '--custom_fields', '--custom-fields', dest='custom_fields',
+        type=str, action='store', default='', help=(
+            'Defines custom fields to be included in the output besides '
+            'the default fields. A custom field is defined as "name:value". '
+            'Multiple custom field names can be defined as list of comma '
+            'separated values. Note that regular fields will are favoured '
+            'above custom fields with same name. Output formats that support '
+            'this are: dynamic, opensearch and xlsx.'))
 
     argument_group.add_argument(
         '--dynamic_time', '--dynamic-time', dest='dynamic_time',
         action='store_true', default=False, help=(
             'Indicate that the output should use dynamic time. Output formats '
-            'that support this are: dynamic'))
+            'that support dynamic time are: dynamic'))
 
     # Note the default here is None so we can determine if the time zone
     # option was set.
@@ -324,9 +353,9 @@ class OutputModuleOptions(object):
         '--output_time_zone', '--output-time-zone', dest='output_time_zone',
         action='store', metavar='TIME_ZONE', type=str, default=None, help=(
             'time zone of date and time values written to the output, if '
-            'supported by the output format. Output formats that support '
-            'this are: dynamic and l2t_csv. Use "list" to see a list of '
-            'available time zones.'))
+            'supported by the output format. Use "list" to see a list of '
+            'available time zones. Output formats that support an output '
+            'time zone are: dynamic and l2t_csv.'))
 
   def ListOutputModules(self):
     """Lists the output modules."""

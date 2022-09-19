@@ -148,6 +148,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
   NAME = 'opensearch_shared'
 
   SUPPORTS_ADDITIONAL_FIELDS = True
+  SUPPORTS_CUSTOM_FIELDS = True
 
   _DEFAULT_FLUSH_INTERVAL = 1000
 
@@ -173,6 +174,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     """
     super(SharedOpenSearchOutputModule, self).__init__(output_mediator)
     self._client = None
+    self._custom_fields = {}
     self._event_documents = []
     self._field_names = self._DEFAULT_FIELD_NAMES
     self._field_formatting_helper = SharedOpenSearchFieldFormattingHelper()
@@ -308,6 +310,12 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
             self._output_mediator, attribute_name, event, event_data,
             event_data_stream, event_tag)
 
+      if field_value is None and attribute_name in self._custom_fields:
+        field_value = self._custom_fields.get(attribute_name, None)
+
+      if field_value is None:
+        field_value = '-'
+
       field_values[attribute_name] = self._SanitizeField(
           event_data.data_type, attribute_name, field_value)
 
@@ -374,6 +382,16 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       field_names (list[str]): names of additional fields to output.
     """
     self._field_names.extend(field_names)
+
+  def SetCustomFields(self, field_names_and_values):
+    """Sets the names and values of custom fields to output.
+
+    Args:
+      field_names_and_values (list[tuple[str, str]]): names and values of
+          custom fields to output.
+    """
+    self._custom_fields = dict(field_names_and_values)
+    self._field_names.extend(self._custom_fields.keys())
 
   def SetFlushInterval(self, flush_interval):
     """Sets the flush interval.
