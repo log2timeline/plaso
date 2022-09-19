@@ -118,59 +118,6 @@ class PyparsingMultiLineTextParserTest(test_lib.ParserTestCase):
 
   # TODO: add tests for _ParseLineStructure
 
-  def testReadLine(self):
-    """Tests the _ReadLine function."""
-    resolver_context = dfvfs_context.Context()
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is another file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-    test_text_file = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
-    line = test_parser._ReadLine(test_text_file)
-    self.assertEqual(line, 'This is another file.')
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-    test_text_file = dfvfs_text_file.TextFile(file_object, encoding='utf8')
-    with self.assertRaises(UnicodeDecodeError):
-      test_parser._ReadLine(test_text_file)
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-    test_text_file = dfvfs_text_file.TextFile(
-        file_object, encoding='utf8', encoding_errors='replace')
-    line = test_parser._ReadLine(test_text_file)
-    self.assertEqual(line, 'This is an\ufffdther file.')
-
-    # pylint: disable=attribute-defined-outside-init
-    self._encoding_errors = []
-    codecs.register_error('test_handler', self._EncodingErrorHandler)
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-    test_text_file = dfvfs_text_file.TextFile(
-        file_object, encoding='utf8', encoding_errors='test_handler')
-    line = test_parser._ReadLine(test_text_file)
-    self.assertEqual(line, 'This is an\\xbather file.')
-
-    self.assertEqual(len(self._encoding_errors), 1)
-    self.assertEqual(self._encoding_errors[0], (10, 0xba))
-
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     storage_writer = self._CreateStorageWriter()

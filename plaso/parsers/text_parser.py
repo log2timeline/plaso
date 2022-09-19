@@ -208,7 +208,11 @@ class SingleLineTextParser(interface.FileObjectParser):
 
 
 class EncodedTextReader(object):
-  """Encoded text reader."""
+  """Encoded text reader.
+
+  Attributes:
+    lines (str): lines of text.
+  """
 
   def __init__(self, encoding, buffer_size=2048):
     """Initializes the encoded text reader object.
@@ -222,6 +226,7 @@ class EncodedTextReader(object):
     self._buffer_size = buffer_size
     self._current_offset = 0
     self._encoding = encoding
+
     self.lines = ''
 
   def _ReadLine(self, file_object):
@@ -331,23 +336,11 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
   # The value is the actual pyparsing structure.
   LINE_STRUCTURES = []
 
-  # In order for the tool to not read too much data into a buffer to evaluate
-  # whether or not the parser is the right one for this file or not we
-  # specifically define a maximum amount of bytes a single line can occupy. This
-  # constant can be overwritten by implementations if their format might have a
-  # longer line than 400 bytes.
-  MAX_LINE_LENGTH = 400
-
   # The maximum number of consecutive lines that don't match known line
   # structures to encounter before aborting parsing.
   MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
   _ENCODING = None
-
-  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
-
-  # Allow for a maximum of 40 empty lines before we bail out.
-  _MAXIMUM_DEPTH = 40
 
   _MONTH_DICT = {
       'jan': 1,
@@ -450,36 +443,6 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       if previous_weight and line_structure.weight > previous_weight:
         self._line_structures[index] = self._line_structures[index - 1]
         self._line_structures[index - 1] = line_structure
-
-  def _ReadLine(self, text_file_object, max_len=None, depth=0):
-    """Reads a line from a text file.
-
-    Args:
-      text_file_object (dfvfs.TextFile): text file.
-      max_len (Optional[int]): maximum number of bytes a single line can take,
-          where None means all remaining bytes should be read.
-      depth (Optional[int]): number of new lines the parser encountered.
-
-    Returns:
-      str: single line read from the file-like object, or the maximum number of
-          characters, if max_len defined and line longer than the defined size.
-
-    Raises:
-      UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding and encoding errors is set to strict.
-    """
-    line = text_file_object.readline(size=max_len)
-
-    if not line:
-      return ''
-
-    if line in self._EMPTY_LINES:
-      if depth == self._MAXIMUM_DEPTH:
-        return ''
-
-      return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
-
-    return line
 
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
