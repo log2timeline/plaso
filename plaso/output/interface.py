@@ -14,6 +14,9 @@ class OutputModule(object):
   NAME = ''
   DESCRIPTION = ''
 
+  # Value to indicate the output module supports outputting additional fields.
+  SUPPORTS_ADDITIONAL_FIELDS = False
+
   # Value to indicate the output module writes to an output file.
   WRITES_OUTPUT_FILE = False
 

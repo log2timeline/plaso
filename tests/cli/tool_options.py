@@ -134,13 +134,19 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
   # pylint: disable=protected-access
 
   _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
-usage: tool_options.py [--dynamic_time] [--output_time_zone TIME_ZONE]
+usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
+                       [--dynamic_time] [--output_time_zone TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
+  --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
+                        Defines additional fields to be included in the output
+                        besides the default fields. Output formats that
+                        support this are: dynamic, opensearch and xlsx.
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
+                        Output formats that support this are: dynamic
   --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
                         output, if supported by the output format. Output

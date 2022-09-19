@@ -35,12 +35,7 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
         '--fields', dest='fields', type=str, action='store',
         default=cls._DEFAULT_FIELDS, help=(
             'Defines which fields should be included in the output.'))
-    argument_group.add_argument(
-        '--additional_fields', dest='additional_fields', type=str,
-        action='store', default='', help=(
-            'Defines extra fields to be included in the output, in addition to'
-            ' the default fields, which are {0:s}.'.format(
-                cls._DEFAULT_FIELDS)))
+
     argument_group.add_argument(
         '--timestamp_format', dest='timestamp_format', type=str,
         action='store', default=cls._DEFAULT_TIMESTAMP_FORMAT, help=(
@@ -65,11 +60,6 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
 
     fields = cls._ParseStringOption(
         options, 'fields', default_value=cls._DEFAULT_FIELDS)
-
-    additional_fields = cls._ParseStringOption(options, 'additional_fields')
-
-    if additional_fields:
-      fields = '{0:s},{1:s}'.format(fields, additional_fields)
 
     filename = getattr(options, 'write', None)
     if not filename:

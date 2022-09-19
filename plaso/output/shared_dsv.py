@@ -70,6 +70,14 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """
     return self._field_delimiter.join(self._field_names)
 
+  def SetAdditionalFields(self, field_names):
+    """Sets the names of additional fields to output.
+
+    Args:
+      field_names (list[str]): names of additional fields to output.
+    """
+    self._field_names.extend(field_names)
+
   def SetFieldDelimiter(self, field_delimiter):
     """Sets the field delimiter.
 
@@ -109,6 +117,14 @@ class DSVOutputModule(interface.TextFileOutputModule):
     super(DSVOutputModule, self).__init__(
         output_mediator, event_formatting_helper)
     self._header = header
+
+  def SetAdditionalFields(self, field_names):
+    """Sets the names of additional fields to output.
+
+    Args:
+      field_names (list[str]): names of additional fields to output.
+    """
+    self._event_formatting_helper.SetAdditionalFields(field_names)
 
   def SetFieldDelimiter(self, field_delimiter):
     """Sets the field delimiter.

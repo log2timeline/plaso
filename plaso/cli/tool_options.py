@@ -108,6 +108,7 @@ class OutputModuleOptions(object):
   def __init__(self):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
+    self._output_additional_fields = []
     self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
@@ -164,7 +165,6 @@ class OutputModuleOptions(object):
       raise RuntimeError(
           'Unable to create output module with error: {0!s}'.format(
               exception))
-
     if output_module.WRITES_OUTPUT_FILE:
       if not self._output_filename:
         raise errors.BadConfigOption(
@@ -186,9 +186,10 @@ class OutputModuleOptions(object):
     # those that may be missing.
     missing_parameters = output_module.GetMissingArguments()
     if missing_parameters and self._unattended_mode:
+      parameters_string = ', '.join(missing_parameters)
       raise errors.BadConfigOption(
           'Unable to create output module missing parameters: {0:s}'.format(
-              ', '.join(missing_parameters)))
+              parameters_string))
 
     while missing_parameters:
       self._PromptUserForMissingOutputModuleParameters(
@@ -196,6 +197,13 @@ class OutputModuleOptions(object):
 
       helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
       missing_parameters = output_module.GetMissingArguments()
+
+    if output_module.SUPPORTS_ADDITIONAL_FIELDS:
+      output_module.SetAdditionalFields(self._output_additional_fields)
+    elif self._output_additional_fields:
+      self._PrintUserWarning(
+          'output module: {0:s} does not support additional fields'.format(
+              self._output_format))
 
     return output_module
 
@@ -220,6 +228,12 @@ class OutputModuleOptions(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    output_additional_fields = self.ParseStringOption(
+        options, 'additional_fields')
+
+    if output_additional_fields:
+      self._output_additional_fields = output_additional_fields.split(',')
+
     self._output_dynamic_time = getattr(options, 'dynamic_time', False)
 
     time_zone_string = self.ParseStringOption(options, 'output_time_zone')
@@ -292,9 +306,17 @@ class OutputModuleOptions(object):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
+        '--additional_fields', '--additional-fields', dest='additional_fields',
+        type=str, action='store', default='', help=(
+            'Defines additional fields to be included in the output besides '
+            'the default fields. Output formats that support this are: '
+            'dynamic, opensearch and xlsx.'))
+
+    argument_group.add_argument(
         '--dynamic_time', '--dynamic-time', dest='dynamic_time',
         action='store_true', default=False, help=(
-            'Indicate that the output should use dynamic time.'))
+            'Indicate that the output should use dynamic time. Output formats '
+            'that support this are: dynamic'))
 
     # Note the default here is None so we can determine if the time zone
     # option was set.

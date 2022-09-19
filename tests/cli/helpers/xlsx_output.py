@@ -19,17 +19,11 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--fields FIELDS] [--additional_fields ADDITIONAL_FIELDS]
-                     [--timestamp_format TIMESTAMP_FORMAT]
+usage: cli_helper.py [--fields FIELDS] [--timestamp_format TIMESTAMP_FORMAT]
 
 Test argument parser.
 
 {0:s}:
-  --additional_fields ADDITIONAL_FIELDS
-                        Defines extra fields to be included in the output, in
-                        addition to the default fields, which are datetime,tim
-                        estamp_desc,source,source_long,message,parser,display_
-                        name,tag.
   --fields FIELDS       Defines which fields should be included in the output.
   --timestamp_format TIMESTAMP_FORMAT
                         Set the timestamp format that will be used in the
