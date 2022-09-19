@@ -849,6 +849,20 @@ message: '{text}'
 short_message: '{text}'
 ---
 type: 'conditional'
+data_type: 'viminfo:history'
+message:
+- '['
+- 'History type: {type}'
+- 'item number: {item_number}'
+- ']'
+- 'value: {value}'
+- 'filename: {filename}'
+short_message:
+- '[{type}]'
+- '{value}'
+- '{filename}'
+---
+type: 'conditional'
 data_type: 'vsftpd:log'
 message:
 - '{text}'
