@@ -19,10 +19,10 @@ class PostgreSQLEventData(events.EventData):
   """PostgreSQL log data.
 
   Attributes:
-    pid (int): process identifier (PID).
-    user (str): "user@database" string if present.
     log_level (str): logging level of event
     log_line (str): log message.
+    pid (int): process identifier (PID).
+    user (str): "user@database" string if present.
   """
 
   DATA_TYPE = 'postgresql'
@@ -30,10 +30,10 @@ class PostgreSQLEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(PostgreSQLEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.pid = None
-    self.user = None
     self.log_level = None
     self.log_line = None
+    self.pid = None
+    self.user = None
 
 class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from PostgreSQL log files."""
@@ -43,44 +43,44 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   _ENCODING = 'utf-8'
 
   _DATE_TIME = pyparsing.Group(
-    pyparsing.LineStart() +
-    text_parser.PyparsingConstants.DATE_ELEMENTS +
-    text_parser.PyparsingConstants.TIME.setResultsName('time') +
-    pyparsing.Optional(
-      pyparsing.Suppress('.') +
-      text_parser.PyparsingConstants.INTEGER
-    ).setResultsName('microseconds') +
-    pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
+      pyparsing.LineStart() +
+      text_parser.PyparsingConstants.DATE_ELEMENTS +
+      text_parser.PyparsingConstants.TIME.setResultsName('time') +
+      pyparsing.Optional(
+          pyparsing.Suppress('.') +
+          text_parser.PyparsingConstants.INTEGER
+      ).setResultsName('microseconds') +
+      pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
   ).setResultsName('date_time')
 
   _PID = pyparsing.Group(
-    pyparsing.Suppress('[') +
-    pyparsing.OneOrMore(text_parser.PyparsingConstants.INTEGER) +
-    pyparsing.Optional(pyparsing.Literal('-')) +
-    pyparsing.ZeroOrMore(text_parser.PyparsingConstants.INTEGER) +
-    pyparsing.Suppress(']')
+      pyparsing.Suppress('[') +
+      pyparsing.OneOrMore(text_parser.PyparsingConstants.INTEGER) +
+      pyparsing.Optional(pyparsing.Literal('-')) +
+      pyparsing.ZeroOrMore(text_parser.PyparsingConstants.INTEGER) +
+      pyparsing.Suppress(']')
   ).setResultsName('pid')
 
   _USER_AND_DATABASE = pyparsing.Group(
-    pyparsing.Word(pyparsing.alphanums) +
-    pyparsing.Literal('@') +
-    pyparsing.Word(pyparsing.alphanums)
+      pyparsing.Word(pyparsing.alphanums) +
+      pyparsing.Literal('@') +
+      pyparsing.Word(pyparsing.alphanums)
   ).setResultsName('user_and_database')
 
   _LOG_LEVEL = (
-    pyparsing.Word(string.ascii_uppercase) +
-    pyparsing.Suppress(':')
+      pyparsing.Word(string.ascii_uppercase) +
+      pyparsing.Suppress(':')
   ).setResultsName('log_level')
 
   _LOG_LINE_END = _BODY_END = pyparsing.StringEnd() | _DATE_TIME
 
   _LOG_LINE = (
-    _DATE_TIME +
-    _PID +
-    pyparsing.Optional(_USER_AND_DATABASE) +
-    _LOG_LEVEL +
-    pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
-    pyparsing.ZeroOrMore(pyparsing.lineEnd())
+      _DATE_TIME +
+      _PID +
+      pyparsing.Optional(_USER_AND_DATABASE) +
+      _LOG_LEVEL +
+      pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
+      pyparsing.ZeroOrMore(pyparsing.lineEnd())
   )
 
   LINE_STRUCTURES = [
@@ -134,7 +134,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = PostgreSQLEventData()
     event_data.pid = ''.join(
-      [str(x) for x in self._GetValueFromStructure(structure, 'pid')])
+        [str(x) for x in self._GetValueFromStructure(structure, 'pid')])
 
     log_level = self._GetValueFromStructure(structure, 'log_level')
     if log_level and len(log_level) == 1:
@@ -144,7 +144,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       return
 
     user_and_database = self._GetValueFromStructure(
-      structure, 'user_and_database')
+        structure, 'user_and_database')
     if user_and_database:
       event_data.user = ''.join(user_and_database)
 
@@ -157,7 +157,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
     date_time.CopyFromDatetime(date_time_parsed)
     event = time_events.DateTimeValuesEvent(
-      date_time, definitions.TIME_DESCRIPTION_RECORDED)
+        date_time, definitions.TIME_DESCRIPTION_RECORDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   # pylint: disable=unused-argument
@@ -179,5 +179,6 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       return False
 
     return True
+
 
 manager.ParsersManager.RegisterParser(PostgreSQLParser)

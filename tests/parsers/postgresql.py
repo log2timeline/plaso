@@ -35,8 +35,7 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'log_level': 'LOG',
         'log_line': 'starting PostgreSQL 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1) '
                     'on x86_64-pc-linux-gnu, compiled by gcc '
-                    '(Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit'
-    }
+                    '(Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -45,8 +44,7 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'pid': '9158',
         'log_level': 'FATAL',
         'user': 'postgres@postgres',
-        'log_line': 'password authentication failed for user "postgres"'
-    }
+        'log_line': 'password authentication failed for user "postgres"'}
 
     self.CheckEventValues(storage_writer, events[15], expected_event_values)
 
@@ -57,8 +55,7 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'log_line': 'User "postgres" has no password assigned.\n        '
                     'Connection matched pg_hba.conf line 96: '
                     '"host    all             all             '
-                    '127.0.0.1/32            md5"'
-    }
+                    '127.0.0.1/32            md5"'}
 
     self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
@@ -67,8 +64,7 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'pid': '203851-1',
         'log_level': 'LOG',
         'log_line': 'could not receive data from client: '
-                    'Connection reset by peer'
-    }
+                    'Connection reset by peer'}
 
     self.CheckEventValues(storage_writer, events[19], expected_event_values)
 
