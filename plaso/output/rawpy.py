@@ -25,7 +25,8 @@ class NativePythonEventFormattingHelper(
     """Retrieves a native Python string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -133,7 +134,8 @@ class NativePythonEventFormattingHelper(
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -152,15 +154,10 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = 'native (or "raw") Python output.'
 
-  def __init__(self, output_mediator):
-    """Initializes a native (or "raw") Python output module.
-
-    Args:
-      output_mediator (OutputMediator): an output mediator.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     event_formatting_helper = NativePythonEventFormattingHelper()
-    super(NativePythonOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(NativePythonOutputModule, self).__init__(event_formatting_helper)
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)

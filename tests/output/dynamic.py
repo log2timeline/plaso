@@ -132,7 +132,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     output_module.SetFields([
@@ -140,7 +140,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         'type', 'user', 'host', 'message_short', 'message',
         'filename', 'inode', 'notes', 'format', 'extra'])
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     expected_header = (
         'date,time,timezone,macb,source,sourcetype,type,user,host,'
@@ -154,7 +154,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    output_module.WriteEventBody(event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(
+        output_mediator, event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '2012-06-27,18:17:01,UTC,..C.,FILE,Test log file,Metadata '
@@ -174,12 +175,12 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     output_module.SetFields(['datetime', 'nonsense', 'hostname', 'message'])
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, 'datetime,nonsense,hostname,message\n')
@@ -189,7 +190,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    output_module.WriteEventBody(event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(
+        output_mediator, event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '2012-06-27T18:17:01.000000+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
@@ -203,10 +205,10 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     expected_header = (
         'datetime,timestamp_desc,source,source_long,message,parser,'
@@ -218,13 +220,13 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, 'date,time,message,hostname,filename,some_stuff\n')
@@ -232,14 +234,14 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
     output_module.SetFieldDelimiter('@')
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, 'date@time@message@hostname@filename@some_stuff\n')

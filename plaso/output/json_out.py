@@ -12,29 +12,26 @@ class JSONOutputModule(interface.TextFileOutputModule):
   NAME = 'json'
   DESCRIPTION = 'Saves the events into a JSON format.'
 
-  def __init__(self, output_mediator):
-    """Initializes the output module object.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     event_formatting_helper = shared_json.JSONEventFormattingHelper()
-    super(JSONOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(JSONOutputModule, self).__init__(event_formatting_helper)
     self._event_counter = 0
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        self._output_mediator, event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     if self._event_counter != 0:
       self.WriteText(', ')
@@ -49,8 +46,13 @@ class JSONOutputModule(interface.TextFileOutputModule):
     """Writes the footer to the output."""
     self.WriteText('}')
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     self.WriteText('{')
     self._event_counter = 0
 

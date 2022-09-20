@@ -57,8 +57,13 @@ class TestXMLOutputModule(interface.TextFileOutputModule):
     """Writes the footer to the output."""
     self.WriteLine('</EventFile>')
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     self.WriteLine('<EventFile>')
 
 
@@ -91,16 +96,16 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
 
     output_mediator = self._CreateOutputMediator()
     event_formatting_helper = TestXMLEventFormattingHelper()
-    output_module = TestXMLOutputModule(
-        output_mediator, event_formatting_helper)
+    output_module = TestXMLOutputModule(event_formatting_helper)
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     for event_values in self._TEST_EVENTS:
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(event_values))
-      output_module.WriteEvent(event, event_data, event_data_stream, None)
+      output_module.WriteEvent(
+          output_mediator, event, event_data, event_data_stream, None)
 
     output_module.WriteFooter()
 

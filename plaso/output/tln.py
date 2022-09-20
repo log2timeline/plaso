@@ -34,7 +34,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a description field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -61,7 +62,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a notes field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -88,7 +90,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a timestamp.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -123,17 +126,12 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
 
   _HEADER = 'Time|Source|Host|User|Description'
 
-  def __init__(self, output_mediator):
-    """Initializes a TLN output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     field_formatting_helper = TLNFieldFormattingHelper()
     super(TLNOutputModule, self).__init__(
-        output_mediator, field_formatting_helper, self._FIELD_NAMES,
-        delimiter='|', header=self._HEADER)
+        field_formatting_helper, self._FIELD_NAMES, delimiter='|',
+        header=self._HEADER)
 
 
 class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
@@ -158,17 +156,12 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
 
   _HEADER = 'Time|Source|Host|User|Description|TZ|Notes'
 
-  def __init__(self, output_mediator):
-    """Initializes a log2timeline extended variant of TLN output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     field_formatting_helper = TLNFieldFormattingHelper()
     super(L2TTLNOutputModule, self).__init__(
-        output_mediator, field_formatting_helper, self._FIELD_NAMES,
-        delimiter='|', header=self._HEADER)
+        field_formatting_helper, self._FIELD_NAMES, delimiter='|',
+        header=self._HEADER)
 
 
 manager.OutputManager.RegisterOutputs([L2TTLNOutputModule, TLNOutputModule])

@@ -357,7 +357,8 @@ class PstealTool(
 
       output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
-          configuration, deduplicate_events=self._deduplicate_events,
+          self._output_mediator, configuration,
+          deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 

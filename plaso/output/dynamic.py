@@ -52,7 +52,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a date field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -103,7 +104,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a timestamp description field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -117,7 +119,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
 
 class DynamicOutputModule(shared_dsv.DSVOutputModule):
-  """Dynamic selected delimiter separated values output module."""
+  """Dynamic selected delimiter separated values (DSV) output module."""
 
   NAME = 'dynamic'
   DESCRIPTION = (
@@ -130,15 +132,11 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
       'datetime', 'timestamp_desc', 'source', 'source_long', 'message',
       'parser', 'display_name', 'tag']
 
-  def __init__(self, output_mediator):
-    """Initializes a dynamic selected delimiter separated values output module.
-
-    Args:
-      output_mediator (OutputMediator): an output mediator.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     field_formatting_helper = DynamicFieldFormattingHelper()
     super(DynamicOutputModule, self).__init__(
-        output_mediator, field_formatting_helper, self._DEFAULT_NAMES)
+        field_formatting_helper, self._DEFAULT_NAMES)
 
 
 manager.OutputManager.RegisterOutput(DynamicOutputModule)

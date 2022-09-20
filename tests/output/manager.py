@@ -15,10 +15,13 @@ class TestOutput(interface.OutputModule):
   DESCRIPTION = 'This is a test output module.'
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -113,14 +116,14 @@ class OutputManagerTest(unittest.TestCase):
     """Tests the NewOutputModule function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
-    output_module = manager.OutputManager.NewOutputModule('test_output', None)
+    output_module = manager.OutputManager.NewOutputModule('test_output')
     self.assertIsInstance(output_module, TestOutput)
 
     with self.assertRaises(ValueError):
-      _ = manager.OutputManager.NewOutputModule(1, None)
+      manager.OutputManager.NewOutputModule(1)
 
     with self.assertRaises(KeyError):
-      _ = manager.OutputManager.NewOutputModule('bogus', None)
+      manager.OutputManager.NewOutputModule('bogus')
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 

@@ -3,9 +3,7 @@
 """CLI arguments helper related functions and classes for testing."""
 
 from plaso.cli.helpers import interface
-from plaso.engine import knowledge_base
 from plaso.lib import errors
-from plaso.output import mediator as output_mediator
 
 from tests.cli import test_lib as cli_test_lib
 
@@ -53,12 +51,3 @@ class AnalysisPluginArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
 class OutputModuleArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests an output module CLI arguments helper."""
-
-  def _CreateOutputMediator(self):
-    """Creates a test output mediator.
-
-    Returns:
-      OutputMediator: output mediator.
-    """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    return output_mediator.OutputMediator(knowledge_base_object)

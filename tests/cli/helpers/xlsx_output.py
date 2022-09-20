@@ -45,8 +45,7 @@ Test argument parser.
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    output_mediator = self._CreateOutputMediator()
-    output_module = xlsx.XLSXOutputModule(output_mediator)
+    output_module = xlsx.XLSXOutputModule()
 
     with self.assertRaises(errors.BadConfigOption):
       xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(

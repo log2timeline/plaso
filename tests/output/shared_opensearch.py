@@ -49,8 +49,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testConnect(self):
     """Tests the _Connect function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._client)
 
@@ -60,8 +59,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testCreateIndexIfNotExists(self):
     """Tests the _CreateIndexIfNotExists function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
@@ -74,14 +72,15 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module._InsertEvent(event, event_data, event_data_stream, None)
+    output_module._InsertEvent(
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -99,7 +98,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -108,7 +107,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabel('Test')
 
     event_values = output_module._GetSanitizedEventValues(
-        event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     expected_event_values = {
         'a_binary_field': 'binary',
@@ -146,7 +145,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
@@ -154,12 +153,14 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module._InsertEvent(event, event_data, event_data_stream, None)
+    output_module._InsertEvent(
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
 
-    output_module._InsertEvent(event, event_data, event_data_stream, None)
+    output_module._InsertEvent(
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 4)
     self.assertEqual(output_module._number_of_buffered_events, 2)
@@ -171,8 +172,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testClose(self):
     """Tests the Close function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
 
@@ -184,8 +184,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testSetFlushInterval(self):
     """Tests the SetFlushInterval function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertEqual(
         output_module._flush_interval, output_module._DEFAULT_FLUSH_INTERVAL)
@@ -196,8 +195,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testSetIndexName(self):
     """Tests the SetIndexName function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._index_name)
 
@@ -207,8 +205,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testSetPassword(self):
     """Tests the SetPassword function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._password)
 
@@ -218,8 +215,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testSetServerInformation(self):
     """Tests the SetServerInformation function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._host)
     self.assertIsNone(output_module._port)
@@ -231,8 +227,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testSetUsername(self):
     """Tests the SetUsername function."""
-    output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._username)
 
@@ -248,7 +243,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOpenSearchOutputModule(output_mediator)
+    output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
@@ -258,7 +253,8 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(
+        output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

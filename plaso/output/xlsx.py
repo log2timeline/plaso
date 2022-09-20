@@ -38,14 +38,9 @@ class XLSXOutputModule(interface.OutputModule):
       r'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf'
       r'\ufffe-\uffff]'))
 
-  def __init__(self, output_mediator):
-    """Initializes an Excel Spreadsheet (XLSX) output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
-    super(XLSXOutputModule, self).__init__(output_mediator)
+  def __init__(self):
+    """Initializes an output module."""
+    super(XLSXOutputModule, self).__init__()
     self._column_widths = []
     self._current_row = 0
     self._custom_fields = {}
@@ -55,13 +50,15 @@ class XLSXOutputModule(interface.OutputModule):
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
 
-  def _FormatDateTime(self, event, event_data):  # pylint: disable=missing-return-type-doc
+  def _FormatDateTime(self, output_mediator, event, event_data):  # pylint: disable=missing-return-type-doc
     """Formats the date to a datetime object without timezone information.
 
     Note: timezone information must be removed due to lack of support
     by xlsxwriter and Excel.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
 
@@ -73,7 +70,7 @@ class XLSXOutputModule(interface.OutputModule):
       datetime_object = datetime.datetime(
           1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
       datetime_object += datetime.timedelta(microseconds=event.timestamp)
-      datetime_object.astimezone(self._output_mediator.timezone)
+      datetime_object.astimezone(output_mediator.timezone)
 
       return datetime_object.replace(tzinfo=None)
 
@@ -168,10 +165,13 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -179,12 +179,12 @@ class XLSXOutputModule(interface.OutputModule):
     """
     for column_index, field_name in enumerate(self._field_names):
       if field_name == 'datetime':
-        field_value = self._FormatDateTime(event, event_data)
+        field_value = self._FormatDateTime(output_mediator, event, event_data)
 
       else:
         field_value = self._field_formatting_helper.GetFormattedField(
-            self._output_mediator, field_name, event, event_data,
-            event_data_stream, event_tag)
+            output_mediator, field_name, event, event_data, event_data_stream,
+            event_tag)
 
       if field_value is None and field_name in self._custom_fields:
         field_value = self._custom_fields.get(field_name, None)
@@ -211,8 +211,13 @@ class XLSXOutputModule(interface.OutputModule):
 
     self._current_row += 1
 
-  def WriteHeader(self):
-    """Writes the header to the spreadsheet."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the spreadsheet.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     cell_format = self._workbook.add_format({'bold': True})
     cell_format.set_align('center')
 

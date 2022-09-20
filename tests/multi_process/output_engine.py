@@ -29,26 +29,24 @@ class TestOutputModule(output_interface.OutputModule):
         events written to the output.
   """
 
+  # pylint: disable=arguments-renamed,unused-argument
+
   NAME = 'psort_test'
 
-  def __init__(self, output_mediator_object):
-    """Initializes an output module.
-
-    Args:
-      output_mediator_object (OutputMediator): mediates interactions between
-          output modules and other components, such as storage and dfvfs.
-
-    Raises:
-      ValueError: when there are unused keyword arguments.
-    """
-    super(TestOutputModule, self).__init__(output_mediator_object)
+  def __init__(self):
+    """Initializes an output module."""
+    super(TestOutputModule, self).__init__()
     self.events = []
     self.macb_groups = []
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator_object, event, event_data, event_data_stream,
+       event_tag):
     """Writes the body of an event object to the output.
 
     Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -56,11 +54,16 @@ class TestOutputModule(output_interface.OutputModule):
     """
     self.events.append((event, event_data, event_data_stream, event_tag))
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator_object):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
+    """
     return
 
-  def WriteEventMACBGroup(self, event_macb_group):
+  def WriteEventMACBGroup(self, output_mediator_object, event_macb_group):
     """Writes an event MACB group to the output.
 
     An event MACB group is a group of events that have the same timestamp and
@@ -72,6 +75,8 @@ class TestOutputModule(output_interface.OutputModule):
     such. If not overridden this function will output every event individually.
 
     Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
       event_macb_group (list[EventObject]): group of events with identical
           timestamps, attributes and values.
     """
@@ -290,7 +295,7 @@ class OutputAndFormattingMultiProcessEngineTest(
     output_mediator_object.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOutputModule(output_mediator_object)
+    output_module = TestOutputModule()
 
     test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
@@ -324,7 +329,7 @@ class OutputAndFormattingMultiProcessEngineTest(
     output_mediator_object.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = TestOutputModule(output_mediator_object)
+    output_module = TestOutputModule()
 
     test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
@@ -366,7 +371,7 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     output_mediator_object.SetPreferredLanguageIdentifier('en-US')
 
-    output_module = dynamic.DynamicOutputModule(output_mediator_object)
+    output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     configuration = configurations.ProcessingConfiguration()
@@ -377,7 +382,8 @@ class OutputAndFormattingMultiProcessEngineTest(
     test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
     test_engine.ExportEvents(
-        knowledge_base_object, storage_reader, output_module, configuration)
+        knowledge_base_object, storage_reader, output_module,
+        output_mediator_object, configuration)
 
     output = test_file_object.getvalue()
     lines = output.split('\n')

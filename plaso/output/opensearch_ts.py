@@ -18,18 +18,13 @@ class OpenSearchTimesketchOutputModule(
   MAPPINGS_FILENAME = 'plaso.mappings'
   MAPPINGS_PATH = '/etc/timesketch'
 
-  def __init__(self, output_mediator):
-    """Initializes a Timesketch OpenSearch output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
-    super(OpenSearchTimesketchOutputModule, self).__init__(output_mediator)
+  def __init__(self):
+    """Initializes an output module."""
+    super(OpenSearchTimesketchOutputModule, self).__init__()
     self._timeline_identifier = None
 
   def _GetSanitizedEventValues(
-      self, event, event_data, event_data_stream, event_tag):
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Sanitizes the event for use in OpenSearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -38,6 +33,8 @@ class OpenSearchTimesketchOutputModule(
     OpenSearch automatic indexing.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -50,10 +47,9 @@ class OpenSearchTimesketchOutputModule(
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    event_values = (
-        super(OpenSearchTimesketchOutputModule, self)._GetSanitizedEventValues(
-            event=event, event_data=event_data,
-            event_data_stream=event_data_stream, event_tag=event_tag))
+    event_values = super(
+        OpenSearchTimesketchOutputModule, self)._GetSanitizedEventValues(
+            output_mediator, event, event_data, event_data_stream, event_tag)
 
     event_values['__ts_timeline_id'] = self._timeline_identifier
 
@@ -79,8 +75,13 @@ class OpenSearchTimesketchOutputModule(
     self._timeline_identifier = timeline_identifier
     logger.info('Timeline identifier: {0:d}'.format(self._timeline_identifier))
 
-  def WriteHeader(self):
-    """Connects to the OpenSearch server and creates the index."""
+  def WriteHeader(self, output_mediator):
+    """Connects to the OpenSearch server and creates the index.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     self._Connect()
 
     self._CreateIndexIfNotExists(self._index_name, self._mappings)

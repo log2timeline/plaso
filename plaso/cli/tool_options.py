@@ -160,7 +160,7 @@ class OutputModuleOptions(object):
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
-          self._output_format, self._output_mediator)
+          self._output_format)
 
     except (KeyError, ValueError) as exception:
       raise RuntimeError(

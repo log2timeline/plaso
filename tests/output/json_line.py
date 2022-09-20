@@ -46,10 +46,10 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module = json_line.JSONLineOutputModule()
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, '')
@@ -58,8 +58,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteFooter function."""
     test_file_object = io.StringIO()
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module = json_line.JSONLineOutputModule()
     output_module._file_object = test_file_object
 
     output_module.WriteFooter()
@@ -77,13 +76,14 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = json_line.JSONLineOutputModule(output_mediator)
+    output_module = json_line.JSONLineOutputModule()
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-    output_module.WriteEventBody(event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(
+        output_mediator, event, event_data, event_data_stream, None)
 
     expected_timestamp = shared_test_lib.CopyTimestampFromString(
         '2012-06-27 18:17:01')

@@ -49,7 +49,8 @@ class SharedOpenSearchFieldFormattingHelper(
     """Formats a date and time field in ISO 8601 format.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -65,7 +66,8 @@ class SharedOpenSearchFieldFormattingHelper(
     """Formats an event tag field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event_tag (EventTag): event tag or None if not set.
 
     Returns:
@@ -78,7 +80,8 @@ class SharedOpenSearchFieldFormattingHelper(
     """Formats a timestamp field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -93,7 +96,8 @@ class SharedOpenSearchFieldFormattingHelper(
     """Formats a timestamp description field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -111,7 +115,8 @@ class SharedOpenSearchFieldFormattingHelper(
     """Formats the specified field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       field_name (str): name of the field.
       event (EventObject): event.
       event_data (EventData): event data.
@@ -165,14 +170,9 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       'timestamp',
       'timestamp_desc']
 
-  def __init__(self, output_mediator):
-    """Initializes an OpenSearch output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
-    super(SharedOpenSearchOutputModule, self).__init__(output_mediator)
+  def __init__(self):
+    """Initializes an output module."""
+    super(SharedOpenSearchOutputModule, self).__init__()
     self._client = None
     self._custom_fields = {}
     self._event_documents = []
@@ -260,7 +260,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     self._number_of_buffered_events = 0
 
   def _GetSanitizedEventValues(
-      self, event, event_data, event_data_stream, event_tag):
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Sanitizes the event for use in OpenSearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -269,6 +269,8 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     OpenSearch automatic indexing.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -307,7 +309,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
       else:
         field_value = self._field_formatting_helper.GetFormattedField(
-            self._output_mediator, attribute_name, event, event_data,
+            output_mediator, attribute_name, event, event_data,
             event_data_stream, event_tag)
 
       if field_value is None and attribute_name in self._custom_fields:
@@ -321,13 +323,16 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     return field_values
 
-  def _InsertEvent(self, event, event_data, event_data_stream, event_tag):
+  def _InsertEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Inserts an event.
 
     Events are buffered in the form of documents and inserted to OpenSearch
     when the flush interval (threshold) has been reached.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -336,7 +341,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     event_document = {'index': {'_index': self._index_name}}
 
     event_values = self._GetSanitizedEventValues(
-        event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     self._event_documents.append(event_document)
     self._event_documents.append(event_values)
@@ -488,13 +493,17 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     self._url_prefix = url_prefix
     logger.debug('OpenSearch URL prefix: {0!s}')
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    self._InsertEvent(event, event_data, event_data_stream, event_tag)
+    self._InsertEvent(
+        output_mediator, event, event_data, event_data_stream, event_tag)

@@ -42,14 +42,14 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     """Tests that nothing is output by the null output module."""
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
-    output_module = null.NullOutputModule(output_mediator)
+    output_module = null.NullOutputModule()
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
     output_module.WriteEventBody(
-        event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, None)
 
     output_module.WriteFooter()
 

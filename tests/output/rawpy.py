@@ -162,12 +162,13 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = rawpy.NativePythonOutputModule(output_mediator)
+    output_module = rawpy.NativePythonOutputModule()
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(event, event_data, event_data_stream, None)
+    output_module.WriteEventBody(
+        output_mediator, event, event_data, event_data_stream, None)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

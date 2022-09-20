@@ -44,8 +44,7 @@ Test argument parser.
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = dynamic.DynamicOutputModule(output_mediator)
+    output_module = dynamic.DynamicOutputModule()
     dynamic_output.DynamicOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

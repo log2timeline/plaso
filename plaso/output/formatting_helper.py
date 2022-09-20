@@ -25,7 +25,8 @@ class EventFormattingHelper(object):
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -68,7 +69,8 @@ class FieldFormattingHelper(object):
     """Formats a date and time field in ISO 8601 format.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -168,7 +170,8 @@ class FieldFormattingHelper(object):
     it is derived from the path specification.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -197,7 +200,8 @@ class FieldFormattingHelper(object):
     it is derived from the path specification.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -223,7 +227,8 @@ class FieldFormattingHelper(object):
     """Formats a hostname field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -237,7 +242,8 @@ class FieldFormattingHelper(object):
     """Formats an inode field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -283,7 +289,8 @@ class FieldFormattingHelper(object):
     """Formats a legacy MACB representation field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -298,7 +305,8 @@ class FieldFormattingHelper(object):
     """Formats a message field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -329,7 +337,8 @@ class FieldFormattingHelper(object):
     """Formats a short message field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -360,7 +369,8 @@ class FieldFormattingHelper(object):
     """Formats a source field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -387,7 +397,8 @@ class FieldFormattingHelper(object):
     """Formats a short source field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -413,7 +424,8 @@ class FieldFormattingHelper(object):
     """Formats an event tag field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event_tag (EventTag): event tag or None if not set.
 
     Returns:
@@ -428,7 +440,8 @@ class FieldFormattingHelper(object):
     """Formats a time field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -477,7 +490,8 @@ class FieldFormattingHelper(object):
     """Formats a time zone field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -518,7 +532,8 @@ class FieldFormattingHelper(object):
     """Formats an username field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -535,7 +550,8 @@ class FieldFormattingHelper(object):
     """Reads the source mappings from the sources.config data file.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
     """
     self._source_mappings = {}
 
@@ -582,7 +598,8 @@ class FieldFormattingHelper(object):
     """Formats the specified field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       field_name (str): name of the field.
       event (EventObject): event.
       event_data (EventData): event data.

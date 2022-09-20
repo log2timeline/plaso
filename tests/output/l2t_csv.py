@@ -190,7 +190,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = l2t_csv.L2TCSVOutputModule(output_mediator)
+    output_module = l2t_csv.L2TCSVOutputModule()
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
@@ -200,7 +200,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabels(['Malware', 'Printed'])
 
     output_module.WriteEventBody(
-        event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     expected_event_body = (
         '06/27/2012,18:17:01,UTC,M...,FILE,Test log file,Content Modification '
@@ -224,10 +224,10 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     output_mediator = self._CreateOutputMediator()
 
-    output_module = l2t_csv.L2TCSVOutputModule(output_mediator)
+    output_module = l2t_csv.L2TCSVOutputModule()
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     expected_header = (
         'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'

@@ -96,26 +96,27 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     return rows
 
-  def testWriteEventBody(self):
-    """Tests the WriteHeader function."""
+  def testWriteEvent(self):
+    """Tests the WriteEvent function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = xlsx.XLSXOutputModule(output_mediator)
+    output_module = xlsx.XLSXOutputModule()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       xslx_file = os.path.join(temp_directory, 'xlsx.out')
 
       output_module.Open(path=xslx_file)
-      output_module.WriteHeader()
+      output_module.WriteHeader(output_mediator)
 
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
-      output_module.WriteEvent(event, event_data, event_data_stream, None)
+      output_module.WriteEvent(
+          output_mediator, event, event_data, event_data_stream, None)
 
       output_module.WriteFooter()
       output_module.Close()
@@ -147,12 +148,12 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XLSXOutputModule(output_mediator)
+      output_module = xlsx.XLSXOutputModule()
 
       xlsx_file = os.path.join(temp_directory, 'xlsx.out')
 
       output_module.Open(path=xlsx_file)
-      output_module.WriteHeader()
+      output_module.WriteHeader(output_mediator)
       output_module.WriteFooter()
       output_module.Close()
 
