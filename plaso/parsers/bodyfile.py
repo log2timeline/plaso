@@ -94,6 +94,7 @@ class BodyfileParser(interface.FileObjectParser):
     else:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=integer_value)
 
+    date_time.is_local_time = True
     return date_time
 
   def _GetLastValueAsBase10Integer(
@@ -285,25 +286,29 @@ class BodyfileParser(interface.FileObjectParser):
         if atime_value:
           date_time = self._GetDateTimeFromTimestamp(atime_value)
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS,
+              time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         if ctime_value:
           date_time = self._GetDateTimeFromTimestamp(ctime_value)
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
+              date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+              time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         if crtime_value:
           date_time = self._GetDateTimeFromTimestamp(crtime_value)
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_CREATION)
+              date_time, definitions.TIME_DESCRIPTION_CREATION,
+              time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         if mtime_value:
           date_time = self._GetDateTimeFromTimestamp(mtime_value)
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+              date_time, definitions.TIME_DESCRIPTION_MODIFICATION,
+              time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         elif not atime_value and not ctime_value and not crtime_value:
