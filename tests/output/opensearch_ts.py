@@ -31,11 +31,11 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     output_mediator = self._CreateOutputMediator()
-    output_module = TestOpenSearchTimesketchOutputModule(output_mediator)
+    output_module = TestOpenSearchTimesketchOutputModule()
 
     self.assertIsNone(output_module._client)
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     self.assertIsNotNone(output_module._client)
 

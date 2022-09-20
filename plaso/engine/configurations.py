@@ -187,6 +187,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
+    preferred_encoding (str): preferred output encoding.
     preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred initial year value for year-less date and
@@ -212,6 +213,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.filter_file = None
     self.log_filename = None
     self.parser_filter_expression = None
+    self.preferred_encoding = None
     self.preferred_language = None
     self.preferred_time_zone = None
     self.preferred_year = None

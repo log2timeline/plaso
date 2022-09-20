@@ -13,8 +13,13 @@ class OpenSearchOutputModule(shared_opensearch.SharedOpenSearchOutputModule):
 
   MAPPINGS_FILENAME = 'opensearch.mappings'
 
-  def WriteHeader(self):
-    """Connects to the OpenSearch server and creates the index."""
+  def WriteHeader(self, output_mediator):
+    """Connects to the OpenSearch server and creates the index.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     self._Connect()
 
     self._CreateIndexIfNotExists(self._index_name, self._mappings)

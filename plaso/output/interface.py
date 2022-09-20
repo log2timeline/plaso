@@ -23,16 +23,6 @@ class OutputModule(object):
   # Value to indicate the output module writes to an output file.
   WRITES_OUTPUT_FILE = False
 
-  def __init__(self, output_mediator):
-    """Initializes an output module.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-    """
-    super(OutputModule, self).__init__()
-    self._output_mediator = output_mediator
-
   def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.
 
@@ -69,17 +59,21 @@ class OutputModule(object):
     """Opens the output."""
     return
 
-  def WriteEvent(self, event, event_data, event_data_stream, event_tag):
+  def WriteEvent(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes the event to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     try:
-      self.WriteEventBody(event, event_data, event_data_stream, event_tag)
+      self.WriteEventBody(
+          output_mediator, event, event_data, event_data_stream, event_tag)
 
     except errors.NoFormatterFound as exception:
       error_message = 'unable to retrieve formatter with error: {0!s}'.format(
@@ -91,17 +85,20 @@ class OutputModule(object):
       self._ReportEventError(event, event_data, error_message)
 
   @abc.abstractmethod
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
 
-  def WriteEventMACBGroup(self, event_macb_group):
+  def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
     """Writes an event MACB group to the output.
 
     An event MACB group is a group of events that have the same timestamp and
@@ -113,12 +110,15 @@ class OutputModule(object):
     such. If not overridden this function will output every event individually.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
           EventTag]]): group of events with identical timestamps, attributes
           and values.
     """
     for event, event_data, event_data_stream, event_tag in event_macb_group:
-      self.WriteEvent(event, event_data, event_data_stream, event_tag)
+      self.WriteEvent(
+          output_mediator, event, event_data, event_data_stream, event_tag)
 
   def WriteFooter(self):
     """Writes the footer to the output.
@@ -128,11 +128,15 @@ class OutputModule(object):
     """
     return
 
-  def WriteHeader(self):
+  def WriteHeader(self, output_mediator):  # pylint: disable=unused-argument
     """Writes the header to the output.
 
     Can be used for pre-processing or output before the first event
     is written, such as writing a file header.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
     """
     return
 
@@ -144,15 +148,13 @@ class TextFileOutputModule(OutputModule):
 
   _ENCODING = 'utf-8'
 
-  def __init__(self, output_mediator, event_formatting_helper):
+  def __init__(self, event_formatting_helper):
     """Initializes an output module that writes to a text file.
 
     Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
       event_formatting_helper (EevntFormattingHelper): event formatting helper.
     """
-    super(TextFileOutputModule, self).__init__(output_mediator)
+    super(TextFileOutputModule, self).__init__()
     self._event_formatting_helper = event_formatting_helper
     self._file_object = None
 
@@ -183,17 +185,20 @@ class TextFileOutputModule(OutputModule):
 
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        self._output_mediator, event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.WriteLine(output_text)
 

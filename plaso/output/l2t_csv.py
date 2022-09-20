@@ -27,7 +27,8 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
           EventTag]]): group of events with identical timestamps, attributes
           and values.
@@ -93,7 +94,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a date field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -144,7 +146,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats an extra attributes field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -199,7 +202,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a parser field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -213,7 +217,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a type field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -228,7 +233,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats a version field.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -252,33 +258,35 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
       'user', 'host', 'short', 'desc', 'version', 'filename', 'inode', 'notes',
       'format', 'extra']
 
-  def __init__(self, output_mediator):
-    """Initializes a L2T CSV output module object.
-
-    Args:
-      output_mediator (OutputMediator): an output mediator.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     field_formatting_helper = L2TCSVFieldFormattingHelper()
     event_formatting_helper = L2TCSVEventFormattingHelper(
         field_formatting_helper, self._FIELD_NAMES)
-    super(L2TCSVOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventMACBGroup(self, event_macb_group):
+  def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
     """Writes an event MACB group to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
           EventTag]]): group of events with identical timestamps, attributes
           and values.
     """
     output_text = self._event_formatting_helper.GetFormattedEventMACBGroup(
-        self._output_mediator, event_macb_group)
+        output_mediator, event_macb_group)
 
     self.WriteLine(output_text)
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     output_text = self._event_formatting_helper.GetFormattedFieldNames()
     self.WriteLine(output_text)
 

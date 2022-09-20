@@ -228,6 +228,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._export_event_timestamp = 0
     self._knowledge_base = None
     self._number_of_consumed_events = 0
+    self._output_mediator = None
     self._processing_configuration = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
@@ -392,11 +393,12 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
       if macb_group_identifier is None:
         if macb_group:
-          output_module.WriteEventMACBGroup(macb_group)
+          output_module.WriteEventMACBGroup(self._output_mediator, macb_group)
           macb_group = []
 
         output_module.WriteEvent(
-            event, event_data, event_data_stream, event_tag)
+            self._output_mediator, event, event_data, event_data_stream,
+            event_tag)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
@@ -404,7 +406,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           macb_group.append((event, event_data, event_data_stream, event_tag))
 
         else:
-          output_module.WriteEventMACBGroup(macb_group)
+          output_module.WriteEventMACBGroup(self._output_mediator, macb_group)
           macb_group = [(event, event_data, event_data_stream, event_tag)]
 
         self._events_status.number_of_macb_grouped_events += 1
@@ -413,7 +415,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       last_content_identifier = content_identifier
 
     if macb_group:
-      output_module.WriteEventMACBGroup(macb_group)
+      output_module.WriteEventMACBGroup(self._output_mediator, macb_group)
 
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""
@@ -432,10 +434,12 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
+  # pylint: disable=too-many-arguments
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
-      processing_configuration, deduplicate_events=True, event_filter=None,
-      status_update_callback=None, time_slice=None, use_time_slicer=False):
+      output_mediator, processing_configuration, deduplicate_events=True,
+      event_filter=None, status_update_callback=None, time_slice=None,
+      use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
@@ -443,6 +447,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           the source data needed for processing.
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       deduplicate_events (Optional[bool]): True if events should be
@@ -457,6 +463,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     """
     self._events_status = processing_status.EventsStatus()
     self._knowledge_base = knowledge_base_object
+    self._output_mediator = output_mediator
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
@@ -480,7 +487,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     self._events_status.total_number_of_events = total_number_of_events
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     self._StartStatusUpdateThread()
 
@@ -507,7 +514,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._StopProfiling()
 
     # Reset values.
-    self._status_update_callback = None
-    self._processing_configuration = None
-    self._knowledge_base = None
     self._events_status = None
+    self._knowledge_base = None
+    self._output_mediator = None
+    self._processing_configuration = None
+    self._status_update_callback = None

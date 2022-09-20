@@ -79,9 +79,7 @@ Test argument parser.
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = opensearch_ts.OpenSearchTimesketchOutputModule(
-        output_mediator)
+    output_module = opensearch_ts.OpenSearchTimesketchOutputModule()
 
     # The mappings file is /etc/timesketch/plaso.mappings by default which
     # does not exist on the CI test environment.

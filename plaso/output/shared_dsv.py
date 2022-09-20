@@ -42,7 +42,8 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -115,12 +116,10 @@ class DSVOutputModule(interface.TextFileOutputModule):
   """Shared functionality for delimiter separated values output modules."""
 
   def __init__(
-      self, output_mediator, field_formatting_helper, names, delimiter=',',
-      header=None):
+      self, field_formatting_helper, names, delimiter=',', header=None):
     """Initializes a delimiter separated values output module.
 
     Args:
-      output_mediator (OutputMediator): an output mediator.
       field_formatting_helper (FieldFormattingHelper): field formatting helper.
       names (list[str]): names of the fields to output.
       delimiter (Optional[str]): field delimiter.
@@ -129,8 +128,7 @@ class DSVOutputModule(interface.TextFileOutputModule):
     """
     event_formatting_helper = DSVEventFormattingHelper(
         field_formatting_helper, names, field_delimiter=delimiter)
-    super(DSVOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(DSVOutputModule, self).__init__(event_formatting_helper)
     self._header = header
 
   def SetAdditionalFields(self, field_names):
@@ -166,8 +164,13 @@ class DSVOutputModule(interface.TextFileOutputModule):
     """
     self._event_formatting_helper.SetFields(field_names)
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     if self._header:
       output_text = self._header
     else:

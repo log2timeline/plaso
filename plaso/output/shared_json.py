@@ -24,7 +24,8 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """Writes an event, event data and event tag to serialized form.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -94,7 +95,8 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.

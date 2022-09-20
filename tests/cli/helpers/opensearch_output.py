@@ -76,8 +76,7 @@ Test argument parser.
     options = cli_test_lib.TestOptions()
     options._data_location = 'data'
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = opensearch.OpenSearchOutputModule(output_mediator)
+    output_module = opensearch.OpenSearchOutputModule()
     opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

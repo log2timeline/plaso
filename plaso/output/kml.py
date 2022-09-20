@@ -23,7 +23,8 @@ class KMLEventFormattingHelper(rawpy.NativePythonEventFormattingHelper):
     """Retrieves a string representation of the event.
 
     Args:
-      output_mediator (OutputMediator): output mediator.
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -65,20 +66,18 @@ class KMLOutputModule(interface.TextFileOutputModule):
   NAME = 'kml'
   DESCRIPTION = 'Saves events with geography data into a KML format.'
 
-  def __init__(self, output_mediator):
-    """Initializes a Keyhole Markup Language (KML) XML file output module.
-
-    Args:
-      output_mediator (OutputMediator): an output mediator.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     event_formatting_helper = KMLEventFormattingHelper()
-    super(KMLOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(KMLOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
@@ -88,16 +87,20 @@ class KMLOutputModule(interface.TextFileOutputModule):
     longitude = getattr(event_data, 'longitude', None)
     if None not in (latitude, longitude):
       output_text = self._event_formatting_helper.GetFormattedEvent(
-          self._output_mediator, event, event_data, event_data_stream,
-          event_tag)
+          output_mediator, event, event_data, event_data_stream, event_tag)
       self.WriteText(output_text)
 
-  def WriteHeader(self):
-    """Writes the header to the output."""
+  def WriteHeader(self, output_mediator):
+    """Writes the header to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
     xml_string = (
         '<?xml version="1.0" encoding="{0:s}"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
-            self._output_mediator.encoding))
+            output_mediator.encoding))
     self.WriteText(xml_string)
 
   def WriteFooter(self):

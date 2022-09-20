@@ -118,10 +118,10 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = tln.TLNOutputModule(output_mediator)
+    output_module = tln.TLNOutputModule()
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, 'Time|Source|Host|User|Description\n')
@@ -136,14 +136,14 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = tln.TLNOutputModule(output_mediator)
+    output_module = tln.TLNOutputModule()
     output_module._file_object = test_file_object
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     output_module.WriteEventBody(
-        event, event_data, event_data_stream, event_data_stream)
+        output_mediator, event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '
@@ -185,10 +185,10 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = tln.L2TTLNOutputModule(output_mediator)
+    output_module = tln.L2TTLNOutputModule()
     output_module._file_object = test_file_object
 
-    output_module.WriteHeader()
+    output_module.WriteHeader(output_mediator)
 
     header = test_file_object.getvalue()
     self.assertEqual(header, 'Time|Source|Host|User|Description|TZ|Notes\n')
@@ -203,13 +203,13 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    output_module = tln.L2TTLNOutputModule(output_mediator)
+    output_module = tln.L2TTLNOutputModule()
     output_module._file_object = test_file_object
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     output_module.WriteEventBody(
-        event, event_data, event_data_stream, event_data_stream)
+        output_mediator, event, event_data, event_data_stream, None)
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '

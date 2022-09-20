@@ -16,28 +16,25 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
   NAME = 'json_line'
   DESCRIPTION = 'Saves the events into a JSON line format.'
 
-  def __init__(self, output_mediator):
-    """Initializes the output module object.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
-    """
+  def __init__(self):
+    """Initializes an output module."""
     event_formatting_helper = shared_json.JSONEventFormattingHelper()
-    super(JSONLineOutputModule, self).__init__(
-        output_mediator, event_formatting_helper)
+    super(JSONLineOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventBody(self, event, event_data, event_data_stream, event_tag):
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
 
     Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
     output_text = self._event_formatting_helper.GetFormattedEvent(
-        self._output_mediator, event, event_data, event_data_stream, event_tag)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.WriteLine(output_text)
 
