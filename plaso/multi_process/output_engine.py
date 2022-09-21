@@ -3,13 +3,16 @@
 
 import collections
 import heapq
+import os
 
 from plaso.containers import events
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.multi_process import engine
 from plaso.multi_process import logger
+from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
 
 
@@ -218,6 +221,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
   _HEAP_MAXIMUM_EVENTS = 100000
 
+  _MESSAGE_FORMATTERS_DIRECTORY_NAME = 'formatters'
+
+  _MESSAGE_FORMATTERS_FILE_NAME = 'formatters.yaml'
+
   def __init__(self):
     """Initializes an output and formatting multi-processing engine."""
     super(OutputAndFormattingMultiProcessEngine, self).__init__()
@@ -232,6 +239,47 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
+
+  def _CreateOutputMediator(
+      self, knowledge_base_object, processing_configuration):
+    """Creates an output mediator.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): contains information from
+          the source data needed for processing.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
+
+    Returns:
+      OutputMediator: mediates interactions between output modules and other
+          components, such as storage and dfVFS.
+
+    Raises:
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
+    """
+    mediator = output_mediator.OutputMediator(
+        knowledge_base_object,
+        data_location=processing_configuration.data_location,
+        dynamic_time=processing_configuration.dynamic_time,
+        preferred_encoding=processing_configuration.preferred_encoding)
+
+    if processing_configuration.preferred_language:
+      try:
+        mediator.SetPreferredLanguageIdentifier(
+            processing_configuration.preferred_language)
+      except (KeyError, TypeError):
+        logger.warning('Unable to to set preferred language: {0!s}.'.format(
+              processing_configuration.preferred_language))
+
+    mediator.SetTimeZone(processing_configuration.preferred_time_zone)
+
+    mediator.SetTextPrepend(processing_configuration.text_prepend)
+
+    self._ReadMessageFormatters(
+        mediator, processing_configuration.data_location)
+
+    return mediator
 
   def _ExportEvent(
       self, storage_reader, output_module, event, event_data, event_data_stream,
@@ -417,6 +465,43 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     if macb_group:
       output_module.WriteEventMACBGroup(self._output_mediator, macb_group)
 
+  def _ReadMessageFormatters(self, output_mediator_object, data_location):
+    """Reads the message formatters from a formatters file or directory.
+
+    Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
+      data_location (str): path to the data files.
+
+    Raises:
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
+    """
+    formatters_directory = os.path.join(
+        data_location, self._MESSAGE_FORMATTERS_DIRECTORY_NAME)
+    formatters_file = os.path.join(
+        data_location, self._MESSAGE_FORMATTERS_FILE_NAME)
+
+    if os.path.isdir(formatters_directory):
+      try:
+        output_mediator_object.ReadMessageFormattersFromDirectory(
+            formatters_directory)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from directory: {0:s} with '
+            'error: {1!s}').format(formatters_directory, exception))
+
+    elif os.path.isfile(formatters_file):
+      try:
+        output_mediator_object.ReadMessageFormattersFromFile(formatters_file)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read message formatters from file: {0:s} with error: '
+            '{1!s}').format(formatters_file, exception))
+
+    else:
+      raise errors.BadConfigOption('Missing formatters file and directory.')
+
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""
     used_memory = self._process_information.GetUsedMemory() or 0
@@ -434,12 +519,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  # pylint: disable=too-many-arguments
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
-      output_mediator, processing_configuration, deduplicate_events=True,
-      event_filter=None, status_update_callback=None, time_slice=None,
-      use_time_slicer=False):
+      processing_configuration, deduplicate_events=True, event_filter=None,
+      status_update_callback=None, time_slice=None, use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
@@ -447,8 +530,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           the source data needed for processing.
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       deduplicate_events (Optional[bool]): True if events should be
@@ -460,10 +541,13 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
           an event of interest.
+
+    Raises:
+      BadConfigOption: if the message formatters file or directory cannot be
+          read.
     """
     self._events_status = processing_status.EventsStatus()
     self._knowledge_base = knowledge_base_object
-    self._output_mediator = output_mediator
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
@@ -486,6 +570,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               'total', 0)
 
     self._events_status.total_number_of_events = total_number_of_events
+
+    self._output_mediator = self._CreateOutputMediator(
+        knowledge_base_object, processing_configuration)
+    self._output_mediator.SetStorageReader(storage_reader)
 
     output_module.WriteHeader(output_mediator)
 

@@ -180,6 +180,8 @@ class ProcessingConfiguration(interface.AttributeContainer):
     credentials (list[CredentialConfiguration]): credential configurations.
     data_location (str): path to the data files.
     debug_output (bool): True if debug output should be enabled.
+    dynamic_time (bool): True if date and time values should be represented
+        in their granularity or semantically.
     event_extraction (EventExtractionConfiguration): event extraction
         configuration.
     extraction (ExtractionConfiguration): extraction configuration.
@@ -208,6 +210,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.credentials = []
     self.data_location = None
     self.debug_output = False
+    self.dynamic_time = False
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()
     self.filter_file = None

@@ -9,10 +9,10 @@ import textwrap
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
-from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import reports
+from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
@@ -100,6 +100,30 @@ class PstealTool(
     self.list_hashers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
+
+  def _CreateOutputAndFormattingProcessingConfiguration(self):
+    """Creates an output and formatting processing configuration.
+
+    Returns:
+      ProcessingConfiguration: output and formatting processing configuration.
+    """
+    if self._preferred_language:
+      preferred_language = self._preferred_language
+    else:
+      preferred_language = self._knowledge_base.language
+
+    configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = self._data_location
+    configuration.debug_output = self._debug_mode
+    configuration.dynamic_time = self._output_dynamic_time
+    configuration.log_filename = self._log_file
+    configuration.preferred_language = preferred_language
+    configuration.preferred_time_zone = self._output_time_zone
+    configuration.profiling.directory = self._profiling_directory
+    configuration.profiling.profilers = self._profilers
+    configuration.profiling.sample_rate = self._profiling_sample_rate
+
+    return configuration
 
   def AddStorageOptions(self, argument_group):  # pylint: disable=arguments-renamed
     """Adds the storage options to the argument group.
@@ -324,7 +348,7 @@ class PstealTool(
     finally:
       storage_reader.Close()
 
-    configuration = self._CreateExtractionProcessingConfiguration()
+    configuration = self._CreateOutputAndFormattingProcessingConfiguration()
 
     if self._output_format != 'null':
       self._status_view.SetMode(self._status_view_mode)
@@ -337,28 +361,13 @@ class PstealTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
-      preferred_language = self._knowledge_base.language
-      if self._preferred_language:
-        preferred_language = self._preferred_language
-
-      if preferred_language:
-        try:
-          self._output_mediator.SetPreferredLanguageIdentifier(
-              preferred_language)
-        except (KeyError, TypeError):
-          logger.warning('Unable to to set preferred language: {0!s}.'.format(
-              preferred_language))
-
-      self._output_mediator.SetStorageReader(storage_reader)
-
       # TODO: add single process output and formatting engine support.
       output_engine = (
           multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
       output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
-          self._output_mediator, configuration,
-          deduplicate_events=self._deduplicate_events,
+          configuration, deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
