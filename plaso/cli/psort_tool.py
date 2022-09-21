@@ -118,6 +118,34 @@ class PsortTool(
 
     storage_file.Close()
 
+  def _CreateOutputAndFormattingProcessingConfiguration(self, text_prepend):
+    """Creates an output and formatting processing configuration.
+
+    Args:
+      text_prepend (str): text to prepend to every display name.
+
+    Returns:
+      ProcessingConfiguration: output and formatting processing configuration.
+    """
+    if self._preferred_language:
+      preferred_language = self._preferred_language
+    else:
+      preferred_language = self._knowledge_base.language
+
+    configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = self._data_location
+    configuration.debug_output = self._debug_mode
+    configuration.dynamic_time = self._output_dynamic_time
+    configuration.log_filename = self._log_file
+    configuration.preferred_language = preferred_language
+    configuration.preferred_time_zone = self._output_time_zone
+    configuration.profiling.directory = self._profiling_directory
+    configuration.profiling.profilers = self._profilers
+    configuration.profiling.sample_rate = self._profiling_sample_rate
+    configuration.text_prepend = text_prepend
+
+    return configuration
+
   def _GetAnalysisPlugins(self, analysis_plugins_string):
     """Retrieves analysis plugins.
 
@@ -481,14 +509,10 @@ class PsortTool(
 
     session = engine.BaseEngine.CreateSession()
 
-    configuration = configurations.ProcessingConfiguration()
-    configuration.data_location = self._data_location
-    configuration.debug_output = self._debug_mode
-    configuration.log_filename = self._log_file
-    configuration.text_prepend = text_prepend
-    configuration.profiling.directory = self._profiling_directory
-    configuration.profiling.sample_rate = self._profiling_sample_rate
-    configuration.profiling.profilers = self._profilers
+    configuration = self._CreateOutputAndFormattingProcessingConfiguration(
+        text_prepend)
+
+    # TODO: implement _CreateAnalysisProcessingConfiguration
 
     if self._analysis_plugins:
       self._AnalyzeEvents(
@@ -501,28 +525,13 @@ class PsortTool(
           storage_factory.StorageFactory.CreateStorageReaderForFile(
               self._storage_file_path))
 
-      preferred_language = self._knowledge_base.language
-      if self._preferred_language:
-        preferred_language = self._preferred_language
-
-      try:
-        self._output_mediator.SetPreferredLanguageIdentifier(
-            preferred_language)
-      except (KeyError, TypeError):
-        logger.warning('Unable to to set preferred language: {0!s}.'.format(
-            preferred_language))
-
-      self._output_mediator.SetTextPrepend(text_prepend)
-      self._output_mediator.SetStorageReader(storage_reader)
-
       # TODO: add single process output and formatting engine support.
       output_engine = (
           multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
       output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
-          self._output_mediator, configuration,
-          deduplicate_events=self._deduplicate_events,
+          configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)

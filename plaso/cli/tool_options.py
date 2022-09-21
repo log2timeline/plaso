@@ -11,7 +11,6 @@ from plaso.cli.helpers import profiling
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
-from plaso.output import mediator as output_mediator
 
 
 # TODO: pass argument_parser instead of argument_group and add groups
@@ -102,9 +101,6 @@ class OutputModuleOptions(object):
   # predefined set of output fields.
   _DEPRECATED_OUTPUT_FORMATS = frozenset(['l2tcsv', 'l2ttln', 'tln'])
 
-  _MESSAGE_FORMATTERS_DIRECTORY_NAME = 'formatters'
-  _MESSAGE_FORMATTERS_FILE_NAME = 'formatters.yaml'
-
   def __init__(self):
     """Initializes output module options."""
     super(OutputModuleOptions, self).__init__()
@@ -113,27 +109,10 @@ class OutputModuleOptions(object):
     self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
-    self._output_mediator = None
     self._output_module = None
     self._output_time_zone = None
 
     self.list_time_zones = False
-
-  def _CreateOutputMediator(self):
-    """Creates an output mediator.
-
-    Raises:
-      BadConfigOption: if the message formatters file or directory cannot be
-          read.
-    """
-    self._output_mediator = output_mediator.OutputMediator(
-        self._knowledge_base, data_location=self._data_location,
-        dynamic_time=self._output_dynamic_time,
-        preferred_encoding=self.preferred_encoding)
-
-    self._output_mediator.SetTimeZone(self._output_time_zone)
-
-    self._ReadMessageFormatters()
 
   def _CreateOutputModule(self, options):
     """Creates an output module.
@@ -155,8 +134,6 @@ class OutputModuleOptions(object):
           'set of output fields. It is strongly recommend to use an '
           'alternative output format like: dynamic.').format(
               self._output_format))
-
-    self._CreateOutputMediator()
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
@@ -283,39 +260,6 @@ class OutputModuleOptions(object):
             'Please specific a value for {0:s}'.format(parameter))
 
       setattr(options, parameter, value)
-
-  def _ReadMessageFormatters(self):
-    """Reads the message formatters from a formatters file or directory.
-
-    Raises:
-      BadConfigOption: if the message formatters file or directory cannot be
-          read.
-    """
-    formatters_directory = os.path.join(
-        self._data_location, self._MESSAGE_FORMATTERS_DIRECTORY_NAME)
-    formatters_file = os.path.join(
-        self._data_location, self._MESSAGE_FORMATTERS_FILE_NAME)
-
-    if os.path.isdir(formatters_directory):
-      try:
-        self._output_mediator.ReadMessageFormattersFromDirectory(
-            formatters_directory)
-      except KeyError as exception:
-        raise errors.BadConfigOption((
-            'Unable to read message formatters from directory: {0:s} with '
-            'error: {1!s}').format(formatters_directory, exception))
-
-    elif os.path.isfile(formatters_file):
-      try:
-        self._output_mediator.ReadMessageFormattersFromFile(
-            formatters_file)
-      except KeyError as exception:
-        raise errors.BadConfigOption((
-            'Unable to read message formatters from file: {0:s} with error: '
-            '{1!s}').format(formatters_file, exception))
-
-    else:
-      raise errors.BadConfigOption('Missing formatters file and directory.')
 
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.

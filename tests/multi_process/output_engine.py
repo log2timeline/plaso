@@ -362,28 +362,20 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     test_file_object = io.StringIO()
 
-    output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator_object.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    output_mediator_object.SetPreferredLanguageIdentifier('en-US')
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+        test_file_path)
 
     output_module = dynamic.DynamicOutputModule()
     output_module._file_object = test_file_object
 
     configuration = configurations.ProcessingConfiguration()
-
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        test_file_path)
+    configuration.data_location = shared_test_lib.DATA_PATH
+    configuration.preferred_language = 'en-US'
 
     test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
     test_engine.ExportEvents(
-        knowledge_base_object, storage_reader, output_module,
-        output_mediator_object, configuration)
+        knowledge_base_object, storage_reader, output_module, configuration)
 
     output = test_file_object.getvalue()
     lines = output.split('\n')
