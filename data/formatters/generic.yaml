@@ -610,7 +610,7 @@ short_message:
 - '{status}'
 ---
 type: 'conditional'
-data_type: 'postgresql'
+data_type: 'postgresql:line'
 message:
 - 'PID {pid}'
 - '{user}'

@@ -25,7 +25,7 @@ class PostgreSQLEventData(events.EventData):
     user (str): "user@database" string if present.
   """
 
-  DATA_TYPE = 'postgresql'
+  DATA_TYPE = 'postgresql:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -83,9 +83,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.ZeroOrMore(pyparsing.lineEnd())
   )
 
-  LINE_STRUCTURES = [
-    ('logline', _LOG_LINE),
-  ]
+  LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
   def _ConvertTimeString(self, structure):
     """Converts the structure to a datetime object.
@@ -105,10 +103,10 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     """
     try:
       dts = '{0:d}-{1:d}-{2:d} {3:d}:{4:d}:{5:d}.{6:d} {7:s}'.format(
-        structure['year'], structure['month'], structure['day_of_month'],
-        structure['time']['hours'], structure['time']['minutes'],
-        structure['time']['seconds'], structure.get('microseconds', [0])[0],
-        structure['time_zone'])
+          structure['year'], structure['month'], structure['day_of_month'],
+          structure['time']['hours'], structure['time']['minutes'],
+          structure['time']['seconds'], structure.get('microseconds', [0])[0],
+          structure['time_zone'])
     except (TypeError, ValueError) as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
@@ -173,7 +171,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _ = self._LOG_LINE.parseString(lines)
+      self._LOG_LINE.parseString(lines)
     except pyparsing.ParseException as exception:
       logger.debug('Not a PostgreSQL log file: {0!s}'.format(exception))
       return False
