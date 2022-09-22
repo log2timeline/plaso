@@ -25,7 +25,9 @@ Test argument parser.
 {0:s}:
   -t TEXT, --text TEXT  Define a free form text string that is prepended to
                         each path to make it easier to distinguish one record
-                        from another in a timeline (like c:\\, or host_w_c:\\)
+                        from another in a timeline (like c:\\, or host_w_c:\\).
+                        WARNING: this option is deprecated use the
+                        psort/psteal --custom-fields option instead.
 """.format(cli_test_lib.ARGPARSE_OPTIONS)
 
   def testAddArguments(self):
