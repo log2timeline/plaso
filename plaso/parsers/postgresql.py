@@ -40,10 +40,10 @@ class PostgreSQLEventData(events.EventData):
 
 class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from PostgreSQL application log files.
-  
+
   This is a multi-line log format that records internal database
   application logs as well as authentication attempts.
-  
+ 
   """
 
   NAME = 'postgresql'
