@@ -29,6 +29,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import regular_expressions
+from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -64,7 +65,8 @@ class SnortFastAlertEventData(events.EventData):
     self.source_port = None
 
 
-class SnortFastLogTextPlugin(interface.TextPlugin):
+class SnortFastLogTextPlugin(
+    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
   """Text parser plugin for Snort3/Suricata fast-log alert log files."""
 
   NAME = 'snort:fastlog:alert'
@@ -105,7 +107,7 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
-      _SIX_DIGITS.setResultsName('fraction_of_second'))
+      _SIX_DIGITS.setResultsName('microseconds'))
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -153,30 +155,42 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def __init__(self):
-    """Initializes a parser."""
-    super(SnortFastLogTextPlugin, self).__init__()
-    self._last_month = 0
-    self._year_use = 0
-
-  def _UpdateYear(self, parser_mediator, month):
-    """Updates the year to use for events, based on last observed month.
+  def _GetTimeElementsTuple(self, structure):
+    """Retrieves a time elements tuple from the structure.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      month (int): month observed by the parser, where January is 1.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Returns:
+      tuple: containing:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
+        microseconds (int): fraction of second in microseconds.
+
+    Raises:
+      ValueError: if month contains an unsupported value.
     """
-    if not self._year_use:
-      self._year_use = parser_mediator.GetEstimatedYear()
+    month = self._GetValueFromStructure(structure, 'month')
+    year = self._GetValueFromStructure(structure, 'year')
+    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
+    hours = self._GetValueFromStructure(structure, 'hours')
+    minutes = self._GetValueFromStructure(structure, 'minutes')
+    seconds = self._GetValueFromStructure(structure, 'seconds')
+    microseconds = self._GetValueFromStructure(structure, 'microseconds')
 
-    if not self._last_month:
-      self._last_month = month
-      return
+    if year:
+      year += 2000
+    else:
+      self._UpdateYear(month)
 
-    if self._last_month == 12 and month == 1:
-      self._year_use += 1
-    self._last_month = month
+      year = self._GetYear()
+
+    return year, month, day_of_month, hours, minutes, seconds, microseconds
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -197,34 +211,14 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    month = self._GetValueFromStructure(structure, 'month')
-    year = self._GetValueFromStructure(structure, 'year')
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    fraction_of_second = self._GetValueFromStructure(
-        structure, 'fraction_of_second')
-
-    if month != 0:
-      self._UpdateYear(parser_mediator, month)
-
-    if year is not None:
-      year += 2000
-    else:
-      year = self._year_use
-
-    time_elements_tuple = (
-        year, month, day_of_month, hours, minutes, seconds, fraction_of_second)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
 
-    except (ValueError, TypeError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
 
     event_data = SnortFastAlertEventData()
@@ -266,8 +260,7 @@ class SnortFastLogTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    self._last_month = 0
-    self._year_use = 0
+    self._SetEstimatedYear(parser_mediator)
 
     return bool(self._VERIFICATION_REGEX.match(line))
 

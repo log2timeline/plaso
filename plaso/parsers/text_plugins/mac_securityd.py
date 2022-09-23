@@ -13,6 +13,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -44,29 +45,14 @@ class MacOSSecuritydLogEventData(events.EventData):
     self.sender_pid = None
 
 
-class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
+class MacOSSecuritydLogTextPlugin(
+    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
   """Text parser plugin for MacOS security daemon (securityd) log files."""
 
   NAME = 'mac_securityd'
   DATA_FORMAT = 'MacOS security daemon (securityd) log file'
 
   ENCODING = 'utf-8'
-
-  _DEFAULT_YEAR = 2012
-
-  _MONTH_DICT = {
-      'jan': 1,
-      'feb': 2,
-      'mar': 3,
-      'apr': 4,
-      'may': 5,
-      'jun': 6,
-      'jul': 7,
-      'aug': 8,
-      'sep': 9,
-      'oct': 10,
-      'nov': 11,
-      'dec': 12}
 
   DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
@@ -105,9 +91,7 @@ class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(MacOSSecuritydLogTextPlugin, self).__init__()
-    self._last_month = None
-    self._previous_structure = None
-    self._year_use = 0
+    self._repeated_structure = None
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -124,20 +108,21 @@ class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
         hours (int): hours.
         minutes (int): minutes.
         seconds (int): seconds.
+
+    Raises:
+      ValueError: if month contains an unsupported value.
     """
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     # TODO: what if time_elements_tuple is None.
-    month, day, hours, minutes, seconds = time_elements_tuple
+    month_string, day, hours, minutes, seconds = time_elements_tuple
 
-    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
-    # for an invalid month.
-    month = self._MONTH_DICT.get(month.lower(), 0)
+    month = self._GetMonthFromString(month_string)
 
-    if month != 0 and month < self._last_month:
-      # Gap detected between years.
-      self._year_use += 1
+    self._UpdateYear(month)
 
-    return (self._year_use, month, day, hours, minutes, seconds)
+    year = self._GetYear()
+
+    return year, month, day, hours, minutes, seconds
 
   def _ParseLogLine(self, parser_mediator, structure, key):
     """Parse a single log line and produce an event object.
@@ -149,28 +134,24 @@ class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
           a line of a text file.
       key (str): name of the parsed structure.
     """
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
 
-    self._last_month = time_elements_tuple[1]
-
     if key == 'logline':
-      self._previous_structure = structure
+      self._repeated_structure = structure
       message = self._GetValueFromStructure(structure, 'message')
     else:
       repeat_count = self._GetValueFromStructure(structure, 'times')
       previous_message = self._GetValueFromStructure(
-          self._previous_structure, 'message')
+          self._repeated_structure, 'message')
       message = 'Repeated {0:d} times: {1:s}'.format(
           repeat_count, previous_message)
-      structure = self._previous_structure
+      structure = self._repeated_structure
 
     # It uses CarsNotIn structure which leaves whitespaces
     # at the beginning of the sender and the caller.
@@ -245,18 +226,14 @@ class MacOSSecuritydLogTextPlugin(interface.TextPlugin):
     if not parsed_structure:
       return False
 
-    self._last_month = 0
-    self._year_use = parser_mediator.GetEstimatedYear()
-
-    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
+    self._SetEstimatedYear(parser_mediator)
 
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (TypeError, ValueError):
       return False
-
-    self._last_month = time_elements_tuple[1]
 
     return True
 

@@ -59,7 +59,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import logger
+from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -81,7 +81,8 @@ class XChatLogEventData(events.EventData):
     self.text = None
 
 
-class XChatLogTextPlugin(interface.TextPlugin):
+class XChatLogTextPlugin(
+    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
   """Text parser plugin for XChat log files."""
 
   NAME = 'xchatlog'
@@ -90,21 +91,8 @@ class XChatLogTextPlugin(interface.TextPlugin):
   ENCODING = 'utf-8'
 
   # Common (header/footer/body) pyparsing structures.
-  # TODO: Only English ASCII timestamp supported ATM, add support for others.
 
-  _MONTH_DICT = {
-      'jan': 1,
-      'feb': 2,
-      'mar': 3,
-      'apr': 4,
-      'may': 5,
-      'jun': 6,
-      'jul': 7,
-      'aug': 8,
-      'sep': 9,
-      'oct': 10,
-      'nov': 11,
-      'dec': 12}
+  # TODO: Only English ASCII timestamp supported ATM, add support for others.
 
   _WEEKDAY = pyparsing.Group(
       pyparsing.Keyword('Sun') |
@@ -124,7 +112,8 @@ class XChatLogTextPlugin(interface.TextPlugin):
   _HEADER_DATE_TIME = pyparsing.Group(
       _WEEKDAY.setResultsName('weekday') +
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+          'day_of_month') +
       text_parser.PyparsingConstants.TIME_ELEMENTS +
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year'))
   _LOG_ACTION = pyparsing.Group(
@@ -140,10 +129,13 @@ class XChatLogTextPlugin(interface.TextPlugin):
 
   _DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+          'day_of_month') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
+
   _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
       'nickname')
+
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Optional(_NICKNAME) +
@@ -155,12 +147,6 @@ class XChatLogTextPlugin(interface.TextPlugin):
       ('header_signature', _HEADER_SIGNATURE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
-
-  def __init__(self):
-    """Initializes a text parser plugin."""
-    super(XChatLogTextPlugin, self).__init__()
-    self._last_month = 0
-    self._xchat_year = None
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -177,63 +163,67 @@ class XChatLogTextPlugin(interface.TextPlugin):
         hours (int): hours.
         minutes (int): minutes.
         seconds (int): seconds.
+
+    Raises:
+      ValueError: if month contains an unsupported value.
     """
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
-    # TODO: what if time_elements_tuple is None.
-    month, day, hours, minutes, seconds = time_elements_tuple
 
-    month = self._MONTH_DICT.get(month.lower(), 0)
+    if len(time_elements_tuple) == 5:
+      month_string, day_of_month, hours, minutes, seconds = time_elements_tuple
 
-    if month != 0 and month < self._last_month:
-      # Gap detected between years.
-      self._xchat_year += 1
+      month = self._GetMonthFromString(month_string)
 
-    return (self._xchat_year, month, day, hours, minutes, seconds)
+      self._UpdateYear(month)
+
+      year = self._GetYear()
+
+    else:
+      _, month_string, day_of_month, hours, minutes, seconds, year = (
+          time_elements_tuple)
+
+      month = self._GetMonthFromString(month_string)
+
+      self._SetMonthAndYear(month, year)
+
+    return year, month, day_of_month, hours, minutes, seconds
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parses a log header.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
-    # TODO: what if time_elements_tuple is None.
-    _, month, day, hours, minutes, seconds, year = time_elements_tuple
-
-    month = self._MONTH_DICT.get(month.lower(), 0)
-
-    time_elements_tuple = (year, month, day, hours, minutes, seconds)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
+      self._year = None
       return
-
-    self._last_month = month
-
-    event_data = XChatLogEventData()
 
     log_action = self._GetValueFromStructure(
         structure, 'log_action', default_value=[])
-    if log_action[0] == 'BEGIN':
-      self._xchat_year = year
-      event_data.text = 'XChat start logging'
 
-    elif log_action[0] == 'END':
-      self._xchat_year = None
-      event_data.text = 'XChat end logging'
-
-    else:
-      logger.debug('Unknown log action: {0:s}.'.format(
-          ' '.join(log_action)))
+    if log_action[0] not in ('BEGIN', 'END'):
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported log action: {0:s}.'.format(' '.join(log_action)))
+      self._year = None
       return
+
+    event_data = XChatLogEventData()
+
+    if log_action[0] == 'BEGIN':
+      event_data.text = 'XChat start logging'
+    else:
+      event_data.text = 'XChat end logging'
+      self._year = None
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED,
@@ -245,25 +235,22 @@ class XChatLogTextPlugin(interface.TextPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    if not self._xchat_year:
+    if not self._year:
       return
 
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
-      return
 
-    self._last_month = time_elements_tuple[1]
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
+      return
 
     text = self._GetValueFromStructure(structure, 'text')
     # The text string contains multiple unnecessary whitespaces that need to
@@ -307,9 +294,9 @@ class XChatLogTextPlugin(interface.TextPlugin):
     elif key == 'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
-      # is found. Stop parsing is done by setting xchat_year to 0.
-      logger.warning('Unknown locale header.')
-      self._xchat_year = 0
+      # is found.
+      parser_mediator.ProduceExtractionWarning('unsupported locale header')
+      self._year = None
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -332,23 +319,14 @@ class XChatLogTextPlugin(interface.TextPlugin):
     except pyparsing.ParseException:
       return False
 
-    time_elements_tuple = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
-
     try:
-      _, month, day, hours, minutes, seconds, year = time_elements_tuple
-    except TypeError:
-      return False
-
-    month = self._MONTH_DICT.get(month.lower(), 0)
-
-    time_elements_tuple = (year, month, day, hours, minutes, seconds)
-
-    try:
+      time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (TypeError, ValueError):
       return False
+
+    self._year = None
 
     return True
 

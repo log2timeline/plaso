@@ -22,7 +22,7 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 1)
+    self.assertEqual(number_of_warnings, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
@@ -103,7 +103,7 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 1)
+    self.assertEqual(number_of_warnings, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')

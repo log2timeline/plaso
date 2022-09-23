@@ -75,8 +75,8 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     """Retrieves a time elements tuple from the structure.
 
     Args:
-        structure (pyparsing.ParseResults): structure of tokens derived from
-            a line of a vsftp log file.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a vsftp log file.
 
     Returns:
       tuple: containing:
@@ -90,25 +90,24 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     _, month, day_of_month, hours, minutes, seconds, year = time_elements_tuple
     month = self._MONTH_DICT.get(month.lower(), 0)
-    return (year, month, day_of_month, hours, minutes, seconds)
+    return year, month, day_of_month, hours, minutes, seconds
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
     Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        structure (pyparsing.ParseResults): structure of tokens derived from
-            a line of a text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
 
     event_data = VsftpdEventData()
@@ -164,12 +163,11 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     except pyparsing.ParseException:
       return False
 
-    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (TypeError, ValueError):
       return False
 
     return True
