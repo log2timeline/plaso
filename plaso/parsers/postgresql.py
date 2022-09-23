@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for PostgreSQL log files."""
+"""Parser for PostgreSQL application log files."""
 
 import string
 import pyparsing
@@ -10,22 +10,24 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import definitions, errors
-from plaso.parsers import logger
+from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 class PostgreSQLEventData(events.EventData):
-  """PostgreSQL log data.
+  """PostgreSQL application log data.
 
   Attributes:
     log_level (str): logging level of event
     log_line (str): log message.
     pid (int): process identifier (PID).
     user (str): "user@database" string if present.
+        Records the user account and database name
+        that was authenticated or attempting to authenticate.
   """
 
-  DATA_TYPE = 'postgresql:line'
+  DATA_TYPE = 'postgresql:application_log:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -35,11 +37,17 @@ class PostgreSQLEventData(events.EventData):
     self.pid = None
     self.user = None
 
+
 class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses events from PostgreSQL log files."""
+  """Parses events from PostgreSQL application log files.
+  
+  This is a multi-line log format that records internal database
+  application logs as well as authentication attempts.
+  
+  """
 
   NAME = 'postgresql'
-  DATA_FORMAT = 'PostgreSQL log file'
+  DATA_FORMAT = 'PostgreSQL application log file'
   _ENCODING = 'utf-8'
 
   _DATE_TIME = pyparsing.Group(
@@ -84,6 +92,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   )
 
   LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def _ConvertTimeString(self, structure):
     """Converts the structure to a datetime object.
@@ -102,7 +111,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       ValueError: if the structure cannot be converted into a datetime.
     """
     try:
-      dts = '{0:d}-{1:d}-{2:d} {3:d}:{4:d}:{5:d}.{6:d} {7:s}'.format(
+      time_string = '{0:d}-{1:d}-{2:d} {3:d}:{4:d}:{5:d}.{6:d} {7:s}'.format(
           structure['year'], structure['month'], structure['day_of_month'],
           structure['time']['hours'], structure['time']['minutes'],
           structure['time']['seconds'], structure.get('microseconds', [0])[0],
@@ -111,7 +120,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
               exception))
-    return parser.parse(timestr=dts)
+    return parser.parse(timestr=time_string)
 
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -126,20 +135,19 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'logline':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = PostgreSQLEventData()
     event_data.pid = ''.join(
-        [str(x) for x in self._GetValueFromStructure(structure, 'pid')])
+        [str(pid) for pid in self._GetValueFromStructure(structure, 'pid')])
 
     log_level = self._GetValueFromStructure(structure, 'log_level')
-    if log_level and len(log_level) == 1:
-      event_data.log_level = log_level[0]
-    else:
+    if log_level and len(log_level) != 1:
       parser_mediator.ProduceExtractionWarning('no log level found')
       return
+    event_data.log_level = log_level[0]
 
     user_and_database = self._GetValueFromStructure(
         structure, 'user_and_database')
@@ -160,7 +168,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
   # pylint: disable=unused-argument
   def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is a bash history file.
+    """Verifies that this is a PostgreSQL application log.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
@@ -172,8 +180,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     """
     try:
       self._LOG_LINE.parseString(lines)
-    except pyparsing.ParseException as exception:
-      logger.debug('Not a PostgreSQL log file: {0!s}'.format(exception))
+    except pyparsing.ParseException:
       return False
 
     return True
