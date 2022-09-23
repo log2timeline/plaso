@@ -35,9 +35,10 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'date_time': '2022-04-12 00:16:05.526000',
         'pid': '7755',
         'log_level': 'LOG',
-        'log_line': ('starting PostgreSQL 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1) '
-                    'on x86_64-pc-linux-gnu, compiled by gcc '
-                    '(Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit')}
+        'log_line': (
+            'starting PostgreSQL 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1) '
+            'on x86_64-pc-linux-gnu, compiled by gcc '
+            '(Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -54,10 +55,11 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'pid': '9158',
         'log_level': 'DETAIL',
-        'log_line': ('User "postgres" has no password assigned.\n        '
-                    'Connection matched pg_hba.conf line 96: '
-                    '"host    all             all             '
-                    '127.0.0.1/32            md5"')}
+        'log_line': (
+            'User "postgres" has no password assigned.\n        '
+            'Connection matched pg_hba.conf line 96: '
+            '"host    all             all             '
+            '127.0.0.1/32            md5"')}
 
     self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
@@ -66,8 +68,8 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
         'pid': '203851-1',
         'date_time': '2022-07-15 13:04:27.000000',
         'log_level': 'LOG',
-        'log_line': ('could not receive data from client: '
-                    'Connection reset by peer')}
+        'log_line': (
+            'could not receive data from client: Connection reset by peer')}
 
     self.CheckEventValues(storage_writer, events[19], expected_event_values)
 

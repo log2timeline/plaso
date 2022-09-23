@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for PostgreSQL application log files."""
 
-import string
-import pyparsing
+import pytz
 
-from dateutil import parser
+import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -22,9 +21,8 @@ class PostgreSQLEventData(events.EventData):
     log_level (str): logging level of event
     log_line (str): log message.
     pid (int): process identifier (PID).
-    user (str): "user@database" string if present.
-        Records the user account and database name
-        that was authenticated or attempting to authenticate.
+    user (str): "user@database" string if present. Records the user account and
+        database name that was authenticated or attempting to authenticate.
   """
 
   DATA_TYPE = 'postgresql:application_log:entry'
@@ -41,94 +39,110 @@ class PostgreSQLEventData(events.EventData):
 class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from PostgreSQL application log files.
 
-  This is a multi-line log format that records internal database
-  application logs as well as authentication attempts.
-
+  This is a multi-line log format that records internal database application
+  logs as well as authentication attempts.
   """
 
   NAME = 'postgresql'
   DATA_FORMAT = 'PostgreSQL application log file'
+
   _ENCODING = 'utf-8'
 
-  _DATE_TIME = pyparsing.Group(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _DATE_TIME = (
       pyparsing.LineStart() +
-      text_parser.PyparsingConstants.DATE_ELEMENTS +
-      text_parser.PyparsingConstants.TIME.setResultsName('time') +
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
       pyparsing.Optional(
           pyparsing.Suppress('.') +
-          text_parser.PyparsingConstants.INTEGER
-      ).setResultsName('microseconds') +
-      pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
-  ).setResultsName('date_time')
+          _THREE_DIGITS.setResultsName('milliseconds'))).setResultsName(
+              'date_time')
 
-  _PID = pyparsing.Group(
+  _TIME_ZONE = pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
+
+  _PID = (
       pyparsing.Suppress('[') +
       pyparsing.OneOrMore(text_parser.PyparsingConstants.INTEGER) +
       pyparsing.Optional(pyparsing.Literal('-')) +
       pyparsing.ZeroOrMore(text_parser.PyparsingConstants.INTEGER) +
-      pyparsing.Suppress(']')
-  ).setResultsName('pid')
+      pyparsing.Suppress(']')).setResultsName('pid')
 
-  _USER_AND_DATABASE = pyparsing.Group(
+  _USER_AND_DATABASE = (
       pyparsing.Word(pyparsing.alphanums) +
       pyparsing.Literal('@') +
-      pyparsing.Word(pyparsing.alphanums)
-  ).setResultsName('user_and_database')
+      pyparsing.Word(pyparsing.alphanums)).setResultsName('user_and_database')
 
   _LOG_LEVEL = (
-      pyparsing.Word(string.ascii_uppercase) +
-      pyparsing.Suppress(':')
-  ).setResultsName('log_level')
+      pyparsing.Word(pyparsing.string.ascii_uppercase) +
+      pyparsing.Suppress(':')).setResultsName('log_level')
 
-  _LOG_LINE_END = _BODY_END = pyparsing.StringEnd() | _DATE_TIME
+  _LOG_LINE_END = pyparsing.StringEnd() | (_DATE_TIME + _TIME_ZONE)
 
   _LOG_LINE = (
-      _DATE_TIME +
-      _PID +
-      pyparsing.Optional(_USER_AND_DATABASE) +
-      _LOG_LEVEL +
-      pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
-      pyparsing.ZeroOrMore(pyparsing.lineEnd())
-  )
+      _DATE_TIME + _TIME_ZONE + _PID + pyparsing.Optional(_USER_AND_DATABASE) +
+      _LOG_LEVEL + pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
+      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
   LINE_STRUCTURES = [('logline', _LOG_LINE)]
+
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-  def _ConvertTimeString(self, structure):
-    """Converts the structure to a datetime object.
-
-    The date and time values are formatted as:
-    "2022-04-12 00:16:05.526 UTC".
+  def _BuildDateTime(self, time_elements_structure):
+    """Builds time elements from an APT History time stamp.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from a
-          line of a text file, that contains the time elements.
+      time_elements_structure (pyparsing.ParseResults): structure of tokens
+          derived from an APT History time stamp.
 
     Returns:
-      datetime: datetime object.
-
-    Raises:
-      ValueError: if the structure cannot be converted into a datetime.
+      dfdatetime.TimeElements: date and time extracted from the structure or
+          None if the structure does not represent a valid string.
     """
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exist.
     try:
-      time_string = '{0:d}-{1:d}-{2:d} {3:d}:{4:d}:{5:d}.{6:d} {7:s}'.format(
-          structure['year'], structure['month'], structure['day_of_month'],
-          structure['time']['hours'], structure['time']['minutes'],
-          structure['time']['seconds'], structure.get('microseconds', [0])[0],
-          structure['time_zone'])
-    except (TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to format date time string with error: {0!s}.'.format(
-              exception))
-    return parser.parse(timestr=time_string)
+      if len(time_elements_structure) == 6:
+        year, month, day_of_month, hours, minutes, seconds = (
+            time_elements_structure)
 
+        date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+            year, month, day_of_month, hours, minutes, seconds))
+
+      else:
+        year, month, day_of_month, hours, minutes, seconds, milliseconds = (
+            time_elements_structure)
+
+        date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+            time_elements_tuple=(
+                year, month, day_of_month, hours, minutes, seconds,
+                milliseconds))
+
+      date_time.is_local_time = True
+      return date_time
+    except (TypeError, ValueError):
+      return None
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a PostgreSQL event.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
@@ -147,6 +161,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     if log_level and len(log_level) != 1:
       parser_mediator.ProduceExtractionWarning('no log level found')
       return
+
     event_data.log_level = log_level[0]
 
     user_and_database = self._GetValueFromStructure(
@@ -158,13 +173,22 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     if log_line:
       event_data.log_line = log_line.lstrip().rstrip()
 
-    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
-    date_time_parsed = self._ConvertTimeString(date_time_structure)
-    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-    date_time.CopyFromDatetime(date_time_parsed)
+    time_zone_string = self._GetValueFromStructure(structure, 'time_zone')
+
+    try:
+      # TODO: PostgreSQL time zone to Python time zone mappings.
+      time_zone = pytz.timezone(time_zone_string)
+    except pytz.UnknownTimeZoneError:
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported time zone: {0!s}'.format(time_zone_string))
+      return
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    date_time = self._BuildDateTime(time_elements_structure)
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED,
-        date_time_parsed.tzinfo)
+        date_time, definitions.TIME_DESCRIPTION_RECORDED, time_zone=time_zone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   # pylint: disable=unused-argument
@@ -173,7 +197,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
+          parsers and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:
