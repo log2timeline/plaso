@@ -43,7 +43,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
   This is a multi-line log format that records internal database
   application logs as well as authentication attempts.
- 
+
   """
 
   NAME = 'postgresql'
