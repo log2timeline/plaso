@@ -163,7 +163,8 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
     date_time.CopyFromDatetime(date_time_parsed)
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+        date_time, definitions.TIME_DESCRIPTION_RECORDED,
+        date_time_parsed.tzinfo)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   # pylint: disable=unused-argument
