@@ -18,8 +18,8 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_HOST = 'localhost'
   _DEFAULT_PORT = 8080
   _DEFAULT_PROTOCOL = 'http'
-  _SUPPORTED_HASHES = viper.ViperAnalyzer.SUPPORTED_HASHES
-  _SUPPORTED_PROTOCOLS = viper.ViperAnalyzer.SUPPORTED_PROTOCOLS
+  _SUPPORTED_HASHES = sorted(viper.ViperAnalysisPlugin.SUPPORTED_HASHES)
+  _SUPPORTED_PROTOCOLS = sorted(viper.ViperAnalysisPlugin.SUPPORTED_PROTOCOLS)
 
   @classmethod
   def AddArguments(cls, argument_group):

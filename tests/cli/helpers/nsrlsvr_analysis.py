@@ -67,9 +67,9 @@ Test argument parser.
       nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
 
-    self.assertEqual(analysis_plugin._analyzer._host, '127.0.0.1')
-    self.assertEqual(analysis_plugin._analyzer._port, 9120)
     self.assertEqual(analysis_plugin._label, 'NSRLSVR')
+    self.assertEqual(analysis_plugin._host, '127.0.0.1')
+    self.assertEqual(analysis_plugin._port, 9120)
 
     with self.assertRaises(errors.BadConfigObject):
       nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.ParseOptions(

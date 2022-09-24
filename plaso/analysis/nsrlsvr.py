@@ -8,36 +8,77 @@ from plaso.analysis import logger
 from plaso.analysis import manager
 
 
-class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
-  """Analyzes file hashes by consulting an nsrlsvr instance.
+class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
+  """Analysis plugin for looking up hashes in nsrlsvr."""
 
-  Attributes:
-    analyses_performed (int): number of analysis batches completed by this
-        analyzer.
-    hashes_per_batch (int): maximum number of hashes to analyze at once.
-    seconds_spent_analyzing (int): number of seconds this analyzer has spent
-        performing analysis (as opposed to waiting on queues, etc.)
-    wait_after_analysis (int): number of seconds the analyzer will sleep for
-        after analyzing a batch of hashes.
-  """
+  # The NSRL contains files of all different types, and can handle a high load
+  # so look up all files.
+  DATA_TYPES = frozenset(['fs:stat', 'fs:stat:ntfs'])
+
+  NAME = 'nsrlsvr'
+
+  SUPPORTED_HASHES = frozenset(['md5', 'sha1'])
+
+  DEFAULT_LABEL = 'nsrl_present'
+
   _RECEIVE_BUFFER_SIZE = 4096
+
   _SOCKET_TIMEOUT = 3
 
-  SUPPORTED_HASHES = ['md5', 'sha1']
+  def __init__(self):
+    """Initializes an nsrlsvr analysis plugin."""
+    super(NsrlsvrAnalysisPlugin, self).__init__()
+    self._host = None
+    self._label = self.DEFAULT_LABEL
+    self._port = None
 
-  def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
-    """Initializes an nsrlsvr analyzer thread.
+  def _Analyze(self, hashes):
+    """Looks up file hashes in nsrlsvr.
 
     Args:
-      hash_queue (Queue.queue): contains hashes to be analyzed.
-      hash_analysis_queue (Queue.queue): that the analyzer will append
-          HashAnalysis objects this queue.
+      hashes (list[str]): hash values to look up.
+
+    Returns:
+      list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    kwargs.pop('hashes_per_batch', None)
-    super(NsrlsvrAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, hashes_per_batch=100, **kwargs)
-    self._host = None
-    self._port = None
+    logger.debug('Opening connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
+
+    nsrl_socket = self._GetSocket()
+    if not nsrl_socket:
+      self.SignalAbort()
+      return []
+
+    hash_analyses = []
+    for digest in hashes:
+      response = self._QueryHash(nsrl_socket, digest)
+      if response is not None:
+        hash_analysis = hash_tagging.HashAnalysis(digest, response)
+        hash_analyses.append(hash_analysis)
+
+    nsrl_socket.close()
+
+    logger.debug('Closed connection to {0:s}:{1:d}'.format(
+        self._host, self._port))
+
+    return hash_analyses
+
+  def _GenerateLabels(self, hash_information):
+    """Generates a list of strings that will be used in the event tag.
+
+    Args:
+      hash_information (bool): response from the hash tagging that indicates
+          that the file hash was present or not.
+
+    Returns:
+      list[str]: list of labels to apply to event.
+    """
+    if hash_information:
+      return [self._label]
+
+    # TODO: Renable when tagging is removed from the analysis report.
+    # return ['nsrl_not_present']
+    return []
 
   def _GetSocket(self):
     """Establishes a connection to an nsrlsvr instance.
@@ -92,36 +133,14 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
     # nsrlsvr returns "OK 1" if the has was found or "OK 0" if not.
     return response == b'OK 1'
 
-  def Analyze(self, hashes):
-    """Looks up file hashes in nsrlsvr.
+  def SetLabel(self, label):
+    """Sets the tagging label.
 
     Args:
-      hashes (list[str]): hash values to look up.
-
-    Returns:
-      list[HashAnalysis]: analysis results, or an empty list on error.
+      label (str): label to apply to events extracted from files that are
+          present in nsrlsvr.
     """
-    logger.debug('Opening connection to {0:s}:{1:d}'.format(
-        self._host, self._port))
-
-    nsrl_socket = self._GetSocket()
-    if not nsrl_socket:
-      self.SignalAbort()
-      return []
-
-    hash_analyses = []
-    for digest in hashes:
-      response = self._QueryHash(nsrl_socket, digest)
-      if response is not None:
-        hash_analysis = hash_tagging.HashAnalysis(digest, response)
-        hash_analyses.append(hash_analysis)
-
-    nsrl_socket.close()
-
-    logger.debug('Closed connection to {0:s}:{1:d}'.format(
-        self._host, self._port))
-
-    return hash_analyses
+    self._label = label
 
   def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
@@ -157,73 +176,6 @@ class NsrlsvrAnalyzer(hash_tagging.HashAnalyzer):
       nsrl_socket.close()
 
     return response is not None
-
-
-class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
-  """Analysis plugin for looking up hashes in nsrlsvr."""
-
-  # The NSRL contains files of all different types, and can handle a high load
-  # so look up all files.
-  DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
-
-  DEFAULT_LABEL = 'nsrl_present'
-
-  NAME = 'nsrlsvr'
-
-  def __init__(self):
-    """Initializes an nsrlsvr analysis plugin."""
-    super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
-    self._label = self.DEFAULT_LABEL
-
-  def _GenerateLabels(self, hash_information):
-    """Generates a list of strings that will be used in the event tag.
-
-    Args:
-      hash_information (bool): response from the hash tagging analyzer that
-          indicates that the file hash was present or not.
-
-    Returns:
-      list[str]: list of labels to apply to event.
-    """
-    if hash_information:
-      return [self._label]
-
-    # TODO: Renable when tagging is removed from the analysis report.
-    # return ['nsrl_not_present']
-    return []
-
-  def SetLabel(self, label):
-    """Sets the tagging label.
-
-    Args:
-      label (str): label to apply to events extracted from files that are
-          present in nsrlsvr.
-    """
-    self._label = label
-
-  def SetHost(self, host):
-    """Sets the address or hostname of the server running nsrlsvr.
-
-    Args:
-      host (str): IP address or hostname to query.
-    """
-    self._analyzer.SetHost(host)
-
-  def SetPort(self, port):
-    """Sets the port where nsrlsvr is listening.
-
-    Args:
-      port (int): port to query.
-    """
-    self._analyzer.SetPort(port)
-
-  def TestConnection(self):
-    """Tests the connection to nsrlsvr.
-
-    Returns:
-      bool: True if nsrlsvr instance is reachable.
-    """
-    return self._analyzer.TestConnection()
 
 
 manager.AnalysisPluginManager.RegisterPlugin(NsrlsvrAnalysisPlugin)

@@ -64,7 +64,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     """
     # pylint: disable=protected-access
     self.assertEqual(
-        url, virustotal.VirusTotalAnalyzer._VIRUSTOTAL_API_REPORT_URL)
+        url, virustotal.VirusTotalAnalysisPlugin._VIRUSTOTAL_API_REPORT_URL)
 
     if params['resource'] != self._EVENT_1_HASH:
       self.fail('Unexpected parameters to request.get()')

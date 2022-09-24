@@ -18,7 +18,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_HOST = 'localhost'
   _DEFAULT_LABEL = nsrlsvr.NsrlsvrAnalysisPlugin.DEFAULT_LABEL
   _DEFAULT_PORT = 9120
-  _SUPPORTED_HASHES = nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES
+  _SUPPORTED_HASHES = sorted(nsrlsvr.NsrlsvrAnalysisPlugin.SUPPORTED_HASHES)
 
   @classmethod
   def AddArguments(cls, argument_group):
