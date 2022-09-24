@@ -42,6 +42,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'type': '_FormatTimestampDescription',
       'user': '_FormatUsername',
       'username': '_FormatUsername',
+      'yara_match': '_FormatYaraMatch',
       'zone': '_FormatTimeZone'}
 
   # The field format callback methods require specific arguments hence
@@ -114,6 +115,23 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       str: timestamp description field.
     """
     return event.timestamp_desc or '-'
+
+  def _FormatYaraMatch(
+      self, output_mediator, event, event_data, event_data_stream):
+    """Formats a Yara match field.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: Yara match field.
+    """
+    yara_match = getattr(event_data_stream, 'yara_match', None) or []
+    return '; '.join(yara_match) or '-'
 
   # pylint: enable=unused-argument
 

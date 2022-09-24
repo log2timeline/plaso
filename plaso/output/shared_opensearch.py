@@ -38,7 +38,8 @@ class SharedOpenSearchFieldFormattingHelper(
       'source_short': '_FormatSourceShort',
       'tag': '_FormatTag',
       'timestamp': '_FormatTimestamp',
-      'timestamp_desc': '_FormatTimestampDescription'}
+      'timestamp_desc': '_FormatTimestampDescription',
+      'yara_match': '_FormatYaraMatch'}
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
@@ -106,6 +107,22 @@ class SharedOpenSearchFieldFormattingHelper(
       str: timestamp description field.
     """
     return event.timestamp_desc
+
+  def _FormatYaraMatch(
+      self, output_mediator, event, event_data, event_data_stream):
+    """Formats a Yara match field.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      list[str]: Yara match field.
+    """
+    return getattr(event_data_stream, 'yara_match', None) or []
 
   # pylint: enable=unused-argument
 

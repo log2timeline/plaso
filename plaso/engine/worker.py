@@ -293,7 +293,7 @@ class EventExtractionWorker(object):
     for analyzer_object in self._analyzers:
       for result in analyzer_object.GetResults():
         logger.debug((
-            '[AnalyzeFileObject] attribute {0:s}:{1:s} calculated for '
+            '[AnalyzeFileObject] attribute {0:s}:{1!s} calculated for '
             'file: {2:s}.').format(
                 result.attribute_name, result.attribute_value, display_name))
 
