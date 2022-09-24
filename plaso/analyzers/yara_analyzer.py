@@ -70,8 +70,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     result = analyzer_result.AnalyzerResult()
     result.analyzer_name = self.NAME
     result.attribute_name = self._ATTRIBUTE_NAME
-    rule_names = [match.rule for match in self._matches]
-    result.attribute_value = ','.join(rule_names)
+    result.attribute_value = [match.rule for match in self._matches]
     return [result]
 
   def Reset(self):

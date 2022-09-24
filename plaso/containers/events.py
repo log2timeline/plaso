@@ -110,7 +110,7 @@ class EventDataStream(interface.AttributeContainer):
       'path_spec': 'dfvfs.PathSpec',
       'sha1_hash': 'str',
       'sha256_hash': 'str',
-      'yara_match': 'str'}
+      'yara_match': 'List[str]'}
 
   def __init__(self):
     """Initializes an event data attribute container."""

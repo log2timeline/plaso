@@ -62,7 +62,7 @@ class YaraAnalyzerTest(shared_test_lib.BaseTestCase):
     self.assertIsInstance(first_result, analyzer_result.AnalyzerResult)
     self.assertEqual(first_result.attribute_name, 'yara_match')
     self.assertEqual(first_result.analyzer_name, 'yara')
-    self.assertEqual(first_result.attribute_value, 'PEfileBasic,PEfile')
+    self.assertEqual(first_result.attribute_value, ['PEfileBasic', 'PEfile'])
 
 
 if __name__ == '__main__':
