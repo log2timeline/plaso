@@ -100,10 +100,10 @@ plaso.parsers.plist\_plugins.software\_update module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.spotlight module
----------------------------------------------
+plaso.parsers.plist\_plugins.spotlight\_searched\_terms module
+--------------------------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.spotlight
+.. automodule:: plaso.parsers.plist_plugins.spotlight_searched_terms
    :members:
    :undoc-members:
    :show-inheritance:
@@ -116,10 +116,10 @@ plaso.parsers.plist\_plugins.spotlight\_volume module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.timemachine module
------------------------------------------------
+plaso.parsers.plist\_plugins.time\_machine module
+-------------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.timemachine
+.. automodule:: plaso.parsers.plist_plugins.time_machine
    :members:
    :undoc-members:
    :show-inheritance:
