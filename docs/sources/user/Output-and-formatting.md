@@ -13,7 +13,7 @@ dynamic | Output events to a delimiter (comma by default) separated value output
 json | Output events to JSON format.
 json_line | Output events to JSON line format.
 kml | Output events with geography data into a KML format.
-l2tcsv | Output events to log2timeline.pl legacy CSV format, with 17 fixed fields. Also see: [l2tcsv output format](Output-format-l2tcsv.md)
+l2tcsv | Output events to log2timeline.pl legacy CSV format, with 17 fixed fields. Also see: [l2tcsv output format](Output-format-l2tcsv.html)
 l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed field. | delimited output. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
 null | Do not output events.
 rawpy | Output events in "raw" (or native) Python format.
