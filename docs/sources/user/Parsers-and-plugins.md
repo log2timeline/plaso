@@ -56,6 +56,7 @@ trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
 usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
+viminfo | Parser for Viminfo files.
 windefender_history | Parser for Windows Defender scan DetectionHistory files.
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
@@ -114,7 +115,7 @@ Name | Description
 --- | ---
 airport | Parser for Airport plist files.
 apple_id | Parser for Apple account information plist files.
-ios_carplay | Parser for iOS Car Play Application plist files.
+ios_carplay | Parser for Apple iOS Car Play application plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
 macos_software_update | Parser for MacOS software update plist files.
@@ -123,9 +124,9 @@ macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
 safari_history | Parser for Safari history plist files.
-spotlight | Parser for Spotlight plist files.
+spotlight | Parser for Spotlight searched terms plist files.
 spotlight_volume | Parser for Spotlight volume configuration plist files.
-time_machine | Parser for TimeMachine plist files.
+time_machine | Parser for MacOS TimeMachine plist files.
 
 ### Parser plugins: sqlite
 

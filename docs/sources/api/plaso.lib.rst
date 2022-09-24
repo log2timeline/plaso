@@ -68,10 +68,26 @@ plaso.lib.plist module
    :undoc-members:
    :show-inheritance:
 
+plaso.lib.regular\_expressions module
+-------------------------------------
+
+.. automodule:: plaso.lib.regular_expressions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.lib.specification module
 ------------------------------
 
 .. automodule:: plaso.lib.specification
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.lib.yearless\_helper module
+---------------------------------
+
+.. automodule:: plaso.lib.yearless_helper
    :members:
    :undoc-members:
    :show-inheritance:

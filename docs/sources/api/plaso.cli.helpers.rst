@@ -12,6 +12,14 @@ plaso.cli.helpers.analysis\_plugins module
    :undoc-members:
    :show-inheritance:
 
+plaso.cli.helpers.archives module
+---------------------------------
+
+.. automodule:: plaso.cli.helpers.archives
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.cli.helpers.artifact\_definitions module
 ----------------------------------------------
 

@@ -447,6 +447,14 @@ plaso.parsers.utmpx module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.viminfo module
+----------------------------
+
+.. automodule:: plaso.parsers.viminfo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.windefender\_history module
 -----------------------------------------
 
