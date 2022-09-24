@@ -110,7 +110,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
     Returns:
       dfdatetime.TimeElements: date and time extracted from the structure or
-          None f the structure does not represent a valid string.
+          None if the structure does not represent a valid string.
     """
     # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
     # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:

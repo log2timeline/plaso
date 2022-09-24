@@ -15,6 +15,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import yearless_helper
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -62,7 +63,9 @@ class SyslogCommentEventData(events.EventData):
     self.body = None
 
 
-class SyslogParser(text_parser.PyparsingMultiLineTextParser):
+class SyslogParser(
+    text_parser.PyparsingMultiLineTextParser,
+    yearless_helper.YearLessLogFormatHelper):
   """Parses syslog formatted log files"""
 
   NAME = 'syslog'
@@ -154,8 +157,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
               'two_digit_month')),
       'month': text_parser.PyparsingConstants.MONTH.setResultsName('month'),
-      'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          'day'),
+      'day_of_month': (
+          text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+              'day_of_month')),
       'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
           'hour'),
       'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -185,7 +189,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   _PYPARSING_COMPONENTS['date'] = (
       _PYPARSING_COMPONENTS['month'] +
-      _PYPARSING_COMPONENTS['day'] +
+      _PYPARSING_COMPONENTS['day_of_month'] +
       _PYPARSING_COMPONENTS['hour'] + pyparsing.Suppress(':') +
       _PYPARSING_COMPONENTS['minute'] + pyparsing.Suppress(':') +
       _PYPARSING_COMPONENTS['second'] + pyparsing.Optional(
@@ -280,39 +284,48 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   def __init__(self):
     """Initializes a parser."""
     super(SyslogParser, self).__init__()
-    self._last_month = 0
-    self._maximum_year = 0
     self._plugin_by_reporter = {}
-    self._year_use = 0
 
-  def _UpdateYear(self, mediator, month):
-    """Updates the year to use for events, based on last observed month.
+  def _GetTimeElementsTuple(self, structure):
+    """Retrieves a time elements tuple from the structure.
 
     Args:
-      mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      month (int): month observed by the parser, where January is 1.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Returns:
+      tuple: containing:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
+
+    Raises:
+      ValueError: if month contains an unsupported value.
     """
-    if not self._year_use:
-      self._year_use = mediator.GetEstimatedYear()
-    if not self._maximum_year:
-      self._maximum_year = mediator.GetLatestYear()
+    # TODO: add support for fractional seconds.
 
-    if not self._last_month:
-      self._last_month = month
-      return
+    month_string = self._GetValueFromStructure(structure, 'month')
+    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
+    hours = self._GetValueFromStructure(structure, 'hour')
+    minutes = self._GetValueFromStructure(structure, 'minute')
+    seconds = self._GetValueFromStructure(structure, 'second')
 
-    # Some syslog daemons allow out-of-order sequences, so allow some leeway
-    # to not cause Apr->May->Apr to cause the year to increment.
-    # See http://bugzilla.adiscon.com/show_bug.cgi?id=527
-    if self._last_month > (month + 1):
-      if self._year_use != self._maximum_year:
-        self._year_use += 1
-    self._last_month = month
+    month = self._GetMonthFromString(month_string)
+
+    self._UpdateYear(month)
+
+    year = self._GetYear()
+
+    return year, month, day_of_month, hours, minutes, seconds
 
   def _PriorityToSeverity(self, priority):
-    """Converts a syslog protocol 23 priority value to severity,
-    see https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
+    """Converts a syslog protocol 23 priority value to severity.
+
+    Also see:
+      https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
 
     Args:
       priority (int): a syslog protocol 23 priority value.
@@ -342,7 +355,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
@@ -353,12 +366,12 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key in (
-        'chromeos_syslog_line', 'rsyslog_line', 'rsyslog_protocol_23_line'):
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+    if key in ('chromeos_syslog_line', 'rsyslog_line',
+               'rsyslog_protocol_23_line'):
       iso8601_string = self._GetValueFromStructure(structure, 'datetime')
 
       try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
         date_time.CopyFromStringISO8601(iso8601_string)
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
@@ -366,32 +379,12 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         return
 
     else:
-      # TODO: add support for fractional seconds.
-
-      month = self._GetValueFromStructure(structure, 'month')
       try:
-        month = self._MONTH_DICT.get(month.lower(), 0)
-      except AttributeError:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid month value: {0!s}'.format(month))
-        return
-
-      if month != 0:
-        self._UpdateYear(parser_mediator, month)
-
-      day = self._GetValueFromStructure(structure, 'day')
-      hours = self._GetValueFromStructure(structure, 'hour')
-      minutes = self._GetValueFromStructure(structure, 'minute')
-      seconds = self._GetValueFromStructure(structure, 'second')
-
-      time_elements_tuple = (
-          self._year_use, month, day, hours, minutes, seconds)
-
-      try:
+        time_elements_tuple = self._GetTimeElementsTuple(structure)
         date_time = dfdatetime_time_elements.TimeElements(
             time_elements_tuple=time_elements_tuple)
         date_time.is_local_time = True
-      except ValueError:
+      except (TypeError, ValueError):
         parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0!s}'.format(time_elements_tuple))
         return
@@ -446,13 +439,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
+          parsers and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    return bool(self._VERIFICATION_REGEX.match(lines))
+    if not bool(self._VERIFICATION_REGEX.match(lines)):
+      return False
+
+    self._SetEstimatedYear(parser_mediator)
+
+    return True
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

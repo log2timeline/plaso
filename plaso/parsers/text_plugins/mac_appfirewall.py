@@ -9,6 +9,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -36,7 +37,8 @@ class MacAppFirewallLogEventData(events.EventData):
     self.status = None
 
 
-class MacAppFirewallTextPlugin(interface.TextPlugin):
+class MacAppFirewallTextPlugin(
+    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
   """Text plugin for MacOS Application firewall log (appfirewall.log) files."""
 
   NAME = 'mac_appfirewall_log'
@@ -48,20 +50,6 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
   # Example: 'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] '
   #          '<Info>: Dropbox: Allow (in:0 out:2)'
   # INFO: process_name is going to have a white space at the beginning.
-
-  _MONTH_DICT = {
-      'jan': 1,
-      'feb': 2,
-      'mar': 3,
-      'apr': 4,
-      'may': 5,
-      'jun': 6,
-      'jul': 7,
-      'aug': 8,
-      'sep': 9,
-      'oct': 10,
-      'nov': 11,
-      'dec': 12}
 
   _DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
@@ -97,9 +85,7 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(MacAppFirewallTextPlugin, self).__init__()
-    self._last_month = 0
-    self._previous_structure = None
-    self._year_use = 0
+    self._repeated_structure = None
 
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
@@ -116,20 +102,21 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
         hours (int): hours.
         minutes (int): minutes.
         seconds (int): seconds.
+
+    Raises:
+      ValueError: if month contains an unsupported value.
     """
     time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
     # TODO: what if time_elements_tuple is None.
-    month, day, hours, minutes, seconds = time_elements_tuple
+    month_string, day, hours, minutes, seconds = time_elements_tuple
 
-    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
-    # for an invalid month.
-    month = self._MONTH_DICT.get(month.lower(), 0)
+    month = self._GetMonthFromString(month_string)
 
-    if month != 0 and month < self._last_month:
-      # Gap detected between years.
-      self._year_use += 1
+    self._UpdateYear(month)
 
-    return (self._year_use, month, day, hours, minutes, seconds)
+    year = self._GetYear()
+
+    return year, month, day, hours, minutes, seconds
 
   def _ParseLogLine(self, parser_mediator, structure, key):
     """Parse a single log line and produce an event object.
@@ -141,24 +128,20 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    time_elements_tuple = self._GetTimeElementsTuple(structure)
-
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(structure)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning('invalid date time value')
       return
-
-    self._last_month = time_elements_tuple[1]
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but use the timestamp from the actual entry.
     if key == 'logline':
-      self._previous_structure = structure
+      self._repeated_structure = structure
     else:
-      structure = self._previous_structure
+      structure = self._repeated_structure
 
     event_data = MacAppFirewallLogEventData()
     event_data.action = self._GetValueFromStructure(structure, 'action')
@@ -227,18 +210,14 @@ class MacAppFirewallTextPlugin(interface.TextPlugin):
     if status != 'Error':
       return False
 
-    self._last_month = 0
-    self._year_use = parser_mediator.GetEstimatedYear()
-
-    time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
+    self._SetEstimatedYear(parser_mediator)
 
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(parsed_structure)
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (TypeError, ValueError):
       return False
-
-    self._last_month = time_elements_tuple[1]
 
     return True
 
