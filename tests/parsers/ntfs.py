@@ -44,7 +44,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # A distributed link tracking event.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
-        'date_time': '2007-06-30 12:58:40.5000041',
+        'date_time': '2007-06-30T12:58:40.5000041+00:00',
         'mac_address': 'db:30:99:be:ae:3c',
         'origin': '$MFT: 462-1',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -55,6 +55,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # Test path hints of a regular file.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
+        'date_time': '2007-06-30T12:58:50.2740544+00:00',
         'name': 'SAM',
         'path_hints': ['\\WINDOWS\\system32\\config\\SAM']}
 
@@ -67,7 +68,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2009-01-14 03:38:58.5869993',
+        'date_time': '2009-01-14T03:38:58.5869993+00:00',
         'is_allocated': False,
         'name': 'CAJA1S19.js',
         'path_hints': expected_path_hints}
@@ -77,7 +78,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # Testing path hint of orphaned file.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2009-01-14 21:07:11.5721856',
+        'date_time': '2009-01-14T21:07:11.5721856+00:00',
         'name': 'menu.text.css',
         'path_hints': ['$Orphan\\session\\menu.text.css']}
 
@@ -116,7 +117,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The creation timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:30:41.8079077',
+        'date_time': '2013-12-03T06:30:41.8079077+00:00',
         'is_allocated': True,
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -125,7 +126,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last modification timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:30:41.8079077',
+        'date_time': '2013-12-03T06:30:41.8079077+00:00',
         'is_allocated': True,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -134,7 +135,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     expected_event_values = {
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:30:41.8079077',
+        'date_time': '2013-12-03T06:30:41.8079077+00:00',
         'is_allocated': True,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
@@ -144,7 +145,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000010,
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:30:41.8079077',
+        'date_time': '2013-12-03T06:30:41.8079077+00:00',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000000,
         'is_allocated': True,
@@ -157,7 +158,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:30:41.8079077',
+        'date_time': '2013-12-03T06:30:41.8079077+00:00',
         'file_reference': 0x1000000000000,
         'is_allocated': True,
         'name': '$MFT',
@@ -170,7 +171,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000010,
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:35:09.5179783',
+        'date_time': '2013-12-03T06:35:09.5179783+00:00',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
         'path_hints': [
@@ -182,7 +183,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:35:09.5023783',
+        'date_time': '2013-12-03T06:35:09.5023783+00:00',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
         'name': '{38088~1',
@@ -194,7 +195,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_type': 0x00000030,
         'data_type': 'fs:stat:ntfs',
-        'date_time': '2013-12-03 06:35:09.5023783',
+        'date_time': '2013-12-03T06:35:09.5023783+00:00',
         'display_name': 'TSK:/$MFT',
         'file_reference': 0x1000000000026,
         'name': '{3808876b-c176-4e48-b7ae-04046e6cc752}',
@@ -269,7 +270,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:ntfs:usn_change',
-        'date_time': '2015-11-30 21:15:27.2031250',
+        'date_time': '2015-11-30T21:15:27.2031250+00:00',
         'filename': 'Nieuw - Tekstdocument.txt',
         'file_reference': 0x100000000001e,
         'parent_file_reference': 0x5000000000005,

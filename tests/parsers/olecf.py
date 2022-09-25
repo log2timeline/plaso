@@ -58,7 +58,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'olecf:item',
-        'date_time': '2013-05-16 02:29:49.7850000',
+        'date_time': '2013-05-16T02:29:49.7850000+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)

@@ -45,7 +45,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'bsm:event',
-        'date_time': '2013-11-04 18:36:20.000381',
+        'date_time': '2013-11-04T18:36:20.000381+00:00',
         'event_type': 45029,
         'extra_tokens': expected_extra_tokens,
         'return_value': expected_return_value}
@@ -77,7 +77,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'bsm:event',
-        'date_time': '2013-11-04 18:36:26.000171',
+        'date_time': '2013-11-04T18:36:26.000171+00:00',
         'event_type': 45023,
         'extra_tokens': expected_extra_tokens,
         'return_value': expected_return_value}
@@ -109,7 +109,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'bsm:event',
-        'date_time': '2013-11-04 18:36:26.000530',
+        'date_time': '2013-11-04T18:36:26.000530+00:00',
         'event_type': 45025,
         'extra_tokens': expected_extra_tokens,
         'return_value': expected_return_value}
@@ -149,7 +149,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'bsm:event',
-        'date_time': '2013-11-04 18:37:36.000399',
+        'date_time': '2013-11-04T18:37:36.000399+00:00',
         'event_type': 44903,
         'extra_tokens': expected_extra_tokens,
         'return_value': expected_return_value}

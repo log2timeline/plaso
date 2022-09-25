@@ -32,7 +32,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'opera:history:typed_entry',
-        'date_time': '2013-11-11 23:45:27',
+        'date_time': '2013-11-11T23:45:27+00:00',
         'entry_selection': 'Filled from autocomplete.',
         'url': 'plaso.kiddaland.net'}
 
@@ -40,7 +40,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'opera:history:typed_entry',
-        'date_time': '2013-11-11 22:46:07',
+        'date_time': '2013-11-11T22:46:07+00:00',
         'entry_selection': 'Manually typed.',
         'url': 'theonion.com'}
 
@@ -70,7 +70,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'opera:history:entry',
-        'date_time': '2013-11-11 22:45:46',
+        'date_time': '2013-11-11T22:45:46+00:00',
         'description': 'First and Only Visit',
         'title': 'Karl Bretaprins fær ellilífeyri - mbl.is',
         'url': (
@@ -81,13 +81,13 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'opera:history:entry',
-        'date_time': '2013-11-11 22:45:55'}
+        'date_time': '2013-11-11T22:45:55+00:00'}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_event_values = {
         'data_type': 'opera:history:entry',
-        'date_time': '2013-11-11 22:46:16',
+        'date_time': '2013-11-11T22:46:16+00:00',
         'title': (
             '10 Celebrities You Never Knew Were Abducted And Murdered '
             'By Andie MacDowell | The Onion - America\'s Finest News Source')}

@@ -47,7 +47,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:30',
+        'date_time': '2009-02-13T23:31:30+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Command Line History',
         'history_value': 'e TEST',
@@ -56,7 +56,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:31',
+        'date_time': '2009-02-13T23:31:31+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Command Line History',
         'history_value': 'version',
@@ -65,7 +65,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:32',
+        'date_time': '2009-02-13T23:31:32+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Search String History',
         'history_value': '/test_search',
@@ -74,7 +74,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:33',
+        'date_time': '2009-02-13T23:31:33+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Search String History',
         'history_value': '/ignore',
@@ -83,7 +83,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:34',
+        'date_time': '2009-02-13T23:31:34+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Register',
         'history_value': 'test register',
@@ -92,7 +92,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:35',
+        'date_time': '2009-02-13T23:31:35+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Register',
         'history_value': 'test multiline register1\ntest multiline register2',
@@ -101,7 +101,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:36',
+        'date_time': '2009-02-13T23:31:36+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'File mark',
         'filename': '~\\_vimrc',
@@ -110,7 +110,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:37',
+        'date_time': '2009-02-13T23:31:37+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'File mark',
         'filename': 'C:\\Program Files (x86)\\Vim\\.vimrc',
@@ -119,7 +119,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:38',
+        'date_time': '2009-02-13T23:31:38+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Jumplist',
         'filename': '~\\_vimrc',
@@ -128,7 +128,7 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-02-13 23:31:39',
+        'date_time': '2009-02-13T23:31:39+00:00',
         'data_type': 'viminfo:history',
         'history_type': 'Jumplist',
         'filename': 'C:\\Program Files (x86)\\Vim\\.vimrc',

@@ -34,8 +34,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': 'Started User Manager for UID 1000.',
-        'date_time': '2017-01-27 09:40:55.913258',
         'data_type': 'systemd:journal',
+        'date_time': '2017-01-27T09:40:55.913258+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '1',
         'reporter': 'systemd'}
@@ -45,8 +45,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     # Test an event with XZ compressed data.
     expected_event_values = {
         'body': 'a' * 692,
-        'date_time': '2017-02-06 16:24:32.564585',
         'data_type': 'systemd:journal',
+        'date_time': '2017-02-06T16:24:32.564585+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '22921',
         'reporter': 'root'}
@@ -74,8 +74,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': 'Reached target Paths.',
-        'date_time': '2018-07-03 15:00:16.682340',
         'data_type': 'systemd:journal',
+        'date_time': '2018-07-03T15:00:16.682340+00:00',
         'hostname': 'testlol',
         'pid': '822',
         'reporter': 'systemd'}
@@ -96,8 +96,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': expected_body,
-        'date_time': '2018-07-03 15:19:04.667807',
         'data_type': 'systemd:journal',
+        'date_time': '2018-07-03T15:19:04.667807+00:00',
         'hostname': 'testlol',
         'pid': '34757',
         'reporter': 'test'}
@@ -135,8 +135,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'body': (
             'Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M '
             'free.'),
-        'date_time': '2016-10-24 13:20:01.063423',
         'data_type': 'systemd:journal',
+        'date_time': '2016-10-24T13:20:01.063423+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '569',
         'reporter': 'systemd-journald'}

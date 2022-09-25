@@ -34,9 +34,8 @@ class PlsRecallTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'PLSRecall:event',
         'database_name': 'DB11',
-        'date_time': '2013-06-18 19:50:00.550000',
-        'query': (
-            'SELECT * from test_databae where date > \'01/01/2012\''),
+        'date_time': '2013-06-18T19:50:00.550000+00:00',
+        'query': 'SELECT * from test_databae where date > \'01/01/2012\'',
         'sequence_number': 206,
         'username': 'tsltmp'}
 

@@ -32,8 +32,8 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2015-03-23 18:38:14.2469544',
         'data_type': 'windows:restore_point:info',
+        'date_time': '2015-03-23T18:38:14.2469544+00:00',
         'description': 'Software Distribution Service 3.0',
         'restore_point_event_type': 102,
         'restore_point_type': 0,

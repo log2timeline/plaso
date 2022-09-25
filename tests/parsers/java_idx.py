@@ -33,7 +33,7 @@ class IDXTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'java:download:idx',
-        'date_time': '2010-05-05 01:34:19.720',
+        'date_time': '2010-05-05T01:34:19.720+00:00',
         'idx_version': 602,
         'timestamp_desc': 'File Hosted Date',
         'url': 'http://www.gxxxxx.com/a/java/xxz.jar'}
@@ -43,7 +43,7 @@ class IDXTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
         'data_type': 'java:download:idx',
-        'date_time': '2010-05-05 03:52:31',
+        'date_time': '2010-05-05T03:52:31+00:00',
         'idx_version': 602,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
         'url': 'http://www.gxxxxx.com/a/java/xxz.jar'}
@@ -70,7 +70,7 @@ class IDXTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'java:download:idx',
-        'date_time': '2001-07-26 05:00:00.000',
+        'date_time': '2001-07-26T05:00:00.000+00:00',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
         'timestamp_desc': 'File Hosted Date',
@@ -83,7 +83,7 @@ class IDXTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     expected_event_values = {
         'data_type': 'java:download:idx',
-        'date_time': '2013-01-13 16:22:01',
+        'date_time': '2013-01-13T16:22:01+00:00',
         'idx_version': 605,
         'ip_address': '10.7.119.10',
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,

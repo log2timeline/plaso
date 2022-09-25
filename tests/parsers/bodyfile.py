@@ -37,19 +37,19 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 15:59:43',
+        'date_time': '2012-05-25T15:59:43',
         'filename': '/a_directory/another_file',
         'group_identifier': 5000,
         'inode': 16,
         'owner_identifier': '151107',
-        'timestamp': 1337961583000000,
+        'timestamp': '2012-05-25 15:59:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[25], expected_event_values)
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 15:59:44',
+        'date_time': '2012-05-25T15:59:44',
         'filename': '/a_directory/another_file',
         'group_identifier': 5000,
         'inode': 16,
@@ -60,7 +60,7 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 15:59:45',
+        'date_time': '2012-05-25T15:59:45',
         'filename': '/a_directory/another_file',
         'group_identifier': 5000,
         'inode': 16,
@@ -72,7 +72,7 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 16:17:43',
+        'date_time': '2012-05-25T16:17:43',
         'filename': '/passwordz\r.txt',
         'group_identifier': 5000,
         'inode': 26,
@@ -83,7 +83,7 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2019-11-16 09:27:58.189698048',
+        'date_time': '2019-11-16T09:27:58.189698048',
         'filename': '\\testdir2',
         'group_identifier': None,
         'inode': 48,
@@ -94,7 +94,7 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2020-07-30 06:41:05.354067456',
+        'date_time': '2020-07-30T06:41:05.354067456',
         'filename': '/file|with|pipes',
         'group_identifier': 0,
         'inode': 64,
@@ -106,7 +106,7 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2020-08-19 18:48:01',
+        'date_time': '2020-08-19T18:48:01',
         'filename': '/file_symboliclink1',
         'group_identifier': 1000,
         'inode': 16,
@@ -141,12 +141,12 @@ class BodyfileTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 15:59:43',
+        'date_time': '2012-05-25T15:59:43',
         'filename': '/a_directory/another_file',
         'group_identifier': 5000,
         'inode': 16,
         'owner_identifier': '151107',
-        'timestamp': 1337954383000000,
+        'timestamp': '2012-05-25 13:59:43.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[25], expected_event_values)
@@ -172,7 +172,7 @@ class BodyfileTest(test_lib.ParserTestCase):
     # Event extracted from line with unescaped \r character.
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2012-05-25 16:00:53',
+        'date_time': '2012-05-25T16:00:53',
         'filename': '/passwords\r.txt',
         'inode': 15,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
@@ -182,7 +182,7 @@ class BodyfileTest(test_lib.ParserTestCase):
     # Event extracted from line with unescaped \\ character.
     expected_event_values = {
         'data_type': 'fs:bodyfile:entry',
-        'date_time': '2019-03-19 04:37:22',
+        'date_time': '2019-03-19T04:37:22',
         'filename': '/Windows\\System32',
         'inode': 75520,
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
