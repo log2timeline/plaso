@@ -640,7 +640,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpecDMG(self):
-    """Tests the ProcessPathSpec function on a DMG."""
+    """Tests the ProcessPathSpec function on a DMG image."""
     knowledge_base_values = {'year': 2016}
 
     test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
@@ -666,7 +666,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpecTarWithDMG(self):
-    """Tests the ProcessPathSpec function on a TAR with a DMG."""
+    """Tests the ProcessPathSpec function on a TAR with a DMG image."""
     knowledge_base_values = {'year': 2016}
 
     test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg.tar'])
@@ -692,6 +692,58 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_counters,
         archive_types_string='modi,tar',
+        knowledge_base_values=knowledge_base_values)
+
+  def testProcessPathSpecISO(self):
+    """Tests the ProcessPathSpec function on an ISO image."""
+    knowledge_base_values = {'year': 2016}
+
+    test_file_path = self._GetTestFilePath(['iso9660.raw'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
+        parent=path_spec)
+    storage_writer = fake_writer.FakeStorageWriter()
+
+    expected_event_counters = {
+        'fs:stat': 5}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        knowledge_base_values=knowledge_base_values)
+
+  def testProcessPathSpecTarWithISO(self):
+    """Tests the ProcessPathSpec function on a TAR with an ISO image."""
+    knowledge_base_values = {'year': 2016}
+
+    test_file_path = self._GetTestFilePath(['iso9660.raw.tar'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    storage_writer = fake_writer.FakeStorageWriter()
+
+    # Typically there are 4 filestat events, but there can be 5 on platforms
+    # that support os.stat_result st_birthtime.
+    expected_event_counters = {
+        'fs:stat': [4, 5]}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        archive_types_string='tar',
+        knowledge_base_values=knowledge_base_values)
+
+    expected_event_counters = {
+        'fs:stat': [11, 12]}
+
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, expected_event_counters,
+        archive_types_string='iso9660,tar',
         knowledge_base_values=knowledge_base_values)
 
   def testProcessPathSpecVMDK(self):

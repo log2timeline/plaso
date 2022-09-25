@@ -6,8 +6,9 @@ import os
 import re
 import time
 
+import pysigscan
+
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
-from dfvfs.helpers import source_scanner as dfvfs_source_scanner
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
@@ -26,32 +27,6 @@ from plaso.lib import errors
 
 class EventExtractionWorkerVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
   """Volume scanner used by the event extraction worker."""
-
-  # TODO: remove after updating to dfVFS >= 20220917
-  def _ScanSourcePathSpec(self, source_path_spec):
-    """Scans the source path specification for supported formats.
-
-    Args:
-      source_path_spec (dfvfs.PathSpec): source path specification.
-
-    Returns:
-      SourceScannerContext: source scanner context.
-
-    Raises:
-      dfvfs.ScannerError: if the source path does not exists, or if the source
-          path is not a file or directory, or if the format of or within
-          the source file is not supported.
-    """
-    scan_context = dfvfs_source_scanner.SourceScannerContext()
-    scan_context.AddScanNode(source_path_spec, None)
-
-    try:
-      self._source_scanner.Scan(scan_context)
-    except (ValueError, dfvfs_errors.BackEndError) as exception:
-      raise dfvfs_errors.ScannerError(
-          'Unable to scan source with error: {0!s}'.format(exception))
-
-    return scan_context
 
   def GetBasePathSpecs(self, source_path_spec, options=None):  # pylint: disable=arguments-renamed
     """Determines the base path specifications.
@@ -178,6 +153,7 @@ class EventExtractionWorker(object):
     self._event_extractor = extractors.EventExtractor(
         force_parser=force_parser,
         parser_filter_expression=parser_filter_expression)
+    self._file_system_scanner = self._CreateFileSystemSignatureScanner()
     self._force_parser = force_parser
     self._hasher_file_size_limit = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
@@ -406,6 +382,20 @@ class EventExtractionWorker(object):
 
     return False
 
+  def _CreateFileSystemSignatureScanner(self):
+    """Creates a signature scanner for file system signatures.
+
+    Returns:
+      pysigscan.scanner: signature scanner.
+    """
+    scanner_object = pysigscan.scanner()
+    scanner_object.set_scan_buffer_size(65536)
+    scanner_object.add_signature(
+        'iso9660', 32769, b'CD001',
+        pysigscan.signature_flags.RELATIVE_FROM_START)
+
+    return scanner_object
+
   def _ExtractContentFromDataStream(
       self, mediator, file_entry, data_stream_name):
     """Extracts content from a data stream.
@@ -495,7 +485,7 @@ class EventExtractionWorker(object):
     return type_indicators
 
   def _GetStorageMediaImageTypes(self, mediator, path_spec):
-    """Determines if a data stream contains a storage media image such as: ISO.
+    """Determines if a data stream contains a storage media image such as: DMG.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
@@ -645,7 +635,7 @@ class EventExtractionWorker(object):
       display_name = mediator.GetDisplayName()
       logger.debug((
           'Found multiple format type indicators: {0:s} for storage media '
-          'file: {1:s}').format(type_indicators, display_name))
+          'image file: {1:s}').format(type_indicators, display_name))
 
     for type_indicator in type_indicators:
       storage_media_image_path_spec = None
@@ -653,6 +643,12 @@ class EventExtractionWorker(object):
         if 'modi' in self._archive_types:
           storage_media_image_path_spec = path_spec_factory.Factory.NewPathSpec(
               type_indicator, parent=path_spec)
+
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+        if 'iso9660' in self._archive_types:
+          storage_media_image_path_spec = path_spec_factory.Factory.NewPathSpec(
+              type_indicator, location='/', parent=path_spec)
+
       else:
         warning_message = (
             'unsupported storage media image format: {0:s}').format(
@@ -887,8 +883,7 @@ class EventExtractionWorker(object):
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
       display_name = mediator.GetDisplayName()
-      logger.debug(
-          'Skipping content extraction of: {0:s}'.format(display_name))
+      logger.debug('Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
@@ -911,6 +906,21 @@ class EventExtractionWorker(object):
     if not compressed_stream_types and not archive_types:
       storage_media_image_types = self._GetStorageMediaImageTypes(
           mediator, path_spec)
+
+    if (not compressed_stream_types and not archive_types and
+        not storage_media_image_types):
+      # Scan for supported volume storage media images like ISO-9660.
+      try:
+        file_object = file_entry.GetFileObject(
+            data_stream_name=data_stream_name)
+        if file_object:
+          scan_state = pysigscan.scan_state()
+          self._file_system_scanner.scan_file_object(scan_state, file_object)
+          results = list(scan_state.scan_results)
+          if results:
+            storage_media_image_types = [dfvfs_definitions.TYPE_INDICATOR_TSK]
+      except IOError:
+        pass
 
     if archive_types:
       if self._archive_types:
