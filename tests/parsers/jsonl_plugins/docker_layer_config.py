@@ -39,8 +39,8 @@ class DockerLayerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'command': (
             '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
             '/etc/apt/sources.list'),
-        'date_time': '2015-10-12 17:27:03.079273',
         'data_type': 'docker:layer:configuration',
+        'date_time': '2015-10-12T17:27:03.079273+00:00',
         'layer_identifier': layer_identifier,
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
 

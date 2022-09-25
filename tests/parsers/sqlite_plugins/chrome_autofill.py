@@ -33,7 +33,7 @@ class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:autofill:entry',
-        'date_time': '2018-08-17 19:35:51',
+        'date_time': '2018-08-17T19:35:51+00:00',
         'field_name': 'repo',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'usage_count': 1,

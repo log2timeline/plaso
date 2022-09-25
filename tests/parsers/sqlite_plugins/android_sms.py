@@ -37,7 +37,7 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         'address': '1 555-521-5554',
         'body': 'Yo Fred this is my new number.',
         'data_type': 'android:messaging:sms',
-        'date_time': '2013-10-29 16:56:28.038',
+        'date_time': '2013-10-29T16:56:28.038+00:00',
         'sms_type': 'SENT',
         'sms_read': 'READ',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}

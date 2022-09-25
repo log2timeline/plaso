@@ -69,7 +69,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
-        'date_time': '2012-11-02 01:21:38.997672',
+        'date_time': '2012-11-02T01:21:38.997672+00:00',
         'key': 'LastUsed',
         'root': '/DE-00-AD-00-BE-EF'}
 
@@ -98,7 +98,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'plist:key',
-        'date_time': '2011-04-07 17:56:53.524275',
+        'date_time': '2011-04-07T17:56:53.524275+00:00',
         'key': 'LastNameUpdate',
         'root': '/DeviceCache/44-00-00-00-00-02'}
 

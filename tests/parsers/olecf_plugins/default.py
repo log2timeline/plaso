@@ -34,7 +34,7 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     # Check the Root Entry event.
     expected_event_values = {
         'data_type': 'olecf:item',
-        'date_time': '2013-05-16 02:29:49.7950000',
+        'date_time': '2013-05-16T02:29:49.7950000+00:00',
         'name': 'Root Entry',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -43,7 +43,7 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     # Check one other entry.
     expected_event_values = {
         'data_type': 'olecf:item',
-        'date_time': '2013-05-16 02:29:49.7040000',
+        'date_time': '2013-05-16T02:29:49.7040000+00:00',
         'name': 'MsoDataStore'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

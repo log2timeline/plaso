@@ -14,8 +14,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacOS Notification Center plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a MacOS Notification Center db."""
-
+    """Tests the Process function."""
     plugin = mac_notificationcenter.MacNotificationCenterPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_notificationcenter.db'], plugin)
@@ -38,9 +37,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'body': 'KeePassXC can now be run',
         'bundle_name': 'com.google.santagui',
         'data_type': 'mac:notificationcenter:db',
-        'date_time': '2018-05-02 10:59:18.930155',
+        'date_time': '2018-05-02T10:59:18.930155+00:00',
         'presented': 1,
-        'timestamp': '2018-05-02 10:59:18.930156',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'title': 'Santa'}
 
@@ -50,9 +48,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'body': 'Drive File Stream is loading your files…',
         'bundle_name': 'com.google.drivefs',
         'data_type': 'mac:notificationcenter:db',
-        'date_time': '2018-05-02 11:13:21.531085',
+        'date_time': '2018-05-02T11:13:21.531085+00:00',
         'presented': 1,
-        'timestamp': '2018-05-02 11:13:21.531085',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'title': 'Drive File Stream'}
 
@@ -62,9 +59,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         'body': 'PyCharm can now be run',
         'bundle_name': 'com.google.santagui',
         'data_type': 'mac:notificationcenter:db',
-        'date_time': '2018-05-16 16:38:04.686079',
+        'date_time': '2018-05-16T16:38:04.686079+00:00',
         'presented': 1,
-        'timestamp': '2018-05-16 16:38:04.686080',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'title': 'Santa'}
 

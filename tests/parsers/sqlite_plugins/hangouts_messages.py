@@ -35,7 +35,7 @@ class HangoutsMessagesTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'body': 'How are you?',
         'data_type': 'android:messaging:hangouts',
-        'date_time': '2017-07-17 04:41:54.326967',
+        'date_time': '2017-07-17T04:41:54.326967+00:00',
         'message_status': 4,
         'message_type': 2,
         'sender': 'John Macron',

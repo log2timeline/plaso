@@ -35,7 +35,7 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
         'allowed': 1,
         'client': 'com.apple.weather',
         'data_type': 'macos:tcc_entry',
-        'date_time': '2020-05-29 12:09:51',
+        'date_time': '2020-05-29T12:09:51+00:00',
         'service': 'kTCCServiceUbiquity',
         'prompt_count': 1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_PROMPTED_USER}

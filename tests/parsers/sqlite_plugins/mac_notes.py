@@ -32,7 +32,7 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:notes:note',
-        'date_time': '2014-02-11 02:38:27.097813',
+        'date_time': '2014-02-11T02:38:27.097813+00:00',
         'text': (
             'building 4th brandy gibs microsoft office body soul and peace '
             'example.com 3015555555: plumbing and heating claim#123456 Small '

@@ -38,7 +38,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         'bundle_id': 'com.apple.Safari',
         'count': 1,
         'data_type': 'macosx:application_usage',
-        'date_time': '2014-05-07 18:52:02'}
+        'date_time': '2014-05-07T18:52:02+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

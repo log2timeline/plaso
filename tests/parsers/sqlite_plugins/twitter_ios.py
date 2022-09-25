@@ -41,7 +41,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test the first contact creation event.
     expected_event_values = {
         'data_type': 'twitter:ios:contact',
-        'date_time': '2007-04-22 14:42:37',
+        'date_time': '2007-04-22T14:42:37+00:00',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -63,7 +63,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a contact modification event.
     expected_event_values = {
         'data_type': 'twitter:ios:contact',
-        'date_time': '2015-12-02 15:35:44',
+        'date_time': '2015-12-02T15:35:44+00:00',
         'description': (
             'Breaking news alerts and updates from the BBC. For news, '
             'features, analysis follow @BBCWorld (international) or @BBCNews '
@@ -85,7 +85,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a status creation event.
     expected_event_values = {
         'data_type': 'twitter:ios:status',
-        'date_time': '2014-09-11 11:46:16',
+        'date_time': '2014-09-11T11:46:16+00:00',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',
@@ -99,7 +99,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     # Test a status update event.
     expected_event_values = {
         'data_type': 'twitter:ios:status',
-        'date_time': '2015-12-02 15:39:37',
+        'date_time': '2015-12-02T15:39:37+00:00',
         'favorite_count': 3,
         'favorited': 0,
         'name': 'Heather Mahalik',

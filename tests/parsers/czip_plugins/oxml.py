@@ -137,7 +137,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
 
     expected_event_values = {
         'data_type': 'metadata:openxml',
-        'date_time': '2012-11-07 23:29:00',
+        'date_time': '2012-11-07T23:29:00+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -147,7 +147,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         'author': 'Nides',
         'creating_app': 'Microsoft Office Word',
         'data_type': 'metadata:openxml',
-        'date_time': '2013-08-25 22:18:00',
+        'date_time': '2013-08-25T22:18:00+00:00',
         'doc_security': '0',
         'hyperlinks_changed': 'false',
         'i4': '1',

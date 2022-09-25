@@ -35,7 +35,7 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         'data': (
             'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER='),
         'data_type': 'webview:cookie',
-        'date_time': '2014-03-05 15:04:44.000',
+        'date_time': '2014-03-05T15:04:44.000+00:00',
         'host': 'skype.com',
         'path': '/',
         'secure': False}

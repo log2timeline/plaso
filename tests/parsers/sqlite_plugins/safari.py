@@ -33,9 +33,9 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'safari:history:visit_sqlite',
-        'date_time': '2017-11-09 21:24:28.829571',
+        'date_time': '2017-11-09T21:24:28.829571+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
-        'title': '',
+        'title': None,
         'url': 'http://facebook.com/',
         'visit_count': 2,
         'was_http_non_get': False}

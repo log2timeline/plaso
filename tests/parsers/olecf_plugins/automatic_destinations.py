@@ -43,7 +43,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'birth_droid_volume_identifier': (
             '{cf6619c2-66a8-44a6-8849-1582fcd3a338}'),
         'data_type': 'olecf:dest_list:entry',
-        'date_time': '2012-04-01 13:52:38.9975382',
+        'date_time': '2012-04-01T13:52:38.9975382+00:00',
         'droid_file_identifier': '{63eea867-7b85-11e1-8950-005056a50b40}',
         'droid_volume_identifier': '{cf6619c2-66a8-44a6-8849-1582fcd3a338}',
         'entry_number': 11,
@@ -58,7 +58,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
-        'date_time': '2010-11-10 07:51:16.7491250',
+        'date_time': '2010-11-10T07:51:16.7491250+00:00',
         'drive_serial_number': 0x24ba718b,
         'drive_type': 3,
         'file_attribute_flags': 0x00002020,
@@ -73,7 +73,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Check a WindowsDistributedLinkTrackingCreationEvent.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
-        'date_time': '2012-03-31 23:01:03.5277415',
+        'date_time': '2012-03-31T23:01:03.5277415+00:00',
         'mac_address': '00:50:56:a5:0b:40',
         'origin': 'DestList entry at offset: 0x00000020',
         'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
@@ -109,7 +109,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'birth_droid_volume_identifier': (
             '{00000000-0000-0000-0000-000000000000}'),
         'data_type': 'olecf:dest_list:entry',
-        'date_time': '2016-01-17 13:08:08.2475045',
+        'date_time': '2016-01-17T13:08:08.2475045+00:00',
         'droid_file_identifier': '{00000000-0000-0000-0000-000000000000}',
         'droid_volume_identifier': '{00000000-0000-0000-0000-000000000000}',
         'entry_number': 2,

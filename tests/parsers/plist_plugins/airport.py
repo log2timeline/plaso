@@ -37,7 +37,7 @@ class MacOSAirportPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:airport:entry',
-        'date_time': '2013-07-30 00:29:26',
+        'date_time': '2013-07-30T00:29:26+00:00',
         'security_type': 'WPA/WPA2 Personal',
         'ssid': 'europa'}
 

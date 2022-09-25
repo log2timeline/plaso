@@ -38,7 +38,7 @@ class SpotlightVolumeConfigurationPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'spotlight_volume_configuration:store',
-        'date_time': '2013-06-25 05:54:43.000000',
+        'date_time': '2013-06-25T05:54:43.000000+00:00',
         'partial_path': '/.MobileBackups',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'volume_identifier': '4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD'}

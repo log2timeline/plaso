@@ -73,7 +73,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'action_type': 'SENDSOLICITUDE',
         'data_type': 'skype:event:transferfile',
-        'date_time': '2013-10-24 21:49:32',
+        'date_time': '2013-10-24T21:49:32+00:00',
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
         'transferred_filename': 'secret-project.pdf'}
@@ -83,7 +83,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test SMS event.
     expected_event_values = {
         'data_type': 'skype:event:sms',
-        'date_time': '2013-07-01 22:14:22',
+        'date_time': '2013-07-01T22:14:22+00:00',
         'number': '+34123456789',
         'text': (
             'If you want I can copy some documents for you, if you can pay '
@@ -95,7 +95,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'action_type': 'GETSOLICITUDE',
         'data_type': 'skype:event:transferfile',
-        'date_time': '2013-10-24 21:49:35',
+        'date_time': '2013-10-24T21:49:35+00:00',
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
         'transferred_filename': 'secret-project.pdf',
@@ -107,7 +107,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test chat event.
     expected_event_values = {
         'data_type': 'skype:event:chat',
-        'date_time': '2013-07-30 21:27:11',
+        'date_time': '2013-07-30T21:27:11+00:00',
         'from_account': 'Gen Beringer <gen.beringer>',
         'text': 'need to know if you got it this time.',
         'title': 'European Competitor | need to know if you got it..',
@@ -118,7 +118,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test chat room event.
     expected_event_values = {
         'data_type': 'skype:event:chat',
-        'date_time': '2013-10-27 15:29:19',
+        'date_time': '2013-10-27T15:29:19+00:00',
         'from_account': 'European Competitor <european.bbq.competitor>',
         'text': 'He is our new employee',
         'title': 'European Competitor, Echo123',
@@ -129,7 +129,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     # Test call event.
     expected_event_values = {
         'data_type': 'skype:event:call',
-        'date_time': '2013-07-01 22:12:17',
+        'date_time': '2013-07-01T22:12:17+00:00',
         'dst_call': 'european.bbq.competitor',
         'src_call': 'gen.beringer',
         'user_start_call': False,

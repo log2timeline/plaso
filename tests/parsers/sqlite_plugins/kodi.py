@@ -34,7 +34,7 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'kodi:videos:viewing',
-        'date_time': '2017-07-16 04:54:54',
+        'date_time': '2017-07-16T04:54:54+00:00',
         'filename': 'plugin://plugin.video.youtube/play/?video_id=7WX0-O_ENlk',
         'play_count': 1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}

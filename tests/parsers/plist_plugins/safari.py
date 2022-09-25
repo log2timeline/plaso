@@ -37,13 +37,13 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'safari:history:visit',
-        'date_time': '2013-07-08 17:31:00.000000'}
+        'date_time': '2013-07-08T17:31:00.000000+00:00'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
         'data_type': 'safari:history:visit',
-        'date_time': '2013-07-08 20:53:54.000000',
+        'date_time': '2013-07-08T20:53:54.000000+00:00',
         'title': 'Amínósýrur',
         'url': 'http://netverslun.sci-mx.is/aminosyrur',
         'visit_count': 1}

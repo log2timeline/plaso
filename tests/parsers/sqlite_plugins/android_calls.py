@@ -33,7 +33,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'call_type': 'MISSED',
         'data_type': 'android:event:call',
-        'date_time': '2013-11-06 21:17:16.690',
+        'date_time': '2013-11-06T21:17:16.690+00:00',
         'number': '5404561685',
         'timestamp_desc': 'Call Started'}
 
@@ -41,13 +41,13 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'android:event:call',
-        'date_time': '2013-11-07 00:03:36.690'}
+        'date_time': '2013-11-07T00:03:36.690+00:00'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
         'data_type': 'android:event:call',
-        'date_time': '2013-11-07 00:14:15.690',
+        'date_time': '2013-11-07T00:14:15.690+00:00',
         'duration': 639,
         'timestamp_desc': 'Call Ended'}
 

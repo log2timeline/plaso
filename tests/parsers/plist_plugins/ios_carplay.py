@@ -39,7 +39,7 @@ class IOSCarPlayPlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'application_identifier': 'com.apple.mobilecal',
         'data_type': 'ios:carplay:history:entry',
-        'date_time': '2020-04-12 13:55:51.255235072',
+        'date_time': '2020-04-12T13:55:51.255235072+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_USED}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

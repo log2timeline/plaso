@@ -40,7 +40,7 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'container_identifier': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
         'data_type': 'docker:container:configuration',
-        'date_time': '2016-01-07 16:49:08.674873'}
+        'date_time': '2016-01-07T16:49:08.674873+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -49,7 +49,7 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'container_identifier': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
         'data_type': 'docker:container:configuration',
-        'date_time': '2016-01-07 16:49:08.507979'}
+        'date_time': '2016-01-07T16:49:08.507979+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

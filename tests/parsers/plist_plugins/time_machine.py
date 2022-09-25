@@ -39,7 +39,7 @@ class MacOSTimeMachinePlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'backup_alias': 'BackUpFast',
         'data_type': 'macos:time_machine:backup',
-        'date_time': '2013-09-25 08:40:55.000000',
+        'date_time': '2013-09-25T08:40:55.000000+00:00',
         'destination_identifier': '5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 

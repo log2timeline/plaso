@@ -33,7 +33,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'mackeeper:cache',
-        'date_time': '2013-07-12 19:30:31',
+        'date_time': '2013-07-12T19:30:31+00:00',
         'description': 'Chat Outgoing Message',
         'record_id': 16059074,
         'room': '12828340738351e0593f987450z40787',

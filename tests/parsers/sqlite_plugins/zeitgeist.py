@@ -33,7 +33,7 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'zeitgeist:activity',
-        'date_time': '2013-10-22 08:53:19.477',
+        'date_time': '2013-10-22T08:53:19.477+00:00',
         'subject_uri': 'application://rhythmbox.desktop'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

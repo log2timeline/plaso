@@ -38,7 +38,7 @@ class MacOSSoftwareUpdatePlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:software_updata:entry',
-        'date_time': '2014-01-06 17:43:48.000000',
+        'date_time': '2014-01-06T17:43:48.000000+00:00',
         'recommended_updates': ['RAWCameraUpdate5.03 (031-2664)'],
         'system_version': '10.9.1 (13B42)',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UPDATE}

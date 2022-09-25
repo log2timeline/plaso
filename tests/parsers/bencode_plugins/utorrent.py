@@ -37,7 +37,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
-        'date_time': '2013-08-03 14:52:12',
+        'date_time': '2013-08-03T14:52:12+00:00',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
@@ -48,7 +48,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
-        'date_time': '2013-08-03 18:11:35',
+        'date_time': '2013-08-03T18:11:35+00:00',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
@@ -59,7 +59,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
-        'date_time': '2013-08-03 18:11:34',
+        'date_time': '2013-08-03T18:11:34+00:00',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
@@ -70,7 +70,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_event_values = {
         'caption': 'plaso test',
         'data_type': 'p2p:bittorrent:utorrent',
-        'date_time': '2013-08-03 16:27:59',
+        'date_time': '2013-08-03T16:27:59+00:00',
         'path': 'e:\\torrent\\files\\plaso test',
         'seedtime': 511,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}

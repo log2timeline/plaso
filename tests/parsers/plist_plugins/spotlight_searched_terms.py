@@ -38,7 +38,7 @@ class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'spotlight_searched_terms:entry',
-        'date_time': '2013-12-23 18:21:41.900938',
+        'date_time': '2013-12-23T18:21:41.900938+00:00',
         'display_name': 'Grab',
         'path': '/Applications/Utilities/Grab.app',
         'search_term': 'gr',

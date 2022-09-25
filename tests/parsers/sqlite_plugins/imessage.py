@@ -34,7 +34,7 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'imessage:event:chat',
-        'date_time': '2015-11-30 10:48:40.000000',
+        'date_time': '2015-11-30T10:48:40.000000+00:00',
         'imessage_id': 'xxxxxx2015@icloud.com',
         'message_type': 0,
         'read_receipt': 1,

@@ -57,7 +57,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'container_identifier': 1,
         'data_type': 'msie:webcache:containers',
-        'date_time': '2014-05-12 07:30:25.4861987',
+        'date_time': '2014-05-12T07:30:25.4861987+00:00',
         'directory': (
             'C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
             'INetCache\\IE\\'),
@@ -95,7 +95,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'cached_filename': 'b83d57c0[1].svg',
         'container_identifier': 14,
         'data_type': 'msie:webcache:container',
-        'date_time': '2019-03-20 17:22:14.0000000',
+        'date_time': '2019-03-20T17:22:14.0000000+00:00',
         'entry_identifier': 63,
         'sync_count': 0,
         'response_headers': (

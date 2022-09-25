@@ -55,7 +55,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': 'leo_auth_token',
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2011-08-25 21:50:27.292367',
+        'date_time': '2011-08-25T21:50:27.292367+00:00',
         'host': 'www.linkedin.com',
         'httponly': False,
         'persistent': True,
@@ -68,7 +68,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': 'put_2249',
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2012-04-01 13:54:34.949210',
+        'date_time': '2012-04-01T13:54:34.949210+00:00',
         'httponly': False,
         'path': '/',
         'persistent': True,
@@ -81,7 +81,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Examine an event for a visit to a political blog site.
     expected_event_values = {
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2012-03-22 01:47:21.012022',
+        'date_time': '2012-03-22T01:47:21.012022+00:00',
         'host': 'politicalticker.blogs.cnn.com',
         'path': '/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/'}
 
@@ -94,7 +94,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'cookie_name': 'autologin[timeout]',
         'data': '1364824322',
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2012-04-01 13:52:56.189444',
+        'date_time': '2012-04-01T13:52:56.189444+00:00',
         'host': 'marvel.com',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -103,7 +103,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Examine a cookie expiry event.
     expected_event_values = {
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2013-08-14 14:19:42.000000',
+        'date_time': '2013-08-14T14:19:42.000000+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
@@ -156,7 +156,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2018-08-14 15:03:43.650324',
+        'date_time': '2018-08-14T15:03:43.650324+00:00',
         'host': 'google.com',
         'httponly': False,
         'persistent': True,
@@ -169,7 +169,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__cfduid',
         'data_type': 'chrome:cookie:entry',
-        'date_time': '2018-08-20 17:19:53.134291',
+        'date_time': '2018-08-20T17:19:53.134291+00:00',
         'httponly': True,
         'path': '/',
         'persistent': True,
@@ -182,7 +182,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Examine an event for a cookie with a very large expire time.
     expected_event_values = {
         'data_type': 'chrome:cookie:entry',
-        'date_time': '9999-08-17 12:26:28.000000',
+        'date_time': '9999-08-17T12:26:28.000000+00:00',
         'host': 'projects.fivethirtyeight.com'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)

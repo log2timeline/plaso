@@ -49,7 +49,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     # Test one local and one cloud entry.
     expected_event_values = {
         'data_type': 'gdrive:snapshot:local_entry',
-        'date_time': '2014-01-28 00:11:25',
+        'date_time': '2014-01-28T00:11:25+00:00',
         'path': (
             '%local_sync_root%/Top Secret/Enn meiri '
             'leyndarmál/Sýnileiki - Örverpi.gdoc'),
@@ -60,7 +60,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'gdrive:snapshot:cloud_entry',
-        'date_time': '2014-01-28 00:12:27',
+        'date_time': '2014-01-28T00:12:27+00:00',
         'document_type': 6,
         'path': '/Almenningur/Saklausa hliðin',
         'size': 0,

@@ -33,7 +33,7 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     expected_event_values = {
         'data_type': 'file_history:namespace:event',
-        'date_time': '2013-10-12 17:34:36.6885806',
+        'date_time': '2013-10-12T17:34:36.6885806+00:00',
         'file_attribute': 16,
         'identifier': 356,
         'original_filename': '?UP\\Favorites\\Links\\Lenovo',

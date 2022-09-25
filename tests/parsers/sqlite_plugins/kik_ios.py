@@ -35,7 +35,7 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'body': 'Hello',
         'data_type': 'ios:kik:messaging',
-        'date_time': '2015-06-29 12:26:11.000000',
+        'date_time': '2015-06-29T12:26:11.000000+00:00',
         'displayname': 'Ken Doh',
         'message_status': 94,
         'message_type': 2,

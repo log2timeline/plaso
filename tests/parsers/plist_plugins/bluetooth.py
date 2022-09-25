@@ -35,7 +35,7 @@ class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:bluetooth:entry',
-        'date_time': '2012-11-02 01:13:17.324095',
+        'date_time': '2012-11-02T01:13:17.324095+00:00',
         'device_identifier': '44-00-00-00-00-04',
         'device_name': 'Apple Magic Trackpad 2',
         'is_paired': True,

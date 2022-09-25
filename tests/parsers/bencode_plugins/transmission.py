@@ -35,7 +35,7 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
 
     expected_event_values = {
         'data_type': 'p2p:bittorrent:transmission',
-        'date_time': '2013-11-08 15:31:20',
+        'date_time': '2013-11-08T15:31:20+00:00',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
@@ -45,7 +45,7 @@ class TransmissionPluginTest(test_lib.BencodePluginTestCase):
     # Test on second event of first torrent.
     expected_event_values = {
         'data_type': 'p2p:bittorrent:transmission',
-        'date_time': '2013-11-08 18:24:24',
+        'date_time': '2013-11-08T18:24:24+00:00',
         'destination': '/Users/brian/Downloads',
         'seedtime': 4,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED}
