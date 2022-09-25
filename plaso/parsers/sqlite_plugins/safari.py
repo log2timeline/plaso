@@ -121,7 +121,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     event_data = SafariHistoryPageVisitedEventData()
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.title = self._GetRowValue(query_hash, row, 'title') or None
     event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
     event_data.was_http_non_get = bool(was_http_non_get)

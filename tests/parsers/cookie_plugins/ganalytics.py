@@ -43,7 +43,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utmz',
         'data_type': 'cookie:google:analytics:utmz',
-        'date_time': '2013-10-30 21:56:06',
+        'date_time': '2013-10-30T21:56:06+00:00',
         'domain_hash': '137167072',
         'sessions': 1,
         'sources': 1,
@@ -104,7 +104,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'cookie:google:analytics:utma',
-        'date_time': '2012-03-22 01:55:29',
+        'date_time': '2012-03-22T01:55:29+00:00',
         'domain_hash': '151488169',
         'sessions': 2,
         'timestamp_desc': 'Analytics Previous Time',
@@ -118,7 +118,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utmb',
         'data_type': 'cookie:google:analytics:utmb',
-        'date_time': '2012-03-22 01:48:30',
+        'date_time': '2012-03-22T01:48:30+00:00',
         'domain_hash': '154523900',
         'pages_viewed': 1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,

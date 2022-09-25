@@ -36,9 +36,8 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'bundle_identifier': 'com.apple.Installer-Progress',
         'data_type': 'mac:knowledgec:application',
-        'date_time': '2019-02-10 16:59:58.860664',
+        'date_time': '2019-02-10T16:59:58.860664+00:00',
         'duration': 1,
-        'timestamp': '2019-02-10 16:59:58.860665',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -65,7 +64,7 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'bundle_identifier': 'com.apple.Terminal',
         'data_type': 'mac:knowledgec:application',
-        'date_time': '2019-05-08 13:57:30.668998',
+        'date_time': '2019-05-08T13:57:30.668998+00:00',
         'duration': 1041,
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -73,7 +72,7 @@ class MacKnowledgecTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:knowledgec:safari',
-        'date_time': '2019-05-08 13:57:20.000000',
+        'date_time': '2019-05-08T13:57:20.000000+00:00',
         'duration': 0,
         'timestamp_desc': definitions.TIME_DESCRIPTION_END,
         'title': 'Instagram',

@@ -37,7 +37,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'birthday': '1980-10-01',
         'data_type': 'tango:android:contact',
-        'date_time': '2016-01-15 13:21:45.624',
+        'date_time': '2016-01-15T13:21:45.624+00:00',
         'distance': 39.04880905,
         'first_name': 'Rouel',
         'friend_request_message': 'I am following you on Tango',
@@ -53,7 +53,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact last access event.
     expected_event_values = {
         'data_type': 'tango:android:contact',
-        'date_time': '2016-01-15 14:35:20.633',
+        'date_time': '2016-01-15T14:35:20.633+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[57], expected_event_values)
@@ -61,7 +61,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact request sent event.
     expected_event_values = {
         'data_type': 'tango:android:contact',
-        'date_time': '2016-01-15 14:35:20.436',
+        'date_time': '2016-01-15T14:35:20.436+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
     self.CheckEventValues(storage_writer, events[56], expected_event_values)
@@ -102,7 +102,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test a message creation event.
     expected_event_values = {
         'data_type': 'tango:android:message',
-        'date_time': '2016-01-15 14:41:33.027',
+        'date_time': '2016-01-15T14:41:33.027+00:00',
         'direction': 2,
         'message_identifier': 16777224,
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -112,7 +112,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test a message sent event.
     expected_event_values = {
         'data_type': 'tango:android:message',
-        'date_time': '2016-01-15 14:41:34.238',
+        'date_time': '2016-01-15T14:41:34.238+00:00',
         'direction': 2,
         'message_identifier': 16777224,
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}

@@ -32,9 +32,9 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'data_type': 'android:webviewcache',
-        'date_time': '2013-03-28 09:48:18.000',
         'content_length': 1821,
+        'data_type': 'android:webviewcache',
+        'date_time': '2013-03-28T09:48:18.000+00:00',
         'url': (
             'https://apps.skypeassets.com/static/skype.skypeloginstatic/css/'
             'print.css?_version=1.15')}

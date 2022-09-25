@@ -37,7 +37,7 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:install_history:entry',
-        'date_time': '2013-11-12 02:59:35',
+        'date_time': '2013-11-12T02:59:35+00:00',
         'identifiers': [
             'com.apple.pkg.BaseSystemBinaries',
             'com.apple.pkg.BaseSystemResources',

@@ -62,7 +62,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'firefox:cookie:entry',
-        'date_time': '2015-10-30 21:56:03',
+        'date_time': '2015-10-30T21:56:03+00:00',
         'host': 's.greenqloud.com',
         'httponly': False,
         'secure': False,
@@ -75,7 +75,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'cookie_name': 'KRTBCOOKIE_391',
         'data_type': 'firefox:cookie:entry',
-        'date_time': '2013-11-29 21:56:04',
+        'date_time': '2013-11-29T21:56:04+00:00',
         'httponly': False,
         'path': '/',
         'secure': False,

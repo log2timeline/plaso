@@ -47,7 +47,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'application': 'Memory Compression',
         'data_type': 'windows:srum:application_usage',
-        'date_time': '2017-11-05 11:32:00.000000',
+        'date_time': '2017-11-05T11:32:00.000000+00:00',
         'identifier': 22167,
         'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE}
 
@@ -57,7 +57,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     expected_event_values = {
         'application': 1,
         'data_type': 'windows:srum:network_connectivity',
-        'date_time': '2017-11-05 10:30:48.1679714',
+        'date_time': '2017-11-05T10:30:48.1679714+00:00',
         'identifier': 501,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_CONNECTED}
 
@@ -68,7 +68,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'application': 'DiagTrack',
         'bytes_sent': 2076,
         'data_type': 'windows:srum:network_usage',
-        'date_time': '2017-11-05 11:32:00.000000',
+        'date_time': '2017-11-05T11:32:00.000000+00:00',
         'identifier': 3495,
         'interface_luid': 1689399632855040,
         'timestamp_desc': definitions.TIME_DESCRIPTION_SAMPLE,

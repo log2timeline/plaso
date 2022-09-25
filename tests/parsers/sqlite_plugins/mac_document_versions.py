@@ -34,7 +34,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:document_versions:file',
-        'date_time': '2014-01-21 02:03:00',
+        'date_time': '2014-01-21T02:03:00+00:00',
         'name': 'Spain is beautiful.rtf',
         'path': '/Users/moxilo/Documents',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,

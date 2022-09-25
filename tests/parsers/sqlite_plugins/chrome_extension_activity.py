@@ -37,7 +37,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
         'activity_id': 48,
         'api_name': 'browserAction.onClicked',
         'data_type': 'chrome:extension_activity:activity_log',
-        'date_time': '2014-11-25 21:08:23.698737',
+        'date_time': '2014-11-25T21:08:23.698737+00:00',
         'extension_id': 'ognampngfcbddbfemdapefohjiobgbdl',
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
 

@@ -36,7 +36,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first page visited entry.
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2011-04-07 12:03:11.000000',
+        'date_time': '2011-04-07T12:03:11.000000+00:00',
         'page_transition_type': 0,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': 'Ubuntu Start Page',
@@ -49,7 +49,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2011-05-23 08:35:30',
+        'date_time': '2011-05-23T08:35:30+00:00',
         'full_path': '/home/john/Downloads/funcats_scr.exe',
         'received_bytes': 1132155,
         'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
@@ -89,7 +89,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21 14:09:53.885478',
+        'date_time': '2018-01-21T14:09:53.885478+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -100,7 +100,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21 14:09:53.900399',
+        'date_time': '2018-01-21T14:09:53.900399+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
@@ -138,7 +138,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21 14:09:27.315765',
+        'date_time': '2018-01-21T14:09:27.315765+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -149,7 +149,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21 14:09:27.200398',
+        'date_time': '2018-01-21T14:09:27.200398+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
@@ -187,7 +187,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21 14:08:52.037692',
+        'date_time': '2018-01-21T14:08:52.037692+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -198,7 +198,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21 14:08:51.811123',
+        'date_time': '2018-01-21T14:08:51.811123+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,
@@ -238,7 +238,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21 14:08:52.037692',
+        'date_time': '2018-01-21T14:08:52.037692+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': '',
         'typed_count': 0,
@@ -249,7 +249,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21 14:08:51.811123',
+        'date_time': '2018-01-21T14:08:51.811123+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,

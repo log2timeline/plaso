@@ -35,7 +35,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'active_duration_seconds': 9,
         'data_type': 'windows:timeline:user_engaged',
-        'date_time': '2018-08-03 11:29:00',
+        'date_time': '2018-08-03T11:29:00+00:00',
         'package_identifier': 'c:\\python34\\python.exe',
         'reporting_app': 'ShellActivityMonitor',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
@@ -45,7 +45,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'active_duration_seconds': 11,
         'data_type': 'windows:timeline:user_engaged',
-        'date_time': '2018-07-27 11:58:55',
+        'date_time': '2018-07-27T11:58:55+00:00',
         'package_identifier': (
             'c:\\users\\demouser\\appdata\\local\\programs\\python\\'
             'python37-32\\python.exe'),
@@ -57,7 +57,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'application_display_name': 'OneDrive',
         'data_type': 'windows:timeline:generic',
-        'date_time': '2018-07-25 12:04:48',
+        'date_time': '2018-07-25T12:04:48+00:00',
         'description': '',
         'package_identifier': 'Microsoft.SkyDrive.Desktop',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
@@ -67,7 +67,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'application_display_name': 'Notepad',
         'data_type': 'windows:timeline:generic',
-        'date_time': '2018-07-27 12:36:09',
+        'date_time': '2018-07-27T12:36:09+00:00',
         'description': 'C:\\Users\\demouser\\Desktop\\SCHEMA.txt',
         'package_identifier': (
             '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe'),

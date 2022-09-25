@@ -35,7 +35,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first page visited event.
     expected_event_values = {
         'data_type': 'firefox:downloads:download',
-        'date_time': '2013-07-18 18:59:59.312000',
+        'date_time': '2013-07-18T18:59:59.312000+00:00',
         'full_path': 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip',
         'received_bytes': 15974599,
         'timestamp_desc': definitions.TIME_DESCRIPTION_START,

@@ -37,7 +37,7 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         'application_version': None,
         'compressed_payload_size': 50,
         'data_type': 'windows:diagnosis:eventtranscript',
-        'date_time': '2021-08-17 11:27:06.2573347',
+        'date_time': '2021-08-17T11:27:06.2573347+00:00',
         'event_keywords': 0x800000000000,
         'event_name_hash': 2681079708,
         'event_name': 'TelClientSyntheticScenario.AcceptingScenario_0',

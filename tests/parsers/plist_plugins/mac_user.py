@@ -38,7 +38,7 @@ class MacOSUserPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:user:entry',
-        'date_time': '2013-12-28 04:35:47',
+        'date_time': '2013-12-28T04:35:47+00:00',
         'fullname': 'Joaquin Moreno',
         'password_hash': (
             '$ml$37313$fa6cac1869263baa85cffc5e77a3d4ee164b7'

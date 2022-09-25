@@ -41,7 +41,7 @@ class AppleAccountPlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'account_name': 'email@domain.com',
         'data_type': 'macos:apple_account:entry',
-        'date_time': '2013-06-24 20:46:42',
+        'date_time': '2013-06-24T20:46:42+00:00',
         'first_name': 'Joaquin',
         'last_name': 'Moreno Garijo',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -51,7 +51,7 @@ class AppleAccountPlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'account_name': 'email@domain.com',
         'data_type': 'macos:apple_account:entry',
-        'date_time': '2013-12-25 14:00:32',
+        'date_time': '2013-12-25T14:00:32+00:00',
         'first_name': 'Joaquin',
         'last_name': 'Moreno Garijo',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CONNECTION_ESTABLISHED}
@@ -61,7 +61,7 @@ class AppleAccountPlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'account_name': 'email@domain.com',
         'data_type': 'macos:apple_account:entry',
-        'date_time': '2013-12-25 14:00:32',
+        'date_time': '2013-12-25T14:00:32+00:00',
         'first_name': 'Joaquin',
         'last_name': 'Moreno Garijo',
         'timestamp_desc': definitions.TIME_DESCRIPTION_VALIDATION}

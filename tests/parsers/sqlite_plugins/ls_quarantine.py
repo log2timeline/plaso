@@ -35,7 +35,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'agent': 'Google Chrome',
         'data_type': 'macosx:lsquarantine',
-        'date_time': '2013-07-08 21:12:03.000000',
+        'date_time': '2013-07-08T21:12:03.000000+00:00',
         'url': (
             'http://download.cnet.com/VLC-Media-Player/'
             '3001-2139_4-10210434.html?spi=40ab24d3c71594a5017d74be3b0c946c')}
@@ -46,7 +46,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'agent': 'Google Chrome',
         'data_type': 'macosx:lsquarantine',
-        'date_time': '2013-07-12 19:28:58.000000'}
+        'date_time': '2013-07-12T19:28:58.000000+00:00'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
@@ -57,7 +57,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
             'http://download.mackeeper.zeobit.com/package.php?'
             'key=460245286&trt=5&landpr=Speedtest'),
         'data_type': 'macosx:lsquarantine',
-        'date_time': '2013-07-12 19:30:16.000000',
+        'date_time': '2013-07-12T19:30:16.000000+00:00',
         'url': (
             'http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?'
             'affid=460245286&trt=5&utm_campaign=3ES&tid_ext=P107fSKcSfqpMbcP3'

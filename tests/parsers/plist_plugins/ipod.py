@@ -38,14 +38,14 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'ipod:device:entry',
-        'date_time': '1995-11-22 18:25:07.000000',
+        'date_time': '1995-11-22T18:25:07.000000+00:00',
         'device_id': '0000A11300000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'ipod:device:entry',
-        'date_time': '2013-10-09 19:27:54.000000',
+        'date_time': '2013-10-09T19:27:54.000000+00:00',
         'device_class': 'iPhone',
         'device_id': '4C6F6F6E65000000',
         'family_id': 10016,
