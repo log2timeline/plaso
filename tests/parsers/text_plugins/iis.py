@@ -35,7 +35,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2013-07-30 00:00:00',
+        'date_time': '2013-07-30T00:00:00+00:00',
         'dest_ip': '10.10.10.100',
         'dest_port': 80,
         'http_method': 'GET',
@@ -49,7 +49,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2013-07-30 00:00:05',
+        'date_time': '2013-07-30T00:00:05+00:00',
         'http_method': 'GET',
         'http_status': 200,
         'requested_uri_stem': '/some/image/path/something.jpg'}
@@ -58,7 +58,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2013-07-30 00:00:03',
+        'date_time': '2013-07-30T00:00:03+00:00',
         'dest_ip': '10.10.10.100',
         'dest_port': 80,
         'http_method': 'GET',
@@ -100,7 +100,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2015-10-16 13:01:02',
+        'date_time': '2015-10-16T13:01:02+00:00',
         'dest_ip': '111.111.111.111',
         'dest_port': 443,
         'http_method': 'GET',
@@ -136,7 +136,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2015-12-31 00:19:48',
+        'date_time': '2015-12-31T00:19:48+00:00',
         'dest_ip': '10.11.2.3',
         'dest_port': 443,
         'http_method': 'GET',
@@ -173,7 +173,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2013-07-30 00:00:03',
+        'date_time': '2013-07-30T00:00:03+00:00',
         'protocol_version': 'HTTP/1.1',
         'timestamp': '2013-07-30 00:00:03.000000'}
 
@@ -202,7 +202,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'iis:log:line',
-        'date_time': '2021-04-01 00:00:21',
+        'date_time': '2021-04-01T00:00:21+00:00',
         'dest_ip': '111.111.111.111',
         'dest_port': 80,
         'http_method': 'GET',

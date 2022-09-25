@@ -36,7 +36,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:session:event',
-        'date_time': '2010-06-22 05:41:41',
+        'date_time': '2010-06-22T05:41:41+00:00',
         'details': 'ARCH:i386 POPCONVER:1.38',
         'hostid': '12345678901234567890123456789012',
         'session': '0',
@@ -47,7 +47,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-06-22 07:34:42',
+        'date_time': '2010-06-22T07:34:42+00:00',
         'mru': '/usr/sbin/atd',
         'package': 'at',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -56,7 +56,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-06-22 07:34:43',
+        'date_time': '2010-06-22T07:34:43+00:00',
         'mru': '/usr/lib/python2.5/lib-dynload/_struct.so',
         'package': 'python2.5-minimal',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -65,7 +65,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-05-30 05:26:20',
+        'date_time': '2010-05-30T05:26:20+00:00',
         'mru': '/usr/bin/empathy',
         'package': 'empathy',
         'record_tag': 'RECENT-CTIME',
@@ -75,7 +75,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-05-30 05:27:43',
+        'date_time': '2010-05-30T05:27:43+00:00',
         'mru': '/usr/bin/empathy',
         'package': 'empathy',
         'record_tag': 'RECENT-CTIME',
@@ -85,7 +85,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-05-12 07:58:33',
+        'date_time': '2010-05-12T07:58:33+00:00',
         'mru': '/usr/bin/orca',
         'package': 'gnome-orca',
         'record_tag': 'OLD',
@@ -95,7 +95,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:session:event',
-        'date_time': '2010-06-22 05:41:41',
+        'date_time': '2010-06-22T05:41:41+00:00',
         'session': '0',
         'status': 'end',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
@@ -104,7 +104,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:session:event',
-        'date_time': '2010-06-22 05:41:41',
+        'date_time': '2010-06-22T05:41:41+00:00',
         'details': 'ARCH:i386 POPCONVER:1.38',
         'hostid': '12345678901234567890123456789012',
         'session': '1',
@@ -115,7 +115,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-06-22 07:34:42',
+        'date_time': '2010-06-22T07:34:42+00:00',
         'mru': '/super/cool/plasuz',
         'package': 'plaso',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -124,7 +124,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-04-06 12:25:42',
+        'date_time': '2010-04-06T12:25:42+00:00',
         'mru': '/super/cool/plasuz',
         'package': 'miss_ctime',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
@@ -133,7 +133,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:log:event',
-        'date_time': '2010-05-12 07:58:33',
+        'date_time': '2010-05-12T07:58:33+00:00',
         'mru': '/super/cóól',
         'package': 'plaso',
         'record_tag': 'WRONG_TAG',
@@ -143,7 +143,7 @@ class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'popularity_contest:session:event',
-        'date_time': '2010-06-22 05:41:41',
+        'date_time': '2010-06-22T05:41:41+00:00',
         'session': '1',
         'status': 'end',
         'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}

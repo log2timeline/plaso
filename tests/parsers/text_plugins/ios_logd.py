@@ -35,7 +35,7 @@ class IOSSysdiagnoseLogdUnitTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': 'libtrace_kic=1',
         'data_type': 'ios:sysdiagnose:logd:line',
-        'date_time': '2021-08-11 05:50:23',
+        'date_time': '2021-08-11T05:50:23+07:00',
         'logger': 'logd[29]',
         'timestamp': '2021-08-10 22:50:23.000000'}
 
@@ -44,7 +44,7 @@ class IOSSysdiagnoseLogdUnitTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': 'Harvesting: 9227BC73-2AF5-318F-AA62-DCBE2219DBC8',
         'data_type': 'ios:sysdiagnose:logd:line',
-        'date_time': '2021-10-13 08:41:02',
+        'date_time': '2021-10-13T08:41:02+04:00',
         'logger': 'logd_helper[90]',
         'timestamp': '2021-10-13 04:41:02.000000'}
 

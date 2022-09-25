@@ -38,7 +38,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
         'action': 'Interface en0 turn up.',
         'agent': 'airportd[88]',
         'data_type': 'mac:wifilog:line',
-        'date_time': '2013-11-14 20:36:37.222',
+        'date_time': '2013-11-14T20:36:37.222+00:00',
         'function': 'airportdProcessDLILEvent',
         'text': 'en0 attached (up)'}
 
@@ -48,7 +48,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
         'action': 'Wifi connected to SSID CampusNet',
         'agent': 'airportd[88]',
         'data_type': 'mac:wifilog:line',
-        'date_time': '2013-11-14 20:36:43.818',
+        'date_time': '2013-11-14T20:36:43.818+00:00',
         'function': '_doAutoJoin',
         'text': (
             'Already associated to \u201cCampusNet\u201d. Bailing on '
@@ -58,7 +58,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2013-11-14 21:50:52.395',
+        'date_time': '2013-11-14T21:50:52.395+00:00',
         'text': (
             '<airportd[88]> _handleLinkEvent: Unable to process link event, '
             'op mode request returned -3903 (Operation not supported)')}
@@ -71,7 +71,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
             'Security: WPA2 Personal.'),
         'agent': 'airportd[88]',
         'data_type': 'mac:wifilog:line',
-        'date_time': '2013-11-14 21:52:09.883',
+        'date_time': '2013-11-14T21:52:09.883+00:00',
         'function': '_processSystemPSKAssoc',
         'text': (
             'No password for network <CWNetwork: 0x7fdfe970b250> '
@@ -84,13 +84,13 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2013-12-31 23:59:38.165'}
+        'date_time': '2013-12-31T23:59:38.165+00:00'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2014-01-01 01:12:17.311'}
+        'date_time': '2014-01-01T01:12:17.311+00:00'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
@@ -118,7 +118,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 00:10:15.000',
+        'date_time': '2017-01-02T00:10:15.000+00:00',
         'text': 'test-macbookpro newsyslog[50498]: logfile turned over'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -129,14 +129,14 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 00:11:02.378',
+        'date_time': '2017-01-02T00:11:02.378+00:00',
         'text': expected_text}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 07:41:01.371',
+        'date_time': '2017-01-02T07:41:01.371+00:00',
         'text': (
             '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.')}
 
@@ -144,7 +144,7 @@ class MacWifiLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'mac:wifilog:line',
-        'date_time': '2017-01-02 07:41:02.207',
+        'date_time': '2017-01-02T07:41:02.207+00:00',
         'text': (
             '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
             'enable_5G:1, profile_5G:0')}

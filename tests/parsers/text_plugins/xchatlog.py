@@ -34,60 +34,67 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2011-12-31 21:11:55',
         'data_type': 'xchat:log:line',
-        'text': 'XChat start logging'}
+        'date_time': '2011-12-31T21:11:55',
+        'text': 'XChat start logging',
+        'timestamp': '2011-12-31 21:11:55.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': '--> You are now talking on #gugle'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': '--- Topic for #gugle is plaso, a difficult word'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': 'Topic for #gugle set by Kristinn'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': '--- Joachim gives voice to fpi'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': '* XChat here'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:58',
         'nickname': 'fpi',
         'text': 'ola plas-ing guys!'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2011-12-31 23:00:00',
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T23:00:00',
         'nickname': 'STRANGER',
         'text': '\u65e5\u672c'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2011-12-31 23:59:00',
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T23:59:00',
         'text': 'XChat end logging'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
@@ -115,8 +122,8 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2011-12-31 21:11:55',
         'data_type': 'xchat:log:line',
+        'date_time': '2011-12-31T21:11:55',
         'text': 'XChat start logging',
         'timestamp': '2011-12-31 20:11:55.000000'}
 
