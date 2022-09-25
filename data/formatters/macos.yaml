@@ -318,8 +318,8 @@ short_message: 'Installation of [{name} {version}] using [{process_name}] Packag
 ---
 type: 'basic'
 data_type: 'macos:launchd:entry'
-message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
-short_message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
+message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
 ---
 type: 'conditional'
 data_type: 'macos:software_updata:entry'
