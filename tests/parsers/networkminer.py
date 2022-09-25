@@ -35,7 +35,7 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'networkminer:fileinfos:file',
-        'date_time': '2007-12-17 04:32:30.399052',
+        'date_time': '2007-12-17T04:32:30.399052+00:00',
         'destination_ip': '192.168.151.130',
         'destination_port': 'TCP 48304',
         'file_details': 'travelocity.com/',

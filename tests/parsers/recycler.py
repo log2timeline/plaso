@@ -32,8 +32,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-03-12 20:49:58.6330000',
         'data_type': 'windows:metadata:deleted_item',
+        'date_time': '2012-03-12T20:49:58.6330000+00:00',
         'file_size': 724919,
         'original_filename': (
             'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')}
@@ -59,8 +59,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2016-06-29 21:37:45.6180000',
         'data_type': 'windows:metadata:deleted_item',
+        'date_time': '2016-06-29T21:37:45.6180000+00:00',
         'file_size': 222255,
         'original_filename': (
             'C:\\Users\\random\\Downloads\\bunnies.jpg')}
@@ -90,8 +90,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2004-08-25 16:18:25.2370000',
         'data_type': 'windows:metadata:deleted_item',
+        'date_time': '2004-08-25T16:18:25.2370000+00:00',
         'drive_number': 2,
         'original_filename': (
             'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe'),

@@ -56,6 +56,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'computer_name': 'WKS-WIN764BITB.shieldbase.local',
         'data_type': 'windows:evtx:record',
+        'date_time': '2012-03-14T04:17:43.3545627+00:00',
         'event_identifier': 105,
         'event_level': 4,
         'event_version': 0,
@@ -98,8 +99,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'computer_name': 'WKS-WIN764BITB.shieldbase.local',
-        'date_time': '2012-03-14 04:17:38.2763402',
         'data_type': 'windows:evtx:record',
+        'date_time': '2012-03-14T04:17:38.2763402+00:00',
         'event_level': 4,
         'event_version': 0,
         'record_number': 12050,
@@ -134,6 +135,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:evtx:record',
+        'date_time': '2015-08-09T09:15:48.4341250+00:00',
         'event_identifier': 4624,
         'message_identifier': 4624}
 
@@ -141,6 +143,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:evtx:record',
+        'date_time': '2015-08-09T09:16:33.9653750+00:00',
         'event_identifier': 4648,
         'message_identifier': 4648}
 

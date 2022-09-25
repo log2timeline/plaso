@@ -32,7 +32,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:cache:entry',
-        'date_time': '2014-04-30 16:44:36.226091',
+        'date_time': '2014-04-30T16:44:36.226091+00:00',
         'original_url': (
             'https://s.ytimg.com/yts/imgbin/player-common-vfliLfqPT.webp')}
 

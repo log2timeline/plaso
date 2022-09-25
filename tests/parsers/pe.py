@@ -41,7 +41,7 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe',
-        'date_time': '2015-04-21 14:53:56',
+        'date_time': '2015-04-21T14:53:56+00:00',
         'pe_attribute': None,
         'pe_type': 'Executable (EXE)',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -50,7 +50,7 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe',
-        'date_time': '2015-04-21 14:53:55',
+        'date_time': '2015-04-21T14:53:55+00:00',
         'pe_attribute': 'DIRECTORY_ENTRY_IMPORT',
         'pe_type': 'Executable (EXE)',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
@@ -59,7 +59,7 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe',
-        'date_time': '2015-04-21 14:53:54',
+        'date_time': '2015-04-21T14:53:54+00:00',
         'dll_name': 'USER32.dll',
         'imphash': '8d0739063fc8f9955cc6696b462544ab',
         'pe_attribute': 'DIRECTORY_ENTRY_DELAY_IMPORT',
@@ -88,7 +88,7 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe',
-        'date_time': '2015-04-21 14:53:54',
+        'date_time': '2015-04-21T14:53:54+00:00',
         'pe_attribute': None,
         'pe_type': 'Driver (SYS)',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -135,7 +135,7 @@ class PECOFFTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'pe',
-        'date_time': '2022-01-03 08:55:07',
+        'date_time': '2022-01-03T08:55:07+00:00',
         'pe_attribute': None,
         'pe_type': 'Dynamic Link Library (DLL)',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}

@@ -32,7 +32,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'android:event:last_resume_time',
-        'date_time': '2013-12-09 19:28:33.047',
+        'date_time': '2013-12-09T19:28:33.047+00:00',
         'component': (
             'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd'),
         'package': 'com.sec.android.widgetapp.ap.hero.accuweather'}
@@ -41,7 +41,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'android:event:last_resume_time',
-        'date_time': '2013-09-27 19:45:55.675',
+        'date_time': '2013-09-27T19:45:55.675+00:00',
         'component': 'com.google.android.gsf.login.NameActivity',
         'package': 'com.google.android.gsf.login'}
 

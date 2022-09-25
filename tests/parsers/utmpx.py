@@ -31,8 +31,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2013-11-13 17:52:34.000000',
         'data_type': 'mac:utmpx:event',
+        'date_time': '2013-11-13T17:52:34.000000+00:00',
         'hostname': 'localhost',
         'pid': 1,
         'terminal_identifier': 0,
@@ -41,8 +41,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-11-13 17:52:41.736713',
         'data_type': 'mac:utmpx:event',
+        'date_time': '2013-11-13T17:52:41.736713+00:00',
         'hostname': 'localhost',
         'pid': 67,
         'terminal': 'console',
@@ -53,8 +53,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-11-14 04:32:56.641464',
         'data_type': 'mac:utmpx:event',
+        'date_time': '2013-11-14T04:32:56.641464+00:00',
         'hostname': 'localhost',
         'pid': 6899,
         'terminal': 'ttys002',

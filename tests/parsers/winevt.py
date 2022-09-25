@@ -38,7 +38,8 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2011-07-27 06:41:47',
+        'data_type': 'windows:evt:record',
+        'date_time': '2011-07-27T06:41:47+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -57,22 +58,20 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
 
-    expected_string2 = (
-        '"The system detected a possible attempt to compromise security. '
-        'Please ensure that you can contact the server that authenticated you.'
-        '\r\n (0xc0000388)"')
-
     expected_event_values = {
         'computer_name': 'WKS-WINXP32BIT',
-        'date_time': '2011-07-27 06:41:47',
         'data_type': 'windows:evt:record',
+        'date_time': '2011-07-27T06:41:47+00:00',
         'event_category': 3,
         'event_identifier': 40961,
         'event_type': 2,
         'record_number': 1392,
         'severity': 2,
         'source_name': 'LSASRV',
-        'strings': ['cifs/CONTROLLER', expected_string2],
+        'strings': ['cifs/CONTROLLER', (
+            '"The system detected a possible attempt to compromise security. '
+            'Please ensure that you can contact the server that authenticated '
+            'you.\r\n (0xc0000388)"')],
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

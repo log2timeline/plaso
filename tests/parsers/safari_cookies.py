@@ -45,6 +45,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'cookie_name': 'GAPS',
         'data_type': 'safari:cookie:entry',
+        'date_time': '2015-07-08T20:54:03.000000+00:00',
         'flags': 5,
         'url': 'accounts.google.com'}
 
@@ -52,8 +53,8 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'cookie_name': 'nonsession',
-        'date_time': '2013-07-08 20:54:50.000000',
         'data_type': 'safari:cookie:entry',
+        'date_time': '2013-07-08T20:54:50.000000+00:00',
         'flags': 0,
         'path': '/',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -68,8 +69,8 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
             '4YyWAG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu'
             '6JgkFwqO5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W'
             '2iuYwA-&v=2'),
-        'date_time': '2013-07-08 17:24:30.000000',
         'data_type': 'safari:cookie:entry',
+        'date_time': '2013-07-08T17:24:30.000000+00:00',
         'path': '/',
         'url': '.www.yahoo.com'}
 

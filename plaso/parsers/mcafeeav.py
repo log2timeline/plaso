@@ -135,17 +135,22 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
           'Unable to create date time with error: {0!s}'.format(exception))
       date_time = dfdatetime_semantic_time.InvalidTime()
 
+    status = row['status']
+    if status:
+      status = status.rstrip()
+
     event_data = McafeeAVEventData()
     event_data.action = row['action']
     event_data.filename = row['filename']
     event_data.offset = row_offset
     event_data.rule = row['rule']
-    event_data.status = row['status']
+    event_data.status = status
     event_data.trigger_location = row['trigger_location']
     event_data.username = row['username']
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
@@ -170,8 +175,8 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.
-    if (not 'Access Protection' in row['status'] and
-        not 'Would be blocked' in row['status']):
+    status = row['status']
+    if 'Access Protection' not in status and 'Would be blocked' not in status:
       return False
 
     return True

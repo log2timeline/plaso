@@ -32,8 +32,8 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
 
     # time="19:33:19.766-330" date="11-28-2014"
     expected_event_values = {
-        'date_time': '2014-11-28 19:33:19.766',
         'data_type': 'software_management:sccm:log',
+        'date_time': '2014-11-28T19:33:19.766-06:30',
         'timestamp': '2014-11-29 01:03:19.766000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -41,31 +41,31 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     # Test timestamps with seven digits after seconds.
     # time="10:22:50.8422964" date="1-2-2015"
     expected_event_values = {
-        'date_time': '2015-01-02 10:22:50.873496',
-        'data_type': 'software_management:sccm:log'}
+        'data_type': 'software_management:sccm:log',
+        'date_time': '2015-01-02T10:22:50.873496+00:00'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Test timestamps with '-' in microseconds.
     expected_event_values = {
-        'date_time': '2014-12-28 13:29:43.373',
         'data_type': 'software_management:sccm:log',
+        'date_time': '2014-12-28T13:29:43.373-06:30',
         'timestamp': '2014-12-28 18:59:43.373000'}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     # Test timestamps with '+' in microseconds.
     expected_event_values = {
-        'date_time': '2014-11-24 01:52:13.827',
         'data_type': 'software_management:sccm:log',
+        'date_time': '2014-11-24T01:52:13.827+08:00',
         'timestamp': '2014-11-23 17:52:13.827000'}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Test timestamps with 2 digit UTC offset.
     expected_event_values = {
-        'date_time': '2014-11-26 04:20:47.594',
         'data_type': 'software_management:sccm:log',
+        'date_time': '2014-11-26T04:20:47.594-01:00',
         'timestamp': '2014-11-26 05:20:47.594000'}
 
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
@@ -73,8 +73,8 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     # Test component and text.
     expected_event_values = {
         'component': 'ContentAccess',
-        'date_time': '2014-12-23 07:03:10.647',
         'data_type': 'software_management:sccm:log',
+        'date_time': '2014-12-23T07:03:10.647-06:30',
         'text': (
             'Releasing content request {4EA97AD6-E7E2-4583-92B9-21F532501337}'),
         'timestamp': '2014-12-23 12:33:10.647000'}

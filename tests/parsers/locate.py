@@ -31,32 +31,38 @@ class LocateUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:36:19.606373200',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:36:19.606373200+00:00',
         'paths': ['/home/user/temp']}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:11:07.438810500',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:11:07.438810500+00:00',
         'paths': ['/home/user/temp/1']}
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:10:54.884843500',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:10:54.884843500+00:00',
         'paths': ['/home/user/temp/2']}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:11:25.146217000',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:11:25.146217000+00:00',
         'paths': ['/home/user/temp/3']}
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:11:25.146217000',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:11:25.146217000+00:00',
         'paths': ['/home/user/temp/3/3c']}
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2021-07-09 04:36:19.606373200',
+        'data_type': 'linux:locate',
+        'date_time': '2021-07-09T04:36:19.606373200+00:00',
         'paths': ['/home/user/temp/À']}
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 

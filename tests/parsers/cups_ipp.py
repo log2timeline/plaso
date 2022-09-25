@@ -347,7 +347,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'computer_name': 'localhost',
         'copies': 1,
         'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03 18:07:21',
+        'date_time': '2013-11-03T18:07:21+00:00',
         'doc_type': 'application/pdf',
         'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
         'job_name': 'Assignament 1',
@@ -361,14 +361,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03 18:07:21',
+        'date_time': '2013-11-03T18:07:21+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_START}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03 18:07:32',
+        'date_time': '2013-11-03T18:07:32+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_END}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)

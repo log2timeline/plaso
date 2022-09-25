@@ -32,28 +32,28 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:extensions_autoupdater',
-        'date_time': '2014-11-12 13:01:43.926143',
+        'date_time': '2014-11-12T13:01:43.926143+00:00',
         'message': 'Chrome extensions autoupdater last run'}
 
     self.CheckEventValues(storage_writer, events[17], expected_event_values)
 
     expected_event_values = {
         'data_type': 'chrome:preferences:extensions_autoupdater',
-        'date_time': '2014-11-12 18:20:21.519200',
+        'date_time': '2014-11-12T18:20:21.519200+00:00',
         'message': 'Chrome extensions autoupdater next run'}
 
     self.CheckEventValues(storage_writer, events[18], expected_event_values)
 
     expected_event_values = {
         'data_type': 'chrome:preferences:extensions_autoupdater',
-        'date_time': '2016-06-08 16:17:47.453766',
+        'date_time': '2016-06-08T16:17:47.453766+00:00',
         'message': 'Chrome history was cleared by user'}
 
     self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
     expected_event_values = {
         'data_type': 'chrome:preferences:extension_installation',
-        'date_time': '2014-11-05 18:31:24.154837',
+        'date_time': '2014-11-05T18:31:24.154837+00:00',
         'extension_id': 'mgndgikekgjfcpckkfioiadnlibdjbkf',
         'extension_name': 'Chrome',
         'path': (
@@ -64,7 +64,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-14 14:12:50.588974',
+        'date_time': '2016-11-14T14:12:50.588974+00:00',
         'permission': 'geolocation',
         'primary_url': ''}
 
@@ -72,7 +72,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-11 16:20:09.866137',
+        'date_time': '2016-11-11T16:20:09.866137+00:00',
         'permission': 'midi_sysex',
         'primary_url': 'https://rawgit.com:443'}
 
@@ -80,7 +80,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-14 14:13:00.639332',
+        'date_time': '2016-11-14T14:13:00.639332+00:00',
         'permission': 'notifications',
         'primary_url': 'https://rawgit.com:443'}
 
@@ -88,7 +88,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-14 14:13:00.627093',
+        'date_time': '2016-11-14T14:13:00.627093+00:00',
         'permission': 'notifications',
         'primary_url': 'https://rawgit.com:443'}
 
@@ -96,7 +96,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-14 14:12:54.899474',
+        'date_time': '2016-11-14T14:12:54.899474+00:00',
         'permission': 'media_stream_mic',
         'primary_url': ''}
 
@@ -104,7 +104,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'chrome:preferences:content_settings:exceptions',
-        'date_time': '2016-11-14 14:12:53.667838',
+        'date_time': '2016-11-14T14:12:53.667838+00:00',
         'permission': 'media_stream_mic',
         'primary_url': 'https://rawgit.com:443'}
 

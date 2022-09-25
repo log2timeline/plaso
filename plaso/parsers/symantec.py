@@ -175,7 +175,7 @@ class SymantecParser(dsv_parser.DSVParser):
 
     A Symantec log timestamp consist of six hexadecimal octets, that represent:
       First octet: Number of years since 1970
-      Second octet: Month, where January is represented by 0
+      Second octet: Month, where 0 represents January.
       Third octet: Day of the month
       Fourth octet: Number of hours
       Fifth octet: Number of minutes
@@ -199,7 +199,7 @@ class SymantecParser(dsv_parser.DSVParser):
         int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
             timestamp[::2], timestamp[1::2]))
 
-    return (year + 1970, month + 1, day_of_month, hours, minutes, seconds)
+    return year + 1970, month + 1, day_of_month, hours, minutes, seconds
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -210,15 +210,16 @@ class SymantecParser(dsv_parser.DSVParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    time_elements_tuple = self._GetTimeElementsTuple(row['time'])
+    timestamp = row['time']
 
     try:
+      time_elements_tuple = self._GetTimeElementsTuple(timestamp)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
-    except ValueError:
+    except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
+          'invalid timestamp value: {0!s}'.format(timestamp))
       return
 
     # TODO: remove unused attributes.
@@ -286,7 +287,8 @@ class SymantecParser(dsv_parser.DSVParser):
     event_data.virustype = row.get('virustype', None)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
@@ -302,13 +304,9 @@ class SymantecParser(dsv_parser.DSVParser):
     """
     try:
       time_elements_tuple = self._GetTimeElementsTuple(row['time'])
-    except (TypeError, ValueError):
-      return False
-
-    try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (TypeError, ValueError):
       return False
 
     try:

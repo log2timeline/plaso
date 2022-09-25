@@ -32,44 +32,63 @@ class FishHistoryTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'command': 'll', 'date_time': '2021-04-29 22:53:00'}
+        'command': 'll',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:53:00+00:00'}
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'command': 'la', 'date_time': '2021-04-29 22:53:02'}
+        'command': 'la',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:53:02+00:00'}
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'command': 'mkdir test', 'date_time': '2021-04-29 22:53:24'}
+        'command': 'mkdir test',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:53:24+00:00'}
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-        'command': 'cp *.txt test', 'date_time': '2021-04-29 22:53:32'}
+        'command': 'cp *.txt test',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:53:32+00:00'}
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
-        'command': 'cd test', 'date_time': '2021-04-29 22:53:37'}
+        'command': 'cd test',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:53:37+00:00'}
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'command': 'rm -rf test', 'date_time': '2021-04-29 22:54:18'}
+        'command': 'rm -rf test',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-04-29T22:54:18+00:00'}
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
     expected_event_values = {
-        'command': 'clear', 'date_time': '2021-05-03 08:20:14'}
+        'command': 'clear',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-05-03T08:20:14+00:00'}
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
     expected_event_values = {
-        'command': 'pwd', 'date_time': '2021-05-03 19:08:19'}
+        'command': 'pwd',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-05-03T19:08:19+00:00'}
     self.CheckEventValues(storage_writer, events[7], expected_event_values)
 
     expected_event_values = {
         'command': 'git clone git@github.com:log2timeline/plaso.git',
-        'date_time': '2021-07-11 02:58:01'}
+        'data_type': 'fish:history:command',
+        'date_time': '2021-07-11T02:58:01+00:00'}
     self.CheckEventValues(storage_writer, events[8], expected_event_values)
 
     expected_event_values = {
-        'command': 'cd plaso', 'date_time': '2021-07-11 02:58:35'}
+        'command': 'cd plaso',
+        'data_type': 'fish:history:command',
+        'date_time': '2021-07-11T02:58:35+00:00'}
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
 
