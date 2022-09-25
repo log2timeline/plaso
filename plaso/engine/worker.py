@@ -649,6 +649,11 @@ class EventExtractionWorker(object):
           storage_media_image_path_spec = path_spec_factory.Factory.NewPathSpec(
               type_indicator, location='/', parent=path_spec)
 
+      elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_VHDI:
+        if 'vhdi' in self._archive_types:
+          storage_media_image_path_spec = path_spec_factory.Factory.NewPathSpec(
+              type_indicator, parent=path_spec)
+
       else:
         warning_message = (
             'unsupported storage media image format: {0:s}').format(
@@ -662,35 +667,24 @@ class EventExtractionWorker(object):
         try:
           base_path_specs = volume_scanner.GetBasePathSpecs(
               storage_media_image_path_spec)
-        except dfvfs_errors.ScannerError as exception:
-          warning_message = (
-              'unable to scan storage media image with error: {0!s}').format(
-                  exception)
-          mediator.ProduceExtractionWarning(
-              warning_message, path_spec=storage_media_image_path_spec)
-          continue
 
-        try:
-          path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-              base_path_specs, resolver_context=mediator.resolver_context)
-
-          for generated_path_spec in path_spec_generator:
+          for base_path_spec in base_path_specs:
             if self._abort:
               break
 
             event_source = event_sources.FileEntryEventSource(
                 file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
-                path_spec=generated_path_spec)
+                path_spec=base_path_spec)
             mediator.ProduceEventSource(event_source)
 
             self.last_activity_timestamp = time.time()
 
-        except (IOError, errors.MaximumRecursionDepth) as exception:
+        except (IOError, dfvfs_errors.ScannerError) as exception:
           warning_message = (
-              'unable to process storage media image file with error: '
-              '{0!s}').format(exception)
+              'unable to process storage media image with error: {0!s}').format(
+                  exception)
           mediator.ProduceExtractionWarning(
-              warning_message, path_spec=generated_path_spec)
+              warning_message, path_spec=storage_media_image_path_spec)
 
   def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
     """Processes a data stream containing compressed stream types such as: bz2.

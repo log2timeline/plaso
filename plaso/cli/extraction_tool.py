@@ -66,6 +66,7 @@ class ExtractionTool(
       'iso9660': 'ISO-9660 disk image (.iso) file',
       'modi': 'MacOS disk image (.dmg) file',
       'tar': 'tape archive (.tar) file',
+      'vhdi': 'Virtual Hard Disk image (.vhd, .vhdx) file',
       'zip': 'ZIP archive (.zip) file'}
 
   def __init__(self, input_reader=None, output_writer=None):
