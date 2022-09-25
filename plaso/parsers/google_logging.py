@@ -190,7 +190,8 @@ class GoogleLogParser(
     event_data.message = self._GetValueFromStructure(structure, 'message')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):

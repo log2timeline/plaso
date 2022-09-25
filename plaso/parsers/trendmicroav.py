@@ -177,41 +177,37 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
           6-character string in the HHMMSS format.
 
     Returns:
-      dfdatetime_time_elements.TimestampElements: the parsed timestamp.
+      dfdatetime.TimeElements: date and time value.
 
     Raises:
       ValueError: if the date and time values cannot be parsed.
     """
-    # Check that the strings have the correct length.
     if len(date) != 8:
-      raise ValueError(
-          'Unsupported length of date string: {0!s}'.format(repr(date)))
+      raise ValueError('Unsupported date string: {0!s}'.format(date))
 
-    if len(time) < 3 or len(time) > 4:
-      raise ValueError(
-          'Unsupported length of time string: {0!s}'.format(repr(time)))
+    # The time consist of a hours and minutes value where the hours value has
+    # no leading zero.
+    if len(time) not in (3, 4):
+      raise ValueError('Unsupported time string: {0!s}'.format(time))
 
-    # Extract the date.
     try:
       year = int(date[:4], 10)
       month = int(date[4:6], 10)
       day = int(date[6:8], 10)
     except (TypeError, ValueError):
-      raise ValueError('Unable to parse date string: {0!s}'.format(repr(date)))
+      raise ValueError('Unable to parse date string: {0!s}'.format(date))
 
-    # Extract the time. Note that a single-digit hour value has no leading zero.
     try:
       hour = int(time[:-2], 10)
       minutes = int(time[-2:], 10)
     except (TypeError, ValueError):
-      raise ValueError('Unable to parse time string: {0!s}'.format(repr(date)))
+      raise ValueError('Unable to parse time string: {0!s}'.format(date))
 
     time_elements_tuple = (year, month, day, hour, minutes, 0)
     date_time = dfdatetime_time_elements.TimeElements(
+        precision=dfdatetime_definitions.PRECISION_1_MINUTE,
         time_elements_tuple=time_elements_tuple)
     date_time.is_local_time = True
-    # TODO: add functionality to dfdatetime to control precision.
-    date_time._precision = dfdatetime_definitions.PRECISION_1_MINUTE  # pylint: disable=protected-access
 
     return date_time
 
@@ -239,8 +235,8 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    timestamp = self._ParseTimestamp(parser_mediator, row)
-    if timestamp is None:
+    date_time = self._ParseTimestamp(parser_mediator, row)
+    if date_time is None:
       return
 
     try:
@@ -262,7 +258,8 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     event_data.threat = row['threat']
 
     event = time_events.DateTimeValuesEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
+        time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):

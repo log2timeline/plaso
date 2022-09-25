@@ -35,7 +35,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # The shortcut last accessed event.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
-        'date_time': '2009-07-13 23:55:56.2481035',
+        'date_time': '2009-07-13T23:55:56.2481035+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
     self.CheckEventValues(storage_writer, events[121], expected_event_values)
@@ -43,7 +43,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # The shortcut creation event.
     expected_event_values = {
         'data_type': 'windows:lnk:link',
-        'date_time': '2009-07-13 23:55:56.2481035',
+        'date_time': '2009-07-13T23:55:56.2481035+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
     self.CheckEventValues(storage_writer, events[122], expected_event_values)
@@ -54,7 +54,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             '{DE3895CB-077B-4C38-B6E3-F3DE1E0D84FC} %systemroot%\\system32\\'
             'control.exe /name Microsoft.Display'),
         'data_type': 'windows:lnk:link',
-        'date_time': '2009-07-14 01:39:11.3880000',
+        'date_time': '2009-07-14T01:39:11.3880000+00:00',
         'description': '@%systemroot%\\system32\\oobefldr.dll,-1262',
         'drive_serial_number': 0x24ba718b,
         'drive_type': 3,
@@ -72,7 +72,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # A shell item event.
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
-        'date_time': '2010-11-10 07:41:04',
+        'date_time': '2010-11-10T07:41:04+00:00',
         'file_reference': '2331-1',
         'long_name': 'System32',
         'name': 'System32',
@@ -84,7 +84,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # A distributed link tracking event.
     expected_event_values = {
         'data_type': 'windows:distributed_link_tracking:creation',
-        'date_time': '2010-11-10 19:08:32.6562596',
+        'date_time': '2010-11-10T19:08:32.6562596+00:00',
         'mac_address': '00:0c:29:03:1e:1e',
         'origin': '5afe4de1b92fc382.customDestinations-ms',
         'uuid': 'e9215b24-ecfd-11df-a81c-000c29031e1e'}

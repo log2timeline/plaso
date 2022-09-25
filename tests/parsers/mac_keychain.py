@@ -37,7 +37,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'account_name': 'moxilo',
         'data_type': 'mac:keychain:application',
-        'date_time': '2014-01-26 14:51:48',
+        'date_time': '2014-01-26T14:51:48+00:00',
         'entry_name': 'Secret Application',
         'ssgp_hash': expected_ssgp,
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
@@ -46,7 +46,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'mac:keychain:application',
-        'date_time': '2014-01-26 14:52:29',
+        'date_time': '2014-01-26T14:52:29+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
@@ -82,7 +82,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'mac:keychain:application',
-        'date_time': '2014-01-26 14:53:29',
+        'date_time': '2014-01-26T14:53:29+00:00',
         'entry_name': 'Secret Note',
         'ssgp_hash': expected_ssgp,
         'text_description': 'secure note'}
@@ -95,7 +95,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'account_name': 'MrMoreno',
         'data_type': 'mac:keychain:internet',
-        'date_time': '2014-01-26 14:54:33',
+        'date_time': '2014-01-26T14:54:33+00:00',
         'entry_name': 'plaso.kiddaland.net',
         'protocol': 'http',
         'ssgp_hash': expected_ssgp,

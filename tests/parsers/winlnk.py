@@ -43,7 +43,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shortcut last accessed event.
     expected_event_values = {
-        'date_time': '2009-07-13 23:29:02.8491310',
+        'date_time': '2009-07-13T23:29:02.8491310+00:00',
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
@@ -58,7 +58,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shortcut creation event.
     expected_event_values = {
-        'date_time': '2009-07-13 23:29:02.8491310',
+        'date_time': '2009-07-13T23:29:02.8491310+00:00',
         'data_type': 'windows:lnk:link',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -66,7 +66,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shortcut last modification event.
     expected_event_values = {
-        'date_time': '2009-07-14 01:39:18.2200000',
+        'date_time': '2009-07-14T01:39:18.2200000+00:00',
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
@@ -81,7 +81,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A distributed link tracking creation event.
     expected_event_values = {
-        'date_time': '2009-07-14 05:45:20.5000123',
+        'date_time': '2009-07-14T05:45:20.5000123+00:00',
         'data_type': 'windows:distributed_link_tracking:creation',
         'mac_address': '00:1d:09:fa:5a:1c',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
@@ -109,7 +109,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shortcut creation event.
     expected_event_values = {
-        'date_time': '2009-06-05 20:13:20.0000000',
+        'date_time': '2009-06-05T20:13:20.0000000+00:00',
         'data_type': 'windows:lnk:link',
         'description': (
             'Nero InfoTool provides you with information about the most '
@@ -137,7 +137,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     # A shell item event.
     expected_event_values = {
-        'date_time': '2009-06-05 20:13:20',
+        'date_time': '2009-06-05T20:13:20+00:00',
         'data_type': 'windows:shell_item:file_entry',
         'file_reference': '81349-1',
         'long_name': 'InfoTool.exe',

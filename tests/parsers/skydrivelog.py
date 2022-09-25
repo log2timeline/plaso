@@ -31,8 +31,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2013-07-25 16:03:23.291',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-07-25T16:03:23.291+00:00',
         'detail': (
             'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
             '2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom=')}
@@ -40,8 +40,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-07-25 16:03:24.649',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-07-25T16:03:24.649+00:00',
         'detail': 'Sign in failed : DRX_E_AUTH_NO_VALID_CREDENTIALS,',
         'log_level': 'ERR',
         'module': 'AUTH',
@@ -50,8 +50,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-08-01 21:27:44.124',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-01T21:27:44.124+00:00',
         'detail': (
             'Received data from server,dwID=0x0;dwSize=0x3e;pbData=PNG 9 '
             'CON 48  <ping-response><wait>44</wait></ping-response>'),
@@ -80,8 +80,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2013-07-25 16:04:02.669',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-07-25T16:04:02.669+00:00',
         'detail': (
             'No node found named Passport-Jméno-člena, no user name '
             'available,')}
@@ -107,20 +107,20 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2013-08-12 01:08:52.985',
-        'data_type': 'skydrive:log:line'}
+        'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-12T01:08:52.985+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-08-12 01:10:08.835',
-        'data_type': 'skydrive:log:line'}
+        'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-12T01:10:08.835+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-08-12 02:52:32.976',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-12T02:52:32.976+00:00',
         'detail': (
             'Received data from server,dwID=0x0;dwSize=0x15a;pbData=GET 5 '
             'WNS 331 Context: 2891  <channel-response><id>1;'
@@ -136,8 +136,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-08-12 03:18:57.232',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-12T03:18:57.232+00:00',
         'detail': (
             'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
             '2013-08-11-231857.232 PID=0x1ef0 TID=0x1ef4 ContinuedFrom=')}
@@ -145,8 +145,8 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[13], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-08-31 03:45:37.940',
         'data_type': 'skydrive:log:line',
+        'date_time': '2013-08-31T03:45:37.940+00:00',
         'detail': (
             ',output=GET <- /MyData/LiveFolders?Filter=changes&InlineBlobs='
             'false&MaxItemCount=50&SyncToken=LM%3d63511875645970%3bID%3d7F0'

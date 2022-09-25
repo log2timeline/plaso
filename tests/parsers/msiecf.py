@@ -52,7 +52,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'cache_directory_index': -2,
         'cached_file_size': 0,
         'data_type': 'msiecf:url',
-        'date_time': '2011-06-23 18:02:10.0660000',
+        'date_time': '2011-06-23T18:02:10.0660000+00:00',
         'number_of_hits': 6,
         'offset': 21376,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
@@ -64,21 +64,21 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'msiecf:url',
-        'date_time': '2011-06-23 18:02:10.0660000',
+        'date_time': '2011-06-23T18:02:10.0660000+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_event_values = {
         'data_type': 'msiecf:url',
-        'date_time': '2011-06-29 17:55:02',
+        'date_time': '2011-06-29T17:55:02+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION}
 
     self.CheckEventValues(storage_writer, events[10], expected_event_values)
 
     expected_event_values = {
         'data_type': 'msiecf:url',
-        'date_time': '2011-06-23 18:02:12',
+        'date_time': '2011-06-23T18:02:12+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED}
 
     self.CheckEventValues(storage_writer, events[11], expected_event_values)
@@ -113,7 +113,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'cached_file_size': 4286,
         'cached_filename': 'favicon[1].ico',
         'data_type': 'msiecf:url',
-        'date_time': '2010-11-10 07:54:32',
+        'date_time': '2010-11-10T07:54:32+00:00',
         'http_headers': (
             'HTTP/1.1 200 OK\r\n'
             'Content-Type: image/x-icon\r\n'
@@ -174,7 +174,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     # Test primary last visited time, in UTC, event.
     expected_event_values = {
-        'date_time': '2013-03-10 10:18:17.2810000',
+        'date_time': '2013-03-10T10:18:17.2810000+00:00',
         'timestamp': '2013-03-10 10:18:17.281000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
@@ -183,7 +183,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     # Test secondary last visited time, in local time, event.
     expected_event_values = {
-        'date_time': '2013-03-10 11:18:17.2810000',
+        'date_time': '2013-03-10T11:18:17.2810000',
         'timestamp': '2013-03-10 10:18:17.281000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
@@ -192,7 +192,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
 
     # Test last checked time event.
     expected_event_values = {
-        'date_time': '2013-03-10 10:18:18',
+        'date_time': '2013-03-10T10:18:18+00:00',
         'timestamp': '2013-03-10 10:18:18.000000',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED,
         'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}

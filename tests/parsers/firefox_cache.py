@@ -42,7 +42,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-04-21 14:13:35',
+        'date_time': '2014-04-21T14:13:35+00:00',
         'fetch_count': 2,
         'request_method': 'GET',
         'response_code': 'HTTP/1.0 200 OK',
@@ -86,7 +86,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-04-21 14:10:58'}
+        'date_time': '2014-04-21T14:10:58+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -115,7 +115,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-04-21 14:11:07',
+        'date_time': '2014-04-21T14:11:07+00:00',
         'url': (
              'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/'
              'jquery.min.js')}
@@ -164,7 +164,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-05-02 14:15:03',
+        'date_time': '2014-05-02T14:15:03+00:00',
         'request_method': 'GET',
         'response_code': 'HTTP/1.1 200 OK',
         'url': 'HTTP:http://start.mozilla.org/en-US/'}
@@ -192,7 +192,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-05-02 14:25:55'}
+        'date_time': '2014-05-02T14:25:55+00:00'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
@@ -217,7 +217,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2014-05-02 14:15:07'}
+        'date_time': '2014-05-02T14:15:07+00:00'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
@@ -247,7 +247,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2015-05-02 15:35:31',
+        'date_time': '2015-05-02T15:35:31+00:00',
         'fetch_count': 2,
         'request_method': 'GET',
         'response_code': 'HTTP/1.1 200 OK',
@@ -259,13 +259,13 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2015-05-02 15:35:31'}
+        'date_time': '2015-05-02T15:35:31+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'data_type': 'firefox:cache:record',
-        'date_time': '2016-05-01 15:35:31'}
+        'date_time': '2016-05-01T15:35:31+00:00'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
@@ -291,14 +291,14 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'url': '~predictor-origin,:http://github.com/',
         'data_type': 'firefox:cache:record',
-        'date_time': '2021-07-18 02:52:12'}
+        'date_time': '2021-07-18T02:52:12+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'url': '~predictor-origin,:http://github.com/',
         'data_type': 'firefox:cache:record',
-        'date_time': '2021-07-18 02:52:12'}
+        'date_time': '2021-07-18T02:52:12+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -315,14 +315,14 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'url': '~predictor-origin,:https://www.mozilla.org/',
         'data_type': 'firefox:cache:record',
-        'date_time': '2021-08-07 22:42:42'}
+        'date_time': '2021-08-07T22:42:42+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'url': '~predictor-origin,:https://www.mozilla.org/',
         'data_type': 'firefox:cache:record',
-        'date_time': '2021-08-07 22:42:44'}
+        'date_time': '2021-08-07T22:42:44+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 

@@ -49,7 +49,7 @@ class FileStatTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_names': ['security.selinux'],
         'data_type': 'fs:stat',
-        'date_time': '2021-07-22 14:07:32.842610820',
+        'date_time': '2021-07-22T14:07:32.842610820+00:00',
         'display_name': 'EXT:/passwords.txt',
         'file_entry_type': 'file',
         'file_size': 116,
@@ -95,7 +95,7 @@ class FileStatTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_names': None,
         'data_type': 'fs:stat',
-        'date_time': '2012-05-25 16:00:53',
+        'date_time': '2012-05-25T16:00:53+00:00',
         'display_name': 'TSK:/passwords.txt',
         'file_entry_type': 'file',
         'file_size': 116,
@@ -142,7 +142,7 @@ class FileStatTest(test_lib.ParserTestCase):
     expected_event_values = {
         'attribute_names': None,
         'data_type': 'fs:stat',
-        'date_time': '2013-12-03 06:30:42.9779097',
+        'date_time': '2013-12-03T06:30:42.9779097+00:00',
         'display_name': 'NTFS:\\$Extend\\$RmMetadata\\$TxfLog\\$TxfLog.blf',
         'file_entry_type': 'file',
         'file_size': 65536,
@@ -180,7 +180,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-24 14:45:24',
+        'date_time': '2012-07-24T14:45:24+00:00',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -220,7 +220,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-28 16:44:07',
+        'date_time': '2012-07-28T16:44:07+00:00',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -259,7 +259,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-24 21:45:24',
+        'date_time': '2012-07-24T21:45:24+00:00',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -300,7 +300,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-24 21:45:24',
+        'date_time': '2012-07-24T21:45:24+00:00',
         'display_name': 'TAR:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,
@@ -337,7 +337,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-28 16:44:43',
+        'date_time': '2012-07-28T16:44:43+00:00',
         'display_name': 'GZIP:{0:s}'.format(test_path),
         'file_entry_type': 'file',
         'file_size': 10240,
@@ -379,7 +379,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'fs:stat',
-        'date_time': '2012-07-20 15:44:14',
+        'date_time': '2012-07-20T15:44:14+00:00',
         'display_name': 'ZIP:/syslog',
         'file_entry_type': 'file',
         'file_size': 1247,

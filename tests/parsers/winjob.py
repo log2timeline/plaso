@@ -41,7 +41,7 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
-        'date_time': '2013-08-24 12:42:00.112',
+        'date_time': '2013-08-24T12:42:00.112+00:00',
         'data_type': 'windows:tasks:job',
         'comment': expected_comment,
         'parameters': '/ua /installsource scheduler',
@@ -53,9 +53,10 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
-        'date_time': '2013-07-12 15:42:00',
+        'date_time': '2013-07-12T15:42:00',
         'data_type': 'windows:tasks:job',
         'parameters': '/ua /installsource scheduler',
+        'timestamp': '2013-07-12 15:42:00.000000',
         'timestamp_desc': 'Scheduled to start',
         'trigger_type': 1,
         'username': 'Brian'}
@@ -83,7 +84,7 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_event_values = {
         'application': (
             'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe'),
-        'date_time': '2013-07-12 15:42:00',
+        'date_time': '2013-07-12T15:42:00',
         'data_type': 'windows:tasks:job',
         'parameters': '/ua /installsource scheduler',
         'timestamp': '2013-07-12 13:42:00.000000',

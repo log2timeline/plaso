@@ -37,21 +37,21 @@ class BashHistoryTest(test_lib.ParserTestCase):
     expected_event_values = {
         'command': '/usr/lib/plaso',
         'data_type': 'bash:history:command',
-        'date_time': '2013-10-01 12:36:17'}
+        'date_time': '2013-10-01T12:36:17+00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'command': '/bin/bash',
         'data_type': 'bash:history:command',
-        'date_time': '2013-10-01 12:36:18'}
+        'date_time': '2013-10-01T12:36:18+00:00'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'command': '/usr/local/bin/splunk -p 8080',
         'data_type': 'bash:history:command',
-        'date_time': '2013-10-01 12:36:19'}
+        'date_time': '2013-10-01T12:36:19+00:00'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 

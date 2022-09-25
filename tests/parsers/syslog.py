@@ -69,8 +69,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2016-01-22 07:54:32',
         'data_type': 'syslog:line',
+        'date_time': '2016-01-22T07:54:32',
         'hostname': 'myhostname.myhost.com',
         'reporter': 'Job',
         'severity': None}
@@ -99,8 +99,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2021-03-06 04:07:38.251122',
         'data_type': 'syslog:line',
+        'date_time': '2021-03-06T04:07:38.251122+00:00',
         'hostname': 'hostname',
         'reporter': 'log_tag',
         'severity': 'DEBUG'}
@@ -129,8 +129,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2021-03-06 04:07:28',
         'data_type': 'syslog:line',
+        'date_time': '2021-03-06T04:07:28',
         'hostname': 'hostname',
         'reporter': 'log_tag',
         'severity': None}
@@ -180,8 +180,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     # Note that syslog_chromeos contains -07:00 as time zone offset.
     expected_event_values = {
         'body': 'cleanup_logs: job completed',
-        'date_time': '2016-10-25 12:37:23.297265',
         'data_type': 'syslog:line',
+        'date_time': '2016-10-25T12:37:23.297265-07:00',
         'reporter': 'periodic_scheduler',
         'pid': 13707,
         'severity': 'INFO',
@@ -190,8 +190,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2016-10-25 12:37:24.987014',
         'data_type': 'syslog:line',
+        'date_time': '2016-10-25T12:37:24.987014-07:00',
         'reporter': 'kernel',
         'severity': 'DEBUG'}
 
@@ -199,16 +199,16 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     # Testing year increment.
     expected_event_values = {
-        'date_time': '2016-10-25 12:37:24.993079',
         'data_type': 'syslog:line',
+        'date_time': '2016-10-25T12:37:24.993079-07:00',
         'reporter': 'kernel',
         'severity': 'DEBUG'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2016-10-25 12:37:25.007963',
         'data_type': 'syslog:line',
+        'date_time': '2016-10-25T12:37:25.007963-07:00',
         'reporter': 'kernel',
         'severity': 'ERR'}
 
@@ -218,8 +218,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'body': (
             '[  316.587330] cfg80211: This is a multi-line\n\tmessage that '
             'screws up many syslog parsers.'),
-        'date_time': '2016-10-25 12:37:25.014015',
         'data_type': 'syslog:line',
+        'date_time': '2016-10-25T12:37:25.014015-07:00',
         'reporter': 'aprocess',
         'severity': 'INFO'}
 
@@ -247,8 +247,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': 'INFO No new content in ímynd.dd.',
-        'date_time': '2012-01-22 07:52:33',
         'data_type': 'syslog:line',
+        'date_time': '2012-01-22T07:52:33',
         'hostname': 'myhostname.myhost.com',
         'pid': 30840,
         'reporter': 'client',
@@ -257,8 +257,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2012-02-29 01:15:43',
         'data_type': 'syslog:line',
+        'date_time': '2012-02-29T01:15:43',
         'reporter': '---',
         'severity': None}
 
@@ -267,16 +267,16 @@ class SyslogParserTest(test_lib.ParserTestCase):
     # Testing year increment.
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
-        'date_time': '2013-03-23 23:01:18',
         'data_type': 'syslog:line',
+        'date_time': '2013-03-23T23:01:18',
         'reporter': 'somrandomexe',
         'severity': None}
 
     self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2013-12-31 17:54:32',
         'data_type': 'syslog:line',
+        'date_time': '2013-12-31T17:54:32',
         'reporter': '/sbin/anacron',
         'severity': None}
 
@@ -286,8 +286,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'body': (
             'This is a multi-line message that screws up\n\tmany syslog '
             'parsers.'),
-        'date_time': '2013-11-18 01:15:20',
         'data_type': 'syslog:line',
+        'date_time': '2013-11-18T01:15:20',
         'pid': 10100,
         'reporter': 'aprocess',
         'severity': None}
@@ -296,8 +296,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'body': '[997.390602] sda2: rw=0, want=65, limit=2',
-        'date_time': '2014-11-18 08:30:20',
         'data_type': 'syslog:line',
+        'date_time': '2014-11-18T08:30:20',
         'hostname': None,
         'reporter': 'kernel',
         'severity': None}
@@ -344,8 +344,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2016-01-22 07:54:32',
         'data_type': 'syslog:line',
+        'date_time': '2016-01-22T07:54:32',
         'hostname': 'myhostname.myhost.com',
         'reporter': 'Job',
         'severity': None,

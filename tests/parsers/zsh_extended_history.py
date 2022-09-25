@@ -32,23 +32,23 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'command': 'cd plaso',
-        'date_time': '2016-03-12 08:26:50',
         'data_type': 'shell:zsh:history',
+        'date_time': '2016-03-12T08:26:50+00:00',
         'elapsed_seconds': 0}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'command': 'echo dfgdfg \\\\\n& touch /tmp/afile',
-        'date_time': '2016-03-26 11:54:53',
         'data_type': 'shell:zsh:history',
+        'date_time': '2016-03-26T11:54:53+00:00',
         'elapsed_seconds': 0}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2016-03-26 11:54:57',
-        'data_type': 'shell:zsh:history'}
+        'data_type': 'shell:zsh:history',
+        'date_time': '2016-03-26T11:54:57+00:00'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
