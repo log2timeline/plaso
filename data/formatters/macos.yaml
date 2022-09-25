@@ -318,8 +318,8 @@ short_message: 'Installation of [{name} {version}] using [{process_name}] Packag
 ---
 type: 'basic'
 data_type: 'macos:launchd:entry'
-message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
-short_message: 'Launchd service config {name} points to {program} with user:{user} group:{group}'
+message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
 ---
 type: 'conditional'
 data_type: 'macos:software_updata:entry'
@@ -356,13 +356,15 @@ short_message:
 type: 'conditional'
 data_type: 'macos:user:entry'
 message:
-- 'User: {username} ({user_identifier})'
+- 'User: {username}'
+- '({user_identifier})'
 - 'Full name: {fullname}'
 - 'Home directory: {home_directory}'
 - 'Number of failed login attempts: {number_of_failed_login_attempts}'
 - 'Password hash: {password_hash}'
 short_message:
-- 'User: {username} ({user_identifier})'
+- 'User: {username}'
+- '({user_identifier})'
 - 'Full name: {fullname}'
 ---
 type: 'basic'
