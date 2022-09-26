@@ -223,17 +223,15 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       event_data.log_line = log_line.lstrip().rstrip()
 
     time_zone_string = self._GetValueFromStructure(structure, 'time_zone')
+    time_zone_string = self._PSQL_TIME_ZONE_MAPPING.get(
+        time_zone_string, time_zone_string)
 
     try:
       time_zone = pytz.timezone(time_zone_string)
     except pytz.UnknownTimeZoneError:
-      if time_zone_string in self._PSQL_TIME_ZONE_MAPPING:
-        time_zone = pytz.timezone(
-            self._PSQL_TIME_ZONE_MAPPING[time_zone_string])
-      else:
-        parser_mediator.ProduceExtractionWarning(
-            'unsupported time zone: {0!s}'.format(time_zone_string))
-        return
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported time zone: {0!s}'.format(time_zone_string))
+      return
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
