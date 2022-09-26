@@ -73,10 +73,9 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2009-08-04 15:19:16.9977500',
         'data_type': 'windows:registry:bagmru',
-        'entries': (
-            'Index: 1 [MRU Value 0]: Shell item path: <My Computer>'),
+        'date_time': '2009-08-04T15:19:16.9977500+00:00',
+        'entries': 'Index: 1 [MRU Value 0]: Shell item path: <My Computer>',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
@@ -84,14 +83,16 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-08-04 15:19:10.6696250',
+        'data_type': 'windows:registry:bagmru',
+        'date_time': '2009-08-04T15:19:10.6696250+00:00',
         'entries': (
             'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\')}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-08-04 15:19:16.9977500',
+        'data_type': 'windows:registry:bagmru',
+        'date_time': '2009-08-04T15:19:16.9977500+00:00',
         'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path)}
 
     self.CheckEventValues(storage_writer, events[14], expected_event_values)

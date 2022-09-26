@@ -87,8 +87,8 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         'c: [REG_SZ] C:/looks_legit.exe')
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.

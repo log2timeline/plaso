@@ -59,8 +59,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     # The ProgramsCache entry shell item event.
     expected_event_values = {
-        'date_time': '2009-08-04 15:12:24',
         'data_type': 'windows:shell_item:file_entry',
+        'date_time': '2009-08-04T15:12:24+00:00',
         'localized_name': '@shell32.dll,-21782',
         'long_name': 'Programs',
         'name': 'Programs',
@@ -95,8 +95,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '19: Internet Explorer (No Add-ons).lnk')
 
     expected_event_values = {
-        'date_time': '2009-08-04 15:22:18.4196250',
         'data_type': 'windows:registry:explorer:programcache',
+        'date_time': '2009-08-04T15:22:18.4196250+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         'parser': 'explorer_programscache',
@@ -113,8 +113,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'StartMenu_Start_Time: [REG_BINARY] (8 bytes)')
 
     expected_event_values = {
-        'date_time': '2009-08-04 15:22:18.4196250',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2009-08-04T15:22:18.4196250+00:00',
         'key_path': key_path,
         'parser': 'explorer_programscache',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
@@ -150,8 +150,8 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2010-11-10 07:50:38',
         'data_type': 'windows:shell_item:file_entry',
+        'date_time': '2010-11-10T07:50:38+00:00',
         'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}

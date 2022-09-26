@@ -161,8 +161,8 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:network_drive',
+        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'drive_letter': 'H',
         'key_path': key_path,
         'server_name': 'acme.local',

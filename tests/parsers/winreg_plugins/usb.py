@@ -47,8 +47,8 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-07 10:31:37.6252465',
         'data_type': 'windows:registry:usb',
+        'date_time': '2012-04-07T10:31:37.6252465+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.

@@ -51,8 +51,8 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2011-08-23 17:10:14.9609605',
         'data_type': 'windows:registry:mount_points2',
+        'date_time': '2011-08-23T17:10:14.9609605+00:00',
         'key_path': key_path,
         'label': 'Home Drive',
         'name': '##controller#home#nfury',

@@ -115,8 +115,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Group: [REG_SZ] Pnp Filter')
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:service',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'error_control': 1,
         'image_path': 'C:\\Dell\\testdriver.sys',
         'key_path': key_path,
@@ -158,8 +158,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(bits_events), 1)
 
     expected_event_values = {
-        'date_time': '2012-04-06 20:43:27.6390752',
         'data_type': 'windows:registry:service',
+        'date_time': '2012-04-06T20:43:27.6390752+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
@@ -179,8 +179,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(mc_task_manager_events), 1)
 
     expected_event_values = {
-        'date_time': '2011-09-16 20:49:16.8774156',
         'data_type': 'windows:registry:service',
+        'date_time': '2011-09-16T20:49:16.8774156+00:00',
         'service_type': 0x10}
 
     self.CheckEventValues(
@@ -202,8 +202,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(len(rdp_video_miniport_events), 1)
 
     expected_event_values = {
-        'date_time': '2011-09-17 13:37:59.3471577',
         'data_type': 'windows:registry:service',
+        'date_time': '2011-09-17T13:37:59.3471577+00:00',
         'image_path': 'System32\\drivers\\rdpvideominiport.sys',
         'start_type': 3}
 

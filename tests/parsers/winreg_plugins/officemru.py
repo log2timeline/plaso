@@ -87,8 +87,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-03-13 18:27:15.0898020',
         'data_type': 'windows:registry:office_mru_list',
+        'date_time': '2012-03-13T18:27:15.0898020+00:00',
         'entries': (
             'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
             'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
@@ -116,8 +116,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'SA-23E Mitchell-Hyundyne Starfury.docx')
 
     expected_event_values = {
-        'date_time': '2012-03-13 18:27:15.0830000',
         'data_type': 'windows:registry:office_mru',
+        'date_time': '2012-03-13T18:27:15.0830000+00:00',
         'key_path': key_path,
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'value_string': expected_value_string}

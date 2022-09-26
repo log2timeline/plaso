@@ -123,8 +123,8 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Index: 3 [MRU Value 1]: c:\\evil.exe')
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mrulistex',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
@@ -190,8 +190,8 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'Setup 3.6.12.exe')
 
     expected_event_values = {
-        'date_time': '2011-08-28 22:48:28.1593086',
         'data_type': 'windows:registry:mrulistex',
+        'date_time': '2011-08-28T22:48:28.1593086+00:00',
         'entries': expected_entries,
         'key_path': '{0:s}\\exe'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
@@ -202,8 +202,8 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     # A shell item event.
     expected_event_values = {
-        'date_time': '2012-03-08 22:16:02',
         'data_type': 'windows:shell_item:file_entry',
+        'date_time': '2012-03-08T22:16:02+00:00',
         'name': 'ALLOYR~1',
         'long_name': 'Alloy Research',
         'file_reference': '44518-33',
@@ -301,8 +301,8 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'Shell item: [wallpaper_medium.lnk]')
 
     expected_event_values = {
-        'date_time': '2012-04-01 13:52:39.1137417',
         'data_type': 'windows:registry:mrulistex',
+        'date_time': '2012-04-01T13:52:39.1137417+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
@@ -382,8 +382,8 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'Shell item path: <Users Libraries> <UNKNOWN: 0x00>')
 
     expected_event_values = {
-        'date_time': '2012-04-01 13:52:38.9662902',
         'data_type': 'windows:registry:mrulistex',
+        'date_time': '2012-04-01T13:52:38.9662902+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,

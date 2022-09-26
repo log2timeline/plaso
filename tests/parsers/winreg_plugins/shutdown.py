@@ -48,8 +48,8 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-04 01:58:40.8392499',
         'data_type': 'windows:registry:shutdown',
+        'date_time': '2012-04-04T01:58:40.8392499+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.

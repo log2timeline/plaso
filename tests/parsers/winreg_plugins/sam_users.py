@@ -50,8 +50,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
-        'date_time': '2014-09-24 03:36:06.3588374',
         'data_type': 'windows:registry:sam_users',
+        'date_time': '2014-09-24T03:36:06.3588374+00:00',
         'login_count': 6,
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'username': 'Administrator'}
@@ -62,8 +62,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
-        'date_time': '2010-11-20 21:48:12.5692440',
         'data_type': 'windows:registry:sam_users',
+        'date_time': '2010-11-20T21:48:12.5692440+00:00',
         'login_count': 6,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN,
         'username': 'Administrator'}
