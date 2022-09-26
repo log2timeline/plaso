@@ -14,6 +14,7 @@ from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
+
 class PostgreSQLEventData(events.EventData):
   """PostgreSQL application log data.
 
