@@ -99,12 +99,61 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
+  # Extracted from /usr/share/postgresql/13/timezonesets/Default
+  # See https://www.postgresql.org/docs/current/datetime-config-files.html
+  _PSQL_TIME_ZONE_MAPPING = {
+        'EAT': 'Africa/Addis_Ababa',
+        'SAST': 'Africa/Johannesburg',
+        'WAT': 'Africa/Bangui',
+        'AKDT': 'America/Anchorage',
+        'AKST': 'America/Anchorage',
+        'CDT': 'America/Chicago',
+        'CST': 'America/Chicago',
+        'EDT': 'America/Detroit',
+        'EST': 'America/Cancun',
+        'MDT': 'America/Boise',
+        'MST': 'America/Boise',
+        'NDT': 'America/St_Johns',
+        'NST': 'America/St_Johns',
+        'PDT': 'America/Dawson',
+        'PST': 'America/Dawson',
+        'HKT': 'Asia/Hong_Kong',
+        'IDT': 'Asia/Jerusalem',
+        'IST': 'Asia/Jerusalem',
+        'JST': 'Asia/Tokyo',
+        'KST': 'Asia/Seoul',
+        'PKT': 'Asia/Karachi',
+        'PKST': 'Asia/Karachi',
+        'ADT': 'America/Glace_Bay',
+        'AST': 'America/Anguilla',
+        'ACDT': 'Australia/Adelaide',
+        'ACST': 'Australia/Adelaide',
+        'AEDT': 'Australia/Brisbane',
+        'AEST': 'Australia/Brisbane',
+        'AWST': 'Australia/Perth',
+        'GMT': 'Africa/Abidjan',
+        'UCT': 'Etc/UCT',
+        'BST': 'Europe/London',
+        'CEST': 'Africa/Ceuta',
+        'CET': 'Africa/Algiers',
+        'CETDST': 'Africa/Ceuta',
+        'EEST': 'Africa/Cairo',
+        'EET': 'Africa/Cairo',
+        'EETDST': 'Africa/Cairo',
+        'MSK': 'Europe/Moscow',
+        'WET': 'Africa/Casablanca',
+        'WETDST': 'Atlantic/Canary',
+        'HST': 'Pacific/Honolulu',
+        'NZDT': 'Antarctica/McMurdo',
+        'NZST': 'Antarctica/McMurdo'
+    }
+
   def _BuildDateTime(self, time_elements_structure):
-    """Builds time elements from an APT History time stamp.
+    """Builds time elements from a PostgreSQL log time stamp.
 
     Args:
       time_elements_structure (pyparsing.ParseResults): structure of tokens
-          derived from an APT History time stamp.
+          derived from a PostgreSQL log time stamp.
 
     Returns:
       dfdatetime.TimeElements: date and time extracted from the structure or
@@ -176,12 +225,15 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     time_zone_string = self._GetValueFromStructure(structure, 'time_zone')
 
     try:
-      # TODO: PostgreSQL time zone to Python time zone mappings.
       time_zone = pytz.timezone(time_zone_string)
     except pytz.UnknownTimeZoneError:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported time zone: {0!s}'.format(time_zone_string))
-      return
+      if time_zone_string in self._PSQL_TIME_ZONE_MAPPING:
+        time_zone = pytz.timezone(
+            self._PSQL_TIME_ZONE_MAPPING[time_zone_string])
+      else:
+        parser_mediator.ProduceExtractionWarning(
+            'unsupported time zone: {0!s}'.format(time_zone_string))
+        return
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')

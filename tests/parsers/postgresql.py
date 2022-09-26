@@ -32,7 +32,7 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
     # Regular line
     expected_event_values = {
         'data_type': 'postgresql:application_log:entry',
-        'date_time': '2022-04-12 00:16:05.526000',
+        'date_time': '2022-04-12 00:16:05.526',
         'pid': '7755',
         'log_level': 'LOG',
         'log_line': (
@@ -66,7 +66,9 @@ class PostgreSQLParserTest(test_lib.ParserTestCase):
     # Other time zone
     expected_event_values = {
         'pid': '203851-1',
-        'date_time': '2022-07-15 13:04:27.000000',
+        # 2022-07-15 13:04:27 UTC
+        'date_time': '2022-07-15 23:04:27',
+        'timestamp': 1657890267000000,
         'log_level': 'LOG',
         'log_line': (
             'could not receive data from client: Connection reset by peer')}
