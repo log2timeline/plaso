@@ -36,7 +36,7 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
     # 17/Jun/2021:12:57:26 +0200
     expected_event_values = {
         'data_type': 'confluence:access',
-        'date_time': '2021-06-17 12:57:26',
+        'date_time': '2021-06-17T12:57:26+02:00',
         'forwarded_for': None,
         'http_request_referer': 'http://localhost/',
         'http_request_method': 'GET',
@@ -50,6 +50,7 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
         'process_duration': 1020,
         'remote_name': '192.168.192.1',
         'thread_name': 'http-nio-8080-exec-6',
+        'timestamp': '2021-06-17 10:57:26.000000',
         'user_name': 'user'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -78,7 +79,7 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
     # 17/Jun/2021:12:57:26 +0200
     expected_event_values = {
         'data_type': 'confluence:access',
-        'date_time': '2021-06-17 12:57:26',
+        'date_time': '2021-06-17T12:57:26+02:00',
         'forwarded_for': '192.168.1.15',
         'http_request_referer': 'http://localhost/',
         'http_request_method': 'GET',
@@ -92,6 +93,7 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
         'process_duration': 1020,
         'remote_name': '0:0:0:0:0:0:0:1',
         'thread_name': 'http-nio-8080-exec-6',
+        'timestamp': '2021-06-17 10:57:26.000000',
         'user_name': 'testuser'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

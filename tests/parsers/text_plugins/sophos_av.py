@@ -34,11 +34,12 @@ class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2010-07-20 18:38:14',
         'data_type': 'sophos:av:log',
+        'date_time': '2010-07-20T18:38:14',
         'text': (
             'File "C:\\Documents and Settings\\Administrator\\Desktop\\'
-            'sxl_test_50.com" belongs to virus/spyware \'LiveProtectTest\'.')}
+            'sxl_test_50.com" belongs to virus/spyware \'LiveProtectTest\'.'),
+        'timestamp': '2010-07-20 18:38:14.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -65,8 +66,8 @@ class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2010-07-20 18:38:14',
         'data_type': 'sophos:av:log',
+        'date_time': '2010-07-20T18:38:14',
         'text': (
             'File "C:\\Documents and Settings\\Administrator\\Desktop\\'
             'sxl_test_50.com" belongs to virus/spyware \'LiveProtectTest\'.'),

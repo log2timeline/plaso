@@ -34,7 +34,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'threadtime',
         'data_type': 'android:logcat',
-        'date_time': '1990-01-01 01:02:03.123000',
+        'date_time': '1990-01-01T01:02:03.123000+00:00',
         'message': 'test of default threadtime format',
         'pid': '1234',
         'priority': 'D',
@@ -45,7 +45,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'sometag',
         'data_type': 'android:logcat',
-        'date_time': '1990-01-02 01:02:04.156000',
+        'date_time': '1990-01-02T01:02:04.156000+00:00',
         'message': 'test of default time format',
         'pid': '190',
         'priority': 'I',
@@ -56,7 +56,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 01:20:03.171000',
+        'date_time': '2022-01-02T01:20:03.171000+00:00',
         'message': 'test of threadtime w/ UTC and year',
         'pid': '1885',
         'priority': 'E',
@@ -68,7 +68,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 01:20:03.171000',
+        'date_time': '2022-01-02T01:20:03.171000+00:00',
         'message': 'test of threadtime w/ UTC, year and uid',
         'pid': '1885',
         'priority': 'E',
@@ -80,7 +80,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 01:20:07.171997',
+        'date_time': '2022-01-02T01:20:07.171997+00:00',
         'message': 'test of threadtime w/ year, uid, usec',
         'pid': '1885',
         'priority': 'E',
@@ -92,11 +92,12 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'AppTag',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 11:20:07.171997',
+        'date_time': '2022-01-02T11:20:07.171997+10:00',
         'message': 'test of threadtime w/ year, zone, usec',
         'pid': '9346',
         'priority': 'E',
         'thread_identifier': '9347' ,
+        'timestamp': '2022-01-02 01:20:07.171997',
         'user_identifier': None}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)
@@ -104,11 +105,12 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'AppTag',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 11:42:10.613472',
+        'date_time': '2022-01-02T11:42:10.613472+10:00',
         'message': 'test of time w/ zone, uid, year',
         'pid': '1179',
         'priority': 'I',
         'thread_identifier': None,
+        'timestamp': '2022-01-02 01:42:10.613472',
         'user_identifier': '1080'}
 
     self.CheckEventValues(storage_writer, events[6], expected_event_values)
@@ -116,11 +118,12 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'component_tag': 'AppTag',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02 11:44:23.183801',
+        'date_time': '2022-01-02T11:44:23.183801+10:00',
         'message': 'test of time w/ zone, year',
         'pid': '1179',
         'priority': 'I',
         'thread_identifier': None,
+        'timestamp': '2022-01-02 01:44:23.183801',
         'user_identifier': None}
 
     self.CheckEventValues(storage_writer, events[7], expected_event_values)

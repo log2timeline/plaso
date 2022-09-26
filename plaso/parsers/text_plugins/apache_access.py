@@ -258,14 +258,21 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
               date_time_string, exception))
       return
 
+    remote_name = self._GetValueFromStructure(structure, 'remote_name')
+    if remote_name == '-':
+      remote_name = None
+
+    user_name = self._GetValueFromStructure(structure, 'user_name')
+    if user_name == '-':
+      user_name = None
+
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
 
     event_data = ApacheAccessEventData()
     event_data.ip_address = self._GetValueFromStructure(structure, 'ip_address')
-    event_data.remote_name = self._GetValueFromStructure(
-        structure, 'remote_name')
-    event_data.user_name = self._GetValueFromStructure(structure, 'user_name')
+    event_data.remote_name = remote_name
+    event_data.user_name = user_name
     event_data.http_request = self._GetValueFromStructure(
         structure, 'http_request')
     event_data.http_response_code = self._GetValueFromStructure(
@@ -274,8 +281,11 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         structure, 'response_bytes')
 
     if key in ('combined_log_format', 'vhost_combined_log_format'):
-      event_data.http_request_referer = self._GetValueFromStructure(
-          structure, 'referer')
+      referer = self._GetValueFromStructure(structure, 'referer')
+      if referer == '-':
+        referer = None
+
+      event_data.http_request_referer = referer
       event_data.http_request_user_agent = self._GetValueFromStructure(
           structure, 'user_agent')
 

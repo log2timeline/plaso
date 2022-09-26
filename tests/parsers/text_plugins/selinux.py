@@ -39,8 +39,8 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         'body': (
             'pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 '
             'new ses=1165'),
-        'date_time': '2012-05-24 07:40:01.174000',
         'data_type': 'selinux:line',
+        'date_time': '2012-05-24T07:40:01.174000+00:00',
         'pid': '25443'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
@@ -49,16 +49,16 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'audit_type': 'SHORTDATE',
         'body': 'check rounding',
-        'date_time': '2012-05-24 07:40:01.000000',
-        'data_type': 'selinux:line'}
+        'data_type': 'selinux:line',
+        'date_time': '2012-05-24T07:40:01.000000+00:00'}
 
     self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Test case: no message.
     expected_event_values = {
         'audit_type': 'NOMSG',
-        'date_time': '2012-05-24 07:40:22.174000',
-        'data_type': 'selinux:line'}
+        'data_type': 'selinux:line',
+        'date_time': '2012-05-24T07:40:22.174000+00:00'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
@@ -68,8 +68,8 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         'body': (
             'pid=25444 uid=0 old auid=4294967295 new auid=54321 old '
             'ses=4294967295 new ses=1166'),
-        'date_time': '2012-05-24 07:47:46.174000',
         'data_type': 'selinux:line',
+        'date_time': '2012-05-24T07:47:46.174000+00:00',
         'pid': '25444'}
 
     self.CheckEventValues(storage_writer, events[5], expected_event_values)

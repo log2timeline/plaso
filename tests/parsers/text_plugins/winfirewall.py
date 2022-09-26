@@ -34,16 +34,17 @@ class WinFirewallLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2005-04-11 08:06:02',
         'data_type': 'windows:firewall:log_entry',
+        'date_time': '2005-04-11T08:06:02',
         'dest_ip': '123.156.78.90',
-        'source_ip': '123.45.78.90'}
+        'source_ip': '123.45.78.90',
+        'timestamp': '2005-04-11 08:06:02.000000'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2005-04-11 08:06:26',
         'data_type': 'windows:firewall:log_entry',
+        'date_time': '2005-04-11T08:06:26',
         'dest_ip': '123.156.78.90',
         'dest_port': 1774,
         'flags': 'A',
@@ -86,8 +87,8 @@ class WinFirewallLogTextPluginTest(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'date_time': '2005-04-11 08:06:02',
         'data_type': 'windows:firewall:log_entry',
+        'date_time': '2005-04-11T08:06:02',
         'dest_ip': '123.156.78.90',
         'source_ip': '123.45.78.90',
         'timestamp': '2005-04-11 06:06:02.000000'}

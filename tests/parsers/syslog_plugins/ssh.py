@@ -32,7 +32,8 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     expected_event_values = {
-        'data_type': 'syslog:line'}
+        'data_type': 'syslog:line',
+        'date_time': '2016-03-11T00:00:00'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -46,31 +47,31 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
     expected_event_values = {
         'address': '192.168.0.1',
         'body': expected_body,
-        'date_time': '2016-03-11 19:26:39',
         'data_type': 'syslog:ssh:login',
+        'date_time': '2016-03-11T19:26:39',
         'fingerprint': expected_fingerprint}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
         'address': '001:db8:a0b:12f0::1',
-        'date_time': '2016-03-11 22:55:30',
         'data_type': 'syslog:ssh:failed_connection',
+        'date_time': '2016-03-11T22:55:30',
         'port': '8759'}
 
     self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     expected_event_values = {
         'address': '188.124.3.41',
-        'date_time': '2016-03-11 22:55:31',
-        'data_type': 'syslog:ssh:opened_connection'}
+        'data_type': 'syslog:ssh:opened_connection',
+        'date_time': '2016-03-11T22:55:31'}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
     expected_event_values = {
         'address': '192.0.2.60',
-        'date_time': '2016-03-11 22:55:34',
         'data_type': 'syslog:ssh:login',
+        'date_time': '2016-03-11T22:55:34',
         'port': '20042',
         'username': 'fred'}
 
@@ -107,8 +108,8 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
     expected_event_values = {
         'address': '192.168.0.1',
         'body': expected_body,
-        'date_time': '2016-03-11 19:26:39',
         'data_type': 'syslog:ssh:login',
+        'date_time': '2016-03-11T19:26:39',
         'fingerprint': expected_fingerprint,
         'timestamp': '2016-03-11 18:26:39.000000'}
 

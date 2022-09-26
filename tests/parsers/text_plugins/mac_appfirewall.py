@@ -38,8 +38,8 @@ class MacAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
         'action': 'creating /var/log/appfirewall.log',
         'agent': 'socketfilterfw[112]',
         'computer_name': 'DarkTemplar-2.local',
+        'date_time': '2013-11-02T04:07:35+00:00',
         'data_type': 'mac:appfirewall:line',
-        'date_time': '2013-11-02 04:07:35',
         'process_name': 'Logging',
         'status': 'Error'}
 
@@ -50,7 +50,7 @@ class MacAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
         'agent': 'socketfilterfw[87]',
         'computer_name': 'DarkTemplar-2.local',
         'data_type': 'mac:appfirewall:line',
-        'date_time': '2013-11-03 13:25:15',
+        'date_time': '2013-11-03T13:25:15+00:00',
         'process_name': 'Dropbox',
         'status': 'Info'}
 
@@ -72,13 +72,13 @@ class MacAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
     # Year changes.
     expected_event_values = {
         'data_type': 'mac:appfirewall:line',
-        'date_time': '2013-12-31 23:59:23'}
+        'date_time': '2013-12-31T23:59:23+00:00'}
 
     self.CheckEventValues(storage_writer, events[45], expected_event_values)
 
     expected_event_values = {
         'data_type': 'mac:appfirewall:line',
-        'date_time': '2014-01-01 01:13:23'}
+        'date_time': '2014-01-01T01:13:23+00:00'}
 
     self.CheckEventValues(storage_writer, events[46], expected_event_values)
 

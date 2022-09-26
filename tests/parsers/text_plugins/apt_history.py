@@ -35,13 +35,13 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-10 16:38:08'}
+        'date_time': '2019-07-10T16:38:08'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-10 16:38:12'}
+        'date_time': '2019-07-10T16:38:12'}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
@@ -50,7 +50,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
             'Commandline: apt-get -y install python-pip python3-pip python-dev '
             'python3-dev git tmux screen joe'),
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-11 12:20:55',
+        'date_time': '2019-07-11T12:20:55',
         'packages': (
             'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
             'manpages:amd64 (4.10-2, automatic), '
@@ -173,7 +173,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
             'Commandline: apt-get install -y docker-ce docker-ce-cli '
             'containerd.io'),
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-11 12:25:24',
+        'date_time': '2019-07-11T12:25:24',
         'error': 'Error: Sub-process /usr/bin/dpkg returned an error code (1)',
         'packages': (
             'Install: containerd.io:amd64 (1.2.6-3), linux-headers-4.9.0-9-'
@@ -194,7 +194,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'command': 'Commandline: apt-get remove volatility',
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-12 04:12:20',
+        'date_time': '2019-07-12T04:12:20',
         'packages': (
             'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)'),
         'requester': 'Requested-By: jxs (1005)'}
@@ -204,7 +204,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'command': 'Commandline: apt-get autoremove',
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-12 04:19:26',
+        'date_time': '2019-07-12T04:19:26',
         'packages': (
             'Remove: python-distorm3:amd64 (3.3.4-2), python-imaging:amd64 '
             '(4.0.0-4), python-py:amd64 (1.4.32-3), python-openpyxl:amd64 '
@@ -238,7 +238,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'apt:history:line',
-        'date_time': '2019-07-10 16:38:08',
+        'date_time': '2019-07-10T16:38:08',
         'timestamp': '2019-07-10 14:38:08.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

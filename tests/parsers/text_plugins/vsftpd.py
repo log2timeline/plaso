@@ -34,12 +34,13 @@ class VsftpdLogTextPluginText(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2016-06-10 14:24:19',
         'data_type': 'vsftpd:log',
+        'date_time': '2016-06-10T14:24:19',
         'text': (
             '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
             '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '
-            '49283 bytes, 931.38Kbyte/sec')}
+            '49283 bytes, 931.38Kbyte/sec'),
+        'timestamp': '2016-06-10 14:24:19.000000'}
 
     self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
@@ -66,8 +67,8 @@ class VsftpdLogTextPluginText(test_lib.TextPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2016-06-10 14:24:19',
         'data_type': 'vsftpd:log',
+        'date_time': '2016-06-10T14:24:19',
         'text': (
             '[pid 3] [jean] OK DOWNLOAD: Client "192.168.1.7", '
             '"/home/jean/trains/how-thomas-the-tank-engine-works-1.jpg", '

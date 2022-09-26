@@ -453,7 +453,7 @@ class SantaTextPlugin(interface.TextPlugin):
     elif key == 'umount_line':
       event_data = SantaMountEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
-      event_data.mount = self._GetValueFromStructure(structure, 'mount')
+      event_data.mount = self._GetValueFromStructure(structure, 'mount') or None
       event_data.volume = self._GetValueFromStructure(structure, 'volume')
       event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
 
@@ -463,12 +463,13 @@ class SantaTextPlugin(interface.TextPlugin):
     elif key == 'mount_line':
       event_data = SantaMountEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
-      event_data.mount = self._GetValueFromStructure(structure, 'mount')
+      event_data.mount = self._GetValueFromStructure(structure, 'mount') or None
       event_data.volume = self._GetValueFromStructure(structure, 'volume')
       event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
       event_data.fs = self._GetValueFromStructure(structure, 'fs')
       event_data.model = self._GetValueFromStructure(structure, 'model')
-      event_data.serial = self._GetValueFromStructure(structure, 'serial')
+      event_data.serial = self._GetValueFromStructure(
+          structure, 'serial') or None
       event_data.bus = self._GetValueFromStructure(structure, 'bus')
       event_data.dmg_path = self._GetValueFromStructure(structure, 'dmg_path')
       event_data.appearance = self._GetValueFromStructure(

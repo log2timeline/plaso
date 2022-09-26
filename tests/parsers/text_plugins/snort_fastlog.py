@@ -42,7 +42,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': None,
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2021-12-28 12:55:38.765402',
+        'date_time': '2021-12-28T12:55:38.765402',
         'destination_ip': '2001:4860:4860:0:0:0:0:8888',
         'message': 'PROTOCOL-ICMP PING Unix',
         'priority': 3,
@@ -62,7 +62,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Misc activity',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2021-12-28 12:55:38.885027',
+        'date_time': '2021-12-28T12:55:38.885027',
         'destination_ip': '2001:df1:c200:c:0:0:0:35',
         'message': 'PROTOCOL-ICMP Echo Reply',
         #'priority': None,
@@ -82,7 +82,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Executable code was detected',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2022-01-02 11:30:23.358639',
+        'date_time': '2022-01-02T11:30:23.358639',
         'destination_ip': '10.6.6.103',
         'destination_port': 60884,
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
@@ -104,7 +104,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Attempted Information Leak',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2022-02-04 23:41:31.115933',
+        'date_time': '2022-02-04T23:41:31.115933',
         'destination_ip': '2001:4860:4860:0:0:0:0:8888',
         'destination_port': 80,
         'message': 'MALWARE-CNC outbound connection',
@@ -145,7 +145,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Web Application Attack',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2010-05-10 10:08:59.667372',
+        'date_time': '2010-05-10T10:08:59.667372',
         'destination_ip': '192.168.1.4',
         'destination_port': 56068,
         'message': (
@@ -169,7 +169,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': None,
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2021-12-28 12:55:38.765402',
+        'date_time': '2021-12-28T12:55:38.765402',
         'destination_ip': '2001:4860:4860:0:0:0:0:8888',
         'message': 'PROTOCOL-ICMP PING Unix',
         'priority': 3,
@@ -189,7 +189,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Misc activity',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2021-12-28 12:55:38.885027',
+        'date_time': '2021-12-28T12:55:38.885027',
         'destination_ip': '2001:df1:c200:c:0:0:0:35',
         'message': 'PROTOCOL-ICMP Echo Reply',
         'priority': None,
@@ -209,7 +209,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Executable code was detected',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2022-01-02 11:30:23.358639',
+        'date_time': '2022-01-02T11:30:23.358639',
         'destination_ip': '10.6.6.103',
         'destination_port': 60884,
         'message': 'INDICATOR-SHELLCODE x86 NOOP',
@@ -232,7 +232,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'classification': 'Attempted Information Leak',
         'data_type': 'snort:fastlog:alert',
-        'date_time': '2022-02-04 23:41:31.115933',
+        'date_time': '2022-02-04T23:41:31.115933',
         'destination_ip': '2001:4860:4860:0:0:0:0:8888',
         'destination_port': 80,
         'message': 'MALWARE-CNC outbound connection',
@@ -243,6 +243,8 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
         'source_port': 60884}
 
     self.CheckEventValues(storage_writer, events[4], expected_event_values)
+
+  # TODO: add with time zone test.
 
 
 if __name__ == '__main__':
