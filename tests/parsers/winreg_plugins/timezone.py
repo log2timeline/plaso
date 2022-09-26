@@ -149,8 +149,8 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'configuration': expected_configuration,
-        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:timezone',
+        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
@@ -195,7 +195,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'configuration': expected_configuration,
         'data_type': 'windows:registry:timezone',
-        'date_time': '2012-03-11 07:00:00.0006424',
+        'date_time': '2012-03-11T07:00:00.0006424+00:00',
         'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

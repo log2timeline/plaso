@@ -83,8 +83,8 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
         '1: C:\\Downloads\\plaso-static.rar')
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'winrar:history',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,

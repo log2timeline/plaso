@@ -303,8 +303,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2004-08-04 14:00:00.0000000',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2004-08-04T14:00:00.0000000+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll'}
@@ -335,8 +335,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2003-03-24 20:32:18.0000000',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2003-03-24T20:32:18.0000000+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': (
@@ -370,8 +370,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2006-11-02 12:35:24.7041218',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2006-11-02T12:35:24.7041218+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'}
@@ -408,8 +408,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-04 01:46:37.9329644',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2012-04-04T01:46:37.9329644+00:00',
         'entry_index': 10,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
@@ -444,8 +444,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-02-18 05:18:23.9350000',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2012-02-18T05:18:23.9350000+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'}
@@ -476,8 +476,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2013-08-22 12:35:25.3750709',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2013-08-22T12:35:25.3750709+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': 'SYSVOL\\Windows\\System32\\dllhost.exe'}
@@ -508,8 +508,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2014-09-22 06:42:39.0000000',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2014-09-22T06:42:39.0000000+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': 'C:\\Windows\\system32\\MpSigStub.exe'}
@@ -540,8 +540,8 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2017-03-16 22:56:01.2487145',
         'data_type': 'windows:registry:appcompatcache',
+        'date_time': '2017-03-16T22:56:01.2487145+00:00',
         'entry_index': 1,
         'key_path': self._TEST_KEY_PATH,
         'path': (

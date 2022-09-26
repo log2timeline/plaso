@@ -51,8 +51,8 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2009-07-14 04:53:25.8116181',
         'data_type': 'task_scheduler:task_cache:entry',
+        'date_time': '2009-07-14T04:53:25.8116181+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
@@ -63,8 +63,8 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2009-07-14 05:08:50.8116269',
         'data_type': 'task_scheduler:task_cache:entry',
+        'date_time': '2009-07-14T05:08:50.8116269+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.

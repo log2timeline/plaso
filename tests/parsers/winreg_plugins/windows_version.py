@@ -122,8 +122,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'RegisteredOwner: [REG_SZ] A Concerned Citizen')
 
     expected_event_values = {
-        'date_time': '2012-08-31 20:09:55.1235210',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2012-08-31T20:09:55.1235210+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
@@ -134,8 +134,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2012-08-31 20:09:55',
         'data_type': 'windows:registry:installation',
+        'date_time': '2012-08-31T20:09:55+00:00',
         'key_path': key_path,
         'owner': 'A Concerned Citizen',
         'product_name': 'MyTestOS',
@@ -194,8 +194,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'SystemRoot: [REG_SZ] C:\\Windows')
 
     expected_event_values = {
-        'date_time': '2012-03-15 07:09:20.6718750',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2012-03-15T07:09:20.6718750+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.

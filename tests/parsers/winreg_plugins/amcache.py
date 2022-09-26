@@ -60,7 +60,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
-        'date_time': '1992-06-19 22:22:17',
+        'date_time': '1992-06-19T22:22:17+00:00',
         'full_path': expected_full_path,
         'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
@@ -69,7 +69,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache:programs',
-        'date_time': '2017-08-01 12:52:59',
+        'date_time': '2017-08-01T12:52:59+00:00',
         'entry_type': 'AddRemoveProgram',
         'file_paths': [
             'c:\\program files (x86)\\fileinsight\\plugins',
@@ -115,7 +115,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
-        'date_time': '1997-01-10 22:26:24',
+        'date_time': '1997-01-10T22:26:24+00:00',
         'full_path': 'c:\\windows\\system32\\svchost.exe',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
 

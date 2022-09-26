@@ -122,8 +122,8 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:boot_execute',
+        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
@@ -143,8 +143,8 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'NumberOfInitialSessions: [REG_SZ] 2')
 
     expected_event_values = {
-        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'key_path': key_path,
         'values': expected_values}
 
@@ -213,8 +213,8 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-08-31 20:45:29.0000000',
         'data_type': 'windows:registry:boot_verification',
+        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,

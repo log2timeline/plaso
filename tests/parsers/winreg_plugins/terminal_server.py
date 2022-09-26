@@ -86,8 +86,8 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mstsc:connection',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'key_path': '{0:s}\\myserver.com'.format(key_path),
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
@@ -97,8 +97,8 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:key_value',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'key_path': key_path,
         'values': None}
 
@@ -166,8 +166,8 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         'MRU1: computer.domain.com')
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mstsc:mru',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': expected_entries,
         'key_path': key_path,
         # This should just be the plugin name, as we're invoking it directly,

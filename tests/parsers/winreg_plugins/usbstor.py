@@ -48,8 +48,8 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-07 10:31:37.6408714',
         'data_type': 'windows:registry:usbstor',
+        'date_time': '2012-04-07T10:31:37.6408714+00:00',
         'device_type': 'Disk',
         'display_name': 'HP v100w USB Device',
         'key_path': key_path,

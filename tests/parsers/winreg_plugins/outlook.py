@@ -84,8 +84,8 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:outlook_search_mru',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': (
             'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
             'username@example.com.ost: 0x00372bcf'),

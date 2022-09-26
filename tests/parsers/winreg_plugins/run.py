@@ -81,8 +81,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-05 17:03:53.9920616',
         'data_type': 'windows:registry:run',
+        'date_time': '2012-04-05T17:03:53.9920616+00:00',
         'entries': [
             'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'],
         # This should just be the plugin name, as we're invoking it directly,
@@ -119,8 +119,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-05 17:03:53.9920616',
         'data_type': 'windows:registry:run',
+        'date_time': '2012-04-05T17:03:53.9920616+00:00',
         'entries': [
             'mctadmin: C:\\Windows\\System32\\mctadmin.exe'],
         # This should just be the plugin name, as we're invoking it directly,
@@ -157,8 +157,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2011-09-16 20:57:09.0675758',
         'data_type': 'windows:registry:run',
+        'date_time': '2011-09-16T20:57:09.0675758+00:00',
         'entries': [
             ('McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\'
              'McAfee\\Host Intrusion Prevention\\FireTray.exe"'),
@@ -200,8 +200,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-04-06 14:07:27.7500000',
         'data_type': 'windows:registry:run',
+        'date_time': '2012-04-06T14:07:27.7500000+00:00',
         'entries': [
             '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'],
         # This should just be the plugin name, as we're invoking it directly,

@@ -111,8 +111,8 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mrulist',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': (
             'Index: 1 [MRU Value a]: Some random text here '
             'Index: 2 [MRU Value c]: C:/looks_legit.exe '
@@ -208,8 +208,8 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
 
     # A MRUList event.
     expected_event_values = {
-        'date_time': '2012-08-28 09:23:49.0020310',
         'data_type': 'windows:registry:mrulist',
+        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': (
             'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
             'C:\\Winnt\\Profiles\\Administrator\\Desktop'),
@@ -221,8 +221,8 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
 
     # A shell item event.
     expected_event_values = {
-        'date_time': '2011-01-14 12:03:52',
         'data_type': 'windows:shell_item:file_entry',
+        'date_time': '2011-01-14T12:03:52+00:00',
         'name': 'Winnt',
         'origin': key_path,
         'shell_item_path': '<My Computer> C:\\Winnt'}

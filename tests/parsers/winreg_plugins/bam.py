@@ -116,8 +116,8 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         'binary_path': (
             '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
             'v1.0\\powershell.exe'),
-        'date_time': '2019-03-19 13:25:26.1496853',
         'data_type': 'windows:registry:bam',
+        'date_time': '2019-03-19T13:25:26.1496853+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,

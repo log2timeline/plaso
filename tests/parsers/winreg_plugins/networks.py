@@ -226,8 +226,8 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'connection_type': 'Wired',
-        'date_time': '2014-05-06 17:02:19.795',
         'data_type': 'windows:registry:network',
+        'date_time': '2014-05-06T17:02:19.795+00:00',
         'default_gateway_mac': '00:50:56:ea:6c:ec',
         'description': 'Network',
         'dns_suffix': 'localdomain',
@@ -238,8 +238,8 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'connection_type': 'Wireless',
-        'date_time': '2015-01-27 15:15:27.965',
         'data_type': 'windows:registry:network',
+        'date_time': '2015-01-27T15:15:27.965+00:00',
         'description': 'My Awesome Wifi Hotspot',
         'ssid': 'My Awesome Wifi Hotspot',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CONNECTED}

@@ -320,8 +320,8 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'application': 'VmApplet',
         'command': 'SystemPropertiesPerformance.exe/pagefile',
-        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:winlogon',
+        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'key_path': key_path,
         'trigger': 'Logon'}
 
@@ -330,8 +330,8 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'application': 'NavLogon',
         'command': 'NavLogon.dll',
-        'date_time': '2013-01-30 10:47:57.0000000',
         'data_type': 'windows:registry:winlogon',
+        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
         'trigger': 'Logoff'}
 
