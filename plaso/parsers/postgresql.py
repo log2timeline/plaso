@@ -19,7 +19,7 @@ class PostgreSQLEventData(events.EventData):
   """PostgreSQL application log data.
 
   Attributes:
-    log_level (str): logging level of event
+    log_level (str): logging level of event.
     log_line (str): log message.
     pid (int): process identifier (PID).
     user (str): "user@database" string if present. Records the user account and
