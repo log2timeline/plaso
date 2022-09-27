@@ -103,51 +103,50 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   # Extracted from /usr/share/postgresql/13/timezonesets/Default
   # See https://www.postgresql.org/docs/current/datetime-config-files.html
   _PSQL_TIME_ZONE_MAPPING = {
-        'EAT': 'Africa/Addis_Ababa',
-        'SAST': 'Africa/Johannesburg',
-        'WAT': 'Africa/Bangui',
+        'ACDT': 'Australia/Adelaide',
+        'ACST': 'Australia/Adelaide',
+        'ADT': 'America/Glace_Bay',
+        'AEDT': 'Australia/Brisbane',
+        'AEST': 'Australia/Brisbane',
         'AKDT': 'America/Anchorage',
         'AKST': 'America/Anchorage',
+        'AST': 'America/Anguilla',
+        'AWST': 'Australia/Perth',
+        'BST': 'Europe/London',
         'CDT': 'America/Chicago',
+        'CEST': 'Africa/Ceuta',
+        'CET': 'Africa/Algiers',
+        'CETDST': 'Africa/Ceuta',
         'CST': 'America/Chicago',
+        'EAT': 'Africa/Addis_Ababa',
         'EDT': 'America/Detroit',
+        'EEST': 'Africa/Cairo',
+        'EET': 'Africa/Cairo',
+        'EETDST': 'Africa/Cairo',
         'EST': 'America/Cancun',
-        'MDT': 'America/Boise',
-        'MST': 'America/Boise',
-        'NDT': 'America/St_Johns',
-        'NST': 'America/St_Johns',
-        'PDT': 'America/Dawson',
-        'PST': 'America/Dawson',
+        'GMT': 'Africa/Abidjan',
         'HKT': 'Asia/Hong_Kong',
+        'HST': 'Pacific/Honolulu',
         'IDT': 'Asia/Jerusalem',
         'IST': 'Asia/Jerusalem',
         'JST': 'Asia/Tokyo',
         'KST': 'Asia/Seoul',
-        'PKT': 'Asia/Karachi',
-        'PKST': 'Asia/Karachi',
-        'ADT': 'America/Glace_Bay',
-        'AST': 'America/Anguilla',
-        'ACDT': 'Australia/Adelaide',
-        'ACST': 'Australia/Adelaide',
-        'AEDT': 'Australia/Brisbane',
-        'AEST': 'Australia/Brisbane',
-        'AWST': 'Australia/Perth',
-        'GMT': 'Africa/Abidjan',
-        'UCT': 'Etc/UCT',
-        'BST': 'Europe/London',
-        'CEST': 'Africa/Ceuta',
-        'CET': 'Africa/Algiers',
-        'CETDST': 'Africa/Ceuta',
-        'EEST': 'Africa/Cairo',
-        'EET': 'Africa/Cairo',
-        'EETDST': 'Africa/Cairo',
+        'MDT': 'America/Boise',
         'MSK': 'Europe/Moscow',
-        'WET': 'Africa/Casablanca',
-        'WETDST': 'Atlantic/Canary',
-        'HST': 'Pacific/Honolulu',
+        'MST': 'America/Boise',
+        'NDT': 'America/St_Johns',
+        'NST': 'America/St_Johns',
         'NZDT': 'Antarctica/McMurdo',
-        'NZST': 'Antarctica/McMurdo'
-    }
+        'NZST': 'Antarctica/McMurdo',
+        'PDT': 'America/Dawson',
+        'PKST': 'Asia/Karachi',
+        'PKT': 'Asia/Karachi',
+        'PST': 'America/Dawson',
+        'SAST': 'Africa/Johannesburg',
+        'UCT': 'Etc/UCT',
+        'WAT': 'Africa/Bangui',
+        'WET': 'Africa/Casablanca',
+        'WETDST': 'Atlantic/Canary'}
 
   def _BuildDateTime(self, time_elements_structure):
     """Builds time elements from a PostgreSQL log time stamp.
@@ -182,7 +181,6 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
                 year, month, day_of_month, hours, minutes, seconds,
                 milliseconds))
 
-      date_time.is_local_time = True
       return date_time
     except (TypeError, ValueError):
       return None
@@ -227,17 +225,23 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     time_zone_string = self._PSQL_TIME_ZONE_MAPPING.get(
         time_zone_string, time_zone_string)
 
-    try:
-      time_zone = pytz.timezone(time_zone_string)
-    except pytz.UnknownTimeZoneError:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported time zone: {0!s}'.format(time_zone_string))
-      return
+    time_zone = None
+    if time_zone_string != 'UTC':
+      try:
+        time_zone = pytz.timezone(time_zone_string)
+      except pytz.UnknownTimeZoneError:
+        parser_mediator.ProduceExtractionWarning(
+            'unsupported time zone: {0!s}'.format(time_zone_string))
+        return
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
     date_time = self._BuildDateTime(time_elements_structure)
+    if time_zone:
+      # TODO: set time_zone_offset in date_time instead of using local time.
+      date_time.is_local_time = True
+
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED, time_zone=time_zone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
