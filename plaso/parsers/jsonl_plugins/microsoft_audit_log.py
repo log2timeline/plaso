@@ -31,7 +31,7 @@ class MicrosoftAuditLogEventData(events.EventData):
     workload (str): Microsoft 365 service
   """
 
-  DATA_TYPE = "microsoft:auditlog:entry"
+  DATA_TYPE = "microsoft365:auditlog:entry"
 
   def __init__(self):
     """Initializes event data."""
