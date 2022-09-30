@@ -610,6 +610,17 @@ short_message:
 - '{status}'
 ---
 type: 'conditional'
+data_type: 'postgresql:application_log:entry'
+message:
+- 'PID {pid}'
+- '{user}'
+- '{log_level}'
+- '{log_line}'
+short_message:
+- '{log_level}'
+- '{log_line}'
+---
+type: 'conditional'
 data_type: 'santa:diskmount'
 message:
 - 'Santa {action}'

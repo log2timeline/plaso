@@ -168,6 +168,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * MacOS Securityd
 * MacOS Wifi
 * Popularity Contest log
+* PostgreSQL application log
 * Santa logs
 * SELinux audit logs
 * Windows SetupAPI log file

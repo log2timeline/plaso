@@ -1,0 +1,22 @@
+2022-04-12 00:16:05.526 UTC [7755] LOG:  starting PostgreSQL 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit
+2022-04-12 00:16:05.527 UTC [7755] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2022-04-12 00:16:05.529 UTC [7755] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2022-04-12 00:16:05.554 UTC [7756] LOG:  database system was shut down at 2022-04-12 00:16:03 UTC
+2022-04-12 00:16:05.562 UTC [7755] LOG:  database system is ready to accept connections
+2022-04-12 00:24:02.304 UTC [7755] LOG:  received fast shutdown request
+2022-04-12 00:24:02.307 UTC [7755] LOG:  aborting any active transactions
+2022-04-12 00:24:02.313 UTC [7755] LOG:  background worker "logical replication launcher" (PID 7762) exited with exit code 1
+2022-04-12 00:24:02.313 UTC [7757] LOG:  shutting down
+2022-04-12 00:24:02.330 UTC [7755] LOG:  database system is shut down
+2022-04-12 00:24:02.493 UTC [9130] LOG:  starting PostgreSQL 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, 64-bit
+2022-04-12 00:24:02.493 UTC [9130] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2022-04-12 00:24:02.496 UTC [9130] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2022-04-12 00:24:02.516 UTC [9131] LOG:  database system was shut down at 2022-04-12 00:24:02 UTC
+2022-04-12 00:24:02.524 UTC [9130] LOG:  database system is ready to accept connections
+2022-04-12 00:24:24.741 UTC [9158] postgres@postgres FATAL:  password authentication failed for user "postgres"
+2022-04-12 00:24:24.741 UTC [9158] postgres@postgres DETAIL:  User "postgres" has no password assigned.
+        Connection matched pg_hba.conf line 96: "host    all             all             127.0.0.1/32            md5"
+2022-04-12 00:25:37.732 UTC [9163] postgres@postgres FATAL:  password authentication failed for user "postgres"
+2022-04-12 00:25:37.732 UTC [9163] postgres@postgres DETAIL:  User "postgres" has no password assigned.
+        Connection matched pg_hba.conf line 96: "host    all             all             127.0.0.1/32            md5"
+2022-07-15 23:04:27 AEST [203851-1] user@databasename LOG:  could not receive data from client: Connection reset by peer
