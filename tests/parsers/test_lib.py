@@ -196,10 +196,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         value = getattr(event_data, name, None)
 
       if name == 'date_time' and value and isinstance(expected_value, str):
-        if 'T' in expected_value:
-          value = value.CopyToDateTimeStringISO8601()
-        else:
-          value = value.CopyToDateTimeString()
+        date_time_value = value.CopyToDateTimeStringISO8601()
+        if not date_time_value:
+          # Call CopyToDateTimeString to support semantic date time values.
+          date_time_value = value.CopyToDateTimeString()
+        value = date_time_value
 
       error_message = (
           'event value: "{0:s}" does not match expected value').format(name)
