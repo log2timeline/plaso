@@ -9,7 +9,7 @@ MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 # docker run -ti -v /data/:/data/ <container_id> log2timeline \
 #   /data/results/result.plaso /data/artifacts
 
-ARG PPA_TRACK=stable
+ARG PPA_TRACK=staging
 
 RUN dnf -y install dnf-plugins-core
 RUN dnf -y copr enable @gift/$PPA_TRACK
