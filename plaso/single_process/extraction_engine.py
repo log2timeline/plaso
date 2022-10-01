@@ -11,7 +11,9 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver
 
 from plaso.containers import counts
+from plaso.containers import event_registry
 from plaso.containers import event_sources
+from plaso.containers import time_events
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import logger
@@ -73,12 +75,12 @@ class SingleProcessEngine(engine.BaseEngine):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
-  def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
+  def _ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
 
     Args:
-      extraction_worker (worker.ExtractionWorker): extraction worker.
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
     """
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
@@ -92,7 +94,7 @@ class SingleProcessEngine(engine.BaseEngine):
           self.collection_filters_helper.excluded_file_system_find_specs)
 
     try:
-      extraction_worker.ProcessPathSpec(
+      self._extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
 
     except KeyboardInterrupt:
@@ -121,13 +123,81 @@ class SingleProcessEngine(engine.BaseEngine):
 
         self._StartStatusUpdateThread()
 
+  def _ProcessEventData(self, parser_mediator):
+    """Processes event data.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('process_event_data')
+
+    self._status = definitions.STATUS_INDICATOR_TIMELINING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('get_event_data')
+
+    event_data = self._storage_writer.GetFirstWrittenEventData()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming('get_event_data')
+
+    while event_data:
+      if self._abort:
+        break
+
+      attribute_mappings = (
+          event_registry.EventDataRegistry.GetAttributeMappings(
+              event_data.data_type))
+
+      if attribute_mappings:
+        event_data_identifier = event_data.GetIdentifier()
+
+        if event_data.parser:
+          parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
+        else:
+          parser_name = None
+
+        for attribute_name, time_description in attribute_mappings.items():
+          attribute_value = getattr(event_data, attribute_name, None)
+          if attribute_value:
+            event = time_events.DateTimeValuesEvent(
+                attribute_value, time_description)
+            event.SetEventDataIdentifier(event_data_identifier)
+
+            parser_mediator.ProduceEvent(event)
+
+            if parser_name:
+              parser_mediator.parsers_counter[parser_name] += 1
+            parser_mediator.parsers_counter['total'] += 1
+
+      # TODO: track number of consumed event data containers?
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming('get_event_data')
+
+      event_data = self._storage_writer.GetNextWrittenEventData()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming('get_event_data')
+
+    if self._abort:
+      self._status = definitions.STATUS_INDICATOR_ABORTED
+    else:
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming('process_event_data')
+
   def _ProcessSources(self, source_configurations, parser_mediator):
     """Processes the sources.
 
     Args:
       source_configurations (list[SourceConfigurationArtifact]): configurations
           of the sources to process.
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -175,8 +245,7 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      self._ProcessPathSpec(
-          self._extraction_worker, parser_mediator, event_source.path_spec)
+      self._ProcessPathSpec(parser_mediator, event_source.path_spec)
 
       self._number_of_consumed_sources += 1
 
@@ -339,6 +408,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     try:
       self._ProcessSources(source_configurations, parser_mediator)
+      self._ProcessEventData(parser_mediator)
 
     finally:
       # Stop the status update thread after close of the storage writer

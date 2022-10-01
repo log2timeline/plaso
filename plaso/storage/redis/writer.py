@@ -9,6 +9,41 @@ class RedisStorageWriter(writer.StorageWriter):
   """Redis-based storage writer."""
 
   # pylint: disable=redundant-returns-doc,useless-return
+  def GetFirstWrittenEventData(self):
+    """Retrieves the first event data that was written after open.
+
+    Using GetFirstWrittenEventData and GetNextWrittenEventData newly
+    added event data can be retrieved in order of addition.
+
+    Returns:
+      EventData: None as there are no newly written event data.
+
+    Raises:
+      IOError: if the storage writer is closed.
+      OSError: if the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Unable to read from closed storage writer.')
+
+    return None
+
+  # pylint: disable=redundant-returns-doc,useless-return
+  def GetNextWrittenEventData(self):
+    """Retrieves the next event data that was written after open.
+
+    Returns:
+      EventData: None as there are no newly written event data.
+
+    Raises:
+      IOError: if the storage writer is closed.
+      OSError: if the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Unable to read from closed storage writer.')
+
+    return None
+
+  # pylint: disable=redundant-returns-doc,useless-return
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 

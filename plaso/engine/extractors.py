@@ -142,7 +142,8 @@ class EventExtractor(object):
     """Parses a data stream of a file entry with a specific parser.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       parser (BaseParser): parser.
       file_entry (dfvfs.FileEntry): file entry.
       data_stream_name (str): data stream name.
@@ -162,7 +163,8 @@ class EventExtractor(object):
     """Parses a file entry with a specific parser.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       parser (BaseParser): parser.
       file_entry (dfvfs.FileEntry): file entry.
       file_object (Optional[file]): file-like object to parse.
@@ -219,7 +221,8 @@ class EventExtractor(object):
     """Parses a file entry with a specific parsers.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       parser_names (list[str]): names of parsers.
       file_entry (dfvfs.FileEntry): file entry.
       file_object (Optional[file]): file-like object to parse.
@@ -267,7 +270,8 @@ class EventExtractor(object):
     """Parses a data stream of a file entry with the enabled parsers.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
       data_stream_name (str): data stream name.
 
@@ -305,7 +309,8 @@ class EventExtractor(object):
     """Parses the file entry metadata such as file system data.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
     """
     if self._filestat_parser:
@@ -317,7 +322,8 @@ class EventExtractor(object):
     """Parses a metadata file.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
       data_stream_name (str): data stream name.
     """

@@ -5,7 +5,6 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import interface
 
 from tests import test_lib as shared_test_lib
 
@@ -58,9 +57,3 @@ def CreateEventsFromValues(event_values_list):
   """
   for event_values in event_values_list:
     yield CreateEventFromValues(event_values)
-
-
-class TestAttributeContainer(interface.AttributeContainer):
-  """Test attribute container."""
-
-  CONTAINER_TYPE = 'test_attribute_container'

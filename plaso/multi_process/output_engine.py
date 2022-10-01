@@ -5,6 +5,9 @@ import collections
 import heapq
 import os
 
+from dfdatetime import interface as dfdatetime_interface
+from dfvfs.path import path_spec as dfvfs_path_spec
+
 from plaso.containers import events
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
@@ -67,9 +70,11 @@ class PsortEventHeap(object):
             attribute_value is None):
           continue
 
-        # Note that support for event_data.pathspec is kept for backwards
-        # compatibility. The current value is event_data_stream.path_spec.
-        if attribute_name in ('path_spec', 'pathspec'):
+        # Ignore date and time values.
+        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+          continue
+
+        if isinstance(attribute_value, dfvfs_path_spec.PathSpec):
           attribute_value = attribute_value.comparable
 
         elif isinstance(attribute_value, dict):

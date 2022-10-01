@@ -397,12 +397,12 @@ class EventExtractionWorker(object):
     return scanner_object
 
   def _ExtractContentFromDataStream(
-      self, mediator, file_entry, data_stream_name):
+      self, parser_mediator, file_entry, data_stream_name):
     """Extracts content from a data stream.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry to extract its content.
       data_stream_name (str): name of the data stream whose content is to be
           extracted.
@@ -413,7 +413,7 @@ class EventExtractionWorker(object):
       self._processing_profiler.StartTiming('extracting')
 
     self._event_extractor.ParseDataStream(
-        mediator, file_entry, data_stream_name)
+        parser_mediator, file_entry, data_stream_name)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('extracting')
@@ -422,12 +422,13 @@ class EventExtractionWorker(object):
 
     self.last_activity_timestamp = time.time()
 
-  def _ExtractMetadataFromFileEntry(self, mediator, file_entry, data_stream):
+  def _ExtractMetadataFromFileEntry(
+      self, parser_mediator, file_entry, data_stream):
     """Extracts metadata from a file entry.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry to extract metadata from.
       data_stream (dfvfs.DataStream): data stream or None if the file entry
           has no data stream.
@@ -443,7 +444,7 @@ class EventExtractionWorker(object):
     if data_stream and not data_stream.IsDefault():
       return
 
-    display_name = mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     logger.debug(
         '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
             display_name))
@@ -453,19 +454,19 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('extracting')
 
-    self._event_extractor.ParseFileEntryMetadata(mediator, file_entry)
+    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('extracting')
 
     self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
-  def _GetArchiveTypes(self, mediator, path_spec):
+  def _GetArchiveTypes(self, parser_mediator, path_spec):
     """Determines if a data stream contains an archive such as: TAR or ZIP.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification of the data stream.
 
     Returns:
@@ -473,23 +474,24 @@ class EventExtractionWorker(object):
     """
     try:
       type_indicators = dfvfs_analyzer.Analyzer.GetArchiveTypeIndicators(
-          path_spec, resolver_context=mediator.resolver_context)
+          path_spec, resolver_context=parser_mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
 
       warning_message = (
           'analyzer failed to determine archive type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
+      parser_mediator.ProduceExtractionWarning(
+          warning_message, path_spec=path_spec)
 
     return type_indicators
 
-  def _GetStorageMediaImageTypes(self, mediator, path_spec):
+  def _GetStorageMediaImageTypes(self, parser_mediator, path_spec):
     """Determines if a data stream contains a storage media image such as: DMG.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification of the data stream.
 
     Returns:
@@ -498,23 +500,24 @@ class EventExtractionWorker(object):
     try:
       type_indicators = (
           dfvfs_analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
-              path_spec, resolver_context=mediator.resolver_context))
+              path_spec, resolver_context=parser_mediator.resolver_context))
     except IOError as exception:
       type_indicators = []
 
       warning_message = (
           'analyzer failed to determine storage media image type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
+      parser_mediator.ProduceExtractionWarning(
+          warning_message, path_spec=path_spec)
 
     return type_indicators
 
-  def _GetCompressedStreamTypes(self, mediator, path_spec):
+  def _GetCompressedStreamTypes(self, parser_mediator, path_spec):
     """Determines if a data stream contains a compressed stream such as: gzip.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification of the data stream.
 
     Returns:
@@ -524,14 +527,15 @@ class EventExtractionWorker(object):
     try:
       type_indicators = (
           dfvfs_analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-              path_spec, resolver_context=mediator.resolver_context))
+              path_spec, resolver_context=parser_mediator.resolver_context))
     except IOError as exception:
       type_indicators = []
 
       warning_message = (
           'analyzer failed to determine compressed stream type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
+      parser_mediator.ProduceExtractionWarning(
+          warning_message, path_spec=path_spec)
 
     return type_indicators
 
@@ -554,12 +558,12 @@ class EventExtractionWorker(object):
 
     return False
 
-  def _ProcessArchiveTypes(self, mediator, path_spec, type_indicators):
+  def _ProcessArchiveTypes(self, parser_mediator, path_spec, type_indicators):
     """Processes a data stream containing archive types such as: TAR or ZIP.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
       type_indicators(list[str]): dfVFS archive type indicators found in
           the data stream.
@@ -571,7 +575,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if number_of_type_indicators > 1:
-      display_name = mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
       logger.debug((
           'Found multiple format type indicators: {0:s} for archive file: '
           '{1:s}').format(type_indicators, display_name))
@@ -586,7 +590,8 @@ class EventExtractionWorker(object):
 
         warning_message = 'unsupported archive format: {0:s}'.format(
             type_indicator)
-        mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
+        parser_mediator.ProduceExtractionWarning(
+            warning_message, path_spec=path_spec)
 
       if process_archive:
         archive_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -594,7 +599,8 @@ class EventExtractionWorker(object):
 
         try:
           path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-              [archive_path_spec], resolver_context=mediator.resolver_context)
+              [archive_path_spec],
+              resolver_context=parser_mediator.resolver_context)
 
           for generated_path_spec in path_spec_generator:
             if self._abort:
@@ -603,7 +609,7 @@ class EventExtractionWorker(object):
             event_source = event_sources.FileEntryEventSource(
                 file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                 path_spec=generated_path_spec)
-            mediator.ProduceEventSource(event_source)
+            parser_mediator.ProduceEventSource(event_source)
 
             self.last_activity_timestamp = time.time()
 
@@ -611,16 +617,16 @@ class EventExtractionWorker(object):
           warning_message = (
               'unable to process archive file with error: {0!s}').format(
                   exception)
-          mediator.ProduceExtractionWarning(
+          parser_mediator.ProduceExtractionWarning(
               warning_message, path_spec=generated_path_spec)
 
   def _ProcessStorageMediaImageTypes(
-      self, mediator, path_spec, type_indicators):
+      self, parser_mediator, path_spec, type_indicators):
     """Processes a data stream containing storage media image types.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
       type_indicators(list[str]): dfVFS archive type indicators found in
           the data stream.
@@ -632,7 +638,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if number_of_type_indicators > 1:
-      display_name = mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
       logger.debug((
           'Found multiple format type indicators: {0:s} for storage media '
           'image file: {1:s}').format(type_indicators, display_name))
@@ -658,7 +664,7 @@ class EventExtractionWorker(object):
         warning_message = (
             'unsupported storage media image format: {0:s}').format(
                 type_indicator)
-        mediator.ProduceExtractionWarning(
+        parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=path_spec)
 
       if storage_media_image_path_spec:
@@ -675,7 +681,7 @@ class EventExtractionWorker(object):
             event_source = event_sources.FileEntryEventSource(
                 file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                 path_spec=base_path_spec)
-            mediator.ProduceEventSource(event_source)
+            parser_mediator.ProduceEventSource(event_source)
 
             self.last_activity_timestamp = time.time()
 
@@ -683,15 +689,16 @@ class EventExtractionWorker(object):
           warning_message = (
               'unable to process storage media image with error: {0!s}').format(
                   exception)
-          mediator.ProduceExtractionWarning(
+          parser_mediator.ProduceExtractionWarning(
               warning_message, path_spec=storage_media_image_path_spec)
 
-  def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
+  def _ProcessCompressedStreamTypes(
+      self, parser_mediator, path_spec, type_indicators):
     """Processes a data stream containing compressed stream types such as: bz2.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
       type_indicators(list[str]): dfVFS archive type indicators found in
           the data stream.
@@ -703,7 +710,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if number_of_type_indicators > 1:
-      display_name = mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
       logger.debug((
           'Found multiple format type indicators: {0:s} for '
           'compressed stream file: {1:s}').format(
@@ -732,23 +739,23 @@ class EventExtractionWorker(object):
         warning_message = (
             'unsupported compressed stream format type indicators: '
             '{0:s}').format(type_indicator)
-        mediator.ProduceExtractionWarning(
+        parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=path_spec)
 
       if compressed_stream_path_spec:
         event_source = event_sources.FileEntryEventSource(
             file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
             path_spec=compressed_stream_path_spec)
-        mediator.ProduceEventSource(event_source)
+        parser_mediator.ProduceEventSource(event_source)
 
         self.last_activity_timestamp = time.time()
 
-  def _ProcessDirectory(self, mediator, file_entry):
+  def _ProcessDirectory(self, parser_mediator, file_entry):
     """Processes a directory file entry.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry of the directory.
     """
     self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
@@ -768,7 +775,7 @@ class EventExtractionWorker(object):
         warning_message = (
             'unable to process directory entry: {0:s} with error: '
             '{1!s}').format(sub_file_entry.name, exception)
-        mediator.ProduceExtractionWarning(
+        parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=file_entry.path_spec)
         continue
 
@@ -782,7 +789,7 @@ class EventExtractionWorker(object):
           file_entry_type=sub_file_entry.entry_type,
           path_spec=sub_file_entry.path_spec)
 
-      mediator.ProduceEventSource(event_source)
+      parser_mediator.ProduceEventSource(event_source)
 
       self.last_activity_timestamp = time.time()
 
@@ -791,20 +798,20 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
-  def _ProcessFileEntry(self, mediator, file_entry):
+  def _ProcessFileEntry(self, parser_mediator, file_entry):
     """Processes a file entry.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
     """
-    display_name = mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     logger.debug(
         '[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
 
     if self._IsMetadataFile(file_entry):
-      self._ProcessMetadataFile(mediator, file_entry)
+      self._ProcessMetadataFile(parser_mediator, file_entry)
 
     else:
       file_entry_processed = False
@@ -819,29 +826,31 @@ class EventExtractionWorker(object):
                   data_stream.name, file_entry.type_indicator, display_name))
           continue
 
-        self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
+        self._ProcessFileEntryDataStream(
+            parser_mediator, file_entry, data_stream)
 
         file_entry_processed = True
 
       if not file_entry_processed:
         # For when the file entry does not contain a data stream.
-        self._ProcessFileEntryDataStream(mediator, file_entry, None)
+        self._ProcessFileEntryDataStream(parser_mediator, file_entry, None)
 
     logger.debug(
         '[ProcessFileEntry] done processing file entry: {0:s}'.format(
             display_name))
 
-  def _ProcessFileEntryDataStream(self, mediator, file_entry, data_stream):
+  def _ProcessFileEntryDataStream(
+      self, parser_mediator, file_entry, data_stream):
     """Processes a specific data stream of a file entry.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
       data_stream (dfvfs.DataStream): data stream or None if the file entry
           has no data stream.
     """
-    display_name = mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
     data_stream_name = getattr(data_stream, 'name', '') or ''
     logger.debug((
         '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
@@ -849,7 +858,7 @@ class EventExtractionWorker(object):
 
     event_data_stream = None
     if data_stream:
-      display_name = mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
 
       path_spec = copy.deepcopy(file_entry.path_spec)
       if not data_stream.IsDefault():
@@ -864,9 +873,9 @@ class EventExtractionWorker(object):
         self._AnalyzeDataStream(
             file_entry, data_stream.name, display_name, event_data_stream)
 
-    mediator.ProduceEventDataStream(event_data_stream)
+    parser_mediator.ProduceEventDataStream(event_data_stream)
 
-    self._ExtractMetadataFromFileEntry(mediator, file_entry, data_stream)
+    self._ExtractMetadataFromFileEntry(parser_mediator, file_entry, data_stream)
 
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
@@ -876,7 +885,7 @@ class EventExtractionWorker(object):
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
-      display_name = mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayName()
       logger.debug('Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
@@ -892,14 +901,14 @@ class EventExtractionWorker(object):
 
     if self._process_compressed_streams:
       compressed_stream_types = self._GetCompressedStreamTypes(
-          mediator, path_spec)
+          parser_mediator, path_spec)
 
     if not compressed_stream_types:
-      archive_types = self._GetArchiveTypes(mediator, path_spec)
+      archive_types = self._GetArchiveTypes(parser_mediator, path_spec)
 
     if not compressed_stream_types and not archive_types:
       storage_media_image_types = self._GetStorageMediaImageTypes(
-          mediator, path_spec)
+          parser_mediator, path_spec)
 
     if (not compressed_stream_types and not archive_types and
         not storage_media_image_types):
@@ -918,37 +927,37 @@ class EventExtractionWorker(object):
 
     if archive_types:
       if self._archive_types:
-        self._ProcessArchiveTypes(mediator, path_spec, archive_types)
+        self._ProcessArchiveTypes(parser_mediator, path_spec, archive_types)
 
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
         # ZIP files are the base of certain file formats like docx.
         self._ExtractContentFromDataStream(
-            mediator, file_entry, data_stream.name)
+            parser_mediator, file_entry, data_stream.name)
 
     elif compressed_stream_types:
       self._ProcessCompressedStreamTypes(
-          mediator, path_spec, compressed_stream_types)
+          parser_mediator, path_spec, compressed_stream_types)
 
     elif storage_media_image_types:
       if self._archive_types:
         self._ProcessStorageMediaImageTypes(
-            mediator, path_spec, storage_media_image_types)
+            parser_mediator, path_spec, storage_media_image_types)
 
     else:
       self._ExtractContentFromDataStream(
-          mediator, file_entry, data_stream.name)
+          parser_mediator, file_entry, data_stream.name)
 
-  def _ProcessMetadataFile(self, mediator, file_entry):
+  def _ProcessMetadataFile(self, parser_mediator, file_entry):
     """Processes a metadata file.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry of the metadata file.
     """
     self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
-    self._event_extractor.ParseFileEntryMetadata(mediator, file_entry)
+    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
@@ -960,12 +969,12 @@ class EventExtractionWorker(object):
       event_data_stream = events.EventDataStream()
       event_data_stream.path_spec = path_spec
 
-      mediator.ProduceEventDataStream(event_data_stream)
+      parser_mediator.ProduceEventDataStream(event_data_stream)
 
       self.last_activity_timestamp = time.time()
 
       self._event_extractor.ParseMetadataFile(
-          mediator, file_entry, data_stream.name)
+          parser_mediator, file_entry, data_stream.name)
 
   def _SetArchiveTypes(self, archive_types_string):
     """Sets the archive types.
@@ -1018,12 +1027,13 @@ class EventExtractionWorker(object):
     """
     return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 
-  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
+  def ProcessPathSpec(
+      self, parser_mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
       excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
          that are excluded from processing.
@@ -1032,32 +1042,32 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=mediator.resolver_context)
+        path_spec, resolver_context=parser_mediator.resolver_context)
 
     if file_entry is None:
-      display_name = mediator.GetDisplayNameForPathSpec(path_spec)
-      logger.warning(
-          'Unable to open file entry with path spec: {0:s}'.format(
-              display_name))
+      display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+      logger.warning('Unable to open file entry: {0:s}'.format(display_name))
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
     for find_spec in excluded_find_specs or []:
       if find_spec.CompareLocation(file_entry):
+        display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
         logger.info('Skipped: {0:s} because of exclusion filter.'.format(
-            file_entry.path_spec.location))
+            display_name))
         self.processing_status = definitions.STATUS_INDICATOR_IDLE
         return
 
-    mediator.SetFileEntry(file_entry)
+    parser_mediator.SetFileEntry(file_entry)
 
     try:
       if file_entry.IsDirectory():
-        self._ProcessDirectory(mediator, file_entry)
-      self._ProcessFileEntry(mediator, file_entry)
+        self._ProcessDirectory(parser_mediator, file_entry)
+
+      self._ProcessFileEntry(parser_mediator, file_entry)
 
     finally:
-      mediator.ResetFileEntry()
+      parser_mediator.ResetFileEntry()
 
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.STATUS_INDICATOR_IDLE

@@ -4,7 +4,6 @@
 import ast
 import collections
 import copy
-import itertools
 
 from plaso.containers import events
 from plaso.storage import identifiers
@@ -21,6 +20,7 @@ class FakeStore(interface.BaseStore):
   def __init__(self):
     """Initializes a fake (in-memory only) store."""
     super(FakeStore, self).__init__()
+    self._attribute_container_indexes = {}
     self._attribute_containers = {}
     self._is_open = False
 
@@ -83,6 +83,13 @@ class FakeStore(interface.BaseStore):
       containers = collections.OrderedDict()
       self._attribute_containers[container.CONTAINER_TYPE] = containers
 
+    container_indexes = self._attribute_container_indexes.get(
+        container.CONTAINER_TYPE, None)
+    if container_indexes is None:
+      container_indexes = []
+      self._attribute_container_indexes[container.CONTAINER_TYPE] = (
+          container_indexes)
+
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
@@ -92,8 +99,8 @@ class FakeStore(interface.BaseStore):
     lookup_key = identifier.CopyToString()
 
     # Make sure the fake storage preserves the state of the attribute container.
-    container = copy.deepcopy(container)
-    containers[lookup_key] = container
+    containers[lookup_key] = copy.deepcopy(container)
+    container_indexes.append(lookup_key)
 
   def Close(self):
     """Closes the store.
@@ -137,8 +144,11 @@ class FakeStore(interface.BaseStore):
     if index < 0 or index >= number_of_containers:
       return None
 
-    return next(itertools.islice(
-        containers.values(), index, number_of_containers))
+    container_indexes = self._attribute_container_indexes.get(
+        container_type, None)
+    lookup_key = container_indexes[index]
+
+    return containers[lookup_key]
 
   def GetAttributeContainers(self, container_type, filter_expression=None):
     """Retrieves a specific type of attribute containers.

@@ -14,8 +14,10 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import counts
+from plaso.containers import event_registry
 from plaso.containers import event_sources
 from plaso.containers import events
+from plaso.containers import time_events
 from plaso.containers import warnings
 from plaso.engine import extractors
 from plaso.lib import definitions
@@ -159,6 +161,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     super(ExtractionMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
+    self._extraction_worker = None
     self._maximum_number_of_containers = 50
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
@@ -244,6 +247,39 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           'utf-8', errors='backslashreplace')
 
     return path_spec_string
+
+  def _ProcessEventData(self, storage_writer, event_data):
+    """Processes event data.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      event_data (EventData): event data.
+    """
+    attribute_mappings = event_registry.EventDataRegistry.GetAttributeMappings(
+          event_data.data_type)
+
+    if attribute_mappings:
+      event_data_identifier = event_data.GetIdentifier()
+
+      if event_data.parser:
+        parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
+      else:
+        parser_name = None
+
+      for attribute_name, time_description in attribute_mappings.items():
+        attribute_value = getattr(event_data, attribute_name, None)
+        if attribute_value:
+          event = time_events.DateTimeValuesEvent(
+              attribute_value, time_description)
+          event.SetEventDataIdentifier(event_data_identifier)
+
+          storage_writer.AddAttributeContainer(event)
+
+          if parser_name:
+            self._parsers_counter[parser_name] += 1
+          self._parsers_counter['total'] += 1
+
+          self._number_of_produced_events += 1
 
   def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
     """Merges an attribute container from a task store into the storage writer.
@@ -353,8 +389,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._number_of_produced_events += 1
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      parser_name = container.parser.split('/')[-1]
+      parser_name = container.parser.rsplit('/', maxsplit=1)[-1]
       merge_helper.event_data_parser_mappings[lookup_key] = parser_name
+
+      # Generate events on merge.
+      self._ProcessEventData(storage_writer, container)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
       self._number_of_produced_sources += 1
