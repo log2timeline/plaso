@@ -16,14 +16,17 @@ class FileStatEventData(events.EventData):
   """File system stat event data.
 
   Attributes:
-    access_time (dfdatetime.DateTimeValues): file entry last access time.
-    added_time (dfdatetime.DateTimeValues): file entry added time.
+    access_time (dfdatetime.DateTimeValues): file entry last access date
+        and time.
+    added_time (dfdatetime.DateTimeValues): file entry added date and time.
     attribute_names ([str]): extended attribute names.
-    backup_time (dfdatetime.DateTimeValues): file entry backup time.
-    creation_time (dfdatetime.DateTimeValues): file entry creation time.
+    backup_time (dfdatetime.DateTimeValues): file entry backup date and time.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     change_time (dfdatetime.DateTimeValues): file entry inode change
-        (or metadata last modification) time.
-    deletion_time (dfdatetime.DateTimeValues): file entry deletion time.
+        (or metadata last modification) date and time.
+    deletion_time (dfdatetime.DateTimeValues): file entry deletion date
+        and time.
     display_name (str): display name.
     file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
@@ -34,7 +37,7 @@ class FileStatEventData(events.EventData):
     is_allocated (bool): True if the file is allocated.
     mode (int): access mode, equivalent to st_mode & 0x0fff.
     modification_time (dfdatetime.DateTimeValues): file entry last modification
-        time.
+        date and time.
     number_of_links (int): number of hard links, equivalent to st_nlink.
     owner_identifier (int): user identifier (UID) of the owner, equivalent to
         st_uid.

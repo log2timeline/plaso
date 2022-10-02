@@ -38,7 +38,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'date_time': '2009-07-13T23:55:56.2481035+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
-    self.CheckEventValues(storage_writer, events[121], expected_event_values)
+    self.CheckEventValues(storage_writer, events[105], expected_event_values)
 
     # The shortcut creation event.
     expected_event_values = {
@@ -46,7 +46,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'date_time': '2009-07-13T23:55:56.2481035+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[122], expected_event_values)
+    self.CheckEventValues(storage_writer, events[106], expected_event_values)
 
     # The shortcut last modification event.
     expected_event_values = {
@@ -67,7 +67,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'local_path': 'C:\\Windows\\System32\\GettingStarted.exe',
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[123], expected_event_values)
+    self.CheckEventValues(storage_writer, events[107], expected_event_values)
 
     # A shell item event.
     expected_event_values = {
@@ -78,8 +78,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'name': 'System32',
         'origin': '5afe4de1b92fc382.customDestinations-ms',
         'shell_item_path': '<My Computer> C:\\Windows\\System32'}
-
-    self.CheckEventValues(storage_writer, events[18], expected_event_values)
+    self.CheckEventValues(storage_writer, events[100], expected_event_values)
 
     # A distributed link tracking event.
     expected_event_values = {
@@ -89,7 +88,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'origin': '5afe4de1b92fc382.customDestinations-ms',
         'uuid': 'e9215b24-ecfd-11df-a81c-000c29031e1e'}
 
-    self.CheckEventValues(storage_writer, events[12], expected_event_values)
+    self.CheckEventValues(storage_writer, events[108], expected_event_values)
 
 
 if __name__ == '__main__':
