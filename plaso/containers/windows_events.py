@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 """Windows event data attribute containers."""
 
+from dfdatetime import uuid_time as dfdatetime_uuid_time
+
+from plaso.containers import event_registry
 from plaso.containers import events
+from plaso.lib import definitions
 
 
 class WindowsDistributedLinkTrackingEventData(events.EventData):
   """Windows distributed link event data attribute container.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     mac_address (str): MAC address stored in the UUID.
     origin (str): origin of the event (event source).
         E.g. the path of the corresponding LNK file or file reference
@@ -16,6 +22,9 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:distributed_link_tracking:creation'
+
+  ATTRIBUTE_MAPPINGS = {
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION}
 
   def __init__(self, uuid, origin):
     """Initializes an event object.
@@ -38,6 +47,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
 
     super(WindowsDistributedLinkTrackingEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.creation_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid.time)
     self.mac_address = mac_address
     # TODO: replace origin my something machine readable.
     self.origin = origin
@@ -79,3 +89,7 @@ class WindowsVolumeEventData(events.EventData):
     # TODO: replace origin with something machine readable.
     self.origin = None
     self.serial_number = None
+
+
+event_registry.EventDataRegistry.RegisterEventDataClasses([
+    WindowsDistributedLinkTrackingEventData])

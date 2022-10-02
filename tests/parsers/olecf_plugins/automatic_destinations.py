@@ -53,7 +53,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'pin_status': -1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[7], expected_event_values)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {
@@ -78,7 +78,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'origin': 'DestList entry at offset: 0x00000020',
         'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    self.CheckEventValues(storage_writer, events[46], expected_event_values)
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""

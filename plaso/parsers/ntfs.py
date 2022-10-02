@@ -6,12 +6,11 @@ import uuid
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import uuid_time as dfdatetime_uuid_time
 
 import pyfsntfs
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
@@ -25,14 +24,22 @@ class NTFSFileStatEventData(events.EventData):
   """NTFS file system stat event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): file entry last access date
+        and time.
     attribute_type (int): attribute type for example "0x00000030", which
         represents "$FILE_NAME".
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     display_name (str): display name.
+    entry_modification_time (dfdatetime.DateTimeValues): file entry
+         modification date and time.
     file_attribute_flags (int): NTFS file attribute flags.
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
     filename (str): name of the file.
     is_allocated (bool): True if the MFT entry is allocated (marked as in use).
+    modification_time (dfdatetime.DateTimeValues): file entry last modification
+        date and time.
     name (str): name associated with the stat event, for example that of
         a $FILE_NAME attribute or None if not available.
     parent_file_reference (int): NTFS file reference of the parent.
@@ -42,16 +49,27 @@ class NTFSFileStatEventData(events.EventData):
 
   DATA_TYPE = 'fs:stat:ntfs'
 
+  ATTRIBUTE_MAPPINGS = {
+      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'entry_modification_time': (
+          definitions.TIME_DESCRIPTION_METADATA_MODIFICATION),
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(NTFSFileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
     self.attribute_type = None
+    self.creation_time = None
     self.display_name = None
+    self.entry_modification_time = None
     self.file_attribute_flags = None
     self.file_reference = None
     self.file_system_type = 'NTFS'
     self.filename = None
     self.is_allocated = None
+    self.modification_time = None
     self.name = None
     self.parent_file_reference = None
     self.path_hints = None
@@ -72,9 +90,13 @@ class NTFSUSNChangeEventData(events.EventData):
     update_reason_flags (int): update reason flags.
     update_sequence_number (int): update sequence number.
     update_source_flags (int): update source flags.
+    update_time (dfdatetime.DateTimeValues): update date and time.
   """
 
   DATA_TYPE = 'fs:ntfs:usn_change'
+
+  ATTRIBUTE_MAPPINGS = {
+      'update_time': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -87,6 +109,7 @@ class NTFSUSNChangeEventData(events.EventData):
     self.update_reason_flags = None
     self.update_sequence_number = None
     self.update_source_flags = None
+    self.update_time = None
 
 
 class NTFSMFTParser(interface.FileObjectParser):
@@ -124,7 +147,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     Returns:
       dfdatetime.DateTimeValues: date and time.
     """
-    if filetime == 0:
+    if not filetime:
       return dfdatetime_semantic_time.NotSet()
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
@@ -144,10 +167,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     if uuid_object.version == 1:
       event_data = windows_events.WindowsDistributedLinkTrackingEventData(
           uuid_object, origin)
-      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseFileStatAttribute(
       self, parser_mediator, mft_entry, mft_attribute, path_hints):
@@ -175,65 +195,42 @@ class NTFSMFTParser(interface.FileObjectParser):
       event_data.parent_file_reference = mft_attribute.parent_file_reference
 
     try:
-      creation_time = mft_attribute.get_creation_time_as_integer()
-    except OverflowError as exception:
-      parser_mediator.ProduceExtractionWarning((
-          'unable to read the creation timestamp from MFT attribute: '
-          '0x{0:08x} with error: {1!s}').format(
-              mft_attribute.attribute_type, exception))
-      creation_time = None
-
-    if creation_time is not None:
-      date_time = self._GetDateTime(creation_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    try:
-      modification_time = mft_attribute.get_modification_time_as_integer()
-    except OverflowError as exception:
-      parser_mediator.ProduceExtractionWarning((
-          'unable to read the modification timestamp from MFT attribute: '
-          '0x{0:08x} with error: {1!s}').format(
-              mft_attribute.attribute_type, exception))
-      modification_time = None
-
-    if modification_time is not None:
-      date_time = self._GetDateTime(modification_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    try:
-      access_time = mft_attribute.get_access_time_as_integer()
+      filetime = mft_attribute.get_access_time_as_integer()
+      event_data.access_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
           'unable to read the access timestamp from MFT attribute: '
           '0x{0:08x} with error: {1!s}').format(
               exception, mft_attribute.attribute_type))
-      access_time = None
-
-    if access_time is not None:
-      date_time = self._GetDateTime(access_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     try:
-      entry_modification_time = (
-          mft_attribute.get_entry_modification_time_as_integer())
+      filetime = mft_attribute.get_creation_time_as_integer()
+      event_data.creation_time = self._GetDateTime(filetime)
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the creation timestamp from MFT attribute: '
+          '0x{0:08x} with error: {1!s}').format(
+              mft_attribute.attribute_type, exception))
+
+    try:
+      filetime = mft_attribute.get_entry_modification_time_as_integer()
+      event_data.entry_modification_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
           'unable to read the entry modification timestamp from MFT '
           'attribute: 0x{0:08x} with error: {1!s}').format(
               mft_attribute.attribute_type, exception))
-      entry_modification_time = None
 
-    if entry_modification_time is not None:
-      date_time = self._GetDateTime(entry_modification_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    try:
+      filetime = mft_attribute.get_modification_time_as_integer()
+      event_data.modification_time = self._GetDateTime(filetime)
+    except OverflowError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read the modification timestamp from MFT attribute: '
+          '0x{0:08x} with error: {1!s}').format(
+              mft_attribute.attribute_type, exception))
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseObjectIDAttribute(
       self, parser_mediator, mft_entry, mft_attribute):
@@ -388,6 +385,20 @@ class NTFSUsnJrnlParser(
   # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
   # seen to be used.
 
+  def _GetDateTime(self, filetime):
+    """Retrieves the date and time from a FILETIME timestamp.
+
+    Args:
+      filetime (int): FILETIME timestamp.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time.
+    """
+    if not filetime:
+      return dfdatetime_semantic_time.NotSet()
+
+    return dfdatetime_filetime.Filetime(timestamp=filetime)
+
   def _ParseUSNChangeJournal(self, parser_mediator, usn_change_journal):
     """Parses an USN change journal.
 
@@ -435,19 +446,12 @@ class NTFSUsnJrnlParser(
       event_data.filename = name_string
       event_data.offset = current_offset
       event_data.parent_file_reference = usn_record.parent_file_reference
+      event_data.update_time = self._GetDateTime(usn_record.update_date_time)
       event_data.update_reason_flags = usn_record.update_reason_flags
       event_data.update_sequence_number = usn_record.update_sequence_number
       event_data.update_source_flags = usn_record.update_source_flags
 
-      if not usn_record.update_date_time:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_filetime.Filetime(
-            timestamp=usn_record.update_date_time)
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
       usn_record_data = usn_change_journal.read_usn_record()
 
@@ -474,4 +478,6 @@ class NTFSUsnJrnlParser(
       fsntfs_volume.close()
 
 
+event_registry.EventDataRegistry.RegisterEventDataClasses([
+    NTFSFileStatEventData, NTFSUSNChangeEventData])
 manager.ParsersManager.RegisterParsers([NTFSMFTParser, NTFSUsnJrnlParser])

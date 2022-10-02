@@ -57,4 +57,6 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
     finally:
       olecf_file.close()
 
+    self._ProcessEventData(storage_writer)
+
     return storage_writer

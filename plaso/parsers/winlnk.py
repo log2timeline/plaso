@@ -7,7 +7,6 @@ import pylnk
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import uuid_time as dfdatetime_uuid_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -109,10 +108,7 @@ class WinLnkParser(interface.FileObjectParser):
     if uuid_object.version == 1:
       event_data = windows_events.WindowsDistributedLinkTrackingEventData(
           uuid_object, origin)
-      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Shortcut (LNK) file-like object.
