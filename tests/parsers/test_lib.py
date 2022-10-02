@@ -3,6 +3,7 @@
 
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dfvfs.file_io import fake_file_io
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -15,6 +16,7 @@ from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import knowledge_base
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -124,6 +126,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       if attribute_mappings:
         event_data_identifier = event_data.GetIdentifier()
 
+        number_of_events = 0
         for attribute_name, time_description in attribute_mappings.items():
           attribute_value = getattr(event_data, attribute_name, None)
           if attribute_value:
@@ -132,6 +135,18 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
             event.SetEventDataIdentifier(event_data_identifier)
 
             storage_writer.AddAttributeContainer(event)
+            number_of_events += 1
+
+        # Create a place holder event for event_data without date and time
+        # values to map.
+        # TODO: add extraction option to control this behavior.
+        if not number_of_events:
+          date_time = dfdatetime_semantic_time.NotSet()
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+          event.SetEventDataIdentifier(event_data_identifier)
+
+          storage_writer.AddAttributeContainer(event)
 
       event_data = storage_writer.GetNextWrittenEventData()
 

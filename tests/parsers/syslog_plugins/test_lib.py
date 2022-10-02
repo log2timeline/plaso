@@ -43,4 +43,6 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     file_object = file_entry.GetFileObject()
     parser.Parse(parser_mediator, file_object)
 
+    self._ProcessEventData(storage_writer)
+
     return storage_writer

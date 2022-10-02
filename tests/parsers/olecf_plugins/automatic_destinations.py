@@ -24,6 +24,10 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # windows:lnk:link 33
     # windows:distributed_link_tracking:creation: 44
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 66)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 88)
 
@@ -53,7 +57,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'pin_status': -1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {
@@ -68,7 +72,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
             'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
             'Libraries\\Documents.library-ms')}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[12], expected_event_values)
 
     # Check a WindowsDistributedLinkTrackingCreationEvent.
     expected_event_values = {
@@ -78,7 +82,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'origin': 'DestList entry at offset: 0x00000020',
         'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
 
-    self.CheckEventValues(storage_writer, events[46], expected_event_values)
+    self.CheckEventValues(storage_writer, events[16], expected_event_values)
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
@@ -89,6 +93,10 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Number of events:
     # olecf:dest_list:entry: 2
     # windows:lnk:link 2
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)
@@ -118,7 +126,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'pin_status': -1,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {
@@ -126,7 +134,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'date_time': 'Not set',
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
 
 if __name__ == '__main__':

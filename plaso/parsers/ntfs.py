@@ -5,7 +5,6 @@ import os
 import uuid
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 import pyfsntfs
 
@@ -145,10 +144,10 @@ class NTFSMFTParser(interface.FileObjectParser):
       filetime (int): FILETIME timestamp.
 
     Returns:
-      dfdatetime.DateTimeValues: date and time.
+      dfdatetime.DateTimeValues: date and time or None if not set.
     """
     if not filetime:
-      return dfdatetime_semantic_time.NotSet()
+      return None
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
@@ -392,10 +391,10 @@ class NTFSUsnJrnlParser(
       filetime (int): FILETIME timestamp.
 
     Returns:
-      dfdatetime.DateTimeValues: date and time.
+      dfdatetime.DateTimeValues: date and time or None if not set.
     """
     if not filetime:
-      return dfdatetime_semantic_time.NotSet()
+      return None
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 

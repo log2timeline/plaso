@@ -6,10 +6,9 @@ import uuid
 import pylnk
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import specification
@@ -22,11 +21,15 @@ class WinLnkLinkEventData(events.EventData):
   """Windows Shortcut (LNK) link event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): file entry last access date
+        and time.
     birth_droid_file_identifier (str): distributed link tracking birth droid
         file identifier.
     birth_droid_volume_identifier (str): distributed link tracking birth droid
         volume identifier.
     command_line_arguments (str): command line arguments.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     description (str): description of the linked item.
     drive_serial_number (int): drive serial number where the linked item
         resides.
@@ -41,6 +44,8 @@ class WinLnkLinkEventData(events.EventData):
     icon_location (str): icon location.
     link_target (str): shell item list of the link target.
     local_path (str): local path of the linked item.
+    modification_time (dfdatetime.DateTimeValues): file entry last modification
+        date and time.
     network_path (str): local path of the linked item.
     relative_path (str): relative path.
     volume_label (str): volume label where the linked item resided.
@@ -49,12 +54,19 @@ class WinLnkLinkEventData(events.EventData):
 
   DATA_TYPE = 'windows:lnk:link'
 
+  ATTRIBUTE_MAPPINGS = {
+      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(WinLnkLinkEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
     self.birth_droid_file_identifier = None
     self.birth_droid_volume_identifier = None
     self.command_line_arguments = None
+    self.creation_time = None
     self.description = None
     self.drive_serial_number = None
     self.drive_type = None
@@ -66,6 +78,7 @@ class WinLnkLinkEventData(events.EventData):
     self.icon_location = None
     self.link_target = None
     self.local_path = None
+    self.modification_time = None
     self.network_path = None
     self.relative_path = None
     self.volume_label = None
@@ -79,6 +92,20 @@ class WinLnkParser(interface.FileObjectParser):
 
   NAME = 'lnk'
   DATA_FORMAT = 'Windows Shortcut (LNK) file'
+
+  def _GetDateTime(self, filetime):
+    """Retrieves the date and time from a FILETIME timestamp.
+
+    Args:
+      filetime (int): FILETIME timestamp.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time or None if not set.
+    """
+    if not filetime:
+      return None
+
+    return dfdatetime_filetime.Filetime(timestamp=filetime)
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -154,11 +181,15 @@ class WinLnkParser(interface.FileObjectParser):
       link_target = shell_items_parser.CopyToPath()
 
     event_data = WinLnkLinkEventData()
+    event_data.access_time = self._GetDateTime(
+        lnk_file.get_file_access_time_as_integer())
     event_data.birth_droid_file_identifier = (
         lnk_file.birth_droid_file_identifier)
     event_data.birth_droid_volume_identifier = (
         lnk_file.birth_droid_volume_identifier)
     event_data.command_line_arguments = lnk_file.command_line_arguments
+    event_data.creation_time = self._GetDateTime(
+        lnk_file.get_file_creation_time_as_integer())
     event_data.description = lnk_file.description
     event_data.drive_serial_number = lnk_file.drive_serial_number
     event_data.drive_type = lnk_file.drive_type
@@ -170,37 +201,14 @@ class WinLnkParser(interface.FileObjectParser):
     event_data.icon_location = lnk_file.icon_location
     event_data.link_target = link_target
     event_data.local_path = lnk_file.local_path
+    event_data.modification_time = self._GetDateTime(
+        lnk_file.get_file_modification_time_as_integer())
     event_data.network_path = lnk_file.network_path
     event_data.relative_path = lnk_file.relative_path
     event_data.volume_label = lnk_file.volume_label
     event_data.working_directory = lnk_file.working_directory
 
-    access_time = lnk_file.get_file_access_time_as_integer()
-    if access_time != 0:
-      date_time = dfdatetime_filetime.Filetime(timestamp=access_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    creation_time = lnk_file.get_file_creation_time_as_integer()
-    if creation_time != 0:
-      date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    modification_time = lnk_file.get_file_modification_time_as_integer()
-    if modification_time != 0:
-      date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if access_time == 0 and creation_time == 0 and modification_time == 0:
-      date_time = dfdatetime_semantic_time.NotSet()
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     if lnk_file.droid_file_identifier:  # pylint: disable=using-constant-test
       try:
@@ -223,4 +231,5 @@ class WinLnkParser(interface.FileObjectParser):
     lnk_file.close()
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(WinLnkLinkEventData)
 manager.ParsersManager.RegisterParser(WinLnkParser)

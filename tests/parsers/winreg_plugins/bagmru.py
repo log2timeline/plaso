@@ -59,6 +59,10 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 9)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 15)
 
@@ -95,7 +99,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'date_time': '2009-08-04T15:19:16.9977500+00:00',
         'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path)}
 
-    self.CheckEventValues(storage_writer, events[14], expected_event_values)
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 
 if __name__ == '__main__':

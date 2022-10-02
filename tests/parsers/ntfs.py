@@ -32,7 +32,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_event_data, 31642)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 126352)
+    self.assertEqual(number_of_events, 126349)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

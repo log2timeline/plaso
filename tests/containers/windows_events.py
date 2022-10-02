@@ -33,6 +33,32 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
     self.assertEqual(attribute_names, expected_attribute_names)
 
 
+class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows shell item event attribute container."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = windows_events.WindowsShellItemFileEntryEventData()
+
+    expected_attribute_names = [
+        '_event_data_stream_row_identifier',
+        'access_time',
+        'creation_time',
+        'data_type',
+        'file_reference',
+        'localized_name',
+        'long_name',
+        'modification_time',
+        'name',
+        'origin',
+        'parser',
+        'shell_item_path']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+
 class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows volume event data attribute container."""
 
