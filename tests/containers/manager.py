@@ -4,11 +4,17 @@
 
 import unittest
 
+from plaso.containers import interface
 from plaso.containers import events
 from plaso.containers import manager
 
 from tests import test_lib as shared_test_lib
-from tests.containers import test_lib
+
+
+class TestAttributeContainer(interface.AttributeContainer):
+  """Test attribute container."""
+
+  CONTAINER_TYPE = 'test_attribute_container'
 
 
 class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
@@ -44,17 +50,17 @@ class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
         manager.AttributeContainersManager._attribute_container_classes)
 
     manager.AttributeContainersManager.RegisterAttributeContainer(
-        test_lib.TestAttributeContainer)
+        TestAttributeContainer)
     self.assertEqual(
         len(manager.AttributeContainersManager._attribute_container_classes),
         number_of_classes + 1)
 
     with self.assertRaises(KeyError):
       manager.AttributeContainersManager.RegisterAttributeContainer(
-          test_lib.TestAttributeContainer)
+          TestAttributeContainer)
 
     manager.AttributeContainersManager.DeregisterAttributeContainer(
-        test_lib.TestAttributeContainer)
+        TestAttributeContainer)
     self.assertEqual(
         len(manager.AttributeContainersManager._attribute_container_classes),
         number_of_classes)

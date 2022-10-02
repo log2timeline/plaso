@@ -39,9 +39,7 @@ class StorageWriter(reader.StorageReader):
     super(StorageWriter, self).__init__()
     self._attribute_containers_counter = collections.Counter()
     self._event_tag_per_event_identifier = collections.OrderedDict()
-    self._first_written_event_source_index = 0
     self._storage_type = storage_type
-    self._written_event_source_index = 0
 
   # TODO: kept for backwards compatibility.
   @property
@@ -192,6 +190,25 @@ class StorageWriter(reader.StorageReader):
       generator(EventObject): event generator.
     """
     return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
+
+  @abc.abstractmethod
+  def GetFirstWrittenEventData(self):
+    """Retrieves the first event data that was written after open.
+
+    Using GetFirstWrittenEventData and GetNextWrittenEventData newly
+    added event data can be retrieved in order of addition.
+
+    Returns:
+      EventData: event data or None if there are no newly written ones.
+    """
+
+  @abc.abstractmethod
+  def GetNextWrittenEventData(self):
+    """Retrieves the next event data that was written after open.
+
+    Returns:
+      EventData: event data or None if there are no newly written ones.
+    """
 
   @abc.abstractmethod
   def GetFirstWrittenEventSource(self):

@@ -21,8 +21,51 @@ class FakeStorageWriter(writer.StorageWriter):
       storage_type (Optional[str]): storage type.
     """
     super(FakeStorageWriter, self).__init__(storage_type=storage_type)
+    self._first_written_event_data_index = 0
+    self._first_written_event_source_index = 0
+    self._written_event_data_index = 0
+    self._written_event_source_index = 0
     self.task_completion = None
     self.task_start = None
+
+  def GetFirstWrittenEventData(self):
+    """Retrieves the first event data that was written after open.
+
+    Using GetFirstWrittenEventData and GetNextWrittenEventData newly
+    added event data can be retrieved in order of addition.
+
+    Returns:
+      EventData: event data or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Unable to read from closed storage writer.')
+
+    event_data = self._store.GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_DATA, self._first_written_event_data_index)
+    self._written_event_data_index = self._first_written_event_data_index + 1
+    return event_data
+
+  def GetNextWrittenEventData(self):
+    """Retrieves the next event data that was written after open.
+
+    Returns:
+      EventData: event data or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    if not self._store:
+      raise IOError('Unable to read from closed storage writer.')
+
+    event_data = self._store.GetAttributeContainerByIndex(
+        self._CONTAINER_TYPE_EVENT_DATA, self._written_event_data_index)
+    self._written_event_data_index += 1
+    return event_data
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -78,5 +121,7 @@ class FakeStorageWriter(writer.StorageWriter):
     self._store = fake_store.FakeStore()
     self._store.Open()
 
+    self._first_written_event_data_index = 0
     self._first_written_event_source_index = 0
+    self._written_event_data_index = 0
     self._written_event_source_index = 0

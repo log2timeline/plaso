@@ -23,12 +23,13 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
   # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
+  def ProcessPathSpec(
+      self, parser_mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
       excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
          that are excluded from processing.

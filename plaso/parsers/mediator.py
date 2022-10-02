@@ -477,6 +477,56 @@ class ParserMediator(object):
     self._cached_parser_chain = None
     self._parser_chain_components.pop()
 
+  def ProduceEvent(self, event):
+    """Produces an event.
+
+    Args:
+      event (EventObject): event.
+
+    Raises:
+      InvalidEvent: if the event date_time or timestamp value is not set, or
+          the timestamp value is out of bounds, or if the event data (attribute
+          container) values cannot be hashed.
+    """
+    if event.date_time is None:
+      raise errors.InvalidEvent('Missing event date time value.')
+
+    if event.timestamp is None:
+      raise errors.InvalidEvent('Missing event timestamp value.')
+
+    if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
+      raise errors.InvalidEvent('Event timestamp value out of bounds.')
+
+    self._storage_writer.AddAttributeContainer(event)
+
+    self._number_of_events += 1
+
+    self.last_activity_timestamp = time.time()
+
+  def ProduceEventData(self, event_data):
+    """Produces event data.
+
+    Args:
+      event_data (EventData): event data.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    if not self._storage_writer:
+      raise RuntimeError('Storage writer not set.')
+
+    # TODO: rename this to event_data.parser_chain or equivalent.
+    if not event_data.parser:
+      event_data.parser = self.GetParserChain()
+
+    if self._event_data_stream_identifier:
+      event_data.SetEventDataStreamIdentifier(
+          self._event_data_stream_identifier)
+
+    self._storage_writer.AddAttributeContainer(event_data)
+
+    self.last_activity_timestamp = time.time()
+
   def ProduceEventDataStream(self, event_data_stream):
     """Produces an event data stream.
 
@@ -534,21 +584,6 @@ class ParserMediator(object):
     """
     parser_chain = self.GetParserChain()
 
-    if event.date_time is None:
-      raise errors.InvalidEvent(
-          'Date time value not set in event produced by: {0:s}.'.format(
-              parser_chain))
-
-    if event.timestamp is None:
-      raise errors.InvalidEvent(
-          'Timestamp value not set in event produced by: {0:s}.'.format(
-              parser_chain))
-
-    if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors.InvalidEvent(
-          'Timestamp value out of bounds in event produced by: {0:s}.'.format(
-              parser_chain))
-
     # TODO: rename this to event_data.parser_chain or equivalent.
     event_data.parser = parser_chain
 
@@ -560,28 +595,19 @@ class ParserMediator(object):
           '{1!s}').format(parser_chain, exception))
 
     if event_data_hash != self._last_event_data_hash:
-      if self._event_data_stream_identifier:
-        event_data.SetEventDataStreamIdentifier(
-            self._event_data_stream_identifier)
-
-      self._storage_writer.AddAttributeContainer(event_data)
-
+      self.ProduceEventData(event_data)
       self._last_event_data_hash = event_data_hash
       self._last_event_data_identifier = event_data.GetIdentifier()
 
     if self._last_event_data_identifier:
       event.SetEventDataIdentifier(self._last_event_data_identifier)
 
-    self._storage_writer.AddAttributeContainer(event)
+    self.ProduceEvent(event)
 
     if self._parser_chain_components:
       parser_name = self._parser_chain_components[-1]
       self.parsers_counter[parser_name] += 1
     self.parsers_counter['total'] += 1
-
-    self._number_of_events += 1
-
-    self.last_activity_timestamp = time.time()
 
   def ProduceExtractionWarning(self, message, path_spec=None):
     """Produces an extraction warning.
@@ -749,7 +775,6 @@ class ParserMediator(object):
     # Reset the last event data information. Each storage file should
     # contain event data for their events.
     self._last_event_data_hash = None
-    self._last_event_data_identifier = None
 
   def SetTemporaryDirectory(self, temporary_directory):
     """Sets the directory to store temporary files.

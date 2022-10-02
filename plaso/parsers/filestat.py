@@ -5,8 +5,8 @@ import pytsk3
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -16,7 +16,14 @@ class FileStatEventData(events.EventData):
   """File system stat event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): file entry last access time.
+    added_time (dfdatetime.DateTimeValues): file entry added time.
     attribute_names ([str]): extended attribute names.
+    backup_time (dfdatetime.DateTimeValues): file entry backup time.
+    creation_time (dfdatetime.DateTimeValues): file entry creation time.
+    change_time (dfdatetime.DateTimeValues): file entry inode change
+        (or metadata last modification) time.
+    deletion_time (dfdatetime.DateTimeValues): file entry deletion time.
     display_name (str): display name.
     file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
@@ -26,6 +33,8 @@ class FileStatEventData(events.EventData):
     inode (int): inode of the file.
     is_allocated (bool): True if the file is allocated.
     mode (int): access mode, equivalent to st_mode & 0x0fff.
+    modification_time (dfdatetime.DateTimeValues): file entry last modification
+        time.
     number_of_links (int): number of hard links, equivalent to st_nlink.
     owner_identifier (int): user identifier (UID) of the owner, equivalent to
         st_uid.
@@ -33,10 +42,25 @@ class FileStatEventData(events.EventData):
 
   DATA_TYPE = 'fs:stat'
 
+  ATTRIBUTE_MAPPINGS = {
+      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'added_time': definitions.TIME_DESCRIPTION_ADDED,
+      'backup_time': definitions.TIME_DESCRIPTION_BACKUP,
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'change_time': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+      'deletion_time': definitions.TIME_DESCRIPTION_DELETED,
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(FileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
+    self.added_time = None
     self.attribute_names = None
+    self.backup_time = None
+    self.creation_time = None
+    self.change_time = None
+    self.deletion_time = None
     self.display_name = None
     self.file_entry_type = None
     self.file_size = None
@@ -46,6 +70,7 @@ class FileStatEventData(events.EventData):
     self.inode = None
     self.is_allocated = None
     self.mode = None
+    self.modification_time = None
     self.number_of_links = None
     self.owner_identifier = None
 
@@ -60,25 +85,25 @@ class FileStatParser(interface.FileEntryParser):
 
   # Maps SleuthKit file system type enumeration values to a string.
   _TSK_FS_TYPE_MAP = {
-      pytsk3.TSK_FS_TYPE_NTFS: 'NTFS',
-      pytsk3.TSK_FS_TYPE_NTFS_DETECT: 'NTFS',
+      pytsk3.TSK_FS_TYPE_EXFAT: 'exFAT',
+      pytsk3.TSK_FS_TYPE_EXT2: 'EXT2',
+      pytsk3.TSK_FS_TYPE_EXT3: 'EXT3',
+      pytsk3.TSK_FS_TYPE_EXT4: 'EXT4',
+      pytsk3.TSK_FS_TYPE_EXT_DETECT: 'EXT',
       pytsk3.TSK_FS_TYPE_FAT12: 'FAT12',
       pytsk3.TSK_FS_TYPE_FAT16: 'FAT16',
       pytsk3.TSK_FS_TYPE_FAT32: 'FAT32',
-      pytsk3.TSK_FS_TYPE_EXFAT: 'exFAT',
       pytsk3.TSK_FS_TYPE_FAT_DETECT: 'FAT',
-      pytsk3.TSK_FS_TYPE_FFS1: 'FFS1',
       pytsk3.TSK_FS_TYPE_FFS1B: 'FFS1b',
+      pytsk3.TSK_FS_TYPE_FFS1: 'FFS1',
       pytsk3.TSK_FS_TYPE_FFS2: 'FFS2',
       pytsk3.TSK_FS_TYPE_FFS_DETECT: 'FFS',
-      pytsk3.TSK_FS_TYPE_EXT2: 'EXT2',
-      pytsk3.TSK_FS_TYPE_EXT3: 'EXT3',
-      pytsk3.TSK_FS_TYPE_EXT_DETECT: 'EXT',
-      pytsk3.TSK_FS_TYPE_ISO9660: 'ISO9660',
-      pytsk3.TSK_FS_TYPE_ISO9660_DETECT: 'ISO9660',
       pytsk3.TSK_FS_TYPE_HFS: 'HFS',
       pytsk3.TSK_FS_TYPE_HFS_DETECT: 'HFS',
-      pytsk3.TSK_FS_TYPE_EXT4: 'EXT4',
+      pytsk3.TSK_FS_TYPE_ISO9660: 'ISO9660',
+      pytsk3.TSK_FS_TYPE_ISO9660_DETECT: 'ISO9660',
+      pytsk3.TSK_FS_TYPE_NTFS: 'NTFS',
+      pytsk3.TSK_FS_TYPE_NTFS_DETECT: 'NTFS',
       pytsk3.TSK_FS_TYPE_YAFFS2: 'YAFFS2',
       pytsk3.TSK_FS_TYPE_YAFFS2_DETECT: 'YAFFS2'}
 
@@ -117,7 +142,7 @@ class FileStatParser(interface.FileEntryParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): a file entry.
     """
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
@@ -131,7 +156,13 @@ class FileStatParser(interface.FileEntryParser):
         attribute_names.append(attribute_name)
 
     event_data = FileStatEventData()
+    event_data.access_time = file_entry.access_time
+    event_data.added_time = file_entry.added_time
     event_data.attribute_names = attribute_names or None
+    event_data.backup_time = file_entry.backup_time
+    event_data.creation_time = file_entry.creation_time
+    event_data.change_time = file_entry.change_time
+    event_data.deletion_time = file_entry.deletion_time
     event_data.display_name = parser_mediator.GetDisplayNameForPathSpec(
         file_entry.path_spec)
     event_data.file_entry_type = file_entry.entry_type
@@ -140,6 +171,7 @@ class FileStatParser(interface.FileEntryParser):
     event_data.filename = parser_mediator.GetRelativePathForPathSpec(
         file_entry.path_spec)
     event_data.is_allocated = file_entry.IsAllocated()
+    event_data.modification_time = file_entry.modification_time
 
     if stat_attribute:
       event_data.group_identifier = stat_attribute.group_identifier
@@ -149,42 +181,8 @@ class FileStatParser(interface.FileEntryParser):
       event_data.number_of_links = stat_attribute.number_of_links
       event_data.owner_identifier = stat_attribute.owner_identifier
 
-    if file_entry.access_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.access_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.added_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.added_time, definitions.TIME_DESCRIPTION_ADDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.backup_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.backup_time, definitions.TIME_DESCRIPTION_BACKUP)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.creation_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.creation_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.change_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.change_time,
-          definitions.TIME_DESCRIPTION_METADATA_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.deletion_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.deletion_time, definitions.TIME_DESCRIPTION_DELETED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if file_entry.modification_time:
-      event = time_events.DateTimeValuesEvent(
-          file_entry.modification_time,
-          definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(FileStatEventData)
 manager.ParsersManager.RegisterParser(FileStatParser)
