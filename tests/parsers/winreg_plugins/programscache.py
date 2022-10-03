@@ -44,6 +44,10 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 27)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 77)
 
@@ -69,7 +73,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[3], expected_event_values)
 
     # The ProgramsCache list event.
     expected_entries = (
@@ -102,7 +106,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'parser': 'explorer_programscache',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckEventValues(storage_writer, events[75], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # The Windows Registry key event.
     expected_values = (
@@ -120,7 +124,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'values': expected_values}
 
-    self.CheckEventValues(storage_writer, events[76], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
@@ -135,6 +139,10 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     plugin = programscache.ExplorerProgramsCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 42)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 118)
@@ -154,9 +162,10 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'date_time': '2010-11-10T07:50:38+00:00',
         'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
+        'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 
 if __name__ == '__main__':

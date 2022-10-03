@@ -99,4 +99,6 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     finally:
       database.Close()
 
+    self._ProcessEventData(storage_writer)
+
     return storage_writer

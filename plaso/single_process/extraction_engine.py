@@ -7,6 +7,8 @@ import pdb
 import threading
 import time
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver
 
@@ -159,6 +161,7 @@ class SingleProcessEngine(engine.BaseEngine):
         else:
           parser_name = None
 
+        number_of_events = 0
         for attribute_name, time_description in attribute_mappings.items():
           attribute_value = getattr(event_data, attribute_name, None)
           if attribute_value:
@@ -168,9 +171,26 @@ class SingleProcessEngine(engine.BaseEngine):
 
             parser_mediator.ProduceEvent(event)
 
+            number_of_events += 1
+
             if parser_name:
               parser_mediator.parsers_counter[parser_name] += 1
             parser_mediator.parsers_counter['total'] += 1
+
+        # Create a place holder event for event_data without date and time
+        # values to map.
+        # TODO: add extraction option to control this behavior.
+        if not number_of_events:
+          date_time = dfdatetime_semantic_time.NotSet()
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+          event.SetEventDataIdentifier(event_data_identifier)
+
+          parser_mediator.ProduceEvent(event)
+
+          if parser_name:
+            parser_mediator.parsers_counter[parser_name] += 1
+          parser_mediator.parsers_counter['total'] += 1
 
       # TODO: track number of consumed event data containers?
 

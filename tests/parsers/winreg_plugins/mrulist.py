@@ -97,6 +97,10 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     plugin = mrulist.MRUListStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -193,6 +197,10 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 5)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
 
@@ -217,7 +225,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # A shell item event.
     expected_event_values = {
@@ -227,7 +235,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'origin': key_path,
         'shell_item_path': '<My Computer> C:\\Winnt'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
 
 if __name__ == '__main__':

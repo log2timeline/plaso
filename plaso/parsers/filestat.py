@@ -21,10 +21,10 @@ class FileStatEventData(events.EventData):
     added_time (dfdatetime.DateTimeValues): file entry added date and time.
     attribute_names ([str]): extended attribute names.
     backup_time (dfdatetime.DateTimeValues): file entry backup date and time.
-    creation_time (dfdatetime.DateTimeValues): file entry creation date
-        and time.
     change_time (dfdatetime.DateTimeValues): file entry inode change
         (or metadata last modification) date and time.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     deletion_time (dfdatetime.DateTimeValues): file entry deletion date
         and time.
     display_name (str): display name.
@@ -49,8 +49,8 @@ class FileStatEventData(events.EventData):
       'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
       'added_time': definitions.TIME_DESCRIPTION_ADDED,
       'backup_time': definitions.TIME_DESCRIPTION_BACKUP,
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
       'change_time': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
       'deletion_time': definitions.TIME_DESCRIPTION_DELETED,
       'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -61,8 +61,8 @@ class FileStatEventData(events.EventData):
     self.added_time = None
     self.attribute_names = None
     self.backup_time = None
-    self.creation_time = None
     self.change_time = None
+    self.creation_time = None
     self.deletion_time = None
     self.display_name = None
     self.file_entry_type = None

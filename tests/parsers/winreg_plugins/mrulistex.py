@@ -103,6 +103,10 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -168,6 +172,10 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 25)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 65)
 
@@ -198,7 +206,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[40], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # A shell item event.
     expected_event_values = {
@@ -212,7 +220,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
             '<Shared Documents Folder (Users Files)> '
             '<UNKNOWN: 0x00>\\Alloy Research')}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[6], expected_event_values)
 
 
 class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
@@ -243,6 +251,10 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     plugin = mrulistex.MRUListExStringAndShellItemWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
@@ -341,6 +353,10 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 11)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 31)
 
@@ -390,7 +406,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[30], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

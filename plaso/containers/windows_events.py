@@ -71,6 +71,47 @@ class WindowsRegistryEventData(events.EventData):
     self.values = None
 
 
+class WindowsShellItemFileEntryEventData(events.EventData):
+  """Windows shell item file entry event data attribute container.
+
+  Attributes:
+    access_time (dfdatetime.DateTimeValues): file entry last access date
+        and time.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
+    file_reference (str): NTFS file reference, in the format:
+        "MTF entry - sequence number".
+    localized_name (str): localized name of the file entry shell item.
+    long_name (str): long name of the file entry shell item.
+    modification_time (dfdatetime.DateTimeValues): file entry last modification
+        date and time.
+    name (str): name of the file entry shell item.
+    origin (str): origin of the event.
+    shell_item_path (str): shell item path.
+  """
+
+  DATA_TYPE = 'windows:shell_item:file_entry'
+
+  ATTRIBUTE_MAPPINGS = {
+      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsShellItemFileEntryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.access_time = None
+    self.creation_time = None
+    self.file_reference = None
+    self.localized_name = None
+    self.long_name = None
+    self.modification_time = None
+    self.name = None
+    self.origin = None
+    self.shell_item_path = None
+
+
 class WindowsVolumeEventData(events.EventData):
   """Windows volume event data attribute container.
 
@@ -92,4 +133,5 @@ class WindowsVolumeEventData(events.EventData):
 
 
 event_registry.EventDataRegistry.RegisterEventDataClasses([
-    WindowsDistributedLinkTrackingEventData])
+    WindowsDistributedLinkTrackingEventData,
+    WindowsShellItemFileEntryEventData])

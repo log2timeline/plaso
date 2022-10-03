@@ -5,10 +5,8 @@ import pyfwsi
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
-from plaso.containers import shell_item_events
-from plaso.containers import time_events
+from plaso.containers import windows_events
 from plaso.helpers.windows import shell_folders
-from plaso.lib import definitions
 
 
 class ShellItemsParser(object):
@@ -26,6 +24,20 @@ class ShellItemsParser(object):
     self._origin = origin
     self._path_segments = []
 
+  def _GetDateTime(self, fat_date_time):
+    """Retrieves the date and time from a FAT date time.
+
+    Args:
+      fat_date_time (int): FAT date time.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time or None if not set.
+    """
+    if not fat_date_time:
+      return None
+
+    return dfdatetime_fat_date_time.FATDateTime(fat_date_time=fat_date_time)
+
   def _ParseShellItem(self, parser_mediator, shell_item):
     """Parses a shell item.
 
@@ -37,49 +49,41 @@ class ShellItemsParser(object):
     path_segment = self._ParseShellItemPathSegment(shell_item)
     self._path_segments.append(path_segment)
 
-    event_data = shell_item_events.ShellItemFileEntryEventData()
-    event_data.origin = self._origin
-    event_data.shell_item_path = self.CopyToPath()
-
+    # TODO: generate event_data for non file_entry shell items.
     if isinstance(shell_item, pyfwsi.file_entry):
+      event_data = windows_events.WindowsShellItemFileEntryEventData()
+      event_data.modification_time = self._GetDateTime(
+          shell_item.get_modification_time_as_integer())
       event_data.name = shell_item.name
+      event_data.origin = self._origin
+      event_data.shell_item_path = self.CopyToPath()
 
+      number_of_event_data = 0
       for extension_block in shell_item.extension_blocks:
         if isinstance(extension_block, pyfwsi.file_entry_extension):
-          long_name = extension_block.long_name
-          localized_name = extension_block.localized_name
           file_reference = extension_block.file_reference
           if file_reference:
             file_reference = '{0:d}-{1:d}'.format(
                 file_reference & 0xffffffffffff, file_reference >> 48)
 
+          event_data.access_time = self._GetDateTime(
+              extension_block.get_access_time_as_integer())
+          event_data.creation_time = self._GetDateTime(
+              extension_block.get_creation_time_as_integer())
           event_data.file_reference = file_reference
-          event_data.localized_name = localized_name
-          event_data.long_name = long_name
+          event_data.localized_name = extension_block.localized_name
+          event_data.long_name = extension_block.long_name
 
-          fat_date_time = extension_block.get_creation_time_as_integer()
-          if fat_date_time != 0:
-            date_time = dfdatetime_fat_date_time.FATDateTime(
-                fat_date_time=fat_date_time)
-            event = time_events.DateTimeValuesEvent(
-                date_time, definitions.TIME_DESCRIPTION_CREATION)
-            parser_mediator.ProduceEventWithEventData(event, event_data)
+          # TODO: change to generate an event_data for each extension block.
+          if (event_data.access_time or event_data.creation_time or
+              event_data.modification_time):
+            parser_mediator.ProduceEventData(event_data)
 
-          fat_date_time = extension_block.get_access_time_as_integer()
-          if fat_date_time != 0:
-            date_time = dfdatetime_fat_date_time.FATDateTime(
-                fat_date_time=fat_date_time)
-            event = time_events.DateTimeValuesEvent(
-                date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-            parser_mediator.ProduceEventWithEventData(event, event_data)
+            number_of_event_data += 1
 
-      fat_date_time = shell_item.get_modification_time_as_integer()
-      if fat_date_time != 0:
-        date_time = dfdatetime_fat_date_time.FATDateTime(
-            fat_date_time=fat_date_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      # TODO: change to generate an event_data for each shell item.
+      if not number_of_event_data and event_data.modification_time:
+        parser_mediator.ProduceEventData(event_data)
 
   def _ParseShellItemPathSegment(self, shell_item):
     """Parses a shell item path segment.

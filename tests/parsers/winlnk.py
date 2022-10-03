@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import winlnk
 
 from tests.parsers import test_lib
@@ -28,6 +27,10 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     #   Icon location                  : %windir%\system32\migwiz\migwiz.exe
     #   Environment variables location : %windir%\system32\migwiz\migwiz.exe
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
 
@@ -39,60 +42,41 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A shortcut last accessed event.
+    # Test shortcut event data.
     expected_event_values = {
-        'date_time': '2009-07-13T23:29:02.8491310+00:00',
+        'access_time': '2009-07-13T23:29:02.8491310+00:00',
         'data_type': 'windows:lnk:link',
         'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
+        'creation_time': '2009-07-13T23:29:02.8491310+00:00',
         'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
         'file_attribute_flags': 0x00000020,
         'file_size': 544768,
         'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'modification_time': '2009-07-14T01:39:18.2200000+00:00',
         'relative_path': '.\\migwiz\\migwiz.exe',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS,
         'working_directory': '%windir%\\system32\\migwiz'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # A shortcut creation event.
+    # Test distributed link tracking event data.
     expected_event_values = {
-        'date_time': '2009-07-13T23:29:02.8491310+00:00',
-        'data_type': 'windows:lnk:link',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    # A shortcut last modification event.
-    expected_event_values = {
-        'date_time': '2009-07-14T01:39:18.2200000+00:00',
-        'data_type': 'windows:lnk:link',
-        'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
-        'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
-        'file_attribute_flags': 0x00000020,
-        'file_size': 544768,
-        'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
-        'relative_path': '.\\migwiz\\migwiz.exe',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION,
-        'working_directory': '%windir%\\system32\\migwiz'}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    # A distributed link tracking creation event.
-    expected_event_values = {
-        'date_time': '2009-07-14T05:45:20.5000123+00:00',
+        'creation_time': '2009-07-14T05:45:20.5000123+00:00',
         'data_type': 'windows:distributed_link_tracking:creation',
         'mac_address': '00:1d:09:fa:5a:1c',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'uuid': '846ee3bb-7039-11de-9d20-001d09fa5a1c'}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     parser = winlnk.WinLnkParser()
     storage_writer = self._ParseFile(['NeroInfoTool.lnk'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 8)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 20)
@@ -105,11 +89,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A shortcut creation event.
+    # Test shortcut event data.
     expected_event_values = {
-        'date_time': '2009-06-05T20:13:20.0000000+00:00',
+        'creation_time': '2009-06-05T20:13:20.0000000+00:00',
         'data_type': 'windows:lnk:link',
         'description': (
             'Nero InfoTool provides you with information about the most '
@@ -128,27 +110,29 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'relative_path': (
             '..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
             'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
         'volume_label': 'OS',
         'working_directory': (
             'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool')}
 
-    self.CheckEventValues(storage_writer, events[16], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # A shell item event.
+    # Test shell item event data.
     expected_event_values = {
-        'date_time': '2009-06-05T20:13:20+00:00',
+        'access_time': '2010-01-29T21:30:12+00:00',
+        'creation_time': '2009-06-05T20:13:20+00:00',
         'data_type': 'windows:shell_item:file_entry',
         'file_reference': '81349-1',
         'long_name': 'InfoTool.exe',
+        'modification_time': '2009-06-05T20:13:20+00:00',
         'name': 'InfoTool.exe',
         'origin': 'NeroInfoTool.lnk',
         'shell_item_path': (
             '<My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
-            'Nero InfoTool\\InfoTool.exe'),
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+            'Nero InfoTool\\InfoTool.exe')}
 
-    self.CheckEventValues(storage_writer, events[12], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

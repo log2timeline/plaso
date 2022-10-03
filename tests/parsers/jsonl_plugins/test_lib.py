@@ -50,4 +50,6 @@ class JSONLPluginTestCase(test_lib.ParserTestCase):
     parser_mediator.AppendToParserChain('jsonl')
     plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
+    self._ProcessEventData(storage_writer)
+
     return storage_writer
