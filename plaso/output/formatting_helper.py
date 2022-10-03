@@ -2,10 +2,8 @@
 """Output module field formatting helper."""
 
 import abc
-import csv
 import datetime
 import math
-import os
 import pytz
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -51,7 +49,6 @@ class FieldFormattingHelper(object):
     self._callback_functions = {}
     self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
     self._event_tag_field_names = []
-    self._source_mappings = {}
 
     for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items():
       if callback_name == '_FormatTag':
@@ -382,15 +379,9 @@ class FieldFormattingHelper(object):
       NoFormatterFound: if no event formatter can be found to match the data
           type in the event data.
     """
-    if not self._source_mappings:
-      self._ReadSourceMappings(output_mediator)
-
-    data_type = getattr(event_data, 'data_type', 'default')
-    _, source = self._source_mappings.get(data_type, (None, None))
-    if source is None:
-      return 'N/A'
-
-    return source
+    data_type = getattr(event_data, 'data_type', None) or '-'
+    _, source = output_mediator.GetSourceMapping(data_type)
+    return source or 'N/A'
 
   def _FormatSourceShort(
       self, output_mediator, event, event_data, event_data_stream):
@@ -410,15 +401,9 @@ class FieldFormattingHelper(object):
       NoFormatterFound: If no event formatter can be found to match the data
           type in the event data.
     """
-    if not self._source_mappings:
-      self._ReadSourceMappings(output_mediator)
-
-    data_type = getattr(event_data, 'data_type', None)
-    source_short, _ = self._source_mappings.get(data_type, (None, None))
-    if source_short is None:
-      return 'N/A'
-
-    return source_short
+    data_type = getattr(event_data, 'data_type', None) or '-'
+    source_short, _ = output_mediator.GetSourceMapping(data_type)
+    return source_short or 'N/A'
 
   def _FormatTag(self, output_mediator, event_tag):
     """Formats an event tag field.
@@ -544,34 +529,6 @@ class FieldFormattingHelper(object):
     return output_mediator.GetUsername(event_data)
 
   # pylint: enable=unused-argument
-
-  # TODO: move to mediator.
-  def _ReadSourceMappings(self, output_mediator):
-    """Reads the source mappings from the sources.config data file.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-    """
-    self._source_mappings = {}
-
-    try:
-      sources_data_file = os.path.join(
-          output_mediator.data_location, 'sources.config')
-
-      with open(sources_data_file, encoding='utf8') as file_object:
-        csv_reader = csv.reader(file_object, delimiter='\t')
-        # Note that csv.reader returns a list per row.
-        header_row = next(csv_reader)
-        if header_row == ['data_type', 'short_source', 'source']:
-          for row in csv_reader:
-            try:
-              self._source_mappings[row[0]] = (row[1], row[2])
-            except IndexError:
-              logger.error('Invalid source mapping: {0!s}'.format(row))
-
-    except (IOError, TypeError, csv.Error):
-      pass
 
   def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.

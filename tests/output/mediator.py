@@ -48,6 +48,8 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     output_mediator._ReadMessageFormattersFile(test_file_path)
     self.assertEqual(len(output_mediator._message_formatters), 2)
 
+  # TODO: add tests for _ReadSourceMappings
+
   # TODO: add tests for GetDisplayNameForPathSpec
 
   def testGetHostname(self):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The output mediator object."""
 
+import csv
 import glob
 import os
 import pytz
@@ -52,6 +53,7 @@ class OutputMediator(object):
     self._lcid = self._DEFAULT_LCID
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
+    self._source_mappings = {}
     self._storage_reader = None
     self._text_prepend = None
     self._time_zone = None
@@ -99,6 +101,32 @@ class OutputMediator(object):
           message_formatter.AddHelper(custom_formatter_helper)
 
       self._message_formatters[message_formatter.data_type] = message_formatter
+
+  def _ReadSourceMappings(self):
+    """Reads the source mappings from the sources.config data file.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+    """
+    self._source_mappings = {}
+
+    try:
+      sources_data_file = os.path.join(self.data_location, 'sources.config')
+
+      with open(sources_data_file, encoding='utf8') as file_object:
+        csv_reader = csv.reader(file_object, delimiter='\t')
+        # Note that csv.reader returns a list per row.
+        header_row = next(csv_reader)
+        if header_row == ['data_type', 'short_source', 'source']:
+          for row in csv_reader:
+            try:
+              self._source_mappings[row[0]] = (row[1], row[2])
+            except IndexError:
+              logger.error('Invalid source mapping: {0!s}'.format(row))
+
+    except (IOError, TypeError, csv.Error):
+      pass
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -276,6 +304,22 @@ class OutputMediator(object):
       str: relateive path of the path specification.
     """
     return path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
+
+  def GetSourceMapping(self, data_type):
+    """Retrieves the source mapping for a specific data type.
+
+    Args:
+      data_type (str): data type.
+
+    Returns:
+      tuple[str, str]: short and (long) source mappings or (None, None) if not
+          available.
+    """
+    if not self._source_mappings:
+      self._ReadSourceMappings()
+
+    data_type = data_type.lower()
+    return self._source_mappings.get(data_type, (None, None))
 
   def GetUsername(self, event_data, default_username='-'):
     """Retrieves the username related to the event.
