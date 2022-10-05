@@ -112,7 +112,8 @@ short_message: '{command}'
 type: 'conditional'
 data_type: 'confluence:access'
 message:
-- 'http_request: {http_request_method} {http_request_uri}'
+- 'http_request: {http_request_method} '
+- '{http_request_uri}'
 - 'from: {remote_name}'
 - 'via: {forwarded_for}'
 - 'user: {user_name}'
@@ -181,7 +182,9 @@ message:
 - 'Event type: {event_type}'
 - 'Direction: {direction}'
 short_message:
-- '{local_path} {event_type} {direction}'
+- '{local_path}'
+- '{event_type}'
+- '{direction}'
 ---
 type: 'basic'
 data_type: 'fish:history:command'
