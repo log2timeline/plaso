@@ -53,6 +53,7 @@ class OutputMediator(object):
     self._lcid = self._DEFAULT_LCID
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
+    self._read_sources_config = False
     self._source_mappings = {}
     self._storage_reader = None
     self._text_prepend = None
@@ -101,6 +102,8 @@ class OutputMediator(object):
           message_formatter.AddHelper(custom_formatter_helper)
 
       self._message_formatters[message_formatter.data_type] = message_formatter
+      self._source_mappings[message_formatter.data_type] = (
+          message_formatter.source_mapping)
 
   def _ReadSourceMappings(self):
     """Reads the source mappings from the sources.config data file.
@@ -109,8 +112,6 @@ class OutputMediator(object):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
     """
-    self._source_mappings = {}
-
     try:
       sources_data_file = os.path.join(self.data_location, 'sources.config')
 
@@ -124,6 +125,8 @@ class OutputMediator(object):
               self._source_mappings[row[0]] = (row[1], row[2])
             except IndexError:
               logger.error('Invalid source mapping: {0!s}'.format(row))
+
+      self._read_sources_config = True
 
     except (IOError, TypeError, csv.Error):
       pass
@@ -315,7 +318,7 @@ class OutputMediator(object):
       tuple[str, str]: short and (long) source mappings or (None, None) if not
           available.
     """
-    if not self._source_mappings:
+    if not self._read_sources_config:
       self._ReadSourceMappings()
 
     data_type = data_type.lower()

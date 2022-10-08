@@ -25,6 +25,8 @@ message:
 - 'Message Content: {text}'
 short_message:
 - '{text}'
+short_source: 'iMessage'
+source: 'Apple iMessage application'
 ---
 type: 'conditional'
 data_type: 'ipod:device:entry'
@@ -42,6 +44,8 @@ short_message:
 - 'Connected {use_count} times'
 - 'Serial nr: {serial_number}'
 - 'IMEI [{imei}]'
+short_source: 'LOG'
+source: 'iPod Connections'
 ---
 type: 'conditional'
 data_type: 'mac:appfirewall:line'
@@ -54,6 +58,8 @@ message:
 short_message:
 - 'Process name: {process_name}'
 - 'Status: {status}'
+short_source: 'LOG'
+source: 'MacOS AppFirewall Log'
 ---
 type: 'conditional'
 data_type: 'mac:asl:event'
@@ -95,6 +101,8 @@ short_message:
 - 'Host: {host}'
 - 'Sender: {sender}'
 - 'Facility: {facility}'
+short_source: 'LOG'
+source: 'MacOS ASL Log'
 ---
 type: 'conditional'
 data_type: 'mac:asl:file'
@@ -108,6 +116,8 @@ message:
 short_message:
 - 'Format version: {format_version}'
 - '{is_dirty_string}'
+short_source: 'LOG'
+source: 'MacOS ASL Log'
 ---
 type: 'conditional'
 data_type: 'mac:document_versions:file'
@@ -118,6 +128,8 @@ message:
 - 'by {user_sid}'
 short_message:
 - 'Stored a document version of [{name}]'
+short_source: 'HISTORY'
+source: 'MacOS Document Versions'
 ---
 type: 'conditional'
 data_type: 'mac:keychain:application'
@@ -126,6 +138,8 @@ message:
 - 'Account: {account_name}'
 short_message:
 - '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (application password)'
 ---
 type: 'conditional'
 data_type: 'mac:keychain:internet'
@@ -137,6 +151,8 @@ message:
 - '({type_protocol})'
 short_message:
 - '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (Internet password)'
 ---
 type: 'conditional'
 data_type: 'mac:knowledgec:application'
@@ -145,6 +161,8 @@ message:
 - 'for {duration} seconds'
 short_message:
 - 'Application {bundle_identifier}'
+short_source: 'LOG'
+source: 'MacOS KnowledgeC'
 ---
 type: 'conditional'
 data_type: 'mac:knowledgec:safari'
@@ -154,6 +172,8 @@ message:
 - 'Duration: {duration}'
 short_message:
 - 'Safari: {url}'
+short_source: 'WEBHIST'
+source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'conditional'
 data_type: 'mac:notes:note'
@@ -162,6 +182,8 @@ message:
 - 'note_text:{text}'
 short_message:
 - 'title:{title}'
+short_source: 'Mac Note'
+source: 'MacOS Notes'
 ---
 type: 'conditional'
 data_type: 'mac:notificationcenter:db'
@@ -181,6 +203,8 @@ message:
 short_message:
 - 'Title: {title},'
 - 'Content: {body}'
+short_source: 'NOTIFICATION'
+source: 'MacOS Notification Center'
 ---
 type: 'conditional'
 data_type: 'mac:securityd:line'
@@ -192,16 +216,8 @@ message:
 - 'Text: {message}'
 short_message:
 - 'Text: {message}'
----
-type: 'conditional'
-data_type: 'mac:wifilog:line'
-message:
-- 'Action: {action}'
-- 'Agent: {agent}'
-- '({function})'
-- 'Log: {text}'
-short_message:
-- 'Action: {action}'
+short_source: 'LOG'
+source: 'MacOS Securityd Log'
 ---
 type: 'conditional'
 data_type: 'mac:utmpx:event'
@@ -233,6 +249,20 @@ short_message:
 - 'User: {username}'
 - 'PID: {pid}'
 - 'Status: {status}'
+short_source: 'LOG'
+source: 'MacOS UTMPX Log'
+---
+type: 'conditional'
+data_type: 'mac:wifilog:line'
+message:
+- 'Action: {action}'
+- 'Agent: {agent}'
+- '({function})'
+- 'Log: {text}'
+short_message:
+- 'Action: {action}'
+short_source: 'LOG'
+source: 'MacOS Wifi Log'
 ---
 type: 'conditional'
 data_type: 'mackeeper:cache'
@@ -249,16 +279,22 @@ message:
 short_message:
 - '<{event_type}>'
 - '{text}'
+short_source: 'LOG'
+source: 'MacKeeper Cache'
 ---
 type: 'basic'
 data_type: 'macos:airport:entry'
 message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
 short_message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
+short_source: 'PLIST'
+source: 'MacOS Airport plist'
 ---
 type: 'basic'
 data_type: 'macos:apple_account:entry'
 message: 'Apple account: {account_name} ({first_name} {last_name})'
 short_message: 'Apple account: {account_name} ({first_name} {last_name})'
+short_source: 'PLIST'
+source: 'Apple account plist'
 ---
 type: 'conditional'
 data_type: 'macos:bluetooth:entry'
@@ -270,6 +306,8 @@ short_message:
 - 'Identifier: {device_identifier}'
 - 'Name: {device_name}'
 - 'Paired: {is_paired}'
+short_source: 'PLIST'
+source: 'MacOS Bluetooth plist'
 ---
 type: 'conditional'
 data_type: 'macos:fseventsd:record'
@@ -310,16 +348,22 @@ message:
 short_message:
 - '{path}'
 - '{flag_values}'
+short_source: 'FILE'
+source: 'MacOS File System Events Disk Log Stream'
 ---
 type: 'basic'
 data_type: 'macos:install_history:entry'
 message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
 short_message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
+short_source: 'PLIST'
+source: 'MacOS install history plist'
 ---
 type: 'basic'
 data_type: 'macos:launchd:entry'
 message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
 short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_source: 'PLIST'
+source: 'MacOS launchd plist'
 ---
 type: 'conditional'
 data_type: 'macos:software_updata:entry'
@@ -329,11 +373,15 @@ message:
 short_message:
 - 'Last update: MacOS {system_version}'
 - 'Recommended updates: {recommended_updates}'
+short_source: 'PLIST'
+source: 'MacOS software update plist'
 ---
 type: 'basic'
 data_type: 'macos:time_machine:backup'
 message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
 short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_source: 'PLIST'
+source: 'MacOS TimeMachine plist'
 ---
 type: 'conditional'
 data_type: 'macos:tcc_entry'
@@ -352,6 +400,8 @@ message:
 short_message:
 - '{service}:'
 - '{client}'
+short_source: 'MacOS TCC'
+source: 'MacOS Transparenty, Control and Consent logs'
 ---
 type: 'conditional'
 data_type: 'macos:user:entry'
@@ -366,11 +416,15 @@ short_message:
 - 'User: {username}'
 - '({user_identifier})'
 - 'Full name: {fullname}'
+short_source: 'PLIST'
+source: 'MacOS User plist'
 ---
 type: 'basic'
 data_type: 'macosx:application_usage'
 message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
 short_message: '{application} ({count} time(s))'
+short_source: 'LOG'
+source: 'MacOS Application Usage Log'
 ---
 type: 'conditional'
 data_type: 'macosx:lsquarantine'
@@ -380,6 +434,8 @@ message:
 - '<{data}>'
 short_message:
 - '{url}'
+short_source: 'LOG'
+source: 'MacOS LS Quarantine Database'
 ---
 type: 'conditional'
 data_type: 'plist:key'
@@ -392,6 +448,8 @@ short_message:
 - '{root}/'
 - '{key}'
 - ' {desc}'
+short_source: 'PLIST'
+source: 'Plist file'
 ---
 type: 'conditional'
 data_type: 'spotlight:metadata_item'
@@ -400,13 +458,19 @@ message:
 - '{content_type}'
 short_message:
 - '{file_name}'
+short_source: 'SPOTLIGHT'
+source: 'Spotlight store database'
 ---
 type: 'basic'
 data_type: 'spotlight_searched_terms:entry'
 message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
 short_message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+short_source: 'PLIST'
+source: 'Spotlight searched terms plist'
 ---
 type: 'basic'
 data_type: 'spotlight_volume_configuration:store'
 message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'
 short_message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'
+short_source: 'PLIST'
+source: 'Spotlight volume configuration plist'

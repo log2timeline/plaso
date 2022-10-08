@@ -38,6 +38,8 @@ type: 'basic'
 data_type: 'fs:mactime:line'
 message: '{filename}'
 short_message: '{filename}'
+short_source: 'FILE'
+source: 'Mactime Bodyfile'
 ---
 type: 'conditional'
 data_type: 'ios:mobile_installation:line'
@@ -54,6 +56,8 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - 'pe_type'
+short_source: 'PE'
+source: 'PE Compilation time'
 ---
 type: 'conditional'
 data_type: 'pe:delay_import:import_time'
@@ -63,6 +67,8 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - '{dll_name}'
+short_source: 'PE'
+source: 'PE Delay Import Table'
 ---
 type: 'conditional'
 data_type: 'pe:export_table'
@@ -72,6 +78,8 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - '{dll_name}'
+short_source: 'PE'
+source: 'PE Export Table'
 ---
 type: 'conditional'
 data_type: 'pe:import:import_time'
@@ -81,6 +89,8 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - '{dll_name}'
+short_source: 'PE'
+source: 'PE Import Table'
 ---
 type: 'conditional'
 data_type: 'pe:load_config:modification_time'
@@ -89,6 +99,8 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - 'pe_type'
+short_source: 'PE'
+source: 'PE Load Configuration Table'
 ---
 type: 'conditional'
 data_type: 'pe:resource:creation_time'
@@ -97,3 +109,5 @@ message:
 - 'Import hash: {imphash}'
 short_message:
 - 'pe_type'
+short_source: 'PE'
+source: 'PE Resource Creation Time'

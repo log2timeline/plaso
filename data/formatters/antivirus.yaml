@@ -1,6 +1,23 @@
 # Plaso anti-virus related event formatters.
 ---
 type: 'conditional'
+data_type: 'av:defender:detection_history'
+message:
+- 'File Name: {filename}'
+- 'Hash: {sha256}'
+- 'User: {host_and_user}'
+- '{threat_name}'
+- 'Process: {process}'
+- '{container_filenames}'
+- '{web_filenames}'
+- '{additional_filenames}'
+short_message:
+- '{filename}'
+- '{threat_name}'
+short_source: 'LOG'
+source: 'Windows Defender Detection History Log'
+---
+type: 'conditional'
 data_type: 'av:mcafee:accessprotectionlog'
 message:
 - 'File Name: {filename}'
@@ -12,6 +29,8 @@ message:
 short_message:
 - '{filename}'
 - '{action}'
+short_source: 'LOG'
+source: 'McAfee Access Protection Log'
 ---
 type: 'conditional'
 data_type: 'av:symantec:scanlog'
@@ -161,6 +180,8 @@ short_message:
 - '{action0_map}'
 - '{action1_map}'
 - '{action2_map}'
+short_source: 'LOG'
+source: 'Symantec AV Log'
 ---
 type: 'conditional'
 data_type: 'av:trendmicro:scan'
@@ -205,6 +226,8 @@ short_message:
 - '{path}'
 - '{filename}'
 - '{action}'
+short_source: 'LOG'
+source: 'Trend Micro Office Scan Virus Detection Log'
 ---
 type: 'conditional'
 data_type: 'av:trendmicro:webrep'
@@ -229,6 +252,8 @@ message:
 short_message:
 - '{url}'
 - '{group_name}'
+short_source: 'LOG'
+source: 'Trend Micro Office Scan Virus Detection Log'
 ---
 type: 'conditional'
 data_type: 'sophos:av:log'
@@ -236,18 +261,5 @@ message:
 - '{text}'
 short_message:
 - '{text}'
----
-type: 'conditional'
-data_type: 'av:defender:detection_history'
-message:
-- 'File Name: {filename}'
-- 'Hash: {sha256}'
-- 'User: {host_and_user}'
-- '{threat_name}'
-- 'Process: {process}'
-- '{container_filenames}'
-- '{web_filenames}'
-- '{additional_filenames}'
-short_message:
-- '{filename}'
-- '{threat_name}'
+short_source: 'LOG'
+source: 'Sophos Anti-Virus log'

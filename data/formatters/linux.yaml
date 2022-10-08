@@ -9,6 +9,8 @@ message:
 - '[{requester}]'
 short_message:
 - '{packages}'
+short_source: 'LOG'
+source: 'APT History Log'
 ---
 type: 'conditional'
 data_type: 'dpkg:line'
@@ -16,11 +18,15 @@ message:
 - '{body}'
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'dpkg log file'
 ---
 type: 'basic'
 data_type: 'linux:locate'
 message: 'Folder Paths: {paths}'
 short_message: '{paths}'
+short_source: 'LOCATE'
+source: 'Locate Database record (updatedb)'
 ---
 type: 'conditional'
 data_type: 'linux:utmp:event'
@@ -52,6 +58,8 @@ short_message:
 - 'User: {username}'
 - 'PID: {pid}'
 - 'Status: {status}'
+short_source: 'LOG'
+source: 'UTMP session'
 ---
 type: 'conditional'
 data_type: 'selinux:line'
@@ -68,3 +76,5 @@ short_message:
 - ', pid: {pid}'
 - ']'
 - ' {body}'
+short_source: 'LOG'
+source: 'Audit Log'
