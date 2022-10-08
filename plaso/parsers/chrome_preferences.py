@@ -101,15 +101,16 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   _ENCODING = 'utf-8'
 
-  # TODO site_engagement & ssl_cert_decisions
+  # TODO: add site_engagement & ssl_cert_decisions.
   _EXCEPTIONS_KEYS = frozenset([
       'geolocation',
       'media_stream_camera',
       'media_stream_mic',
       'midi_sysex',
       'notifications',
-      'push_messaging',
-  ])
+      'push_messaging'])
+
+  _MAXIMUM_FILE_SIZE = 16 * 1024 * 1024
 
   def _ExtractExtensionInstallEvents(self, settings_dict, parser_mediator):
     """Extract extension installation events.
@@ -199,34 +200,39 @@ class ChromePreferencesParser(interface.FileObjectParser):
     """
     # First pass check for initial character being open brace.
     if file_object.read(1) != b'{':
+      display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, '
-          'missing opening brace.').format(
-              self.NAME, parser_mediator.GetDisplayName()))
+          '[{0:s}] {1:s} is not a valid Preference file, missing opening '
+          'brace.').format(self.NAME, display_name))
 
     file_object.seek(0, os.SEEK_SET)
+
+    # Note that _MAXIMUM_FILE_SIZE prevents this read to become too large.
     file_content = file_object.read()
 
     try:
       file_content = codecs.decode(file_content, self._ENCODING)
     except UnicodeDecodeError:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, '
-          'unable to decode UTF-8.').format(
-              self.NAME, parser_mediator.GetDisplayName()))
+          '[{0:s}] {1:s} is not a valid Preference file, unable to decode '
+          'UTF-8.').format(self.NAME, display_name))
 
     # Second pass to verify it's valid JSON
     try:
       json_dict = json.loads(file_content)
+
     except ValueError as exception:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser((
           '[{0:s}] Unable to parse file {1:s} as JSON: {2!s}').format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+              self.NAME, display_name, exception))
+
     except IOError as exception:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser((
-          '[{0:s}] Unable to open file {1:s} for parsing as'
-          'JSON: {2!s}').format(
-              self.NAME, parser_mediator.GetDisplayName(), exception))
+          '[{0:s}] Unable to open file {1:s} for parsing as JSON: '
+          '{2!s}').format(self.NAME, display_name, exception))
 
     # Third pass to verify the file has the correct keys in it for Preferences
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
@@ -234,17 +240,17 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     extensions_setting_dict = json_dict.get('extensions')
     if not extensions_setting_dict:
-      raise errors.WrongParser(
-          '[{0:s}] {1:s} is not a valid Preference file, '
-          'does not contain extensions value.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.WrongParser((
+          '[{0:s}] {1:s} is not a valid Preference file, does not contain '
+          'extensions value.').format(self.NAME, display_name))
 
     extensions_dict = extensions_setting_dict.get('settings')
     if not extensions_dict:
-      raise errors.WrongParser(
-          '[{0:s}] {1:s} is not a valid Preference file, '
-          'does not contain extensions settings value.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.WrongParser((
+          '[{0:s}] {1:s} is not a valid Preference file, does not contain '
+          'extensions settings value.').format(self.NAME, display_name))
 
     extensions_autoupdate_dict = extensions_setting_dict.get('autoupdate')
     if extensions_autoupdate_dict:

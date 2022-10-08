@@ -19,8 +19,8 @@ class PlistParser(interface.FileObjectParser):
   NAME = 'plist'
   DATA_FORMAT = 'Property list (plist) file'
 
-  # 50MB is 10x larger than any plist file seen to date.
-  _MAXIMUM_PLIST_FILE_SIZE = 50000000
+  # 50 MB is 10x larger than any plist file seen to date.
+  _MAXIMUM_FILE_SIZE = 50000000
 
   _UTF16BE_BYTE_ORDER_MARK = b'\xfe\xff'
   _UTF16LE_BYTE_ORDER_MARK = b'\xff\xfe'
@@ -83,16 +83,8 @@ class PlistParser(interface.FileObjectParser):
       WrongParser: when the file cannot be parsed.
     """
     filename = parser_mediator.GetFilename()
-    file_size = file_object.get_size()
 
-    if file_size <= 0:
-      raise errors.WrongParser(
-          'File size: {0:d} bytes is less equal 0.'.format(file_size))
-
-    if file_size > self._MAXIMUM_PLIST_FILE_SIZE:
-      raise errors.WrongParser(
-          'File size: {0:d} bytes is larger than 50 MB.'.format(file_size))
-
+    # Note that _MAXIMUM_FILE_SIZE prevents this read to become too large.
     plist_data = file_object.read()
 
     has_leading_whitespace = False
