@@ -301,6 +301,11 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatSource(self):
     """Tests the _FormatSource function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (
@@ -314,6 +319,11 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   def testFormatSourceShort(self):
     """Tests the _FormatSourceShort function."""
     output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
     test_helper = formatting_helper.FieldFormattingHelper()
 
     event, event_data, event_data_stream = (

@@ -11,6 +11,8 @@ short_message:
 - 'Action: {action}'
 - 'Container Name: {container_name}'
 - 'Container ID: {container_id}'
+short_source: 'DOCKER'
+source: 'Docker Container'
 ---
 type: 'conditional'
 data_type: 'docker:json:container:log'
@@ -23,6 +25,8 @@ short_message:
 - 'Text: {log_line}'
 - 'Container ID: {container_id}'
 - 'Source: {log_source}'
+short_source: 'DOCKER'
+source: 'Docker Container Log'
 ---
 type: 'conditional'
 data_type: 'docker:json:layer'
@@ -33,6 +37,8 @@ separator: ', '
 short_message:
 - 'Command: {command}'
 - 'Layer ID: {layer_id}'
+short_source: 'DOCKER'
+source: 'Docker Layer'
 ---
 type: 'basic'
 data_type: 'fs:mactime:line'
@@ -48,6 +54,8 @@ message:
 - 'Body: {body}'
 short_message:
 - 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiag log'
 ---
 type: 'conditional'
 data_type: 'pe:compilation:compilation_time'

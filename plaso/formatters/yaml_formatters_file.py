@@ -211,25 +211,26 @@ class YAMLFormattersFile(object):
     message = formatter_definition_values.get('message', None)
     if not message:
       raise errors.ParseError(
-          'Invalid event formatter definition missing message.')
+          'Invalid event formatter definition: {0:s} missing message.'.format(
+              data_type))
 
     short_message = formatter_definition_values.get('short_message', None)
     if not short_message:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing short message.')
+      raise errors.ParseError((
+          'Invalid event formatter definition: {0:s} missing short '
+          'message.').format(data_type))
 
     short_source = formatter_definition_values.get('short_source', None)
+    if not short_source:
+      raise errors.ParseError((
+          'Invalid event formatter definition: {0:s} missing short '
+          'source.').format(data_type))
+
     source = formatter_definition_values.get('source', None)
-
-    # TODO: for only check if both short_source and source are defined or not
-    # at all.
-    if not short_source and source:
+    if not source:
       raise errors.ParseError(
-          'Invalid event formatter definition missing short source.')
-
-    if short_source and not source:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing source.')
+          'Invalid event formatter definition: {0:s} missing source.'.format(
+              data_type))
 
     if formatter_type == 'basic':
       formatter = interface.BasicEventFormatter(

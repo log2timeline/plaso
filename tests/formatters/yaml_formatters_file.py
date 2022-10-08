@@ -24,7 +24,9 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
           'Type: {file_entry_type}',
           '({unallocated})'],
       'short_message': [
-          '{filename}']}
+          '{filename}'],
+      'short_source': 'SOURCE',
+      'source': 'My Custom Log Source'}
 
   def testReadFormatterDefinition(self):
     """Tests the _ReadFormatterDefinition function."""
