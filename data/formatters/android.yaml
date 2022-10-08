@@ -1,15 +1,6 @@
 # Plaso Android related event formatters.
 ---
 type: 'conditional'
-data_type: 'android:event:last_resume_time'
-message:
-- 'Package: {package}'
-- 'Component: {component}'
-short_message:
-- 'Package: {package}'
-- 'Component: {component}'
----
-type: 'conditional'
 data_type: 'android:event:call'
 message:
 - '{call_type}'
@@ -18,6 +9,32 @@ message:
 - 'Duration: {duration} seconds'
 short_message:
 - '{call_type} Call'
+short_source: 'LOG'
+source: 'Android Call History'
+---
+type: 'conditional'
+data_type: 'android:event:last_resume_time'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
+data_type: 'android:logcat'
+message:
+- '{message}'
+- 'Component Tag: {component_tag}'
+- 'PID: {pid}'
+- 'Thread: {thread_identifier}'
+- 'User identifier: {user_identifier}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Android logcat'
 ---
 type: 'conditional'
 data_type: 'android:messaging:hangouts'
@@ -41,17 +58,8 @@ message:
 - 'Type: {message_type}'
 short_message:
 - '{body}'
----
-type: 'conditional'
-data_type: 'android:logcat'
-message:
-- '{message}'
-- 'Component Tag: {component_tag}'
-- 'PID: {pid}'
-- 'Thread: {thread_identifier}'
-- 'User identifier: {user_identifier}'
-short_message:
-- '{message}'
+short_source: 'HANGOUTS'
+source: 'Google Hangouts Message'
 ---
 type: 'conditional'
 data_type: 'android:messaging:sms'
@@ -62,6 +70,8 @@ message:
 - 'Message: {body}'
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'Android SMS messages'
 ---
 type: 'conditional'
 data_type: 'android:webviewcache'
@@ -70,6 +80,8 @@ message:
 - 'Content Length: {content_length}'
 short_message:
 - '{url}'
+short_source: 'WebViewCache'
+source: 'Android WebViewCache'
 ---
 type: 'conditional'
 data_type: 'tango:android:contact'
@@ -86,6 +98,8 @@ short_message:
 - '{first_name}'
 - '{last_name}'
 - 'Status: {status}'
+short_source: 'Tango Android'
+source: 'Tango Android Contact'
 ---
 type: 'conditional'
 data_type: 'tango:android:conversation'
@@ -93,6 +107,8 @@ message:
 - 'Conversation ({conversation_identifier})'
 short_message:
 - 'Conversation ({conversation_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Conversation'
 ---
 type: 'conditional'
 data_type: 'tango:android:message'
@@ -109,6 +125,8 @@ message:
 short_message:
 - '{direction}'
 - 'Message ({message_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Message'
 ---
 type: 'conditional'
 data_type: 'twitter:android:contact'
@@ -126,6 +144,8 @@ short_message:
 - 'Screen name: {username}'
 - 'Description: {description}'
 - 'URL: {web_url}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Contacts'
 ---
 type: 'conditional'
 data_type: 'twitter:android:search'
@@ -134,6 +154,8 @@ message:
 - 'Query: {search_query}'
 short_message:
 - 'Query: {search_query}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Search'
 ---
 type: 'conditional'
 data_type: 'twitter:android:status'
@@ -158,6 +180,8 @@ message:
 short_message:
 - 'User: {username}'
 - 'Status: {content}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Status'
 ---
 type: 'conditional'
 data_type: 'webview:cookie'
@@ -171,3 +195,5 @@ short_message:
 - '{host}'
 - '{name}'
 - '{value}'
+short_source: 'WebView'
+source: 'Android WebView'

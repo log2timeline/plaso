@@ -36,6 +36,14 @@ plaso.containers.counts module
    :undoc-members:
    :show-inheritance:
 
+plaso.containers.event\_registry module
+---------------------------------------
+
+.. automodule:: plaso.containers.event_registry
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.containers.event\_sources module
 --------------------------------------
 
@@ -88,14 +96,6 @@ plaso.containers.sessions module
 --------------------------------
 
 .. automodule:: plaso.containers.sessions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.containers.shell\_item\_events module
--------------------------------------------
-
-.. automodule:: plaso.containers.shell_item_events
    :members:
    :undoc-members:
    :show-inheritance:

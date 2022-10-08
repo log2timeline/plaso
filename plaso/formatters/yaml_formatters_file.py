@@ -12,6 +12,7 @@ class YAMLFormattersFile(object):
   """YAML-based formatters file.
 
   A YAML-based formatters file contains one or more event formatters.
+
   type: 'conditional'
   data_type: 'fs:stat'
   message:
@@ -20,6 +21,8 @@ class YAMLFormattersFile(object):
   - '({unallocated})'
   short_message:
   - '{filename}'
+  short_source: 'FILE'
+  source: 'File stat'
 
   Where:
   * type, defines the formatter data type, which can be "basic" or
@@ -28,6 +31,8 @@ class YAMLFormattersFile(object):
   * message, defines a list of message string pieces;
   * separator, defines the message and short message string pieces separator;
   * short_message, defines the short message string pieces;
+  * short_source, defines the short source description;
+  * source, defines the source description.
   """
 
   _SUPPORTED_KEYS = frozenset([
@@ -39,6 +44,8 @@ class YAMLFormattersFile(object):
       'message',
       'separator',
       'short_message',
+      'short_source',
+      'source',
       'type'])
 
   def _ReadBooleanHelpers(self, formatter, boolean_helpers_definition_values):
@@ -211,6 +218,19 @@ class YAMLFormattersFile(object):
       raise errors.ParseError(
           'Invalid event formatter definition missing short message.')
 
+    short_source = formatter_definition_values.get('short_source', None)
+    source = formatter_definition_values.get('source', None)
+
+    # TODO: for only check if both short_source and source are defined or not
+    # at all.
+    if not short_source and source:
+      raise errors.ParseError(
+          'Invalid event formatter definition missing short source.')
+
+    if short_source and not source:
+      raise errors.ParseError(
+          'Invalid event formatter definition missing source.')
+
     if formatter_type == 'basic':
       formatter = interface.BasicEventFormatter(
           data_type=data_type, format_string=message,
@@ -235,6 +255,9 @@ class YAMLFormattersFile(object):
 
     flags_helpers = formatter_definition_values.get('flags_helpers', [])
     self._ReadFlagsHelpers(formatter, flags_helpers)
+
+    if short_source and source:
+      formatter.source_mapping = (short_source, source)
 
     return formatter
 

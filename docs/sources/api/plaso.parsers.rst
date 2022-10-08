@@ -335,6 +335,14 @@ plaso.parsers.plugins module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.postgresql module
+-------------------------------
+
+.. automodule:: plaso.parsers.postgresql
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.presets module
 ----------------------------
 

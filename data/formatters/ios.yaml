@@ -10,6 +10,8 @@ message:
 short_message:
 - 'Accessor Identifier: {accessor_identifier}'
 - 'Resource Category: {resource_category}'
+short_source: 'LOG'
+source: 'iOS application privacy report'
 ---
 type: 'conditional'
 data_type: 'ios:app_privacy:network'
@@ -18,6 +20,8 @@ message:
 - 'Domain: {domain}'
 short_message:
 - 'Bundle Identifier: {bundle_identifier}'
+short_source: 'LOG'
+source: 'iOS application privacy report'
 ---
 type: 'conditional'
 data_type: 'ios:carplay:history:entry'
@@ -25,6 +29,8 @@ message:
 - 'Application identifier: {application_identifier}'
 short_message:
 - 'Application identifier: {application_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
 data_type: 'ios:kik:messaging'
@@ -60,6 +66,8 @@ message:
 - 'Message: {body}'
 short_message:
 - '{body}'
+short_source: 'Kik iOS'
+source: 'Kik iOS messages'
 ---
 type: 'conditional'
 data_type: 'ios:lockdown:log:line'
@@ -163,6 +171,8 @@ short_message:
 - 'Screen name: {screen_name}'
 - 'Description: {description}'
 - 'URL: {url}'
+short_source: 'Twitter iOS'
+source: 'Twitter Android Contacts'
 ---
 type: 'conditional'
 data_type: 'twitter:ios:status'
@@ -183,3 +193,5 @@ message:
 short_message:
 - 'Name: {name}'
 - 'Message: {text}'
+short_source: 'Twitter iOS'
+source: 'Twitter Android Status'

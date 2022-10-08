@@ -4,6 +4,8 @@ type: 'basic'
 data_type: 'ccleaner:configuration'
 message: '[{key_path}] {configuration}'
 short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
 ---
 type: 'conditional'
 data_type: 'ccleaner:update'
@@ -11,6 +13,8 @@ message:
 - 'Origin: {key_path}'
 short_message:
 - 'Origin: {key_path}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
 ---
 type: 'conditional'
 data_type: 'file_history:namespace:event'
@@ -22,6 +26,8 @@ message:
 - 'USN number: {usn_number}'
 short_message:
 - 'Filename: {original_filename}'
+short_source: 'REG'
+source: 'File History Namespace'
 ---
 type: 'conditional'
 data_type: 'iis:log:line'
@@ -50,6 +56,8 @@ short_message:
 - ':'
 - '{dest_port}'
 - ']'
+short_source: 'LOG'
+source: 'IIS Log'
 ---
 type: 'conditional'
 data_type: 'setupapi:log:line'
@@ -61,6 +69,8 @@ separator: ' - '
 short_message:
 - '{exit_status}'
 - '{entry_type}'
+short_source: 'LOG'
+source: 'Setup API Log'
 ---
 type: 'conditional'
 data_type: 'software_management:sccm:log'
@@ -69,6 +79,8 @@ message:
 - '{text}'
 short_message:
 - '{text}'
+short_source: 'LOG'
+source: 'SCCM Log'
 ---
 type: 'conditional'
 data_type: 'task_scheduler:task_cache:entry'
@@ -78,6 +90,8 @@ message:
 - '[Identifier: {task_identifier}]'
 short_message:
 - 'Task: {task_name}'
+short_source: 'REG'
+source: 'Task Cache Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:diagnosis:eventtranscript'
@@ -693,6 +707,8 @@ type: 'basic'
 data_type: 'winrar:history'
 message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'WinRAR History Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:shell_item:file_entry'

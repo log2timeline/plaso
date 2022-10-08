@@ -13,6 +13,8 @@ message:
 short_message:
 - '{http_request}'
 - 'from: {ip_address}'
+short_source: 'LOG'
+source: 'Apache Access Log'
 ---
 type: 'conditional'
 data_type: 'aws:cloudtrail:entry'
@@ -26,6 +28,8 @@ short_message:
 - 'User {user_name}'
 - 'performed {event_name}'
 - 'on [{resources}]'
+short_source: 'LOG'
+source: 'AWS CloudTrail Log'
 ---
 type: 'conditional'
 data_type: 'aws:elb:access'
@@ -54,6 +58,8 @@ short_message:
 - 'domain_name: {domain_name}'
 - 'request: {request}'
 - 'user_agent: {user_agent}'
+short_source: 'LOG'
+source: 'AWS Elastic Load Balancer Access Log'
 ---
 type: 'conditional'
 data_type: 'azure:activitylog:entry'
@@ -66,6 +72,8 @@ short_message:
 - 'User {caller}'
 - 'performed {operation_name}'
 - 'on {resource_identifier}'
+short_source: 'LOG'
+source: 'Azure Activity Log'
 ---
 type: 'conditional'
 data_type: 'azure:applicationgatewayaccess:entry'
@@ -103,11 +111,15 @@ short_message:
 - 'http method: {http_method}'
 - 'original request URI: {original_request_uri}'
 - 'http status: {http_status}'
+short_source: 'LOG'
+source: 'Azure Application Gateway Access Log'
 ---
 type: 'basic'
 data_type: 'bash:history:command'
 message: 'Command executed: {command}'
 short_message: '{command}'
+short_source: 'LOG'
+source: 'Bash History'
 ---
 type: 'conditional'
 data_type: 'confluence:access'
@@ -139,6 +151,8 @@ message:
 short_message:
 - 'Status: {status}'
 - 'Job Name: {job_name}'
+short_source: 'LOG'
+source: 'CUPS IPP Log'
 ---
 type: 'conditional'
 data_type: 'docker:container:configuration'
@@ -151,6 +165,8 @@ short_message:
 - 'Container identifier: {container_identifier}'
 - 'Container name: {container_name}'
 - 'Action: {action}'
+short_source: 'DOCKER'
+source: 'Docker Container'
 ---
 type: 'conditional'
 data_type: 'docker:container:log:entry'
@@ -163,6 +179,8 @@ short_message:
 - 'Container identifier: {container_identifier}'
 - 'Source: {log_source}'
 - 'Text: {log_line}'
+short_source: 'DOCKER'
+source: 'Docker Container Log'
 ---
 type: 'conditional'
 data_type: 'docker:layer:configuration'
@@ -173,6 +191,8 @@ separator: ', '
 short_message:
 - 'Layer identifier: {layer_identifier}'
 - 'Command: {command}'
+short_source: 'DOCKER'
+source: 'Docker Layer'
 ---
 type: 'conditional'
 data_type: 'dropbox:sync_history:entry'
@@ -190,6 +210,8 @@ type: 'basic'
 data_type: 'fish:history:command'
 message: 'Command executed: {command}'
 short_message: '{command}'
+short_source: 'LOG'
+source: 'Fish History'
 ---
 type: 'conditional'
 data_type: 'fs:bodyfile:entry'
@@ -201,6 +223,8 @@ message:
 - 'MD5: {md5}'
 short_message:
 - '{filename}'
+short_source: 'FILE'
+source: 'Bodyfile'
 ---
 type: 'conditional'
 data_type: 'fs:ntfs:usn_change'
@@ -251,6 +275,8 @@ short_message:
 - '{filename}'
 - '{file_reference}'
 - '{update_reason}'
+short_source: 'FILE'
+source: 'NTFS USN change'
 ---
 type: 'conditional'
 data_type: 'fs:stat'
@@ -268,6 +294,8 @@ message:
 - '({unallocated})'
 short_message:
 - '{filename}'
+short_source: 'FILE'
+source: 'File stat'
 ---
 type: 'conditional'
 data_type: 'fs:stat:ntfs'
@@ -301,6 +329,8 @@ short_message:
 - '{filename}'
 - '{file_reference}'
 - '{attribute_name}'
+short_source: 'FILE'
+source: 'NTFS file stat'
 ---
 type: 'conditional'
 data_type: 'gcp:log:entry'
@@ -314,6 +344,8 @@ short_message:
 - 'User {user}'
 - 'performed {action}'
 - 'on {resource}'
+short_source: 'LOG'
+source: 'Google Cloud Log'
 ---
 type: 'conditional'
 data_type: 'gdrive:snapshot:cloud_entry'
@@ -343,6 +375,8 @@ message:
 - 'Type: {document_type}'
 short_message:
 - '{path}'
+short_source: 'LOG'
+source: 'Google Drive (cloud entry)'
 ---
 type: 'conditional'
 data_type: 'gdrive:snapshot:local_entry'
@@ -351,6 +385,8 @@ message:
 - 'Size: {size}'
 short_message:
 - '{path}'
+short_source: 'LOG'
+source: 'Google Drive (local entry)'
 ---
 type: 'conditional'
 data_type: 'gdrive_sync:log:line'
@@ -362,6 +398,8 @@ message:
 - '{message}'
 short_message:
 - '{message}'
+short_source: 'LOG'
+source: 'GoogleDriveSync Log'
 ---
 type: 'conditional'
 data_type: 'googlelog:log'
@@ -371,6 +409,8 @@ message:
 - '{message}'
 short_message:
 - '{message}'
+short_source: 'LOG'
+source: 'Google Log'
 ---
 type: 'conditional'
 data_type: 'java:download:idx'
@@ -382,6 +422,8 @@ short_message:
 - 'IDX Version: {idx_version}'
 - 'Host IP address: ({ip_address})'
 - 'Download URL: {url}'
+short_source: 'JAVA_IDX'
+source: 'Java Cache IDX'
 ---
 type: 'conditional'
 data_type: 'kodi:videos:viewing'
@@ -390,6 +432,8 @@ message:
 - 'Play Count: {play_count}'
 short_message:
 - '{filename}'
+short_source: 'KODI'
+source: 'Kodi Video Viewed'
 ---
 type: 'conditional'
 data_type: 'metadata:openxml'
@@ -427,6 +471,8 @@ short_message:
 - 'Title: {title}'
 - 'Subject: {subject}'
 - 'Author: {author}'
+short_source: 'META'
+source: 'Open XML Metadata'
 ---
 type: 'conditional'
 data_type: microsoft:auditlog:entry
@@ -444,6 +490,8 @@ short_message:
 - 'on {workload}'
 - 'Result Status: {result_status}'
 - 'Record Type: {record_type}'
+short_source: 'LOG'
+source: 'Microsoft (Office) 365 Audit Log'
 ---
 type: 'conditional'
 data_type: 'networkminer:fileinfos:file'
@@ -463,6 +511,8 @@ short_message:
 - '{filename}'
 - '{file_path}'
 - '{file_md5}'
+short_source: 'NetworkMiner'
+source: 'NetworkMiner fileinfos'
 ---
 type: 'conditional'
 data_type: 'olecf:dest_list:entry'
@@ -486,6 +536,8 @@ short_message:
 - 'Entry: {entry_number}'
 - 'Pin status: {pin_status}'
 - 'Path: {path}'
+short_source: 'OLECF'
+source: 'OLECF Dest list entry'
 ---
 type: 'conditional'
 data_type: 'olecf:document_summary_info'
@@ -507,11 +559,15 @@ message:
 - 'Document version: {document_version}'
 short_message:
 - 'Company: {company}'
+short_source: 'OLECF'
+source: 'OLECF Document Summary Info'
 ---
 type: 'basic'
 data_type: 'olecf:item'
 message: 'Name: {name}'
 short_message: 'Name: {name}'
+short_source: 'OLECF'
+source: 'OLECF Item'
 ---
 type: 'conditional'
 data_type: 'olecf:summary_info'
@@ -544,6 +600,8 @@ short_message:
 - 'Subject: {subject}'
 - 'Author: {author}'
 - 'Revision number: {revision_number}'
+short_source: 'OLECF'
+source: 'OLECF Summary Info'
 ---
 type: 'conditional'
 data_type: 'p2p:bittorrent:transmission'
@@ -554,6 +612,8 @@ separator: '; '
 short_message:
 - 'Saved to {destination}'
 - 'Minutes seeded: {seedtime}'
+short_source: 'TORRENT'
+source: 'Transmission Active Torrents'
 ---
 type: 'conditional'
 data_type: 'p2p:bittorrent:utorrent'
@@ -566,6 +626,8 @@ short_message:
 - 'Torrent {caption}'
 - 'Saved to {path}'
 - 'Minutes seeded: {seedtime}'
+short_source: 'TORRENT'
+source: 'uTorrent Active Torrents'
 ---
 type: 'conditional'
 data_type: 'pe'
@@ -578,6 +640,8 @@ short_message:
 - '{pe_type}'
 - '[{pe_attribute}]'
 - '{dll_name}'
+short_source: 'PE'
+source: 'PE Event'
 ---
 type: 'conditional'
 data_type: 'PLSRecall:event'
@@ -591,6 +655,8 @@ short_message:
 - '{username}'
 - '{database_name}'
 - '{query}'
+short_source: 'PLSRecall'
+source: 'PL/SQL Developer Recall file'
 ---
 type: 'conditional'
 data_type: 'popularity_contest:log:event'
@@ -600,6 +666,8 @@ message:
 - 'tag [{record_tag}]'
 short_message:
 - '{mru}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
 ---
 type: 'conditional'
 data_type: 'popularity_contest:session:event'
@@ -611,6 +679,8 @@ message:
 short_message:
 - 'Session {session}'
 - '{status}'
+short_source: 'LOG'
+source: 'Popularity Contest Session'
 ---
 type: 'conditional'
 data_type: 'postgresql:application_log:entry'
@@ -622,6 +692,8 @@ message:
 short_message:
 - '{log_level}'
 - '{log_line}'
+short_source: 'LOG'
+source: 'PostgreSQL Log'
 ---
 type: 'conditional'
 data_type: 'santa:diskmount'
@@ -633,6 +705,8 @@ message:
 short_message:
 - '{action}'
 - '{volume}'
+short_source: 'LOG'
+source: 'Santa disk mount'
 ---
 type: 'conditional'
 data_type: 'santa:execution'
@@ -643,6 +717,8 @@ message:
 short_message:
 - '{decision}'
 - 'process: {process_path}'
+short_source: 'LOG'
+source: 'Santa Execution'
 ---
 type: 'conditional'
 data_type: 'santa:file_system_event'
@@ -653,6 +729,8 @@ message:
 short_message:
 - 'File {action}'
 - 'on: {file_path}'
+short_source: 'LOG'
+source: 'Santa FSEvent'
 ---
 type: 'conditional'
 data_type: 'shell:zsh:history'
@@ -661,6 +739,8 @@ message:
 - 'Time elapsed: {elapsed_seconds} seconds'
 short_message:
 - '{command}'
+short_source: 'HIST'
+source: 'Santa FSEvent'
 ---
 type: 'conditional'
 data_type: 'skydrive:log:old:line'
@@ -670,6 +750,8 @@ message:
 - '{text}'
 short_message:
 - '{text}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
 ---
 type: 'conditional'
 data_type: 'skydrive:log:line'
@@ -680,6 +762,8 @@ message:
 - '{detail}'
 short_message:
 - '{detail}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
 ---
 type: 'conditional'
 data_type: 'skype:event:account'
@@ -691,6 +775,8 @@ short_message:
 - '{username}'
 - '[{email}]'
 - 'Country: {country}'
+short_source: 'LOG'
+source: 'Skype Account'
 ---
 type: 'conditional'
 data_type: 'skype:event:call'
@@ -702,6 +788,8 @@ short_message:
 - 'From: {src_call}'
 - 'To: {dst_call}'
 - '[{call_type}]'
+short_source: 'LOG'
+source: 'Skype Call'
 ---
 type: 'conditional'
 data_type: 'skype:event:chat'
@@ -713,6 +801,8 @@ message:
 short_message:
 - 'From: {from_account}'
 - 'To: {to_account}'
+short_source: 'LOG'
+source: 'Skype Chat Message'
 ---
 type: 'conditional'
 data_type: 'skype:event:sms'
@@ -722,6 +812,8 @@ message:
 short_message:
 - 'To: {number}'
 - '[{text}]'
+short_source: 'LOG'
+source: 'Skype Text Message (SMS)'
 ---
 type: 'conditional'
 data_type: 'skype:event:transferfile'
@@ -735,6 +827,8 @@ short_message:
 - 'Destination: {destination}'
 - 'File: {transferred_filename}'
 - '[{action_type}]'
+short_source: 'LOG'
+source: 'Skype File Transfer'
 ---
 type: 'conditional'
 data_type: 'snort:fastlog:alert'
@@ -753,6 +847,8 @@ short_message:
 - 'Source-IP: {source_ip}'
 - 'Destination-IP: {destination_ip}'
 - 'Rule: {rule_identifier}'
+short_source: 'LOG'
+source: 'Snort3/Suricata fast-log alert log'
 ---
 type: 'conditional'
 data_type: 'syslog:comment'
@@ -761,6 +857,8 @@ message:
 separator: ''
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'Log File'
 ---
 type: 'conditional'
 data_type: 'syslog:cron:task_run'
@@ -770,6 +868,8 @@ message:
 - 'pid: {pid}'
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'Cron log'
 ---
 type: 'conditional'
 data_type: 'syslog:line'
@@ -786,6 +886,8 @@ short_message:
 - '{reporter}'
 - ', pid: {pid}'
 - '] {body}'
+short_source: 'LOG'
+source: 'Log File'
 ---
 type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
@@ -798,6 +900,8 @@ message:
 separator: ''
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'SSH Log'
 ---
 type: 'conditional'
 data_type: 'syslog:ssh:login'
@@ -810,6 +914,8 @@ message:
 separator: ''
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'SSH Log'
 ---
 type: 'conditional'
 data_type: 'syslog:ssh:opened_connection'
@@ -820,6 +926,8 @@ message:
 separator: ''
 short_message:
 - '{body}'
+short_source: 'LOG'
+source: 'SSH Log'
 ---
 # It would be nice to have the _MACHINE_ID field, which is a unique identifier
 # for the system, and hopefully more unique than the _HOSTNAME field.
@@ -840,6 +948,8 @@ short_message:
 - '{reporter}'
 - ', pid: {pid}'
 - '] {body}'
+short_source: 'LOG'
+source: 'Systemd journal'
 ---
 type: 'conditional'
 data_type: 'systemd:journal:dirty'
@@ -856,11 +966,15 @@ short_message:
 - '{reporter}'
 - ', pid: {pid}'
 - '] {body}'
+short_source: 'LOG'
+source: 'Systemd journal'
 ---
 type: 'basic'
 data_type: 'text:entry'
 message: '{text}'
 short_message: '{text}'
+short_source: 'LOG'
+source: 'Text File'
 ---
 type: 'conditional'
 data_type: 'viminfo:history'
@@ -875,6 +989,8 @@ short_message:
 - '[{type}]'
 - '{value}'
 - '{filename}'
+short_source: 'HISTORY'
+source: 'viminfo'
 ---
 type: 'conditional'
 data_type: 'vsftpd:log'
@@ -882,6 +998,8 @@ message:
 - '{text}'
 short_message:
 - '{text}'
+short_source: 'LOG'
+source: 'vsftpd log'
 ---
 type: 'conditional'
 data_type: 'xchat:log:line'
@@ -891,6 +1009,8 @@ message:
 short_message:
 - '[nickname: {nickname}]'
 - '{text}'
+short_source: 'LOG'
+source: 'XChat Log'
 ---
 type: 'conditional'
 data_type: 'xchat:scrollback:line'
@@ -905,8 +1025,12 @@ short_message:
 - 'nickname: {nickname}'
 - ']'
 - ' {text}'
+short_source: 'LOG'
+source: 'XChat Scrollback Log'
 ---
 type: 'basic'
 data_type: 'zeitgeist:activity'
 message: '{subject_uri}'
 short_message: '{subject_uri}'
+short_source: 'LOG'
+source: 'Zeitgeist Activity Log'

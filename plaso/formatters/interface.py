@@ -198,6 +198,7 @@ class EventFormatter(object):
   Attributes:
     custom_helpers (list[str]): identifiers of custom event formatter helpers.
     helpers (list[EventFormatterHelper]): event formatter helpers.
+    source_mapping (tuple[str, str]): short and (long) source mapping.
   """
 
   # The format string can be defined as:
@@ -218,6 +219,7 @@ class EventFormatter(object):
 
     self.custom_helpers = []
     self.helpers = []
+    self.source_mapping = None
 
   @property
   def data_type(self):
