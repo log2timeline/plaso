@@ -4,6 +4,8 @@ type: 'basic'
 data_type: 'test:event'
 message: '{text}'
 short_message: '{text}'
+short_source: 'FILE'
+source: 'Test log file'
 ---
 type: 'conditional'
 data_type: 'test:fs:stat'
@@ -13,3 +15,5 @@ message:
 - '({unallocated})'
 short_message:
 - '{filename}'
+short_source: 'LOG'
+source: 'Test'

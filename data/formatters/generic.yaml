@@ -137,6 +137,8 @@ short_message:
 - '{http_request_method}'
 - '{http_request_uri}'
 - 'from: {remote_name}'
+short_source: 'LOG'
+source: 'Confluence access log'
 ---
 type: 'conditional'
 data_type: 'cups:ipp:event'
@@ -205,6 +207,8 @@ short_message:
 - '{local_path}'
 - '{event_type}'
 - '{direction}'
+short_source: 'HISTORY'
+source: 'Dropbox sync history'
 ---
 type: 'basic'
 data_type: 'fish:history:command'
