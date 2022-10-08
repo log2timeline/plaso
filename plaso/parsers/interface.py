@@ -145,7 +145,7 @@ class BaseParser(object):
     Returns:
       FormatSpecification: a format specification or None if not available.
     """
-    return
+    return None
 
   @classmethod
   def GetPluginNames(cls):
@@ -263,9 +263,17 @@ class FileEntryParser(BaseParser):
 class FileObjectParser(BaseParser):
   """The file-like object parser interface."""
 
-  # The initial file offset. Set this value to None if no initial
-  # file offset seek needs to be performed.
+  # The initial file offset. Set this value to None if no initial file offset
+  # seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
+
+  # The maximum file size supported by the parser. Set this value to None if no
+  # file size check needs to be performed.
+  _MAXIMUM_FILE_SIZE = None
+
+  # The minimum file size supported by the parser. Set this value to None if no
+  # file size check needs to be performed.
+  _MINIMUM_FILE_SIZE = None
 
   def Parse(self, parser_mediator, file_object):
     """Parses a single file-like object.
@@ -279,6 +287,22 @@ class FileObjectParser(BaseParser):
     """
     if not file_object:
       raise errors.WrongParser('Invalid file object')
+
+    file_size = file_object.get_size()
+    if file_size == 0:
+      return
+
+    if (self._MINIMUM_FILE_SIZE is not None and
+        file_size < self._MINIMUM_FILE_SIZE):
+      raise errors.WrongParser(
+          'File size: {0:d} too small, minimum: {1:d}.'.format(
+              file_size, self._MINIMUM_FILE_SIZE))
+
+    if (self._MAXIMUM_FILE_SIZE is not None and
+        file_size > self._MAXIMUM_FILE_SIZE):
+      raise errors.WrongParser(
+          'File size: {0:d} too large, maximum: {1:d}.'.format(
+              file_size, self._MAXIMUM_FILE_SIZE))
 
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
