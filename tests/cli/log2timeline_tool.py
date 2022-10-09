@@ -540,7 +540,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       # that support os.stat_result st_birthtime.
       expected_event_counters = {
           'fs:stat': [3, 4],
-          'pe': 3}
+          'pe_coff:dll_import': 2,
+          'pe_coff:file': 1}
 
       self.CheckEventCounters(storage_file, expected_event_counters)
 

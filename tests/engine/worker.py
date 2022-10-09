@@ -850,7 +850,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     expected_event_data_counts = {
         'fs:stat': 1,
-        'pe': 3}
+        'pe_coff:dll_import': 2,
+        'pe_coff:file': 1}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,

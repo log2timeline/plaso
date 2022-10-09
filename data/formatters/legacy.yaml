@@ -58,6 +58,20 @@ short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
 type: 'conditional'
+data_type: 'pe'
+message:
+- 'PE Type: {pe_type}'
+- '[{pe_attribute}]'
+- 'DLL name: {dll_name}'
+- 'Import hash: {imphash}'
+short_message:
+- '{pe_type}'
+- '[{pe_attribute}]'
+- '{dll_name}'
+short_source: 'PE'
+source: 'PE Event'
+---
+type: 'conditional'
 data_type: 'pe:compilation:compilation_time'
 message:
 - 'PE Type: {pe_type}'

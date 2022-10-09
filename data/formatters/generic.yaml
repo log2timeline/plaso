@@ -634,18 +634,37 @@ short_source: 'TORRENT'
 source: 'uTorrent Active Torrents'
 ---
 type: 'conditional'
-data_type: 'pe'
+data_type: 'pe_coff:dll_import'
+message:
+- 'Name: {name}'
+- 'Delayed import: {delayed_import}'
+short_message:
+- '{name}'
+short_source: 'PE'
+source: 'PE/COFF DLL import table'
+---
+type: 'conditional'
+data_type: 'pe_coff:file'
 message:
 - 'PE Type: {pe_type}'
-- '[{pe_attribute}]'
-- 'DLL name: {dll_name}'
 - 'Import hash: {imphash}'
+- 'Export DLL name: {export_dll_name}'
 short_message:
 - '{pe_type}'
-- '[{pe_attribute}]'
-- '{dll_name}'
+- '{export_dll_name}'
 short_source: 'PE'
-source: 'PE Event'
+source: 'PE/COFF file'
+---
+type: 'conditional'
+data_type: 'pe_coff:resource'
+message:
+- 'Identifier: {identifier}'
+- 'Name: {name}'
+short_message:
+- '{identifier}'
+- '{name}'
+short_source: 'PE'
+source: 'PE/COFF DLL resource section'
 ---
 type: 'conditional'
 data_type: 'PLSRecall:event'
