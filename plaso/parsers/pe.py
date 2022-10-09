@@ -6,13 +6,12 @@ import os
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.helpers import data_slice as dfvfs_data_slice
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import artifacts
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
 from plaso.lib import errors
@@ -23,28 +22,88 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class PEEventData(events.EventData):
-  """Portable Executable (PE) event data.
+class PEDLLImportEventData(events.EventData):
+  """Portable Executable (PE) DLL import event data.
 
   Attributes:
-    dll_name (str): name of an imported DLL.
-    imphash (str): "Import Hash" of the pe file the event relates to. Also see:
-        https://www.mandiant.com/resources/tracking-malware-import-hashing
-    pe_attribute (str): attribute of PE file the event relates to.
-    pe_type (str): type of PE file the event relates to.
-    section_names (list[str]): names of the sections in the PE file.
+    delayed_import (bool): True if the DLL is imported at run-time.
+    modification_time (dfdatetime.DateTimeValues): last modification date and
+        time.
+    name (str): name of the imported DLL.
   """
 
-  DATA_TYPE = 'pe'
+  DATA_TYPE = 'pe_coff:dll_import'
+
+  ATTRIBUTE_MAPPINGS = {
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
-    super(PEEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.dll_name = None
+    super(PEDLLImportEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.delayed_import = None
+    self.modification_time = None
+    self.name = None
+
+
+class PEFileEventData(events.EventData):
+  """Portable Executable (PE) file event data.
+
+  Attributes:
+    creation_time (dfdatetime.DateTimeValues): creation date and time.
+    export_dll_name (str): name of the exported DLL.
+    export_table_modification_time (dfdatetime.DateTimeValues): export table
+        last modification date and time.
+    imphash (str): "Import Hash" of the Portable Executable (PE) file. Also see:
+        https://www.mandiant.com/resources/tracking-malware-import-hashing
+    load_configuration_table_modification_time (dfdatetime.DateTimeValues):
+        load configuration table last modification date and time.
+    pe_type (str): type of Portable Executable (PE) file.
+    section_names (list[str]): names of the sections in the Portable Executable
+        (PE) file.
+  """
+
+  DATA_TYPE = 'pe_coff:file'
+
+  ATTRIBUTE_MAPPINGS = {
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'export_table_modification_time': (
+          definitions.TIME_DESCRIPTION_MODIFICATION),
+      'load_configuration_table_modification_time': (
+          definitions.TIME_DESCRIPTION_MODIFICATION)}
+
+  def __init__(self):
+    """Initializes event data."""
+    super(PEFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
+    self.export_dll_name = None
+    self.export_table_modification_time = None
     self.imphash = None
-    self.pe_attribute = None
+    self.load_configuration_table_modification_time = None
     self.pe_type = None
     self.section_names = None
+
+
+class PEResourceEventData(events.EventData):
+  """Portable Executable (PE) resource event data.
+
+  Attributes:
+    identifier (int): identifier of the resource.
+    modification_time (dfdatetime.DateTimeValues): last modification date and
+        time.
+    name (str): name of the resource.
+  """
+
+  DATA_TYPE = 'pe_coff:resource'
+
+  ATTRIBUTE_MAPPINGS = {
+      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
+  def __init__(self):
+    """Initializes event data."""
+    super(PEResourceEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.identifier = None
+    self.modification_time = None
+    self.name = None
 
 
 class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
@@ -106,15 +165,12 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     return section_names
 
-  def _ParseLoadConfigurationTable(
-      self, parser_mediator, pefile_object, event_data):
+  def _ParseLoadConfigurationTable(self, pefile_object, event_data):
     """Parses the load configuration table.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
       pefile_object (pefile.PE): pefile object.
-      event_data (PEEventData): event data.
+      event_data (PEFileEventData): event data.
     """
     load_configuration_table = getattr(
         pefile_object, 'DIRECTORY_ENTRY_LOAD_CONFIG', None)
@@ -123,21 +179,16 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     timestamp = getattr(load_configuration_table.struct, 'TimeDateStamp', None)
     if timestamp:
-      event_data.pe_attribute = 'DIRECTORY_ENTRY_LOAD_CONFIG'
-
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.load_configuration_table_modification_time = date_time
 
-  def _ParseDelayImportTable(self, parser_mediator, pefile_object, event_data):
+  def _ParseDelayImportTable(self, parser_mediator, pefile_object):
     """Parses the delay import table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       pefile_object (pefile.PE): pefile object.
-      event_data (PEEventData): event data.
     """
     delay_import_table = getattr(
         pefile_object, 'DIRECTORY_ENTRY_DELAY_IMPORT', None)
@@ -145,7 +196,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       return
 
     for table_entry in delay_import_table:
-      timestamp = getattr(table_entry.struct, 'dwTimeStamp', 0)
+      timestamp = getattr(table_entry.struct, 'dwTimeStamp', None)
       if not timestamp:
         continue
 
@@ -154,34 +205,25 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         dll_name = dll_name.decode('ascii')
       except UnicodeDecodeError:
         dll_name = dll_name.decode('ascii', errors='replace')
-      if not dll_name:
-        dll_name = '<NO DLL NAME>'
 
-      event_data.pe_attribute = 'DIRECTORY_ENTRY_DELAY_IMPORT'
-      event_data.dll_name = dll_name
+      event_data = PEDLLImportEventData()
+      event_data.delayed_import = True
+      event_data.name = dll_name or None
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.modification_time = date_time
 
-    event_data.dll_name = None
+      parser_mediator.ProduceEventData(event_data)
 
-  def _ParseExportTable(self, parser_mediator, pefile_object, event_data):
+  def _ParseExportTable(self, pefile_object, event_data):
     """Parses the export table.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
       pefile_object (pefile.PE): pefile object.
-      event_data (PEEventData): event data.
+      event_data (PEFileEventData): event data.
     """
     export_table = getattr(pefile_object, 'DIRECTORY_ENTRY_EXPORT', None)
     if not export_table:
-      return
-
-    timestamp = getattr(export_table.struct, 'TimeDateStamp', 0)
-    if not timestamp:
       return
 
     dll_name = getattr(export_table, 'name', '')
@@ -189,34 +231,28 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       dll_name = dll_name.decode('ascii')
     except UnicodeDecodeError:
       dll_name = dll_name.decode('ascii', errors='replace')
-    if not dll_name:
-      dll_name = '<NO DLL NAME>'
 
-    event_data.pe_attribute = 'DIRECTORY_ENTRY_EXPORT'
-    event_data.dll_name = dll_name
+    event_data.export_dll_name = dll_name or None
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    timestamp = getattr(export_table.struct, 'TimeDateStamp', None)
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event_data.export_table_modification_time = date_time
 
-    event_data.dll_name = None
-
-  def _ParseImportTable(self, parser_mediator, pefile_object, event_data):
+  def _ParseImportTable(self, parser_mediator, pefile_object):
     """Parses the import table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       pefile_object (pefile.PE): pefile object.
-      event_data (PEEventData): event data.
     """
     import_table = getattr(pefile_object, 'DIRECTORY_ENTRY_IMPORT', None)
     if not import_table:
       return
 
     for table_entry in import_table:
-      timestamp = getattr(table_entry.struct, 'TimeDateStamp', 0)
+      timestamp = getattr(table_entry.struct, 'TimeDateStamp', None)
       if not timestamp:
         continue
 
@@ -225,27 +261,23 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         dll_name = dll_name.decode('ascii')
       except UnicodeDecodeError:
         dll_name = dll_name.decode('ascii', errors='replace')
-      if not dll_name:
-        dll_name = '<NO DLL NAME>'
 
-      event_data.pe_attribute = 'DIRECTORY_ENTRY_IMPORT'
-      event_data.dll_name = dll_name
+      event_data = PEDLLImportEventData()
+      event_data.delayed_import = False
+      event_data.name = dll_name or None
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.modification_time = date_time
 
-    event_data.dll_name = None
+      parser_mediator.ProduceEventData(event_data)
 
-  def _ParseResourceSection(self, parser_mediator, pefile_object, event_data):
+  def _ParseResourceSection(self, parser_mediator, pefile_object):
     """Parses the resource section.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       pefile_object (pefile.PE): pefile object.
-      event_data (PEEventData): event data.
     """
     resources = getattr(pefile_object, 'DIRECTORY_ENTRY_RESOURCE', None)
     if not resources:
@@ -254,15 +286,21 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     message_table_resource = None
     winevt_template_resource = None
     for resource in resources.entries:
+      if resource.name:
+        resource_name = str(resource.name)
+      else:
+        resource_name = None
+
       timestamp = getattr(resource.directory, 'TimeDateStamp', None)
       if timestamp:
-        event_data.pe_attribute = 'DIRECTORY_ENTRY_RESOURCE: {0!s}'.format(
-            resource.id)
+        event_data = PEResourceEventData()
+        event_data.identifier = resource.id
+        event_data.name = resource_name
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        event_data.modification_time = date_time
+
+        parser_mediator.ProduceEventData(event_data)
 
       # Only extract message strings from the first message table resource.
       if resource.id == 11 and not message_table_resource:
@@ -271,8 +309,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       # Need to cast resource.name name to a string since it is of type
       # pefile.UnicodeStringWrapperPostProcessor and would fail the comparison
       # with 'WEVT_TEMPLATE' otherwise.
-      elif (resource.name and str(resource.name) == 'WEVT_TEMPLATE' and
-            not winevt_template_resource):
+      elif resource_name == 'WEVT_TEMPLATE' and not winevt_template_resource:
         winevt_template_resource = resource
 
     if parser_mediator.extract_winevt_resources:
@@ -544,7 +581,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       raise errors.WrongParser(
           'Unable to read PE file with error: {0!s}'.format(exception))
 
-    event_data = PEEventData()
+    event_data = PEFileEventData()
     # Note that the result of get_imphash() is an empty string if there is no
     # import hash.
     event_data.imphash = pefile_object.get_imphash() or None
@@ -553,24 +590,22 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     timestamp = getattr(pefile_object.FILE_HEADER, 'TimeDateStamp', None)
     if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
+      event_data.creation_time = dfdatetime_posix_time.PosixTime(
+          timestamp=timestamp)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    self._ParseExportTable(pefile_object, event_data)
 
-    self._ParseExportTable(parser_mediator, pefile_object, event_data)
+    self._ParseLoadConfigurationTable(pefile_object, event_data)
 
-    self._ParseImportTable(parser_mediator, pefile_object, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
-    self._ParseLoadConfigurationTable(
-        parser_mediator, pefile_object, event_data)
+    self._ParseImportTable(parser_mediator, pefile_object)
 
-    self._ParseDelayImportTable(parser_mediator, pefile_object, event_data)
+    self._ParseDelayImportTable(parser_mediator, pefile_object)
 
-    self._ParseResourceSection(parser_mediator, pefile_object, event_data)
+    self._ParseResourceSection(parser_mediator, pefile_object)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClasses([
+    PEDLLImportEventData, PEFileEventData, PEResourceEventData])
 manager.ParsersManager.RegisterParser(PEParser)

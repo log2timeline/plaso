@@ -10,7 +10,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import artifacts
-from plaso.lib import definitions
 from plaso.parsers import pe
 
 from tests.parsers import test_lib
@@ -26,6 +25,10 @@ class PECOFFTest(test_lib.ParserTestCase):
     parser = pe.PEParser()
     storage_writer = self._ParseFile(['test_pe.exe'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
 
@@ -37,41 +40,43 @@ class PECOFFTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
-        'data_type': 'pe',
-        'date_time': '2015-04-21T14:53:56+00:00',
-        'pe_attribute': None,
-        'pe_type': 'Executable (EXE)',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'pe',
-        'date_time': '2015-04-21T14:53:55+00:00',
-        'pe_attribute': 'DIRECTORY_ENTRY_IMPORT',
-        'pe_type': 'Executable (EXE)',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'pe',
-        'date_time': '2015-04-21T14:53:54+00:00',
-        'dll_name': 'USER32.dll',
+        'creation_time': '2015-04-21T14:53:56+00:00',
+        'data_type': 'pe_coff:file',
+        'export_table_modification_time': None,
         'imphash': '8d0739063fc8f9955cc6696b462544ab',
-        'pe_attribute': 'DIRECTORY_ENTRY_DELAY_IMPORT',
-        'pe_type': 'Executable (EXE)',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
+        'load_configuration_table_modification_time': None,
+        'pe_type': 'Executable (EXE)'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'pe_coff:dll_import',
+        'delayed_import': False,
+        'modification_time': '2015-04-21T14:53:55+00:00',
+        'name': 'KERNEL32.dll'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'pe_coff:dll_import',
+        'delayed_import': True,
+        'modification_time': '2015-04-21T14:53:54+00:00',
+        'name': 'USER32.dll'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
     parser = pe.PEParser()
     storage_writer = self._ParseFile(['test_driver.sys'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -84,16 +89,16 @@ class PECOFFTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
-        'data_type': 'pe',
-        'date_time': '2015-04-21T14:53:54+00:00',
-        'pe_attribute': None,
-        'pe_type': 'Driver (SYS)',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'data_type': 'pe_coff:file',
+        'creation_time': '2015-04-21T14:53:54+00:00',
+        'export_table_modification_time': None,
+        'imphash': 'd9c9c4541168665f44917e3ddc4a00d5',
+        'load_configuration_table_modification_time': None,
+        'pe_type': 'Driver (SYS)'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseFileObjectOnResourceFile(self):
     """Tests the ParseFileObject on a resource Dynamic Link Library file."""
@@ -120,6 +125,12 @@ class PECOFFTest(test_lib.ParserTestCase):
     file_object = file_entry.GetFileObject()
     parser.Parse(parser_mediator, file_object)
 
+    self._ProcessEventData(storage_writer)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -131,16 +142,16 @@ class PECOFFTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
-        'data_type': 'pe',
-        'date_time': '2022-01-03T08:55:07+00:00',
-        'pe_attribute': None,
-        'pe_type': 'Dynamic Link Library (DLL)',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'creation_time': '2022-01-03T08:55:07+00:00',
+        'data_type': 'pe_coff:file',
+        'export_table_modification_time': None,
+        'imphash': '1913ea9cbfeed7fd2a2ef823b6656f85',
+        'load_configuration_table_modification_time': None,
+        'pe_type': 'Dynamic Link Library (DLL)'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
         'windows_eventlog_message_string')
