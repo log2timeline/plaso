@@ -3,6 +3,7 @@
 
 import ast
 import collections
+import itertools
 import os
 import pathlib
 import sqlite3
@@ -168,6 +169,8 @@ class SQLiteStorageFile(interface.BaseStore):
   # The maximum number of cached attribute containers
   _MAXIMUM_CACHED_CONTAINERS = 32 * 1024
 
+  _MAXIMUM_WRITE_CACHE_SIZE = 50
+
   def __init__(self):
     """Initializes a SQLite storage file."""
     super(SQLiteStorageFile, self).__init__()
@@ -178,6 +181,7 @@ class SQLiteStorageFile(interface.BaseStore):
     self._read_only = True
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._use_schema = True
+    self._write_cache = {}
 
     self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
     self.format_version = self._FORMAT_VERSION
@@ -343,13 +347,62 @@ class SQLiteStorageFile(interface.BaseStore):
 
       if self._storage_profiler:
         self._storage_profiler.Sample(
-            'get_container_by_index', 'read', container_type,
-            len(serialized_data), len(compressed_data))
+            'read_create', 'read', container_type, len(serialized_data),
+            len(compressed_data))
 
       container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
 
     return container
+
+  def _Flush(self):
+    """Ensures cached data is written to file.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    for container_type, write_cache in self._write_cache.items():
+      if len(write_cache) > 1:
+        self._FlushWriteCache(container_type, write_cache)
+
+    self._write_cache = {}
+
+    # We need to run commit or not all data is stored in the database.
+    self._connection.commit()
+
+  def _FlushWriteCache(self, container_type, write_cache):
+    """Flushes attribute container values cached for writing.
+
+    Args:
+      container_type (str): attribute container type.
+      write_cache (list[tuple[str]]): cached attribute container values.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
+    """
+    column_names = write_cache.pop(0)
+
+    value_statement = '({0:s})'.format(','.join(['?'] * len(column_names)))
+    values_statement = ', '.join([value_statement] * len(write_cache))
+
+    query = 'INSERT INTO {0:s} ({1:s}) VALUES {2:s}'.format(
+        container_type, ', '.join(column_names), values_statement)
+
+    if self._storage_profiler:
+      self._storage_profiler.StartTiming('write_new')
+
+    try:
+      self._cursor.execute(query, list(itertools.chain(*write_cache)))
+
+    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
+
+    finally:
+      if self._storage_profiler:
+        self._storage_profiler.StopTiming('write_new')
 
   def _GetAttributeContainersWithFilter(
       self, container_type, column_names=None, filter_expression=None,
@@ -369,6 +422,11 @@ class SQLiteStorageFile(interface.BaseStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
+    write_cache = self._write_cache.get(container_type, [])
+    if len(write_cache) > 1:
+      self._FlushWriteCache(container_type, write_cache)
+      del self._write_cache[container_type]
+
     query = 'SELECT _identifier, {0:s} FROM {1:s}'.format(
         ', '.join(column_names), container_type)
     if filter_expression:
@@ -664,6 +722,11 @@ class SQLiteStorageFile(interface.BaseStore):
           'Unsupported attribute container type: {0:s}'.format(
               container.CONTAINER_TYPE))
 
+    write_cache = self._write_cache.get(container.CONTAINER_TYPE, [])
+    if len(write_cache) > 1:
+      self._FlushWriteCache(container.CONTAINER_TYPE, write_cache)
+      del self._write_cache[container.CONTAINER_TYPE]
+
     self._UpdateAttributeContainerBeforeSerialize(container)
 
     column_names = []
@@ -795,23 +858,15 @@ class SQLiteStorageFile(interface.BaseStore):
         column_names = ['_data']
         values = [serialized_data]
 
-    query = 'INSERT INTO {0:s} ({1:s}) VALUES ({2:s})'.format(
-        container.CONTAINER_TYPE, ', '.join(column_names),
-        ','.join(['?'] * len(column_names)))
+    write_cache = self._write_cache.get(
+        container.CONTAINER_TYPE, [column_names])
+    write_cache.append(values)
 
-    if self._storage_profiler:
-      self._storage_profiler.StartTiming('write_new')
+    if len(write_cache) >= self._MAXIMUM_WRITE_CACHE_SIZE:
+      self._FlushWriteCache(container.CONTAINER_TYPE, write_cache)
+      write_cache = [column_names]
 
-    try:
-      self._cursor.execute(query, values)
-
-    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
-
-    finally:
-      if self._storage_profiler:
-        self._storage_profiler.StopTiming('write_new')
+    self._write_cache[container.CONTAINER_TYPE] = write_cache
 
     self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
@@ -867,8 +922,8 @@ class SQLiteStorageFile(interface.BaseStore):
       raise IOError('Storage file already closed.')
 
     if self._connection:
-      # We need to run commit or not all data is stored in the database.
-      self._connection.commit()
+      self._Flush()
+
       self._connection.close()
 
       self._connection = None
@@ -919,6 +974,11 @@ class SQLiteStorageFile(interface.BaseStore):
     container = self._GetCachedAttributeContainer(container_type, index)
     if container:
       return container
+
+    write_cache = self._write_cache.get(container_type, [])
+    if len(write_cache) > 1:
+      self._FlushWriteCache(container_type, write_cache)
+      del self._write_cache[container_type]
 
     schema = self._GetAttributeContainerSchema(container_type)
 
@@ -1007,6 +1067,11 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     if not self._HasTable(container_type):
       return 0
+
+    write_cache = self._write_cache.get(container_type, [])
+    if len(write_cache) > 1:
+      self._FlushWriteCache(container_type, write_cache)
+      del self._write_cache[container_type]
 
     # Note that this is SQLite specific, and will give inaccurate results if
     # there are DELETE commands run on the table. The Plaso SQLite storage
@@ -1114,9 +1179,11 @@ class SQLiteStorageFile(interface.BaseStore):
 
     if path_uri:
       connection = sqlite3.connect(
-          path_uri, detect_types=detect_types, uri=True)
+          path_uri, detect_types=detect_types, isolation_level='DEFERRED',
+          uri=True)
     else:
-      connection = sqlite3.connect(path, detect_types=detect_types)
+      connection = sqlite3.connect(
+          path, detect_types=detect_types, isolation_level='DEFERRED')
 
     try:
       # Use in-memory journaling mode to reduce IO.

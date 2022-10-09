@@ -294,6 +294,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       try:
         test_store.AddAttributeContainer(event_data_stream)
+
         identifier = event_data_stream.GetIdentifier()
 
         container = test_store.GetAttributeContainerByIdentifier(
