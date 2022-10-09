@@ -179,7 +179,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
-  _UNSIGNED_INTEGER = text_parser.PyparsingConstants.INTEGER | _BLANK
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _UNSIGNED_INTEGER = _INTEGER | _BLANK
 
   _SIGNED_INTEGER = pyparsing.Word('-', pyparsing.nums) | _UNSIGNED_INTEGER
 

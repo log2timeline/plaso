@@ -76,7 +76,6 @@ class PyparsingConstants(object):
   # Numbers.
   INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
 
-  # TODO: deprecate and remove, use THREE_LETTERS instead.
   # TODO: fix Python 3 compatibility of .uppercase and .lowercase.
   # pylint: disable=no-member
   MONTH = pyparsing.Word(
@@ -98,8 +97,6 @@ class PyparsingConstants(object):
   FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       PyParseIntCast)
 
-  THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
-
   DATE_ELEMENTS = (
       FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
       TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
@@ -108,19 +105,13 @@ class PyparsingConstants(object):
       TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       TWO_DIGITS.setResultsName('seconds'))
-  TIME_MSEC_ELEMENTS = (
-      TIME_ELEMENTS + pyparsing.Word('.,', exact=1).suppress() +
-      INTEGER.setResultsName('microseconds'))
 
   # Date structures defined as a single group.
   DATE = pyparsing.Group(DATE_ELEMENTS)
   DATE_TIME = pyparsing.Group(DATE_ELEMENTS + TIME_ELEMENTS)
-  DATE_TIME_MSEC = pyparsing.Group(DATE_ELEMENTS + TIME_MSEC_ELEMENTS)
   TIME = pyparsing.Group(TIME_ELEMENTS)
 
   TIME_MSEC = TIME + pyparsing.Suppress('.') + INTEGER
-  # TODO: replace by
-  # TIME_MSEC = pyparsing.Group(TIME_MSEC_ELEMENTS)
 
   COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())

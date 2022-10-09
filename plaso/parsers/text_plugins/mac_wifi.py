@@ -49,7 +49,8 @@ class MacWifiLogTextPlugin(
   ENCODING = 'utf-8'
 
   THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
-  THREE_LETTERS = text_parser.PyparsingConstants.THREE_LETTERS
+
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   # Regular expressions for known actions.
   _CONNECTED_RE = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
@@ -69,8 +70,8 @@ class MacWifiLogTextPlugin(
       pyparsing.Literal('>'))
 
   _DATE_TIME = pyparsing.Group(
-      THREE_LETTERS.setResultsName('day_of_week') +
-      THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('day_of_week') +
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
       THREE_DIGITS.setResultsName('milliseconds'))

@@ -87,6 +87,9 @@ class SnortFastLogTextPlugin(
       regular_expressions.IP_ADDRESS,  # Destination IPv4 or IPv6 address
       r'(:\d*)?$']))  # Optional TCP/UDP destination port
 
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -118,9 +121,8 @@ class SnortFastLogTextPlugin(
       pyparsing.White(' ', max=2))).setResultsName('message')
 
   _RULE_IDENTIFIER = pyparsing.Combine(
-      text_parser.PyparsingConstants.INTEGER + ':' +
-      text_parser.PyparsingConstants.INTEGER + ':' +
-      text_parser.PyparsingConstants.INTEGER).setResultsName('rule_identifier')
+      _INTEGER + ':' + _INTEGER + ':' + _INTEGER).setResultsName(
+          'rule_identifier')
 
   _FASTLOG_LINE = (
       _DATE_TIME + pyparsing.Suppress('[**] [') + _RULE_IDENTIFIER +
@@ -133,7 +135,7 @@ class SnortFastLogTextPlugin(
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
           pyparsing.Suppress('[Priority:') +
-          text_parser.PyparsingConstants.INTEGER.setResultsName('priority') +
+          _INTEGER.setResultsName('priority') +
           pyparsing.Suppress(']')) +
       pyparsing.Suppress('{') +
       pyparsing.Word(pyparsing.alphanums).setResultsName('protocol') +
@@ -141,14 +143,12 @@ class SnortFastLogTextPlugin(
       _IP_ADDRESS.setResultsName('source_ip_address') +
       pyparsing.Optional(
           pyparsing.Suppress(':') +
-          text_parser.PyparsingConstants.INTEGER.setResultsName(
-              'source_port')) +
+          _INTEGER.setResultsName('source_port')) +
       pyparsing.Suppress('->') +
       _IP_ADDRESS.setResultsName('destination_ip_address') +
       pyparsing.Optional(
           pyparsing.Suppress(':') +
-          text_parser.PyparsingConstants.INTEGER.setResultsName(
-              'destination_port')) +
+          _INTEGER.setResultsName('destination_port')) +
       pyparsing.Suppress(pyparsing.lineEnd()))
 
   _LINE_STRUCTURES = [('fastlog_line', _FASTLOG_LINE)]

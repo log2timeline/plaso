@@ -142,6 +142,9 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
   _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(
       chr(character) for character in range(65536)
@@ -153,22 +156,22 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   _HEADER = (
       pyparsing.Literal('POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      _INTEGER.setResultsName('session') +
       pyparsing.Literal('TIME:').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('timestamp') +
+      _INTEGER.setResultsName('timestamp') +
       pyparsing.Literal('ID:').suppress() +
       pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
 
   _FOOTER = (
       pyparsing.Literal('END-POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      _INTEGER.setResultsName('session') +
       pyparsing.Literal('TIME:').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('timestamp'))
+      _INTEGER.setResultsName('timestamp'))
 
   _LOG_LINE = (
-      text_parser.PyparsingConstants.INTEGER.setResultsName('atime') +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('ctime') +
+      _INTEGER.setResultsName('atime') +
+      _INTEGER.setResultsName('ctime') +
       (_PACKAGE + _TAG | _PACKAGE + _MRU + pyparsing.Optional(_TAG)))
 
   _LINE_STRUCTURES = [

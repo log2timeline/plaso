@@ -36,29 +36,34 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
   NAME = 'ios_lockdownd'
   DATA_FORMAT = 'iOS lockdown daemon log'
 
-  TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
 
-  DATE_ELEMENTS = (
-      TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
-      TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('/') +
-      TWO_DIGITS.setResultsName('two_digit_year'))
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
 
-  TIME_MSEC_ELEMENTS = text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS
-
-  _TIMESTAMP = DATE_ELEMENTS + TIME_MSEC_ELEMENTS
+  _DATE_TIME = (
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
+      _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('/') +
+      _TWO_DIGITS.setResultsName('two_digit_year') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS +
+      pyparsing.Word('.,', exact=1).suppress() +
+      _INTEGER.setResultsName('microseconds'))
 
   _PID = (
       pyparsing.Suppress('pid=') +
       pyparsing.Word(pyparsing.nums).setResultsName('process_identifier'))
 
-  _BODY_END = pyparsing.StringEnd() | _TIMESTAMP
+  _BODY_END = pyparsing.StringEnd() | _DATE_TIME
 
   _BODY = pyparsing.SkipTo(_BODY_END).setResultsName('body')
 
-  _LINE_GRAMMAR = _TIMESTAMP + _PID + _BODY + pyparsing.ZeroOrMore(
+  _LINE_GRAMMAR = _DATE_TIME + _PID + _BODY + pyparsing.ZeroOrMore(
       pyparsing.lineEnd())
 
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -75,7 +80,7 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'log_entry':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 

@@ -52,21 +52,32 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   # premature end of string matching on multi-line log entries.
   BUFFER_SIZE = 16384
 
-  _GDS_DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
-      text_parser.PyparsingConstants.HYPHEN +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +
-      text_parser.PyparsingConstants.HYPHEN +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS +
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _DATE_TIME = pyparsing.Group(
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Literal('-').suppress() +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Literal('-').suppress() +
+      _TWO_DIGITS.setResultsName('day') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      pyparsing.Word('.,', exact=1).suppress() +
+      _THREE_DIGITS.setResultsName('milliseconds') +
       pyparsing.Word(pyparsing.printables).setResultsName('time_zone_offset')
   ).setResultsName('date_time')
 
   # Multiline entry end marker, matched from right to left.
-  _GDS_ENTRY_END = pyparsing.StringEnd() | _GDS_DATE_TIME
+  _GDS_ENTRY_END = pyparsing.StringEnd() | _DATE_TIME
 
   _GDS_LINE = (
-      _GDS_DATE_TIME +
+      _DATE_TIME +
       pyparsing.Word(pyparsing.alphas).setResultsName('log_level') +
       # TODO: strip pid= out, cast to integers?
       pyparsing.Word(pyparsing.printables).setResultsName('pid') +
@@ -76,9 +87,9 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.SkipTo(_GDS_ENTRY_END).setResultsName('message') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  LINE_STRUCTURES = [
-      ('logline', _GDS_LINE),
-  ]
+  LINE_STRUCTURES = [('logline', _GDS_LINE)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def _GetISO8601String(self, structure):
     """Retrieves an ISO 8601 date time string from the structure.
@@ -113,13 +124,13 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     hours = self._GetValueFromStructure(structure, 'hours')
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
-    microseconds = self._GetValueFromStructure(structure, 'microseconds')
+    milliseconds = self._GetValueFromStructure(structure, 'milliseconds')
 
     try:
       iso8601 = (
           '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
           '{7:s}{8:02d}:{9:02d}').format(
-              year, month, day_of_month, hours, minutes, seconds, microseconds,
+              year, month, day_of_month, hours, minutes, seconds, milliseconds,
               time_zone_offset[0], time_zone_offset_hours,
               time_zone_offset_minutes)
     except (TypeError, ValueError) as exception:
@@ -181,7 +192,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'logline':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 

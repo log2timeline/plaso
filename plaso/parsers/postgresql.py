@@ -49,6 +49,9 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = 'utf-8'
 
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -74,10 +77,9 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   _TIME_ZONE = pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
 
   _PID = (
-      pyparsing.Suppress('[') +
-      pyparsing.OneOrMore(text_parser.PyparsingConstants.INTEGER) +
+      pyparsing.Suppress('[') + pyparsing.OneOrMore(_INTEGER) +
       pyparsing.Optional(pyparsing.Literal('-')) +
-      pyparsing.ZeroOrMore(text_parser.PyparsingConstants.INTEGER) +
+      pyparsing.ZeroOrMore(_INTEGER) +
       pyparsing.Suppress(']')).setResultsName('pid')
 
   _USER_AND_DATABASE = (

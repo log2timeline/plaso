@@ -56,12 +56,14 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
 
   ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
   FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
-  THREE_LETTERS = text_parser.PyparsingConstants.THREE_LETTERS
+
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
   TIME_ELEMENTS = text_parser.PyparsingConstants.TIME_ELEMENTS
 
   _TIMESTAMP = (
-      THREE_LETTERS.suppress() +
-      THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.suppress() +
+      _THREE_LETTERS.setResultsName('month') +
       ONE_OR_TWO_DIGITS.setResultsName('day') + TIME_ELEMENTS +
       FOUR_DIGITS.setResultsName('year'))
 

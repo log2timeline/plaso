@@ -42,12 +42,17 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
-  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
 
-  # Common pyparsing objects.
-  _COLON = pyparsing.Literal(':')
-  _EXCLAMATION = pyparsing.Literal('!')
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   # Date and time format used in the header is: DD-MM-YYYY hhmmss.###
   # For example: 08-01-2013 21:22:28.999
@@ -55,14 +60,15 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
       _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('-') +
       _FOUR_DIGITS.setResultsName('year') +
-      text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS).setResultsName(
-          'date_time')
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      pyparsing.Word('.,', exact=1).suppress() +
+      _THREE_DIGITS.setResultsName('milliseconds')).setResultsName('date_time')
 
   _SOURCE_CODE = pyparsing.Combine(
-      pyparsing.CharsNotIn(':') +
-      _COLON +
-      text_parser.PyparsingConstants.INTEGER +
-      _EXCLAMATION +
+      pyparsing.CharsNotIn(':') + pyparsing.Literal(':') + _INTEGER +
+      pyparsing.Literal('!') +
       pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
 
   _LOG_LEVEL = (
@@ -71,8 +77,8 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       pyparsing.Literal(')').suppress())
 
   _LINE = (
-      _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL +
-      _COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Literal(':') +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   # Sometimes the timestamped log line is followed by an empty line,
   # then by a file name plus other data and finally by another empty
