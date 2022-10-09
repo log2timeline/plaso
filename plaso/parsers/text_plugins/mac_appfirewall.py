@@ -46,13 +46,15 @@ class MacAppFirewallTextPlugin(
 
   ENCODING = 'utf-8'
 
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
   # Define how a log line should look like.
   # Example: 'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] '
   #          '<Info>: Dropbox: Allow (in:0 out:2)'
   # INFO: process_name is going to have a white space at the beginning.
 
   _DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 

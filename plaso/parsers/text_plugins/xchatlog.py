@@ -92,6 +92,8 @@ class XChatLogTextPlugin(
 
   # Common (header/footer/body) pyparsing structures.
 
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
 
   _WEEKDAY = pyparsing.Group(
@@ -111,7 +113,7 @@ class XChatLogTextPlugin(
   _HEADER_SIGNATURE = pyparsing.Keyword('****')
   _HEADER_DATE_TIME = pyparsing.Group(
       _WEEKDAY.setResultsName('weekday') +
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           'day_of_month') +
       text_parser.PyparsingConstants.TIME_ELEMENTS +
@@ -128,7 +130,7 @@ class XChatLogTextPlugin(
   # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
 
   _DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           'day_of_month') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)

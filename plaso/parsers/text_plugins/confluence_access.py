@@ -62,6 +62,17 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
   _MAXIMUM_LINE_LENGTH = 2048
 
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
   # Default pattern is %t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{
   # User-Agent}i
 
@@ -82,17 +93,17 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   # Date format [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
       pyparsing.Suppress('[') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
+      _TWO_DIGITS.setResultsName('day') +
       pyparsing.Suppress('/') +
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('month') +
       pyparsing.Suppress('/') +
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
+      _FOUR_DIGITS.setResultsName('year') +
       pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
+      _TWO_DIGITS.setResultsName('hours') +
       pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
+      _TWO_DIGITS.setResultsName('minutes') +
       pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
+      _TWO_DIGITS.setResultsName('seconds') +
       pyparsing.Combine(
           pyparsing.oneOf(['-', '+']) +
           pyparsing.Word(
@@ -104,8 +115,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.pyparsing_common.ipv6_address)
 
   _RESPONSE_BYTES = (
-      pyparsing.Literal('-') |
-      text_parser.PyparsingConstants.INTEGER).setResultsName('response_bytes')
+      pyparsing.Literal('-') | _INTEGER).setResultsName('response_bytes')
 
   _REFERER = (
       pyparsing.Word(pyparsing.alphanums + "/-_.?=%&:+<>#~[]").setResultsName(
@@ -149,9 +159,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _HTTP_METHOD +
       _REQUEST_URI +
       _HTTP_VERSION +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
-      text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'process_duration') +
+      _INTEGER.setResultsName('response_code') +
+      _INTEGER.setResultsName('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER +
@@ -170,9 +179,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _HTTP_METHOD +
       _REQUEST_URI +
       _HTTP_VERSION +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
-      text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'process_duration') +
+      _INTEGER.setResultsName('response_code') +
+      _INTEGER.setResultsName('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER +

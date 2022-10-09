@@ -54,13 +54,18 @@ class MacOSSecuritydLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
+  _DATE_TIME = pyparsing.Group(
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
   _SECURITYD_LINE = (
-      DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.CharsNotIn('[').setResultsName('sender') +
       pyparsing.Literal('[').suppress() +
       text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
@@ -79,9 +84,9 @@ class MacOSSecuritydLogTextPlugin(
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
 
   _REPEATED_LINE = (
-      DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.Literal('--- last message repeated').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName('times') +
+      _INTEGER.setResultsName('times') +
       pyparsing.Literal('time ---').suppress())
 
   _LINE_STRUCTURES = [

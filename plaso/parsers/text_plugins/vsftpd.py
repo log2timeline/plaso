@@ -48,9 +48,11 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
   _DATETIME_ELEMENTS = (
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('day') +
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('day') +
+      _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           'day_of_month') +
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
