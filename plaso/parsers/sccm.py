@@ -44,150 +44,109 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   # than the default value.
   BUFFER_SIZE = 16384
 
-  LINE_STRUCTURES = []
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
 
-  _ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
+  _TWO_OR_THREE_DIGITS = pyparsing.Word(
+      pyparsing.nums, min=2, max=3).setParseAction(text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
-  # PyParsing Components used to construct grammars for parsing lines.
-  _PARSING_COMPONENTS = {
-      'msg_left_delimiter': pyparsing.Literal('<![LOG['),
-      'msg_right_delimiter': pyparsing.Literal(']LOG]!><time="'),
-      'year': _FOUR_DIGITS.setResultsName('year'),
-      'month': _ONE_OR_TWO_DIGITS.setResultsName('month'),
-      'day': _ONE_OR_TWO_DIGITS.setResultsName('day'),
-      'fraction_of_second': pyparsing.Regex(r'\d{3,7}').setResultsName(
-          'fraction_of_second'),
-      'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{2,3}').setResultsName(
-          'utc_offset_minutes'),
-      'date_prefix': pyparsing.Literal('" date="'). setResultsName(
-          'date_prefix'),
-      'component_prefix': pyparsing.Literal('" component="').setResultsName(
-          'component_prefix'),
-      'component': pyparsing.Word(pyparsing.alphanums).setResultsName(
-          'component'),
-      'text': pyparsing.Regex(
-          r'.*?(?=(]LOG]!><time="))', re.DOTALL).setResultsName('text'),
-      'line_remainder': pyparsing.Regex(
-          r'.*?(?=(\<!\[LOG\[))', re.DOTALL).setResultsName('line_remainder'),
-      'lastline_remainder': pyparsing.restOfLine.setResultsName(
-          'lastline_remainder'),
-      'hour': _ONE_OR_TWO_DIGITS.setResultsName('hour'),
-      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'minute'),
-      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'second')}
+  # Date formatted as: date="M-D-YYYY"
+  _DATE = (pyparsing.Suppress('" date="') + _ONE_OR_TWO_DIGITS +
+           pyparsing.Suppress('-') + _ONE_OR_TWO_DIGITS +
+           pyparsing.Suppress('-') + _FOUR_DIGITS)
 
-  # Base grammar for individual log event lines.
-  LINE_GRAMMAR_BASE = (
-      _PARSING_COMPONENTS['msg_left_delimiter'] +
-      _PARSING_COMPONENTS['text'] +
-      _PARSING_COMPONENTS['msg_right_delimiter'] +
-      _PARSING_COMPONENTS['hour'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
-      pyparsing.Suppress('.') + _PARSING_COMPONENTS['fraction_of_second'] +
-      _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
-      pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
-      pyparsing.Suppress('-') + _PARSING_COMPONENTS['year'] +
-      _PARSING_COMPONENTS['component_prefix'] +
-      _PARSING_COMPONENTS['component'])
+  _TIME_ZONE_OFFSET = pyparsing.Group(
+      pyparsing.Word('+-', exact=1) + _TWO_OR_THREE_DIGITS)
 
-  # Grammar for individual log event lines with a minutes offset from UTC.
-  LINE_GRAMMAR_OFFSET = (
-      _PARSING_COMPONENTS['msg_left_delimiter'] +
-      _PARSING_COMPONENTS['text'] +
-      _PARSING_COMPONENTS['msg_right_delimiter'] +
-      _PARSING_COMPONENTS['hour'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
-      pyparsing.Suppress('.') + _PARSING_COMPONENTS['fraction_of_second'] +
-      _PARSING_COMPONENTS['utc_offset_minutes'] +
-      _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
-      pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
-      pyparsing.Suppress('-') + _PARSING_COMPONENTS['year'] +
-      _PARSING_COMPONENTS['component_prefix'] +
-      _PARSING_COMPONENTS['component'])
+  # Time formatted as: time="h:mm:ss.###or time="h:mm:ss.###[+-]##"
+  _TIME = (pyparsing.Suppress('time="') + _ONE_OR_TWO_DIGITS +
+           pyparsing.Suppress(':') + _TWO_DIGITS + pyparsing.Suppress(':') +
+           _TWO_DIGITS + pyparsing.Suppress('.') + pyparsing.Regex(r'\d{3,7}') +
+           pyparsing.Optional(_TIME_ZONE_OFFSET))
+
+  _DATE_TIME = (_TIME + _DATE).setResultsName('date_time')
+
+  _LOG_MESSAGE = (
+      pyparsing.Suppress('<![LOG[') +
+      pyparsing.Regex(r'.*?(?=(]LOG]!><))', re.DOTALL).setResultsName('text') +
+      pyparsing.Suppress(']LOG]!><'))
+
+  _COMPONENT = (
+      pyparsing.Suppress('" component="') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('component'))
+
+  _LOG_ENTRY = (
+      _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
+      pyparsing.Regex(r'.*?(?=(\<!\[LOG\[))', re.DOTALL))
+
+  _LAST_LOG_ENTRY = (
+      _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
+      pyparsing.restOfLine + pyparsing.lineEnd)
 
   LINE_STRUCTURES = [
-      ('log_entry',
-       LINE_GRAMMAR_BASE + _PARSING_COMPONENTS['line_remainder']),
-      ('log_entry_at_end',
-       LINE_GRAMMAR_BASE +_PARSING_COMPONENTS['lastline_remainder'] +
-       pyparsing.lineEnd),
-      ('log_entry_offset',
-       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['line_remainder']),
-      ('log_entry_offset_at_end',
-       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['lastline_remainder'] +
-       pyparsing.lineEnd)]
+      ('log_entry', _LOG_ENTRY),
+      ('log_entry_at_end', _LAST_LOG_ENTRY)]
 
-  def _GetISO8601String(self, structure):
-    """Retrieves an ISO8601 date time string from the structure.
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-    The date and time values in the SCCM log are formatted as:
-    time="19:33:19.766-330" date="11-28-2014"
+  def _BuildDateTime(self, time_elements_structure):
+    """Builds time elements from a PostgreSQL log time stamp.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      time_elements_structure (pyparsing.ParseResults): structure of tokens
+          derived from a SCCM log time stamp.
 
     Returns:
-      str: ISO 8601 date time string.
-
-    Raises:
-      ValueError: if the structure cannot be converted into a date time string.
+      dfdatetime.TimeElements: date and time extracted from the structure or
+          None if the structure does not represent a valid string.
     """
-    fraction_of_second = self._GetValueFromStructure(
-        structure, 'fraction_of_second')
-    fraction_of_second_length = len(fraction_of_second)
-    if fraction_of_second_length not in (3, 6, 7):
-      raise ValueError(
-          'unsupported time fraction of second length: {0:d}'.format(
-              fraction_of_second_length))
-
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exist.
     try:
-      fraction_of_second = int(fraction_of_second, 10)
-    except (TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to determine fraction of second with error: {0!s}'.format(
-              exception))
+      if len(time_elements_structure) == 8:
+        (hours, minutes, seconds, fraction_of_second, utc_offset_minutes, month,
+         day_of_month, year) = time_elements_structure
 
-    # TODO: improve precision support, but for now ignore the 100ns precision.
-    if fraction_of_second_length == 7:
-      fraction_of_second, _ = divmod(fraction_of_second, 10)
+        time_zone_offset = utc_offset_minutes[1]
+        if utc_offset_minutes[0] == '-':
+          time_zone_offset *= -1
 
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self._GetValueFromStructure(structure, 'month')
-    day_of_month = self._GetValueFromStructure(structure, 'day')
-    hours = self._GetValueFromStructure(structure, 'hour')
-    minutes = self._GetValueFromStructure(structure, 'minute')
-    seconds = self._GetValueFromStructure(structure, 'second')
+      else:
+        (hours, minutes, seconds, fraction_of_second, month, day_of_month,
+         year) = time_elements_structure
 
-    date_time_string = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}'.format(
-        year, month, day_of_month, hours, minutes, seconds)
+        time_zone_offset = None
 
-    if fraction_of_second_length > 0:
-      date_time_string = '{0:s}.{1:d}'.format(
-          date_time_string, fraction_of_second)
+      if len(fraction_of_second) == 3:
+        milliseconds = int(fraction_of_second, 10)
+        time_elements_tuple=(
+            year, month, day_of_month, hours, minutes, seconds, milliseconds)
+        date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+            time_elements_tuple=time_elements_tuple,
+            time_zone_offset=time_zone_offset)
 
-    utc_offset_minutes = self._GetValueFromStructure(
-        structure, 'utc_offset_minutes')
-    if utc_offset_minutes is not None:
-      try:
-        time_zone_offset = int(utc_offset_minutes[1:], 10)
-      except (IndexError, ValueError) as exception:
-        raise ValueError(
-            'Unable to parse time zone offset with error: {0!s}.'.format(
-                exception))
+      else:
+        # TODO: improve precision support, but for now ignore the 100ns
+        # precision.
+        microseconds = int(fraction_of_second[:6], 10)
+        time_elements_tuple=(
+            year, month, day_of_month, hours, minutes, seconds, microseconds)
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+            time_elements_tuple=time_elements_tuple,
+            time_zone_offset=time_zone_offset)
 
-      time_zone_hours, time_zone_minutes = divmod(time_zone_offset, 60)
-      date_time_string = '{0:s}{1:s}{2:02d}:{3:02d}'.format(
-          date_time_string, utc_offset_minutes[0], time_zone_hours,
-          time_zone_minutes)
-
-    return date_time_string
+      return date_time
+    except (TypeError, ValueError):
+      return None
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse the record and return an SCCM log event object.
@@ -202,34 +161,14 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (
-        'log_entry', 'log_entry_at_end', 'log_entry_offset',
-        'log_entry_offset_at_end'):
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    try:
-      date_time_string = self._GetISO8601String(structure)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to determine date time string with error: {0!s}'.format(
-              exception))
+    time_elements_structure = self._GetValueFromStructure(
+         structure, 'date_time')
 
-    fraction_of_second = self._GetValueFromStructure(
-        structure, 'fraction_of_second')
-    fraction_of_second_length = len(fraction_of_second)
-    if fraction_of_second_length == 3:
-      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    elif fraction_of_second_length in (6, 7):
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-
-    try:
-      date_time.CopyFromStringISO8601(date_time_string)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse date time value: {0:s} with error: {1!s}'.format(
-              date_time_string, exception))
-      return
+    date_time = self._BuildDateTime(time_elements_structure)
 
     event_data = SCCMLogEventData()
     event_data.component = self._GetValueFromStructure(structure, 'component')
@@ -250,14 +189,11 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    # Identify the token to which we attempt a match.
-    match = self._PARSING_COMPONENTS['msg_left_delimiter'].match
-
     # Because logs files can lead with a partial event,
     # we can't assume that the first character (post-BOM)
     # in the file is the beginning of our match - so we
     # look for match anywhere in lines.
-    return match in lines
+    return pyparsing.Literal('<![LOG[').match in lines
 
 
 manager.ParsersManager.RegisterParser(SCCMParser)
