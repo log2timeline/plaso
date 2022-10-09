@@ -61,17 +61,20 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
+  _FRACTION_OF_SECOND = pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS
+
+  _TIME_ZONE_OFFSET = pyparsing.Group(
+      pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
+
   _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Literal('-').suppress() +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Literal('-').suppress() +
-      _TWO_DIGITS.setResultsName('day') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') +
-      pyparsing.Word('.,', exact=1).suppress() +
-      _THREE_DIGITS.setResultsName('milliseconds') +
-      pyparsing.Word(pyparsing.printables).setResultsName('time_zone_offset')
-  ).setResultsName('date_time')
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS +
+      _FRACTION_OF_SECOND +
+      _TIME_ZONE_OFFSET).setResultsName('date_time')
 
   # Multiline entry end marker, matched from right to left.
   _GDS_ENTRY_END = pyparsing.StringEnd() | _DATE_TIME
@@ -91,54 +94,41 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-  def _GetISO8601String(self, structure):
-    """Retrieves an ISO 8601 date time string from the structure.
-
-    The date and time values in Google Drive Sync log files are formatted as:
-    "2018-01-24 18:25:08,454 -0800".
+  def _BuildDateTime(self, time_elements_structure):
+    """Builds time elements from a PostgreSQL log time stamp.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from a
-          line of a text file, that contains the time elements.
+      time_elements_structure (pyparsing.ParseResults): structure of tokens
+          derived from a PostgreSQL log time stamp.
 
     Returns:
-      str: ISO 8601 date time string.
-
-    Raises:
-      ValueError: if the structure cannot be converted into a date time string.
+      dfdatetime.TimeElements: date and time extracted from the structure or
+          None if the structure does not represent a valid string.
     """
-    time_zone_offset = self._GetValueFromStructure(
-        structure, 'time_zone_offset')
-
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exist.
     try:
-      time_zone_offset_hours = int(time_zone_offset[1:3], 10)
-      time_zone_offset_minutes = int(time_zone_offset[3:5], 10)
-    except (IndexError, TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to parse time zone offset with error: {0!s}.'.format(
-              exception))
+      (year, month, day_of_month, hours, minutes, seconds, milliseconds,
+       time_zone_group) = time_elements_structure
 
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self._GetValueFromStructure(structure, 'month')
-    day_of_month = self._GetValueFromStructure(structure, 'day')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    milliseconds = self._GetValueFromStructure(structure, 'milliseconds')
+      time_zone_sign, time_zone_hours, time_zone_minutes = time_zone_group
 
-    try:
-      iso8601 = (
-          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
-          '{7:s}{8:02d}:{9:02d}').format(
-              year, month, day_of_month, hours, minutes, seconds, milliseconds,
-              time_zone_offset[0], time_zone_offset_hours,
-              time_zone_offset_minutes)
-    except (TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to format date time string with error: {0!s}.'.format(
-              exception))
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds, milliseconds)
 
-    return iso8601
+      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
+      if time_zone_sign == '-':
+        time_zone_offset *= -1
+
+      return dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple,
+          time_zone_offset=time_zone_offset)
+
+    except (TypeError, ValueError):
+      return None
 
   def _ParseRecordLogline(self, parser_mediator, structure):
     """Parses a logline record structure and produces events.
@@ -149,17 +139,10 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
-    try:
-      datetime_iso8601 = self._GetISO8601String(time_elements_structure)
-      date_time.CopyFromStringISO8601(datetime_iso8601)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
-      return
+
+    date_time = self._BuildDateTime(time_elements_structure)
 
     # Replace newlines with spaces in structure.message to preserve output.
     message = self._GetValueFromStructure(structure, 'message')
@@ -217,14 +200,12 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
 
-    date_time_string = self._GetValueFromStructure(structure, 'date_time')
-    try:
-      datetime_iso8601 = self._GetISO8601String(date_time_string)
-      date_time.CopyFromStringISO8601(datetime_iso8601)
-    except ValueError as exception:
-      logger.debug((
-          'Not a Google Drive Sync log file, invalid date/time: {0!s} '
-          'with error: {1!s}').format(date_time_string, exception))
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    date_time = self._BuildDateTime(time_elements_structure)
+
+    if not date_time:
       return False
 
     return True
