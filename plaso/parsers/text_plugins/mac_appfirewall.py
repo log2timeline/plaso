@@ -46,6 +46,9 @@ class MacAppFirewallTextPlugin(
 
   ENCODING = 'utf-8'
 
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -58,7 +61,7 @@ class MacAppFirewallTextPlugin(
 
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
+      _ONE_OR_TWO_DIGITS.setResultsName('day') +
       _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds'))

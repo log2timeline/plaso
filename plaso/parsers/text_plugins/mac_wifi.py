@@ -108,7 +108,7 @@ class MacWifiLogTextPlugin(
       pyparsing.Literal('***Starting Up***').setResultsName('text'))
 
   _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
-      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
+      _THREE_LETTERS.setResultsName('month') +
       _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
       _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
