@@ -36,9 +36,19 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
   NAME = 'ios_logd'
   DATA_FORMAT = 'iOS sysdiagnose logd file'
 
-  _TIMESTAMP = (
-      text_parser.PyparsingConstants.DATE_ELEMENTS +
-      text_parser.PyparsingConstants.TIME_ELEMENTS)
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _DATE_TIME = (
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds'))
 
   _TIME_DELTA = pyparsing.Word(
       pyparsing.nums + '+' + '-', exact=5).setResultsName('time_delta')
@@ -48,7 +58,7 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
 
   _BODY = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('body')
 
-  _LINE_GRAMMAR = _TIMESTAMP + _TIME_DELTA + _LOGGER + _BODY
+  _LINE_GRAMMAR = _DATE_TIME + _TIME_DELTA + _LOGGER + _BODY
 
   _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 

@@ -44,21 +44,23 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = 'utf-8'
 
-  # Common SDF (SkyDrive Format) structures.
-  _COMMA = pyparsing.Literal(',').suppress()
-  _HYPHEN = text_parser.PyparsingConstants.HYPHEN
-
-  _THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
-  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
-
-  MSEC = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
   IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
 
   # Date and time format used in the header is: YYYY-MM-DD-hhmmss.###
   # For example: 2013-07-25-160323.291
-  _SDF_HEADER_DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.DATE_ELEMENTS + _HYPHEN +
+  _HEADER_DATE_TIME = pyparsing.Group(
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('-') +
       _TWO_DIGITS.setResultsName('hours') +
       _TWO_DIGITS.setResultsName('minutes') +
       _TWO_DIGITS.setResultsName('seconds') +
@@ -69,11 +71,14 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
   # Date and time format used in lines other than the header is:
   # MM-DD-YY,hh:mm:ss.###
   # For example: 07-25-13,16:06:31.820
-  _SDF_DATE_TIME = (
-      _TWO_DIGITS.setResultsName('month') + _HYPHEN +
-      _TWO_DIGITS.setResultsName('day') + _HYPHEN +
-      _TWO_DIGITS.setResultsName('year') + _COMMA +
-      text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
+  _DATE_TIME = (
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('year') + pyparsing.Suppress(',') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      pyparsing.Suppress('.') +
       _THREE_DIGITS.setResultsName('milliseconds')).setResultsName(
           'date_time')
 
@@ -82,15 +87,21 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Literal('Logging started.').setResultsName('log_start'))
 
   # Multiline entry end marker, matched from right to left.
-  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _SDF_DATE_TIME
+  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _DATE_TIME
 
   _SDF_LINE = (
-      _SDF_DATE_TIME + _COMMA +
-      IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
-      pyparsing.CharsNotIn(',').setResultsName('module') + _COMMA +
-      pyparsing.CharsNotIn(',').setResultsName('source_code') + _COMMA +
-      IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
-      pyparsing.CharsNotIn(',').setResultsName('log_level') + _COMMA +
+      _DATE_TIME + pyparsing.Suppress(',') +
+      IGNORE_FIELD + pyparsing.Suppress(',') +
+      IGNORE_FIELD + pyparsing.Suppress(',') +
+      IGNORE_FIELD + pyparsing.Suppress(',') +
+      pyparsing.CharsNotIn(',').setResultsName('module') +
+      pyparsing.Suppress(',') +
+      pyparsing.CharsNotIn(',').setResultsName('source_code') +
+      pyparsing.Suppress(',') +
+      IGNORE_FIELD + pyparsing.Suppress(',') +
+      IGNORE_FIELD + pyparsing.Suppress(',') +
+      pyparsing.CharsNotIn(',').setResultsName('log_level') +
+      pyparsing.Suppress(',') +
       pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName('detail') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
@@ -99,7 +110,7 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Literal('Version=').setResultsName('version_string') +
       pyparsing.Word(pyparsing.nums + '.').setResultsName('version_number') +
       pyparsing.Literal('StartSystemTime:').suppress() +
-      _SDF_HEADER_DATE_TIME +
+      _HEADER_DATE_TIME +
       pyparsing.Literal('StartLocalTime:').setResultsName(
           'local_time_string') +
       pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +

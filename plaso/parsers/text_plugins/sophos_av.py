@@ -42,21 +42,24 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   _MAXIMUM_LINE_LENGTH = 4096
 
-  _DATE_ELEMENTS = (
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day_of_month'))
-  _TIME_ELEMENTS = (
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds'))
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   # Note that the whitespace is suppressed by pyparsing.
-  _DATE_TIME = pyparsing.Group(_DATE_ELEMENTS + _TIME_ELEMENTS)
+
+  _DATE_TIME = pyparsing.Group(
+      _FOUR_DIGITS.setResultsName('year') +
+      _TWO_DIGITS.setResultsName('month') +
+      _TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') +
+      _TWO_DIGITS.setResultsName('minutes') +
+      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      _DATE_TIME + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 

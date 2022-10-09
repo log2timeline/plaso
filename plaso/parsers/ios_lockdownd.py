@@ -46,7 +46,9 @@ class IOSLockdownParser(text_parser.PyparsingMultiLineTextParser):
       _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
       _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('/') +
       _TWO_DIGITS.setResultsName('two_digit_year') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
       pyparsing.Word('.,', exact=1).suppress() +
       _INTEGER.setResultsName('microseconds'))
 

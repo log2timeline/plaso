@@ -46,8 +46,10 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = []
 
-  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
   _ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   # PyParsing Components used to construct grammars for parsing lines.
   _PARSING_COMPONENTS = {

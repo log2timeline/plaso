@@ -90,7 +90,14 @@ class XChatLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  # Common (header/footer/body) pyparsing structures.
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
@@ -111,17 +118,21 @@ class XChatLogTextPlugin(
   # different if XChat locale is different.
 
   _HEADER_SIGNATURE = pyparsing.Keyword('****')
+
   _HEADER_DATE_TIME = pyparsing.Group(
       _WEEKDAY.setResultsName('weekday') +
       _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          'day_of_month') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS +
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year'))
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      _FOUR_DIGITS.setResultsName('year'))
+
   _LOG_ACTION = pyparsing.Group(
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables))
+
   _HEADER = (
       _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName('log_action') +
       _HEADER_DATE_TIME.setResultsName('date_time'))
@@ -131,9 +142,10 @@ class XChatLogTextPlugin(
 
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          'day_of_month') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS)
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds'))
 
   _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
       'nickname')

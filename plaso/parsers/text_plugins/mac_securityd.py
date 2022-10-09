@@ -57,12 +57,17 @@ class MacOSSecuritydLogTextPlugin(
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS)
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds'))
 
   _SECURITYD_LINE = (
       _DATE_TIME.setResultsName('date_time') +

@@ -105,8 +105,7 @@ class SnortFastLogTextPlugin(
       _DATE_MONTH_DAY)
 
   _DATE_TIME = (
-      (_DATE_YEAR_MONTH_DAY | _DATE_MONTH_DAY) +
-      pyparsing.Suppress(text_parser.PyparsingConstants.HYPHEN) +
+      (_DATE_YEAR_MONTH_DAY | _DATE_MONTH_DAY) + pyparsing.Suppress('-') +
       _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +

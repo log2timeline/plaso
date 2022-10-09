@@ -81,6 +81,20 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK
 
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _DATE_TIME = pyparsing.Group(
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address | _BLANK)
@@ -88,8 +102,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _PORT_NUMBER = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK
 
+  _COMMENT_LINE = pyparsing.Literal('#') + pyparsing.SkipTo(pyparsing.LineEnd())
+
   _LOG_LINE = (
-      text_parser.PyparsingConstants.DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME +
       _WORD.setResultsName('action') +
       _WORD.setResultsName('protocol') +
       _IP_ADDRESS.setResultsName('source_ip') +
@@ -107,7 +123,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       _WORD.setResultsName('path'))
 
   _LINE_STRUCTURES = [
-      ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      ('comment', _COMMENT_LINE),
       ('logline', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])

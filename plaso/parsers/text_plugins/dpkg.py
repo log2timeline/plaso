@@ -59,68 +59,66 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _DPKG_STARTUP = 'startup'
-  _DPKG_STATUS = 'status'
-  _DPKG_CONFFILE = 'conffile'
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
 
-  _DPKG_ACTIONS = [
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _DATE_TIME = pyparsing.Group(
+      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+
+  _DPKG_STARTUP_TYPE = pyparsing.oneOf([
+      'archives',
+      'packages'])
+
+  _DPKG_STARTUP_COMMAND = pyparsing.oneOf([
+      'unpack',
+      'install',
+      'configure',
+      'triggers-only',
+      'remove',
+      'purge'])
+
+  _DPKG_STARTUP_BODY = pyparsing.Combine((
+      pyparsing.Literal('startup') + _DPKG_STARTUP_TYPE +
+      _DPKG_STARTUP_COMMAND), joinString=' ', adjacent=False)
+
+  _DPKG_STATUS_BODY = pyparsing.Combine((
+      pyparsing.Literal('status') + pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
+
+  _DPKG_ACTION = pyparsing.oneOf([
       'install',
       'upgrade',
       'configure',
       'trigproc',
       'disappear',
       'remove',
-      'purge']
+      'purge'])
 
-  _DPKG_STARTUP_TYPES = [
-      'archives',
-      'packages']
+  _DPKG_ACTION_BODY = pyparsing.Combine((
+      _DPKG_ACTION + pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
 
-  _DPKG_STARTUP_COMMANDS = [
-      'unpack',
+  _DPKG_CONFFILE_DECISION = pyparsing.oneOf([
       'install',
-      'configure',
-      'triggers-only',
-      'remove',
-      'purge']
+      'keep'])
 
-  _DPKG_CONFFILE_DECISIONS = [
-      'install',
-      'keep']
+  _DPKG_CONFFILE_BODY = pyparsing.Combine((
+      pyparsing.Literal('conffile') + pyparsing.Word(pyparsing.printables) +
+      _DPKG_CONFFILE_DECISION), joinString=' ', adjacent=False)
 
-  _DPKG_STARTUP_BODY = pyparsing.Combine(
-      pyparsing.Literal(_DPKG_STARTUP) +
-      pyparsing.oneOf(_DPKG_STARTUP_TYPES) +
-      pyparsing.oneOf(_DPKG_STARTUP_COMMANDS),
-      joinString=' ', adjacent=False)
-
-  _DPKG_STATUS_BODY = pyparsing.Combine(
-      pyparsing.Literal(_DPKG_STATUS) +
-      pyparsing.Word(pyparsing.printables) +
-      pyparsing.Word(pyparsing.printables) +
-      pyparsing.Word(pyparsing.printables),
-      joinString=' ', adjacent=False)
-
-  _DPKG_ACTION_BODY = pyparsing.Combine(
-      pyparsing.oneOf(_DPKG_ACTIONS) +
-      pyparsing.Word(pyparsing.printables) +
-      pyparsing.Word(pyparsing.printables) +
-      pyparsing.Word(pyparsing.printables),
-      joinString=' ', adjacent=False)
-
-  _DPKG_CONFFILE_BODY = pyparsing.Combine(
-      pyparsing.Literal(_DPKG_CONFFILE) +
-      pyparsing.Word(pyparsing.printables) +
-      pyparsing.oneOf(_DPKG_CONFFILE_DECISIONS),
-      joinString=' ', adjacent=False)
-
-  _DPKG_LOG_LINE = (
-      text_parser.PyparsingConstants.DATE_TIME.setResultsName('date_time') +
-      pyparsing.MatchFirst([
-          _DPKG_STARTUP_BODY,
-          _DPKG_STATUS_BODY,
-          _DPKG_ACTION_BODY,
-          _DPKG_CONFFILE_BODY]).setResultsName('body'))
+  _DPKG_LOG_LINE = (_DATE_TIME + pyparsing.MatchFirst([
+      _DPKG_STARTUP_BODY, _DPKG_STATUS_BODY, _DPKG_ACTION_BODY,
+      _DPKG_CONFFILE_BODY]).setResultsName('body'))
 
   _LINE_STRUCTURES = [('line', _DPKG_LOG_LINE)]
 
