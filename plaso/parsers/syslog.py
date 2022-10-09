@@ -150,9 +150,11 @@ class SyslogParser(
       _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN,
       _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN])))
 
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
   _PYPARSING_COMPONENTS = {
-      'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
-          'year'),
+      'year': _FOUR_DIGITS.setResultsName('year'),
       'two_digit_month': (
           text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
               'two_digit_month')),

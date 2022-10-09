@@ -59,27 +59,6 @@ class TestPyparsingMultiLineTextParser(
     return True
 
 
-class PyparsingConstantsTest(test_lib.ParserTestCase):
-  """Tests the PyparsingConstants text parser."""
-
-  def testConstants(self):
-    """Tests parsing with constants."""
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('MMo')
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('M')
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString('March', parseAll=True)
-
-    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString('Jan'))
-
-    line = '# This is a comment.'
-    parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
-        line)
-    self.assertEqual(parsed_line[-1], 'This is a comment.')
-    self.assertEqual(len(parsed_line), 2)
-
-
 class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
   """Tests for the single-line PyParsing-based text parser."""
 

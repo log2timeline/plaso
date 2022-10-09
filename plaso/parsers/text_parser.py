@@ -82,9 +82,6 @@ class PyparsingConstants(object):
       pyparsing.string.ascii_uppercase, pyparsing.string.ascii_lowercase,
       exact=3)
 
-  # Define date structures.
-  HYPHEN = pyparsing.Literal('-').suppress()
-
   ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       PyParseIntCast)
   ONE_TO_THREE_DIGITS = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
@@ -94,28 +91,7 @@ class PyparsingConstants(object):
       PyParseIntCast)
   THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
       PyParseIntCast)
-  FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      PyParseIntCast)
 
-  DATE_ELEMENTS = (
-      FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      TWO_DIGITS.setResultsName('day_of_month'))
-  TIME_ELEMENTS = (
-      TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      TWO_DIGITS.setResultsName('seconds'))
-
-  # Date structures defined as a single group.
-  DATE = pyparsing.Group(DATE_ELEMENTS)
-  DATE_TIME = pyparsing.Group(DATE_ELEMENTS + TIME_ELEMENTS)
-  TIME = pyparsing.Group(TIME_ELEMENTS)
-
-  TIME_MSEC = TIME + pyparsing.Suppress('.') + INTEGER
-
-  COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
-      pyparsing.LineEnd())
-  # TODO: Add more commonly used structs that can be used by parsers.
   PID = pyparsing.Word(pyparsing.nums, max=5).setParseAction(PyParseIntCast)
 
 

@@ -42,15 +42,18 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
 
-  _SLASH = pyparsing.Literal('/').suppress()
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
 
-  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
-  _THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
-  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   _SETUPAPI_DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS + _SLASH +
-      _TWO_DIGITS + _SLASH +
+      _FOUR_DIGITS + pyparsing.Suppress('/') +
+      _TWO_DIGITS + pyparsing.Suppress('/') +
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +

@@ -54,18 +54,25 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
       'Nov': 11,
       'Dec': 12}
 
-  ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
-  FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
-
-  TIME_ELEMENTS = text_parser.PyparsingConstants.TIME_ELEMENTS
 
   _TIMESTAMP = (
       _THREE_LETTERS.suppress() +
       _THREE_LETTERS.setResultsName('month') +
-      ONE_OR_TWO_DIGITS.setResultsName('day') + TIME_ELEMENTS +
-      FOUR_DIGITS.setResultsName('year'))
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      _FOUR_DIGITS.setResultsName('year'))
 
   _ELEMENT_NUMBER = (
       pyparsing.Suppress('[') +
@@ -98,6 +105,8 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses an iOS mobile installation log record.
 
@@ -110,7 +119,7 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'log_entry':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -118,7 +127,7 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
 
     year = self._GetValueFromStructure(structure, 'year')
     month = self.MONTHS.get(month_string)
-    day = self._GetValueFromStructure(structure, 'day')
+    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
     hours = self._GetValueFromStructure(structure, 'hours')
     minutes = self._GetValueFromStructure(structure, 'minutes')
     seconds = self._GetValueFromStructure(structure, 'seconds')
@@ -132,8 +141,8 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.body = self._GetValueFromStructure(structure, 'body')
 
     try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=(year, month, day, hours, minutes, seconds))
+      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+          year, month, day_of_month, hours, minutes, seconds))
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning('invalid date time value')
       return

@@ -48,7 +48,17 @@ class MacWifiLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
@@ -70,11 +80,13 @@ class MacWifiLogTextPlugin(
       pyparsing.Literal('>'))
 
   _DATE_TIME = pyparsing.Group(
-      _THREE_LETTERS.setResultsName('day_of_week') +
+      _THREE_LETTERS.setResultsName('weekday') +
       _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
-      THREE_DIGITS.setResultsName('milliseconds'))
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
+      _THREE_DIGITS.setResultsName('milliseconds'))
 
   # Log line with a known function name.
   _MAC_WIFI_KNOWN_FUNCTION_LINE = (
@@ -97,8 +109,10 @@ class MacWifiLogTextPlugin(
 
   _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
       text_parser.PyparsingConstants.MONTH.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS)
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds'))
 
   _MAC_WIFI_TURNED_OVER_HEADER = (
       _DATE_TIME_TURNED_OVER_HEADER.setResultsName('date_time') +

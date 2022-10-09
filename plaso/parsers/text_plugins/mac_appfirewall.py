@@ -46,6 +46,9 @@ class MacAppFirewallTextPlugin(
 
   ENCODING = 'utf-8'
 
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   # Define how a log line should look like.
@@ -56,7 +59,9 @@ class MacAppFirewallTextPlugin(
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS)
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds'))
 
   _FIREWALL_LINE = (
       _DATE_TIME.setResultsName('date_time') +

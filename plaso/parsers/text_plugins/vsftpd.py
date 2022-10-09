@@ -48,22 +48,27 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  _DATETIME_ELEMENTS = (
-      _THREE_LETTERS.setResultsName('day') +
-      _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          'day_of_month') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
-      pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
-      pyparsing.Suppress(':') +
-      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year'))
-
   # Whitespace is suppressed by pyparsing.
-  _DATE_TIME = pyparsing.Group(_DATETIME_ELEMENTS)
+
+  _DATE_TIME = pyparsing.Group(
+      _THREE_LETTERS.setResultsName('weekday') +
+      _THREE_LETTERS.setResultsName('month') +
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      _FOUR_DIGITS.setResultsName('year'))
 
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
