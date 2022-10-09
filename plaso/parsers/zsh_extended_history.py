@@ -45,22 +45,20 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
-  _PYPARSING_COMPONENTS = {
-      'timestamp': text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'timestamp'),
-      'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.setResultsName(
-          'elapsed_seconds'),
-      'command': pyparsing.Regex(
-          r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).setResultsName('command'),
-  }
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _COMMAND = pyparsing.Regex(
+      r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).setResultsName('command')
 
   _LINE_GRAMMAR = (
-      pyparsing.Literal(':') +
-      _PYPARSING_COMPONENTS['timestamp'] + pyparsing.Literal(':') +
-      _PYPARSING_COMPONENTS['elapsed_seconds'] + pyparsing.Literal(';') +
-      _PYPARSING_COMPONENTS['command'] + pyparsing.LineEnd())
+      pyparsing.Literal(':') + _INTEGER.setResultsName('timestamp') +
+      pyparsing.Literal(':') + _INTEGER.setResultsName('elapsed_seconds') +
+      pyparsing.Literal(';') + _COMMAND + pyparsing.LineEnd())
 
   LINE_STRUCTURES = [('command', _LINE_GRAMMAR)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a ZSH history event.
@@ -74,7 +72,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'command':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -100,10 +98,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if the line was successfully parsed.
     """
-    if self._VERIFICATION_REGEX.match(lines):
-      return True
-
-    return False
+    return bool(self._VERIFICATION_REGEX.match(lines))
 
 
 manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)
