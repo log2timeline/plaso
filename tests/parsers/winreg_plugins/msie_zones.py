@@ -52,6 +52,10 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
 
@@ -86,7 +90,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.NAME,
         'settings': expected_settings}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
@@ -101,6 +105,10 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
@@ -140,7 +148,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.NAME,
         'settings': expected_settings}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
@@ -155,6 +163,10 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
@@ -271,7 +283,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.NAME,
         'settings': expected_settings}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
@@ -286,6 +298,10 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     plugin = msie_zones.MSIEZoneSettingsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
@@ -406,7 +422,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'parser': plugin.NAME,
         'settings': expected_settings}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
 
 if __name__ == '__main__':

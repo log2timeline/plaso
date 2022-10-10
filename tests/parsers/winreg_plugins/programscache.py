@@ -73,7 +73,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # The ProgramsCache list event.
     expected_entries = (
@@ -124,7 +124,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'values': expected_values}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[76], expected_event_values)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
@@ -165,7 +165,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    self.CheckEventValues(storage_writer, events[4], expected_event_values)
 
 
 if __name__ == '__main__':

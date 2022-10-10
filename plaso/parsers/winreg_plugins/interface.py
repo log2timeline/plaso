@@ -5,9 +5,7 @@ import abc
 
 from dfwinreg import errors as dfwinreg_errors
 
-from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import definitions
 from plaso.parsers import plugins
 
 
@@ -293,13 +291,12 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
     event_data.values = ' '.join([
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(values_dict.items())]) or None
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod

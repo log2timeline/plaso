@@ -4,12 +4,11 @@
 import os
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -22,7 +21,11 @@ class AppCompatCacheEventData(events.EventData):
 
   Attributes:
     entry_index (int): cache entry index number for the record.
+    file_entry_modification_time (dfdatetime.DateTimeValues): last modification
+        date and time of the corresponding file entry.
     key_path (str): Windows Registry key path.
+    last_update_time (dfdatetime.DateTimeValues): last update date and time of
+        the Application Compatibility Cache entry.
     offset (int): offset of the Application Compatibility Cache entry relative
         to the start of the Windows Registry value data, from which the event
         data was extracted.
@@ -31,11 +34,17 @@ class AppCompatCacheEventData(events.EventData):
 
   DATA_TYPE = 'windows:registry:appcompatcache'
 
+  ATTRIBUTE_MAPPINGS = {
+      'file_entry_modification_time': 'File Last Modification Time',
+      'last_update_time': definitions.TIME_DESCRIPTION_LAST_RUN}
+
   def __init__(self):
     """Initializes event data."""
     super(AppCompatCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_index = None
+    self.file_entry_modification_time = None
     self.key_path = None
+    self.last_update_time = None
     self.offset = None
     self.path = None
 
@@ -680,29 +689,15 @@ class AppCompatCacheWindowsRegistryPlugin(
       event_data.offset = cached_entry_offset
       event_data.path = cached_entry_object.path
 
-      if cached_entry_object.last_modification_time is not None:
-        if not cached_entry_object.last_modification_time:
-          date_time = dfdatetime_semantic_time.NotSet()
-        else:
-          date_time = dfdatetime_filetime.Filetime(
-              timestamp=cached_entry_object.last_modification_time)
+      if cached_entry_object.last_modification_time:
+        event_data.file_entry_modification_time = dfdatetime_filetime.Filetime(
+            timestamp=cached_entry_object.last_modification_time)
 
-        # TODO: refactor to file modification event.
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'File Last Modification Time')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      if cached_entry_object.last_update_time:
+        event_data.last_update_time = dfdatetime_filetime.Filetime(
+            timestamp=cached_entry_object.last_update_time)
 
-      if cached_entry_object.last_update_time is not None:
-        if not cached_entry_object.last_update_time:
-          date_time = dfdatetime_semantic_time.NotSet()
-        else:
-          date_time = dfdatetime_filetime.Filetime(
-              timestamp=cached_entry_object.last_update_time)
-
-        # TODO: refactor to process run event.
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
       cached_entry_offset += cached_entry_object.cached_entry_size
       cached_entry_index += 1
@@ -712,5 +707,6 @@ class AppCompatCacheWindowsRegistryPlugin(
         break
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(AppCompatCacheEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     AppCompatCacheWindowsRegistryPlugin)
