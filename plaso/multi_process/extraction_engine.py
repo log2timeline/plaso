@@ -312,6 +312,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           containers.
       container (AttributeContainer): attribute container.
     """
+    self._status = definitions.STATUS_INDICATOR_MERGING
+
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       event_data_identifier = container.GetEventDataIdentifier()
       event_data_lookup_key = event_data_identifier.CopyToString()
@@ -414,11 +416,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       parser_name = container.parser.rsplit('/', maxsplit=1)[-1]
       merge_helper.event_data_parser_mappings[lookup_key] = parser_name
 
+      self._status = definitions.STATUS_INDICATOR_TIMELINING
+
       # Generate events on merge.
       self._ProcessEventData(storage_writer, container)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
       self._number_of_produced_sources += 1
+
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
   def _MergeAttributeContainers(
         self, storage_writer, merge_helper, maximum_number_of_containers=0):
@@ -500,8 +506,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
     if task or self._task_merge_helper:
-      self._status = definitions.STATUS_INDICATOR_MERGING
-
       if self._processing_profiler:
         self._processing_profiler.StartTiming('merge')
 
@@ -588,8 +592,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           self._task_merge_helper_on_hold = None
 
           self._task_manager.SampleTaskStatus(self._merge_task, 'merge_resumed')
-
-      self._status = definitions.STATUS_INDICATOR_RUNNING
 
   def _ProcessSources(
       self, source_configurations, storage_writer, session_identifier):
