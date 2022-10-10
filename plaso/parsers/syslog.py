@@ -150,39 +150,41 @@ class SyslogParser(
       _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN,
       _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN])))
 
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
       text_parser.PyParseIntCast)
 
   _PYPARSING_COMPONENTS = {
       'year': _FOUR_DIGITS.setResultsName('year'),
-      'two_digit_month': (
-          text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-              'two_digit_month')),
-      'month': text_parser.PyparsingConstants.MONTH.setResultsName('month'),
-      'day_of_month': (
-          text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-              'day_of_month')),
-      'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'hour'),
-      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'minute'),
-      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'second'),
+      'two_digit_month': _TWO_DIGITS.setResultsName('two_digit_month'),
+      'month': _THREE_LETTERS.setResultsName('month'),
+      'day_of_month': _ONE_OR_TWO_DIGITS.setResultsName('day_of_month'),
+      'hour': _TWO_DIGITS.setResultsName('hour'),
+      'minute': _TWO_DIGITS.setResultsName('minute'),
+      'second': _TWO_DIGITS.setResultsName('second'),
       'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
           'fractional_seconds'),
       'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
           'hostname'),
       'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
           'reporter'),
-      'pid': text_parser.PyparsingConstants.PID.setResultsName('pid'),
+      'pid': _PROCESS_IDENTIFIER.setResultsName('pid'),
       'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
           'facility'),
       'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity'),
       'body': pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'),
       'comment_body': pyparsing.SkipTo(' ---').setResultsName('body'),
-      'priority': (
-          text_parser.PyparsingConstants.ONE_TO_THREE_DIGITS.setResultsName(
-              'priority')),
+      'priority': _ONE_OR_TWO_DIGITS.setResultsName('priority'),
       'message_identifier': pyparsing.Word(pyparsing.printables).setResultsName(
           'message_identifier'),
       'structured_data': pyparsing.Word(pyparsing.printables).setResultsName(
@@ -387,8 +389,7 @@ class SyslogParser(
             time_elements_tuple=time_elements_tuple)
         date_time.is_local_time = True
       except (TypeError, ValueError):
-        parser_mediator.ProduceExtractionWarning(
-            'invalid date time value: {0!s}'.format(time_elements_tuple))
+        parser_mediator.ProduceExtractionWarning('invalid date time value')
         return
 
     plugin = None

@@ -57,6 +57,9 @@ class MacOSSecuritydLogTextPlugin(
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+      text_parser.PyParseIntCast)
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -64,16 +67,19 @@ class MacOSSecuritydLogTextPlugin(
 
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
+      _ONE_OR_TWO_DIGITS.setResultsName('day') +
       _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds'))
+
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+      text_parser.PyParseIntCast)
 
   _SECURITYD_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.CharsNotIn('[').setResultsName('sender') +
       pyparsing.Literal('[').suppress() +
-      text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
+      _PROCESS_IDENTIFIER.setResultsName('sender_pid') +
       pyparsing.Literal(']').suppress() +
       pyparsing.Literal('<').suppress() +
       pyparsing.CharsNotIn('>').setResultsName('level') +

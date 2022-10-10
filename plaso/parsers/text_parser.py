@@ -70,31 +70,6 @@ def PyParseIntCast(string, location, tokens):  # pylint: disable=unused-argument
       tokens[key] = 0
 
 
-class PyparsingConstants(object):
-  """Constants for pyparsing-based parsers."""
-
-  # Numbers.
-  INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
-
-  # TODO: fix Python 3 compatibility of .uppercase and .lowercase.
-  # pylint: disable=no-member
-  MONTH = pyparsing.Word(
-      pyparsing.string.ascii_uppercase, pyparsing.string.ascii_lowercase,
-      exact=3)
-
-  ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      PyParseIntCast)
-  ONE_TO_THREE_DIGITS = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
-      PyParseIntCast)
-
-  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      PyParseIntCast)
-  THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
-      PyParseIntCast)
-
-  PID = pyparsing.Word(pyparsing.nums, max=5).setParseAction(PyParseIntCast)
-
-
 class PyparsingLineStructure(object):
   """Line structure.
 
