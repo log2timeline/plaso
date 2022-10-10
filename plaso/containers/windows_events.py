@@ -59,15 +59,21 @@ class WindowsRegistryEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): key last written date and
+        time.
     values (str): names and data of the values in the key.
   """
 
   DATA_TYPE = 'windows:registry:key_value'
 
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(WindowsRegistryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.last_written_time = None
     self.values = None
 
 
@@ -134,4 +140,4 @@ class WindowsVolumeEventData(events.EventData):
 
 event_registry.EventDataRegistry.RegisterEventDataClasses([
     WindowsDistributedLinkTrackingEventData,
-    WindowsShellItemFileEntryEventData])
+    WindowsRegistryEventData, WindowsShellItemFileEntryEventData])
