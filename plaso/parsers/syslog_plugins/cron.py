@@ -34,23 +34,23 @@ class CronSyslogPlugin(interface.SyslogPlugin):
 
   REPORTER = 'CRON'
 
-  _PYPARSING_COMPONENTS = {
-      'command': pyparsing.Combine(
-          pyparsing.SkipTo(
-              pyparsing.Literal(')') + pyparsing.StringEnd())).setResultsName(
-                  'command'),
-      'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
-          'username'),
-  }
+  _USERNAME = (
+      pyparsing.Literal('(') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('username') +
+      pyparsing.Literal(')'))
 
-  _TASK_RUN_GRAMMAR = (
-      pyparsing.Literal('(') + _PYPARSING_COMPONENTS['username'] +
-      pyparsing.Literal(')') + pyparsing.Literal('CMD') +
-      pyparsing.Literal('(') + _PYPARSING_COMPONENTS['command'] +
-      pyparsing.Literal(')') + pyparsing.StringEnd()
-  )
+  _COMMAND = (
+      pyparsing.Literal('CMD') + pyparsing.Literal('(') +
+      pyparsing.Combine(pyparsing.SkipTo(
+          pyparsing.Literal(')') +
+          pyparsing.StringEnd())).setResultsName('command') +
+      pyparsing.Literal(')'))
 
-  MESSAGE_GRAMMARS = [('task_run', _TASK_RUN_GRAMMAR)]
+  _TASK_RUN = _USERNAME + _COMMAND + pyparsing.StringEnd()
+
+  MESSAGE_GRAMMARS = [('task_run', _TASK_RUN)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in MESSAGE_GRAMMARS])
 
   def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of defined grammars.
@@ -66,8 +66,8 @@ class CronSyslogPlugin(interface.SyslogPlugin):
     Raises:
       ValueError: If an unknown key is provided.
     """
-    if key != 'task_run':
-      raise ValueError('Unknown grammar key: {0:s}'.format(key))
+    if key not in self._SUPPORTED_KEYS:
+      raise ValueError('Unsupported grammar: {0:s}'.format(key))
 
     event_data = CronTaskRunEventData()
     event_data.body = tokens.get('body', None)
