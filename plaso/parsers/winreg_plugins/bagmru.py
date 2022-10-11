@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains BagMRU Windows Registry plugins (shellbags)."""
+"""Windows Registry plugin to parse the BagMRU (or ShellBags) key."""
 
 import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -16,25 +16,31 @@ from plaso.parsers.winreg_plugins import interface
 
 
 class BagMRUEventData(events.EventData):
-  """BagMRU event data attribute container.
+  """BagMRU (or ShellBags) event data attribute container.
 
   Attributes:
     entries (str): most recently used (MRU) entries.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'windows:registry:bagmru'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
     super(BagMRUEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class BagMRUWindowsRegistryPlugin(
     interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
-  """Class that defines a BagMRU Windows Registry plugin."""
+  """Windows Registry plugin to parse the BagMRU (or ShellBags) key."""
 
   NAME = 'bagmru'
   DATA_FORMAT = 'BagMRU (or ShellBags) Registry data'
@@ -180,12 +186,11 @@ class BagMRUWindowsRegistryPlugin(
       entries.append(entry)
 
     event_data = BagMRUEventData()
-    event_data.entries = ' '.join(entries)
+    event_data.entries = ' '.join(entries) or None
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     for entry_number, path_segment in entry_numbers.items():
       sub_key_name = '{0:d}'.format(entry_number)
@@ -215,4 +220,5 @@ class BagMRUWindowsRegistryPlugin(
     self._ParseSubKey(parser_mediator, registry_key, [], codepage=codepage)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(BagMRUEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(BagMRUWindowsRegistryPlugin)
