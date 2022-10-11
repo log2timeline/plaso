@@ -6,7 +6,6 @@ import unittest
 
 from dfwinreg import regf as dfwinreg_regf
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import amcache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -39,6 +38,10 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3250)
+
     # 1178 windows:registry:amcache events
     # 2105 last written time events
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
@@ -52,37 +55,40 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_full_path = (
         'c:\\users\\user\\appdata\\local\\temp\\chocolatey\\'
         'is-f4510.tmp\\idafree50.tmp')
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
-        'date_time': '1992-06-19T22:22:17+00:00',
+        'file_creation_time': '2017-08-01T12:43:35.1772758+00:00',
+        'file_modification_time': '2017-08-01T12:43:35.3024523+00:00',
         'full_path': expected_full_path,
-        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
+        'installation_time': None,
+        'last_written_time': '2017-08-01T12:43:35.3715211+00:00',
+        'link_time': '1992-06-19T22:22:17+00:00',
+        'msi_installation_time': None,
+        'sha1': '82274eef0911a948f91425f5e5b0e730517fe75e'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1420)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:registry:amcache:programs',
-        'date_time': '2017-08-01T12:52:59+00:00',
         'entry_type': 'AddRemoveProgram',
         'file_paths': [
             'c:\\program files (x86)\\fileinsight\\plugins',
             'c:\\program files (x86)\\fileinsight\\plugins\\anomaly chart',
             'c:\\program files (x86)\\fileinsight'],
+        'installation_time': '2017-08-01T12:52:59+00:00',
         'name': 'FileInsight - File analysis tool',
         'publisher': 'McAfee Inc.',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_INSTALLATION,
         'uninstall_key': [
             'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\'
             'CurrentVersion\\Uninstall\\FileInsight']}
 
-    self.CheckEventValues(storage_writer, events[1285], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3233)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessWindows101(self):
     """Tests the Process function on a Windows 10 1807 AMCache.hve file."""
@@ -100,6 +106,10 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 236)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 236)
 
@@ -111,15 +121,18 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
-        'date_time': '1997-01-10T22:26:24+00:00',
+        'file_creation_time': None,
+        'file_modification_time': None,
         'full_path': 'c:\\windows\\system32\\svchost.exe',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LINK_TIME}
+        'installation_time': None,
+        'last_written_time': None,
+        'link_time': '1997-01-10T22:26:24+00:00',
+        'msi_installation_time': None}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 135)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

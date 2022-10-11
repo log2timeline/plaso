@@ -9,8 +9,8 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from dfwinreg import errors as dfwinreg_errors
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -21,31 +21,55 @@ class AMCacheFileEventData(events.EventData):
 
   Attributes:
     company_name (str): company name that created product file belongs to.
+    file_creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     file_description (str): description of file.
+    file_modification_time (dfdatetime.DateTimeValues): file entry last
+        modification date and time.
     file_reference (str): file system file reference, for example 9-1 (MFT
         entry - sequence number).
     file_size (int): size of file in bytes.
     file_version (str): version of file.
     full_path (str): full path of file.
+    installation_time (dfdatetime.DateTimeValues): installation date and time.
     language_code (int): language code of file.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
+    link_time (dfdatetime.DateTimeValues): link date and time.
+    msi_installation_time (dfdatetime.DateTimeValues): MSI installation date
+        and time.
     product_name (str): product name file belongs to.
     program_identifier (str): GUID of entry under Root/Program key file belongs
         to.
-    sha1 (str): SHA-1 of file.
+    sha1 (str): SHA-1.
   """
 
   DATA_TYPE = 'windows:registry:amcache'
+
+  ATTRIBUTE_MAPPINGS = {
+      'file_creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'file_modification_time': definitions.TIME_DESCRIPTION_MODIFICATION,
+      'installation_time': definitions.TIME_DESCRIPTION_INSTALLATION,
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION,
+      'link_time': definitions.TIME_DESCRIPTION_LINK_TIME,
+      'msi_installation_time': definitions.TIME_DESCRIPTION_INSTALLATION}
 
   def __init__(self):
     """Initializes event data."""
     super(AMCacheFileEventData, self).__init__(data_type=self.DATA_TYPE)
     self.company_name = None
+    self.file_creation_time = None
     self.file_description = None
+    self.file_modification_time = None
     self.file_reference = None
     self.file_size = None
     self.file_version = None
     self.full_path = None
+    self.installation_time = None
     self.language_code = None
+    self.last_written_time = None
+    self.link_time = None
+    self.msi_installation_time = None
     self.product_name = None
     self.program_identifier = None
     self.sha1 = None
@@ -58,6 +82,7 @@ class AMCacheProgramEventData(events.EventData):
     entry_type (str): type of entry (usually AddRemoveProgram).
     file_paths (str): file paths of installed program.
     files (str): list of files belonging to program.
+    installation_time (dfdatetime.DateTimeValues): installation date and time.
     language_code (int): language_code of program.
     msi_package_code (str): MSI package code of program.
     msi_product_code (str): MSI product code of program.
@@ -71,12 +96,16 @@ class AMCacheProgramEventData(events.EventData):
 
   DATA_TYPE = 'windows:registry:amcache:programs'
 
+  ATTRIBUTE_MAPPINGS = {
+      'installation_time': definitions.TIME_DESCRIPTION_INSTALLATION}
+
   def __init__(self):
     """Initializes event data."""
     super(AMCacheProgramEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
     self.file_paths = None
     self.files = None
+    self.installation_time = None
     self.language_code = None
     self.msi_package_code = None
     self.msi_product_code = None
@@ -152,7 +181,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key_path (str): key path.
       value_name (str): name of the value.
       registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
@@ -205,35 +234,31 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
     install_date_value = application_sub_key.GetValueByName('InstallDate')
     if install_date_value:
-      date_time = self._ParseDateStringValue(
-         parser_mediator, application_sub_key.path, install_date_value)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LINK_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.installation_time = self._ParseDateStringValue(
+          parser_mediator, application_sub_key.path, install_date_value)
 
     install_date_msi_value = application_sub_key.GetValueByName(
         'InstallDateMsi')
     if install_date_msi_value:
-      date_time = self._ParseDateStringValue(
-         parser_mediator, application_sub_key.path, install_date_msi_value)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LINK_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.msi_installation_time = self._ParseDateStringValue(
+          parser_mediator, application_sub_key.path, install_date_msi_value)
 
     link_date_value = application_sub_key.GetValueByName('LinkDate')
     if link_date_value:
-      date_time = self._ParseDateStringValue(
-         parser_mediator, application_sub_key.path, link_date_value)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LINK_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.link_time = self._ParseDateStringValue(
+          parser_mediator, application_sub_key.path, link_date_value)
+
+    # TODO: remove this check.
+    if (event_data.installation_time or event_data.msi_installation_time or
+        event_data.link_time):
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseDateStringValue(self, parser_mediator, key_path, registry_value):
     """Parses a date and time string value.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key_path (str): key path.
       registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
 
@@ -315,14 +340,16 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
     try:
       if '0000' in file_reference_key.name:
-        # A NTFS file is a combination of MFT entry and sequence number.
+        # A NTFS file reference is a combination of MFT entry and sequence
+        # number.
         sequence_number, mft_entry = file_reference_key.name.split('0000')
         mft_entry = int(mft_entry, 16)
         sequence_number = int(sequence_number, 16)
         event_data.file_reference = '{0:d}-{1:d}'.format(
             mft_entry, sequence_number)
       else:
-        # A FAT file is a single number.
+        # A FAT file reference is the offset of the corresponding directory
+        # entry.
         file_reference = int(file_reference_key.name, 16)
         event_data.file_reference = '{0:d}'.format(file_reference)
 
@@ -347,36 +374,33 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         self._AMCACHE_ENTRY_WRITE_TIME)
     if write_time_value:
       timestamp = write_time_value.GetDataAsObject()
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.last_written_time = dfdatetime_filetime.Filetime(
+          timestamp=timestamp)
 
     creation_time_value = file_reference_key.GetValueByName(
         self._AMCACHE_FILE_CREATION_TIME)
     if creation_time_value:
       timestamp = creation_time_value.GetDataAsObject()
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.file_creation_time = dfdatetime_filetime.Filetime(
+          timestamp=timestamp)
 
     modification_time_value = file_reference_key.GetValueByName(
         self._AMCACHE_FILE_MODIFICATION_TIME)
     if modification_time_value:
       timestamp = modification_time_value.GetDataAsObject()
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.file_modification_time = dfdatetime_filetime.Filetime(
+          timestamp=timestamp)
 
     link_time_value = file_reference_key.GetValueByName(self._AMCACHE_LINK_TIME)
     if link_time_value:
       timestamp = link_time_value.GetDataAsObject()
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LINK_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.link_time = dfdatetime_posix_time.PosixTime(
+          timestamp=timestamp)
+
+    # TODO: remove this check.
+    if (event_data.last_written_time or event_data.file_creation_time or
+        event_data.file_modification_time or event_data.link_time):
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseInventoryApplicationFileKey(
       self, parser_mediator, inventory_application_file_key):
@@ -413,10 +437,12 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         self._AMCACHE_P_INSTALLATION_TIME)
     if installation_time_value:
       timestamp = installation_time_value.GetDataAsObject()
-      installation_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          installation_time, definitions.TIME_DESCRIPTION_INSTALLATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.installation_time = dfdatetime_posix_time.PosixTime(
+          timestamp=timestamp)
+
+    # TODO: remove this check.
+    if event_data.installation_time:
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseProgramsKey(self, parser_mediator, programs_key):
     """Parses a Root\\Programs key.
@@ -475,4 +501,6 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
     self._ParseRootKey(parser_mediator, registry_key)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClasses([
+    AMCacheFileEventData, AMCacheProgramEventData])
 winreg_parser.WinRegistryParser.RegisterPlugin(AMCachePlugin)
