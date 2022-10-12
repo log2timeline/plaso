@@ -5,32 +5,12 @@
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfvfs.path import fake_path_spec
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.parsers.winreg_plugins import bam
 
 from tests.parsers.winreg_plugins import test_lib
-
-
-class TestFileEntry(object):
-  """File entry object for testing purposes.
-
-  Attributes:
-    name (str): name of the file entry.
-    path_spec (dfvfs.PathSpec): path specification of the file entry.
-  """
-
-  def __init__(self, name):
-    """Initializes a file entry.
-
-    Args:
-      name (str): the file entry name.
-    """
-    super(TestFileEntry, self).__init__()
-    self.name = name
-    self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
 
 class BackgroundActivityModeratorWindowsRegistryPluginTest(
@@ -92,12 +72,16 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
 
   def testProcessValue(self):
     """Tests the Process function for BAM data."""
-    test_file_entry = TestFileEntry('SYSTEM')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM')
     registry_key = self._CreateTestKey(self._TEST_DATA)
     plugin = bam.BackgroundActivityModeratorWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.NAME)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -110,20 +94,19 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'binary_path': (
-            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
-            'v1.0\\powershell.exe'),
         'data_type': 'windows:registry:bam',
-        'date_time': '2019-03-19T13:25:26.1496853+00:00',
+        'last_run_time': '2019-03-19T13:25:26.1496853+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
-        'user_sid': 'S-1-5-21-321011808-3761883066-353627080-1000'}
+        'path': (
+            '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
+            'v1.0\\powershell.exe'),
+        'user_identifier': 'S-1-5-21-321011808-3761883066-353627080-1000'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

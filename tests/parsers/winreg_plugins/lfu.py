@@ -108,6 +108,10 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootExecutePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -119,18 +123,17 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:boot_execute',
-        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'key_path': key_path,
+        'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
         'value': 'autocheck autochk *'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_values = (
         'CriticalSectionTimeout: [REG_SZ] 2592000 '
@@ -144,11 +147,12 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'key_path': key_path,
+        'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
         'values': expected_values}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
@@ -199,6 +203,10 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
     plugin = lfu.BootVerificationPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -210,18 +218,17 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:boot_verification',
-        'date_time': '2012-08-31T20:45:29.0000000+00:00',
         'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
         'key_path': key_path,
+        'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
