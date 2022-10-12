@@ -360,49 +360,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # TODO: check results in storage writer
 
-  def testGetArchiveTypes(self):
-    """Tests the _GetArchiveTypes function."""
-    knowledge_base_values = {'year': 2016}
-    session = sessions.Session()
-
-    storage_writer = fake_writer.FakeStorageWriter()
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
-
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
-    parser_mediator.SetStorageWriter(storage_writer)
-
-    extraction_worker = worker.EventExtractionWorker()
-
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
-
-    extraction_worker._analyzers = [test_analyzer]
-
-    storage_writer.Open()
-
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
-
-    extraction_worker = worker.EventExtractionWorker()
-
-    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-
-    type_indicators = extraction_worker._GetArchiveTypes(
-        parser_mediator, path_spec)
-    self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_TAR])
-
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
-
-    storage_writer.Close()
-
   def testGetCompressedStreamTypes(self):
     """Tests the _GetCompressedStreamTypes function."""
     knowledge_base_values = {'year': 2016}
