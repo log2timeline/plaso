@@ -5,8 +5,8 @@ import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -18,19 +18,24 @@ class BackgroundActivityModeratorEventData(events.EventData):
   """Background Activity Moderator event data.
 
   Attributes:
-    binary_path (str): binary executed.
-    user_sid (str): user SID associated with entry.
+    last_run_time (dfdatetime.DateTimeValues): executable (binary) last run
+        date and time.
+    path (str): path of the executable (binary).
+    user_identifier (str): user identifier (Windows NT SID).
   """
 
   DATA_TYPE = 'windows:registry:bam'
 
+  ATTRIBUTE_MAPPINGS = {
+      'last_run_time': definitions.TIME_DESCRIPTION_LAST_RUN}
+
   def __init__(self):
     """Initializes event data."""
-    super(
-        BackgroundActivityModeratorEventData,
-        self).__init__(data_type=self.DATA_TYPE)
-    self.binary_path = None
-    self.user_sid = None
+    super(BackgroundActivityModeratorEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.last_run_time = None
+    self.path = None
+    self.user_identifier = None
 
 
 class BackgroundActivityModeratorWindowsRegistryPlugin(
@@ -84,26 +89,26 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
     Raises:
       ParseError: if the value data could not be parsed.
     """
-    sid_keys = registry_key.GetSubkeys()
-    if not sid_keys:
-      return
-
-    for sid_key in sid_keys:
+    for sid_key in registry_key.GetSubkeys():
       for value in sid_key.GetValues():
-        if not value.name == 'Version' and not value.name == 'SequenceNumber':
-          timestamp = self._ParseValue(value.data)
+        if value.name in ('SequenceNumber', 'Version'):
+          continue
 
-          if timestamp:
-            event_data = BackgroundActivityModeratorEventData()
-            event_data.binary_path = value.name
-            event_data.user_sid = sid_key.name
+        event_data = BackgroundActivityModeratorEventData()
+        event_data.path = value.name
+        event_data.user_identifier = sid_key.name
 
-            date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        timestamp = self._ParseValue(value.data)
+        if timestamp:
+          event_data.last_run_time = dfdatetime_filetime.Filetime(
+              timestamp=timestamp)
 
-            event = time_events.DateTimeValuesEvent(
-                date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-            parser_mediator.ProduceEventWithEventData(event, event_data)
+        # TODO: remove this check.
+        if event_data.last_run_time:
+          parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    BackgroundActivityModeratorEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     BackgroundActivityModeratorWindowsRegistryPlugin)

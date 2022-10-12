@@ -5,32 +5,12 @@
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfvfs.path import fake_path_spec
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests.parsers.winreg_plugins import test_lib
-
-
-class TestFileEntry(object):
-  """File entry object for testing purposes.
-
-  Attributes:
-    name (str): name of the file entry.
-    path_spec (dfvfs.PathSpec): path specification of the file entry.
-  """
-
-  def __init__(self, name):
-    """Initializes a file entry.
-
-    Args:
-      name (str): the file entry name.
-    """
-    super(TestFileEntry, self).__init__()
-    self.name = name
-    self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
 
 class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
@@ -281,7 +261,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindowsXP(self):
     """Tests the Process function for Windows XP AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-XP')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-XP')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_XP)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -317,7 +297,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows2003(self):
     """Tests the Process function for Windows 2003 AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Windows2003')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Windows2003')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_2003)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -356,7 +336,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindowsVista(self):
     """Tests the Process function for Windows Vista AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Vista')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Vista')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_VISTA)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -439,7 +419,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows8_0(self):
     """Tests the Process function for Windows 8.0 AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Windows8.0')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Windows8.0')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_0)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -475,7 +455,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows8_1(self):
     """Tests the Process function for Windows 8.1 AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Windows8.1')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Windows8.1')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_1)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -511,7 +491,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows10(self):
     """Tests the Process function for Windows 10 AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Windows10')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Windows10')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -547,7 +527,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows10Creator(self):
     """Tests the Process function for Windows 10 Creator AppCompatCache data."""
-    test_file_entry = TestFileEntry('SYSTEM-Windows10-Creator')
+    test_file_entry = test_lib.TestFileEntry('SYSTEM-Windows10-Creator')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10_CREATOR)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()

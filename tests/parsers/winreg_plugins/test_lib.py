@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
+from dfvfs.path import fake_path_spec
+
 from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
@@ -8,6 +10,25 @@ from dfwinreg import registry as dfwinreg_registry
 from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
+
+
+class TestFileEntry(object):
+  """File entry object for testing purposes.
+
+  Attributes:
+    name (str): name of the file entry.
+    path_spec (dfvfs.PathSpec): path specification of the file entry.
+  """
+
+  def __init__(self, name):
+    """Initializes a file entry.
+
+    Args:
+      name (str): the file entry name.
+    """
+    super(TestFileEntry, self).__init__()
+    self.name = name
+    self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
 
 class RegistryPluginTestCase(test_lib.ParserTestCase):
