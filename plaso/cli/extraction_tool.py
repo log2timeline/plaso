@@ -771,7 +771,7 @@ class ExtractionTool(
         self._views_format_type, column_names=['Name', 'Description'],
         title='Archive and storage media image types')
 
-    for name, description in sorted(self._SUPPORTED_ARCHIVE_TYPES):
+    for name, description in sorted(self._SUPPORTED_ARCHIVE_TYPES.items()):
       table_view.AddRow([name, description])
 
     table_view.Write(self._output_writer)
