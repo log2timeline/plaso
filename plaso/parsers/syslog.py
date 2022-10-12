@@ -164,43 +164,16 @@ class SyslogParser(
   _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
       text_parser.PyParseIntCast)
 
-  _PYPARSING_COMPONENTS = {
-      'year': _FOUR_DIGITS.setResultsName('year'),
-      'two_digit_month': _TWO_DIGITS.setResultsName('two_digit_month'),
-      'month': _THREE_LETTERS.setResultsName('month'),
-      'day_of_month': _ONE_OR_TWO_DIGITS.setResultsName('day_of_month'),
-      'hour': _TWO_DIGITS.setResultsName('hour'),
-      'minute': _TWO_DIGITS.setResultsName('minute'),
-      'second': _TWO_DIGITS.setResultsName('second'),
-      'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
-          'fractional_seconds'),
-      'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
-          'hostname'),
-      'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
-          'reporter'),
-      'pid': _PROCESS_IDENTIFIER.setResultsName('pid'),
-      'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
-          'facility'),
-      'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity'),
-      'body': pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'),
-      'comment_body': pyparsing.SkipTo(' ---').setResultsName('body'),
-      'priority': _ONE_OR_TWO_DIGITS.setResultsName('priority'),
-      'message_identifier': pyparsing.Word(pyparsing.printables).setResultsName(
-          'message_identifier'),
-      'structured_data': pyparsing.Word(pyparsing.printables).setResultsName(
-          'structured_data'),
-  }
-
-  _PYPARSING_COMPONENTS['date'] = (
-      _PYPARSING_COMPONENTS['month'] +
-      _PYPARSING_COMPONENTS['day_of_month'] +
-      _PYPARSING_COMPONENTS['hour'] + pyparsing.Suppress(':') +
-      _PYPARSING_COMPONENTS['minute'] + pyparsing.Suppress(':') +
-      _PYPARSING_COMPONENTS['second'] + pyparsing.Optional(
+  _DATE_TIME = (
+      _THREE_LETTERS.setResultsName('month') +
+      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
+      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Optional(
           pyparsing.Suppress('.') +
-          _PYPARSING_COMPONENTS['fractional_seconds']))
+          pyparsing.Word(pyparsing.nums).setResultsName('fraction_of_second')))
 
-  _PYPARSING_COMPONENTS['rfc3339_datetime'] = pyparsing.Combine(
+  _DATE_TIME_RFC3339 = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
@@ -213,66 +186,74 @@ class SyslogParser(
       joinString='', adjacent=True)
 
   _CHROMEOS_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
-      _PYPARSING_COMPONENTS['severity'] +
-      _PYPARSING_COMPONENTS['reporter'] +
+      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
+      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PYPARSING_COMPONENTS['pid'] +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.lineEnd())
 
   _RSYSLOG_LINE = (
-      _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
-      _PYPARSING_COMPONENTS['hostname'] +
-      _PYPARSING_COMPONENTS['reporter'] +
+      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
+      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PYPARSING_COMPONENTS['pid'] +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
-          pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['facility'] +
+          pyparsing.Suppress('<') +
+          pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.lineEnd())
 
   _RSYSLOG_TRADITIONAL_LINE = (
-      _PYPARSING_COMPONENTS['date'] +
-      _PYPARSING_COMPONENTS['hostname'] +
-      _PYPARSING_COMPONENTS['reporter'] +
+      _DATE_TIME +
+      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
+      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PYPARSING_COMPONENTS['pid'] +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
-          pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['facility'] +
+          pyparsing.Suppress('<') +
+          pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.lineEnd())
 
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
   _RSYSLOG_PROTOCOL_23_LINE = (
-      pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['priority'] +
+      pyparsing.Suppress('<') + _ONE_OR_TWO_DIGITS.setResultsName('priority') +
       pyparsing.Suppress('>') + pyparsing.Suppress(
           pyparsing.Word(pyparsing.nums, max=1)) +
-      _PYPARSING_COMPONENTS['rfc3339_datetime'].setResultsName('datetime') +
-      _PYPARSING_COMPONENTS['hostname'] +
-      _PYPARSING_COMPONENTS['reporter'] +
-      pyparsing.Or([pyparsing.Suppress('-'), _PYPARSING_COMPONENTS['pid']]) +
-      _PYPARSING_COMPONENTS['message_identifier'] +
-      _PYPARSING_COMPONENTS['structured_data'] +
-      _PYPARSING_COMPONENTS['body'] +
+      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
+      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
+      pyparsing.Or([
+          pyparsing.Suppress('-'), _PROCESS_IDENTIFIER.setResultsName('pid')]) +
+      pyparsing.Word(pyparsing.printables).setResultsName(
+          'message_identifier') +
+      pyparsing.Word(pyparsing.printables).setResultsName('structured_data') +
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       pyparsing.lineEnd())
 
   _SYSLOG_COMMENT = (
-      _PYPARSING_COMPONENTS['date'] + pyparsing.Suppress(':') +
-      pyparsing.Suppress('---') + _PYPARSING_COMPONENTS['comment_body'] +
+      _DATE_TIME + pyparsing.Suppress(':') +
+      pyparsing.Suppress('---') +
+      pyparsing.SkipTo(' ---').setResultsName('body') +
       pyparsing.Suppress('---') + pyparsing.LineEnd())
 
   _KERNEL_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS['date'] +
-      pyparsing.Literal('kernel').setResultsName('reporter') +
-      pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['body'] +
+      _DATE_TIME + pyparsing.Literal('kernel').setResultsName('reporter') +
+      pyparsing.Suppress(':') +
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       pyparsing.lineEnd())
 
   LINE_STRUCTURES = [
@@ -313,9 +294,9 @@ class SyslogParser(
 
     month_string = self._GetValueFromStructure(structure, 'month')
     day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hour')
-    minutes = self._GetValueFromStructure(structure, 'minute')
-    seconds = self._GetValueFromStructure(structure, 'second')
+    hours = self._GetValueFromStructure(structure, 'hours')
+    minutes = self._GetValueFromStructure(structure, 'minutes')
+    seconds = self._GetValueFromStructure(structure, 'seconds')
 
     month = self._GetMonthFromString(month_string)
 

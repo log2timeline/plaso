@@ -66,52 +66,44 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
-  _PYPARSING_COMPONENTS = {
-      'address': _IP_ADDRESS.setResultsName('address'),
-      'authentication_method': _AUTHENTICATION_METHOD.setResultsName(
-          'authentication_method'),
-      'fingerprint': pyparsing.Combine(
-          pyparsing.Literal('RSA ') +
-          pyparsing.Word(':' + pyparsing.hexnums)).setResultsName(
-              'fingerprint'),
-      'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName('port'),
-      'protocol': pyparsing.Literal('ssh2').setResultsName('protocol'),
-      'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
-          'username'),
-  }
+  _USERNAME = pyparsing.Word(pyparsing.alphanums).setResultsName('username')
+
+  _PORT = pyparsing.Word(pyparsing.nums, max=5).setResultsName('port')
+
+  _FINGER_PRINT = pyparsing.Combine(
+      pyparsing.Literal('RSA ') +
+      pyparsing.Word(':' + pyparsing.hexnums)).setResultsName('fingerprint')
 
   _LOGIN_GRAMMAR = (
       pyparsing.Literal('Accepted') +
-      _PYPARSING_COMPONENTS['authentication_method'] +
-      pyparsing.Literal('for') + _PYPARSING_COMPONENTS['username'] +
-      pyparsing.Literal('from') + _PYPARSING_COMPONENTS['address'] +
-      pyparsing.Literal('port') + _PYPARSING_COMPONENTS['port'] +
-      _PYPARSING_COMPONENTS['protocol'] +
-      pyparsing.Optional(
-          pyparsing.Literal(':') + _PYPARSING_COMPONENTS['fingerprint']) +
-      pyparsing.StringEnd()
-  )
+      _AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      pyparsing.Literal('for') + _USERNAME +
+      pyparsing.Literal('from') + _IP_ADDRESS.setResultsName('address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.Literal('ssh2').setResultsName('protocol') +
+      pyparsing.Optional(pyparsing.Literal(':') + _FINGER_PRINT) +
+      pyparsing.StringEnd())
 
   _FAILED_CONNECTION_GRAMMAR = (
       pyparsing.Literal('Failed') +
-      _PYPARSING_COMPONENTS['authentication_method'] +
-      pyparsing.Literal('for') + _PYPARSING_COMPONENTS['username'] +
-      pyparsing.Literal('from') + _PYPARSING_COMPONENTS['address'] +
-      pyparsing.Literal('port') + _PYPARSING_COMPONENTS['port'] +
-      pyparsing.StringEnd()
-  )
+      _AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      pyparsing.Literal('for') + _USERNAME +
+      pyparsing.Literal('from') + _IP_ADDRESS.setResultsName('address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.StringEnd())
 
   _OPENED_CONNECTION_GRAMMAR = (
       pyparsing.Literal('Connection from') +
-      _PYPARSING_COMPONENTS['address'] +
-      pyparsing.Literal('port') + _PYPARSING_COMPONENTS['port'] +
-      pyparsing.LineEnd()
-  )
+      _IP_ADDRESS.setResultsName('address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.LineEnd())
 
   MESSAGE_GRAMMARS = [
       ('login', _LOGIN_GRAMMAR),
       ('failed_connection', _FAILED_CONNECTION_GRAMMAR),
       ('opened_connection', _OPENED_CONNECTION_GRAMMAR),]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in MESSAGE_GRAMMARS])
 
   def _ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Produces an event from a syslog body that matched one of the grammars.
@@ -127,8 +119,8 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     Raises:
       ValueError: If an unknown key is provided.
     """
-    if key not in ('failed_connection', 'login', 'opened_connection'):
-      raise ValueError('Unknown grammar key: {0:s}'.format(key))
+    if key not in self._SUPPORTED_KEYS:
+      raise ValueError('Unsupported grammar: {0:s}'.format(key))
 
     if key == 'login':
       event_data = SSHLoginEventData()
