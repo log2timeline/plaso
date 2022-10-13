@@ -118,9 +118,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A MRUListEx event.
+    # MRUListEx event data.
     expected_entries = (
         'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
         'Index: 2 [MRU Value 0]: Some random text here '
@@ -128,14 +126,15 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
-        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': expected_entries,
         'key_path': key_path,
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class TestMRUListExShellItemListWindowsRegistryPlugin(
@@ -187,9 +186,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A MRUListEx event.
+    # MRUListEx event data.
     expected_entries = (
         'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
         'P:\\Application Tools\\Firefox 6.0\\Firefox Setup 6.0.exe '
@@ -199,28 +196,32 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
-        'date_time': '2011-08-28T22:48:28.1593086+00:00',
         'entries': expected_entries,
         'key_path': '{0:s}\\exe'.format(key_path),
+        'last_written_time': '2011-08-28T22:48:28.1593086+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # A shell item event.
+    # Shell item event data.
     expected_event_values = {
+        'accress_time': None,
+        'creation_time': '2012-03-08T22:16:02+00:00',
         'data_type': 'windows:shell_item:file_entry',
-        'date_time': '2012-03-08T22:16:02+00:00',
-        'name': 'ALLOYR~1',
-        'long_name': 'Alloy Research',
         'file_reference': '44518-33',
+        'long_name': 'Alloy Research',
+        'name': 'ALLOYR~1',
+        'modification_time': '2012-03-12T20:50:00+00:00',
         'origin': '{0:s}\\*'.format(key_path),
         'shell_item_path': (
             '<Shared Documents Folder (Users Files)> '
             '<UNKNOWN: 0x00>\\Alloy Research')}
 
-    self.CheckEventValues(storage_writer, events[6], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
@@ -267,9 +268,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A MRUListEx event.
+    # MRUListEx event data.
     expected_entries = (
         'Index: 1 [MRU Value 17]: Path: The SHIELD, '
         'Shell item: [The SHIELD.lnk] '
@@ -314,14 +313,15 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
-        'date_time': '2012-04-01T13:52:39.1137417+00:00',
         'entries': expected_entries,
         'key_path': key_path,
+        'last_written_time': '2012-04-01T13:52:39.1137417+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
@@ -368,9 +368,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # A MRUListEx event.
+    # MRUListEx event data.
     expected_entries = (
         'Index: 1 [MRU Value 1]: Path: chrome.exe, '
         'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
@@ -399,14 +397,15 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
-        'date_time': '2012-04-01T13:52:38.9662902+00:00',
         'entries': expected_entries,
         'key_path': key_path,
+        'last_written_time': '2012-04-01T13:52:38.9662902+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

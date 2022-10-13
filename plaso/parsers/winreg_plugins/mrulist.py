@@ -10,8 +10,8 @@ import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -27,15 +27,21 @@ class MRUListEventData(events.EventData):
   Attributes:
     entries (str): most recently used (MRU) entries.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'windows:registry:mrulist'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
     super(MRUListEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class MRUListStringRegistryKeyFilter(
@@ -165,10 +171,9 @@ class BaseMRUListWindowsRegistryPlugin(
     event_data = MRUListEventData()
     event_data.entries = ' '.join(entries)
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
@@ -305,6 +310,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
     self._ParseMRUListKey(parser_mediator, registry_key, codepage=codepage)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(MRUListEventData)
 winreg_parser.WinRegistryParser.RegisterPlugins([
     MRUListStringWindowsRegistryPlugin,
     MRUListShellItemListWindowsRegistryPlugin])
