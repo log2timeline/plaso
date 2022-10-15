@@ -143,6 +143,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     plugin.Process(parser_mediator, registry_key)
 
-    self._ProcessEventData(storage_writer)
+    self._ProcessEventData(storage_writer, parser_mediator)
 
     return storage_writer

@@ -50,6 +50,6 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
     finally:
       database.Close()
 
-    self._ProcessEventData(storage_writer)
+    self._ProcessEventData(storage_writer, parser_mediator)
 
     return storage_writer

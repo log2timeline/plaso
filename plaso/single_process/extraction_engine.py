@@ -22,6 +22,7 @@ from plaso.engine import logger
 from plaso.engine import process_info
 from plaso.engine import worker
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -166,7 +167,7 @@ class SingleProcessEngine(engine.BaseEngine):
           attribute_value = getattr(event_data, attribute_name, None)
           if attribute_value:
             event = time_events.DateTimeValuesEvent(
-                attribute_value, time_description)
+                attribute_value, time_description, time_zone=self._time_zone)
             event.SetEventDataIdentifier(event_data_identifier)
 
             parser_mediator.ProduceEvent(event)
@@ -382,6 +383,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
     Returns:
       ProcessingStatus: processing status.
+
+    Raises:
+      BadConfigOption: if the preferred time zone is invalid.
     """
     parser_mediator = self._CreateParserMediator(
         self.knowledge_base, resolver_context, processing_configuration)
@@ -399,6 +403,11 @@ class SingleProcessEngine(engine.BaseEngine):
     self._resolver_context = resolver_context
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
+
+    try:
+      self.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
+    except ValueError as exception:
+      raise errors.BadConfigOption(exception)
 
     logger.debug('Processing started.')
 
