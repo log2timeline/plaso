@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce key plugins for Plaso."""
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -14,15 +14,21 @@ class RunKeyEventData(events.EventData):
   Attributes:
     entries (list[str]): Run/RunOnce entries.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'windows:registry:run'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
     super(RunKeyEventData, self).__init__(data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class AutoRunsPlugin(interface.WindowsRegistryPlugin):
@@ -80,10 +86,10 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
     event_data = RunKeyEventData()
     event_data.entries = sorted(entries)
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(RunKeyEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(AutoRunsPlugin)

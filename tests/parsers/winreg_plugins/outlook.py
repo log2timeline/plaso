@@ -70,6 +70,10 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     plugin = outlook.OutlookSearchMRUPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -81,20 +85,19 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:outlook_search_mru',
-        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': (
             'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
             'username@example.com.ost: 0x00372bcf'),
         'key_path': key_path,
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 # TODO: The catalog for Office 2013 (15.0) contains binary values not

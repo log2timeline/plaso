@@ -73,7 +73,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # The ProgramsCache list event.
     expected_entries = (
@@ -106,25 +106,23 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'parser': 'explorer_programscache',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    self.CheckEventValues(storage_writer, events[75], expected_event_values)
 
     # The Windows Registry key event.
-    expected_values = (
-        'Favorites: [REG_BINARY] (55 bytes) '
-        'FavoritesChanges: [REG_DWORD_LE] 1 '
-        'FavoritesResolve: [REG_BINARY] (8 bytes) '
-        'StartMenu_Balloon_Time: [REG_BINARY] (8 bytes) '
-        'StartMenu_Start_Time: [REG_BINARY] (8 bytes)')
-
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'date_time': '2009-08-04T15:22:18.4196250+00:00',
         'key_path': key_path,
+        'last_written_time': '2009-08-04T15:22:18.4196250+00:00',
         'parser': 'explorer_programscache',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
-        'values': expected_values}
+        'values': (
+            'Favorites: [REG_BINARY] (55 bytes) '
+            'FavoritesChanges: [REG_DWORD_LE] 1 '
+            'FavoritesResolve: [REG_BINARY] (8 bytes) '
+            'StartMenu_Balloon_Time: [REG_BINARY] (8 bytes) '
+            'StartMenu_Start_Time: [REG_BINARY] (8 bytes)')}
 
-    self.CheckEventValues(storage_writer, events[76], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 26)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
@@ -155,17 +153,17 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
+        'access_time': '2010-11-10T07:51:24+00:00',
+        'creation_time': '2010-11-10T07:50:38+00:00',
         'data_type': 'windows:shell_item:file_entry',
-        'date_time': '2010-11-10T07:50:38+00:00',
+        'modification_time': '2010-11-10T07:51:24+00:00',
         'origin': '{0:s} ProgramsCache'.format(key_path),
         'parser': 'explorer_programscache/shell_items',
-        'shell_item_path': 'Programs',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'shell_item_path': 'Programs'}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
