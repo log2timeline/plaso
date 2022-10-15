@@ -112,11 +112,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return storage_writer.GetAttributeContainerByIdentifier(
         events.EventData.CONTAINER_TYPE, event_data_identifier)
 
-  def _ProcessEventData(self, storage_writer):
+  def _ProcessEventData(self, storage_writer, parser_mediator):
     """Processes event data.
 
     Args:
       storage_writer (StorageWriter): storage writer.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
     """
     event_data = storage_writer.GetFirstWrittenEventData()
     while event_data:
@@ -131,7 +133,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
           attribute_value = getattr(event_data, attribute_name, None)
           if attribute_value:
             event = time_events.DateTimeValuesEvent(
-                attribute_value, time_description)
+                attribute_value, time_description,
+                time_zone=parser_mediator.timezone)
             event.SetEventDataIdentifier(event_data_identifier)
 
             storage_writer.AddAttributeContainer(event)
@@ -213,7 +216,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser_type = type(parser)
       self.fail('Unsupported parser type: {0!s}'.format(parser_type))
 
-    self._ProcessEventData(storage_writer)
+    self._ProcessEventData(storage_writer, parser_mediator)
 
     return storage_writer
 

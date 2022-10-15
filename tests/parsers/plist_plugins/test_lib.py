@@ -65,6 +65,6 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     plugin.Process(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
 
-    self._ProcessEventData(storage_writer)
+    self._ProcessEventData(storage_writer, parser_mediator)
 
     return storage_writer

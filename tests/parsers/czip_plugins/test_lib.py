@@ -44,6 +44,6 @@ class CompoundZIPPluginTestCase(test_lib.ParserTestCase):
 
       plugin.Process(parser_mediator, zip_file=zip_file)
 
-    self._ProcessEventData(storage_writer)
+    self._ProcessEventData(storage_writer, parser_mediator)
 
     return storage_writer

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains MRUListEx Windows Registry plugins.
+"""Windows Registry plugin to parse the MRUListEx Registry values.
 
 Also see:
 https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html

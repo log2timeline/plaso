@@ -273,7 +273,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         attribute_value = getattr(event_data, attribute_name, None)
         if attribute_value:
           event = time_events.DateTimeValuesEvent(
-              attribute_value, time_description)
+              attribute_value, time_description, time_zone=self._time_zone)
           event.SetEventDataIdentifier(event_data_identifier)
 
           storage_writer.AddAttributeContainer(event)
@@ -1027,6 +1027,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     Returns:
       ProcessingStatus: processing status.
+
+    Raises:
+      BadConfigOption: if the preferred time zone is invalid.
     """
     self._enable_sigsegv_handler = enable_sigsegv_handler
 
@@ -1039,6 +1042,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._storage_file_path = storage_file_path
     self._storage_writer = storage_writer
     self._task_storage_format = processing_configuration.task_storage_format
+
+    try:
+      self.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
+    except ValueError as exception:
+      raise errors.BadConfigOption(exception)
 
     # Set up the task queue.
     task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(

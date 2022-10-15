@@ -737,21 +737,24 @@ class ParserMediator(object):
     self._language_tag = language_tag
     self._lcid = lcid
 
-  def SetPreferredTimeZone(self, time_zone):
+  def SetPreferredTimeZone(self, time_zone_string):
     """Sets the preferred time zone for zone-less date and time values.
 
     Args:
-      time_zone (str): time zone such as "Europe/Amsterdam" or None if the
-          time zone determined by preprocessing or the default should be used.
+      time_zone_string (str): time zone such as "Europe/Amsterdam" or None if
+          the time zone determined by preprocessing or the default should be
+          used.
 
     Raises:
       ValueError: if the time zone is not supported.
     """
-    if time_zone is not None:
+    time_zone = None
+    if time_zone_string:
       try:
-        time_zone = pytz.timezone(time_zone)
+        time_zone = pytz.timezone(time_zone_string)
       except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
+        raise ValueError('Unsupported time zone: {0!s}'.format(
+            time_zone_string))
 
     self._time_zone = time_zone
 

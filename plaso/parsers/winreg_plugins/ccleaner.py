@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Parser for the CCleaner Registry key."""
+"""Windows Registry plugin to parse the CCleaner Registry key.
+
+Also see:
+https://winreg-kb.readthedocs.io/en/latest/sources/application-keys/CCleaner.html
+"""
 
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -18,9 +22,14 @@ class CCleanerConfigurationEventData(events.EventData):
   Attributes:
     configuration (str): CCleaner configuration.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'ccleaner:configuration'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -28,6 +37,7 @@ class CCleanerConfigurationEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.configuration = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class CCleanerUpdateEventData(events.EventData):
@@ -35,42 +45,24 @@ class CCleanerUpdateEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    update_time (dfdatetime.DateTimeValues): date and time CCleaner last
+        checked for an update.
   """
 
   DATA_TYPE = 'ccleaner:update'
+
+  ATTRIBUTE_MAPPINGS = {
+      'update_time': definitions.TIME_DESCRIPTION_UPDATE}
 
   def __init__(self):
     """Initializes event data."""
     super(CCleanerUpdateEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.update_time = None
 
 
 class CCleanerPlugin(interface.WindowsRegistryPlugin):
-  """Gathers the CCleaner Keys for NTUSER hive.
-
-  Known Windows Registry values within the CCleaner key:
-  * (App)Cookies [REG_SZ], contains "True" if the cookies should be cleaned;
-  * (App)Delete Index.dat files [REG_SZ]
-  * (App)History [REG_SZ]
-  * (App)Last Download Location [REG_SZ]
-  * (App)Other Explorer MRUs [REG_SZ]
-  * (App)Recent Documents [REG_SZ]
-  * (App)Recently Typed URLs [REG_SZ]
-  * (App)Run (in Start Menu) [REG_SZ]
-  * (App)Temporary Internet Files [REG_SZ]
-  * (App)Thumbnail Cache [REG_SZ]
-  * CookiesToSave [REG_SZ]
-  * UpdateKey [REG_SZ], contains a date and time formatted as:
-      "MM/DD/YYYY hh:mm:ss [A|P]M", for example "07/13/2013 10:03:14 AM";
-  * WINDOW_HEIGHT [REG_SZ], contains the windows height in number of pixels;
-  * WINDOW_LEFT [REG_SZ]
-  * WINDOW_MAX [REG_SZ]
-  * WINDOW_TOP [REG_SZ]
-  * WINDOW_WIDTH [REG_SZ], contains the windows width in number of pixels;
-
-  Also see:
-  http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner-regripper-plugin-part_05.html
-  """
+  """Windows Registry plugin to parse the CCleaner Registry key."""
 
   NAME = 'ccleaner'
   DATA_FORMAT = 'CCleaner Registry data'
@@ -91,7 +83,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
 
     Returns:
@@ -152,7 +144,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     configuration = []
@@ -171,19 +163,18 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     if date_time:
       event_data = CCleanerUpdateEventData()
       event_data.key_path = registry_key.path
+      event_data.update_time = date_time
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
     event_data = CCleanerConfigurationEventData()
     event_data.configuration = ' '.join(sorted(configuration)) or None
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClasses([
+    CCleanerConfigurationEventData, CCleanerUpdateEventData])
 winreg_parser.WinRegistryParser.RegisterPlugin(CCleanerPlugin)
