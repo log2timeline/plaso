@@ -107,7 +107,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   _WORKER_PROCESSES_MINIMUM = 2
-  _WORKER_PROCESSES_MAXIMUM = 15
+  _WORKER_PROCESSES_MAXIMUM = 99
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
