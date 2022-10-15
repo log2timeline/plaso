@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Network drive Registry plugin."""
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -14,17 +14,23 @@ class NetworkDriveEventData(events.EventData):
   Attributes:
     drive_letter (str): drive letter assigned to network drive.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     server_name (str): name of the server of the network drive.
     share_name (str): name of the share of the network drive.
   """
 
   DATA_TYPE = 'windows:registry:network_drive'
 
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(NetworkDriveEventData, self).__init__(data_type=self.DATA_TYPE)
     self.drive_letter = None
     self.key_path = None
+    self.last_written_time = None
     self.server_name = None
     self.share_name = None
 
@@ -43,7 +49,7 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for subkey in registry_key.GetSubkeys():
@@ -64,12 +70,12 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
       event_data = NetworkDriveEventData()
       event_data.drive_letter = drive_letter
       event_data.key_path = registry_key.path
+      event_data.last_written_time = subkey.last_written_time
       event_data.server_name = server_name
       event_data.share_name = share_name
 
-      event = time_events.DateTimeValuesEvent(
-          subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(NetworkDriveEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(NetworkDrivesPlugin)

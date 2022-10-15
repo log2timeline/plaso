@@ -89,7 +89,7 @@ class BaseMRUListWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
            the MRUList value.
       entry_index (int): MRUList entry index.
@@ -128,7 +128,7 @@ class BaseMRUListWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """
@@ -190,7 +190,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
            the MRUList value.
       entry_index (int): MRUList entry index.
@@ -236,7 +236,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """
@@ -263,7 +263,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
            the MRUList value.
       entry_index (int): MRUList entry index.
@@ -303,7 +303,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """

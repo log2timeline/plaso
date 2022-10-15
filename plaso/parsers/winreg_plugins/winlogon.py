@@ -56,7 +56,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       notify_subkey (dfwinreg.WinRegistryKey): Notify Windows Registry subkey.
     """
     for subkey in notify_subkey.GetSubkeys():
@@ -87,7 +87,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for application in self._LOGON_APPLICATIONS:
@@ -111,7 +111,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     self._ParseLogonApplications(parser_mediator, registry_key)
