@@ -5,8 +5,8 @@ import os
 
 from dfdatetime import systemtime as dfdatetime_systemtime
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -18,23 +18,32 @@ class WindowsRegistryNetworkListEventData(events.EventData):
   """Windows NetworkList event data.
 
   Attributes:
-    connection_type (str): type of connection.
+    connection_type (int): type of connection.
+    creation_time (dfdatetime.DateTimeValues): entry creation date and time.
     default_gateway_mac (str): MAC address for the default gateway.
     description (str): description of the wireless connection.
     dns_suffix (str): DNS suffix.
+    last_connected_time (dfdatetime.DateTimeValues): last connected date and
+        time.
     ssid (str): SSID of the connection.
   """
 
   DATA_TYPE = 'windows:registry:network'
+
+  ATTRIBUTE_MAPPINGS = {
+      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
+      'last_connected_time': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
   def __init__(self):
     """Initializes event data."""
     super(WindowsRegistryNetworkListEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.connection_type = None
+    self.creation_time = None
     self.default_gateway_mac = None
     self.description = None
     self.dns_suffix = None
+    self.last_connected_time = None
     self.ssid = None
 
 
@@ -52,11 +61,6 @@ class NetworksWindowsRegistryPlugin(
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'systemtime.yaml')
-
-  _CONNECTION_TYPE = {
-      0x06: 'Wired',
-      0x17: '3g',
-      0x47: 'Wireless'}
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -98,11 +102,31 @@ class NetworksWindowsRegistryPlugin(
 
     return network_info
 
-  def _ParseSystemTime(self, byte_stream):
+  def _GetValueFromKey(self, registry_key, value_name):
+    """Retrieves a value from the Windows Registry key.
+
+    Args:
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the value to retrieve.
+
+    Returns:
+      object: value data or None if no corresponding Windows Registry value
+          is available.
+    """
+    registry_value = registry_key.GetValueByName(value_name)
+    if not registry_value:
+      return None
+
+    return registry_value.GetDataAsObject()
+
+  def _ParseSystemTime(self, parser_mediator, registry_key, value_name):
     """Parses a SYSTEMTIME date and time value from a byte stream.
 
     Args:
-      byte_stream (bytes): byte stream.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the value to retrieve.
 
     Returns:
       dfdatetime.Systemtime: SYSTEMTIME date and time value or None if no
@@ -111,15 +135,20 @@ class NetworksWindowsRegistryPlugin(
     Raises:
       ParseError: if the SYSTEMTIME could not be parsed.
     """
+    registry_value = registry_key.GetValueByName(value_name)
+    if not registry_value:
+      return None
+
     systemtime_map = self._GetDataTypeMap('systemtime')
 
     try:
       systemtime = self._ReadStructureFromByteStream(
-          byte_stream, 0, systemtime_map)
+          registry_value.data, 0, systemtime_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.ParseError(
-          'Unable to parse SYSTEMTIME value with error: {0!s}'.format(
-              exception))
+      parser_mediator.ProduceExtractionWarning(
+          'Unable to parse SYSTEMTIME in value: {0:s} with error: {1!s}'.format(
+              value_name, exception))
+      return None
 
     system_time_tuple = (
         systemtime.year, systemtime.month, systemtime.weekday,
@@ -132,16 +161,19 @@ class NetworksWindowsRegistryPlugin(
     try:
       return dfdatetime_systemtime.Systemtime(
           system_time_tuple=system_time_tuple)
+
     except ValueError:
-      raise errors.ParseError(
-          'Invalid SYSTEMTIME value: {0!s}'.format(system_time_tuple))
+      parser_mediator.ProduceExtractionWarning(
+          'Invalid SYSTEMTIME value: {0!s} in value: {1:s}'.format(
+              system_time_tuple, value_name))
+      return None
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     network_info = {}
@@ -150,62 +182,25 @@ class NetworksWindowsRegistryPlugin(
       network_info = self._GetNetworkInfo(signatures)
 
     profiles = registry_key.GetSubkeyByName('Profiles')
-    if not profiles:
-      return
+    if profiles:
+      for subkey in profiles.GetSubkeys():
+        default_gateway_mac, dns_suffix = network_info.get(
+            subkey.name, (None, None))
 
-    for subkey in profiles.GetSubkeys():
-      default_gateway_mac, dns_suffix = network_info.get(
-          subkey.name, (None, None))
+        event_data = WindowsRegistryNetworkListEventData()
+        event_data.connection_type = self._GetValueFromKey(subkey, 'NameType')
+        event_data.creation_time = self._ParseSystemTime(
+            parser_mediator, subkey, 'DateCreated')
+        event_data.default_gateway_mac = default_gateway_mac
+        event_data.description = self._GetValueFromKey(subkey, 'Description')
+        event_data.dns_suffix = dns_suffix
+        event_data.last_connected_time = self._ParseSystemTime(
+            parser_mediator, subkey, 'DateLastConnected')
+        event_data.ssid = self._GetValueFromKey(subkey, 'ProfileName')
 
-      event_data = WindowsRegistryNetworkListEventData()
-      event_data.default_gateway_mac = default_gateway_mac
-      event_data.dns_suffix = dns_suffix
-
-      ssid_value = subkey.GetValueByName('ProfileName')
-      if ssid_value:
-        event_data.ssid = ssid_value.GetDataAsObject()
-
-      description_value = subkey.GetValueByName('Description')
-      if description_value:
-        event_data.description = description_value.GetDataAsObject()
-
-      connection_type_value = subkey.GetValueByName('NameType')
-      if connection_type_value:
-        connection_type = connection_type_value.GetDataAsObject()
-        # TODO: move to formatter.
-        connection_type = self._CONNECTION_TYPE.get(
-            connection_type, 'unknown')
-        event_data.connection_type = connection_type
-
-      date_created_value = subkey.GetValueByName('DateCreated')
-      if date_created_value:
-        try:
-          date_time = self._ParseSystemTime(date_created_value.data)
-        except errors.ParseError as exception:
-          date_time = None
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse date created with error: {0!s}'.format(
-                  exception))
-
-        if date_time:
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_CREATION)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      date_last_connected_value = subkey.GetValueByName('DateLastConnected')
-      if date_last_connected_value:
-        try:
-          date_time = self._ParseSystemTime(date_last_connected_value.data)
-        except errors.ParseError as exception:
-          date_time = None
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse date last connected with error: {0!s}'.format(
-                  exception))
-
-        if date_time:
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    WindowsRegistryNetworkListEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(NetworksWindowsRegistryPlugin)

@@ -74,7 +74,7 @@ class BagMRUWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
            the MRUListEx value.
       entry_number (int): entry number.
@@ -143,7 +143,7 @@ class BagMRUWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       parent_path_segments (list[str]): parent shell item path segments.
       codepage (Optional[str]): extended ASCII string codepage.
@@ -213,7 +213,7 @@ class BagMRUWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """

@@ -501,6 +501,14 @@ source: 'RDP Connection Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:network'
+enumeration_helpers:
+- input_attribute: 'connection_type'
+  output_attribute: 'connection_type'
+  default_value: 'UNKNOWN'
+  values:
+    0x06: 'Wired'
+    0x17: '3g'
+    0x47: 'Wireless'
 message:
 - 'SSID: {ssid}'
 - 'Description: {description}'

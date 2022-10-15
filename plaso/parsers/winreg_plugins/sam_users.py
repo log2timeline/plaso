@@ -88,7 +88,7 @@ class SAMUsersWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       data (bytes): Windows Registry V value data.
       user_information_descriptor (user_information_descriptor): V value
           user information descriptor.
@@ -117,7 +117,7 @@ class SAMUsersWindowsRegistryPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     names_key = registry_key.GetSubkeyByName('Names')

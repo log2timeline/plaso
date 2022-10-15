@@ -227,7 +227,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       names_to_skip (Optional[list[str]]): names of values that should
           be skipped.
@@ -281,7 +281,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       names_to_skip (Optional[list[str]]): names of values that should
           be skipped.
@@ -305,7 +305,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
 
@@ -315,7 +315,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Raises:
@@ -335,7 +335,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Raises:

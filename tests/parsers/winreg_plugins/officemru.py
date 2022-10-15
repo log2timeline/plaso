@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import officemru
 
 from tests.parsers.winreg_plugins import test_lib
@@ -73,6 +72,10 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
 
@@ -84,11 +87,8 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:office_mru_list',
-        'date_time': '2012-03-13T18:27:15.0898020+00:00',
         'entries': (
             'Item 1: [F00000000][T01CD0146EA1EADB0][O00000000]*'
             'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
@@ -102,27 +102,25 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             'C:\\Users\\nfury\\Documents\\VIBRANIUM.docx '
             'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
             'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx'),
+        'last_written_time': '2012-03-13T18:27:15.0898020+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
-        'parser': plugin.NAME,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
+        'parser': plugin.NAME}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
-
-    # Test OfficeMRUWindowsRegistryEvent.
-    expected_value_string = (
-        '[F00000000][T01CD0146EA1EADB0][O00000000]*'
-        'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
-        'SA-23E Mitchell-Hyundyne Starfury.docx')
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:registry:office_mru',
-        'date_time': '2012-03-13T18:27:15.0830000+00:00',
         'key_path': key_path,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
-        'value_string': expected_value_string}
+        'last_written_time': '2012-03-13T18:27:15.0830000+00:00',
+        'value_string': (
+            '[F00000000][T01CD0146EA1EADB0][O00000000]*'
+            'C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\'
+            'SA-23E Mitchell-Hyundyne Starfury.docx')}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

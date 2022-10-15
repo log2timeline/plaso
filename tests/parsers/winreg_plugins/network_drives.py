@@ -147,6 +147,10 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     plugin = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -158,17 +162,16 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:network_drive',
-        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'drive_letter': 'H',
         'key_path': key_path,
+        'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'server_name': 'acme.local',
         'share_name': '\\Shares\\User_Data\\John.Doe'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

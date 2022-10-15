@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -13,15 +13,21 @@ class MSIEZoneSettingsEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     settings (str): MSIE zone settings.
   """
 
   DATA_TYPE = 'windows:registry:msie_zone_settings'
 
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
+
   def __init__(self):
     """Initializes event data."""
     super(MSIEZoneSettingsEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.last_written_time = None
     self.settings = None
 
 
@@ -173,7 +179,7 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
@@ -237,11 +243,12 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
       event_data = MSIEZoneSettingsEventData()
       event_data.key_path = path
+      event_data.last_written_time = zone_key.last_written_time
       event_data.settings = ' '.join(sorted(settings))
 
-      event = time_events.DateTimeValuesEvent(
-          zone_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    MSIEZoneSettingsEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)
