@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import sam_users
 
 from tests.parsers.winreg_plugins import test_lib
@@ -34,6 +33,10 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 7)
 
@@ -45,30 +48,18 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
         'data_type': 'windows:registry:sam_users',
-        'date_time': '2014-09-24T03:36:06.3588374+00:00',
+        'last_login_time': '2010-11-20T21:48:12.5692440+00:00',
+        'last_password_set_time': '2010-11-20T21:56:34.7436870+00:00',
+        'last_written_time': '2014-09-24T03:36:06.3588374+00:00',
         'login_count': 6,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'username': 'Administrator'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    # Test SAMUsersWindowsRegistryEvent.
-    expected_event_values = {
-        'account_rid': 500,
-        'comments': 'Built-in account for administering the computer/domain',
-        'data_type': 'windows:registry:sam_users',
-        'date_time': '2010-11-20T21:48:12.5692440+00:00',
-        'login_count': 6,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_LOGIN,
-        'username': 'Administrator'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

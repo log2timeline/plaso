@@ -5,8 +5,8 @@ import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -22,10 +22,23 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
     comments (str): comments.
     fullname (str): full name.
     key_path (str): Windows Registry key path.
+    last_login_time (dfdatetime.DateTimeValues): date and time of the last
+       login.
+    last_password_set_time (dfdatetime.DateTimeValues): date and time of the
+        last password set.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     login_count (int): login count.
     username (str): a string containing the username.
   """
+
   DATA_TYPE = 'windows:registry:sam_users'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_login_time': definitions.TIME_DESCRIPTION_LAST_LOGIN,
+      'last_password_set_time': (
+          definitions.TIME_DESCRIPTION_LAST_PASSWORD_RESET),
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -35,6 +48,9 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
     self.comments = None
     self.fullname = None
     self.key_path = None
+    self.last_login_time = None
+    self.last_password_set_time = None
+    self.last_written_time = None
     self.login_count = None
     self.username = None
 
@@ -126,8 +142,8 @@ class SAMUsersWindowsRegistryPlugin(
       return
 
     last_written_time_per_username = {
-        registry_value.name: registry_value.last_written_time
-        for registry_value in names_key.GetSubkeys()}
+        name_key.name: name_key.last_written_time
+        for name_key in names_key.GetSubkeys()}
 
     for subkey in registry_key.GetSubkeys():
       if subkey.name == 'Names':
@@ -160,41 +176,31 @@ class SAMUsersWindowsRegistryPlugin(
       username = self._ParseVValueString(
           parser_mediator, registry_value.data, v_value[1])
 
-      fullname = self._ParseVValueString(
-          parser_mediator, registry_value.data, v_value[2])
-
-      comments = self._ParseVValueString(
-          parser_mediator, registry_value.data, v_value[3])
-
-      last_written_time = last_written_time_per_username.get(username, None)
-
       # TODO: check if subkey.name == f_value.rid
 
       event_data = SAMUsersWindowsRegistryEventData()
       event_data.account_rid = f_value.rid
-      event_data.comments = comments
-      event_data.fullname = fullname
+      event_data.comments = self._ParseVValueString(
+          parser_mediator, registry_value.data, v_value[3])
+      event_data.fullname = self._ParseVValueString(
+          parser_mediator, registry_value.data, v_value[2])
       event_data.key_path = registry_key.path
+      event_data.last_written_time = last_written_time_per_username.get(
+          username, None)
       event_data.login_count = f_value.number_of_logons
       event_data.username = username
 
-      event = time_events.DateTimeValuesEvent(
-          last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      if f_value.last_login_time != 0:
-        date_time = dfdatetime_filetime.Filetime(
+      if f_value.last_login_time:
+        event_data.last_login_time = dfdatetime_filetime.Filetime(
             timestamp=f_value.last_login_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_LOGIN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if f_value.last_password_set_time != 0:
-        date_time = dfdatetime_filetime.Filetime(
+      if f_value.last_password_set_time:
+        event_data.last_password_set_time = dfdatetime_filetime.Filetime(
             timestamp=f_value.last_password_set_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_PASSWORD_RESET)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      parser_mediator.ProduceEventData(event_data)
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    SAMUsersWindowsRegistryEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)
