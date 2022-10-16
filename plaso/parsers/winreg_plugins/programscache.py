@@ -6,8 +6,8 @@ import uuid
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -23,10 +23,15 @@ class ExplorerProgramsCacheEventData(events.EventData):
     entries (str): entries in the program cache.
     key_path (str): Windows Registry key path.
     known_folder_identifier (str): known folder identifier.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     value_name (str): Windows Registry value name.
   """
 
   DATA_TYPE = 'windows:registry:explorer:programcache'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -35,6 +40,7 @@ class ExplorerProgramsCacheEventData(events.EventData):
     self.entries = None
     self.key_path = None
     self.known_folder_identifier = None
+    self.last_written_time = None
     self.value_name = None
 
 
@@ -182,11 +188,10 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         for index, link_target in enumerate(link_targets)]) or None
     event_data.key_path = registry_key.path
     event_data.known_folder_identifier = known_folder_identifier
+    event_data.last_written_time = registry_key.last_written_time
     event_data.value_name = registry_value.name
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -213,5 +218,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
             'programscache', 'programscachesmp', 'programscachetbp'])
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    ExplorerProgramsCacheEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     ExplorerProgramsCacheWindowsRegistryPlugin)
