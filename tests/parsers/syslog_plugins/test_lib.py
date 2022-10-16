@@ -35,7 +35,7 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values,
-        timezone=timezone)
+        time_zone_string=timezone)
 
     parser = syslog.SyslogParser()
     parser.EnablePlugins([plugin_name])

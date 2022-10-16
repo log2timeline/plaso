@@ -87,8 +87,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
           of number of event data containers per data type.
       archive_types_string (Optional[str]): comma separated archive types for
           which embedded file entries should be processed.
-      extraction_worker (Optional[EventExtractorWorker]): worker to process the
-          path specification. If None, a new worker will be created.
+      extraction_worker (Optional[EventExtractionWorker]): worker to process
+          the path specification. If None, a new worker will be created.
       knowledge_base_values (Optional[dict]): knowledge base values.
     """
     session = sessions.Session()

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The extractor class definitions.
-
-An extractor is a class used to extract information from "raw" data.
-"""
+"""Extractor classes, used to extract information from sources."""
 
 import copy
 import re
@@ -20,11 +17,8 @@ from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
 
 
-class EventExtractor(object):
-  """Event extractor.
-
-  An event extractor extracts events from event sources.
-  """
+class EventDataExtractor(object):
+  """The event data extractor."""
 
   _PARSE_RESULT_FAILURE = 1
   _PARSE_RESULT_SUCCESS = 2
@@ -43,7 +37,7 @@ class EventExtractor(object):
           denotes which parsers and plugins should be used. See
           filters/parser_filter.py for details of the expression syntax.
     """
-    super(EventExtractor, self).__init__()
+    super(EventDataExtractor, self).__init__()
     self._file_scanner = None
     self._filestat_parser = None
     self._force_parser = force_parser

@@ -126,7 +126,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values, timezone=timezone)
+        knowledge_base_values=knowledge_base_values, time_zone_string=timezone)
 
     # Most tests aren't explicitly checking for parser chain values,
     # or setting them, so we'll just append the plugin name if no explicit

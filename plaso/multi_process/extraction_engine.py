@@ -10,18 +10,15 @@ import re
 import time
 import traceback
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import counts
-from plaso.containers import event_registry
 from plaso.containers import event_sources
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.containers import warnings
 from plaso.engine import extractors
+from plaso.engine import timeliner
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -163,6 +160,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     super(ExtractionMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
+    self._event_data_timeliner = None
     self._extraction_worker = None
     self._maximum_number_of_containers = 50
     self._maximum_number_of_tasks = maximum_number_of_tasks
@@ -249,59 +247,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           'utf-8', errors='backslashreplace')
 
     return path_spec_string
-
-  def _ProcessEventData(self, storage_writer, event_data):
-    """Processes event data.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-      event_data (EventData): event data.
-    """
-    attribute_mappings = event_registry.EventDataRegistry.GetAttributeMappings(
-          event_data.data_type)
-
-    if attribute_mappings:
-      event_data_identifier = event_data.GetIdentifier()
-
-      if event_data.parser:
-        parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
-      else:
-        parser_name = None
-
-      number_of_events = 0
-      for attribute_name, time_description in attribute_mappings.items():
-        attribute_value = getattr(event_data, attribute_name, None)
-        if attribute_value:
-          event = time_events.DateTimeValuesEvent(
-              attribute_value, time_description, time_zone=self._time_zone)
-          event.SetEventDataIdentifier(event_data_identifier)
-
-          storage_writer.AddAttributeContainer(event)
-
-          number_of_events += 1
-
-          if parser_name:
-            self._parsers_counter[parser_name] += 1
-          self._parsers_counter['total'] += 1
-
-          self._number_of_produced_events += 1
-
-      # Create a place holder event for event_data without date and time
-      # values to map.
-      # TODO: add extraction option to control this behavior.
-      if not number_of_events:
-        date_time = dfdatetime_semantic_time.NotSet()
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-        event.SetEventDataIdentifier(event_data_identifier)
-
-        storage_writer.AddAttributeContainer(event)
-
-        if parser_name:
-          self._parsers_counter[parser_name] += 1
-        self._parsers_counter['total'] += 1
-
-        self._number_of_produced_events += 1
 
   def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
     """Merges an attribute container from a task store into the storage writer.
@@ -419,7 +364,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_TIMELINING
 
       # Generate events on merge.
-      self._ProcessEventData(storage_writer, container)
+      self._event_data_timeliner.ProcessEventData(storage_writer, container)
+
+      self._number_of_produced_events += (
+          self._event_data_timeliner.number_of_produced_events)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_SOURCE:
       self._number_of_produced_sources += 1
@@ -658,6 +606,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
+    for key, value in self._event_data_timeliner.parsers_counter.items():
+      parser_count = stored_parsers_counter.get(key, None)
+      if parser_count:
+        parser_count.number_of_events += value
+        storage_writer.UpdateAttributeContainer(parser_count)
+      else:
+        parser_count = counts.ParserCount(name=key, number_of_events=value)
+        storage_writer.AddAttributeContainer(parser_count)
+
+    # TODO: remove after completion event and event data split.
     for key, value in self._parsers_counter.items():
       parser_count = stored_parsers_counter.get(key, None)
       if parser_count:
@@ -1033,6 +991,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     """
     self._enable_sigsegv_handler = enable_sigsegv_handler
 
+    self._event_data_timeliner = timeliner.EventDataTimeliner(
+        self.knowledge_base)
+
+    try:
+      self._event_data_timeliner.SetPreferredTimeZone(
+          processing_configuration.preferred_time_zone)
+    except ValueError as exception:
+      raise errors.BadConfigOption(exception)
+
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
 
@@ -1042,11 +1009,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._storage_file_path = storage_file_path
     self._storage_writer = storage_writer
     self._task_storage_format = processing_configuration.task_storage_format
-
-    try:
-      self.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
-    except ValueError as exception:
-      raise errors.BadConfigOption(exception)
 
     # Set up the task queue.
     task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
@@ -1139,9 +1101,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     # Reset values.
     self._enable_sigsegv_handler = None
-
+    self._event_data_timeliner = None
     self._processing_configuration = None
-
     self._status_update_callback = None
     self._storage_file_path = None
     self._storage_writer = None

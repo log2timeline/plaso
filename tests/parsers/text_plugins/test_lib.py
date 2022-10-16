@@ -35,7 +35,7 @@ class TextPluginTestCase(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values, timezone=timezone)
+        knowledge_base_values=knowledge_base_values, time_zone_string=timezone)
 
     file_object = file_entry.GetFileObject()
     text_file_object = text_file.TextFile(
