@@ -62,7 +62,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         else:
           knowledge_base_object.SetValue(identifier, value)
 
-    knowledge_base_object.SetTimeZone(time_zone_string)
+    if time_zone_string:
+      knowledge_base_object.SetTimeZone(time_zone_string)
 
     return knowledge_base_object
 
@@ -148,7 +149,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
   def _ParseFile(
       self, path_segments, parser, collection_filters_helper=None,
-      knowledge_base_values=None, timezone='UTC'):
+      knowledge_base_values=None, time_zone_string='UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -157,7 +158,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (Optional[str]): time zone.
+      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -173,11 +174,12 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return self._ParseFileByPathSpec(
         path_spec, parser, collection_filters_helper=collection_filters_helper,
-        knowledge_base_values=knowledge_base_values, timezone=timezone)
+        knowledge_base_values=knowledge_base_values,
+        time_zone_string=time_zone_string)
 
   def _ParseFileByPathSpec(
       self, path_spec, parser, collection_filters_helper=None,
-      knowledge_base_values=None, timezone='UTC'):
+      knowledge_base_values=None, time_zone_string=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -186,17 +188,29 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      timezone (Optional[str]): time zone.
+      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
+
+    Raises:
+      SkipTest: if the path inside the test data directory does not exist and
+          the test should be skipped.
     """
+    # TODO: move knowledge base time_zone_string into knowledge_base_values.
+    knowledge_base_object = self._CreateKnowledgeBase(
+        knowledge_base_values=knowledge_base_values,
+        time_zone_string=time_zone_string)
+
+    parser_mediator = parsers_mediator.ParserMediator(
+        knowledge_base_object,
+        collection_filters_helper=collection_filters_helper)
+
     storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_mediator = self._CreateParserMediator(
-        storage_writer, collection_filters_helper=collection_filters_helper,
-        file_entry=file_entry, knowledge_base_values=knowledge_base_values,
-        time_zone_string=timezone)
+    parser_mediator.SetFileEntry(file_entry)
 
     if isinstance(parser, interface.FileEntryParser):
       parser.Parse(parser_mediator)
@@ -209,7 +223,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser_type = type(parser)
       self.fail('Unsupported parser type: {0!s}'.format(parser_type))
 
-    self._ProcessEventData(storage_writer, parser_mediator)
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base_object)
+    event_data_timeliner.SetPreferredTimeZone(time_zone_string)
+
+    event_data = storage_writer.GetFirstWrittenEventData()
+    while event_data:
+      event_data_timeliner.ProcessEventData(storage_writer, event_data)
+
+      event_data = storage_writer.GetNextWrittenEventData()
 
     return storage_writer
 

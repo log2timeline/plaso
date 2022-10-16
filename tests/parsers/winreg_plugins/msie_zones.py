@@ -83,9 +83,6 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:msie_zone_settings',
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         'last_written_time': '2011-09-16T21:12:40.1455141+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'settings': expected_settings}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
@@ -140,9 +137,6 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:msie_zone_settings',
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         'last_written_time': '2011-09-16T21:12:40.1455141+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'settings': expected_settings}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
@@ -274,9 +268,6 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:msie_zone_settings',
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         'last_written_time': '2011-08-28T21:32:44.9376751+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'settings': expected_settings}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
@@ -412,9 +403,6 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:msie_zone_settings',
         'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
         'last_written_time': '2011-08-28T21:32:44.9376751+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'settings': expected_settings}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)

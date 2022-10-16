@@ -62,7 +62,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base_values=knowledge_base_values)
 
-    plugin.Process(
+    plugin.UpdateChainAndProcess(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
 
     self._ProcessEventData(storage_writer, parser_mediator)

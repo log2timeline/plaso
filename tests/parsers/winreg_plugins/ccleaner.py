@@ -54,10 +54,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'ccleaner:update',
         'date_time': '2013-07-13T10:03:14',
-        'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -96,7 +93,8 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry, timezone='CET')
+        registry_key, plugin, file_entry=test_file_entry,
+        time_zone_string='CET')
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -119,9 +117,6 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'ccleaner:update',
         'date_time': '2013-07-13T10:03:14',
         'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'timestamp': '2013-07-13 08:03:14.000000'}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)

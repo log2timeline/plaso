@@ -74,10 +74,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:typedurls',
         'date_time': '2012-03-12T21:23:53.3077499+00:00',
         'entries': expected_entries,
-        'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -119,10 +116,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:typedurls',
         'date_time': '2010-11-10T07:58:15.8116250+00:00',
         'entries': expected_entries,
-        'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'key_path': key_path}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 

@@ -78,10 +78,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:bagmru',
         'entries': 'Index: 1 [MRU Value 0]: Shell item path: <My Computer>',
         'key_path': key_path,
-        'last_written_time': '2009-08-04T15:19:16.9977500+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2009-08-04T15:19:16.9977500+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

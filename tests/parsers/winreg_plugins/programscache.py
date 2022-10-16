@@ -69,7 +69,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'long_name': 'Programs',
         'name': 'Programs',
         'origin': '{0:s} ProgramsCache'.format(key_path),
-        'parser': 'explorer_programscache/shell_items',
         'shell_item_path': 'Programs',
         'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
 
@@ -103,7 +102,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'date_time': '2009-08-04T15:22:18.4196250+00:00',
         'entries': expected_entries,
         'key_path': key_path,
-        'parser': 'explorer_programscache',
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
 
     self.CheckEventValues(storage_writer, events[75], expected_event_values)
@@ -113,7 +111,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         'last_written_time': '2009-08-04T15:22:18.4196250+00:00',
-        'parser': 'explorer_programscache',
         'values': (
             'Favorites: [REG_BINARY] (55 bytes) '
             'FavoritesChanges: [REG_DWORD_LE] 1 '
@@ -159,7 +156,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'data_type': 'windows:shell_item:file_entry',
         'modification_time': '2010-11-10T07:51:24+00:00',
         'origin': '{0:s} ProgramsCache'.format(key_path),
-        'parser': 'explorer_programscache/shell_items',
         'shell_item_path': 'Programs'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

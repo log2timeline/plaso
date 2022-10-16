@@ -59,7 +59,7 @@ class GooglelogParserTest(test_lib.ParserTestCase):
     knowledge_base_values = {'year': 2020}
     storage_writer = self._ParseFile(
         ['googlelog_test.INFO'], parser,
-        knowledge_base_values=knowledge_base_values, timezone='CET')
+        knowledge_base_values=knowledge_base_values, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)

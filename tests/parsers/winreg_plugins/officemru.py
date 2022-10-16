@@ -102,10 +102,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             'C:\\Users\\nfury\\Documents\\VIBRANIUM.docx '
             'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
             'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx'),
-        'last_written_time': '2012-03-13T18:27:15.0898020+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-03-13T18:27:15.0898020+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
     self.CheckEventData(event_data, expected_event_values)

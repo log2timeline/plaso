@@ -128,10 +128,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
         'key_path': key_path,
-        'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -198,10 +195,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
         'key_path': '{0:s}\\exe'.format(key_path),
-        'last_written_time': '2011-08-28T22:48:28.1593086+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2011-08-28T22:48:28.1593086+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
     self.CheckEventData(event_data, expected_event_values)
@@ -315,10 +309,7 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
         'key_path': key_path,
-        'last_written_time': '2012-04-01T13:52:39.1137417+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-04-01T13:52:39.1137417+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -399,10 +390,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
         'key_path': key_path,
-        'last_written_time': '2012-04-01T13:52:38.9662902+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-04-01T13:52:38.9662902+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
     self.CheckEventData(event_data, expected_event_values)

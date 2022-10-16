@@ -103,7 +103,7 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a time zone."""
     plugin = xchatlog.XChatLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['xchat.log'], plugin, timezone='Europe/Rome')
+        ['xchat.log'], plugin, time_zone_string='Europe/Rome')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)

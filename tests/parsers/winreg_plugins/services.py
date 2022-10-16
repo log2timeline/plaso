@@ -122,9 +122,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'image_path': 'C:\\Dell\\testdriver.sys',
         'key_path': key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'service_type': 2,
         'start_type': 2,
         'values': expected_values}
@@ -161,9 +158,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:service',
         'last_written_time': '2012-04-06T20:43:27.6390752+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'service_dll': '%SystemRoot%\\System32\\qmgr.dll',
         'service_type': 0x20,
         'start_type': 3}

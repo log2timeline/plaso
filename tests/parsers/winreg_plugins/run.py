@@ -87,10 +87,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'entries': [
             'Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe /autoRun'],
         'key_path': key_path,
-        'last_written_time': '2012-04-05T17:03:53.9920616+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-04-05T17:03:53.9920616+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -129,10 +126,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'entries': [
             'mctadmin: C:\\Windows\\System32\\mctadmin.exe'],
         'key_path': key_path,
-        'last_written_time': '2012-04-05T17:03:53.9920616+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-04-05T17:03:53.9920616+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -176,10 +170,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
             ('VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
              'VMwareUser.exe"')],
         'key_path': key_path,
-        'last_written_time': '2011-09-16T20:57:09.0675758+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2011-09-16T20:57:09.0675758+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -218,10 +209,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         'entries': [
             '*WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe -k -rq'],
         'key_path': key_path,
-        'last_written_time': '2012-04-06T14:07:27.7500000+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-04-06T14:07:27.7500000+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
