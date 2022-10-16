@@ -52,9 +52,6 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:shutdown',
         'key_path': key_path,
         'last_shutdown_time': '2012-04-04T01:58:40.8392499+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'value_name': 'ShutdownTime'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

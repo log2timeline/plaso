@@ -127,9 +127,6 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:boot_execute',
         'key_path': key_path,
         'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'value': 'autocheck autochk *'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -222,10 +219,7 @@ class BootVerificationPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:boot_verification',
         'image_path': 'C:\\WINDOWS\\system32\\googleupdater.exe',
         'key_path': key_path,
-        'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-08-31T20:45:29.0000000+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

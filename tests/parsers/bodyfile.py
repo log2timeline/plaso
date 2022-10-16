@@ -120,7 +120,8 @@ class BodyfileTest(test_lib.ParserTestCase):
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
     parser = bodyfile.BodyfileParser()
-    storage_writer = self._ParseFile(['bodyfile'], parser, timezone='CET')
+    storage_writer = self._ParseFile(
+        ['bodyfile'], parser, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 71)

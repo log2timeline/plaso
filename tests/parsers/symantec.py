@@ -66,7 +66,8 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
     parser = symantec.SymantecParser()
-    storage_writer = self._ParseFile(['Symantec.Log'], parser, timezone='CET')
+    storage_writer = self._ParseFile(
+        ['Symantec.Log'], parser, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 8)

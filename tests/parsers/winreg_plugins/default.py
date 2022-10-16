@@ -86,9 +86,6 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'values': (
             'MRUList: [REG_SZ] acb '
             'a: [REG_SZ] Some random text here '

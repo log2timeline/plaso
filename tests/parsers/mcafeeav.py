@@ -69,7 +69,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     """Tests the Parse function with a time zone."""
     parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(
-        ['AccessProtectionLog.txt'], parser, timezone='CET')
+        ['AccessProtectionLog.txt'], parser, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)

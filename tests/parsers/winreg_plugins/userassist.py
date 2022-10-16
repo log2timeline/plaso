@@ -71,9 +71,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'date_time': '2009-08-04T15:11:22.8110676+00:00',
         'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
 
@@ -113,9 +110,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'date_time': '2010-11-10T07:49:37.0780676+00:00',
         'key_path': '{0:s}\\Count'.format(key_path),
         'number_of_executions': 14,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'value_name': 'Microsoft.Windows.GettingStarted'}
 

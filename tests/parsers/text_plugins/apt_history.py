@@ -218,7 +218,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a time zone."""
     plugin = apt_history.APTHistoryLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['apt_history.log'], plugin, timezone='CET')
+        ['apt_history.log'], plugin, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)

@@ -50,9 +50,6 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:usb',
         'date_time': '2012-04-07T10:31:37.6252465+00:00',
         'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'product': 'PID_0002',
         'serial': '6&2ab01149&0&2',
         'subkey_name': 'VID_0E0F&PID_0002',

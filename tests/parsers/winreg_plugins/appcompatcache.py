@@ -266,8 +266,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_XP)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -302,8 +301,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_2003)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -341,8 +339,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_VISTA)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -383,8 +380,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     registry_key = win_registry.GetKeyByPath(key_path)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -407,9 +403,6 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2012-04-04T01:46:37.9329644+00:00',
         'key_path': key_path,
         'last_update_time': None,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'path': '\\??\\C:\\Windows\\PSEXESVC.EXE'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
@@ -424,8 +417,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_0)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -460,8 +452,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_1)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -496,8 +487,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -532,8 +522,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10_CREATOR)
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

@@ -66,7 +66,8 @@ class WinJobTest(test_lib.ParserTestCase):
   def testParseWithTimeZone(self):
     """Tests the Parse function with a time zone."""
     parser = winjob.WinJobParser()
-    storage_writer = self._ParseFile(['wintask.job'], parser, timezone='CET')
+    storage_writer = self._ParseFile(
+        ['wintask.job'], parser, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)

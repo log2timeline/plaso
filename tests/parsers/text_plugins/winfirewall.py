@@ -68,7 +68,7 @@ class WinFirewallLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a time zone."""
     plugin = winfirewall.WinFirewallLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['firewall.log'], plugin, timezone='CET')
+        ['firewall.log'], plugin, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 15)

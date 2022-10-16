@@ -120,10 +120,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'entries': (
             'Index: 1 [MRU Value a]: Some random text here '
             'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-            'Index: 3 [MRU Value b]: c:/evil.exe'),
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+            'Index: 3 [MRU Value b]: c:/evil.exe')}
 
     self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
@@ -218,10 +215,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'entries': (
             'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
             'C:\\Winnt\\Profiles\\Administrator\\Desktop'),
-        'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME}
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)

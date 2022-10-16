@@ -125,9 +125,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:key_value',
         'date_time': '2012-08-31T20:09:55.1235210+00:00',
         'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'values': expected_values}
 
@@ -197,9 +194,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:key_value',
         'date_time': '2012-03-15T07:09:20.6718750+00:00',
         'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'values': expected_values}
 
     self.CheckEventValues(storage_writer, events[1], expected_event_values)

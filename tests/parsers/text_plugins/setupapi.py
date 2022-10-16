@@ -138,7 +138,7 @@ class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with setupapi.setup.log and a time zone."""
     plugin = setupapi.SetupAPILogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['setupapi.setup.log'], plugin, timezone='CET')
+        ['setupapi.setup.log'], plugin, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 32)

@@ -53,9 +53,6 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'device_type': 'Disk',
         'display_name': 'HP v100w USB Device',
         'key_path': key_path,
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'product': 'Prod_v100w',
         'revision': 'Rev_1024',
         'serial': 'AA951D0000007252&0',

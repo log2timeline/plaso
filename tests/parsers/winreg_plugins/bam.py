@@ -76,8 +76,7 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     registry_key = self._CreateTestKey(self._TEST_DATA)
     plugin = bam.BackgroundActivityModeratorWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry,
-        parser_chain=plugin.NAME)
+        registry_key, plugin, file_entry=test_file_entry)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -97,9 +96,6 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     expected_event_values = {
         'data_type': 'windows:registry:bam',
         'last_run_time': '2019-03-19T13:25:26.1496853+00:00',
-        # This should just be the plugin name, as we're invoking it directly,
-        # and not through the parser.
-        'parser': plugin.NAME,
         'path': (
             '\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\'
             'v1.0\\powershell.exe'),

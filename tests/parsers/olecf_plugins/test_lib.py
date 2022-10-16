@@ -3,7 +3,8 @@
 
 import pyolecf
 
-from plaso.storage.fake import writer as fake_writer
+from plaso.engine import timeliner
+from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
 
@@ -15,7 +16,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
 
   def _ParseOLECFFileWithPlugin(
       self, path_segments, plugin, codepage='cp1252',
-      knowledge_base_values=None):
+      knowledge_base_values=None, time_zone_string=None):
     """Parses a file as an OLE compound file and returns an event generator.
 
     Args:
@@ -24,6 +25,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       codepage (Optional[str]): codepage.
       knowledge_base_values (Optional[dict[str, object]]): knowledge base
           values.
+      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -32,13 +34,21 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    storage_writer = fake_writer.FakeStorageWriter()
-    storage_writer.Open()
+    # TODO: move knowledge base time_zone_string into knowledge_base_values.
+    knowledge_base_object = self._CreateKnowledgeBase(
+        knowledge_base_values=knowledge_base_values,
+        time_zone_string=time_zone_string)
+
+    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
+
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
 
     file_entry = self._GetTestFileEntry(path_segments)
-    parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values)
+    parser_mediator.SetFileEntry(file_entry)
+
+    # AppendToParserChain needs to be run after SetFileEntry.
+    parser_mediator.AppendToParserChain('olecf')
 
     file_object = file_entry.GetFileObject()
 
@@ -51,12 +61,20 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       root_item = olecf_file.root_item
       item_names = [item.name for item in root_item.sub_items]
 
-      plugin.Process(
+      plugin.UpdateChainAndProcess(
           parser_mediator, root_item=root_item, item_names=item_names)
 
     finally:
       olecf_file.close()
 
-    self._ProcessEventData(storage_writer, parser_mediator)
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base_object)
+    event_data_timeliner.SetPreferredTimeZone(time_zone_string)
+
+    event_data = storage_writer.GetFirstWrittenEventData()
+    while event_data:
+      event_data_timeliner.ProcessEventData(storage_writer, event_data)
+
+      event_data = storage_writer.GetNextWrittenEventData()
 
     return storage_writer

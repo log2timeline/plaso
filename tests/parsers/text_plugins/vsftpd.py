@@ -48,7 +48,7 @@ class VsftpdLogTextPluginText(test_lib.TextPluginTestCase):
     """Tests the Process function with a time zone."""
     plugin = vsftpd.VsftpdLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['vsftpd.log'], plugin, timezone='CET')
+        ['vsftpd.log'], plugin, time_zone_string='CET')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 25)

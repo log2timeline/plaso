@@ -157,7 +157,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(
         ['MSHist012013031020130311-index.dat'], parser,
-        timezone='Europe/Amsterdam')
+        time_zone_string='Europe/Amsterdam')
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 83)
