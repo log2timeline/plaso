@@ -20,8 +20,8 @@ from plaso.storage.fake import writer as fake_writer
 from tests import test_lib as shared_test_lib
 
 
-class EventExtractorTest(shared_test_lib.BaseTestCase):
-  """Tests for the event extractor."""
+class EventDataExtractorTest(shared_test_lib.BaseTestCase):
+  """Tests for the event data extractor."""
 
   def _CreateParserMediator(
       self, storage_writer, collection_filters_helper=None,
@@ -86,7 +86,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['INFO2'])
     self._SkipIfPathNotExists(test_file_path)
 
-    test_extractor = extractors.EventExtractor(
+    test_extractor = extractors.EventDataExtractor(
         parser_filter_expression='recycle_bin_info2')
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -115,7 +115,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['UsnJrnl.raw'])
     self._SkipIfPathNotExists(test_file_path)
 
-    test_extractor = extractors.EventExtractor(
+    test_extractor = extractors.EventDataExtractor(
         force_parser=True, parser_filter_expression='usnjrnl')
 
     path_spec = path_spec_factory.Factory.NewPathSpec(

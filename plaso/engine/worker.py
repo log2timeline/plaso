@@ -152,7 +152,7 @@ class EventExtractionWorker(object):
     self._achive_type_scanner = None
     self._achive_type_scanner = self._CreateArchiveTypeScanner([])
     self._archive_types = []
-    self._event_extractor = extractors.EventExtractor(
+    self._event_data_extractor = extractors.EventDataExtractor(
         force_parser=force_parser,
         parser_filter_expression=parser_filter_expression)
     self._force_parser = force_parser
@@ -444,7 +444,7 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('extracting')
 
-    self._event_extractor.ParseDataStream(
+    self._event_data_extractor.ParseDataStream(
         parser_mediator, file_entry, data_stream_name)
 
     if self._processing_profiler:
@@ -486,7 +486,8 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('extracting')
 
-    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+    self._event_data_extractor.ParseFileEntryMetadata(
+        parser_mediator, file_entry)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('extracting')
@@ -918,7 +919,8 @@ class EventExtractionWorker(object):
     """
     self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
-    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+    self._event_data_extractor.ParseFileEntryMetadata(
+        parser_mediator, file_entry)
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
@@ -934,7 +936,7 @@ class EventExtractionWorker(object):
 
       self.last_activity_timestamp = time.time()
 
-      self._event_extractor.ParseMetadataFile(
+      self._event_data_extractor.ParseMetadataFile(
           parser_mediator, file_entry, data_stream.name)
 
   def _SetArchiveTypes(self, archive_types_string):

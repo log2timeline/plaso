@@ -3,7 +3,6 @@
 
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dfvfs.file_io import fake_file_io
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -12,11 +11,9 @@ from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.engine import knowledge_base
-from plaso.lib import definitions
+from plaso.engine import timeliner
 from plaso.parsers import interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -46,23 +43,16 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return file_object
 
-  def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None,
-      file_entry=None, knowledge_base_values=None, parser_chain=None,
-      timezone='UTC'):
-    """Creates a parser mediator.
+  def _CreateKnowledgeBase(
+      self, knowledge_base_values=None, time_zone_string='UTC'):
+    """Creates a knowledge base.
 
     Args:
-      storage_writer (StorageWriter): storage writer.
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
-      file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
-      parser_chain (Optional[str]): parsing chain up to this point.
-      timezone (Optional[str]): time zone.
+      time_zone_string (Optional[str]): time zone.
 
     Returns:
-      ParserMediator: parser mediator.
+      KnowledgeBase: knowledge base.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -72,7 +62,31 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         else:
           knowledge_base_object.SetValue(identifier, value)
 
-    knowledge_base_object.SetTimeZone(timezone)
+    knowledge_base_object.SetTimeZone(time_zone_string)
+
+    return knowledge_base_object
+
+  def _CreateParserMediator(
+      self, storage_writer, collection_filters_helper=None,
+      file_entry=None, knowledge_base_values=None, parser_chain=None,
+      time_zone_string='UTC'):
+    """Creates a parser mediator.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
+      file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
+      knowledge_base_values (Optional[dict]): knowledge base values.
+      parser_chain (Optional[str]): parsing chain up to this point.
+      time_zone_string (Optional[str]): time zone.
+
+    Returns:
+      ParserMediator: parser mediator.
+    """
+    knowledge_base_object = self._CreateKnowledgeBase(
+        knowledge_base_values=knowledge_base_values,
+        time_zone_string=time_zone_string)
 
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object,
@@ -120,36 +134,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
     """
+    # TODO: clean up.
+    # pylint: disable=protected-access
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        parser_mediator._knowledge_base)
+    event_data_timeliner._time_zone = parser_mediator.timezone
+
     event_data = storage_writer.GetFirstWrittenEventData()
     while event_data:
-      attribute_mappings = (
-            event_registry.EventDataRegistry.GetAttributeMappings(
-                event_data.data_type))
-      if attribute_mappings:
-        event_data_identifier = event_data.GetIdentifier()
-
-        number_of_events = 0
-        for attribute_name, time_description in attribute_mappings.items():
-          attribute_value = getattr(event_data, attribute_name, None)
-          if attribute_value:
-            event = time_events.DateTimeValuesEvent(
-                attribute_value, time_description,
-                time_zone=parser_mediator.timezone)
-            event.SetEventDataIdentifier(event_data_identifier)
-
-            storage_writer.AddAttributeContainer(event)
-            number_of_events += 1
-
-        # Create a place holder event for event_data without date and time
-        # values to map.
-        # TODO: add extraction option to control this behavior.
-        if not number_of_events:
-          date_time = dfdatetime_semantic_time.NotSet()
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-          event.SetEventDataIdentifier(event_data_identifier)
-
-          storage_writer.AddAttributeContainer(event)
+      event_data_timeliner.ProcessEventData(storage_writer, event_data)
 
       event_data = storage_writer.GetNextWrittenEventData()
 
@@ -203,7 +196,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     parser_mediator = self._CreateParserMediator(
         storage_writer, collection_filters_helper=collection_filters_helper,
         file_entry=file_entry, knowledge_base_values=knowledge_base_values,
-        timezone=timezone)
+        time_zone_string=timezone)
 
     if isinstance(parser, interface.FileEntryParser):
       parser.Parse(parser_mediator)

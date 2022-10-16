@@ -2,7 +2,6 @@
 """The processing engine."""
 
 import os
-import pytz
 
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
@@ -35,8 +34,6 @@ class BaseEngine(object):
     knowledge_base (KnowledgeBase): knowledge base.
   """
 
-  _DEFAULT_TIME_ZONE = pytz.UTC
-
   # The interval of status updates in number of seconds.
   _STATUS_UPDATE_INTERVAL = 0.5
 
@@ -55,7 +52,6 @@ class BaseEngine(object):
     self._serializers_profiler = None
     self._storage_profiler = None
     self._task_queue_profiler = None
-    self._time_zone = None
 
     self.collection_filters_helper = None
     self.knowledge_base = knowledge_base.KnowledgeBase()
@@ -108,28 +104,6 @@ class BaseEngine(object):
             'error: {1!s}').format(custom_artifacts_path, exception))
 
     return registry
-
-  def SetPreferredTimeZone(self, time_zone_string):
-    """Sets the preferred time zone for zone-less date and time values.
-
-    Args:
-      time_zone_string (str): time zone such as "Europe/Amsterdam" or None if
-          the time zone determined by preprocessing or the default should be
-          used.
-
-    Raises:
-      ValueError: if the time zone is not supported.
-    """
-    self._time_zone = None
-    if time_zone_string:
-      try:
-        self._time_zone = pytz.timezone(time_zone_string)
-      except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0!s}'.format(
-            time_zone_string))
-
-    if not self._time_zone:
-      self._time_zone = self.knowledge_base.timezone or self._DEFAULT_TIME_ZONE
 
   def _StartProfiling(self, configuration):
     """Starts profiling.

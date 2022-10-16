@@ -7,19 +7,16 @@ import pdb
 import threading
 import time
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver
 
 from plaso.containers import counts
-from plaso.containers import event_registry
 from plaso.containers import event_sources
-from plaso.containers import time_events
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import logger
 from plaso.engine import process_info
+from plaso.engine import timeliner
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -36,6 +33,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes a single process extraction engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
+    self._event_data_timeliner = None
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
@@ -126,13 +124,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
         self._StartStatusUpdateThread()
 
-  def _ProcessEventData(self, parser_mediator):
-    """Processes event data.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-    """
+  def _ProcessEventData(self):
+    """Generate events from event data."""
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_event_data')
 
@@ -150,48 +143,8 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      attribute_mappings = (
-          event_registry.EventDataRegistry.GetAttributeMappings(
-              event_data.data_type))
-
-      if attribute_mappings:
-        event_data_identifier = event_data.GetIdentifier()
-
-        if event_data.parser:
-          parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
-        else:
-          parser_name = None
-
-        number_of_events = 0
-        for attribute_name, time_description in attribute_mappings.items():
-          attribute_value = getattr(event_data, attribute_name, None)
-          if attribute_value:
-            event = time_events.DateTimeValuesEvent(
-                attribute_value, time_description, time_zone=self._time_zone)
-            event.SetEventDataIdentifier(event_data_identifier)
-
-            parser_mediator.ProduceEvent(event)
-
-            number_of_events += 1
-
-            if parser_name:
-              parser_mediator.parsers_counter[parser_name] += 1
-            parser_mediator.parsers_counter['total'] += 1
-
-        # Create a place holder event for event_data without date and time
-        # values to map.
-        # TODO: add extraction option to control this behavior.
-        if not number_of_events:
-          date_time = dfdatetime_semantic_time.NotSet()
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-          event.SetEventDataIdentifier(event_data_identifier)
-
-          parser_mediator.ProduceEvent(event)
-
-          if parser_name:
-            parser_mediator.parsers_counter[parser_name] += 1
-          parser_mediator.parsers_counter['total'] += 1
+      self._event_data_timeliner.ProcessEventData(
+          self._storage_writer, event_data)
 
       # TODO: track number of consumed event data containers?
 
@@ -398,16 +351,20 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
+    self._event_data_timeliner = timeliner.EventDataTimeliner(
+        self.knowledge_base)
+
+    try:
+      self._event_data_timeliner.SetPreferredTimeZone(
+          processing_configuration.preferred_time_zone)
+    except ValueError as exception:
+      raise errors.BadConfigOption(exception)
+
     self._parser_mediator = parser_mediator
     self._processing_configuration = processing_configuration
     self._resolver_context = resolver_context
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
-
-    try:
-      self.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
-    except ValueError as exception:
-      raise errors.BadConfigOption(exception)
 
     logger.debug('Processing started.')
 
@@ -437,7 +394,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     try:
       self._ProcessSources(source_configurations, parser_mediator)
-      self._ProcessEventData(parser_mediator)
+
+      self._ProcessEventData()
 
     finally:
       # Stop the status update thread after close of the storage writer
@@ -459,6 +417,17 @@ class SingleProcessEngine(engine.BaseEngine):
       self._StopProfiling()
       parser_mediator.StopProfiling()
 
+    for key, value in self._event_data_timeliner.parsers_counter.items():
+      parser_count = self._parsers_counter.get(key, None)
+      if parser_count:
+        parser_count.number_of_events += value
+        self._storage_writer.UpdateAttributeContainer(parser_count)
+      else:
+        parser_count = counts.ParserCount(name=key, number_of_events=value)
+        self._parsers_counter[key] = parser_count
+        self._storage_writer.AddAttributeContainer(parser_count)
+
+    # TODO: remove after completion event and event data split.
     for key, value in parser_mediator.parsers_counter.items():
       parser_count = self._parsers_counter.get(key, None)
       if parser_count:
@@ -478,6 +447,7 @@ class SingleProcessEngine(engine.BaseEngine):
     # Update the status view one last time.
     self._UpdateStatus()
 
+    self._event_data_timeliner = None
     self._extraction_worker = None
     self._file_system_cache = []
     self._parser_mediator = None
