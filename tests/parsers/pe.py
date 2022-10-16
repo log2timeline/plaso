@@ -11,6 +11,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import artifacts
 from plaso.parsers import pe
+from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
 
@@ -105,34 +106,32 @@ class PECOFFTest(test_lib.ParserTestCase):
     test_file_path = self._GetTestFilePath(['wrc-test-wevt_template.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
+    knowledge_base_object = self._CreateKnowledgeBase()
+
+    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
+
     test_event_provider = artifacts.WindowsEventLogMessageFileArtifact()
-
-    parser = pe.PEParser()
-
-    storage_writer = self._CreateStorageWriter()
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-    parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry)
     parser_mediator._extract_winevt_resources = True
     parser_mediator._windows_event_log_providers_per_path = {
         os.path.dirname(test_file_path).lower(): {
             'wrc-test-wevt_template.dll': test_event_provider}}
 
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    parser_mediator.SetFileEntry(file_entry)
+
+    parser = pe.PEParser()
+
     file_object = file_entry.GetFileObject()
     parser.Parse(parser_mediator, file_object)
-
-    self._ProcessEventData(storage_writer, parser_mediator)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 1)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

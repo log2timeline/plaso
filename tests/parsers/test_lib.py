@@ -127,26 +127,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return storage_writer.GetAttributeContainerByIdentifier(
         events.EventData.CONTAINER_TYPE, event_data_identifier)
 
-  def _ProcessEventData(self, storage_writer, parser_mediator):
-    """Processes event data.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-    """
-    # TODO: clean up.
-    # pylint: disable=protected-access
-    event_data_timeliner = timeliner.EventDataTimeliner(
-        parser_mediator._knowledge_base)
-    event_data_timeliner._time_zone = parser_mediator.timezone
-
-    event_data = storage_writer.GetFirstWrittenEventData()
-    while event_data:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
-
-      event_data = storage_writer.GetNextWrittenEventData()
-
   def _ParseFile(
       self, path_segments, parser, collection_filters_helper=None,
       knowledge_base_values=None, time_zone_string='UTC'):
