@@ -214,6 +214,23 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # parse the Windows Registry key or its values.
   FILTERS = frozenset()
 
+  def _GetValueFromKey(self, registry_key, value_name):
+    """Retrieves a value from the Windows Registry key.
+
+    Args:
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      value_name (str): name of the value to retrieve.
+
+    Returns:
+      object: value data or None if no corresponding Windows Registry value
+          is available.
+    """
+    registry_value = registry_key.GetValueByName(value_name)
+    if not registry_value:
+      return None
+
+    return registry_value.GetDataAsObject()
+
   def _GetValuesFromKey(
       self, parser_mediator, registry_key, names_to_skip=None):
     """Retrieves the values from a Windows Registry key.

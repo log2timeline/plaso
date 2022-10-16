@@ -96,6 +96,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = services.ServicesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -107,8 +111,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_values = (
         'DisplayName: [REG_SZ] Test Driver '
         'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
@@ -116,10 +118,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:service',
-        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'error_control': 1,
         'image_path': 'C:\\Dell\\testdriver.sys',
         'key_path': key_path,
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
@@ -127,39 +129,38 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'start_type': 2,
         'values': expected_values}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
     test_file_entry = self._GetTestFileEntry(['SYSTEM'])
-    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services'
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\BITS'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
     plugin = services.ServicesPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    events = []
-    for winreg_subkey in registry_key.GetSubkeys():
-      storage_writer = self._ParseKeyWithPlugin(
-          winreg_subkey, plugin, file_entry=test_file_entry)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
-      events_subkey = list(storage_writer.GetEvents())
-      events.extend(events_subkey)
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 1)
 
-    self.assertEqual(len(events), 416)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
 
-    # Test the BITS subkey events.
-    winreg_subkey = registry_key.GetSubkeyByName('BITS')
-    bits_storage_writer = self._ParseKeyWithPlugin(
-        winreg_subkey, plugin, file_entry=test_file_entry)
-    bits_events = list(bits_storage_writer.GetEvents())
-
-    self.assertEqual(len(bits_events), 1)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
         'data_type': 'windows:registry:service',
-        'date_time': '2012-04-06T20:43:27.6390752+00:00',
+        'last_written_time': '2012-04-06T20:43:27.6390752+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
@@ -167,49 +168,8 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'service_type': 0x20,
         'start_type': 3}
 
-    self.CheckEventValues(
-        bits_storage_writer, bits_events[0], expected_event_values)
-
-    # Test the McTaskManager subkey events.
-    winreg_subkey = registry_key.GetSubkeyByName('McTaskManager')
-    mc_task_manager_storage_writer = self._ParseKeyWithPlugin(
-        winreg_subkey, plugin, file_entry=test_file_entry)
-    mc_task_manager_events = list(mc_task_manager_storage_writer.GetEvents())
-
-    self.assertEqual(len(mc_task_manager_events), 1)
-
-    expected_event_values = {
-        'data_type': 'windows:registry:service',
-        'date_time': '2011-09-16T20:49:16.8774156+00:00',
-        'service_type': 0x10}
-
-    self.CheckEventValues(
-        mc_task_manager_storage_writer, mc_task_manager_events[0],
-        expected_event_values)
-
-    event_data = self._GetEventDataOfEvent(
-        mc_task_manager_storage_writer, mc_task_manager_events[0])
-    self.assertTrue(
-        'DisplayName: [REG_SZ] McAfee Task Manager' in event_data.values)
-
-    # Test the RdpVideoMiniport subkey events.
-    winreg_subkey = registry_key.GetSubkeyByName('RdpVideoMiniport')
-    rdp_video_miniport_storage_writer = self._ParseKeyWithPlugin(
-        winreg_subkey, plugin, file_entry=test_file_entry)
-    rdp_video_miniport_events = list(
-        rdp_video_miniport_storage_writer.GetEvents())
-
-    self.assertEqual(len(rdp_video_miniport_events), 1)
-
-    expected_event_values = {
-        'data_type': 'windows:registry:service',
-        'date_time': '2011-09-17T13:37:59.3471577+00:00',
-        'image_path': 'System32\\drivers\\rdpvideominiport.sys',
-        'start_type': 3}
-
-    self.CheckEventValues(
-        rdp_video_miniport_storage_writer, rdp_video_miniport_events[0],
-        expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

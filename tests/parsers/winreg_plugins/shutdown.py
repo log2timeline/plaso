@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import shutdown
 
 from tests.parsers.winreg_plugins import test_lib
@@ -34,6 +33,10 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -45,19 +48,17 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:shutdown',
-        'date_time': '2012-04-04T01:58:40.8392499+00:00',
         'key_path': key_path,
+        'last_shutdown_time': '2012-04-04T01:58:40.8392499+00:00',
         # This should just be the plugin name, as we're invoking it directly,
         # and not through the parser.
         'parser': plugin.NAME,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN,
         'value_name': 'ShutdownTime'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

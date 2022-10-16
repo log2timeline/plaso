@@ -6,8 +6,8 @@ import os
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
+from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -20,16 +20,22 @@ class ShutdownWindowsRegistryEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    last_shutdown_time (dfdatetime.DateTimeValues): date and time the system
+        was last shutdown.
     value_name (str): name of the Windows Registry value.
   """
 
   DATA_TYPE = 'windows:registry:shutdown'
+
+  ATTRIBUTE_MAPPINGS = {
+      'last_shutdown_time': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN}
 
   def __init__(self):
     """Initializes event data."""
     super(ShutdownWindowsRegistryEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.key_path = None
+    self.last_shutdown_time = None
     self.value_name = None
 
 
@@ -89,25 +95,25 @@ class ShutdownWindowsRegistryPlugin(
     """
     shutdown_value = registry_key.GetValueByName('ShutdownTime')
     if shutdown_value:
+      event_data = ShutdownWindowsRegistryEventData()
+      event_data.key_path = registry_key.path
+      event_data.value_name = shutdown_value.name
+
       try:
-        date_time = self._ParseFiletime(shutdown_value.data)
+        event_data.last_shutdown_time = self._ParseFiletime(shutdown_value.data)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to determine shutdown timestamp with error: {0!s}'.format(
                 exception))
-        date_time = None
 
-      if date_time:
-        event_data = ShutdownWindowsRegistryEventData()
-        event_data.key_path = registry_key.path
-        event_data.value_name = shutdown_value.name
-
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      # TODO: remove this check.
+      if event_data.last_shutdown_time:
+        parser_mediator.ProduceEventData(event_data)
 
     self._ProduceDefaultWindowsRegistryEvent(
         parser_mediator, registry_key, names_to_skip=['ShutdownTime'])
 
 
+event_registry.EventDataRegistry.RegisterEventDataClass(
+    ShutdownWindowsRegistryEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)
