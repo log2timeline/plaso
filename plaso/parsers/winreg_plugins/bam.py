@@ -5,9 +5,7 @@ import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -25,9 +23,6 @@ class BackgroundActivityModeratorEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:bam'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_run_time': definitions.TIME_DESCRIPTION_LAST_RUN}
 
   def __init__(self):
     """Initializes event data."""
@@ -108,7 +103,5 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    BackgroundActivityModeratorEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     BackgroundActivityModeratorWindowsRegistryPlugin)

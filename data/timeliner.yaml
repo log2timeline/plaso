@@ -66,6 +66,23 @@ attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:appcompatcache'
+attribute_mappings:
+- name: 'file_entry_modification_time'
+  description: 'File Last Modification Time'
+- name: 'last_update_time'
+  description: 'Last Time Executed'
+---
+data_type: 'windows:registry:bagmru'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:bam'
+attribute_mappings:
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+---
 data_type: 'windows:registry:boot_execute'
 attribute_mappings:
 - name: 'last_written_time'
@@ -76,12 +93,42 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:explorer:programcache'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:registry:key_value'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:mrulist'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:msie_zone_settings'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:network_drive'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:outlook_search_mru'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:registry:run'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:service'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'

@@ -7,9 +7,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -33,10 +31,6 @@ class AppCompatCacheEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:appcompatcache'
-
-  ATTRIBUTE_MAPPINGS = {
-      'file_entry_modification_time': 'File Last Modification Time',
-      'last_update_time': definitions.TIME_DESCRIPTION_LAST_RUN}
 
   def __init__(self):
     """Initializes event data."""
@@ -707,6 +701,5 @@ class AppCompatCacheWindowsRegistryPlugin(
         break
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(AppCompatCacheEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     AppCompatCacheWindowsRegistryPlugin)

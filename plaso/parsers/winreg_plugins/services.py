@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """Windows drivers and services Registry key parser plugin."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -27,9 +25,6 @@ class WindowsRegistryServiceEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:service'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -119,6 +114,4 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    WindowsRegistryServiceEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(ServicesPlugin)
