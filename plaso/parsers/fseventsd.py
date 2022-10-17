@@ -44,7 +44,9 @@ class FseventsdParser(
   """Parser for fseventsd files.
 
   This parser supports both version 1 and version 2 fseventsd files.
-  Refer to http://nicoleibrahim.com/apple-fsevents-forensics/ for details.
+
+  Also see:
+    https://github.com/libyal/dtformats/blob/main/documentation/MacOS%20File%20System%20Events%20Disk%20Log%20Stream%20format.asciidoc
   """
 
   NAME = 'fseventsd'
