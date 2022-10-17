@@ -116,6 +116,14 @@ plaso.engine.tagging\_file module
    :undoc-members:
    :show-inheritance:
 
+plaso.engine.timeliner module
+-----------------------------
+
+.. automodule:: plaso.engine.timeliner
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.engine.worker module
 --------------------------
 
@@ -128,6 +136,14 @@ plaso.engine.yaml\_filter\_file module
 --------------------------------------
 
 .. automodule:: plaso.engine.yaml_filter_file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.engine.yaml\_timeliner\_file module
+-----------------------------------------
+
+.. automodule:: plaso.engine.yaml_timeliner_file
    :members:
    :undoc-members:
    :show-inheritance:
