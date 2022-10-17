@@ -1,5 +1,10 @@
 # Plaso timeliner configuration.
 ---
+data_type: 'fs:ntfs:usn_change'
+attribute_mappings:
+- name: 'update_time'
+  description: 'Metadata Modification Time'
+---
 data_type: 'fs:stat'
 attribute_mappings:
 - name: 'access_time'
@@ -17,6 +22,50 @@ attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
 ---
+data_type: 'fs:stat:ntfs'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'entry_modification_time'
+  description: 'Metadata Modification Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+---
+data_type: 'pe_coff:dll_import'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+---
+data_type: 'pe_coff:file'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'export_table_modification_time'
+  description: 'Content Modification Time'
+- name: 'load_configuration_table_modification_time'
+  description: 'Content Modification Time'
+---
+data_type: 'pe_coff:resource'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:distributed_link_tracking:creation'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+---
+data_type: 'windows:lnk:link'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:registry:boot_execute'
 attribute_mappings:
 - name: 'last_written_time'
@@ -25,4 +74,28 @@ attribute_mappings:
 data_type: 'windows:registry:boot_verification'
 attribute_mappings:
 - name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:key_value'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:run'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:shutdown'
+attribute_mappings:
+- name: 'last_shutdown_time'
+  description: 'Last Shutdown Time'
+---
+data_type: 'windows:shell_item:file_entry'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
   description: 'Content Modification Time'

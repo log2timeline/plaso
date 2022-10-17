@@ -5,9 +5,7 @@ import pytsk3
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -44,15 +42,6 @@ class FileStatEventData(events.EventData):
   """
 
   DATA_TYPE = 'fs:stat'
-
-  ATTRIBUTE_MAPPINGS = {
-      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      'added_time': definitions.TIME_DESCRIPTION_ADDED,
-      'backup_time': definitions.TIME_DESCRIPTION_BACKUP,
-      'change_time': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'deletion_time': definitions.TIME_DESCRIPTION_DELETED,
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -187,5 +176,4 @@ class FileStatParser(interface.FileEntryParser):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(FileStatEventData)
 manager.ParsersManager.RegisterParser(FileStatParser)

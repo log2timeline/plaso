@@ -7,10 +7,8 @@ import pylnk
 
 from dfdatetime import filetime as dfdatetime_filetime
 
-from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.containers import windows_events
-from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -53,11 +51,6 @@ class WinLnkLinkEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:lnk:link'
-
-  ATTRIBUTE_MAPPINGS = {
-      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -231,5 +224,4 @@ class WinLnkParser(interface.FileObjectParser):
     lnk_file.close()
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(WinLnkLinkEventData)
 manager.ParsersManager.RegisterParser(WinLnkParser)

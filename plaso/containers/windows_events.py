@@ -3,9 +3,7 @@
 
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 
 
 class WindowsDistributedLinkTrackingEventData(events.EventData):
@@ -22,9 +20,6 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:distributed_link_tracking:creation'
-
-  ATTRIBUTE_MAPPINGS = {
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION}
 
   def __init__(self, uuid, origin):
     """Initializes an event object.
@@ -66,9 +61,6 @@ class WindowsRegistryEventData(events.EventData):
 
   DATA_TYPE = 'windows:registry:key_value'
 
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
-
   def __init__(self):
     """Initializes event data."""
     super(WindowsRegistryEventData, self).__init__(data_type=self.DATA_TYPE)
@@ -98,11 +90,6 @@ class WindowsShellItemFileEntryEventData(events.EventData):
 
   DATA_TYPE = 'windows:shell_item:file_entry'
 
-  ATTRIBUTE_MAPPINGS = {
-      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
-
   def __init__(self):
     """Initializes event data."""
     super(WindowsShellItemFileEntryEventData, self).__init__(
@@ -127,6 +114,7 @@ class WindowsVolumeEventData(events.EventData):
         the corresponding Prefetch file name.
     serial_number (str): volume serial number.
   """
+
   DATA_TYPE = 'windows:volume:creation'
 
   def __init__(self):
@@ -136,8 +124,3 @@ class WindowsVolumeEventData(events.EventData):
     # TODO: replace origin with something machine readable.
     self.origin = None
     self.serial_number = None
-
-
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    WindowsDistributedLinkTrackingEventData,
-    WindowsRegistryEventData, WindowsShellItemFileEntryEventData])
