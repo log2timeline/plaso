@@ -92,7 +92,7 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
     test_formatters_file = yaml_formatters_file.YAMLFormattersFile()
 
-    formatters = test_formatters_file.ReadFromFile(test_file_path)
+    formatters = list(test_formatters_file.ReadFromFile(test_file_path))
 
     self.assertEqual(len(formatters), 2)
 

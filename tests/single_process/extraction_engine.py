@@ -46,6 +46,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = shared_test_lib.DATA_PATH
     configuration.parser_filter_expression = 'filestat'
 
     storage_writer = fake_writer.FakeStorageWriter()

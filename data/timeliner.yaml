@@ -1,0 +1,28 @@
+# Plaso timeliner configuration.
+---
+data_type: 'fs:stat'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'backup_time'
+  description: 'Backup Time'
+- name: 'change_time'
+  description: 'Metadata Modification Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'deletion_time'
+  description: 'Content Deletion Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:boot_execute'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:boot_verification'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'

@@ -9,6 +9,7 @@ from plaso.containers import events
 from plaso.lib import definitions
 from plaso.engine import timeliner
 
+from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
@@ -40,7 +41,8 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   def testProcessEventData(self):
     """Tests the ProcessEventData function."""
     knowledge_base = self._CreateKnowledgeBase()
-    event_data_timeliner = timeliner.EventDataTimeliner(knowledge_base)
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base, data_location=shared_test_lib.DATA_PATH)
 
     event_data = TestEventData()
     event_data.value = 'MyValue'
@@ -61,7 +63,8 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   def testSetPreferredTimeZone(self):
     """Tests the SetPreferredTimeZone function."""
     knowledge_base = self._CreateKnowledgeBase()
-    event_data_timeliner = timeliner.EventDataTimeliner(knowledge_base)
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base, data_location=shared_test_lib.DATA_PATH)
 
     event_data_timeliner.SetPreferredTimeZone('Europe/Amsterdam')
 

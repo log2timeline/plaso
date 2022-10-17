@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """YAML-based formatters file."""
 
-import io
 import yaml
 
 from plaso.formatters import interface
@@ -11,7 +10,8 @@ from plaso.lib import errors
 class YAMLFormattersFile(object):
   """YAML-based formatters file.
 
-  A YAML-based formatters file contains one or more event formatters.
+  A YAML-based formatters file contains one or more event formatter
+  definitions. An event formatter definition consists of:
 
   type: 'conditional'
   data_type: 'fs:stat'
@@ -269,7 +269,7 @@ class YAMLFormattersFile(object):
       file_object (file): formatters file-like object.
 
     Yields:
-      EventFormatter: event formatters.
+      EventFormatter: an event formatter.
     """
     yaml_generator = yaml.safe_load_all(file_object)
 
@@ -277,13 +277,14 @@ class YAMLFormattersFile(object):
       yield self._ReadFormatterDefinition(yaml_definition)
 
   def ReadFromFile(self, path):
-    """Reads the event formatters from the YAML-based formatters file.
+    """Reads the event formatters from a YAML file.
 
     Args:
       path (str): path to a formatters file.
 
-    Returns:
-      list[EventFormatter]: event formatters.
+    Yields:
+      EventFormatter: an event formatter.
     """
-    with io.open(path, 'r', encoding='utf-8') as file_object:
-      return list(self._ReadFromFileObject(file_object))
+    with open(path, 'r', encoding='utf-8') as file_object:
+      for yaml_definition in self._ReadFromFileObject(file_object):
+        yield yaml_definition

@@ -45,6 +45,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = shared_test_lib.DATA_PATH
     configuration.parser_filter_expression = 'filestat'
     configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 

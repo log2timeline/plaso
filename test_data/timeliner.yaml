@@ -1,0 +1,6 @@
+# Plaso timeliner configuration.
+---
+data_type: 'test:fs:stat'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'

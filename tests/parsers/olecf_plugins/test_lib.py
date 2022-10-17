@@ -3,7 +3,6 @@
 
 import pyolecf
 
-from plaso.engine import timeliner
 from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
@@ -67,14 +66,8 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
     finally:
       olecf_file.close()
 
-    event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base_object)
-    event_data_timeliner.SetPreferredTimeZone(time_zone_string)
-
-    event_data = storage_writer.GetFirstWrittenEventData()
-    while event_data:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
-
-      event_data = storage_writer.GetNextWrittenEventData()
+    self._ProcessEventData(
+        knowledge_base_object, storage_writer,
+        time_zone_string=time_zone_string)
 
     return storage_writer
