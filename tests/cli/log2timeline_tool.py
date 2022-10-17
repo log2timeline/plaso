@@ -52,6 +52,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     """
     options = test_lib.TestOptions()
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.data_location = shared_test_lib.DATA_PATH
     options.quiet = True
     options.single_process = True
     options.status_view_mode = 'none'

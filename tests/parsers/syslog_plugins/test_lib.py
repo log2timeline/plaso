@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Syslog plugin related functions and classes for testing."""
 
-from plaso.engine import timeliner
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import syslog
 
@@ -52,14 +51,8 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     file_object = file_entry.GetFileObject()
     parser.Parse(parser_mediator, file_object)
 
-    event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base_object)
-    event_data_timeliner.SetPreferredTimeZone(time_zone_string)
-
-    event_data = storage_writer.GetFirstWrittenEventData()
-    while event_data:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
-
-      event_data = storage_writer.GetNextWrittenEventData()
+    self._ProcessEventData(
+        knowledge_base_object, storage_writer,
+        time_zone_string=time_zone_string)
 
     return storage_writer

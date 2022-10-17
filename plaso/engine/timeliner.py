@@ -2,12 +2,14 @@
 """The timeliner, which is used to generate events from event data."""
 
 import collections
+import os
 import pytz
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import event_registry
 from plaso.containers import time_events
+from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
 
@@ -22,19 +24,46 @@ class EventDataTimeliner(object):
 
   _DEFAULT_TIME_ZONE = pytz.UTC
 
-  def __init__(self, knowledge_base):
+  _TIMELINER_CONFIGURATION_FILENAME = 'timeliner.yaml'
+
+  def __init__(self, knowledge_base, data_location=None):
     """Initializes an event data timeliner.
 
     Args:
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for generation of the time line.
+      data_location (Optional[str]): path of the timeliner configuration file.
     """
     super(EventDataTimeliner, self).__init__()
+    self._attribute_mappings = {}
+    self._data_location = data_location
     self._knowledge_base = knowledge_base
     self._time_zone = None
 
     self.number_of_produced_events = 0
     self.parsers_counter = collections.Counter()
+
+    self._ReadConfigurationFile()
+
+  def _ReadConfigurationFile(self):
+    """Reads a timeliner configuration file.
+
+    Raises:
+      KeyError: if the attribute mappings are already set for the corresponding
+          data type.
+    """
+    path = os.path.join(
+        self._data_location, self._TIMELINER_CONFIGURATION_FILENAME)
+
+    configuration_file = yaml_timeliner_file.YAMLTimelinerConfigurationFile()
+    for timeliner_definition in configuration_file.ReadFromFile(path):
+      if timeliner_definition.data_type in self._attribute_mappings:
+        raise KeyError(
+            'Attribute mappings for data type: {0:s} already set.'.format(
+                timeliner_definition.data_type))
+
+      self._attribute_mappings[timeliner_definition.data_type] = (
+          timeliner_definition.attribute_mappings)
 
   def ProcessEventData(self, storage_writer, event_data):
     """Generate events from event data.
@@ -43,8 +72,11 @@ class EventDataTimeliner(object):
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
     """
-    attribute_mappings = event_registry.EventDataRegistry.GetAttributeMappings(
-        event_data.data_type)
+    attribute_mappings = self._attribute_mappings.get(event_data.data_type)
+    if not attribute_mappings:
+      attribute_mappings = (
+          event_registry.EventDataRegistry.GetAttributeMappings(
+              event_data.data_type))
 
     if not attribute_mappings:
       return

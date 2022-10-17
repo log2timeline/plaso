@@ -992,7 +992,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._enable_sigsegv_handler = enable_sigsegv_handler
 
     self._event_data_timeliner = timeliner.EventDataTimeliner(
-        self.knowledge_base)
+        self.knowledge_base,
+        data_location=processing_configuration.data_location)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(

@@ -154,6 +154,7 @@ class ExtractionTool(
       ProcessingConfiguration: extraction processing configuration.
     """
     configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = self._data_location
     configuration.extraction.archive_types_string = self._archive_types_string
     configuration.artifact_filters = self._artifact_filters
     configuration.credentials = self._credential_configurations

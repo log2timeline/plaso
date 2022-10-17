@@ -3,7 +3,6 @@
 
 from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -20,9 +19,6 @@ class WindowsBootExecuteEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:boot_execute'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -45,9 +41,6 @@ class WindowsBootVerificationEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:boot_verification'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
