@@ -6,9 +6,7 @@ import os
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -26,9 +24,6 @@ class ShutdownWindowsRegistryEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:shutdown'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_shutdown_time': definitions.TIME_DESCRIPTION_LAST_SHUTDOWN}
 
   def __init__(self):
     """Initializes event data."""
@@ -114,6 +109,4 @@ class ShutdownWindowsRegistryPlugin(
         parser_mediator, registry_key, names_to_skip=['ShutdownTime'])
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    ShutdownWindowsRegistryEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)

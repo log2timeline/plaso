@@ -6,9 +6,7 @@ import uuid
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -29,9 +27,6 @@ class ExplorerProgramsCacheEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:explorer:programcache'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -218,7 +213,5 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
             'programscache', 'programscachesmp', 'programscachetbp'])
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    ExplorerProgramsCacheEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(
     ExplorerProgramsCacheWindowsRegistryPlugin)

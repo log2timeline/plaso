@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -19,9 +17,6 @@ class MSIEZoneSettingsEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:msie_zone_settings'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -249,6 +244,4 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    MSIEZoneSettingsEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)

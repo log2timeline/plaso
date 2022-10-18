@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains an Outlook search MRU Registry parser."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -19,9 +17,6 @@ class OutlookSearchMRUEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:outlook_search_mru'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -94,6 +89,4 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    OutlookSearchMRUEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

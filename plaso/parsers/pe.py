@@ -10,12 +10,10 @@ from dfvfs.helpers import data_slice as dfvfs_data_slice
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import artifacts
-from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -33,9 +31,6 @@ class PEDLLImportEventData(events.EventData):
   """
 
   DATA_TYPE = 'pe_coff:dll_import'
-
-  ATTRIBUTE_MAPPINGS = {
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -64,13 +59,6 @@ class PEFileEventData(events.EventData):
 
   DATA_TYPE = 'pe_coff:file'
 
-  ATTRIBUTE_MAPPINGS = {
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'export_table_modification_time': (
-          definitions.TIME_DESCRIPTION_MODIFICATION),
-      'load_configuration_table_modification_time': (
-          definitions.TIME_DESCRIPTION_MODIFICATION)}
-
   def __init__(self):
     """Initializes event data."""
     super(PEFileEventData, self).__init__(data_type=self.DATA_TYPE)
@@ -94,9 +82,6 @@ class PEResourceEventData(events.EventData):
   """
 
   DATA_TYPE = 'pe_coff:resource'
-
-  ATTRIBUTE_MAPPINGS = {
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -606,6 +591,4 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     self._ParseResourceSection(parser_mediator, pefile_object)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    PEDLLImportEventData, PEFileEventData, PEResourceEventData])
 manager.ParsersManager.RegisterParser(PEParser)

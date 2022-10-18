@@ -8,10 +8,8 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 import pyfsntfs
 
-from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.containers import windows_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -47,13 +45,6 @@ class NTFSFileStatEventData(events.EventData):
   """
 
   DATA_TYPE = 'fs:stat:ntfs'
-
-  ATTRIBUTE_MAPPINGS = {
-      'access_time': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'entry_modification_time': (
-          definitions.TIME_DESCRIPTION_METADATA_MODIFICATION),
-      'modification_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -93,9 +84,6 @@ class NTFSUSNChangeEventData(events.EventData):
   """
 
   DATA_TYPE = 'fs:ntfs:usn_change'
-
-  ATTRIBUTE_MAPPINGS = {
-      'update_time': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -477,6 +465,4 @@ class NTFSUsnJrnlParser(
       fsntfs_volume.close()
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    NTFSFileStatEventData, NTFSUSNChangeEventData])
 manager.ParsersManager.RegisterParsers([NTFSMFTParser, NTFSUsnJrnlParser])

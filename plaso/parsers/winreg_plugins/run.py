@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce key plugins for Plaso."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -19,9 +17,6 @@ class RunKeyEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:run'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -91,5 +86,4 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(RunKeyEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(AutoRunsPlugin)

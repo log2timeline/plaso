@@ -5,9 +5,7 @@ import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers.shared import shell_items
@@ -26,9 +24,6 @@ class BagMRUEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:bagmru'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -220,5 +215,4 @@ class BagMRUWindowsRegistryPlugin(
     self._ParseSubKey(parser_mediator, registry_key, [], codepage=codepage)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(BagMRUEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(BagMRUWindowsRegistryPlugin)
