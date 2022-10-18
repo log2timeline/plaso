@@ -115,8 +115,7 @@ class SQLiteStorageFile(interface.BaseStore):
       'hostname',
       'mount_point',
       'operating_system',
-      'path',
-      'source_configuration')
+      'path')
 
   # Container types that are referenced from other container types.
   _REFERENCED_CONTAINER_TYPES = (

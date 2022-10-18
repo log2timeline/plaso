@@ -415,6 +415,10 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
 
   CONTAINER_TYPE = 'source_configuration'
 
+  SCHEMA = {
+      'mount_path': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
+
   def __init__(self, path_spec=None):
     """Initializes a source configuration artifact.
 

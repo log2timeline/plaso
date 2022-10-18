@@ -574,6 +574,9 @@ class ExtractionTool(
           path_spec=path_spec)
       source_configurations.append(source_configuration)
 
+      # TODO: check if source configuration for the path_spec already exists.
+      storage_writer.AddAttributeContainer(source_configuration)
+
     # TODO: improve to detect more than 1 system configurations.
     # TODO: improve to add volumes to system configuration.
     system_configuration = (
