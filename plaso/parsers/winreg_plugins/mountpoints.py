@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """MountPoints2 Windows Registry parser plugin."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -24,9 +22,6 @@ class MountPoints2EventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:mount_points2'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -95,5 +90,4 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(MountPoints2EventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(MountPoints2Plugin)

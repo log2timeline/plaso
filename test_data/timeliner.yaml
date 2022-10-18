@@ -1,4 +1,4 @@
-# Plaso timeliner configuration.
+# Plaso timeliner test configuration.
 ---
 data_type: 'test:fs:stat'
 attribute_mappings:

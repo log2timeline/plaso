@@ -1,5 +1,17 @@
 # Plaso timeliner configuration.
 ---
+# TODO: prefix data_type with registry.
+data_type: 'ccleaner:configuration'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+# TODO: prefix data_type with registry.
+data_type: 'ccleaner:update'
+attribute_mappings:
+- name: 'update_time'
+  description: 'Update Time'
+---
 data_type: 'fs:ntfs:usn_change'
 attribute_mappings:
 - name: 'update_time'
@@ -66,6 +78,28 @@ attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:amcache'
+attribute_mappings:
+- name: 'file_creation_time'
+  # TODO: rename to 'File Creation Time'
+  description: 'Creation Time'
+- name: 'file_modification_time'
+  # TODO: rename to 'File Last Modification Time'
+  description: 'Content Modification Time'
+- name: 'installation_time'
+  description: 'Installation Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+- name: 'link_time'
+  description: 'Link Time'
+- name: 'msi_installation_time'
+  description: 'Installation Time'
+---
+data_type: 'windows:registry:amcache:programs'
+attribute_mappings:
+- name: 'installation_time'
+  description: 'Installation Time'
+---
 data_type: 'windows:registry:appcompatcache'
 attribute_mappings:
 - name: 'file_entry_modification_time'
@@ -103,7 +137,17 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:mount_points2'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:registry:mrulist'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:mrulistex'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
@@ -113,7 +157,24 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:network'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'last_connected_time'
+  description: 'Last Connection Time'
+---
 data_type: 'windows:registry:network_drive'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:office_mru'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:office_mru_list'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
@@ -125,6 +186,15 @@ attribute_mappings:
 ---
 data_type: 'windows:registry:run'
 attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:sam_users'
+attribute_mappings:
+- name: 'last_login_time'
+  description: 'Last Login Time'
+- name: 'last_password_set_time'
+  description: 'Last Password Set Time'
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---

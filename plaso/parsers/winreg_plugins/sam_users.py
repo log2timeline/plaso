@@ -5,9 +5,7 @@ import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -33,12 +31,6 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:sam_users'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_login_time': definitions.TIME_DESCRIPTION_LAST_LOGIN,
-      'last_password_set_time': (
-          definitions.TIME_DESCRIPTION_LAST_PASSWORD_RESET),
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -201,6 +193,4 @@ class SAMUsersWindowsRegistryPlugin(
       parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    SAMUsersWindowsRegistryEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)

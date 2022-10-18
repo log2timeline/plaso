@@ -2,7 +2,7 @@
 """Windows Registry plugin to parse the MRUListEx Registry values.
 
 Also see:
-https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html
+  https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html
 """
 
 import abc
@@ -10,11 +10,9 @@ import os
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
-from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.lib import dtfabric_helper
-from plaso.lib import definitions
 from plaso.parsers import logger
 from plaso.parsers import winreg_parser
 from plaso.parsers.shared import shell_items
@@ -32,9 +30,6 @@ class MRUListExEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:mrulistex'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -516,7 +511,6 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
     self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(MRUListExEventData)
 winreg_parser.WinRegistryParser.RegisterPlugins([
     MRUListExStringWindowsRegistryPlugin,
     MRUListExShellItemListWindowsRegistryPlugin,

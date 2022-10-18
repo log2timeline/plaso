@@ -5,9 +5,7 @@ import os
 
 from dfdatetime import systemtime as dfdatetime_systemtime
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -29,10 +27,6 @@ class WindowsRegistryNetworkListEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:network'
-
-  ATTRIBUTE_MAPPINGS = {
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'last_connected_time': definitions.TIME_DESCRIPTION_LAST_CONNECTED}
 
   def __init__(self):
     """Initializes event data."""
@@ -184,6 +178,4 @@ class NetworksWindowsRegistryPlugin(
         parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClass(
-    WindowsRegistryNetworkListEventData)
 winreg_parser.WinRegistryParser.RegisterPlugin(NetworksWindowsRegistryPlugin)

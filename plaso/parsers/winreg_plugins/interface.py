@@ -68,12 +68,9 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
       self._key_path_prefix = None
       self._key_path_suffix = None
 
-      # Handle WoW64 Windows Registry key redirection.
-      # Also see:
-      # https://msdn.microsoft.com/en-us/library/windows/desktop/
-      # ms724072%28v=vs.85%29.aspx
-      # https://msdn.microsoft.com/en-us/library/windows/desktop/
-      # aa384253(v=vs.85).aspx
+      # Handle WoW64 Windows Registry key redirection. Also see:
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/ms724072%28v=vs.85%29.aspx
+      # https://msdn.microsoft.com/en-us/library/windows/desktop/aa384253(v=vs.85).aspx
       wow64_prefix = None
       for key_path_prefix in self._WOW64_PREFIXES:
         if key_path.startswith(key_path_prefix.upper()):
