@@ -124,6 +124,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     plugin = timezone.WinRegTimezonePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -135,25 +139,22 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    expected_configuration = (
-        'ActiveTimeBias: -60 '
-        'Bias: -60 '
-        'DaylightBias: -60 '
-        'DaylightName: @tzres.dll,-321 '
-        'DynamicDaylightTimeDisabled: 0 '
-        'StandardBias: 0 '
-        'StandardName: @tzres.dll,-322 '
-        'TimeZoneKeyName: W. Europe Standard Time')
-
     expected_event_values = {
-        'configuration': expected_configuration,
+        'configuration': (
+            'ActiveTimeBias: -60 '
+            'Bias: -60 '
+            'DaylightBias: -60 '
+            'DaylightName: @tzres.dll,-321 '
+            'DynamicDaylightTimeDisabled: 0 '
+            'StandardBias: 0 '
+            'StandardName: @tzres.dll,-322 '
+            'TimeZoneKeyName: W. Europe Standard Time'),
         'data_type': 'windows:registry:timezone',
-        'date_time': '2013-01-30T10:47:57.0000000+00:00',
-        'key_path': key_path}
+        'key_path': key_path,
+        'last_written_time': '2013-01-30T10:47:57.0000000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -169,6 +170,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -180,25 +185,22 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    expected_configuration = (
-        'ActiveTimeBias: 240 '
-        'Bias: 300 '
-        'DaylightBias: -60 '
-        'DaylightName: @tzres.dll,-111 '
-        'DynamicDaylightTimeDisabled: 0 '
-        'StandardBias: 0 '
-        'StandardName: @tzres.dll,-112 '
-        'TimeZoneKeyName: Eastern Standard Time')
-
     expected_event_values = {
-        'configuration': expected_configuration,
+        'configuration': (
+            'ActiveTimeBias: 240 '
+            'Bias: 300 '
+            'DaylightBias: -60 '
+            'DaylightName: @tzres.dll,-111 '
+            'DynamicDaylightTimeDisabled: 0 '
+            'StandardBias: 0 '
+            'StandardName: @tzres.dll,-112 '
+            'TimeZoneKeyName: Eastern Standard Time'),
         'data_type': 'windows:registry:timezone',
-        'date_time': '2012-03-11T07:00:00.0006424+00:00',
-        'key_path': key_path}
+        'key_path': key_path,
+        'last_written_time': '2012-03-11T07:00:00.0006424+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

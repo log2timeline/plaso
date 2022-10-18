@@ -37,6 +37,10 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 85)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 174)
 
@@ -48,25 +52,18 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'task_scheduler:task_cache:entry',
-        'date_time': '2009-07-14T04:53:25.8116181+00:00',
         'key_path': key_path,
+        'last_registered_time': '2009-07-14T05:08:50.8116269+00:00',
+        'last_written_time': '2009-07-14T04:53:25.8116181+00:00',
+        'launch_time': None,
         'task_name': 'SynchronizeTime',
-        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
+        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}',
+        'unknown_time': None}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'task_scheduler:task_cache:entry',
-        'date_time': '2009-07-14T05:08:50.8116269+00:00',
-        'key_path': key_path,
-        'task_name': 'SynchronizeTime',
-        'task_identifier': '{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

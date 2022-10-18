@@ -1,12 +1,12 @@
 # Plaso timeliner configuration.
 ---
-# TODO: prefix data_type with registry.
+# TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:configuration'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
-# TODO: prefix data_type with registry.
+# TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:update'
 attribute_mappings:
 - name: 'update_time'
@@ -63,6 +63,18 @@ data_type: 'pe_coff:resource'
 attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
+---
+# TODO: prefix data_type with 'windows:registry:'.
+data_type: 'task_scheduler:task_cache:entry'
+attribute_mappings:
+- name: 'last_registered_time'
+  description: 'Last registered Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+- name: 'launch_time'
+  description: 'Launch Time'
+- name: 'unknown_time'
+  description: 'Unknown Time'
 ---
 data_type: 'windows:distributed_link_tracking:creation'
 attribute_mappings:
@@ -157,6 +169,16 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:mstsc:connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:mstsc:mru'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:registry:network'
 attribute_mappings:
 - name: 'creation_time'
@@ -208,6 +230,16 @@ attribute_mappings:
 - name: 'last_shutdown_time'
   description: 'Last Shutdown Time'
 ---
+data_type: 'windows:registry:timezone'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:typedurls'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
 data_type: 'windows:shell_item:file_entry'
 attribute_mappings:
 - name: 'access_time'
@@ -215,4 +247,10 @@ attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
 - name: 'modification_time'
+  description: 'Content Modification Time'
+---
+# TODO: prefix data_type with 'windows:registry:'.
+data_type: 'winrar:history'
+attribute_mappings:
+- name: 'last_written_time'
   description: 'Content Modification Time'

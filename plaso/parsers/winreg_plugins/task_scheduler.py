@@ -6,8 +6,6 @@ import os
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import winreg_parser
@@ -19,8 +17,15 @@ class TaskCacheEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    last_registered_time (dfdatetime.DateTimeValues): date and time the task
+        was last registered.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
+    launch_time (dfdatetime.DateTimeValues): date and time the task was last
+        launched.
     task_name (str): name of the task.
     task_identifier (str): identifier of the task.
+    unknown_time (dfdatetime.DateTimeValues): unknown date and time.
   """
 
   DATA_TYPE = 'task_scheduler:task_cache:entry'
@@ -29,8 +34,12 @@ class TaskCacheEventData(events.EventData):
     """Initializes event data."""
     super(TaskCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.last_registered_time = None
+    self.last_written_time = None
+    self.launch_time = None
     self.task_name = None
     self.task_identifier = None
+    self.unknown_time = None
 
 
 class TaskCacheWindowsRegistryPlugin(
@@ -128,6 +137,7 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record = self._ReadStructureFromByteStream(
             dynamic_info_value.data, 0, dynamic_info_record_map)
       except (ValueError, errors.ParseError) as exception:
+        dynamic_info_record = None
         parser_mediator.ProduceExtractionWarning(
             'unable to parse DynamicInfo record with error: {0!s}.'.format(
                 exception))
@@ -136,36 +146,27 @@ class TaskCacheWindowsRegistryPlugin(
 
       event_data = TaskCacheEventData()
       event_data.key_path = registry_key.path
+      event_data.last_written_time = registry_key.last_written_time
       event_data.task_name = name
       event_data.task_identifier = sub_key.name
 
-      event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      if dynamic_info_record:
+        if dynamic_info_record.last_registered_time:
+          # Note this is likely either the last registered time or
+          # the update time.
+          event_data.last_registered_time = dfdatetime_filetime.Filetime(
+              timestamp=dynamic_info_record.last_registered_time)
 
-      last_registered_time = dynamic_info_record.last_registered_time
-      if last_registered_time:
-        # Note this is likely either the last registered time or
-        # the update time.
-        date_time = dfdatetime_filetime.Filetime(timestamp=last_registered_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'Last registered time')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        if dynamic_info_record.launch_time:
+          event_data.launch_time = dfdatetime_filetime.Filetime(
+              timestamp=dynamic_info_record.launch_time)
 
-      launch_time = dynamic_info_record.launch_time
-      if launch_time:
-        # Note this is likely the launch time.
-        date_time = dfdatetime_filetime.Filetime(timestamp=launch_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'Launch time')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        unknown_time = getattr(dynamic_info_record, 'unknown_time', None)
+        if unknown_time:
+          event_data.unknown_time = dfdatetime_filetime.Filetime(
+              timestamp=unknown_time)
 
-      unknown_time = getattr(dynamic_info_record, 'unknown_time', None)
-      if unknown_time:
-        date_time = dfdatetime_filetime.Filetime(timestamp=unknown_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_UNKNOWN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
     # TODO: Add support for the Triggers value.
 
