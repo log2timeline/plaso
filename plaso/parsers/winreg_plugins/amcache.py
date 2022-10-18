@@ -9,9 +9,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from dfwinreg import errors as dfwinreg_errors
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -45,14 +43,6 @@ class AMCacheFileEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:amcache'
-
-  ATTRIBUTE_MAPPINGS = {
-      'file_creation_time': definitions.TIME_DESCRIPTION_CREATION,
-      'file_modification_time': definitions.TIME_DESCRIPTION_MODIFICATION,
-      'installation_time': definitions.TIME_DESCRIPTION_INSTALLATION,
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION,
-      'link_time': definitions.TIME_DESCRIPTION_LINK_TIME,
-      'msi_installation_time': definitions.TIME_DESCRIPTION_INSTALLATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -95,9 +85,6 @@ class AMCacheProgramEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:amcache:programs'
-
-  ATTRIBUTE_MAPPINGS = {
-      'installation_time': definitions.TIME_DESCRIPTION_INSTALLATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -501,6 +488,4 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
     self._ParseRootKey(parser_mediator, registry_key)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    AMCacheFileEventData, AMCacheProgramEventData])
 winreg_parser.WinRegistryParser.RegisterPlugin(AMCachePlugin)

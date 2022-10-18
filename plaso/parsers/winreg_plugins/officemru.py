@@ -5,9 +5,7 @@ import re
 
 from dfdatetime import filetime as dfdatetime_filetime
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -23,9 +21,6 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:office_mru'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -47,9 +42,6 @@ class OfficeMRUListWindowsRegistryEventData(events.EventData):
   """
 
   DATA_TYPE = 'windows:registry:office_mru_list'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -157,6 +149,4 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    OfficeMRUWindowsRegistryEventData, OfficeMRUListWindowsRegistryEventData])
 winreg_parser.WinRegistryParser.RegisterPlugin(OfficeMRUPlugin)

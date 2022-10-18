@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""File containing a Windows Registry plugin to parse the USB Device key."""
+"""File containing a Windows Registry plugin to parse the USB Device key.
+
+Also see:
+  https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/
+"""
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -34,11 +38,7 @@ class WindowsUSBDeviceEventData(events.EventData):
 
 
 class USBPlugin(interface.WindowsRegistryPlugin):
-  """USB Windows Registry plugin for last connection time.
-
-  Also see:
-    https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/
-  """
+  """USB Windows Registry plugin for last connection time."""
 
   NAME = 'windows_usb_devices'
   DATA_FORMAT = 'Windows USB device Registry data'

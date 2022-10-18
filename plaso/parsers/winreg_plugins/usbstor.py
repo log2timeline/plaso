@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""File containing a Windows Registry plugin to parse the USBStor key."""
+"""File containing a Windows Registry plugin to parse the USBStor key.
+
+Also see:
+  https://forensicswiki.xyz/wiki/index.php?title=USB_History_Viewing
+"""
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -42,11 +46,7 @@ class USBStorEventData(events.EventData):
 
 
 class USBStorPlugin(interface.WindowsRegistryPlugin):
-  """USBStor key plugin.
-
-  Also see:
-  https://forensicswiki.xyz/wiki/index.php?title=USB_History_Viewing
-  """
+  """USBStor key plugin."""
 
   NAME = 'windows_usbstor_devices'
   DATA_FORMAT = 'Windows USB Plug And Play Manager USBStor Registry data'

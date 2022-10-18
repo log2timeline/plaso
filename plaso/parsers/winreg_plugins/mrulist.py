@@ -2,7 +2,7 @@
 """Windows Registry plugin to parse the MRUList Registry values.
 
 Also see:
-https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html
+  https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Most-recently-used.html
 """
 
 import abc

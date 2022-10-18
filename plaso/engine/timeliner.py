@@ -7,7 +7,6 @@ import pytz
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso.containers import event_registry
 from plaso.containers import time_events
 from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
@@ -73,11 +72,6 @@ class EventDataTimeliner(object):
       event_data (EventData): event data.
     """
     attribute_mappings = self._attribute_mappings.get(event_data.data_type)
-    if not attribute_mappings:
-      attribute_mappings = (
-          event_registry.EventDataRegistry.GetAttributeMappings(
-              event_data.data_type))
-
     if not attribute_mappings:
       return
 

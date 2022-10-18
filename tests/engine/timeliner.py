@@ -4,9 +4,7 @@
 
 import unittest
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.engine import timeliner
 
 from tests import test_lib as shared_test_lib
@@ -17,19 +15,16 @@ class TestEventData(events.EventData):
   """Test event data.
 
   Attributes:
-    creation_time (dfdatetime.DateTimeValues): creation date and time.
+    access_time (dfdatetime.DateTimeValues): access date and time.
     value (str): value.
   """
 
-  DATA_TYPE = 'test'
-
-  ATTRIBUTE_MAPPINGS = {
-      'creation_time': definitions.TIME_DESCRIPTION_CREATION}
+  DATA_TYPE = 'test:fs:stat'
 
   def __init__(self):
     """Initializes event data."""
     super(TestEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.creation_time = None
+    self.access_time = None
     self.value = None
 
 
@@ -42,7 +37,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     """Tests the ProcessEventData function."""
     knowledge_base = self._CreateKnowledgeBase()
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.DATA_PATH)
+        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
 
     event_data = TestEventData()
     event_data.value = 'MyValue'
@@ -51,12 +46,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     storage_writer = self._CreateStorageWriter()
 
-    event_registry.EventDataRegistry.RegisterEventDataClass(TestEventData)
-
-    try:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
-    finally:
-      event_registry.EventDataRegistry.DeregisterEventDataClass(TestEventData)
+    event_data_timeliner.ProcessEventData(storage_writer, event_data)
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 1)
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect the Less Frequently Used (LFU) keys."""
 
-from plaso.containers import event_registry
 from plaso.containers import events
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
@@ -135,7 +134,5 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         parser_mediator, registry_key, names_to_skip=['BootExecute'])
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    WindowsBootExecuteEventData, WindowsBootVerificationEventData])
 winreg_parser.WinRegistryParser.RegisterPlugins([
     BootVerificationPlugin, BootExecutePlugin])

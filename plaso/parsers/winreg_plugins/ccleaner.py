@@ -2,16 +2,14 @@
 """Windows Registry plugin to parse the CCleaner Registry key.
 
 Also see:
-https://winreg-kb.readthedocs.io/en/latest/sources/application-keys/CCleaner.html
+  https://winreg-kb.readthedocs.io/en/latest/sources/application-keys/CCleaner.html
 """
 
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import event_registry
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -27,9 +25,6 @@ class CCleanerConfigurationEventData(events.EventData):
   """
 
   DATA_TYPE = 'ccleaner:configuration'
-
-  ATTRIBUTE_MAPPINGS = {
-      'last_written_time': definitions.TIME_DESCRIPTION_MODIFICATION}
 
   def __init__(self):
     """Initializes event data."""
@@ -50,9 +45,6 @@ class CCleanerUpdateEventData(events.EventData):
   """
 
   DATA_TYPE = 'ccleaner:update'
-
-  ATTRIBUTE_MAPPINGS = {
-      'update_time': definitions.TIME_DESCRIPTION_UPDATE}
 
   def __init__(self):
     """Initializes event data."""
@@ -175,6 +167,4 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-event_registry.EventDataRegistry.RegisterEventDataClasses([
-    CCleanerConfigurationEventData, CCleanerUpdateEventData])
 winreg_parser.WinRegistryParser.RegisterPlugin(CCleanerPlugin)
