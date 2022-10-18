@@ -2,8 +2,6 @@
 """Plug-in to collect information about the Windows timezone settings."""
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -14,6 +12,8 @@ class WindowsTimezoneSettingsEventData(events.EventData):
   Attributes:
     configuration (str): timezone configuration.
     key_path (str): Windows Registry key path.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'windows:registry:timezone'
@@ -24,6 +24,7 @@ class WindowsTimezoneSettingsEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.configuration = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
@@ -60,18 +61,15 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
         continue
 
       value = registry_value.GetDataAsObject()
-      if value is None:
-        continue
-
-      configuration.append('{0:s}: {1!s}'.format(registry_value.name, value))
+      if value is not None:
+        configuration.append('{0:s}: {1!s}'.format(registry_value.name, value))
 
     event_data = WindowsTimezoneSettingsEventData()
     event_data.configuration = ' '.join(sorted(configuration)) or None
     event_data.key_path = registry_key.path
+    event_data.last_written_time = registry_key.last_written_time
 
-    event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(WinRegTimezonePlugin)
