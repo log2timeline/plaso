@@ -5,12 +5,9 @@ import codecs
 import os
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.helpers.windows import known_folders
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
@@ -26,6 +23,8 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     application_focus_duration (int): application focus duration.
     entry_index (int): entry index.
     key_path (str): Windows Registry key path.
+    last_execution_time (dfdatetime.DateTimeValues): date and time
+        the application was last executed (or run).
     number_of_executions (int): number of executions.
     value_name (str): name of the Windows Registry value.
   """
@@ -40,6 +39,7 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     self.application_focus_duration = None
     self.entry_index = None
     self.key_path = None
+    self.last_execution_time = None
     self.number_of_executions = None
     self.value_name = None
 
@@ -221,14 +221,11 @@ class UserAssistPlugin(
         event_data.entry_index = userassist_entry_index
 
       timestamp = user_assist_entry.last_execution_time
-      if not timestamp:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+      if timestamp:
+        event_data.last_execution_time = dfdatetime_filetime.Filetime(
+            timestamp=timestamp)
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

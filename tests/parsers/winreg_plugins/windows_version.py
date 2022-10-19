@@ -8,7 +8,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import windows_version
 
 from tests import test_lib as shared_test_lib
@@ -23,8 +22,15 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_version.WindowsRegistryInstallationEventData()
 
     expected_attribute_names = [
-        '_event_data_stream_row_identifier', 'build_number', 'data_type',
-        'key_path', 'owner', 'parser', 'product_name', 'service_pack',
+        '_event_data_stream_row_identifier',
+        'build_number',
+        'data_type',
+        'installation_time',
+        'key_path',
+        'owner',
+        'parser',
+        'product_name',
+        'service_pack',
         'version']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -102,6 +108,10 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     plugin = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -113,34 +123,30 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    expected_values = (
-        'CSDVersion: [REG_SZ] Service Pack 1 '
-        'CurrentVersion: [REG_SZ] 5.1 '
-        'ProductName: [REG_SZ] MyTestOS '
-        'RegisteredOwner: [REG_SZ] A Concerned Citizen')
-
-    expected_event_values = {
-        'data_type': 'windows:registry:key_value',
-        'date_time': '2012-08-31T20:09:55.1235210+00:00',
-        'key_path': key_path,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
-        'values': expected_values}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
     expected_event_values = {
         'data_type': 'windows:registry:installation',
-        'date_time': '2012-08-31T20:09:55+00:00',
+        'installation_time': '2012-08-31T20:09:55+00:00',
         'key_path': key_path,
         'owner': 'A Concerned Citizen',
         'product_name': 'MyTestOS',
         'service_pack': 'Service Pack 1',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_INSTALLATION,
         'version': '5.1'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    expected_event_values = {
+        'data_type': 'windows:registry:key_value',
+        'key_path': key_path,
+        'last_written_time': '2012-08-31T20:09:55.1235210+00:00',
+        'values': (
+            'CSDVersion: [REG_SZ] Service Pack 1 '
+            'CurrentVersion: [REG_SZ] 5.1 '
+            'ProductName: [REG_SZ] MyTestOS '
+            'RegisteredOwner: [REG_SZ] A Concerned Citizen')}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
@@ -155,6 +161,10 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -166,37 +176,17 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    expected_values = (
-        'BuildGUID: [REG_SZ] f4bf21b9-55fe-4ee8-a84b-0e91cbd5fe5d '
-        'BuildLab: [REG_SZ] 7601.win7sp1_gdr.111118-2330 '
-        'BuildLabEx: [REG_SZ] 7601.17727.amd64fre.win7sp1_gdr.111118-2330 '
-        'CSDBuildNumber: [REG_SZ] 1130 '
-        'CSDVersion: [REG_SZ] Service Pack 1 '
-        'CurrentBuild: [REG_SZ] 7601 '
-        'CurrentBuildNumber: [REG_SZ] 7601 '
-        'CurrentType: [REG_SZ] Multiprocessor Free '
-        'CurrentVersion: [REG_SZ] 6.1 '
-        'DigitalProductId: [REG_BINARY] (164 bytes) '
-        'DigitalProductId4: [REG_BINARY] (1272 bytes) '
-        'EditionID: [REG_SZ] Ultimate '
-        'InstallationType: [REG_SZ] Client '
-        'PathName: [REG_SZ] C:\\Windows '
-        'ProductId: [REG_SZ] 00426-065-0381817-86216 '
-        'ProductName: [REG_SZ] Windows 7 Ultimate '
-        'RegisteredOrganization: [REG_SZ]  '
-        'RegisteredOwner: [REG_SZ] Windows User '
-        'SoftwareType: [REG_SZ] System '
-        'SystemRoot: [REG_SZ] C:\\Windows')
-
     expected_event_values = {
-        'data_type': 'windows:registry:key_value',
-        'date_time': '2012-03-15T07:09:20.6718750+00:00',
+        'data_type': 'windows:registry:installation',
+        'installation_time': '2010-11-10T17:10:57+00:00',
         'key_path': key_path,
-        'values': expected_values}
+        'owner': 'Windows User',
+        'product_name': 'Windows 7 Ultimate',
+        'service_pack': 'Service Pack 1',
+        'version': '6.1'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
