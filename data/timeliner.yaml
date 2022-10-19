@@ -149,6 +149,11 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:installation'
+attribute_mappings:
+- name: 'installation_time'
+  description: 'Installation Time'
+---
 data_type: 'windows:registry:mount_points2'
 attribute_mappings:
 - name: 'last_written_time'
@@ -236,6 +241,22 @@ attribute_mappings:
   description: 'Content Modification Time'
 ---
 data_type: 'windows:registry:typedurls'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+---
+data_type: 'windows:registry:usb'
+attribute_mappings:
+- name: 'last_written_time'
+  # TODO: change description to correspond to meaning of date time value.
+  description: 'Last Connection Time'
+---
+data_type: 'windows:registry:userassist'
+attribute_mappings:
+- name: 'last_execution_time'
+  description: 'Last Time Executed'
+---
+data_type: 'windows:registry:winlogon'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'

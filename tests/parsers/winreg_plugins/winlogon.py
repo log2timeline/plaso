@@ -288,6 +288,10 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 14)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 14)
 
@@ -299,43 +303,27 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
-    # The order of the events is non-deterministic since they are sorted on
-    # timestamp and description only.
-    test_event1 = None
-    test_event2 = None
-    for event in events:
-      self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
-
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(event_data.data_type, 'windows:registry:winlogon')
-
-      if event_data.application == 'VmApplet':
-        test_event1 = event
-      elif (event_data.application == 'NavLogon' and
-            event_data.trigger == 'Logoff'):
-        test_event2 = event
-
     expected_event_values = {
         'application': 'VmApplet',
         'command': 'SystemPropertiesPerformance.exe/pagefile',
         'data_type': 'windows:registry:winlogon',
-        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'key_path': key_path,
+        'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'trigger': 'Logon'}
 
-    self.CheckEventValues(storage_writer, test_event1, expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'application': 'NavLogon',
         'command': 'NavLogon.dll',
         'data_type': 'windows:registry:winlogon',
-        'date_time': '2013-01-30T10:47:57.0000000+00:00',
         'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
+        'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'trigger': 'Logoff'}
 
-    self.CheckEventValues(storage_writer, test_event2, expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
