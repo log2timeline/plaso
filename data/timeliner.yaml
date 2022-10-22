@@ -251,6 +251,19 @@ attribute_mappings:
   # TODO: change description to correspond to meaning of date time value.
   description: 'Last Connection Time'
 ---
+data_type: 'windows:registry:usbstor:instance'
+attribute_mappings:
+- name: 'device_last_arrival_time'
+  description: 'Last Connect Time'
+- name: 'device_last_removal_time'
+  description: 'Last Disconnect Time'
+- name: 'driver_first_installation_time'
+  description: 'Installation Time'
+- name: 'driver_last_installation_time'
+  description: 'Installation Time'
+- name: 'firmware_time'
+  description: 'Compile Time'
+---
 data_type: 'windows:registry:userassist'
 attribute_mappings:
 - name: 'last_execution_time'
