@@ -148,7 +148,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     # Check that the number of events produced by each plugin are correct.
     parser_chain = self._GetParserChainOfPlugin('windows_usbstor_devices')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 10)
+    self.assertEqual(parser_chains.get(parser_chain, 0), 6)
 
     parser_chain = self._GetParserChainOfPlugin('windows_boot_execute')
     self.assertEqual(parser_chains.get(parser_chain, 0), 4)
@@ -197,7 +197,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     # 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
     parser_chain = self._GetParserChainOfPlugin('windows_usbstor_devices')
     number_of_parser_chains = parser_chains.get(parser_chain, 0)
-    self.assertEqual(number_of_parser_chains, 10)
+    self.assertEqual(number_of_parser_chains, 6)
 
     # There will be 4 Windows boot execute chains for key_value pairs:
     # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager',

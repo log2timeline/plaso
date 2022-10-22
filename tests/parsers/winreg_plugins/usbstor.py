@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import usbstor
 
 from tests.parsers.winreg_plugins import test_lib
@@ -34,8 +33,12 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 5)
+    self.assertEqual(number_of_events, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -45,22 +48,24 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'data_type': 'windows:registry:usbstor',
-        'date_time': '2012-04-07T10:31:37.6408714+00:00',
+        'data_type': 'windows:registry:usbstor:instance',
+        'device_last_arrival_time': None,
+        'device_last_removal_time': None,
         'device_type': 'Disk',
         'display_name': 'HP v100w USB Device',
-        'key_path': key_path,
+        'driver_first_installation_time': '2011-04-01T04:52:38.6860000+00:00',
+        'driver_last_installation_time': '2011-04-01T04:52:38.6860000+00:00',
+        'firmware_time': None,
+        'key_path': (
+            '{0:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\AA951D0000007252&0'.format(
+                key_path)),
         'product': 'Prod_v100w',
         'revision': 'Rev_1024',
-        'serial': 'AA951D0000007252&0',
-        'subkey_name': 'Disk&Ven_HP&Prod_v100w&Rev_1024',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
         'vendor': 'Ven_HP'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,33 @@
+# dtFabric format specification.
+---
+name: usbstor
+type: format
+description: USB storage device formats.
+---
+name: uint32le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: wchar16
+type: character
+attributes:
+  size: 2
+  units: bytes
+---
+name: utf16le_string
+type: string
+encoding: utf-16-le
+element_data_type: wchar16
+elements_terminator: "\x00\x00"
