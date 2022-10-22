@@ -2,12 +2,13 @@
 """The timeliner, which is used to generate events from event data."""
 
 import collections
+import datetime
 import os
 import pytz
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso.containers import time_events
+from plaso.containers import events
 from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
@@ -43,6 +44,34 @@ class EventDataTimeliner(object):
     self.parsers_counter = collections.Counter()
 
     self._ReadConfigurationFile()
+
+  def _GetEvent(self, date_time, date_time_description, time_zone=None):
+    """Retrieves an event.
+
+    Args:
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date and
+          time values.
+      time_zone (Optional[datetime.tzinfo]): time zone.
+
+    Returns:
+      EventObject: event.
+    """
+    timestamp = date_time.GetPlasoTimestamp()
+    if date_time.is_local_time and time_zone and time_zone != pytz.UTC:
+      datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
+      datetime_object += datetime.timedelta(microseconds=timestamp)
+
+      datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
+      seconds_delta = int(datetime_delta.total_seconds())
+      timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
+
+    event = events.EventObject()
+    event.date_time = date_time
+    event.timestamp = timestamp
+    event.timestamp_desc = date_time_description
+
+    return event
 
   def _ReadConfigurationFile(self):
     """Reads a timeliner configuration file.
@@ -86,7 +115,7 @@ class EventDataTimeliner(object):
     for attribute_name, time_description in attribute_mappings.items():
       attribute_value = getattr(event_data, attribute_name, None)
       if attribute_value:
-        event = time_events.DateTimeValuesEvent(
+        event = self._GetEvent(
             attribute_value, time_description, time_zone=self._time_zone)
         event.SetEventDataIdentifier(event_data_identifier)
 
@@ -105,8 +134,7 @@ class EventDataTimeliner(object):
     # TODO: add extraction option to control this behavior.
     if not number_of_events:
       date_time = dfdatetime_semantic_time.NotSet()
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
+      event = self._GetEvent(date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       event.SetEventDataIdentifier(event_data_identifier)
 
       storage_writer.AddAttributeContainer(event)
