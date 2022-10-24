@@ -40,7 +40,8 @@ class StorageReaderTest(test_lib.StorageTestCase):
           event_source.CONTAINER_TYPE, test_identifier)
       self.assertIsNotNone(test_container)
 
-      test_identifier = identifiers.FakeIdentifier(99)
+      test_identifier = identifiers.FakeIdentifier(
+          event_source.CONTAINER_TYPE, 99)
       test_container = test_reader.GetAttributeContainerByIdentifier(
           event_source.CONTAINER_TYPE, test_identifier)
       self.assertIsNone(test_container)

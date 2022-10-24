@@ -8,16 +8,19 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
   """Fake attribute container identifier intended for testing.
 
   Attributes:
+    name (str): name of the attribute container.
     sequence_number (int): sequence number of the attribute container.
   """
 
-  def __init__(self, sequence_number):
+  def __init__(self, name, sequence_number):
     """Initializes a fake attribute container identifier.
 
     Args:
+      name (str): name of the table.
       sequence_number (int): sequence number of the attribute container.
     """
     super(FakeIdentifier, self).__init__()
+    self.name = name
     self.sequence_number = sequence_number
 
   def CopyToString(self):
@@ -26,10 +29,10 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
     Returns:
       str: unique identifier or None.
     """
-    if self.sequence_number is None:
-      return None
+    if self.name is not None and self.sequence_number is not None:
+      return '{0:s}.{1:d}'.format(self.name, self.sequence_number)
 
-    return '{0:d}'.format(self.sequence_number)
+    return None
 
 
 class RedisKeyIdentifier(containers_interface.AttributeContainerIdentifier):

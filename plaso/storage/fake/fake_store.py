@@ -93,7 +93,8 @@ class FakeStore(interface.BaseStore):
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
-    identifier = identifiers.FakeIdentifier(next_sequence_number)
+    identifier = identifiers.FakeIdentifier(
+        container.CONTAINER_TYPE, next_sequence_number)
     container.SetIdentifier(identifier)
 
     lookup_key = identifier.CopyToString()
