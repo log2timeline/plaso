@@ -310,5 +310,50 @@ class EventTag(interface.AttributeContainer):
     self._event_identifier = event_identifier
 
 
+class YearLessLogHelper(interface.AttributeContainer):
+  """Year-less log helper attribute container.
+
+  Attributes:
+    estimated_creation_year (int): estimation of the year the event data stream
+        was created.
+  """
+  CONTAINER_TYPE = 'year_less_log_helper'
+
+  SCHEMA = {
+      'estimated_creation_year': 'int'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_stream_row_identifier']
+
+  def __init__(self):
+    """Initializes a year-less log helper attribute container."""
+    super(YearLessLogHelper, self).__init__()
+    self._event_data_stream_identifier = None
+    self._event_data_stream_row_identifier = None
+    self.estimated_creation_year = None
+
+  def GetEventDataStreamIdentifier(self):
+    """Retrieves the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Returns:
+      AttributeContainerIdentifier: event data stream or None when not set.
+    """
+    return self._event_data_stream_identifier
+
+  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+    """Sets the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Args:
+      event_data_stream_identifier (AttributeContainerIdentifier): event data
+          stream identifier.
+    """
+    self._event_data_stream_identifier = event_data_stream_identifier
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventData, EventDataStream, EventObject, EventTag])
+    EventData, EventDataStream, EventObject, EventTag, YearLessLogHelper])

@@ -88,7 +88,7 @@ class StorageReader(object):
     # TODO: change GetAttributeContainers to handle identifier attributes.
     lookup_key = event_identifier.CopyToString()
     filter_expression = '_event_row_identifier == "{0:s}"'.format(
-        lookup_key.split('.')[-1])
+        lookup_key.rsplit('.', maxsplit=1)[-1])
     event_tags = list(self.GetAttributeContainers(
         self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression))
 

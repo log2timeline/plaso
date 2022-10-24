@@ -138,15 +138,16 @@ class SingleLineTextParser(interface.FileObjectParser):
       text_file_object = text_file.TextFile(
           file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
 
-      if plugin.CheckRequiredFormat(parser_mediator, text_file_object):
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, file_object=file_object)
+      if not plugin.CheckRequiredFormat(parser_mediator, text_file_object):
+        continue
 
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse text file with error: '
-              '{1!s}').format(plugin.NAME, exception))
+      try:
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse text file with error: '
+            '{1!s}').format(plugin.NAME, exception))
+        continue
 
 
 class EncodedTextReader(object):

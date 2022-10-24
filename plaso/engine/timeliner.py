@@ -26,18 +26,21 @@ class EventDataTimeliner(object):
 
   _TIMELINER_CONFIGURATION_FILENAME = 'timeliner.yaml'
 
-  def __init__(self, knowledge_base, data_location=None):
+  def __init__(self, knowledge_base, data_location=None, preferred_year=None):
     """Initializes an event data timeliner.
 
     Args:
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for generation of the time line.
       data_location (Optional[str]): path of the timeliner configuration file.
+      preferred_year (Optional[int]): preferred initial year value for year-less
+          date and time values.
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
     self._data_location = data_location
     self._knowledge_base = knowledge_base
+    self._preferred_year = preferred_year
     self._time_zone = None
 
     self.number_of_produced_events = 0
@@ -45,24 +48,31 @@ class EventDataTimeliner(object):
 
     self._ReadConfigurationFile()
 
-  def _GetEvent(self, date_time, date_time_description, time_zone=None):
+  def _GetEvent(
+      self, date_time, date_time_description, event_data_identifier, base_year):
     """Retrieves an event.
 
     Args:
       date_time (dfdatetime.DateTimeValues): date and time values.
       date_time_description (str): description of the meaning of the date and
           time values.
-      time_zone (Optional[datetime.tzinfo]): time zone.
+      event_data_identifier (AttributeContainerIdentifier): attribute container
+          identifier of the event data.
+      base_year (int): base year of a date time delta.
 
     Returns:
       EventObject: event.
     """
+    if date_time.is_delta and base_year:
+      date_time = date_time.NewFromDeltaAndYear(base_year)
+
     timestamp = date_time.GetPlasoTimestamp()
-    if date_time.is_local_time and time_zone and time_zone != pytz.UTC:
+    if (date_time.is_local_time and self._time_zone and
+        self._time_zone != pytz.UTC):
       datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
       datetime_object += datetime.timedelta(microseconds=timestamp)
 
-      datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
+      datetime_delta = self._time_zone.utcoffset(datetime_object, is_dst=False)
       seconds_delta = int(datetime_delta.total_seconds())
       timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
@@ -70,6 +80,8 @@ class EventDataTimeliner(object):
     event.date_time = date_time
     event.timestamp = timestamp
     event.timestamp_desc = date_time_description
+
+    event.SetEventDataIdentifier(event_data_identifier)
 
     return event
 
@@ -106,6 +118,10 @@ class EventDataTimeliner(object):
 
     event_data_identifier = event_data.GetIdentifier()
 
+    base_year = self._preferred_year
+    if not base_year:
+      base_year = self._knowledge_base.year
+
     if event_data.parser:
       parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
     else:
@@ -116,8 +132,7 @@ class EventDataTimeliner(object):
       attribute_value = getattr(event_data, attribute_name, None)
       if attribute_value:
         event = self._GetEvent(
-            attribute_value, time_description, time_zone=self._time_zone)
-        event.SetEventDataIdentifier(event_data_identifier)
+            attribute_value, time_description, event_data_identifier, base_year)
 
         storage_writer.AddAttributeContainer(event)
 
@@ -134,8 +149,9 @@ class EventDataTimeliner(object):
     # TODO: add extraction option to control this behavior.
     if not number_of_events:
       date_time = dfdatetime_semantic_time.NotSet()
-      event = self._GetEvent(date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-      event.SetEventDataIdentifier(event_data_identifier)
+      event = self._GetEvent(
+          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME,
+          event_data_identifier, base_year)
 
       storage_writer.AddAttributeContainer(event)
 

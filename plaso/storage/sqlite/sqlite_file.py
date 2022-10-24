@@ -92,7 +92,7 @@ class SQLiteStorageFile(interface.BaseStore):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
-  _FORMAT_VERSION = 20220716
+  _FORMAT_VERSION = 20221023
 
   # The earliest format version with a schema.
   _WITH_SCHEMA_FORMAT_VERSION = 20210621
@@ -103,7 +103,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # The earliest format version, stored in-file, that this class
   # is able to upgrade (write new format features).
-  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20211121
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20221023
 
   # The earliest format version, stored in-file, that this class
   # is able to read.

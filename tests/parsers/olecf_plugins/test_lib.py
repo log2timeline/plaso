@@ -3,6 +3,7 @@
 
 import pyolecf
 
+from plaso.containers import events
 from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
@@ -45,6 +46,12 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
 
     file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator.SetFileEntry(file_entry)
+
+    if file_entry:
+      event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = file_entry.path_spec
+
+      parser_mediator.ProduceEventDataStream(event_data_stream)
 
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain('olecf')
