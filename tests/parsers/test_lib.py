@@ -192,6 +192,12 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
+    if file_entry:
+      event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = file_entry.path_spec
+
+      parser_mediator.ProduceEventDataStream(event_data_stream)
+
     if isinstance(parser, interface.FileEntryParser):
       parser.Parse(parser_mediator)
 

@@ -3,6 +3,7 @@
 
 import os
 
+from plaso.containers import events
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import sqlite
 
@@ -87,6 +88,12 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     file_entry, database = self._OpenDatabaseFile(
         path_segments, wal_path_segments=wal_path_segments)
     parser_mediator.SetFileEntry(file_entry)
+
+    if file_entry:
+      event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = file_entry.path_spec
+
+      parser_mediator.ProduceEventDataStream(event_data_stream)
 
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain('sqlite')

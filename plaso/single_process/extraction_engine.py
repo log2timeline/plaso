@@ -353,7 +353,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         self.knowledge_base,
-        data_location=processing_configuration.data_location)
+        data_location=processing_configuration.data_location,
+        preferred_year=processing_configuration.preferred_year)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(

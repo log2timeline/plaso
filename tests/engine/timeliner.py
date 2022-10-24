@@ -4,6 +4,8 @@
 
 import unittest
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.engine import timeliner
 
@@ -32,6 +34,54 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   """Tests for the event data timeliner."""
 
   # pylint: disable=protected-access
+
+  def testGetEvent(self):
+    """Tests the _GetEvent function."""
+    knowledge_base = self._CreateKnowledgeBase()
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    event_data = TestEventData()
+    event_data.value = 'MyValue'
+
+    event_data_identifier = event_data.GetIdentifier()
+
+    # Test date time.
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876))
+
+    event = event_data_timeliner._GetEvent(
+        date_time, 'Test Time', event_data_identifier, 2009)
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertEqual(event.date_time.year, 2010)
+    self.assertEqual(event.timestamp, 1281643591429876)
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876))
+
+    # Test date time delta.
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
+    date_time.is_delta = True
+
+    event = event_data_timeliner._GetEvent(
+        date_time, 'Test Time', event_data_identifier, 2009)
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertEqual(event.date_time.year, 2010)
+    self.assertEqual(event.timestamp, 1281643591429876)
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
+    date_time.is_delta = True
+
+    event = event_data_timeliner._GetEvent(
+        date_time, 'Test Time', event_data_identifier, None)
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertEqual(event.date_time.year, 1)
+    self.assertEqual(event.timestamp, -62116257208570124)
 
   def testProcessEventData(self):
     """Tests the ProcessEventData function."""

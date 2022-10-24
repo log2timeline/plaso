@@ -3,6 +3,7 @@
 
 import plistlib
 
+from plaso.containers import events
 from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
@@ -69,6 +70,12 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     parser_mediator.SetStorageWriter(storage_writer)
 
     parser_mediator.SetFileEntry(file_entry)
+
+    if file_entry:
+      event_data_stream = events.EventDataStream()
+      event_data_stream.path_spec = file_entry.path_spec
+
+      parser_mediator.ProduceEventDataStream(event_data_stream)
 
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain('plist')

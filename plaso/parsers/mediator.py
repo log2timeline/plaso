@@ -208,6 +208,18 @@ class ParserMediator(object):
     year, _, _ = date_time.GetDate()
     return year
 
+  def AddYearLessLogHelper(self, year_less_log_helper):
+    """Adds a year-less log helper.
+
+    Args:
+      year_less_log_helper (YearLessLogHelper): year-less log helper.
+    """
+    if self._event_data_stream_identifier:
+      year_less_log_helper.SetEventDataStreamIdentifier(
+          self._event_data_stream_identifier)
+
+    self._storage_writer.AddAttributeContainer(year_less_log_helper)
+
   def AddWindowsEventLogMessageFile(self, message_file):
     """Adds a Windows EventLog message file.
 

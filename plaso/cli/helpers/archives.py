@@ -13,7 +13,7 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'archives'
   DESCRIPTION = 'Archive command line arguments.'
 
-  _SUPPORTED_ARCHIVE_TYPES = frozenset([
+  _SUPPORTED_ARCHIVE_TYPES = sorted([
       'iso9660', 'modi', 'tar', 'vhdi', 'zip'])
 
   @classmethod
@@ -59,7 +59,7 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
     archives = getattr(options, 'archives', 'none')
 
     if archives == 'all':
-      archives = list(cls._SUPPORTED_ARCHIVE_TYPES)
+      archives = ','.join(cls._SUPPORTED_ARCHIVE_TYPES)
     elif archives not in ('list', 'none'):
       for archive_type in archives.split(','):
         if archive_type not in cls._SUPPORTED_ARCHIVE_TYPES:
