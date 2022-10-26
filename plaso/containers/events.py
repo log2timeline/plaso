@@ -262,14 +262,6 @@ class EventTag(interface.AttributeContainer):
       if label not in self.labels:
         self.labels.append(label)
 
-  def CopyToDict(self):
-    """Copies the event tag to a dictionary.
-
-    Returns:
-      dict[str, object]: event tag attributes.
-    """
-    return {'labels': self.labels}
-
   @classmethod
   def CopyTextToLabel(cls, text, prefix=''):
     """Copies a string to a label.
