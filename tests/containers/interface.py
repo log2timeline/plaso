@@ -9,6 +9,39 @@ from plaso.containers import interface
 from tests import test_lib as shared_test_lib
 
 
+class TestAttributeContainer(interface.AttributeContainer):
+  """Attribute container for testing purposes."""
+
+  CONTAINER_TYPE = 'test'
+
+  def __init__(self):
+    """Initializes an attribute container."""
+    super(TestAttributeContainer, self).__init__()
+    self._protected_attribute = None
+    self.attribute_name = None
+    self.attribute_value = None
+
+
+class TestAttributeContainerWithSchema(interface.AttributeContainer):
+  """Attribute container for testing purposes."""
+
+  CONTAINER_TYPE = 'test_with_schema'
+
+  SCHEMA = {
+      '_protected_attribute': 'AttributeContainerIdentifier',
+      'attribute_name': 'str',
+      'attribute_value': 'str'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_protected_attribute']
+
+  def __init__(self):
+    """Initializes an attribute container."""
+    super(TestAttributeContainerWithSchema, self).__init__()
+    self._protected_attribute = None
+    self.attribute_name = None
+    self.attribute_value = None
+
+
 class AttributeContainerIdentifierTest(shared_test_lib.BaseTestCase):
   """Tests for the attribute container identifier."""
 
@@ -28,7 +61,8 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
+    attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
 
@@ -42,7 +76,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
     attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
@@ -53,8 +87,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attribute_names, expected_attribute_names)
 
-    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-        '_protected_attribute']
+    attribute_container = TestAttributeContainerWithSchema()
+    attribute_container._protected_attribute = 'protected'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     expected_attribute_names = [
         '_protected_attribute', 'attribute_name', 'attribute_value']
@@ -65,7 +101,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testGetAttributes(self):
     """Tests the GetAttributes function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
     attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
@@ -78,8 +114,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attributes, expected_attributes)
 
-    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-        '_protected_attribute']
+    attribute_container = TestAttributeContainerWithSchema()
+    attribute_container._protected_attribute = 'protected'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     expected_attributes = [
         ('_protected_attribute', 'protected'),
@@ -92,7 +130,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testGetAttributeValueHash(self):
     """Tests the GetAttributeValuesHash function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
     attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
@@ -107,8 +145,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     attribute_container.attribute_value = 'attribute_value'
 
-    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-        '_protected_attribute']
+    attribute_container = TestAttributeContainerWithSchema()
+    attribute_container._protected_attribute = 'protected'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     attribute_values_hash2 = attribute_container.GetAttributeValuesHash()
 
@@ -116,7 +156,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testGetAttributeValuesString(self):
     """Tests the GetAttributeValuesString function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
     attribute_container._protected_attribute = 'protected'
     attribute_container.attribute_name = 'attribute_name'
     attribute_container.attribute_value = 'attribute_value'
@@ -131,8 +171,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     attribute_container.attribute_value = 'attribute_value'
 
-    attribute_container._SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-        '_protected_attribute']
+    attribute_container = TestAttributeContainerWithSchema()
+    attribute_container._protected_attribute = 'protected'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     attribute_values_string2 = attribute_container.GetAttributeValuesString()
 
@@ -140,7 +182,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testGetIdentifier(self):
     """Tests the GetIdentifier function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
 
     identifier = attribute_container.GetIdentifier()
 
@@ -148,13 +190,13 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testMatchesExpression(self):
     """Tests the MatchesExpression function."""
-    attribute_container = interface.AttributeContainer()
-    attribute_container.name = 'value'
+    attribute_container = TestAttributeContainer()
+    attribute_container.attribute_name = 'value'
 
-    result = attribute_container.MatchesExpression('name == "value"')
+    result = attribute_container.MatchesExpression('attribute_name == "value"')
     self.assertTrue(result)
 
-    result = attribute_container.MatchesExpression('name == "bogus"')
+    result = attribute_container.MatchesExpression('attribute_name == "bogus"')
     self.assertFalse(result)
 
     result = attribute_container.MatchesExpression('bogus')
@@ -162,7 +204,7 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
   def testSetIdentifier(self):
     """Tests the SetIdentifier function."""
-    attribute_container = interface.AttributeContainer()
+    attribute_container = TestAttributeContainer()
 
     attribute_container.SetIdentifier(None)
 
