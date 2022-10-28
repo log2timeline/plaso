@@ -22,6 +22,7 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_version.WindowsRegistryInstallationEventData()
 
     expected_attribute_names = [
+        '_event_data_stream_identifier',
         '_event_data_stream_row_identifier',
         'build_number',
         'data_type',

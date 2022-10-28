@@ -17,6 +17,7 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventData()
 
     expected_attribute_names = [
+        '_event_data_stream_identifier',
         '_event_data_stream_row_identifier',
         'data_type',
         'parser']
@@ -79,6 +80,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventObject()
 
     expected_attribute_names = [
+        '_event_data_identifier',
         '_event_data_row_identifier',
         'date_time',
         'timestamp',
@@ -109,7 +111,10 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = events.EventTag()
 
-    expected_attribute_names = ['_event_row_identifier', 'labels']
+    expected_attribute_names = [
+        '_event_identifier',
+        '_event_row_identifier',
+         'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -137,6 +142,7 @@ class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
     attribute_container = events.YearLessLogHelper()
 
     expected_attribute_names = [
+        '_event_data_stream_identifier',
         '_event_data_stream_row_identifier',
         'estimated_creation_year']
 

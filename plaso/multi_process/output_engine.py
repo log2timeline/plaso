@@ -9,6 +9,7 @@ from dfdatetime import interface as dfdatetime_interface
 from dfvfs.path import path_spec as dfvfs_path_spec
 
 from plaso.containers import events
+from plaso.containers import interface as containers_interface
 from plaso.engine import processing_status
 from plaso.lib import bufferlib
 from plaso.lib import definitions
@@ -68,6 +69,11 @@ class PsortEventHeap(object):
       for attribute_name, attribute_value in sorted(event_attributes):
         if (attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES or
             attribute_value is None):
+          continue
+
+        # Ignore attribute container identifier values.
+        if isinstance(attribute_value,
+                      containers_interface.AttributeContainerIdentifier):
           continue
 
         # Ignore date and time values.

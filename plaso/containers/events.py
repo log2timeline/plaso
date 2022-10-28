@@ -19,7 +19,9 @@ class EventData(interface.AttributeContainer):
   """
   CONTAINER_TYPE = 'event_data'
 
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_stream_row_identifier']
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_data_stream_identifier',
+      '_event_data_stream_row_identifier']
 
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
@@ -145,7 +147,9 @@ class EventObject(interface.AttributeContainer):
       'timestamp': 'int',
       'timestamp_desc': 'str'}
 
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_row_identifier']
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_data_identifier',
+      '_event_data_row_identifier']
 
   def __init__(self):
     """Initializes an event attribute container."""
@@ -210,7 +214,9 @@ class EventTag(interface.AttributeContainer):
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_row_identifier']
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_identifier',
+      '_event_row_identifier']
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
@@ -314,7 +320,9 @@ class YearLessLogHelper(interface.AttributeContainer):
   SCHEMA = {
       'estimated_creation_year': 'int'}
 
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = ['_event_data_stream_row_identifier']
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_data_stream_identifier',
+      '_event_data_stream_row_identifier']
 
   def __init__(self):
     """Initializes a year-less log helper attribute container."""
