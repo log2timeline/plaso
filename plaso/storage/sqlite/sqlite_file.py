@@ -156,6 +156,14 @@ class SQLiteStorageFile(interface.BaseStore):
       'str': 'TEXT',
       'timestamp': 'BIGINT'}
 
+  # TODO: remove after deprecating format version 20220716.
+  _CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS_20220716 = {
+      'AttributeContainerIdentifier': 'INT',
+      'bool': 'INTEGER',
+      'int': 'INTEGER',
+      'str': 'TEXT',
+      'timestamp': 'BIGINT'}
+
   _CREATE_METADATA_TABLE_QUERY = (
       'CREATE TABLE metadata (key TEXT, value TEXT);')
 
@@ -267,9 +275,14 @@ class SQLiteStorageFile(interface.BaseStore):
 
     schema = self._GetAttributeContainerSchema(container_type)
     if self._use_schema and schema:
+      if self.format_version > 20220716:
+        schema_to_sqlite_type_mappings = (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS)
+      else:
+        schema_to_sqlite_type_mappings = (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS_20220716)
       for name, data_type in sorted(schema.items()):
-        data_type = self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
-              data_type, 'TEXT')
+        data_type = schema_to_sqlite_type_mappings.get(data_type, 'TEXT')
         column_definitions.append('{0:s} {1:s}'.format(name, data_type))
 
     else:
@@ -584,12 +597,6 @@ class SQLiteStorageFile(interface.BaseStore):
     self._use_schema = bool(
         self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
 
-    # pylint: disable=protected-access
-    # TODO: remove after deprecating format version 20220716.
-    if self.format_version <= 20220716:
-      self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS[
-          'AttributeContainerIdentifier'] = 'INTEGER'
-
   def _SerializeAttributeContainer(self, attribute_container):
     """Serializes an attribute container.
 
@@ -704,10 +711,11 @@ class SQLiteStorageFile(interface.BaseStore):
         for _, attribute_name, serialized_attribute_name in identifier_mappings:
           identifier = getattr(container, attribute_name, None)
           if not isinstance(identifier, identifiers.SQLTableIdentifier):
+            identifier_type = type(identifier)
             raise IOError((
                 'Unsupported attribute container identifier type: {0!s} for: '
                 '{1:s}.{2:s}').format(
-                    type(identifier), container.CONTAINER_TYPE, attribute_name))
+                    identifier_type, container.CONTAINER_TYPE, attribute_name))
 
           setattr(container, serialized_attribute_name,
                   identifier.sequence_number)
@@ -717,9 +725,10 @@ class SQLiteStorageFile(interface.BaseStore):
         if event_data_stream_identifier:
           if not isinstance(
               event_data_stream_identifier, identifiers.SQLTableIdentifier):
+            identifier_type = type(event_data_stream_identifier)
             raise IOError(
                 'Unsupported event data stream identifier type: {0!s}'.format(
-                    type(event_data_stream_identifier)))
+                    identifier_type))
 
           setattr(container, '_event_data_stream_row_identifier',
                   event_data_stream_identifier.sequence_number)
@@ -756,9 +765,10 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     identifier = container.GetIdentifier()
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      identifier_type = type(identifier)
       raise IOError(
           'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
+              identifier_type))
 
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if not schema:
@@ -1000,9 +1010,10 @@ class SQLiteStorageFile(interface.BaseStore):
           provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      identifier_type = type(identifier)
       raise IOError(
           'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
+              identifier_type))
 
     return self.GetAttributeContainerByIndex(
         container_type, identifier.sequence_number - 1)
