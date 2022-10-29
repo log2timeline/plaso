@@ -18,6 +18,10 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     storage_writer = self._ParseTextFileWithPlugin(
         ['android_logcat.log'], plugin, knowledge_base_values={'year': 1990})
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 8)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 8)
 
@@ -29,104 +33,62 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
+    # Check entry with recorded time with milliseconds precision in local time.
     expected_event_values = {
         'component_tag': 'threadtime',
         'data_type': 'android:logcat',
-        'date_time': '1990-01-01T01:02:03.123000+00:00',
         'message': 'test of default threadtime format',
-        'pid': '1234',
+        'pid': 1234,
         'priority': 'D',
-        'thread_identifier': '1234'}
+        'recorded_time': '1990-01-01T01:02:03.123',
+        'thread_identifier': 1234}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    expected_event_values = {
-        'component_tag': 'sometag',
-        'data_type': 'android:logcat',
-        'date_time': '1990-01-02T01:02:04.156000+00:00',
-        'message': 'test of default time format',
-        'pid': '190',
-        'priority': 'I',
-        'thread_identifier': None}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
+    # Check entry with recorded time with milliseconds precision with time
+    # zone offset.
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02T01:20:03.171000+00:00',
         'message': 'test of threadtime w/ UTC and year',
-        'pid': '1885',
+        'pid': 1885,
         'priority': 'E',
-        'thread_identifier': '3066' ,
+        'recorded_time': '2022-01-02T01:20:03.171+00:00',
+        'thread_identifier': 3066,
         'user_identifier': None}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
+    # Check entry with recorded time with microseconds precision in local time.
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02T01:20:03.171000+00:00',
-        'message': 'test of threadtime w/ UTC, year and uid',
-        'pid': '1885',
-        'priority': 'E',
-        'thread_identifier': '3066' ,
-        'user_identifier': '1000'}
-
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_event_values = {
-        'component_tag': 'App',
-        'data_type': 'android:logcat',
-        'date_time': '2022-01-02T01:20:07.171997+00:00',
         'message': 'test of threadtime w/ year, uid, usec',
-        'pid': '1885',
+        'pid': 1885,
         'priority': 'E',
-        'thread_identifier': '3066' ,
-        'user_identifier': '1000'}
+        'recorded_time': '2022-01-02T01:20:07.171997',
+        'thread_identifier': 3066,
+        'user_identifier': 1000}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
 
+    # Check entry with recorded time with microseconds precision with time
+    # zone offset.
     expected_event_values = {
         'component_tag': 'AppTag',
         'data_type': 'android:logcat',
-        'date_time': '2022-01-02T11:20:07.171997+10:00',
         'message': 'test of threadtime w/ year, zone, usec',
-        'pid': '9346',
+        'pid': 9346,
         'priority': 'E',
-        'thread_identifier': '9347' ,
-        'timestamp': '2022-01-02 01:20:07.171997',
+        'recorded_time': '2022-01-02T11:20:07.171997+10:00',
+        'thread_identifier': 9347,
         'user_identifier': None}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
-
-    expected_event_values = {
-        'component_tag': 'AppTag',
-        'data_type': 'android:logcat',
-        'date_time': '2022-01-02T11:42:10.613472+10:00',
-        'message': 'test of time w/ zone, uid, year',
-        'pid': '1179',
-        'priority': 'I',
-        'thread_identifier': None,
-        'timestamp': '2022-01-02 01:42:10.613472',
-        'user_identifier': '1080'}
-
-    self.CheckEventValues(storage_writer, events[6], expected_event_values)
-
-    expected_event_values = {
-        'component_tag': 'AppTag',
-        'data_type': 'android:logcat',
-        'date_time': '2022-01-02T11:44:23.183801+10:00',
-        'message': 'test of time w/ zone, year',
-        'pid': '1179',
-        'priority': 'I',
-        'thread_identifier': None,
-        'timestamp': '2022-01-02 01:44:23.183801',
-        'user_identifier': None}
-
-    self.CheckEventValues(storage_writer, events[7], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
