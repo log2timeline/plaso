@@ -28,43 +28,6 @@ class BaseStore(object):
     self.format_version = None
     self.serialization_format = None
 
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-
-    Raises:
-      IOError: if the serialized data cannot be decoded.
-      OSError: if the serialized data cannot be decoded.
-    """
-    if not serialized_data:
-      return None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
-
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-      attribute_container = self._serializer.ReadSerialized(serialized_string)
-
-    except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
-
-    except (TypeError, ValueError) as exception:
-      # TODO: consider re-reading attribute container with error correction.
-      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
-
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(container_type)
-
-    return attribute_container
-
   def _GetAttributeContainerNextSequenceNumber(self, container_type):
     """Retrieves the next sequence number of an attribute container.
 
@@ -112,38 +75,6 @@ class BaseStore(object):
        OSError: if the store cannot be written to.
        IOError: if the store cannot be written to.
     """
-
-  def _SerializeAttributeContainer(self, attribute_container):
-    """Serializes an attribute container.
-
-    Args:
-      attribute_container (AttributeContainer): attribute container.
-
-    Returns:
-      bytes: serialized attribute container.
-
-    Raises:
-      IOError: if the attribute container cannot be serialized.
-      OSError: if the attribute container cannot be serialized.
-    """
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(
-          attribute_container.CONTAINER_TYPE)
-
-    try:
-      attribute_container_data = self._serializer.WriteSerialized(
-          attribute_container)
-      if not attribute_container_data:
-        raise IOError(
-            'Unable to serialize attribute container: {0:s}.'.format(
-                attribute_container.CONTAINER_TYPE))
-
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(
-            attribute_container.CONTAINER_TYPE)
-
-    return attribute_container_data
 
   def _SetAttributeContainerNextSequenceNumber(
       self, container_type, next_sequence_number):
