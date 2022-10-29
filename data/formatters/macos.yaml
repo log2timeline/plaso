@@ -193,19 +193,6 @@ short_source: 'NOTIFICATION'
 source: 'MacOS Notification Center'
 ---
 type: 'conditional'
-data_type: 'mac:securityd:line'
-message:
-- 'Sender: {sender}'
-- '({sender_pid})'
-- 'Level: {level}'
-- 'Facility: {facility}'
-- 'Text: {message}'
-short_message:
-- 'Text: {message}'
-short_source: 'LOG'
-source: 'MacOS Securityd Log'
----
-type: 'conditional'
 data_type: 'mac:utmpx:event'
 enumeration_helpers:
 - input_attribute: 'type'
@@ -237,18 +224,6 @@ short_message:
 - 'Status: {status}'
 short_source: 'LOG'
 source: 'MacOS UTMPX Log'
----
-type: 'conditional'
-data_type: 'mac:wifilog:line'
-message:
-- 'Action: {action}'
-- 'Agent: {agent}'
-- '({function})'
-- 'Log: {text}'
-short_message:
-- 'Action: {action}'
-short_source: 'LOG'
-source: 'MacOS Wifi Log'
 ---
 type: 'conditional'
 data_type: 'mackeeper:cache'
@@ -366,6 +341,19 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
+data_type: 'macos:securityd_log:entry'
+message:
+- 'Sender: {sender}'
+- '({sender_pid})'
+- 'Level: {level}'
+- 'Facility: {facility}'
+- 'Text: {message}'
+short_message:
+- 'Text: {message}'
+short_source: 'LOG'
+source: 'MacOS Securityd Log'
+---
+type: 'conditional'
 data_type: 'macos:software_updata:entry'
 message:
 - 'Last update: MacOS {system_version}'
@@ -418,6 +406,18 @@ short_message:
 - 'Full name: {fullname}'
 short_source: 'PLIST'
 source: 'MacOS User plist'
+---
+type: 'conditional'
+data_type: 'macos:wifi_log:entry'
+message:
+- 'Action: {action}'
+- 'Agent: {agent}'
+- '({function})'
+- 'Log: {text}'
+short_message:
+- 'Action: {action}'
+short_source: 'LOG'
+source: 'MacOS Wifi Log'
 ---
 type: 'basic'
 data_type: 'macosx:application_usage'

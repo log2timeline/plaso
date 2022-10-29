@@ -104,10 +104,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

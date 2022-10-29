@@ -128,10 +128,7 @@ class MacOSAppFirewallTextPlugin(
     parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -186,8 +183,10 @@ class MacOSAppFirewallTextPlugin(
 
       relative_year = self._GetRelativeYear()
 
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          relative_year, month, day_of_month, hours, minutes, seconds))
+      time_elements_tuple = (
+          relative_year, month, day_of_month, hours, minutes, seconds)
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
       date_time.is_delta = True
 
       return date_time
