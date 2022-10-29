@@ -37,6 +37,7 @@ class AttributeContainer(object):
   private class members are not to be serialized, with the exception of those
   defined in _SERIALIZABLE_PROTECTED_ATTRIBUTES.
   """
+
   CONTAINER_TYPE = None
 
   # Names of protected attributes, those with a leading underscore, that

@@ -31,6 +31,7 @@ class EventData(interface.AttributeContainer):
     """
     super(EventData, self).__init__()
     self._event_data_stream_identifier = None
+    # TODO: remove after deprecating format version 20220716.
     self._event_data_stream_row_identifier = None
     self.data_type = data_type
     self.parser = None
@@ -142,6 +143,18 @@ class EventObject(interface.AttributeContainer):
   CONTAINER_TYPE = 'event'
 
   SCHEMA = {
+      '_event_data_identifier': 'AttributeContainerIdentifier',
+      'date_time': 'dfdatetime.DateTimeValues',
+      'timestamp': 'int',
+      'timestamp_desc': 'str'}
+
+  SCHEMA_20220716 = {
+      '_event_data_row_identifier': 'AttributeContainerIdentifier',
+      'date_time': 'dfdatetime.DateTimeValues',
+      'timestamp': 'int',
+      'timestamp_desc': 'str'}
+
+  SCHEMA_20211121 = {
       '_event_data_row_identifier': 'AttributeContainerIdentifier',
       'date_time': 'dfdatetime.DateTimeValues',
       'timestamp': 'int',
@@ -155,6 +168,7 @@ class EventObject(interface.AttributeContainer):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
+    # TODO: remove after deprecating format version 20220716.
     self._event_data_row_identifier = None
     self.date_time = None
     self.timestamp = None
@@ -209,6 +223,14 @@ class EventTag(interface.AttributeContainer):
   CONTAINER_TYPE = 'event_tag'
 
   SCHEMA = {
+      '_event_identifier': 'AttributeContainerIdentifier',
+      'labels': 'List[str]'}
+
+  SCHEMA_20220716 = {
+      '_event_row_identifier': 'AttributeContainerIdentifier',
+      'labels': 'List[str]'}
+
+  SCHEMA_20211121 = {
       '_event_row_identifier': 'AttributeContainerIdentifier',
       'labels': 'List[str]'}
 
@@ -224,6 +246,7 @@ class EventTag(interface.AttributeContainer):
     """Initializes an event tag attribute container."""
     super(EventTag, self).__init__()
     self._event_identifier = None
+    # TODO: remove after deprecating format version 20220716.
     self._event_row_identifier = None
     self.labels = []
 
@@ -318,17 +341,16 @@ class YearLessLogHelper(interface.AttributeContainer):
   CONTAINER_TYPE = 'year_less_log_helper'
 
   SCHEMA = {
+      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
       'estimated_creation_year': 'int'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier',
-      '_event_data_stream_row_identifier']
+      '_event_data_stream_identifier']
 
   def __init__(self):
     """Initializes a year-less log helper attribute container."""
     super(YearLessLogHelper, self).__init__()
     self._event_data_stream_identifier = None
-    self._event_data_stream_row_identifier = None
     self.estimated_creation_year = None
 
   def GetEventDataStreamIdentifier(self):

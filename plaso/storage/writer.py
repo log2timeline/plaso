@@ -94,8 +94,11 @@ class StorageWriter(reader.StorageReader):
 
     event_tag = self._event_tag_per_event_identifier.get(lookup_key, None)
     if not event_tag:
-      filter_expression = '_event_row_identifier == {0:d}'.format(
-          event_identifier.sequence_number)
+      if self._store.format_version and self._store.format_version <= 20220716:
+        filter_expression = '_event_row_identifier == {0:d}'.format(
+            event_identifier.sequence_number)
+      else:
+        filter_expression = '_event_identifier == "{0:s}"'.format(lookup_key)
 
       generator = self._store.GetAttributeContainers(
           self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)

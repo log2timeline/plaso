@@ -114,7 +114,7 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_identifier',
         '_event_row_identifier',
-         'labels']
+        'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -143,7 +143,6 @@ class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
-        '_event_data_stream_row_identifier',
         'estimated_creation_year']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
