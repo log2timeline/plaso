@@ -1,7 +1,7 @@
 # Plaso event formatters.
 ---
 type: 'conditional'
-data_type: 'apache:access'
+data_type: 'apache:access_log:entry'
 message:
 - 'http_request: {http_request}'
 - 'from: {ip_address}'
