@@ -14,20 +14,22 @@ from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
-class _TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+class _TestSQLiteStorageFileV20220716(sqlite_file.SQLiteStorageFile):
   """Test class for testing format compatibility checks."""
 
-  _FORMAT_VERSION = 1
-  _APPEND_COMPATIBLE_FORMAT_VERSION = 1
-  _READ_COMPATIBLE_FORMAT_VERSION = 1
+  _FORMAT_VERSION = 20220716
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20211121
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20211121
+  _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
 
-class _TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+class _TestSQLiteStorageFileV20221023(sqlite_file.SQLiteStorageFile):
   """Test class for testing format compatibility checks."""
 
-  _FORMAT_VERSION = 2
-  _APPEND_COMPATIBLE_FORMAT_VERSION = 2
-  _READ_COMPATIBLE_FORMAT_VERSION = 1
+  _FORMAT_VERSION = 20221023
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20221023
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20221023
+  _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
 
 class SQLiteStorageFileTest(test_lib.StorageTestCase):
@@ -107,7 +109,47 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _CreatetAttributeContainerFromRow
 
-  # TODO: add tests for _GetAttributeContainersWithFilter
+  def testGetAttributeContainersWithFilter(self):
+    """Tests the _GetAttributeContainersWithFilter function."""
+    event_data_stream = events.EventDataStream()
+    event_data_stream.md5_hash = '8f0bf95a7959baad9666b21a7feed79d'
+
+    column_names = ['md5_hash']
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_path = os.path.join(temp_directory, 'plaso.sqlite')
+      test_store = sqlite_file.SQLiteStorageFile()
+      test_store.Open(path=test_path, read_only=False)
+
+      try:
+        containers = list(test_store._GetAttributeContainersWithFilter(
+            event_data_stream.CONTAINER_TYPE, column_names=column_names))
+        self.assertEqual(len(containers), 0)
+
+        test_store.AddAttributeContainer(event_data_stream)
+
+        containers = list(test_store._GetAttributeContainersWithFilter(
+            event_data_stream.CONTAINER_TYPE, column_names=column_names))
+        self.assertEqual(len(containers), 1)
+
+        filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+        containers = list(test_store._GetAttributeContainersWithFilter(
+            event_data_stream.CONTAINER_TYPE, column_names=column_names,
+            filter_expression=filter_expression))
+        self.assertEqual(len(containers), 1)
+
+        filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+        containers = list(test_store._GetAttributeContainersWithFilter(
+            event_data_stream.CONTAINER_TYPE, column_names=column_names,
+            filter_expression=filter_expression))
+        self.assertEqual(len(containers), 0)
+
+        with self.assertRaises(IOError):
+          list(test_store._GetAttributeContainersWithFilter(
+              'bogus', column_names=column_names))
+
+      finally:
+        test_store.Close()
 
   def testGetCachedAttributeContainer(self):
     """Tests the _GetCachedAttributeContainer function."""
@@ -464,17 +506,17 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testVersionCompatibility(self):
     """Tests the version compatibility methods."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
-      v1_test_store = _TestSQLiteStorageFileV1()
+      v1_storage_path = os.path.join(temp_directory, 'v20220716.sqlite')
+      v1_test_store = _TestSQLiteStorageFileV20220716()
       v1_test_store.Open(path=v1_storage_path, read_only=False)
       v1_test_store.Close()
 
-      v2_test_store_rw = _TestSQLiteStorageFileV2()
+      v2_test_store_rw = _TestSQLiteStorageFileV20221023()
 
       with self.assertRaises((IOError, OSError)):
         v2_test_store_rw.Open(path=v1_storage_path, read_only=False)
 
-      v2_test_store_ro = _TestSQLiteStorageFileV2()
+      v2_test_store_ro = _TestSQLiteStorageFileV20221023()
       v2_test_store_ro.Open(path=v1_storage_path, read_only=True)
       v2_test_store_ro.Close()
 

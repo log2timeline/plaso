@@ -76,6 +76,8 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
 class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   """Tests for the JSON attribute container serializer object."""
 
+  # pylint: disable=protected-access
+
   def testReadAndWriteSerializedAnalysisReport(self):
     """Test ReadSerialized and WriteSerialized of AnalysisReport."""
     expected_report_text = (
@@ -109,6 +111,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventData(self):
     """Test ReadSerialized and WriteSerialized of EventData."""
     expected_event_data = events.EventData()
+    expected_event_data._event_data_stream_identifier = 'event_data_stream.1'
+    expected_event_data._ignored = 'Not serialized'
     expected_event_data.data_type = 'test:event2'
     expected_event_data.parser = 'test_parser'
 
@@ -136,6 +140,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_data, events.EventData)
 
     expected_event_data_dict = {
+        '_event_data_stream_identifier': 'event_data_stream.1',
         'a_tuple': ('some item', [234, 52, 15]),
         'data_type': 'test:event2',
         'empty_string': '',
@@ -192,6 +197,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
     expected_event = events.EventObject()
+    expected_event._event_data_identifier = 'event_data.1'
     expected_event.date_time = dfdatetime_posix_time.PosixTime(
         timestamp=1621839644)
     expected_event.timestamp = 1621839644
@@ -210,6 +216,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event, events.EventObject)
 
     expected_event_dict = {
+        '_event_data_identifier': 'event_data.1',
         'date_time': expected_event.date_time,
         'timestamp': 1621839644,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
@@ -253,6 +260,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
     expected_event_tag = events.EventTag()
+    expected_event_tag._event_identifier = 'event.1'
     expected_event_tag.AddLabels(['Malware', 'Common'])
 
     json_string = (
@@ -269,6 +277,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_tag, events.EventTag)
 
     expected_event_tag_dict = {
+        '_event_identifier': 'event.1',
         'labels': ['Malware', 'Common'],
     }
 

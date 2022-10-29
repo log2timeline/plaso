@@ -78,21 +78,26 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
     sequence_number (int): sequence number of the attribute container.
   """
 
-  def __init__(self, name, sequence_number):
+  def __init__(self, name=None, sequence_number=None):
     """Initializes a SQL table attribute container identifier.
 
     Args:
-      name (str): name of the table (attribute container).
-      sequence_number (int): sequence number of the attribute container.
+      name (Optional[str]): name of the table (attribute container).
+      sequence_number (Optional[int]): sequence number of the attribute
+          container.
     """
     super(SQLTableIdentifier, self).__init__()
     self.name = name
     self.sequence_number = sequence_number
 
-  @property
-  def row_identifier(self):
-    """int: unique identifier of the row in the table."""
-    return self.sequence_number
+  def CopyFromString(self, identifier_string):
+    """Copies the identifier from a string representation.
+
+    Args:
+      identifier_string (str): string representation.
+    """
+    self.name, sequence_number = identifier_string.split('.')
+    self.sequence_number = int(sequence_number, 10)
 
   def CopyToString(self):
     """Copies the identifier to a string representation.

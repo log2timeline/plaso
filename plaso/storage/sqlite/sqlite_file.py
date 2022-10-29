@@ -4,6 +4,7 @@
 import ast
 import collections
 import itertools
+import json
 import os
 import pathlib
 import sqlite3
@@ -11,6 +12,7 @@ import zlib
 
 from plaso.containers import event_sources
 from plaso.containers import events
+from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import identifiers
@@ -125,7 +127,7 @@ class SQLiteStorageFile(interface.BaseStore):
       _CONTAINER_TYPE_EVENT_DATA_STREAM,
       _CONTAINER_TYPE_EVENT_SOURCE)
 
-  # TODO: automatically generate mappings
+  # TODO: remove after deprecating format version 20220716.
   _CONTAINER_SCHEMA_IDENTIFIER_MAPPINGS = {
       'event': [(
           'event_data',
@@ -150,7 +152,15 @@ class SQLiteStorageFile(interface.BaseStore):
   }
 
   _CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS = {
-      'AttributeContainerIdentifier': 'INTEGER',
+      'AttributeContainerIdentifier': 'TEXT',
+      'bool': 'INTEGER',
+      'int': 'INTEGER',
+      'str': 'TEXT',
+      'timestamp': 'BIGINT'}
+
+  # TODO: remove after deprecating format version 20220716.
+  _CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS_20220716 = {
+      'AttributeContainerIdentifier': 'INT',
       'bool': 'INTEGER',
       'int': 'INTEGER',
       'str': 'TEXT',
@@ -267,9 +277,14 @@ class SQLiteStorageFile(interface.BaseStore):
 
     schema = self._GetAttributeContainerSchema(container_type)
     if self._use_schema and schema:
+      if self.format_version > 20220716:
+        schema_to_sqlite_type_mappings = (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS)
+      else:
+        schema_to_sqlite_type_mappings = (
+              self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS_20220716)
       for name, data_type in sorted(schema.items()):
-        data_type = self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS.get(
-              data_type, 'TEXT')
+        data_type = schema_to_sqlite_type_mappings.get(data_type, 'TEXT')
         column_definitions.append('{0:s} {1:s}'.format(name, data_type))
 
     else:
@@ -294,9 +309,12 @@ class SQLiteStorageFile(interface.BaseStore):
           exception))
 
     if container_type == self._CONTAINER_TYPE_EVENT_TAG:
-      query = (
-          'CREATE INDEX event_tag_per_event '
-          'ON event_tag (_event_row_identifier)')
+      if self.format_version > 20220716:
+        query = ('CREATE INDEX event_tag_per_event '
+                 'ON event_tag (_event_identifier)')
+      else:
+        query = ('CREATE INDEX event_tag_per_event '
+                 'ON event_tag (_event_row_identifier)')
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
@@ -328,7 +346,13 @@ class SQLiteStorageFile(interface.BaseStore):
           continue
 
         data_type = schema[name]
-        if data_type == 'bool':
+        if (self.format_version > 20220716 and
+            data_type == 'AttributeContainerIdentifier'):
+          identifier = identifiers.SQLTableIdentifier()
+          identifier.CopyFromString(attribute_value)
+          attribute_value = identifier
+
+        elif data_type == 'bool':
           attribute_value = bool(attribute_value)
 
         elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
@@ -352,6 +376,52 @@ class SQLiteStorageFile(interface.BaseStore):
 
       container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
+
+    return container
+
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
+    """Deserializes an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
+    """
+    if not serialized_data:
+      return None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+      container = self._serializer.ReadSerialized(serialized_string)
+
+      if (self.format_version > 20220716 and
+          container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA):
+        serialized_identifier = getattr(
+            container, '_event_data_stream_identifier', None)
+        if serialized_identifier:
+          event_data_stream_identifier = identifiers.SQLTableIdentifier()
+          event_data_stream_identifier.CopyFromString(serialized_identifier)
+          container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+
+    except (TypeError, ValueError) as exception:
+      # TODO: consider re-reading attribute container with error correction.
+      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(container_type)
 
     return container
 
@@ -394,7 +464,8 @@ class SQLiteStorageFile(interface.BaseStore):
       self._storage_profiler.StartTiming('write_new')
 
     try:
-      self._cursor.execute(query, list(itertools.chain(*write_cache)))
+      values = list(itertools.chain(*write_cache))
+      self._cursor.execute(query, values)
 
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
       raise IOError('Unable to query storage file with error: {0!s}'.format(
@@ -458,10 +529,13 @@ class SQLiteStorageFile(interface.BaseStore):
       container = self._CreatetAttributeContainerFromRow(
           container_type, column_names, row, 1)
 
-      identifier = identifiers.SQLTableIdentifier(container_type, row[0])
+      identifier = identifiers.SQLTableIdentifier(
+          name=container_type, sequence_number=row[0])
       container.SetIdentifier(identifier)
 
-      self._UpdateAttributeContainerAfterDeserialize(container)
+      # TODO: remove after deprecating format version 20220716.
+      if self.format_version <= 20220716:
+        self._UpdateAttributeContainerAfterDeserialize(container)
 
       yield container
 
@@ -573,11 +647,11 @@ class SQLiteStorageFile(interface.BaseStore):
     self._use_schema = bool(
         self.format_version >= self._WITH_SCHEMA_FORMAT_VERSION)
 
-  def _SerializeAttributeContainer(self, attribute_container):
+  def _SerializeAttributeContainer(self, container):
     """Serializes an attribute container.
 
     Args:
-      attribute_container (AttributeContainer): attribute container.
+      container (AttributeContainer): attribute container.
 
     Returns:
       bytes: serialized attribute container.
@@ -587,26 +661,32 @@ class SQLiteStorageFile(interface.BaseStore):
       OSError: if the attribute container cannot be serialized.
     """
     if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(
-          attribute_container.CONTAINER_TYPE)
+      self._serializers_profiler.StartTiming(container.CONTAINER_TYPE)
 
     try:
-      attribute_container_data = self._serializer.WriteSerialized(
-          attribute_container)
-      if not attribute_container_data:
-        raise IOError(
-            'Unable to serialize attribute container: {0:s}.'.format(
-                attribute_container.CONTAINER_TYPE))
+      json_dict = self._serializer.WriteSerializedDict(container)
 
-      attribute_container_data = attribute_container_data.encode('utf-8')
+      if (self.format_version > 20220716 and
+          container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA):
+        event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+        if event_data_stream_identifier:
+          json_dict['_event_data_stream_identifier'] = (
+              event_data_stream_identifier.CopyToString())
+
+      serialized_string = json.dumps(json_dict)
+      if not serialized_string:
+        raise IOError('Unable to serialize attribute container: {0:s}.'.format(
+            container.CONTAINER_TYPE))
+
+      serialized_string = serialized_string.encode('utf-8')
 
     finally:
       if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(
-            attribute_container.CONTAINER_TYPE)
+        self._serializers_profiler.StopTiming(container.CONTAINER_TYPE)
 
-    return attribute_container_data
+    return serialized_string
 
+  # TODO: remove after deprecating format version 20220716.
   def _UpdateAttributeContainerAfterDeserialize(self, container):
     """Updates an attribute container after deserialization.
 
@@ -628,7 +708,7 @@ class SQLiteStorageFile(interface.BaseStore):
               serialized_attribute_name))
 
         identifier = identifiers.SQLTableIdentifier(
-            identifier_container_type, row_identifier)
+            name=identifier_container_type, sequence_number=row_identifier)
         setattr(container, attribute_name, identifier)
 
         delattr(container, serialized_attribute_name)
@@ -638,11 +718,13 @@ class SQLiteStorageFile(interface.BaseStore):
           container, '_event_data_stream_row_identifier', None)
       if row_identifier:
         event_data_stream_identifier = identifiers.SQLTableIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+            name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+            sequence_number=row_identifier)
         container.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
         delattr(container, '_event_data_stream_row_identifier')
 
+  # TODO: remove after deprecating format version 20220716.
   def _UpdateAttributeContainerBeforeSerialize(self, container):
     """Updates an attribute container before serialization.
 
@@ -660,10 +742,11 @@ class SQLiteStorageFile(interface.BaseStore):
       for _, attribute_name, serialized_attribute_name in identifier_mappings:
         identifier = getattr(container, attribute_name, None)
         if not isinstance(identifier, identifiers.SQLTableIdentifier):
+          identifier_type = type(identifier)
           raise IOError((
               'Unsupported attribute container identifier type: {0!s} for: '
               '{1:s}.{2:s}').format(
-                  type(identifier), container.CONTAINER_TYPE, attribute_name))
+                  identifier_type, container.CONTAINER_TYPE, attribute_name))
 
         setattr(container, serialized_attribute_name,
                 identifier.sequence_number)
@@ -673,9 +756,10 @@ class SQLiteStorageFile(interface.BaseStore):
       if event_data_stream_identifier:
         if not isinstance(
             event_data_stream_identifier, identifiers.SQLTableIdentifier):
+          identifier_type = type(event_data_stream_identifier)
           raise IOError(
               'Unsupported event data stream identifier type: {0!s}'.format(
-                  type(event_data_stream_identifier)))
+                  identifier_type))
 
         setattr(container, '_event_data_stream_row_identifier',
                 event_data_stream_identifier.sequence_number)
@@ -712,9 +796,10 @@ class SQLiteStorageFile(interface.BaseStore):
     """
     identifier = container.GetIdentifier()
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      identifier_type = type(identifier)
       raise IOError(
           'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
+              identifier_type))
 
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if not schema:
@@ -727,14 +812,20 @@ class SQLiteStorageFile(interface.BaseStore):
       self._FlushWriteCache(container.CONTAINER_TYPE, write_cache)
       del self._write_cache[container.CONTAINER_TYPE]
 
-    self._UpdateAttributeContainerBeforeSerialize(container)
+    # TODO: remove after deprecating format version 20220716.
+    if self.format_version <= 20220716:
+      self._UpdateAttributeContainerBeforeSerialize(container)
 
     column_names = []
     values = []
     for name, data_type in sorted(schema.items()):
       attribute_value = getattr(container, name, None)
       if attribute_value is not None:
-        if data_type == 'bool':
+        if data_type == 'AttributeContainerIdentifier' and isinstance(
+            attribute_value, containers_interface.AttributeContainerIdentifier):
+          attribute_value = attribute_value.CopyToString()
+
+        elif data_type == 'bool':
           attribute_value = int(attribute_value)
 
         elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
@@ -813,12 +904,14 @@ class SQLiteStorageFile(interface.BaseStore):
         container.CONTAINER_TYPE)
 
     identifier = identifiers.SQLTableIdentifier(
-        container.CONTAINER_TYPE, next_sequence_number)
+        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
     container.SetIdentifier(identifier)
 
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
 
-    self._UpdateAttributeContainerBeforeSerialize(container)
+    # TODO: remove after deprecating format version 20220716.
+    if self.format_version <= 20220716:
+      self._UpdateAttributeContainerBeforeSerialize(container)
 
     if self._use_schema and schema:
       column_names = []
@@ -826,7 +919,12 @@ class SQLiteStorageFile(interface.BaseStore):
       for name, data_type in sorted(schema.items()):
         attribute_value = getattr(container, name, None)
         if attribute_value is not None:
-          if data_type == 'bool':
+          if data_type == 'AttributeContainerIdentifier' and isinstance(
+              attribute_value,
+              containers_interface.AttributeContainerIdentifier):
+            attribute_value = attribute_value.CopyToString()
+
+          elif data_type == 'bool':
             attribute_value = int(attribute_value)
 
           elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
@@ -948,9 +1046,10 @@ class SQLiteStorageFile(interface.BaseStore):
           provided.
     """
     if not isinstance(identifier, identifiers.SQLTableIdentifier):
+      identifier_type = type(identifier)
       raise IOError(
           'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
+              identifier_type))
 
     return self.GetAttributeContainerByIndex(
         container_type, identifier.sequence_number - 1)
@@ -1013,10 +1112,13 @@ class SQLiteStorageFile(interface.BaseStore):
     container = self._CreatetAttributeContainerFromRow(
         container_type, column_names, row, 0)
 
-    identifier = identifiers.SQLTableIdentifier(container_type, row_number)
+    identifier = identifiers.SQLTableIdentifier(
+        name=container_type, sequence_number=row_number)
     container.SetIdentifier(identifier)
 
-    self._UpdateAttributeContainerAfterDeserialize(container)
+    # TODO: remove after deprecating format version 20220716.
+    if self.format_version <= 20220716:
+      self._UpdateAttributeContainerAfterDeserialize(container)
 
     self._CacheAttributeContainerByIndex(container, index)
     return container
