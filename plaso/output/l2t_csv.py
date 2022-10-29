@@ -10,6 +10,7 @@ import pytz
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.output import formatting_helper
@@ -172,20 +173,27 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     extra_attributes = []
     for attribute_name, attribute_value in event_data.GetAttributes():
-      if attribute_name not in formatted_attribute_names:
-        # Some parsers have written bytes values to storage.
-        if isinstance(attribute_value, bytes):
-          attribute_value = attribute_value.decode('utf-8', 'replace')
-          logger.warning(
-              'Found bytes value for attribute "{0:s}" for data type: '
-              '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-                  attribute_name, event_data.data_type, attribute_value))
+      if attribute_name in formatted_attribute_names:
+        continue
 
-        # With ! in {1!s} we force a string conversion since some of
-        # the extra attributes values can be integer, float point or
-        # boolean values.
-        extra_attributes.append('{0:s}: {1!s}'.format(
-            attribute_name, attribute_value))
+      # Ignore attribute container identifier values.
+      if isinstance(attribute_value,
+                    containers_interface.AttributeContainerIdentifier):
+        continue
+
+      # Some parsers have written bytes values to storage.
+      if isinstance(attribute_value, bytes):
+        attribute_value = attribute_value.decode('utf-8', 'replace')
+        logger.warning(
+            'Found bytes value for attribute "{0:s}" for data type: '
+            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                attribute_name, event_data.data_type, attribute_value))
+
+      # With ! in {1!s} we force a string conversion since some of
+      # the extra attributes values can be integer, float point or
+      # boolean values.
+      extra_attributes.append('{0:s}: {1!s}'.format(
+          attribute_name, attribute_value))
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():

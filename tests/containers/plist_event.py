@@ -17,8 +17,15 @@ class PlistTimeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = plist_event.PlistTimeEventData()
 
     expected_attribute_names = [
-        '_event_data_stream_row_identifier', 'data_type', 'desc', 'hostname',
-        'key', 'parser', 'root', 'username']
+        '_event_data_stream_identifier',
+        '_event_data_stream_row_identifier',
+        'data_type',
+        'desc',
+        'hostname',
+        'key',
+        'parser',
+        'root',
+        'username']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

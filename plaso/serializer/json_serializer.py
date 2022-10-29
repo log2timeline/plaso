@@ -56,7 +56,10 @@ class JSONAttributeContainerSerializer(object):
     }
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
-      json_dict[attribute_name] = cls._ConvertValueToJSON(attribute_value)
+      # TODO: remove this work-around once row_identifier has been removed.
+      if not isinstance(
+          attribute_value, containers_interface.AttributeContainerIdentifier):
+        json_dict[attribute_name] = cls._ConvertValueToJSON(attribute_value)
 
     return json_dict
 
@@ -136,16 +139,6 @@ class JSONAttributeContainerSerializer(object):
 
     supported_attribute_names = attribute_container.GetAttributeNames()
     for attribute_name, attribute_value in json_dict.items():
-      # Convert attribute names to provide backwards compatibility for previous
-      # variants of attribute containers.
-      if (container_type == 'event' and
-          attribute_name == 'event_data_row_identifier'):
-        attribute_name = '_event_data_row_identifier'
-
-      elif (container_type == 'event_tag' and
-            attribute_name == 'event_row_identifier'):
-        attribute_name = '_event_row_identifier'
-
       # Be strict about which attributes to set in non event data attribute
       # containers.
       if (container_type != 'event_data' and

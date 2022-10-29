@@ -3,6 +3,7 @@
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.output import dynamic
 from plaso.output import formatting_helper
@@ -93,6 +94,11 @@ class NativePythonEventFormattingHelper(
       event_attributes.append(('inode', attribute_value))
 
     for attribute_name, attribute_value in sorted(event_attributes):
+      # Ignore attribute container identifier values.
+      if isinstance(attribute_value,
+                    containers_interface.AttributeContainerIdentifier):
+        continue
+
       # Some parsers have written bytes values to storage.
       if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
