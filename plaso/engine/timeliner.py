@@ -121,6 +121,17 @@ class EventDataTimeliner(object):
     base_year = self._preferred_year
     if not base_year:
       base_year = self._knowledge_base.year
+    if not base_year:
+      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        lookup_key = event_data_stream_identifier.CopyToString()
+        filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
+            lookup_key)
+        year_less_log_helpers = list(storage_writer.GetAttributeContainers(
+            events.YearLessLogHelper.CONTAINER_TYPE,
+            filter_expression=filter_expression))
+        if year_less_log_helpers:
+          base_year = year_less_log_helpers[0].estimated_creation_year
 
     if event_data.parser:
       parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]

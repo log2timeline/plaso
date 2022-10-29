@@ -58,6 +58,20 @@ short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
 type: 'conditional'
+data_type: 'mac:appfirewall:line'
+message:
+- 'Computer: {computer_name}'
+- 'Agent: {agent}'
+- 'Status: {status}'
+- 'Process name: {process_name}'
+- 'Log: {action}'
+short_message:
+- 'Process name: {process_name}'
+- 'Status: {status}'
+short_source: 'LOG'
+source: 'MacOS AppFirewall Log'
+---
+type: 'conditional'
 data_type: 'pe'
 message:
 - 'PE Type: {pe_type}'

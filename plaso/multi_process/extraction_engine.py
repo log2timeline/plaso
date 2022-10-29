@@ -364,6 +364,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_TIMELINING
 
       # Generate events on merge.
+      self._event_data_timeliner.number_of_produced_events = 0
+
       self._event_data_timeliner.ProcessEventData(storage_writer, container)
 
       self._number_of_produced_events += (
