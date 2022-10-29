@@ -67,6 +67,10 @@ class TextPluginTestCase(test_lib.ParserTestCase):
 
     plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
+    if hasattr(plugin, 'GetYearLessLogHelper'):
+      year_less_log_helper = plugin.GetYearLessLogHelper()
+      parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+
     self._ProcessEventData(
         knowledge_base_object, storage_writer,
         time_zone_string=time_zone_string)

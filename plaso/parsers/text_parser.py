@@ -149,6 +149,10 @@ class SingleLineTextParser(interface.FileObjectParser):
             '{1!s}').format(plugin.NAME, exception))
         continue
 
+      if hasattr(plugin, 'GetYearLessLogHelper'):
+        year_less_log_helper = plugin.GetYearLessLogHelper()
+        parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+
 
 class EncodedTextReader(object):
   """Encoded text reader.
