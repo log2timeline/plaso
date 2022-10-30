@@ -5,6 +5,13 @@ attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
 ---
+data_type: 'aws:elb:access'
+attribute_mappings:
+- name: 'request_time'
+  description: 'Request Received Time'
+- name: 'response_time'
+  description: 'Response Sent Time'
+---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:configuration'
 attribute_mappings:

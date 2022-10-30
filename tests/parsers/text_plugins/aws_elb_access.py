@@ -18,7 +18,10 @@ class AWSELBTextPluginTest(test_lib.TextPluginTestCase):
     storage_writer = self._ParseTextFileWithPlugin(
         ['aws_elb_access.log'], plugin)
 
-    # Test number of events and warnings
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 16)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 26)
 
@@ -30,156 +33,45 @@ class AWSELBTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which the text parser plugin generates events is
-    # nondeterministic hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'actions_executed': 'waf,forward',
         'chosen_cert_arn': 'arn:aws:abc:us-east-2:234567891234:certificate',
-        'classification': '-',
-        'classification_reason': '-',
+        'classification': None,
+        'classification_reason': None,
         'data_type': 'aws:elb:access',
         'destination_group_arn': (
             'arn:aws:elasticloadbalancing:us-east-2:123456789123'),
         'destination_ip_address': '192.168.1.123',
         'destination_list': ['192.168.1.123:32869'],
         'destination_port': 32869,
-        'destination_processing_time': '0.164',
+        'destination_processing_duration': '0.164',
         'destination_status_code': 200,
         'destination_status_code_list': '200',
         'domain_name': 'www.domain.name',
         'elb_status_code': 200,
-        'error_reason': '-',
+        'error_reason': None,
         'matched_rule_priority': 2,
         'received_bytes': 391,
-        'redirect_url': '-',
+        'redirect_url': None,
         'request': 'GET https://www.domain.name:443/ HTTP/1.1',
-        'request_processing_time': '0.013',
+        'request_processing_duration': '0.013',
         'request_type': 'https',
         'resource_identifier': 'app/production-web/jf29fj2198ejf922',
-        'response_processing_time': '0.000',
+        'response_processing_duration': '0.000',
         'sent_bytes': 107999,
         'source_ip_address': '192.168.1.10',
         'source_port': 44325,
         'ssl_cipher': 'ECDHE-RSA-AES128-GCM-SHA256',
         'ssl_protocol': 'TLSv1.2',
-        'timestamp': '2020-01-11 16:55:19.000000',
+        'request_time': '2020-01-11T16:55:19.624000+00:00',
+        'response_time': '2020-01-11T16:55:20.356586+00:00',
         'trace_identifier': 'XXXXXXX',
         'user_agent': (
             'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; '
             'Trident/6.0)')}
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_event_values = {
-        'actions_executed': 'waf,forward',
-        'chosen_cert_arn': 'arn:aws:abc:us-east-2:234567891234:certificate',
-        'classification': '-',
-        'classification_reason': '-',
-        'data_type': 'aws:elb:access',
-        'destination_group_arn': (
-            'arn:aws:elasticloadbalancing:us-east-2:123456789123'),
-        'destination_ip_address': '192.168.1.123',
-        'destination_list': ['192.168.1.123:32869'],
-        'destination_port': 32869,
-        'destination_processing_time': '0.164',
-        'destination_status_code': 200,
-        'destination_status_code_list': '200',
-        'domain_name': 'www.domain.name',
-        'elb_status_code': 200,
-        'error_reason': '-',
-        'matched_rule_priority': 2,
-        'received_bytes': 391,
-        'redirect_url': '-',
-        'request': 'GET https://www.domain.name:443/ HTTP/1.1',
-        'request_processing_time': '0.013',
-        'request_type': 'https',
-        'resource_identifier': 'app/production-web/jf29fj2198ejf922',
-        'response_processing_time': '0.000',
-        'sent_bytes': 107999,
-        'source_ip_address': '192.168.1.10',
-        'source_port': 44325,
-        'ssl_cipher': 'ECDHE-RSA-AES128-GCM-SHA256',
-        'ssl_protocol': 'TLSv1.2',
-        'timestamp': '2020-01-11 16:55:20.000000',
-        'trace_identifier': 'XXXXXXX',
-        'user_agent': (
-            'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; '
-            'Trident/6.0)')}
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'destination_ip_address': '10.0.0.1',
-        'destination_port': 80,
-        'destination_processing_time': '0.001048',
-        'destination_status_code': 200,
-        'elb_status_code': 200,
-        'received_bytes': 0,
-        'request': 'GET http://www.example.com:80/ HTTP/1.1',
-        'request_processing_time': '0.000073',
-        'resource_identifier': 'my-loadbalancer',
-        'response_processing_time': '0.000057',
-        'sent_bytes': 29,
-        'source_ip_address': '192.168.131.39',
-        'source_port': 2817,
-        'ssl_cipher': '-',
-        'ssl_protocol': '-',
-        'timestamp': '2021-05-13 23:39:43.000000',
-        'user_agent': 'curl/7.38.0'}
-    self.CheckEventValues(storage_writer, events[20], expected_event_values)
-
-    expected_event_values = {
-        'destination_ip_address': '10.0.0.1',
-        'destination_port': 80,
-        'destination_processing_time': '0.000015',
-        'destination_status_code': '-',
-        'elb_status_code': '-',
-        'received_bytes': '-1',
-        'request': '- - - ',
-        'request_processing_time': '0.001065',
-        'resource_identifier': 'my-loadbalancer',
-        'response_processing_time': '0.000023',
-        'sent_bytes': '-1',
-        'source_ip_address': '192.168.131.39',
-        'source_port': 2817,
-        'ssl_cipher': 'ECDHE-ECDSA-AES128-GCM-SHA256',
-        'ssl_protocol': 'TLSv1.2',
-        'timestamp': '2021-05-13 23:39:46.000000',
-        'user_agent': '-'}
-    self.CheckEventValues(storage_writer, events[23], expected_event_values)
-
-    expected_event_values = {
-        'alpn_back_end_protocol': 'h2',
-        'alpn_client_preference_list': 'h2',
-        'alpn_front_end_protocol': 'h2',
-        'chosen_cert_arn': (
-            'arn:aws:acm:us-east-2:671290407336:certificate/'
-            '2a108f19-aded-46b0-8493-c63eb1ef4a99'),
-        'chosen_cert_serial': '-',
-        'connection_time': 5,
-        'destination_ip_address': '172.100.100.185',
-        'destination_port': 443,
-        'domain_name': (
-            'my-network-loadbalancer-c6e77e28c25b2234.elb.us-east-2.'
-            'amazonaws.com'),
-        'handshake_time': 2,
-        'incoming_tls_alert': '-',
-        'listener': 'g3d4b5e8bb8464cd',
-        'received_bytes': 98,
-        'request_type':'tls',
-        'resource_identifier': 'net/my-network-loadbalancer/c6e77e28c25b2234',
-        'sent_bytes': 246,
-        'source_ip_address': '72.21.218.154',
-        'source_port': 51341,
-        'timestamp': '2022-04-01 08:51:42.000000',
-        'tls_cipher': 'ECDHE-RSA-AES128-SHA',
-        'tls_named_group': '-',
-        'tls_protocol_version': 'tlsv12',
-        'version':'2.0'}
-    self.CheckEventValues(storage_writer, events[24], expected_event_values)
-
-    # TODO: add test for request_creation_time event
-    # '2020-01-11T16:55:19.624000Z'
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
