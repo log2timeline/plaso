@@ -76,26 +76,26 @@ plaso.parsers.text\_plugins.ios\_logd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.text\_plugins.mac\_appfirewall module
+plaso.parsers.text\_plugins.macos\_appfirewall module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.macos_appfirewall
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.macos\_securityd module
 ---------------------------------------------------
 
-.. automodule:: plaso.parsers.text_plugins.mac_appfirewall
+.. automodule:: plaso.parsers.text_plugins.macos_securityd
    :members:
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.text\_plugins.mac\_securityd module
--------------------------------------------------
+plaso.parsers.text\_plugins.macos\_wifi module
+----------------------------------------------
 
-.. automodule:: plaso.parsers.text_plugins.mac_securityd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.text\_plugins.mac\_wifi module
---------------------------------------------
-
-.. automodule:: plaso.parsers.text_plugins.mac_wifi
+.. automodule:: plaso.parsers.text_plugins.macos_wifi
    :members:
    :undoc-members:
    :show-inheritance:

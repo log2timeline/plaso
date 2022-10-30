@@ -69,7 +69,7 @@ class SnortFastLogTextPlugin(
     interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
   """Text parser plugin for Snort3/Suricata fast-log alert log files."""
 
-  NAME = 'snort:fastlog:alert'
+  NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
   _VERIFICATION_REGEX = re.compile(''.join([

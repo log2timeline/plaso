@@ -550,8 +550,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = '17c2f64c-ff4c-493d-b79d-18f31deaf7d5'
-    session_start_time = '2021-11-21 16:57:49.936026'
+    session_identifier = 'fceffa2e-5f79-48d5-9c6f-392b7055ca2d'
+    session_start_time = '2022-10-30 07:14:55.610025'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -593,11 +593,11 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20211121'
-    plaso_version = '20211106'
-    session_identifier = '17c2f64c-ff4c-493d-b79d-18f31deaf7d5'
-    session_start_time = '2021-11-21T16:57:49.936026+00:00'
-    session_completion_time = '2021-11-21T16:57:58.645043+00:00'
+    format_version = '20221023'
+    plaso_version = '20221030'
+    session_identifier = 'fceffa2e-5f79-48d5-9c6f-392b7055ca2d'
+    session_start_time = '2022-10-30T07:14:55.610025+00:00'
+    session_completion_time = '2022-10-30T07:15:04.347208+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
@@ -605,14 +605,13 @@ Storage files are different.
 
     enabled_parser_names = ', '.join([
         'android_app_usage',
-        'apache_access',
-        'apt_history',
         'asl_log',
         'bash_history',
         'bencode',
         'bencode/bencode_transmission',
         'bencode/bencode_utorrent',
         'binary_cookies',
+        'bodyfile',
         'bsm_log',
         'chrome_cache',
         'chrome_preferences',
@@ -620,12 +619,11 @@ Storage files are different.
         'custom_destinations',
         'czip',
         'czip/oxml',
-        'dockerjson',
-        'dpkg',
         'esedb',
         'esedb/file_history',
         'esedb/msie_webcache',
         'esedb/srum',
+        'esedb/user_access_logging',
         'filestat',
         'firefox_cache',
         'firefox_cache2',
@@ -633,14 +631,22 @@ Storage files are different.
         'fseventsd',
         'gdrive_synclog',
         'googlelog',
+        'ios_lockdownd',
+        'ios_sysdiag_log',
         'java_idx',
+        'jsonl',
+        'jsonl/aws_cloudtrail_log',
+        'jsonl/azure_activity_log',
+        'jsonl/azure_application_gateway_access_log',
+        'jsonl/docker_container_config',
+        'jsonl/docker_container_log',
+        'jsonl/docker_layer_config',
+        'jsonl/gcp_log',
+        'jsonl/ios_application_privacy',
+        'jsonl/microsoft_audit_log',
         'lnk',
         'locate_database',
-        'mac_appfirewall_log',
         'mac_keychain',
-        'mac_securityd',
-        'mactime',
-        'macwifi',
         'mcafee_protection',
         'mft',
         'msiecf',
@@ -656,6 +662,7 @@ Storage files are different.
         'plist',
         'plist/airport',
         'plist/apple_id',
+        'plist/ios_carplay',
         'plist/ipod_device',
         'plist/launchd_plist',
         'plist/macos_software_update',
@@ -668,18 +675,13 @@ Storage files are different.
         'plist/spotlight_volume',
         'plist/time_machine',
         'pls_recall',
-        'popularity_contest',
+        'postgresql',
         'prefetch',
         'recycle_bin',
         'recycle_bin_info2',
         'rplog',
-        'santa',
         'sccm',
-        'selinux',
-        'setupapi',
         'skydrive_log',
-        'skydrive_log_old',
-        'sophos_av',
         'spotlight_storedb',
         'sqlite',
         'sqlite/android_calls',
@@ -693,13 +695,17 @@ Storage files are different.
         'sqlite/chrome_8_history',
         'sqlite/chrome_autofill',
         'sqlite/chrome_extension_activity',
+        'sqlite/dropbox',
         'sqlite/firefox_cookies',
         'sqlite/firefox_downloads',
         'sqlite/firefox_history',
         'sqlite/google_drive',
         'sqlite/hangouts_messages',
         'sqlite/imessage',
-        'sqlite/kik_messenger',
+        'sqlite/ios_netusage',
+        'sqlite/ios_powerlog',
+        'sqlite/ios_screentime',
+        'sqlite/kik_ios',
         'sqlite/kodi',
         'sqlite/ls_quarantine',
         'sqlite/mac_document_versions',
@@ -722,16 +728,38 @@ Storage files are different.
         'syslog/cron',
         'syslog/ssh',
         'systemd_journal',
+        'text',
+        'text/android_logcat',
+        'text/apache_access',
+        'text/apt_history',
+        'text/aws_elb_access',
+        'text/confluence_access',
+        'text/dpkg',
+        'text/ios_logd',
+        'text/mac_appfirewall_log',
+        'text/mac_securityd',
+        'text/mac_wifi',
+        'text/popularity_contest',
+        'text/santa',
+        'text/selinux',
+        'text/setupapi',
+        'text/skydrive_log_v1',
+        'text/snort_fastlog',
+        'text/sophos_av',
+        'text/vsftpd',
+        'text/winfirewall',
+        'text/winiis',
+        'text/xchatlog',
+        'text/xchatscrollback',
         'trendmicro_url',
         'trendmicro_vd',
         'usnjrnl',
         'utmp',
         'utmpx',
-        'vsftpd',
+        'viminfo',
+        'windefender_history',
         'winevt',
         'winevtx',
-        'winfirewall',
-        'winiis',
         'winjob',
         'winreg',
         'winreg/amcache',
@@ -770,8 +798,6 @@ Storage files are different.
         'winreg/winlogon',
         'winreg/winrar_mru',
         'winreg/winreg_default',
-        'xchatlog',
-        'xchatscrollback',
         'zsh_extended_history'])
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
