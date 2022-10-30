@@ -101,9 +101,7 @@ class ShutdownWindowsRegistryPlugin(
             'unable to determine shutdown timestamp with error: {0!s}'.format(
                 exception))
 
-      # TODO: remove this check.
-      if event_data.last_shutdown_time:
-        parser_mediator.ProduceEventData(event_data)
+      parser_mediator.ProduceEventData(event_data)
 
     self._ProduceDefaultWindowsRegistryEvent(
         parser_mediator, registry_key, names_to_skip=['ShutdownTime'])

@@ -4,3 +4,10 @@ data_type: 'test:fs:stat'
 attribute_mappings:
 - name: 'access_time'
   description: 'Last Access Time'
+place_holder_event: true
+---
+data_type: 'test:log:entry'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+place_holder_event: false

@@ -20,7 +20,8 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
       'data_type': 'test:fs:stat',
       'attribute_mappings': [{
           'name': 'access_time',
-          'description': 'Last Access Time'}]}
+          'description': 'Last Access Time'}],
+      'place_holder_event': True}
 
   def testReadTimelinerDefinition(self):
     """Tests the _ReadTimelinerDefinition function."""
@@ -54,7 +55,7 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
       timeliner_definitions = list(test_timeliner_file._ReadFromFileObject(
           file_object))
 
-    self.assertEqual(len(timeliner_definitions), 1)
+    self.assertEqual(len(timeliner_definitions), 2)
 
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
@@ -66,7 +67,7 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
     timeliner_definitions = list(test_timeliner_file.ReadFromFile(
         test_file_path))
 
-    self.assertEqual(len(timeliner_definitions), 1)
+    self.assertEqual(len(timeliner_definitions), 2)
 
     self.assertEqual(timeliner_definitions[0].data_type, 'test:fs:stat')
 

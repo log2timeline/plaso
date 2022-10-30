@@ -4,23 +4,27 @@ data_type: 'android:logcat'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
+place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:configuration'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:update'
 attribute_mappings:
 - name: 'update_time'
   description: 'Update Time'
+place_holder_event: true
 ---
 data_type: 'fs:ntfs:usn_change'
 attribute_mappings:
 - name: 'update_time'
   description: 'Metadata Modification Time'
+place_holder_event: true
 ---
 data_type: 'fs:stat'
 attribute_mappings:
@@ -38,6 +42,7 @@ attribute_mappings:
   description: 'Content Deletion Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'fs:stat:ntfs'
 attribute_mappings:
@@ -49,37 +54,44 @@ attribute_mappings:
   description: 'Metadata Modification Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
 - name: 'start_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'linux:dpkg_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'macos:appfirewall_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'macos:securityd_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'macos:wifi_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'pe_coff:dll_import'
 attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'pe_coff:file'
 attribute_mappings:
@@ -89,11 +101,13 @@ attribute_mappings:
   description: 'Content Modification Time'
 - name: 'load_configuration_table_modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'pe_coff:resource'
 attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'
@@ -106,11 +120,13 @@ attribute_mappings:
   description: 'Launch Time'
 - name: 'unknown_time'
   description: 'Unknown Time'
+place_holder_event: true
 ---
 data_type: 'windows:distributed_link_tracking:creation'
 attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
+place_holder_event: true
 ---
 data_type: 'windows:lnk:link'
 attribute_mappings:
@@ -120,6 +136,7 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:amcache'
 attribute_mappings:
@@ -137,11 +154,13 @@ attribute_mappings:
   description: 'Link Time'
 - name: 'msi_installation_time'
   description: 'Installation Time'
+place_holder_event: false
 ---
 data_type: 'windows:registry:amcache:programs'
 attribute_mappings:
 - name: 'installation_time'
   description: 'Installation Time'
+place_holder_event: false
 ---
 data_type: 'windows:registry:appcompatcache'
 attribute_mappings:
@@ -149,71 +168,85 @@ attribute_mappings:
   description: 'File Last Modification Time'
 - name: 'last_update_time'
   description: 'Last Time Executed'
+place_holder_event: true
 ---
 data_type: 'windows:registry:bagmru'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:bam'
 attribute_mappings:
 - name: 'last_run_time'
   description: 'Last Time Executed'
+place_holder_event: false
 ---
 data_type: 'windows:registry:boot_execute'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:boot_verification'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:explorer:programcache'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:key_value'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:installation'
 attribute_mappings:
 - name: 'installation_time'
   description: 'Installation Time'
+place_holder_event: false
 ---
 data_type: 'windows:registry:mount_points2'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:mrulist'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:mrulistex'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:msie_zone_settings'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:mstsc:connection'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:mstsc:mru'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:network'
 attribute_mappings:
@@ -221,31 +254,37 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'last_connected_time'
   description: 'Last Connection Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:network_drive'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:office_mru'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:office_mru_list'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:outlook_search_mru'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:run'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:sam_users'
 attribute_mappings:
@@ -255,32 +294,38 @@ attribute_mappings:
   description: 'Last Password Set Time'
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:service'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:shutdown'
 attribute_mappings:
 - name: 'last_shutdown_time'
   description: 'Last Shutdown Time'
+place_holder_event: false
 ---
 data_type: 'windows:registry:timezone'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:typedurls'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:usb'
 attribute_mappings:
 - name: 'last_written_time'
   # TODO: change description to correspond to meaning of date time value.
   description: 'Last Connection Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:usbstor:instance'
 attribute_mappings:
@@ -294,16 +339,19 @@ attribute_mappings:
   description: 'Installation Time'
 - name: 'firmware_time'
   description: 'Compile Time'
+place_holder_event: true
 ---
 data_type: 'windows:registry:userassist'
 attribute_mappings:
 - name: 'last_execution_time'
   description: 'Last Time Executed'
+place_holder_event: true
 ---
 data_type: 'windows:registry:winlogon'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 data_type: 'windows:shell_item:file_entry'
 attribute_mappings:
@@ -313,6 +361,7 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'winrar:history'

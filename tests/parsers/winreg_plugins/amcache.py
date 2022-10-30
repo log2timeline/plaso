@@ -40,7 +40,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 3250)
+    self.assertEqual(number_of_event_data, 3497)
 
     # 1178 windows:registry:amcache events
     # 2105 last written time events
@@ -87,7 +87,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
             'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\'
             'CurrentVersion\\Uninstall\\FileInsight']}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3233)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3480)
     self.CheckEventData(event_data, expected_event_values)
 
   def testProcessWindows101(self):
