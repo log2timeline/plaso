@@ -453,7 +453,8 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
   def testRuleApplicationInstall(self):
     """Tests the application_install tagging rule."""
-    # Test: data_type is 'dpkg:line' AND body contains 'status installed'
+    # Test: data_type is 'linux:dpkg_log:entry' AND
+    #       body contains 'status installed'
     attribute_values_per_name = {
         'body': ['status installed']}
     self._CheckTaggingRule(

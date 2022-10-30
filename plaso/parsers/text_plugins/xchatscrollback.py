@@ -24,7 +24,7 @@ the tab name, selecting Settings, and then unchecking Reload scrollback'
 
 The log file format differs from logging format, but it's quite simple
 'T 1232315916 Python interface unloaded'
-<T><space><decimal timestamp><space><text><\n>
+<T><space><decimal timestamp><space><text><\\n>
 
 The time reported in the log is the number of seconds since January 1, 1970
 00:00:00 UTC (from source code, time(0)). The <text> part could contain some

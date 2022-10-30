@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for Debian package manager log (dpkg.log) files.
 
-Information updated 02 September 2016.
-
 An example:
 
 2016-08-03 15:25:53 install base-passwd:amd64 <none> 3.5.33
@@ -29,9 +27,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -40,14 +36,17 @@ class DpkgEventData(events.EventData):
   """Dpkg event data.
 
   Attributes:
+    added_time (dfdatetime.DateTimeValues): date and time the log entry
+        was added.
     body (str): body of the log line.
   """
 
-  DATA_TYPE = 'dpkg:line'
+  DATA_TYPE = 'linux:dpkg_log:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(DpkgEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.added_time = None
     self.body = None
 
 
@@ -66,12 +65,12 @@ class DpkgTextPlugin(interface.TextPlugin):
       text_parser.PyParseIntCast)
 
   _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS).setResultsName('date_time')
 
   _DPKG_STARTUP_TYPE = pyparsing.oneOf([
       'archives',
@@ -124,6 +123,23 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parse a single log line.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    event_data = DpkgEventData()
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
+    event_data.body = self._GetValueFromStructure(structure, 'body')
+
+    parser_mediator.ProduceEventData(event_data)
+
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
@@ -140,14 +156,32 @@ class DpkgTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exists.
-    time_elements_structure = structure.get('date_time', None)
-
     try:
+      self._ParseLogLine(parser_mediator, structure)
+    except errors.ParseError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to parse log line with error: {0!s}'.format(exception))
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exists.
       year, month, day_of_month, hours, minutes, seconds = (
           time_elements_structure)
 
@@ -155,23 +189,11 @@ class DpkgTextPlugin(interface.TextPlugin):
           year, month, day_of_month, hours, minutes, seconds))
       date_time.is_local_time = True
 
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
-      return
+      return date_time
 
-    body_text = self._GetValueFromStructure(structure, 'body')
-    if not body_text:
-      parser_mediator.ProduceExtractionWarning('missing body text')
-      return
-
-    event_data = DpkgEventData()
-    event_data.body = body_text
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -194,7 +216,18 @@ class DpkgTextPlugin(interface.TextPlugin):
     except pyparsing.ParseException:
       return False
 
-    return 'date_time' in parsed_structure and 'body' in parsed_structure
+    if 'body' not in parsed_structure:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(DpkgTextPlugin)

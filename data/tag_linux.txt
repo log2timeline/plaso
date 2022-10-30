@@ -97,7 +97,7 @@ device_disconnection
 
 # Tags Linux application installation events.
 application_install
-  data_type is 'dpkg:line' AND body contains 'status installed'
+  data_type is 'linux:dpkg_log:entry' AND body contains 'status installed'
 
 # Tags Linux service start events.
 service_start

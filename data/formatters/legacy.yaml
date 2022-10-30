@@ -1,6 +1,18 @@
 # Plaso event formatters that are no longer used and kept for backwards compatibility.
 ---
 type: 'conditional'
+data_type: 'apt:history:line'
+message:
+- '{packages}'
+- '[{command}]'
+- '[{error}]'
+- '[{requester}]'
+short_message:
+- '{packages}'
+short_source: 'LOG'
+source: 'APT History Log'
+---
+type: 'conditional'
 data_type: 'docker:json:container'
 message:
 - 'Action: {action}'
@@ -39,6 +51,15 @@ short_message:
 - 'Layer ID: {layer_id}'
 short_source: 'DOCKER'
 source: 'Docker Layer'
+---
+type: 'conditional'
+data_type: 'dpkg:line'
+message:
+- '{body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'dpkg log file'
 ---
 type: 'basic'
 data_type: 'fs:mactime:line'

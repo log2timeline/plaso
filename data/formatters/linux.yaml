@@ -1,19 +1,21 @@
 # Plaso Linux related event formatters.
 ---
 type: 'conditional'
-data_type: 'apt:history:line'
+data_type: 'linux:apt_history_log:entry'
 message:
+- '{command}:'
 - '{packages}'
-- '[{command}]'
+- '[{command_line}]'
 - '[{error}]'
 - '[{requester}]'
 short_message:
+- '{command}:'
 - '{packages}'
 short_source: 'LOG'
 source: 'APT History Log'
 ---
 type: 'conditional'
-data_type: 'dpkg:line'
+data_type: 'linux:dpkg_log:entry'
 message:
 - '{body}'
 short_message:

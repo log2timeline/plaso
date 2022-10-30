@@ -6,9 +6,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -17,21 +15,29 @@ class APTHistoryLogEventData(events.EventData):
   """APT History log event data.
 
   Attributes:
-    command (str): command executed
+    command (str): command.
+    command_line (str): command line.
+    end_time (dfdatetime.DateTimeValues): date and time the end of the log
+        entry was added.
     error (str): reported error.
-    packages (str): list of packages being affected.
+    packages (str): packages that were affected.
     requester (str): user requesting the activity.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the log entry was added.
   """
 
-  DATA_TYPE = 'apt:history:line'
+  DATA_TYPE = 'linux:apt_history_log:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(APTHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
+    self.command_line = None
+    self.end_time = None
     self.error = None
     self.packages = None
     self.requester = None
+    self.start_time = None
 
 
 class APTHistoryLogTextPlugin(interface.TextPlugin):
@@ -60,6 +66,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS)
 
+  # Start-Date: 2019-07-10  16:38:12
   _RECORD_START = (
       # APT History logs may start with empty lines
       pyparsing.ZeroOrMore(pyparsing.lineEnd()) +
@@ -79,6 +86,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('Upgrade:')]) +
       pyparsing.restOfLine())
 
+  # End-Date: 2019-07-10  16:38:10
   _RECORD_END = (
       pyparsing.Literal('End-Date:') +
       _APTHISTORY_DATE_TIME.setResultsName('end_date') +
@@ -94,42 +102,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(APTHistoryLogTextPlugin, self).__init__()
-    self._date_time = None
     self._event_data = None
-    self._downgrade = None
-    self._install = None
-    self._purge = None
-    self._remove = None
-    self._upgrade = None
-
-  def _BuildDateTime(self, time_elements_structure):
-    """Builds time elements from an APT History time stamp.
-
-    Args:
-      time_elements_structure (pyparsing.ParseResults): structure of tokens
-          derived from an APT History time stamp.
-
-    Returns:
-      dfdatetime.TimeElements: date and time extracted from the structure or
-          None if the structure does not represent a valid string.
-    """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exist.
-    try:
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day_of_month, hours, minutes, seconds))
-
-      # APT History logs store date and time values in local time.
-      date_time.is_local_time = True
-      return date_time
-    except (TypeError, ValueError):
-      return None
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -148,15 +121,21 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'record_start':
-      self._ParseRecordStart(parser_mediator, structure)
+      try:
+        self._ParseRecordStart(structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse record start with error: {0!s}'.format(exception))
 
     elif key == 'record_body':
       self._ParseRecordBody(structure)
 
     elif key == 'record_end':
-      self._ParseRecordEnd(parser_mediator)
-      # Reset for next record.
-      self._ResetState()
+      try:
+        self._ParseRecordEnd(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse record end with error: {0!s}'.format(exception))
 
   def _ParseRecordBody(self, structure):
     """Parses a line from the body of a log record.
@@ -168,91 +147,24 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: when the date and time value is missing.
     """
-    if not self._date_time:
-      raise errors.ParseError('Missing date time value.')
+    command, body = structure
 
-    # Command data
-    if structure[0] == 'Commandline:':
-      self._event_data.command = ''.join(structure)
+    if command == 'Commandline:':
+      self._event_data.command_line = body.strip()
 
-    elif structure[0] == 'Error:':
-      self._event_data.error = ''.join(structure)
+    elif command == 'Error:':
+      self._event_data.error = body.strip()
 
-    elif structure[0] == 'Requested-By:':
-      self._event_data.requester = ''.join(structure)
+    elif command == 'Requested-By:':
+      self._event_data.requester = body.strip()
 
-    # Package lists
-    elif structure[0] == 'Downgrade:':
-      self._downgrade = ''.join(structure)
+    elif command in (
+        'Downgrade:', 'Install:', 'Purge:', 'Remove:', 'Upgrade:'):
+      self._event_data.command = command[:-1]
+      self._event_data.packages = body.strip()
 
-    elif structure[0] == 'Install:':
-      self._install = ''.join(structure)
-
-    elif structure[0] == 'Purge:':
-      self._purge = ''.join(structure)
-
-    elif structure[0] == 'Remove:':
-      self._remove = ''.join(structure)
-
-    elif structure[0] == 'Upgrade:':
-      self._upgrade = ''.join(structure)
-
-  def _ParseRecordEnd(self, parser_mediator):
+  def _ParseRecordEnd(self, parser_mediator, structure):
     """Parses the last line of a log record.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-
-    Raises:
-      ParseError: when the date and time value is missing.
-    """
-    if not self._date_time:
-      raise errors.ParseError('Missing date time value.')
-
-    # Create relevant events for record
-    if self._downgrade:
-      self._event_data.packages = self._downgrade
-      event = time_events.DateTimeValuesEvent(
-          self._date_time,
-          definitions.TIME_DESCRIPTION_DOWNGRADE,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-    if self._install:
-      self._event_data.packages = self._install
-      event = time_events.DateTimeValuesEvent(
-          self._date_time,
-          definitions.TIME_DESCRIPTION_INSTALLATION,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-    if self._purge:
-      self._event_data.packages = self._purge
-      event = time_events.DateTimeValuesEvent(
-          self._date_time,
-          definitions.TIME_DESCRIPTION_DELETED,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-    if self._remove:
-      self._event_data.packages = self._remove
-      event = time_events.DateTimeValuesEvent(
-          self._date_time,
-          definitions.TIME_DESCRIPTION_DELETED,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-    if self._upgrade:
-      self._event_data.packages = self._upgrade
-      event = time_events.DateTimeValuesEvent(
-          self._date_time,
-          definitions.TIME_DESCRIPTION_UPDATE,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, self._event_data)
-
-  def _ParseRecordStart(self, parser_mediator, structure):
-    """Parses the first line of a log record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -260,23 +172,69 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
     """
-    self._date_time = self._BuildDateTime(structure.get('start_date', None))
-    if not self._date_time:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(self._date_time))
-      return
+    time_elements_structure = self._GetValueFromStructure(structure, 'end_date')
 
+    self._event_data.end_time = self._ParseTimeElements(time_elements_structure)
+
+    parser_mediator.ProduceEventData(self._event_data)
+
+    self._ResetState()
+
+  def _ParseRecordStart(self, structure):
+    """Parses the first line of a log record.
+
+    Args:
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a log entry.
+    """
     self._event_data = APTHistoryLogEventData()
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'start_date')
+
+    self._event_data.start_time = self._ParseTimeElements(
+        time_elements_structure)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exist.
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds)
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+      # APT History logs store date and time values in local time.
+      date_time.is_local_time = True
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def _ResetState(self):
     """Resets stored values."""
-    self._date_time = None
-    self._downgrade = None
     self._event_data = None
-    self._install = None
-    self._purge = None
-    self._remove = None
-    self._upgrade = None
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -294,14 +252,22 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    self._ResetState()
-
     try:
       parsed_structure = self._RECORD_START.parseString(line)
     except pyparsing.ParseException:
-      parsed_structure = None
+      return False
 
-    return bool(parsed_structure)
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'start_date')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    self._ResetState()
+
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(APTHistoryLogTextPlugin)
