@@ -177,14 +177,13 @@ class MacOSWiFiLogTextPlugin(
     return text
 
   def _ParseLogLine(self, parser_mediator, key, structure):
-    """Parse a single log line and produce an event object.
+    """Parse a single log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')

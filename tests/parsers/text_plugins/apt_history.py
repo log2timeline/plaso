@@ -17,6 +17,10 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
     plugin = apt_history.APTHistoryLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(['apt_history.log'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 10)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
 
@@ -28,31 +32,15 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # TODO: sort events.
-    # events = list(storage_writer.GetSortedEvents())
-
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-10T16:38:08'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-10T16:38:12'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'command': (
-            'Commandline: apt-get -y install python-pip python3-pip python-dev '
-            'python3-dev git tmux screen joe'),
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-11T12:20:55',
+        'command': 'Install',
+        'command_line': (
+            'apt-get -y install python-pip python3-pip python-dev python3-dev '
+            'git tmux screen joe'),
+        'data_type': 'linux:apt_history_log:entry',
+        'end_time': '2019-07-11T12:21:28',
         'packages': (
-            'Install: libmpc3:amd64 (1.0.3-1+b2, automatic), '
+            'libmpc3:amd64 (1.0.3-1+b2, automatic), '
             'manpages:amd64 (4.10-2, automatic), '
             'libmpx2:amd64 (6.3.0-18+deb9u1, automatic), '
             'python3-dev:amd64 (3.5.3-1), '
@@ -164,84 +152,11 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
             'python-all-dev:amd64 (2.7.13-2, automatic), '
             'python3-pyasn1:amd64 (0.1.9-2, automatic), '
             'libstdc++-6-dev:amd64 (6.3.0-18+deb9u1, automatic), '
-            'liberror-perl:amd64 (0.17024-1, automatic)')}
+            'liberror-perl:amd64 (0.17024-1, automatic)'),
+        'start_time': '2019-07-11T12:20:55'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'command': (
-            'Commandline: apt-get install -y docker-ce docker-ce-cli '
-            'containerd.io'),
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-11T12:25:24',
-        'error': 'Error: Sub-process /usr/bin/dpkg returned an error code (1)',
-        'packages': (
-            'Install: containerd.io:amd64 (1.2.6-3), linux-headers-4.9.0-9-'
-            'common:amd64 (4.9.168-1+deb9u3, automatic), aufs-tools:amd64 '
-            '(1:4.1+20161219-1, automatic), aufs-dkms:amd64 (4.9+20161219-1, '
-            'automatic), cgroupfs-mount:amd64 (1.3, automatic), '
-            'linux-compiler-gcc-6-x86:amd64 (4.9.168-1+deb9u3, automatic), '
-            'dkms:amd64 (2.3-2, automatic), libltdl7:amd64 (2.4.6-2, '
-            'automatic), linux-headers-amd64:amd64 (4.9+80+deb9u7, automatic), '
-            'linux-kbuild-4.9:amd64 (4.9.168-1+deb9u3, automatic), '
-            'linux-headers-4.9.0-9-amd64:amd64 (4.9.168-1+deb9u3, automatic), '
-            'pigz:amd64 (2.3.4-1, automatic), '
-            'docker-ce:amd64 (5:18.09.7~3-0~debian-stretch), '
-            'docker-ce-cli:amd64 (5:18.09.7~3-0~debian-stretch)')}
-
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_event_values = {
-        'command': 'Commandline: apt-get remove volatility',
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-12T04:12:20',
-        'packages': (
-            'Remove: volatility:amd64 (2.6-1), forensics-all:amd64 (1.5)'),
-        'requester': 'Requested-By: jxs (1005)'}
-
-    self.CheckEventValues(storage_writer, events[6], expected_event_values)
-
-    expected_event_values = {
-        'command': 'Commandline: apt-get autoremove',
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-12T04:19:26',
-        'packages': (
-            'Remove: python-distorm3:amd64 (3.3.4-2), python-imaging:amd64 '
-            '(4.0.0-4), python-py:amd64 (1.4.32-3), python-openpyxl:amd64 '
-            '(2.3.0-3), libdistorm3-3:amd64 (3.3.4-2), python-jdcal:amd64 '
-            '(1.0-1.2~deb9u1)'),
-        'requester': 'Requested-By: jxs (1005)'}
-
-    self.CheckEventValues(storage_writer, events[9], expected_event_values)
-
-  def testProcessWithTimeZone(self):
-    """Tests the Process function with a time zone."""
-    plugin = apt_history.APTHistoryLogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
-        ['apt_history.log'], plugin, time_zone_string='CET')
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 10)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    # TODO: sort events.
-    # events = list(storage_writer.GetSortedEvents())
-
-    events = list(storage_writer.GetEvents())
-
-    expected_event_values = {
-        'data_type': 'apt:history:line',
-        'date_time': '2019-07-10T16:38:08',
-        'timestamp': '2019-07-10 14:38:08.000000'}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

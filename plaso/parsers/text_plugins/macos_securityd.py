@@ -114,15 +114,14 @@ class MacOSSecuritydLogTextPlugin(
 
   def _ParseLogLine(
       self, parser_mediator, time_elements_structure, structure, key):
-    """Parse a single log line and produce an event object.
+    """Parse a single log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       time_elements_structure (pyparsing.ParseResults): date and time elements
           of a log line.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
       key (str): name of the parsed structure.
     """
     time_elements_structure = self._GetValueFromStructure(

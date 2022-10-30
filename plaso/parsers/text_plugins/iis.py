@@ -263,12 +263,12 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line and produce an event object.
+    """Parse a single log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
     time_elements_structure = structure.get('date_time', None)
     if time_elements_structure:

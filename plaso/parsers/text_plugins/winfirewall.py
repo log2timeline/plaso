@@ -152,13 +152,12 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         self._use_local_timezone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line and produce an event object.
+    """Parse a single log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
     # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
     # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:

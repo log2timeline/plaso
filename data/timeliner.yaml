@@ -50,6 +50,17 @@ attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
 ---
+data_type: 'linux:apt_history_log:entry'
+attribute_mappings:
+# TODO: add end_time
+- name: 'start_time'
+  description: 'Added Time'
+---
+data_type: 'linux:dpkg_log:entry'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+---
 data_type: 'macos:appfirewall_log:entry'
 attribute_mappings:
 - name: 'added_time'
