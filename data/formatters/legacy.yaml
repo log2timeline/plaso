@@ -72,6 +72,31 @@ short_source: 'LOG'
 source: 'MacOS AppFirewall Log'
 ---
 type: 'conditional'
+data_type: 'mac:securityd:line'
+message:
+- 'Sender: {sender}'
+- '({sender_pid})'
+- 'Level: {level}'
+- 'Facility: {facility}'
+- 'Text: {message}'
+short_message:
+- 'Text: {message}'
+short_source: 'LOG'
+source: 'MacOS Securityd Log'
+---
+type: 'conditional'
+data_type: 'mac:wifilog:line'
+message:
+- 'Action: {action}'
+- 'Agent: {agent}'
+- '({function})'
+- 'Log: {text}'
+short_message:
+- 'Action: {action}'
+short_source: 'LOG'
+source: 'MacOS Wifi Log'
+---
+type: 'conditional'
 data_type: 'pe'
 message:
 - 'PE Type: {pe_type}'
