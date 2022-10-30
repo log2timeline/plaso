@@ -101,7 +101,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
   # The earliest format version, stored in-file, that this class
   # is able to append (write).
-  _APPEND_COMPATIBLE_FORMAT_VERSION = 20211121
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20221023
 
   # The earliest format version, stored in-file, that this class
   # is able to upgrade (write new format features).

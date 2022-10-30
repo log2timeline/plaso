@@ -39,6 +39,7 @@ opera_typed_history | Parser for Opera typed history (typed_history.xml) files.
 pe | Parser for Portable Executable (PE) files.
 plist | Parser for Property list (plist) files.
 pls_recall | 
+postgresql | Parser for PostgreSQL application log files.
 prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
@@ -192,13 +193,13 @@ dpkg | Parser for Debian package manager log (dpkg.log) files.
 ios_logd | Parser for iOS sysdiagnose logd files.
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_securityd | Parser for MacOS security daemon (securityd) log files.
-mac_wifi | Parser for MacOS Wifi log (wifi.log) files.
+mac_wifi | Parser for MacOS Wi-Fi log (wifi.log) files.
 popularity_contest | Parser for Popularity Contest log files.
 santa | Parser for Santa log (santa.log) files.
 selinux | Parser for SELinux audit log (audit.log) files.
 setupapi | Parser for Windows SetupAPI log files.
 skydrive_log_v1 | Parser for OneDrive (or SkyDrive) version 1 log files.
-snort:fastlog:alert | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
+snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.

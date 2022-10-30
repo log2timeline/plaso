@@ -8,6 +8,7 @@ https://forensicswiki.xyz/wiki/index.php?title=L2T_CSV
 import datetime
 import pytz
 
+from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import interface as containers_interface
@@ -179,6 +180,10 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       # Ignore attribute container identifier values.
       if isinstance(attribute_value,
                     containers_interface.AttributeContainerIdentifier):
+        continue
+
+      # Ignore date and time values.
+      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
         continue
 
       # Some parsers have written bytes values to storage.

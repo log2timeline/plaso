@@ -3,6 +3,9 @@
 
 import json
 
+from dfdatetime import interface as dfdatetime_interface
+
+from plaso.containers import interface as containers_interface
 from plaso.lib import errors
 from plaso.output import dynamic
 from plaso.output import formatting_helper
@@ -34,61 +37,90 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Returns:
       dict[str, object]: JSON serialized objects.
     """
-    event_data_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event_data)
-    del event_data_json_dict['__container_type__']
-    del event_data_json_dict['__type__']
+    event_values = {
+        '__container_type__': 'event',
+        '__type__': 'AttributeContainer'}
 
-    display_name = event_data_json_dict.get('display_name', None)
+    if event_data:
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        # Ignore attribute container identifier values.
+        if isinstance(attribute_value,
+                      containers_interface.AttributeContainerIdentifier):
+          continue
+
+        # Ignore date and time values.
+        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+          continue
+
+        event_values[attribute_name] = attribute_value
+
+    if event_data_stream:
+      for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        if attribute_name == 'path_spec':
+          attribute_name = 'pathspec'
+          attribute_value = self._JSON_SERIALIZER.WriteSerializedDict(
+              attribute_value)
+
+        event_values[attribute_name] = attribute_value
+
+    if event:
+      for attribute_name, attribute_value in event.GetAttributes():
+        # Ignore attribute container identifier values.
+        if isinstance(attribute_value,
+                      containers_interface.AttributeContainerIdentifier):
+          continue
+
+        if attribute_name == 'date_time':
+          attribute_value = self._JSON_SERIALIZER.WriteSerializedDict(
+              attribute_value)
+
+        event_values[attribute_name] = attribute_value
+
+    display_name = event_values.get('display_name', None)
     if display_name is None:
       display_name = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'display_name', event, event_data, event_data_stream,
           event_tag)
-      event_data_json_dict['display_name'] = display_name
+      event_values['display_name'] = display_name
 
-    filename = event_data_json_dict.get('filename', None)
+    filename = event_values.get('filename', None)
     if filename is None:
       filename = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'filename', event, event_data, event_data_stream,
           event_tag)
-      event_data_json_dict['filename'] = filename
+      event_values['filename'] = filename
 
-    inode = event_data_json_dict.get('inode', None)
+    inode = event_values.get('inode', None)
     if inode is None:
       inode = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'inode', event, event_data, event_data_stream,
           event_tag)
-      event_data_json_dict['inode'] = inode
+      event_values['inode'] = inode
 
     try:
       message = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'message', event, event_data, event_data_stream,
           event_tag)
-      event_data_json_dict['message'] = message
+      event_values['message'] = message
     except (errors.NoFormatterFound, errors.WrongFormatter):
       pass
 
-    event_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
-    event_json_dict['__container_type__'] = 'event'
-
-    event_json_dict.update(event_data_json_dict)
-
-    if event_data_stream:
-      event_data_stream_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(
-          event_data_stream)
-      del event_data_stream_json_dict['__container_type__']
-
-      path_spec = event_data_stream_json_dict.pop('path_spec', None)
-      if path_spec:
-        event_data_stream_json_dict['pathspec'] = path_spec
-
-      event_json_dict.update(event_data_stream_json_dict)
-
     if event_tag:
-      event_tag_json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event_tag)
+      event_tag_values = {
+          '__container_type__': 'event_tag',
+          '__type__': 'AttributeContainer'}
 
-      event_json_dict['tag'] = event_tag_json_dict
+      for attribute_name, attribute_value in event_tag.GetAttributes():
+        # Ignore attribute container identifier values.
+        if isinstance(attribute_value,
+                      containers_interface.AttributeContainerIdentifier):
+          continue
 
-    return event_json_dict
+        event_tag_values[attribute_name] = attribute_value
+
+      event_values['tag'] = event_tag_values
+
+    return event_values
 
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
