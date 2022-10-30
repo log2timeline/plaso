@@ -1,5 +1,10 @@
 # Plaso timeliner configuration.
 ---
+data_type: 'android:logcat'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:configuration'
 attribute_mappings:
