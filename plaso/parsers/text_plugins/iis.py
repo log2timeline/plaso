@@ -6,8 +6,6 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -27,6 +25,8 @@ class IISEventData(events.EventData):
     dest_port (str): Server port number.
     http_method (str): HTTP request method, such as GET or POST.
     http_status (str): HTTP status code that was returned by the server.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     protocol_version (str): HTTP protocol version that was used.
     received_bytes (str): Number of bytes received and processed by the server.
     requested_uri_stem (str): File requested, such as index.php or Default.htm
@@ -56,6 +56,7 @@ class IISEventData(events.EventData):
     self.dest_port = None
     self.http_method = None
     self.http_status = None
+    self.last_written_time = None
     self.protocol_version = None
     self.received_bytes = None
     self.requested_uri_stem = None
@@ -117,12 +118,12 @@ class WinIISTextPlugin(interface.TextPlugin):
            _BLANK)
 
   _DATE_TIME = (
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS).setResultsName('date_time')
 
   FIELDS_METADATA = (
       pyparsing.Literal('Fields:') +
@@ -160,14 +161,14 @@ class WinIISTextPlugin(interface.TextPlugin):
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
   _LOG_LINE_STRUCTURES['date'] = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day_of_month')).setResultsName('date')
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS).setResultsName('date')
 
   _LOG_LINE_STRUCTURES['time'] = pyparsing.Group(
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds')).setResultsName('time')
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS).setResultsName('time')
 
   _LOG_LINE_STRUCTURES['s-sitename'] = URI.setResultsName('s_sitename')
   _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.setResultsName('dest_ip')
@@ -270,68 +271,41 @@ class WinIISTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
-    time_elements_structure = structure.get('date_time', None)
-    if time_elements_structure:
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-      # overriding __getattr__ with a function that returns an empty string when
-      # named token does not exists.
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
-
-    else:
-      time_tuple = self._GetValueFromStructure(structure, 'time')
-      if not time_tuple:
-        parser_mediator.ProduceExtractionWarning('missing time values')
-        return
-
-      date_tuple = self._GetValueFromStructure(structure, 'date')
-      if not date_tuple:
-        time_elements_tuple = (
-            self._year, self._month, self._day_of_month, time_tuple[0],
-            time_tuple[1], time_tuple[2])
-
-      else:
-        time_elements_tuple = (
-            date_tuple[0], date_tuple[1], date_tuple[2], time_tuple[0],
-            time_tuple[1], time_tuple[2])
-
-    try:
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
-      return
-
     event_data = IISEventData()
-    event_data.cs_cookie = structure.get('cs_cookie', None)
-    event_data.cs_host = structure.get('cs_host', None)
-    event_data.cs_referrer = structure.get('cs_referrer', None)
-    event_data.cs_uri_query = structure.get('cs_uri_query', None)
-    event_data.cs_username = structure.get('cs_username', None)
-    event_data.dest_ip = structure.get('dest_ip', None)
-    event_data.dest_port = structure.get('dest_port', None)
-    event_data.http_method = structure.get('http_method', None)
-    event_data.http_status = structure.get('http_status', None)
-    event_data.protocol_version = structure.get('protocol_version', None)
-    event_data.received_bytes = structure.get('received_bytes', None)
-    event_data.requested_uri_stem = structure.get('requested_uri_stem', None)
-    event_data.s_computername = structure.get('s_computername', None)
-    event_data.sc_substatus = structure.get('sc_substatus', None)
-    event_data.sc_win32_status = structure.get('sc_win32_status', None)
-    event_data.sent_bytes = structure.get('sent_bytes', None)
-    event_data.source_ip = structure.get('source_ip', None)
-    event_data.s_sitename = structure.get('s_sitename', None)
-    event_data.time_taken = structure.get('time_taken', None)
-    event_data.user_agent = structure.get('user_agent', None)
+    event_data.cs_cookie = self._GetValueFromStructure(structure, 'cs_cookie')
+    event_data.cs_host = self._GetValueFromStructure(structure, 'cs_host')
+    event_data.cs_referrer = self._GetValueFromStructure(
+        structure, 'cs_referrer')
+    event_data.cs_uri_query = self._GetValueFromStructure(
+        structure, 'cs_uri_query')
+    event_data.cs_username = self._GetValueFromStructure(
+        structure, 'cs_username')
+    event_data.dest_ip = self._GetValueFromStructure(structure, 'dest_ip')
+    event_data.dest_port = self._GetValueFromStructure(structure, 'dest_port')
+    event_data.http_method = self._GetValueFromStructure(
+        structure, 'http_method')
+    event_data.http_status = self._GetValueFromStructure(
+        structure, 'http_status')
+    event_data.protocol_version = self._GetValueFromStructure(
+        structure, 'protocol_version')
+    event_data.last_written_time = self._ParseTimeElements(structure)
+    event_data.received_bytes = self._GetValueFromStructure(
+        structure, 'received_bytes')
+    event_data.requested_uri_stem = self._GetValueFromStructure(
+        structure, 'requested_uri_stem')
+    event_data.s_computername = self._GetValueFromStructure(
+        structure, 's_computername')
+    event_data.sc_substatus = self._GetValueFromStructure(
+        structure, 'sc_substatus')
+    event_data.sc_win32_status = self._GetValueFromStructure(
+        structure, 'sc_win32_status')
+    event_data.sent_bytes = self._GetValueFromStructure(structure, 'sent_bytes')
+    event_data.source_ip = self._GetValueFromStructure(structure, 'source_ip')
+    event_data.s_sitename = self._GetValueFromStructure(structure, 's_sitename')
+    event_data.time_taken = self._GetValueFromStructure(structure, 'time_taken')
+    event_data.user_agent = self._GetValueFromStructure(structure, 'user_agent')
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -350,9 +324,66 @@ class WinIISTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'logline':
-      self._ParseLogLine(parser_mediator, structure)
+      try:
+        self._ParseLogLine(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse log line with error: {0!s}'.format(exception))
+
     elif key == 'comment':
       self._ParseComment(parser_mediator, structure)
+
+  def _ParseTimeElements(self, structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8
+      # with: "TypeError: 'str' object is not callable" due to
+      # pyparsing.ParseResults overriding __getattr__ with a function that
+      # returns an empty string when named token does not exists.
+
+      time_elements_structure = self._GetValueFromStructure(
+          structure, 'date_time')
+
+      if time_elements_structure:
+        year, month, day_of_month, hours, minutes, seconds = (
+            time_elements_structure)
+
+        time_elements_tuple = (
+            year, month, day_of_month, hours, minutes, seconds)
+
+      else:
+        time_tuple = self._GetValueFromStructure(structure, 'time')
+        if not time_tuple:
+          raise errors.ParseError('Missing time values.')
+
+        date_tuple = self._GetValueFromStructure(structure, 'date')
+        if date_tuple:
+          time_elements_tuple = (
+              date_tuple[0], date_tuple[1], date_tuple[2], time_tuple[0],
+              time_tuple[1], time_tuple[2])
+        else:
+          time_elements_tuple = (
+               self._year, self._month, self._day_of_month, time_tuple[0],
+               time_tuple[1], time_tuple[2])
+
+      return dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
