@@ -10,6 +10,7 @@ data_type: 'apache:access_log:entry'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
+place_holder_event: true
 ---
 data_type: 'aws:elb:access'
 attribute_mappings:
@@ -17,6 +18,7 @@ attribute_mappings:
   description: 'Request Received Time'
 - name: 'response_time'
   description: 'Response Sent Time'
+place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'ccleaner:configuration'
@@ -30,6 +32,12 @@ data_type: 'ccleaner:update'
 attribute_mappings:
 - name: 'update_time'
   description: 'Update Time'
+place_holder_event: true
+---
+data_type: 'confluence:access'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'fs:ntfs:usn_change'
@@ -121,6 +129,22 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'linux:popularity_contest_log:entry'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'change_time'
+  description: 'Metadata Modification Time'
+place_holder_event: true
+---
+data_type: 'linux:popularity_contest_log:session'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'
 attribute_mappings:
@@ -138,6 +162,7 @@ data_type: 'vsftpd:log'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
 ---
 data_type: 'windows:distributed_link_tracking:creation'
 attribute_mappings:

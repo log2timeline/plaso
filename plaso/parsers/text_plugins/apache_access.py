@@ -257,9 +257,6 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
 
-    The date and time values in Apache access log files are formatted as:
-    "[18/Sep/2011:19:18:28 -0400]".
-
     Args:
       time_elements_structure (pyparsing.ParseResults): date and time elements
           of a log line.
