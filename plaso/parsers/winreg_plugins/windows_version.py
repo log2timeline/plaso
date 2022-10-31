@@ -75,9 +75,7 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
         event_data.installation_time = dfdatetime_posix_time.PosixTime(
             timestamp=installation_time)
 
-      # TODO: remove this check.
-      if event_data.installation_time:
-        parser_mediator.ProduceEventData(event_data)
+      parser_mediator.ProduceEventData(event_data)
 
     self._ProduceDefaultWindowsRegistryEvent(
         parser_mediator, registry_key, names_to_skip=['InstallDate'])

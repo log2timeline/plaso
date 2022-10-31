@@ -235,10 +235,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       event_data.link_time = self._ParseDateStringValue(
           parser_mediator, application_sub_key.path, link_date_value)
 
-    # TODO: remove this check.
-    if (event_data.installation_time or event_data.msi_installation_time or
-        event_data.link_time):
-      parser_mediator.ProduceEventData(event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseDateStringValue(self, parser_mediator, key_path, registry_value):
     """Parses a date and time string value.
@@ -384,10 +381,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       event_data.link_time = dfdatetime_posix_time.PosixTime(
           timestamp=timestamp)
 
-    # TODO: remove this check.
-    if (event_data.last_written_time or event_data.file_creation_time or
-        event_data.file_modification_time or event_data.link_time):
-      parser_mediator.ProduceEventData(event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseInventoryApplicationFileKey(
       self, parser_mediator, inventory_application_file_key):
@@ -427,9 +421,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       event_data.installation_time = dfdatetime_posix_time.PosixTime(
           timestamp=timestamp)
 
-    # TODO: remove this check.
-    if event_data.installation_time:
-      parser_mediator.ProduceEventData(event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseProgramsKey(self, parser_mediator, programs_key):
     """Parses a Root\\Programs key.

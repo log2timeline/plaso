@@ -98,9 +98,7 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           event_data.last_run_time = dfdatetime_filetime.Filetime(
               timestamp=timestamp)
 
-        # TODO: remove this check.
-        if event_data.last_run_time:
-          parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(

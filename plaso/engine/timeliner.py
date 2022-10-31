@@ -40,6 +40,7 @@ class EventDataTimeliner(object):
     self._attribute_mappings = {}
     self._data_location = data_location
     self._knowledge_base = knowledge_base
+    self._place_holder_event = set()
     self._preferred_year = preferred_year
     self._time_zone = None
 
@@ -105,6 +106,9 @@ class EventDataTimeliner(object):
       self._attribute_mappings[timeliner_definition.data_type] = (
           timeliner_definition.attribute_mappings)
 
+      if timeliner_definition.place_holder_event:
+        self._place_holder_event.add(timeliner_definition.data_type)
+
   def ProcessEventData(self, storage_writer, event_data):
     """Generate events from event data.
 
@@ -157,8 +161,8 @@ class EventDataTimeliner(object):
 
     # Create a place holder event for event_data without date and time
     # values to map.
-    # TODO: add extraction option to control this behavior.
-    if not number_of_events:
+    if (not number_of_events and
+        event_data.data_type in self._place_holder_event):
       date_time = dfdatetime_semantic_time.NotSet()
       event = self._GetEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME,

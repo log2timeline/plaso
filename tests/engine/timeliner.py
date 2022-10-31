@@ -13,7 +13,7 @@ from tests import test_lib as shared_test_lib
 from tests.engine import test_lib
 
 
-class TestEventData(events.EventData):
+class TestEventData1(events.EventData):
   """Test event data.
 
   Attributes:
@@ -25,7 +25,24 @@ class TestEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TestEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(TestEventData1, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
+    self.value = None
+
+
+class TestEventData2(events.EventData):
+  """Test event data.
+
+  Attributes:
+    added_time (dfdatetime.DateTimeValues): added date and time.
+    value (str): value.
+  """
+
+  DATA_TYPE = 'test:log:entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(TestEventData2, self).__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.value = None
 
@@ -41,7 +58,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_timeliner = timeliner.EventDataTimeliner(
         knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
 
-    event_data = TestEventData()
+    event_data = TestEventData1()
     event_data.value = 'MyValue'
 
     event_data_identifier = event_data.GetIdentifier()
@@ -86,10 +103,15 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   def testProcessEventData(self):
     """Tests the ProcessEventData function."""
     knowledge_base = self._CreateKnowledgeBase()
+
+    # Test creating an event.
     event_data_timeliner = timeliner.EventDataTimeliner(
         knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
 
-    event_data = TestEventData()
+    event_data = TestEventData1()
+    event_data.access_time = (
+        dfdatetime_time_elements.TimeElementsInMicroseconds(
+            time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876)))
     event_data.value = 'MyValue'
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 0)
@@ -99,6 +121,36 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_timeliner.ProcessEventData(storage_writer, event_data)
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 1)
+
+    # Test creating a placeholder event.
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    event_data = TestEventData1()
+    event_data.value = 'MyValue'
+
+    self.assertEqual(event_data_timeliner.number_of_produced_events, 0)
+
+    storage_writer = self._CreateStorageWriter()
+
+    event_data_timeliner.ProcessEventData(storage_writer, event_data)
+
+    self.assertEqual(event_data_timeliner.number_of_produced_events, 1)
+
+    # Test creating no placeholder event.
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+
+    event_data = TestEventData2()
+    event_data.value = 'MyValue'
+
+    self.assertEqual(event_data_timeliner.number_of_produced_events, 0)
+
+    storage_writer = self._CreateStorageWriter()
+
+    event_data_timeliner.ProcessEventData(storage_writer, event_data)
+
+    self.assertEqual(event_data_timeliner.number_of_produced_events, 0)
 
   def testSetPreferredTimeZone(self):
     """Tests the SetPreferredTimeZone function."""

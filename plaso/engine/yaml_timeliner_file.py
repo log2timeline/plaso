@@ -10,9 +10,12 @@ class TimelinerDefinition(object):
   """Timeliner definition.
 
   Attributes:
-    attribute_mappings (dict[str, str]): data and time description
+    attribute_mappings (dict[str, str]): date and time description
         (timestamp_desc) per attribute name.
     data_type (str): event data type indicator.
+    place_holder_event (bool): True if the timeliner should generate
+        a placeholder event if no date and time values were found in
+        the event data.
   """
 
   def __init__(self, data_type):
@@ -24,6 +27,7 @@ class TimelinerDefinition(object):
     super(TimelinerDefinition, self).__init__()
     self.attribute_mappings = {}
     self.data_type = data_type
+    self.place_holder_event = True
 
 
 class YAMLTimelinerConfigurationFile(object):
@@ -36,15 +40,19 @@ class YAMLTimelinerConfigurationFile(object):
   attribute_mappings:
   - name: 'access_time'
     description: 'Last Access Time'
+  place_holder_event: true
 
   Where:
   * data_type, defines the corresponding event data type;
-  * attribute_mappings, defines attribute mappings.
+  * attribute_mappings, defines attribute mappings;
+  * place_holder_event, defines if the timeliner should generate a placeholder
+    event.
   """
 
   _SUPPORTED_KEYS = frozenset([
       'attribute_mappings',
-      'data_type'])
+      'data_type',
+      'place_holder_event'])
 
   def _ReadTimelinerDefinition(self, timeliner_definition_values):
     """Reads a timeliner definition from a dictionary.
@@ -84,6 +92,8 @@ class YAMLTimelinerConfigurationFile(object):
     timeliner_definition.attribute_mappings = {
         attribute_mapping['name']: attribute_mapping['description']
         for attribute_mapping in attribute_mappings}
+    timeliner_definition.place_holder_event = timeliner_definition_values.get(
+        'place_holder_event', True)
 
     return timeliner_definition
 
