@@ -31,6 +31,28 @@ short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
 ---
 type: 'conditional'
+data_type: 'linux:popularity_contest_log:entry'
+message:
+- 'mru [{mru}]'
+- 'package [{package}]'
+- 'tag [{record_tag}]'
+short_message:
+- '{mru}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
+data_type: 'linux:popularity_contest_log:session'
+message:
+- 'Session {session}'
+- 'Host identifier: {host_indentifier}'
+- '[{details}]'
+short_message:
+- 'Session {session}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
 data_type: 'linux:utmp:event'
 enumeration_helpers:
 - input_attribute: 'type'

@@ -3,6 +3,7 @@
 
 Also see:
   https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
+  https://confluence.atlassian.com/confkb/audit-confluence-using-the-tomcat-valve-component-223216846.html
 """
 
 import pyparsing
@@ -10,9 +11,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -30,6 +29,8 @@ class ConfluenceAccessEventData(events.EventData):
     http_response_code (int): HTTP response code from server.
     http_version (str): HTTP request version.
     process_duration (int): time taken to process the request in milliseconds.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
     remote_name (str): remote  hostname or IP address
     thread_name (str): name of the thread that handled the request.
     user_name (str): response X-AUSERNAME header value.
@@ -49,6 +50,7 @@ class ConfluenceAccessEventData(events.EventData):
     self.http_response_code = None
     self.http_version = None
     self.process_duration = None
+    self.recorded_time = None
     self.remote_name = None
     self.thread_name = None
     self.user_name = None
@@ -73,9 +75,6 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  # Default pattern is %t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{
-  # User-Agent}i
-
   _MONTH_DICT = {
       'jan': 1,
       'feb': 2,
@@ -90,25 +89,18 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
-  # Date format [18/Sep/2011:19:18:28 -0400]
+  _TIME_ZONE_OFFSET = (
+      pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
+
+  # Date and time values are formatted as: [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
-      pyparsing.Suppress('[') +
-      _TWO_DIGITS.setResultsName('day') +
-      pyparsing.Suppress('/') +
-      _THREE_LETTERS.setResultsName('month') +
-      pyparsing.Suppress('/') +
-      _FOUR_DIGITS.setResultsName('year') +
-      pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('hours') +
-      pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') +
-      pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') +
-      pyparsing.Combine(
-          pyparsing.oneOf(['-', '+']) +
-          pyparsing.Word(
-              pyparsing.nums, exact=4)).setResultsName('time_offset') +
-      pyparsing.Suppress(']')).setResultsName('date_time')
+      pyparsing.Suppress('[') + _TWO_DIGITS +
+      pyparsing.Suppress('/') + _THREE_LETTERS +
+      pyparsing.Suppress('/') + _FOUR_DIGITS +
+      pyparsing.Suppress(':') + _TWO_DIGITS +
+      pyparsing.Suppress(':') + _TWO_DIGITS +
+      pyparsing.Suppress(':') + _TWO_DIGITS +
+      _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).setResultsName('date_time')
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -117,9 +109,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   _RESPONSE_BYTES = (
       pyparsing.Literal('-') | _INTEGER).setResultsName('response_bytes')
 
-  _REFERER = (
-      pyparsing.Word(pyparsing.alphanums + "/-_.?=%&:+<>#~[]").setResultsName(
-          'referer'))
+  _REFERER = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 
   _THREAD_NAME = (
       pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name'))
@@ -142,34 +132,32 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
           'remote_name')
 
   _HTTP_VERSION = (
-      pyparsing.Word(pyparsing.alphanums + "/.").setResultsName('http_version'))
+      pyparsing.Word(pyparsing.alphanums + '/.').setResultsName('http_version'))
 
-  _REQUEST_URI = (
-      pyparsing.Word(pyparsing.alphanums + "/-_.?=%&:+<>#~[]").setResultsName(
-          'request_url'))
+  _REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 
-  # Defined in
-  # https://confluence.atlassian.com/confkb/audit-confluence-using-the-tomcat-valve-component-223216846.html
-  # format: "%t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{User-Agent}i"
+  # Default (pre 7.11) format:
+  # %t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{User-Agent}i
+
   _PRE_711_FORMAT = (
       _DATE_TIME +
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
       _HTTP_METHOD +
-      _REQUEST_URI +
+      _REQUEST_URI.setResultsName('request_url') +
       _HTTP_VERSION +
       _INTEGER.setResultsName('response_code') +
       _INTEGER.setResultsName('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
-      _REFERER +
+      _REFERER.setResultsName('referer') +
       _USER_AGENT)
 
-  # Post 7.11
-  # %t %{X-Forwarded-For}i %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{
-  # User-Agent}i
-  # Post 7.11
+  # Post 7.11 format:
+  # %t %{X-Forwarded-For}i %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i
+  # %{User-Agent}i
+
   _POST_711_FORMAT = (
       _DATE_TIME +
       _IP_ADDRESS.setResultsName('forwarded_for') +
@@ -177,13 +165,13 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _THREAD_NAME +
       _REMOTE_NAME +
       _HTTP_METHOD +
-      _REQUEST_URI +
+      _REQUEST_URI.setResultsName('request_url') +
       _HTTP_VERSION +
       _INTEGER.setResultsName('response_code') +
       _INTEGER.setResultsName('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
-      _REFERER +
+      _REFERER.setResultsName('referer') +
       _USER_AGENT)
 
   _LINE_STRUCTURES = [
@@ -192,53 +180,51 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _GetDateTime(self, structure):
-    """Retrieves the date and time from a date and time values structure.
-
-    The date and time values in Confluence access log files are formatted as:
-    "[18/Sep/2011:19:18:28 -0400]".
+  def _ParseLogLine(self, parser_mediator, key, structure):
+    """Parse a single log line.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from a
-          line of a text file.
-
-    Returns:
-      dfdatetime.DateTimeValues: date and time.
-
-    Raises:
-      ValueError: if the structure cannot be converted into a date time string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self._GetValueFromStructure(structure, 'month')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
-    try:
-      month = self._MONTH_DICT.get(month.lower(), 0)
-    except AttributeError as exception:
-      raise ValueError('unable to parse month with error: {0!s}.'.format(
-          exception))
+    user_agent = self._GetValueFromStructure(
+        structure, 'user_agent', default_value='')
+    user_agent = user_agent.strip()
 
-    day_of_month = self._GetValueFromStructure(structure, 'day')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    time_offset = self._GetValueFromStructure(structure, 'time_offset')
+    event_data = ConfluenceAccessEventData()
+    event_data.http_request_method = self._GetValueFromStructure(
+        structure, 'http_method')
+    event_data.http_request_referer = self._GetValueFromStructure(
+        structure, 'referer')
+    event_data.http_request_uri = self._GetValueFromStructure(
+        structure, 'request_url')
+    event_data.http_request_user_agent = user_agent
+    event_data.http_response_code = self._GetValueFromStructure(
+        structure, 'response_code')
+    event_data.http_response_bytes = self._GetValueFromStructure(
+        structure, 'response_bytes')
+    event_data.http_version = self._GetValueFromStructure(
+        structure, 'http_version')
+    event_data.process_duration = self._GetValueFromStructure(
+        structure, 'process_duration')
+    event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
+    event_data.remote_name = self._GetValueFromStructure(
+        structure, 'remote_name')
+    event_data.thread_name = self._GetValueFromStructure(
+        structure, 'thread_name')
+    event_data.user_name = self._GetValueFromStructure(
+        structure, 'user_name')
 
-    try:
-      time_zone_offset = int(time_offset[1:3], 10) * 60
-      time_zone_offset += int(time_offset[3:5], 10)
-      if time_offset[0] == '-':
-        time_zone_offset *= -1
+    if key == 'post_711_format':
+      event_data.forwarded_for = self._GetValueFromStructure(
+          structure, 'forwarded_for')
 
-    except (TypeError, ValueError) as exception:
-      raise ValueError(
-          'unable to parse time zone offset with error: {0!s}.'.format(
-              exception))
-
-    time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
-
-    return dfdatetime_time_elements.TimeElements(
-        time_elements_tuple=time_elements_tuple,
-        time_zone_offset=time_zone_offset)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -256,52 +242,46 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    date_time_string = self._GetValueFromStructure(structure, 'date_time')
-
     try:
-      date_time = self._GetDateTime(date_time_string)
-    except ValueError as exception:
+      self._ParseLogLine(parser_mediator, key, structure)
+    except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse date time value: {0!s} with error: {1!s}'.format(
-              date_time_string, exception))
-      return
+          'unable to parse log line with error: {0!s}'.format(exception))
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
 
-    event_data = ConfluenceAccessEventData()
-    if key == 'post_711_format':
-      event_data.forwarded_for = self._GetValueFromStructure(
-          structure, 'forwarded_for')
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
 
-    event_data.remote_name = self._GetValueFromStructure(
-        structure, 'remote_name')
-    event_data.user_name = self._GetValueFromStructure(
-        structure, 'user_name')
-    event_data.thread_name = self._GetValueFromStructure(
-        structure, 'thread_name')
-    event_data.http_request_method = self._GetValueFromStructure(
-        structure, 'http_method')
-    event_data.http_request_uri = self._GetValueFromStructure(
-        structure, 'request_url')
-    event_data.http_response_code = self._GetValueFromStructure(
-        structure, 'response_code')
-    event_data.process_duration = self._GetValueFromStructure(
-        structure, 'process_duration')
-    event_data.http_response_bytes = self._GetValueFromStructure(
-        structure, 'response_bytes')
-    event_data.http_request_referer = self._GetValueFromStructure(
-        structure, 'referer')
-    event_data.http_request_user_agent = self._GetValueFromStructure(
-        structure,'user_agent')
-    if event_data.http_request_user_agent:
-      user_agent = event_data.http_request_user_agent.strip()
-      event_data.http_request_user_agent = user_agent
+    Returns:
+      dfdatetime.TimeElements: date and time value.
 
-    event_data.http_version = self._GetValueFromStructure(
-        structure, 'http_version')
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      (day_of_month, month_string, year, hours, minutes, seconds,
+       time_zone_sign, time_zone_hours, time_zone_minutes) = (
+          time_elements_structure)
 
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+      month = self._MONTH_DICT.get(month_string.lower(), 0)
+
+      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
+      if time_zone_sign == '-':
+        time_zone_offset *= -1
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      return dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple,
+          time_zone_offset=time_zone_offset)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -320,8 +300,18 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       return False
 
     _, _, parsed_structure = self._GetMatchingLineStructure(line)
+    if not parsed_structure:
+      return False
 
-    return bool(parsed_structure)
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(ConfluenceAccessTextPlugin)

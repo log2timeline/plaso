@@ -211,6 +211,30 @@ short_source: 'PE'
 source: 'PE Resource Creation Time'
 ---
 type: 'conditional'
+data_type: 'popularity_contest:log:event'
+message:
+- 'mru [{mru}]'
+- 'package [{package}]'
+- 'tag [{record_tag}]'
+short_message:
+- '{mru}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
+data_type: 'popularity_contest:session:event'
+message:
+- 'Session {session}'
+- '{status}'
+- 'ID {hostid}'
+- '[{details}]'
+short_message:
+- 'Session {session}'
+- '{status}'
+short_source: 'LOG'
+source: 'Popularity Contest Session'
+---
+type: 'conditional'
 data_type: 'windows:registry:usbstor'
 message:
 - '[{key_path}]'
