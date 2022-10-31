@@ -1,6 +1,22 @@
 # Plaso event formatters that are no longer used and kept for backwards compatibility.
 ---
 type: 'conditional'
+data_type: 'apache:access'
+message:
+- 'http_request: {http_request}'
+- 'from: {ip_address}'
+- 'code: {http_response_code}'
+- 'referer: {http_request_referer}'
+- 'user_agent: {http_request_user_agent}'
+- 'server_name: {server_name}'
+- 'port: {port_number}'
+short_message:
+- '{http_request}'
+- 'from: {ip_address}'
+short_source: 'LOG'
+source: 'Apache Access Log'
+---
+type: 'conditional'
 data_type: 'apt:history:line'
 message:
 - '{packages}'
