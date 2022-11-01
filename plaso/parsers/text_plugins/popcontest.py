@@ -193,6 +193,22 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     super(PopularityContestTextPlugin, self).__init__()
     self._session_event_data = None
 
+  def _GetDateTimeValueFromStructure(self, structure, name):
+    """Retrieves a date and time value from a Pyparsing structure.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value or None if not available.
+    """
+    timestamp = self._GetValueFromStructure(structure, name)
+    if not timestamp:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def _ParseLogLine(self, parser_mediator, structure):
     """Extracts events from a log line.
 
@@ -226,22 +242,6 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     event_data.record_tag = self._GetValueFromStructure(structure, 'tag')
 
     parser_mediator.ProduceEventData(event_data)
-
-  def _GetDateTimeValueFromStructure(self, structure, name):
-    """Retrieves a date and time value from a Pyparsing structure.
-
-    Args:
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-      name (str): name of the token.
-
-    Returns:
-      dfdatetime.TimeElements: date and time value or None if not available.
-    """
-    timestamp = self._GetValueFromStructure(structure, name)
-    if not timestamp:
-      return None
-
-    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
