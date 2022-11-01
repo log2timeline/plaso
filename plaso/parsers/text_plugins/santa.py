@@ -7,11 +7,46 @@ import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
+
+
+class SantaMountEventData(events.EventData):
+  """Santa mount event data.
+
+  Attributes:
+    action (str): event type recorded by Santa.
+    appearance_time (dfdatetime.DateTimeValues): date and time the disk
+        appeared.
+    bsd_name (str): disk BSD name.
+    bus (str): device protocol.
+    dmg_path (str): DMG file path.
+    fs (str): disk volume kind.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
+    model (str): disk model.
+    mount (str): disk mount point.
+    serial (str): disk serial.
+    volume (str): disk volume name.
+  """
+
+  DATA_TYPE = 'santa:diskmount'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SantaMountEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.action = None
+    self.appearance_time = None
+    self.bsd_name = None
+    self.bus = None
+    self.dmg_path = None
+    self.fs = None
+    self.last_written_time = None
+    self.model = None
+    self.mount = None
+    self.serial = None
+    self.volume = None
 
 
 class SantaExecutionEventData(events.EventData):
@@ -25,6 +60,8 @@ class SantaExecutionEventData(events.EventData):
     decision (str): if the process was allowed or blocked.
     gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
+    last_run_time (dfdatetime.DateTimeValues): executable (binary) last run
+        date and time.
     long_reason (str): further explanation behind Santa decision to execute
         or block a process.
     mode (str): Santa execution mode, for example Monitor or Lockdown.
@@ -52,6 +89,7 @@ class SantaExecutionEventData(events.EventData):
     self.decision = None
     self.gid = None
     self.group = None
+    self.last_run_time = None
     self.long_reason = None
     self.mode = None
     self.pid = None
@@ -66,33 +104,6 @@ class SantaExecutionEventData(events.EventData):
     self.user = None
 
 
-class SantaProcessExitEventData(events.EventData):
-  """Santa process exit event data.
-
-  Attributes:
-    action (str): action recorded by Santa.
-    gid (str): group identifier associated with the executed process.
-    pid (str): process identifier for the process.
-    pid_version (str): the process identifier version extracted from the Mach
-        audit token. The version can be used to identify process identifier
-        rollovers.
-    ppid (str): parent process identifier for the executed process.
-    uid (str): user identifier associated with the executed process.
-  """
-
-  DATA_TYPE = 'santa:process_exit'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(SantaProcessExitEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.action = None
-    self.gid = None
-    self.pid = None
-    self.pid_version = None
-    self.ppid = None
-    self.uid = None
-
-
 class SantaFileSystemEventData(events.EventData):
   """Santa file system event data.
 
@@ -102,6 +113,8 @@ class SantaFileSystemEventData(events.EventData):
     file_path (str): file path and name for WRITE/DELETE events.
     gid (str): group identifier associated with the executed process.
     group (str): group name associated with the executed process.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     pid (str): process identifier for the process.
     pid_version (str): the process identifier version extracted from the Mach
         audit token. The version can be used to identify process identifier
@@ -123,6 +136,7 @@ class SantaFileSystemEventData(events.EventData):
     self.file_path = None
     self.gid = None
     self.group = None
+    self.last_written_time = None
     self.pid = None
     self.pid_version = None
     self.ppid = None
@@ -132,37 +146,33 @@ class SantaFileSystemEventData(events.EventData):
     self.user = None
 
 
-class SantaMountEventData(events.EventData):
-  """Santa mount event data.
+class SantaProcessExitEventData(events.EventData):
+  """Santa process exit event data.
 
   Attributes:
-    action (str): event type recorded by Santa.
-    appearance (str): disk appearance date.
-    bsd_name (str): disk BSD name.
-    bus (str): device protocol.
-    dmg_path (str): DMG file path.
-    fs (str): disk volume kind.
-    model (str): disk model.
-    mount (str): disk mount point.
-    serial (str): disk serial.
-    volume (str): disk volume name.
+    action (str): action recorded by Santa.
+    exit_time (dfdatetime.DateTimeValues): process exit date and time.
+    gid (str): group identifier associated with the executed process.
+    pid (str): process identifier for the process.
+    pid_version (str): the process identifier version extracted from the Mach
+        audit token. The version can be used to identify process identifier
+        rollovers.
+    ppid (str): parent process identifier for the executed process.
+    uid (str): user identifier associated with the executed process.
   """
 
-  DATA_TYPE = 'santa:diskmount'
+  DATA_TYPE = 'santa:process_exit'
 
   def __init__(self):
     """Initializes event data."""
-    super(SantaMountEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(SantaProcessExitEventData, self).__init__(data_type=self.DATA_TYPE)
     self.action = None
-    self.appearance = None
-    self.bsd_name = None
-    self.bus = None
-    self.dmg_path = None
-    self.fs = None
-    self.model = None
-    self.mount = None
-    self.serial = None
-    self.volume = None
+    self.exit_time = None
+    self.gid = None
+    self.pid = None
+    self.pid_version = None
+    self.ppid = None
+    self.uid = None
 
 
 class SantaTextPlugin(interface.TextPlugin):
@@ -175,26 +185,36 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _MAXIMUM_LINE_LENGTH = 3000
 
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      text_parser.PyParseIntCast)
+
   _SEPARATOR = pyparsing.Suppress('|')
 
   _SKIP_TO_SEPARATOR = pyparsing.SkipTo('|')
 
   _SKIP_TO_END = pyparsing.SkipTo(pyparsing.lineEnd)
 
-  _DATE_AND_TIME = pyparsing.Combine(
-      pyparsing.Suppress('[') + pyparsing.Word(pyparsing.nums, exact=4) +
-      pyparsing.Literal('-') + pyparsing.Word(pyparsing.nums, exact=2) +
-      pyparsing.Literal('-') + pyparsing.Word(pyparsing.nums, exact=2) +
-      pyparsing.Literal('T') + pyparsing.Word(pyparsing.nums, exact=2) +
-      pyparsing.Literal(':') + pyparsing.Word(pyparsing.nums, exact=2) +
-      pyparsing.Literal(':') + pyparsing.Word(pyparsing.nums, exact=2) +
-      pyparsing.Literal('.') + pyparsing.Word(pyparsing.nums, exact=3) +
-      pyparsing.Literal('Z') + pyparsing.Suppress(']')).setResultsName(
-          'date_time')
+  # Date and time values are formatted as: 2018-08-19T03:09:13.120Z
+  _DATE_AND_TIME = (
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('T') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress('.') +
+      _THREE_DIGITS + pyparsing.Suppress('Z')).setResultsName('date_time')
 
-  _QUOTA_EXCEEDED_LINE = (_DATE_AND_TIME + pyparsing.Literal((
-      '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
-      'HAVE BEEN DISCARDED ***')))
+  _QUOTA_EXCEEDED_LINE = (
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      pyparsing.Literal((
+          '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
+          'HAVE BEEN DISCARDED ***')))
 
   _PID = (pyparsing.Suppress('pid=') +
           _SKIP_TO_SEPARATOR.setResultsName('pid') + _SEPARATOR)
@@ -233,7 +253,8 @@ class SantaTextPlugin(interface.TextPlugin):
   _SANTAD_PREAMBLE = pyparsing.Suppress('I santad:')
 
   _PROCESS_EXIT_LINE = (
-      _DATE_AND_TIME + _SANTAD_PREAMBLE + _EXIT_ACTION + _PID + _PID_VERSION +
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      _SANTAD_PREAMBLE + _EXIT_ACTION + _PID + _PID_VERSION +
       _PPID + _UID + _GID)
 
   _EXEC_ACTION = (
@@ -280,7 +301,8 @@ class SantaTextPlugin(interface.TextPlugin):
   _ARGS = (pyparsing.Suppress('args=') + _SKIP_TO_END.setResultsName('args'))
 
   _EXECUTION_LINE = (
-      _DATE_AND_TIME + _SANTAD_PREAMBLE + _EXEC_ACTION + _DECISION + _REASON +
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      _SANTAD_PREAMBLE + _EXEC_ACTION + _DECISION + _REASON +
       pyparsing.Optional(_EXPLAIN) + _SHA256 +
       pyparsing.Optional(_CERT_SHA256) + pyparsing.Optional(_CERT_CN) +
       pyparsing.Optional(_QUARANTINE_URL) + _PID +
@@ -300,7 +322,8 @@ class SantaTextPlugin(interface.TextPlugin):
       _SKIP_TO_SEPARATOR.setResultsName('processpath') + _SEPARATOR)
 
   _FILE_OPERATION_LINE = (
-      _DATE_AND_TIME + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') + (
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      _SANTAD_PREAMBLE + pyparsing.Suppress('action=') + (
           pyparsing.Literal('WRITE') ^ pyparsing.Literal('RENAME') ^
           pyparsing.Literal('DELETE') ^ pyparsing.Literal('LINK')
       ).setResultsName('action') + _SEPARATOR + _PATH +
@@ -330,20 +353,20 @@ class SantaTextPlugin(interface.TextPlugin):
                _SKIP_TO_SEPARATOR.setResultsName('dmg_path') + _SEPARATOR)
 
   _APPEARANCE = (pyparsing.Suppress('appearance=') +
-                 _SKIP_TO_END.setResultsName('appearance'))
+                 _DATE_AND_TIME.setResultsName('appearance'))
 
   _DISK_MOUNT_LINE = (
-      _DATE_AND_TIME + _SANTAD_PREAMBLE + _DISKAPPEAR_ACTION + _MOUNT +
-      _VOLUME + _BSD_NAME + _FS + _MODEL + _SERIAL + _BUS + _DMG_PATH +
-      _APPEARANCE)
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      _SANTAD_PREAMBLE + _DISKAPPEAR_ACTION + _MOUNT + _VOLUME + _BSD_NAME +
+      _FS + _MODEL + _SERIAL + _BUS + _DMG_PATH + _APPEARANCE)
 
   _DISKDISAPPEAR_ACTION = (
       pyparsing.Suppress('action=') +
       pyparsing.Literal('DISKDISAPPEAR').setResultsName('action') + _SEPARATOR)
 
   _DISK_UMOUNT_LINE = (
-      _DATE_AND_TIME + _SANTAD_PREAMBLE + _DISKDISAPPEAR_ACTION + _MOUNT +
-      _VOLUME + _BSD_NAME)
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
+      _SANTAD_PREAMBLE + _DISKDISAPPEAR_ACTION + _MOUNT + _VOLUME + _BSD_NAME)
 
   _LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
@@ -378,48 +401,42 @@ class SantaTextPlugin(interface.TextPlugin):
       # skip this line
       return
 
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    date_time_string = self._GetValueFromStructure(structure, 'date_time')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
-    try:
-      date_time.CopyFromStringISO8601(date_time_string)
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(date_time_string))
-      return
+    date_time = self._ParseTimeElements(time_elements_structure)
 
     if key == 'execution_line':
       event_data = SantaExecutionEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
-      event_data.decision = self._GetValueFromStructure(structure, 'decision')
-      event_data.long_reason = self._GetValueFromStructure(structure, 'explain')
-      event_data.reason = self._GetValueFromStructure(structure, 'reason')
-      event_data.process_hash = self._GetValueFromStructure(structure, 'sha256')
-      event_data.certificate_hash = self._GetValueFromStructure(
-          structure, 'cert_sha256')
       event_data.certificate_common_name = self._GetValueFromStructure(
           structure, 'cert_cn')
+      event_data.certificate_hash = self._GetValueFromStructure(
+          structure, 'cert_sha256')
+      event_data.decision = self._GetValueFromStructure(structure, 'decision')
+      event_data.gid = self._GetValueFromStructure(structure, 'gid')
+      event_data.group = self._GetValueFromStructure(structure, 'group')
+      event_data.last_run_time = date_time
+      event_data.long_reason = self._GetValueFromStructure(structure, 'explain')
+      event_data.mode = self._GetValueFromStructure(structure, 'mode')
       event_data.quarantine_url = self._GetValueFromStructure(
           structure, 'quarantine_url')
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.pid_version = self._GetValueFromStructure(
           structure, 'pidversion')
       event_data.ppid = self._GetValueFromStructure(structure, 'ppid')
-      event_data.uid = self._GetValueFromStructure(structure, 'uid')
-      event_data.user = self._GetValueFromStructure(structure, 'user')
-      event_data.gid = self._GetValueFromStructure(structure, 'gid')
-      event_data.group = self._GetValueFromStructure(structure, 'group')
-      event_data.mode = self._GetValueFromStructure(structure, 'mode')
-      event_data.process_path = self._GetValueFromStructure(structure, 'path')
       event_data.process_arguments = self._GetValueFromStructure(
           structure, 'args')
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
+      event_data.process_hash = self._GetValueFromStructure(structure, 'sha256')
+      event_data.process_path = self._GetValueFromStructure(structure, 'path')
+      event_data.reason = self._GetValueFromStructure(structure, 'reason')
+      event_data.uid = self._GetValueFromStructure(structure, 'uid')
+      event_data.user = self._GetValueFromStructure(structure, 'user')
 
     if key == 'process_exit_line':
       event_data = SantaProcessExitEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.exit_time = date_time
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.pid_version = self._GetValueFromStructure(
           structure, 'pidversion')
@@ -427,15 +444,15 @@ class SantaTextPlugin(interface.TextPlugin):
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
       event_data.gid = self._GetValueFromStructure(structure, 'gid')
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_EXIT)
-
     elif key == 'file_system_event_line':
       event_data = SantaFileSystemEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
-      event_data.file_path = self._GetValueFromStructure(structure, 'path')
       event_data.file_new_path = self._GetValueFromStructure(
           structure, 'newpath')
+      event_data.file_path = self._GetValueFromStructure(structure, 'path')
+      event_data.gid = self._GetValueFromStructure(structure, 'gid')
+      event_data.group = self._GetValueFromStructure(structure, 'group')
+      event_data.last_written_time = date_time
       event_data.pid = self._GetValueFromStructure(structure, 'pid')
       event_data.pid_version = self._GetValueFromStructure(
           structure, 'pidversion')
@@ -445,53 +462,68 @@ class SantaTextPlugin(interface.TextPlugin):
           structure, 'processpath')
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
       event_data.user = self._GetValueFromStructure(structure, 'user')
-      event_data.gid = self._GetValueFromStructure(structure, 'gid')
-      event_data.group = self._GetValueFromStructure(structure, 'group')
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 
     elif key == 'umount_line':
       event_data = SantaMountEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
+      event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
+      event_data.last_written_time = date_time
       event_data.mount = self._GetValueFromStructure(structure, 'mount') or None
       event_data.volume = self._GetValueFromStructure(structure, 'volume')
-      event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 
     elif key == 'mount_line':
       event_data = SantaMountEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
-      event_data.mount = self._GetValueFromStructure(structure, 'mount') or None
-      event_data.volume = self._GetValueFromStructure(structure, 'volume')
       event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')
-      event_data.fs = self._GetValueFromStructure(structure, 'fs')
-      event_data.model = self._GetValueFromStructure(structure, 'model')
-      event_data.serial = self._GetValueFromStructure(
-          structure, 'serial') or None
       event_data.bus = self._GetValueFromStructure(structure, 'bus')
       event_data.dmg_path = self._GetValueFromStructure(structure, 'dmg_path')
-      event_data.appearance = self._GetValueFromStructure(
-          structure, 'appearance')
+      event_data.fs = self._GetValueFromStructure(structure, 'fs')
+      event_data.last_written_time = date_time
+      event_data.model = self._GetValueFromStructure(structure, 'model')
+      event_data.mount = self._GetValueFromStructure(structure, 'mount') or None
+      event_data.serial = self._GetValueFromStructure(
+          structure, 'serial') or None
+      event_data.volume = self._GetValueFromStructure(structure, 'volume')
 
-      if event_data.appearance:
-        new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+      appearance = self._GetValueFromStructure(structure, 'appearance')
+      if appearance:
+        # pylint: disable=attribute-defined-outside-init
+        event_data.appearance_time = self._ParseTimeElements(appearance)
 
-        try:
-          new_date_time.CopyFromStringISO8601(event_data.appearance)
-          new_event = time_events.DateTimeValuesEvent(
-              new_date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
-          parser_mediator.ProduceEventWithEventData(new_event, event_data)
-        except ValueError:
-          parser_mediator.ProduceExtractionWarning(
-              'invalid date time value: {0:s}'.format(event_data.appearance))
+    parser_mediator.ProduceEventData(event_data)
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
 
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      (year, month, day_of_month, hours, minutes, seconds, milliseconds) = (
+          time_elements_structure)
+
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exist.
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds, milliseconds)
+
+      return dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
