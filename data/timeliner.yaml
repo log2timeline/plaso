@@ -82,6 +82,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'ios:sysdiagnose:logd:line'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
@@ -93,6 +99,22 @@ data_type: 'linux:dpkg_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'linux:popularity_contest_log:entry'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'change_time'
+  description: 'Metadata Modification Time'
+place_holder_event: true
+---
+data_type: 'linux:popularity_contest_log:session'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'macos:appfirewall_log:entry'
@@ -135,21 +157,31 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
-data_type: 'linux:popularity_contest_log:entry'
+data_type: 'santa:diskmount'
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'change_time'
-  description: 'Metadata Modification Time'
+- name: 'appearance_time'
+  description: 'First Connection Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
-data_type: 'linux:popularity_contest_log:session'
+data_type: 'santa:execution'
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+place_holder_event: false
+---
+data_type: 'santa:file_system_event'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
+---
+data_type: 'santa:process_exit'
+attribute_mappings:
+- name: 'exit_time'
+  description: 'Exit Time'
+place_holder_event: false
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'

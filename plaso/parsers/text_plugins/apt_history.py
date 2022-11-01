@@ -218,8 +218,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
       # overriding __getattr__ with a function that returns an empty string
       # when named token does not exist.
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds)
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
 
