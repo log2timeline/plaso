@@ -76,6 +76,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'iis:log:line'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
