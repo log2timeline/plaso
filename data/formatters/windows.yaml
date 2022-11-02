@@ -189,10 +189,10 @@ short_source: 'EVT'
 source: 'WinEVTX'
 ---
 # TODO: Add more "elegant" formatting, as in transform ICMP code/type into
-# a more human readable format as well as translating the additional info
+# a more human readable format as well as translating the additional information
 # column (meaning may depend on action field).
 type: 'conditional'
-data_type: 'windows:firewall:log_entry'
+data_type: 'windows:firewall_log:entry'
 message:
 - '{action}'
 - '['
@@ -202,24 +202,24 @@ message:
 - 'From: {source_ip}'
 - ':{source_port}'
 - '>'
-- '{dest_ip}'
-- ':{dest_port}'
+- '{destination_ip}'
+- ':{destination_port}'
 - 'Size (bytes): {size}'
-- 'Flags [{flags}]'
-- 'TCP Seq Number: {tcp_seq}'
-- 'TCP ACK Number: {tcp_ack}'
-- 'TCP Window Size (bytes): {tcp_win}'
+- 'TCP flags [{tcp_flags}]'
+- 'TCP sequence number: {tcp_sequence_number}'
+- 'TCP ACK number: {tcp_ack}'
+- 'TCP window size (bytes): {tcp_window_size}'
 - 'ICMP type: {icmp_type}'
 - 'ICMP code: {icmp_code}'
-- 'Additional info: {info}'
+- 'Additional information: {information}'
 short_message:
 - '{action}'
 - '[{protocol}]'
 - '{source_ip}'
 - ': {source_port}'
 - '>'
-- '{dest_ip}'
-- ': {dest_port}'
+- '{destination_ip}'
+- ': {destination_port}'
 short_source: 'LOG'
 source: 'Windows Firewall Log'
 ---

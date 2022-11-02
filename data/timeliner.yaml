@@ -240,7 +240,7 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
-data_type: 'windows:firewall:log_entry'
+data_type: 'windows:firewall_log:entry'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
