@@ -385,6 +385,12 @@ class WinIISTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._day_of_month = None
+    self._month = None
+    self._year = None
+
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -412,13 +418,14 @@ class WinIISTextPlugin(interface.TextPlugin):
       except UnicodeDecodeError:
         break
 
-    self._day_of_month = None
-    self._month = None
-    self._year = None
+    if not found_signature:
+      return False
+
+    self._ResetState()
 
     self._SetLineStructures(self._LINE_STRUCTURES)
 
-    return found_signature
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(WinIISTextPlugin)

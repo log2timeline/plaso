@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for Windows Firewall Log files."""
 
-import pytz
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -20,20 +16,22 @@ class WinFirewallEventData(events.EventData):
 
   Attributes:
     action (str): action taken.
-    protocol (str): IP protocol.
-    source_ip (str): source IP address.
     dest_ip (str): destination IP address.
-    source_port (int): TCP or UDP source port.
     dest_port (int): TCP or UDP destination port.
-    size (int): size of ???
     flags (str): TCP flags.
-    tcp_seq (int): TCP sequence number.
-    tcp_ack (int): TCP ACK ???
-    tcp_win (int): TCP window size ???
-    icmp_type (int): ICMP type.
     icmp_code (int): ICMP code.
+    icmp_type (int): ICMP type.
     info (str): ???
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     path (str): ???
+    protocol (str): IP protocol.
+    size (int): size of ???
+    source_ip (str): source IP address.
+    source_port (int): TCP or UDP source port.
+    tcp_ack (int): TCP ACK ???
+    tcp_seq (int): TCP sequence number.
+    tcp_win (int): TCP window size ???
   """
 
   DATA_TYPE = 'windows:firewall:log_entry'
@@ -48,6 +46,7 @@ class WinFirewallEventData(events.EventData):
     self.icmp_code = None
     self.icmp_type = None
     self.info = None
+    self.last_written_time = None
     self.path = None
     self.protocol = None
     self.size = None
@@ -66,11 +65,6 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'ascii'
 
-  # TODO: Add support for custom field names. Currently this parser only
-  # supports the default fields, which are:
-  #   date time action protocol src-ip dst-ip src-port dst-port size
-  #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
-
   _BLANK = pyparsing.Suppress(pyparsing.Literal('-'))
 
   _WORD = (
@@ -88,12 +82,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       text_parser.PyParseIntCast)
 
   _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -105,7 +97,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _COMMENT_LINE = pyparsing.Literal('#') + pyparsing.SkipTo(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME +
+      _DATE_TIME.setResultsName('date_time') +
       _WORD.setResultsName('action') +
       _WORD.setResultsName('protocol') +
       _IP_ADDRESS.setResultsName('source_ip') +
@@ -131,9 +123,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(WinFirewallLogTextPlugin, self).__init__()
-    self._software = None
-    self._use_local_timezone = False
-    self._version = None
+    self._use_local_time = False
 
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
@@ -142,14 +132,15 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): parsed log line.
     """
     comment = structure[1]
-    if comment.startswith('Version'):
-      _, _, self._version = comment.partition(':')
-    elif comment.startswith('Software'):
-      _, _, self._software = comment.partition(':')
-    elif comment.startswith('Time'):
+
+    # TODO: Add support for custom field names. Currently this parser only
+    # supports the default fields, which are:
+    #   date time action protocol src-ip dst-ip src-port dst-port size
+    #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
+
+    if comment.startswith('Time'):
       _, _, time_format = comment.partition(':')
-      if 'local' in time_format.lower():
-        self._use_local_timezone = True
+      self._use_local_time = 'local' in time_format.lower()
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line.
@@ -159,25 +150,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfvfs.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exist.
-    time_elements_structure = structure.get('date_time', None)
-
-    try:
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day_of_month, hours, minutes, seconds))
-      date_time.is_local_time = True
-
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
-      return
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     event_data = WinFirewallEventData()
     event_data.action = self._GetValueFromStructure(structure, 'action')
@@ -187,6 +161,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     event_data.icmp_code = self._GetValueFromStructure(structure, 'icmp_code')
     event_data.icmp_type = self._GetValueFromStructure(structure, 'icmp_type')
     event_data.info = self._GetValueFromStructure(structure, 'info')
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
     event_data.path = self._GetValueFromStructure(structure, 'path')
     event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
     event_data.size = self._GetValueFromStructure(structure, 'size')
@@ -197,14 +173,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     event_data.tcp_seq = self._GetValueFromStructure(structure, 'tcp_seq')
     event_data.tcp_win = self._GetValueFromStructure(structure, 'tcp_win')
 
-    if self._use_local_timezone:
-      time_zone = parser_mediator.timezone
-    else:
-      time_zone = pytz.UTC
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN, time_zone=time_zone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -226,7 +195,52 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       self._ParseCommentRecord(structure)
 
     elif key == 'logline':
-      self._ParseLogLine(parser_mediator, structure)
+      try:
+        self._ParseLogLine(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse log line with error: {0!s}'.format(exception))
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exist.
+
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+      date_time.is_local_time = self._use_local_time
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
+
+  def _ResetState(self):
+    """Resets stored values."""
+    self._use_local_time = False
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -244,10 +258,23 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    # TODO: Examine other versions of the file format and if this parser
-    # supports them.
-    stripped_line = line.rstrip()
-    return stripped_line == '#Version: 1.5'
+    found_signature = False
+    while line and line[0] == '#':
+      if line.startswith('#Software: Microsoft Windows Firewall'):
+        found_signature = True
+        break
+
+      try:
+        line = self._ReadLineOfText(text_file_object)
+      except UnicodeDecodeError:
+        break
+
+    if not found_signature:
+      return False
+
+    self._ResetState()
+
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(WinFirewallLogTextPlugin)
