@@ -42,11 +42,6 @@ class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
         'exit_status': 'SUCCESS',
         'start_time': '2016-10-12T03:36:30.936'}
 
-    for i in range(194):
-      ed = storage_writer.GetAttributeContainerByIndex('event_data', i)
-      if getattr(ed, 'entry_type', None) == expected_event_values['entry_type']:
-        print('I: ', i)
-
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 28)
     self.CheckEventData(event_data, expected_event_values)
 

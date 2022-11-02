@@ -25,8 +25,6 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import regular_expressions
 from plaso.lib import yearless_helper
@@ -41,6 +39,8 @@ class SnortFastAlertEventData(events.EventData):
     classification (str): classification of the alert.
     destination_ip (str): destination IP-address.
     destination_port (int): destination TCP/UDP port number.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     message (str): message associated with the alert.
     priority (int): priorty, ranging from 1 (high) to 4 (very low).
     rule_identifier (str): identifier of the Snort3/Suricata rule that generated
@@ -57,6 +57,7 @@ class SnortFastAlertEventData(events.EventData):
     self.classification = None
     self.destination_ip = None
     self.destination_port = None
+    self.last_written_time = None
     self.message = None
     self.priority = None
     self.protocol = None
@@ -97,19 +98,19 @@ class SnortFastLogTextPlugin(
       text_parser.PyParseIntCast)
 
   _DATE_MONTH_DAY = (
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
-      _TWO_DIGITS.setResultsName('day_of_month'))
+      _TWO_DIGITS + pyparsing.Suppress('/') + _TWO_DIGITS)
 
   _DATE_YEAR_MONTH_DAY = (
-      _TWO_DIGITS.setResultsName('year') + pyparsing.Suppress('/') +
-      _DATE_MONTH_DAY)
+      _TWO_DIGITS + pyparsing.Suppress('/') + _DATE_MONTH_DAY)
 
+  # Date and time values are formatted as: MM/DD-hh:mm:ss.###### or
+  # YY/MM/DD-hh:mm:ss.######
+  # For example: 12/28-12:55:38.765402 or 10/05/10-10:08:59.667372
   _DATE_TIME = (
       (_DATE_YEAR_MONTH_DAY | _DATE_MONTH_DAY) + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
-      _SIX_DIGITS.setResultsName('microseconds'))
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress('.') + _SIX_DIGITS)
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -124,7 +125,8 @@ class SnortFastLogTextPlugin(
           'rule_identifier')
 
   _FASTLOG_LINE = (
-      _DATE_TIME + pyparsing.Suppress('[**] [') + _RULE_IDENTIFIER +
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Suppress('[**] [') + _RULE_IDENTIFIER +
       pyparsing.Suppress('] ') + pyparsing.Optional(pyparsing.Suppress('"')) +
       _MESSAGE + pyparsing.Optional(pyparsing.Suppress('"')) +
       pyparsing.Suppress('[**]') +
@@ -154,42 +156,41 @@ class SnortFastLogTextPlugin(
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _GetTimeElementsTuple(self, structure):
-    """Retrieves a time elements tuple from the structure.
+  def _ParseLogLine(self, parser_mediator, structure):
+    """Parse a single log line.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-
-    Returns:
-      tuple: containing:
-        year (int): year.
-        month (int): month, where 1 represents January.
-        day_of_month (int): day of month, where 1 is the first day of the month.
-        hours (int): hours.
-        minutes (int): minutes.
-        seconds (int): seconds.
-        microseconds (int): fraction of second in microseconds.
-
-    Raises:
-      ValueError: if month contains an unsupported value.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
-    month = self._GetValueFromStructure(structure, 'month')
-    year = self._GetValueFromStructure(structure, 'year')
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    microseconds = self._GetValueFromStructure(structure, 'microseconds')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
-    if year:
-      year += 2000
-    else:
-      self._UpdateYear(month)
+    message = self._GetValueFromStructure(
+        structure, 'message', default_value='')
+    message = message.strip()
 
-      year = self._GetYear()
+    event_data = SnortFastAlertEventData()
+    event_data.classification = self._GetValueFromStructure(
+        structure, 'classification')
+    event_data.destination_ip = self._GetValueFromStructure(
+        structure, 'destination_ip_address')
+    event_data.destination_port = self._GetValueFromStructure(
+        structure, 'destination_port')
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
+    event_data.message = message or None
+    event_data.priority = self._GetValueFromStructure(structure, 'priority')
+    event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
+    event_data.source_ip = self._GetValueFromStructure(
+        structure, 'source_ip_address')
+    event_data.source_port = self._GetValueFromStructure(
+        structure, 'source_port')
+    event_data.rule_identifier = self._GetValueFromStructure(
+        structure, 'rule_identifier')
 
-    return year, month, day_of_month, hours, minutes, seconds, microseconds
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -208,37 +209,51 @@ class SnortFastLogTextPlugin(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     try:
-      time_elements_tuple = self._GetTimeElementsTuple(structure)
+      self._ParseLogLine(parser_mediator, structure)
+    except errors.ParseError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to parse log line with error: {0!s}'.format(exception))
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      if len(time_elements_structure) == 7:
+        year, month, day_of_month, hours, minutes, seconds, microseconds = (
+            time_elements_structure)
+
+        year += 2000
+      else:
+        month, day_of_month, hours, minutes, seconds, microseconds = (
+            time_elements_structure)
+
+        self._UpdateYear(month)
+
+        year = self._GetYear()
+
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds, microseconds)
+
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
 
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning('invalid date time value')
-      return
+      return date_time
 
-    event_data = SnortFastAlertEventData()
-    event_data.rule_identifier = self._GetValueFromStructure(
-        structure, 'rule_identifier')
-    event_data.message = str(
-        self._GetValueFromStructure(structure, 'message')).strip()
-    event_data.priority = self._GetValueFromStructure(structure, 'priority')
-    event_data.classification = self._GetValueFromStructure(
-        structure, 'classification')
-    event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
-    event_data.source_ip = self._GetValueFromStructure(
-        structure, 'source_ip_address')
-    event_data.source_port = self._GetValueFromStructure(
-        structure, 'source_port')
-    event_data.destination_ip = self._GetValueFromStructure(
-        structure, 'destination_ip_address')
-    event_data.destination_port = self._GetValueFromStructure(
-        structure, 'destination_port')
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -256,9 +271,12 @@ class SnortFastLogTextPlugin(
     except UnicodeDecodeError:
       return False
 
+    if not self._VERIFICATION_REGEX.match(line):
+      return False
+
     self._SetEstimatedYear(parser_mediator)
 
-    return bool(self._VERIFICATION_REGEX.match(line))
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(SnortFastLogTextPlugin)
