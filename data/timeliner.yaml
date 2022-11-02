@@ -486,3 +486,15 @@ data_type: 'winrar:history'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
+---
+data_type: 'xchat:log:line'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'xchat:scrollback:line'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+place_holder_event: true
