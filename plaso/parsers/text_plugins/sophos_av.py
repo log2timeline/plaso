@@ -10,9 +10,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -21,6 +19,8 @@ class SophosAVLogEventData(events.EventData):
   """Sophos anti-virus log event data.
 
   Attributes:
+    added_time (dfdatetime.DateTimeValues): date and time the log entry
+        was added.
     text (str): Sophos anti-virus log message.
   """
 
@@ -29,6 +29,7 @@ class SophosAVLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SophosAVLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.added_time = None
     self.text = None
 
 
@@ -48,15 +49,12 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
+  # Date and time values are formatted as: YYYYMMDD hhmmss
+  # For example: 20100720 183814
   # Note that the whitespace is suppressed by pyparsing.
-
   _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS.setResultsName('year') +
-      _TWO_DIGITS.setResultsName('month') +
-      _TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') +
-      _TWO_DIGITS.setResultsName('minutes') +
-      _TWO_DIGITS.setResultsName('seconds')).setResultsName('date_time')
+      _FOUR_DIGITS + _TWO_DIGITS + _TWO_DIGITS +
+      _TWO_DIGITS + _TWO_DIGITS + _TWO_DIGITS).setResultsName('date_time')
 
   _LOG_LINE = (
       _DATE_TIME + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
@@ -74,34 +72,14 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exists.
-    time_elements_structure = structure.get('date_time', None)
-
-    try:
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day_of_month, hours, minutes, seconds))
-      # TODO: check if date and time values are local time or in UTC.
-      date_time.is_local_time = True
-
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_structure))
-      return
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     event_data = SophosAVLogEventData()
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
     event_data.text = self._GetValueFromStructure(structure, 'text')
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -119,7 +97,49 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    self._ParseLogLine(parser_mediator, structure)
+    try:
+      self._ParseLogLine(parser_mediator, structure)
+    except errors.ParseError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to parse log line with error: {0!s}'.format(exception))
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exists.
+
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+      # TODO: check if date and time values are local time or in UTC.
+      date_time.is_local_time = True
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.
@@ -149,9 +169,11 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     if not parsed_structure:
       return False
 
-    date_time_value = self._GetValueFromStructure(parsed_structure, 'date_time')
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
     try:
-      dfdatetime_time_elements.TimeElements(time_elements_tuple=date_time_value)
+      self._ParseTimeElements(time_elements_structure)
     except ValueError:
       return False
 
