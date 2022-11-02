@@ -189,6 +189,14 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'setupapi:log:line'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Added Time'
+place_holder_event: true
+---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'
 attribute_mappings:
