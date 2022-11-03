@@ -102,28 +102,6 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
 
   _MESSAGE.parseWithTabs()
 
-  def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
-
-    raw_text = self._GetValueFromStructure(
-        structure, 'raw_text', default_value='')
-
-    nickname, text = self._ParseRawText(raw_text)
-
-    event_data = XChatScrollbackEventData()
-    event_data.added_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event_data.nickname = nickname
-    event_data.text = text
-
-    parser_mediator.ProduceEventData(event_data)
-
   def _ParseRawText(self, raw_text):
     """Parses the raw text.
 
@@ -172,11 +150,19 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    try:
-      self._ParseLogLine(parser_mediator, structure)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+
+    raw_text = self._GetValueFromStructure(
+        structure, 'raw_text', default_value='')
+
+    nickname, text = self._ParseRawText(raw_text)
+
+    event_data = XChatScrollbackEventData()
+    event_data.added_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    event_data.nickname = nickname
+    event_data.text = text
+
+    parser_mediator.ProduceEventData(event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_file_object):
     """Check if the log record has the minimal structure required by the plugin.

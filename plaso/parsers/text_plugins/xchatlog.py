@@ -236,11 +236,7 @@ class XChatLogTextPlugin(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'logline':
-      try:
-        self._ParseLogLine(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line with error: {0!s}'.format(exception))
+      self._ParseLogLine(parser_mediator, structure)
 
     elif key == 'header':
       self._ParseHeader(parser_mediator, structure)
@@ -273,6 +269,7 @@ class XChatLogTextPlugin(
 
         month = self._GetMonthFromString(month_string)
 
+        # Use year-less helper to ensure a change in year is accounted for.
         self._UpdateYear(month)
 
         year = self._GetYear()

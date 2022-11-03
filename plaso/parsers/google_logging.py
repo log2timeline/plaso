@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Parser for Google-formatted log files."""
+"""Parser for Google-formatted log files.
+
+Note that this format is also used by Kubernetes.
+
+Also see:
+  https://github.com/google/glog
+  https://github.com/kubernetes/klog
+"""
 
 import re
 
@@ -8,9 +15,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.lib import yearless_helper
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -19,11 +24,10 @@ from plaso.parsers import text_parser
 class GoogleLogEventData(events.EventData):
   """Google-formatted log file event data.
 
-  See: https://github.com/google/glog. This format is also used by
-  Kubernetes, see https://github.com/kubernetes/klog
-
   Attributes:
     file_name (str): the name of the source file that logged the message.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     line_number (int): the line number in the source file where the logging
         statement is.
     message (str): the log message.
@@ -44,6 +48,7 @@ class GoogleLogEventData(events.EventData):
     """
     super(GoogleLogEventData, self).__init__(data_type=data_type)
     self.file_name = None
+    self.last_written_time = None
     self.line_number = None
     self.message = None
     self.priority = None
@@ -73,16 +78,16 @@ class GoogleLogParser(
       text_parser.PyParseIntCast)
 
   _DATE_TIME = (
-      _TWO_DIGITS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Optional(
-          pyparsing.Suppress('.') + _SIX_DIGITS.setResultsName('microseconds')))
+      _TWO_DIGITS + _ONE_OR_TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Optional(
+          pyparsing.Suppress('.') + _SIX_DIGITS)).setResultsName('date_time')
+
+  _PRIORITY = pyparsing.oneOf(['E', 'F', 'I', 'W']).setResultsName('priority')
 
   _LOG_LINE = (
-      pyparsing.oneOf(['I', 'W', 'E', 'F']).setResultsName('priority') +
-      _DATE_TIME +
+      _PRIORITY + _DATE_TIME +
       pyparsing.Word(pyparsing.nums).setResultsName('thread_identifier') +
       pyparsing.Word(pyparsing.printables.replace(':', '')).setResultsName(
           'file_name') + pyparsing.Suppress(':') +
@@ -113,38 +118,6 @@ class GoogleLogParser(
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
-  def _GetTimeElementsTuple(self, structure):
-    """Retrieves a time elements tuple from the structure.
-
-    Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-
-    Returns:
-      tuple: containing:
-        year (int): year.
-        month (int): month, where 1 represents January.
-        day_of_month (int): day of month, where 1 is the first day of the month.
-        hours (int): hours.
-        minutes (int): minutes.
-        seconds (int): seconds.
-
-    Raises:
-      ValueError: if month contains an unsupported value.
-    """
-    month = self._GetValueFromStructure(structure, 'month')
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
-    microseconds = self._GetValueFromStructure(structure, 'microseconds')
-
-    self._UpdateYear(month)
-
-    year = self._GetYear()
-
-    return year, month, day_of_month, hours, minutes, seconds, microseconds
-
   def _ParseGreeting(self, parser_mediator, structure):
     """Extract useful information from the logfile greeting.
 
@@ -170,29 +143,59 @@ class GoogleLogParser(
           and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): elements parsed from the file.
     """
-    try:
-      time_elements_tuple = self._GetTimeElementsTuple(structure)
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
-      date_time.is_local_time = True
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(time_elements_tuple))
-      return
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     event_data = GoogleLogEventData()
-    event_data.priority = self._GetValueFromStructure(structure, 'priority')
-    event_data.thread_identifier = self._GetValueFromStructure(
-        structure, 'thread_identifier')
     event_data.file_name = self._GetValueFromStructure(structure, 'file_name')
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
     event_data.line_number = self._GetValueFromStructure(
         structure, 'line_number')
     event_data.message = self._GetValueFromStructure(structure, 'message')
+    event_data.priority = self._GetValueFromStructure(structure, 'priority')
+    event_data.thread_identifier = self._GetValueFromStructure(
+        structure, 'thread_identifier')
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      month, day_of_month, hours, minutes, seconds, microseconds = (
+          time_elements_structure)
+
+      self._UpdateYear(month)
+
+      relative_year = self._GetRelativeYear()
+
+      time_elements_tuple = (
+          relative_year, month, day_of_month, hours, minutes, seconds,
+          microseconds)
+
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+          time_elements_tuple=time_elements_tuple)
+
+      date_time.is_delta = True
+      date_time.is_local_time = True
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
@@ -214,7 +217,11 @@ class GoogleLogParser(
       self._ParseGreeting(parser_mediator, structure)
 
     elif key == 'log_entry':
-      self._ParseLine(parser_mediator, structure)
+      try:
+        self._ParseLine(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse log line with error: {0!s}'.format(exception))
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies that this is a google log-formatted file.

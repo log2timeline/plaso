@@ -504,6 +504,10 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionWarning(
             'unable to read lines with error: {0!s}'.format(exception))
 
+    if hasattr(self, 'GetYearLessLogHelper'):
+      year_less_log_helper = self.GetYearLessLogHelper()
+      parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.

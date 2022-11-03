@@ -76,6 +76,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'googlelog:log'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'iis:log:line'
 attribute_mappings:
 - name: 'last_written_time'
@@ -219,6 +225,12 @@ data_type: 'sophos:av:log'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'syslog:line'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.

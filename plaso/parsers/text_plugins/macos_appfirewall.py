@@ -98,34 +98,6 @@ class MacOSAppFirewallTextPlugin(
     super(MacOSAppFirewallTextPlugin, self).__init__()
     self._repeated_structure = None
 
-  def _ParseLogLine(
-      self, parser_mediator, time_elements_structure, structure):
-    """Parse a single log line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-    process_name = self._GetValueFromStructure(
-        structure, 'process_name', default_value='')
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    process_name = process_name.strip()
-
-    event_data = MacOSAppFirewallLogEventData()
-    event_data.action = self._GetValueFromStructure(structure, 'action')
-    event_data.added_time = self._ParseTimeElements(time_elements_structure)
-    event_data.agent = self._GetValueFromStructure(structure, 'agent')
-    event_data.computer_name = self._GetValueFromStructure(
-        structure, 'computer_name')
-    event_data.process_name = process_name or None
-    event_data.status = self._GetValueFromStructure(structure, 'status')
-
-    parser_mediator.ProduceEventData(event_data)
-
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
@@ -152,11 +124,22 @@ class MacOSAppFirewallTextPlugin(
     else:
       structure = self._repeated_structure
 
-    try:
-      self._ParseLogLine(parser_mediator, time_elements_structure, structure)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
+    process_name = self._GetValueFromStructure(
+        structure, 'process_name', default_value='')
+    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
+    # that need to be removed.
+    process_name = process_name.strip()
+
+    event_data = MacOSAppFirewallLogEventData()
+    event_data.action = self._GetValueFromStructure(structure, 'action')
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
+    event_data.agent = self._GetValueFromStructure(structure, 'agent')
+    event_data.computer_name = self._GetValueFromStructure(
+        structure, 'computer_name')
+    event_data.process_name = process_name or None
+    event_data.status = self._GetValueFromStructure(structure, 'status')
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
