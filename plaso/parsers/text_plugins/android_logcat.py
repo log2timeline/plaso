@@ -1,14 +1,33 @@
 #-*- coding: utf-8 -*-
 """Text parser plugin for Android logcat files.
 
-Android logcat can have a number of output forms, however this particular
-parser only supports the 'threadtime' and 'time' formats.
+Android logcat can have a number of output formats. This parser supports:
+* 'threadtime' format
+* 'time' format
+
+The log file format is:
+date time PID-TID/package priority/tag: message
+
+For example:
+12-10 13:02:50.071 1901-4229/com.google.android.gms V/AuthZen: Handling
+delegate intent.
+
+Where priority is:
+V: Verbose (lowest priority)
+D: Debug
+I: Info
+W: Warning
+E: Error
+A: Assert
 
 In addition, support for the format modifiers:
-- uid
-- usec
-- UTC | zone
-- year
+* date with a year
+* user identifier (uid)
+* microseconds fraction of second precision (usec)
+* time zone offset
+
+Also see:
+  https://developer.android.com/studio/debug/am-logcat#format
 """
 
 import pyparsing
@@ -81,12 +100,16 @@ class AndroidLogcatTextPlugin(
       _FOUR_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS)
 
+  _FRACTION_OF_SECOND = (
+      pyparsing.Word(pyparsing.nums, exact=3) ^
+      pyparsing.Word(pyparsing.nums, exact=6))
+
   _DATE_TIME = (
       pyparsing.Or([_YEAR_MONTH_DAY, _MONTH_DAY]) +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress('.') +
-      pyparsing.Word(pyparsing.nums, min=3, max=6))
+      _FRACTION_OF_SECOND)
 
   _TIME_ZONE_OFFSET = (
       pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
@@ -190,7 +213,10 @@ class AndroidLogcatTextPlugin(
     try:
       time_elements_structure = self._GetValueFromStructure(
           structure, 'date_time')
-      if len(time_elements_structure) == 7:
+
+      has_year = len(time_elements_structure) == 7
+
+      if has_year:
         (year, month, day_of_month, hours, minutes, seconds,
          fraction_of_second_string) = time_elements_structure
       else:
@@ -199,8 +225,7 @@ class AndroidLogcatTextPlugin(
 
         self._UpdateYear(month)
 
-        # TODO: add support for relative year
-        year = self._GetYear()
+        year = self._GetRelativeYear()
 
       time_zone_offset = self._GetValueFromStructure(
           structure, 'time_zone_offset')
@@ -212,9 +237,11 @@ class AndroidLogcatTextPlugin(
           time_zone_offset *= -1
 
       fraction_of_second = int(fraction_of_second_string, 10)
+
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds,
           fraction_of_second)
+
       if len(fraction_of_second_string) == 3:
         date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
             time_elements_tuple=time_elements_tuple,
@@ -223,6 +250,8 @@ class AndroidLogcatTextPlugin(
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
             time_elements_tuple=time_elements_tuple,
             time_zone_offset=time_zone_offset)
+
+      date_time.is_delta = not has_year
 
       if time_zone_offset is None:
         date_time.is_local_time = True

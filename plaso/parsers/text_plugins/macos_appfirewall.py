@@ -184,8 +184,10 @@ class MacOSAppFirewallTextPlugin(
 
       time_elements_tuple = (
           relative_year, month, day_of_month, hours, minutes, seconds)
+
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
+
       date_time.is_delta = True
 
       return date_time
