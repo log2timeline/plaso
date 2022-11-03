@@ -103,12 +103,12 @@ class WinIISTextPlugin(interface.TextPlugin):
       text_parser.ConvertTokenToInteger) | _BLANK
 
   # Username can consist of: domain.username
-  USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | _BLANK
+  _USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | _BLANK
 
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
   _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`\'"<>'
 
-  URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
+  _URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
 
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
   # IIS does not require that a query comply with RFC1738 restrictions on valid
@@ -117,37 +117,39 @@ class WinIISTextPlugin(interface.TextPlugin):
       pyparsing.alphanums + _URI_SAFE_CHARACTERS + _URI_UNSAFE_CHARACTERS) |
            _BLANK)
 
-  _DATE_TIME = (
+  _DATE = (
       _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS)
+
+  _TIME = (
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
   FIELDS_METADATA = (
       pyparsing.Literal('Fields:') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('fields'))
 
-  COMMENT = pyparsing.Literal('#') + (
-      pyparsing.Literal('Date:') + _DATE_TIME | FIELDS_METADATA |
+  _COMMENT_LINE = pyparsing.Literal('#') + (
+      pyparsing.Literal('Date:') + _DATE.setResultsName('date') +
+      _TIME.setResultsName('time') | FIELDS_METADATA |
       pyparsing.SkipTo(pyparsing.LineEnd()))
 
   # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
   # sc-substatus sc-win32-status
 
-  LOG_LINE_6_0 = (
-      _DATE_TIME +
-      URI.setResultsName('s_sitename') +
+  _LOG_LINE_6_0 = (
+      _DATE.setResultsName('date') +
+      _TIME.setResultsName('time') +
+      _URI.setResultsName('s_sitename') +
       _IP_ADDRESS.setResultsName('dest_ip') +
       _WORD.setResultsName('http_method') +
-      URI.setResultsName('cs_uri_stem') +
-      URI.setResultsName('cs_uri_query') +
+      _URI.setResultsName('cs_uri_stem') +
+      _URI.setResultsName('cs_uri_query') +
       PORT.setResultsName('dest_port') +
       _WORD.setResultsName('cs_username') +
       _IP_ADDRESS.setResultsName('source_ip') +
-      URI.setResultsName('user_agent') +
+      _URI.setResultsName('user_agent') +
       _INTEGER.setResultsName('sc_status') +
       _INTEGER.setResultsName('sc_substatus') +
       _INTEGER.setResultsName('sc_win32_status'))
@@ -160,26 +162,19 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
-  _LOG_LINE_STRUCTURES['date'] = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS).setResultsName('date')
 
-  _LOG_LINE_STRUCTURES['time'] = pyparsing.Group(
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('time')
-
-  _LOG_LINE_STRUCTURES['s-sitename'] = URI.setResultsName('s_sitename')
+  _LOG_LINE_STRUCTURES['date'] = _DATE.setResultsName('date')
+  _LOG_LINE_STRUCTURES['time'] = _TIME.setResultsName('time')
+  _LOG_LINE_STRUCTURES['s-sitename'] = _URI.setResultsName('s_sitename')
   _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.setResultsName('dest_ip')
   _LOG_LINE_STRUCTURES['cs-method'] = _WORD.setResultsName('http_method')
-  _LOG_LINE_STRUCTURES['cs-uri-stem'] = URI.setResultsName(
+  _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI.setResultsName(
       'requested_uri_stem')
   _LOG_LINE_STRUCTURES['cs-uri-query'] = QUERY.setResultsName('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = USERNAME.setResultsName('cs_username')
+  _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.setResultsName('cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.setResultsName('source_ip')
-  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = URI.setResultsName('user_agent')
+  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _URI.setResultsName('user_agent')
   _LOG_LINE_STRUCTURES['sc-status'] = _INTEGER.setResultsName('http_status')
   _LOG_LINE_STRUCTURES['sc-substatus'] = _INTEGER.setResultsName(
       'sc_substatus')
@@ -187,21 +182,23 @@ class WinIISTextPlugin(interface.TextPlugin):
       'sc_win32_status')
 
   # Less common fields.
-  _LOG_LINE_STRUCTURES['s-computername'] = URI.setResultsName('s_computername')
+
+  _LOG_LINE_STRUCTURES['s-computername'] = _URI.setResultsName('s_computername')
   _LOG_LINE_STRUCTURES['sc-bytes'] = _INTEGER.setResultsName('sent_bytes')
   _LOG_LINE_STRUCTURES['cs-bytes'] = _INTEGER.setResultsName('received_bytes')
   _LOG_LINE_STRUCTURES['time-taken'] = _INTEGER.setResultsName('time_taken')
-  _LOG_LINE_STRUCTURES['cs-version'] = URI.setResultsName('protocol_version')
-  _LOG_LINE_STRUCTURES['cs-host'] = URI.setResultsName('cs_host')
-  _LOG_LINE_STRUCTURES['cs(Cookie)'] = URI.setResultsName('cs_cookie')
-  _LOG_LINE_STRUCTURES['cs(Referrer)'] = URI.setResultsName('cs_referrer')
-  _LOG_LINE_STRUCTURES['cs(Referer)'] = URI.setResultsName('cs_referrer')
+  _LOG_LINE_STRUCTURES['cs-version'] = _URI.setResultsName('protocol_version')
+  _LOG_LINE_STRUCTURES['cs-host'] = _URI.setResultsName('cs_host')
+  _LOG_LINE_STRUCTURES['cs(Cookie)'] = _URI.setResultsName('cs_cookie')
+  _LOG_LINE_STRUCTURES['cs(Referrer)'] = _URI.setResultsName('cs_referrer')
+  _LOG_LINE_STRUCTURES['cs(Referer)'] = _URI.setResultsName('cs_referrer')
 
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.
+
   _LINE_STRUCTURES = [
-      ('comment', COMMENT),
-      ('logline', LOG_LINE_6_0)]
+      ('comment', _COMMENT_LINE),
+      ('logline', _LOG_LINE_6_0)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -212,8 +209,8 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._month = None
     self._year = None
 
-  def _ParseComment(self, parser_mediator, structure):
-    """Parses a comment.
+  def _ParseCommentLine(self, parser_mediator, structure):
+    """Parses a comment line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -221,11 +218,13 @@ class WinIISTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure parsed from a comment in
           the log file.
     """
-    if structure[1] == 'Date:':
-      time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
-      self._year, self._month, self._day_of_month, _, _, _ = time_elements_tuple
+    comment = structure[1]
 
-    elif structure[1] == 'Fields:':
+    if comment == 'Date:':
+      date_elements_tuple = self._GetValueFromStructure(structure, 'date')
+      self._year, self._month, self._day_of_month = date_elements_tuple
+
+    elif comment == 'Fields:':
       self._ParseFieldsMetadata(parser_mediator, structure)
 
   def _ParseFieldsMetadata(self, parser_mediator, structure):
@@ -241,17 +240,13 @@ class WinIISTextPlugin(interface.TextPlugin):
     fields = fields.split(' ')
 
     log_line_structure = pyparsing.Empty()
-    if fields[0] == 'date' and fields[1] == 'time':
-      log_line_structure += self._DATE_TIME
-      fields = fields[2:]
-
     for member in fields:
       if not member:
         continue
 
       field_structure = self._LOG_LINE_STRUCTURES.get(member, None)
       if not field_structure:
-        field_structure = self.URI
+        field_structure = self._URI
         parser_mediator.ProduceExtractionWarning(
             'missing definition for field: {0:s} defaulting to URI'.format(
                 member))
@@ -259,8 +254,8 @@ class WinIISTextPlugin(interface.TextPlugin):
       log_line_structure += field_structure
 
     line_structures = [
-      ('comment', self.COMMENT),
-      ('logline', log_line_structure)]
+        ('comment', self._COMMENT_LINE),
+        ('logline', log_line_structure)]
     self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -331,7 +326,7 @@ class WinIISTextPlugin(interface.TextPlugin):
             'unable to parse log line with error: {0!s}'.format(exception))
 
     elif key == 'comment':
-      self._ParseComment(parser_mediator, structure)
+      self._ParseCommentLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):
     """Parses date and time elements of a log line.
@@ -347,36 +342,20 @@ class WinIISTextPlugin(interface.TextPlugin):
           the time elements.
     """
     try:
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8
-      # with: "TypeError: 'str' object is not callable" due to
-      # pyparsing.ParseResults overriding __getattr__ with a function that
-      # returns an empty string when named token does not exists.
+      time_elements_structure = self._GetValueFromStructure(structure, 'time')
 
-      time_elements_structure = self._GetValueFromStructure(
-          structure, 'date_time')
+      hours, minutes, seconds = time_elements_structure
 
-      if time_elements_structure:
-        year, month, day_of_month, hours, minutes, seconds = (
-            time_elements_structure)
+      date_elements_structure = self._GetValueFromStructure(structure, 'date')
+      if date_elements_structure:
+        year, month, day_of_month = date_elements_structure
 
         time_elements_tuple = (
             year, month, day_of_month, hours, minutes, seconds)
-
       else:
-        time_tuple = self._GetValueFromStructure(structure, 'time')
-        if not time_tuple:
-          raise errors.ParseError('Missing time values.')
-
-        date_tuple = self._GetValueFromStructure(structure, 'date')
-        if date_tuple:
-          time_elements_tuple = (
-              date_tuple[0], date_tuple[1], date_tuple[2], time_tuple[0],
-              time_tuple[1], time_tuple[2])
-        else:
-          time_elements_tuple = (
-               self._year, self._month, self._day_of_month, time_tuple[0],
-               time_tuple[1], time_tuple[2])
+        time_elements_tuple = (
+             self._year, self._month, self._day_of_month, hours, minutes,
+             seconds)
 
       return dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
