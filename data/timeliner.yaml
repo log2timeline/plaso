@@ -197,6 +197,12 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'skydrive:log:line'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+place_holder_event: true
+---
 data_type: 'skydrive:log:old:line'
 attribute_mappings:
 - name: 'added_time'
