@@ -33,21 +33,22 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # Check entry with recorded time with milliseconds precision in local time.
+    # Check entry with recorded time without a year with milliseconds precision
+    # in local time.
     expected_event_values = {
         'component_tag': 'threadtime',
         'data_type': 'android:logcat',
         'message': 'test of default threadtime format',
         'pid': 1234,
         'priority': 'D',
-        'recorded_time': '1990-01-01T01:02:03.123',
+        'recorded_time': '0000-01-01T01:02:03.123',
         'thread_identifier': 1234}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Check entry with recorded time with milliseconds precision with time
-    # zone offset.
+    # Check entry with recorded time with a year and milliseconds precision
+    # with a time zone offset.
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
@@ -61,7 +62,8 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Check entry with recorded time with microseconds precision in local time.
+    # Check entry with recorded time with a year and microseconds precision
+    # in local time.
     expected_event_values = {
         'component_tag': 'App',
         'data_type': 'android:logcat',
@@ -75,8 +77,8 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Check entry with recorded time with microseconds precision with time
-    # zone offset.
+    # Check entry with recorded time with a year and microseconds precision
+    # with time a zone offset.
     expected_event_values = {
         'component_tag': 'AppTag',
         'data_type': 'android:logcat',
