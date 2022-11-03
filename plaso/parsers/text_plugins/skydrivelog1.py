@@ -186,19 +186,20 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
-    # TODO: Check if date and time value is locale dependent.
     try:
       # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
       # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
       # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
       # overriding __getattr__ with a function that returns an empty string
       # when named token does not exists.
+
       month, day_of_month, year, hours, minutes, seconds, milliseconds = (
           time_elements_structure)
 
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, milliseconds)
 
+      # TODO: determine if this should be local time.
       return dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
 
