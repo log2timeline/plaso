@@ -176,15 +176,22 @@ class MacOSWiFiLogTextPlugin(
 
     return text
 
-  def _ParseLogLine(self, parser_mediator, key, structure):
-    """Parse a single log line.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
@@ -204,28 +211,6 @@ class MacOSWiFiLogTextPlugin(
       event_data.action = self._GetAction(event_data.function, event_data.text)
 
     parser_mediator.ProduceEventData(event_data)
-
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    try:
-      self._ParseLogLine(parser_mediator, key, structure)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
 
   def _ParseTimeElements(self, key, time_elements_structure):
     """Parses date and time elements of a log line.

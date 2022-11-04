@@ -163,11 +163,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'logline':
-      try:
-        self._ParseLogline(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line with error: {0!s}'.format(exception))
+      self._ParseLogline(parser_mediator, structure)
 
     elif key == 'no_header_single_line':
       self._ParseNoHeaderSingleLine(parser_mediator, structure)

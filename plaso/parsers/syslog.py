@@ -12,9 +12,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.lib import yearless_helper
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -27,6 +25,8 @@ class SyslogLineEventData(events.EventData):
   Attributes:
     body (str): message body.
     hostname (str): hostname of the reporter.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     pid (str): process identifier of the reporter.
     reporter (str): reporter.
     severity (str): severity.
@@ -43,6 +43,7 @@ class SyslogLineEventData(events.EventData):
     super(SyslogLineEventData, self).__init__(data_type=data_type)
     self.body = None
     self.hostname = None
+    self.last_written_time = None
     self.pid = None
     self.reporter = None
     self.severity = None
@@ -53,6 +54,8 @@ class SyslogCommentEventData(events.EventData):
 
   Attributes:
     body (str): message body.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'syslog:comment'
@@ -61,6 +64,7 @@ class SyslogCommentEventData(events.EventData):
     """Initializes event data."""
     super(SyslogCommentEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
+    self.last_written_time = None
 
 
 class SyslogParser(
@@ -159,34 +163,35 @@ class SyslogParser(
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+      text_parser.PyParseIntCast)
+
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
       text_parser.PyParseIntCast)
 
   _DATE_TIME = (
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Optional(
+      _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Optional(
           pyparsing.Suppress('.') +
-          pyparsing.Word(pyparsing.nums).setResultsName('fraction_of_second')))
+          pyparsing.Word(pyparsing.nums))).setResultsName('date_time')
 
-  _DATE_TIME_RFC3339 = pyparsing.Combine(
-      pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
-      pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.oneOf(['-', '+']) +
-      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Optional(
-          pyparsing.Literal(':') + pyparsing.Word(pyparsing.nums, exact=2)),
-      joinString='', adjacent=True)
+  _DATE_TIME_RFC3339 = (
+      _FOUR_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('T') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress('.') +
+      _SIX_DIGITS + pyparsing.Word('+-', exact=1) +
+      _TWO_DIGITS + pyparsing.Optional(
+          pyparsing.Suppress(':') + _TWO_DIGITS))
 
   _CHROMEOS_SYSLOG_LINE = (
-      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
       pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
@@ -198,7 +203,7 @@ class SyslogParser(
       pyparsing.lineEnd())
 
   _RSYSLOG_LINE = (
-      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
       pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Optional(
@@ -233,7 +238,7 @@ class SyslogParser(
       pyparsing.Suppress('<') + _ONE_OR_TWO_DIGITS.setResultsName('priority') +
       pyparsing.Suppress('>') + pyparsing.Suppress(
           pyparsing.Word(pyparsing.nums, max=1)) +
-      _DATE_TIME_RFC3339.setResultsName('datetime') +
+      _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
       pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
       pyparsing.Or([
@@ -271,40 +276,79 @@ class SyslogParser(
     super(SyslogParser, self).__init__()
     self._plugin_by_reporter = {}
 
-  def _GetTimeElementsTuple(self, structure):
-    """Retrieves a time elements tuple from the structure.
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
 
     Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
 
     Returns:
-      tuple: containing:
-        year (int): year.
-        month (int): month, where 1 represents January.
-        day_of_month (int): day of month, where 1 is the first day of the month.
-        hours (int): hours.
-        minutes (int): minutes.
-        seconds (int): seconds.
+      dfdatetime.TimeElements: date and time value.
 
     Raises:
-      ValueError: if month contains an unsupported value.
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
     """
-    # TODO: add support for fractional seconds.
+    try:
+      if len(time_elements_structure) >= 9:
+        time_zone_minutes = 0
 
-    month_string = self._GetValueFromStructure(structure, 'month')
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
+        if len(time_elements_structure) == 9:
+          (year, month, day_of_month, hours, minutes, seconds, microseconds,
+           time_zone_sign, time_zone_hours) = time_elements_structure
 
-    month = self._GetMonthFromString(month_string)
+        else:
+          (year, month, day_of_month, hours, minutes, seconds, microseconds,
+           time_zone_sign, time_zone_hours, time_zone_minutes) = (
+              time_elements_structure)
 
-    self._UpdateYear(month)
+        time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
+        if time_zone_sign == '-':
+          time_zone_offset *= -1
 
-    year = self._GetYear()
+      else:
+        microseconds = None
+        time_zone_offset = None
 
-    return year, month, day_of_month, hours, minutes, seconds
+        if len(time_elements_structure) == 5:
+          month_string, day_of_month, hours, minutes, seconds = (
+              time_elements_structure)
+
+        else:
+          # TODO: add support for fractional seconds.
+          month_string, day_of_month, hours, minutes, seconds, _ = (
+              time_elements_structure)
+
+        month = self._GetMonthFromString(month_string)
+
+        self._UpdateYear(month)
+
+        year = self._GetYear()
+
+      if microseconds is None:
+        time_elements_tuple = (
+            year, month, day_of_month, hours, minutes, seconds)
+
+        date_time = dfdatetime_time_elements.TimeElements(
+            time_elements_tuple=time_elements_tuple,
+            time_zone_offset=time_zone_offset)
+
+      else:
+        time_elements_tuple = (
+            year, month, day_of_month, hours, minutes, seconds, microseconds)
+
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+            time_elements_tuple=time_elements_tuple,
+            time_zone_offset=time_zone_offset)
+
+      date_time.is_local_time = time_zone_offset is None
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def _PriorityToSeverity(self, priority):
     """Converts a syslog protocol 23 priority value to severity.
@@ -351,27 +395,10 @@ class SyslogParser(
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key in ('chromeos_syslog_line', 'rsyslog_line',
-               'rsyslog_protocol_23_line'):
-      iso8601_string = self._GetValueFromStructure(structure, 'datetime')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(iso8601_string)
-      except ValueError:
-        parser_mediator.ProduceExtractionWarning(
-            'invalid date time value: {0:s}'.format(iso8601_string))
-        return
-
-    else:
-      try:
-        time_elements_tuple = self._GetTimeElementsTuple(structure)
-        date_time = dfdatetime_time_elements.TimeElements(
-            time_elements_tuple=time_elements_tuple)
-        date_time.is_local_time = True
-      except (TypeError, ValueError):
-        parser_mediator.ProduceExtractionWarning('invalid date time value')
-        return
+    date_time = self._ParseTimeElements(time_elements_structure)
 
     plugin = None
     if key == 'syslog_comment':
@@ -413,10 +440,9 @@ class SyslogParser(
           plugin = None
 
     if not plugin:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.last_written_time = date_time
+
+      parser_mediator.ProduceEventData(event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies that this is a syslog-formatted file.

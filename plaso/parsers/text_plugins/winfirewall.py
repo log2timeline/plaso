@@ -256,11 +256,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'logline':
-      try:
-        self._ParseLogLine(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line with error: {0!s}'.format(exception))
+      self._ParseLogLine(parser_mediator, structure)
 
     elif key == 'comment':
       self._ParseCommentLine(parser_mediator, structure)

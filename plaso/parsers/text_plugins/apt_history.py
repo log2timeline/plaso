@@ -121,21 +121,13 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'record_start':
-      try:
-        self._ParseRecordStart(structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse record start with error: {0!s}'.format(exception))
+      self._ParseRecordStart(structure)
 
     elif key == 'record_body':
       self._ParseRecordBody(structure)
 
     elif key == 'record_end':
-      try:
-        self._ParseRecordEnd(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse record end with error: {0!s}'.format(exception))
+      self._ParseRecordEnd(parser_mediator, structure)
 
   def _ParseRecordBody(self, structure):
     """Parses a line from the body of a log record.

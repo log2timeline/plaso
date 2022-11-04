@@ -112,18 +112,22 @@ class MacOSSecuritydLogTextPlugin(
     super(MacOSSecuritydLogTextPlugin, self).__init__()
     self._repeated_structure = None
 
-  def _ParseLogLine(
-      self, parser_mediator, time_elements_structure, structure, key):
-    """Parse a single log line.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
       key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
@@ -164,32 +168,6 @@ class MacOSSecuritydLogTextPlugin(
     event_data.sender = sender or None
 
     parser_mediator.ProduceEventData(event_data)
-
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    try:
-      self._ParseLogLine(
-          parser_mediator, time_elements_structure, structure, key)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.

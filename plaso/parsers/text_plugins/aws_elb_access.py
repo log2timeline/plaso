@@ -350,16 +350,22 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
     return structure_value.get(key_name)
 
-  def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
+      key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     destination_list = self._GetValueFromStructure(
         structure, 'destination_list')
     if destination_list:
@@ -494,28 +500,6 @@ class AWSELBTextPlugin(interface.TextPlugin):
       event_data.request_time = self._ParseTimeElements(request_time_structure)
 
     parser_mediator.ProduceEventData(event_data)
-
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    try:
-      self._ParseLogLine(parser_mediator, structure)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.

@@ -77,25 +77,6 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _ParseLogLine(self, parser_mediator, structure):
-    """Parses a log line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    event_data = VsftpdLogEventData()
-    event_data.added_time = self._ParseTimeElements(time_elements_structure)
-    # TODO: extract pid and username.
-    event_data.text = self._GetValueFromStructure(structure, 'text')
-
-    parser_mediator.ProduceEventData(event_data)
-
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
@@ -112,11 +93,15 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    try:
-      self._ParseLogLine(parser_mediator, structure)
-    except errors.ParseError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse log line with error: {0!s}'.format(exception))
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    event_data = VsftpdLogEventData()
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
+    # TODO: extract pid and username.
+    event_data.text = self._GetValueFromStructure(structure, 'text')
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
