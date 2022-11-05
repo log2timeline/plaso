@@ -149,7 +149,6 @@ class EventExtractionWorker(object):
     self._abort = False
     self._analyzers = []
     self._analyzers_profiler = None
-    self._achive_type_scanner = None
     self._achive_type_scanner = self._CreateArchiveTypeScanner([])
     self._archive_types = []
     self._event_data_extractor = extractors.EventDataExtractor(
