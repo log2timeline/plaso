@@ -186,9 +186,8 @@ class GoogleLogParser(
           microseconds)
 
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
+          is_delta=True, time_elements_tuple=time_elements_tuple)
 
-      date_time.is_delta = True
       date_time.is_local_time = True
 
       return date_time

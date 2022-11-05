@@ -244,14 +244,12 @@ class AndroidLogcatTextPlugin(
 
       if len(fraction_of_second_string) == 3:
         date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-            time_elements_tuple=time_elements_tuple,
+            is_delta=(not has_year), time_elements_tuple=time_elements_tuple,
             time_zone_offset=time_zone_offset)
       else:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple,
+            is_delta=(not has_year), time_elements_tuple=time_elements_tuple,
             time_zone_offset=time_zone_offset)
-
-      date_time.is_delta = not has_year
 
       if time_zone_offset is None:
         date_time.is_local_time = True

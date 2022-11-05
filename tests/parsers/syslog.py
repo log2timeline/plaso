@@ -87,7 +87,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
-        'last_written_time': '2016-01-22T07:54:32',
+        'last_written_time': '0000-01-22T07:54:32',
         'reporter': 'Job',
         'severity': None}
 
@@ -153,7 +153,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'syslog:line',
         'hostname': 'hostname',
-        'last_written_time': '2021-03-06T04:07:28',
+        'last_written_time': '0000-03-06T04:07:28',
         'reporter': 'log_tag',
         'severity': None}
 
@@ -186,7 +186,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'syslog:line',
         'hostname': 'osx-machine',
-        'last_written_time': '2016-03-11T19:26:39',
+        'last_written_time': '0000-03-11T19:26:39',
         'reporter': 'kernel',
         'severity': None}
 
@@ -253,7 +253,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'body': 'INFO No new content in ímynd.dd.',
         'data_type': 'syslog:line',
         'hostname': 'myhostname.myhost.com',
-        'last_written_time': '2012-01-22T07:52:33',
+        'last_written_time': '0000-01-22T07:52:33',
         'pid': 30840,
         'reporter': 'client',
         'severity': None}
@@ -265,30 +265,39 @@ class SyslogParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
         'data_type': 'syslog:line',
-        'last_written_time': '2013-03-23T23:01:18',
+        'last_written_time': '0001-03-23T23:01:18',
         'reporter': 'somrandomexe',
         'severity': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Testing non-leap year.
+  # TODO: move this to timeliner tests.
+  def testParseNonLeapYear(self):
+    """Tests the Parse function with a non-leap year."""
     parser = syslog.SyslogParser()
     knowledge_base_values = {'year': 2013}
     storage_writer = self._ParseFile(
-        ['syslog'], parser,
-        knowledge_base_values=knowledge_base_values)
+        ['syslog'], parser, knowledge_base_values=knowledge_base_values)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 16)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 15)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 2)
+    self.assertEqual(number_of_warnings, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'timelining_warning')
+    self.assertEqual(number_of_warnings, 1)
 
 
 if __name__ == '__main__':

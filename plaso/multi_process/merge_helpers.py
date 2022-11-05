@@ -121,9 +121,12 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
   _CONTAINER_TYPES = (
       event_sources.EventSource.CONTAINER_TYPE,
       events.EventDataStream.CONTAINER_TYPE,
+      # The year-less log helper is needed to generate event from the event
+      # data by the timeliner and therefore needs to be merged before event
+      # data containers.
+      events.YearLessLogHelper.CONTAINER_TYPE,
       events.EventData.CONTAINER_TYPE,
       events.EventObject.CONTAINER_TYPE,
-      events.YearLessLogHelper.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,

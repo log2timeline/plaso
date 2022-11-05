@@ -35,12 +35,15 @@ class SyslogPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): names of the fields extracted by the syslog
           parser and the matching grammar, and values are the values of those
           fields.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
 
   # pylint: disable=arguments-differ
@@ -49,19 +52,19 @@ class SyslogPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       date_time (dfdatetime.DateTimeValues): date and time values.
       syslog_tokens (dict[str, str]): names of the fields extracted by the
           syslog parser and the matching grammar, and values are the values of
           those fields.
 
     Raises:
-      AttributeError: If the syslog_tokens do not include a 'body' attribute.
+      ParseError: If the syslog_tokens do not include a 'body' attribute.
       WrongPlugin: If the plugin is unable to parse the syslog tokens.
     """
     body = syslog_tokens.get('body', None)
     if not body:
-      raise AttributeError('Missing required attribute: body')
+      raise errors.ParseError('Missing required attribute: body')
 
     for key, grammar in self.MESSAGE_GRAMMARS:
       try:
