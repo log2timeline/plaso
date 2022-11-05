@@ -365,6 +365,84 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
 
     return value
 
+  def _ParseLines(self, parser_mediator, file_object, text_reader):
+    """Parses lines of text using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      file_object (dfvfs.FileIO): file-like object.
+      text_reader (EncodedTextReader): text reader.
+
+    Raises:
+      WrongParser: when the file cannot be parsed.
+    """
+    consecutive_line_failures = 0
+    # Read every line in the text file.
+    while text_reader.lines:
+      if parser_mediator.abort:
+        break
+
+      # Initialize pyparsing objects.
+      tokens = None
+      start = 0
+      end = 0
+
+      index = None
+      line_structure = None
+
+      # Try to parse the line using all the line structures.
+      for index, line_structure in enumerate(self._line_structures):
+        try:
+          structure_generator = line_structure.expression.scanString(
+              text_reader.lines, maxMatches=1)
+          parsed_structure = next(structure_generator, None)
+        except pyparsing.ParseException:
+          parsed_structure = None
+
+        if parsed_structure:
+          tokens, start, end = parsed_structure
+
+          # Only want to parse the structure if it starts
+          # at the beginning of the buffer.
+          if start == 0:
+            break
+
+      if tokens and start == 0:
+        try:
+          self._ParseLineStructure(
+              parser_mediator, index, line_structure, tokens)
+          consecutive_line_failures = 0
+
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse record: {0:s} with error: {1!s}'.format(
+                  line_structure.name, exception))
+
+        text_reader.SkipAhead(file_object, end)
+
+      else:
+        odd_line = text_reader.ReadLine(file_object)
+        if odd_line:
+          if len(odd_line) > 80:
+            odd_line = '{0:s}...'.format(odd_line[:77])
+
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse log line: {0:s}'.format(repr(odd_line)))
+
+          consecutive_line_failures += 1
+          if (consecutive_line_failures >
+              self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
+            raise errors.WrongParser(
+                'more than {0:d} consecutive failures to parse lines.'.format(
+                    self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
+
+      try:
+        text_reader.ReadLines(file_object)
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to read lines with error: {0!s}'.format(exception))
+
   def _ParseLineStructure(
       self, parser_mediator, index, line_structure, parsed_structure):
     """Parses a line structure and produces events.
@@ -432,77 +510,18 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     try:
       text_reader.ReadLines(file_object)
     except UnicodeDecodeError as exception:
-      raise errors.WrongParser(
-          'Not a text file, with error: {0!s}'.format(exception))
+      raise errors.WrongParser('Not a text file, with error: {0!s}'.format(
+          exception))
 
     if not self.VerifyStructure(parser_mediator, text_reader.lines):
       raise errors.WrongParser('Wrong file structure.')
 
-    consecutive_line_failures = 0
-    # Read every line in the text file.
-    while text_reader.lines:
-      if parser_mediator.abort:
-        break
-
-      # Initialize pyparsing objects.
-      tokens = None
-      start = 0
-      end = 0
-
-      index = None
-      line_structure = None
-
-      # Try to parse the line using all the line structures.
-      for index, line_structure in enumerate(self._line_structures):
-        try:
-          structure_generator = line_structure.expression.scanString(
-              text_reader.lines, maxMatches=1)
-          parsed_structure = next(structure_generator, None)
-        except pyparsing.ParseException:
-          parsed_structure = None
-
-        if parsed_structure:
-          tokens, start, end = parsed_structure
-
-          # Only want to parse the structure if it starts
-          # at the beginning of the buffer.
-          if start == 0:
-            break
-
-      if tokens and start == 0:
-        try:
-          self._ParseLineStructure(
-              parser_mediator, index, line_structure, tokens)
-          consecutive_line_failures = 0
-
-        except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse record: {0:s} with error: {1!s}'.format(
-                  line_structure.name, exception))
-
-        text_reader.SkipAhead(file_object, end)
-
-      else:
-        odd_line = text_reader.ReadLine(file_object)
-        if odd_line:
-          if len(odd_line) > 80:
-            odd_line = '{0:s}...'.format(odd_line[:77])
-
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse log line: {0:s}'.format(repr(odd_line)))
-
-          consecutive_line_failures += 1
-          if (consecutive_line_failures >
-              self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-            raise errors.WrongParser(
-                'more than {0:d} consecutive failures to parse lines.'.format(
-                    self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
-
-      try:
-        text_reader.ReadLines(file_object)
-      except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to read lines with error: {0!s}'.format(exception))
+    try:
+      self._ParseLines(parser_mediator, file_object, text_reader)
+    except Exception as exception:  # pylint: disable=broad-except
+      parser_mediator.ProduceExtractionWarning(
+          '{0:s} unable to parse text file with error: {1!s}'.format(
+              self.NAME, exception))
 
     if hasattr(self, 'GetYearLessLogHelper'):
       year_less_log_helper = self.GetYearLessLogHelper()
