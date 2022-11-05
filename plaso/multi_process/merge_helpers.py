@@ -123,6 +123,7 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       events.EventDataStream.CONTAINER_TYPE,
       events.EventData.CONTAINER_TYPE,
       events.EventObject.CONTAINER_TYPE,
+      events.YearLessLogHelper.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,

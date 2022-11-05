@@ -40,7 +40,7 @@ class ExtractionWarning(interface.AttributeContainer):
 
   Extraction warnings are produced by parsers/plugins when they encounter
   situations that should be brought to the users' attention but are not
-  events derived from the data being processed.
+  event data derived from the data being processed.
 
   Attributes:
     message (str): warning message.
@@ -111,7 +111,7 @@ class RecoveryWarning(interface.AttributeContainer):
   """Recovery warning attribute container.
 
   Recovery warnings are warning encountered during recovery. They are typically
-  produced by parsers/plugins when they are unable to recover events.
+  produced by parsers/plugins when they are unable to recover event data.
 
   Attributes:
     message (str): warning message.
@@ -141,5 +141,41 @@ class RecoveryWarning(interface.AttributeContainer):
     self.path_spec = path_spec
 
 
+class TimeliningWarning(interface.AttributeContainer):
+  """Timelining warning attribute container.
+
+  Timelining warnings are produced by the timeliner when it encounters
+  situations that should be brought to the users' attention but are not
+  events derived from the event data being processed.
+
+  Attributes:
+    message (str): warning message.
+    parser_chain (str): parser chain to which the warning applies.
+    path_spec (dfvfs.PathSpec): path specification of the file entry to which
+        the warning applies.
+  """
+  CONTAINER_TYPE = 'timelining_warning'
+
+  SCHEMA = {
+      'message': 'str',
+      'parser_chain': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
+
+  def __init__(self, message=None, parser_chain=None, path_spec=None):
+    """Initializes a timelining warning.
+
+    Args:
+      message (Optional[str]): warning message.
+      parser_chain (Optional[str]): parser chain to which the warning applies.
+      path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
+          to which the warning applies.
+    """
+    super(TimeliningWarning, self).__init__()
+    self.message = message
+    self.parser_chain = parser_chain
+    self.path_spec = path_spec
+
+
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    AnalysisWarning, ExtractionWarning, PreprocessingWarning, RecoveryWarning])
+    AnalysisWarning, ExtractionWarning, PreprocessingWarning, RecoveryWarning,
+    TimeliningWarning])

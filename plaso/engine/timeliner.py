@@ -9,6 +9,7 @@ import pytz
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
+from plaso.containers import warnings
 from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
@@ -109,6 +110,28 @@ class EventDataTimeliner(object):
       if timeliner_definition.place_holder_event:
         self._place_holder_event.add(timeliner_definition.data_type)
 
+  def _ProducTimeliningWarning(self, storage_writer, event_data, message):
+    """Produces a timelining warning.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      event_data (EventData): event data.
+      message (str): message of the warning.
+    """
+    parser_chain = event_data.parser
+    path_spec = None
+
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    if event_data_stream_identifier:
+      event_data_stream = storage_writer.GetAttributeContainerByIdentifier(
+          events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
+      if event_data_stream:
+        path_spec = event_data_stream.path_spec
+
+    warning = warnings.TimeliningWarning(
+        message=message, parser_chain=parser_chain, path_spec=path_spec)
+    storage_writer.AddAttributeContainer(warning)
+
   def ProcessEventData(self, storage_writer, event_data):
     """Generate events from event data.
 
@@ -146,8 +169,15 @@ class EventDataTimeliner(object):
     for attribute_name, time_description in attribute_mappings.items():
       attribute_value = getattr(event_data, attribute_name, None)
       if attribute_value:
-        event = self._GetEvent(
-            attribute_value, time_description, event_data_identifier, base_year)
+        try:
+          event = self._GetEvent(
+              attribute_value, time_description, event_data_identifier,
+              base_year)
+
+        except ValueError as exception:
+          self._ProducTimeliningWarning(
+              storage_writer, event_data, str(exception))
+          continue
 
         storage_writer.AddAttributeContainer(event)
 
