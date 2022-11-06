@@ -3,5 +3,5 @@
 set -e
 
 brew update
-brew install tox || true
+brew install python@3.11 tox || true
 
