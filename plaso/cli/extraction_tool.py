@@ -441,6 +441,10 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_EXT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_EXT)
 
+    elif self._vfs_back_end == 'fsfat':
+      dfvfs_definitions.PREFERRED_FAT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_FAT)
+
     elif self._vfs_back_end == 'fshfs':
       dfvfs_definitions.PREFERRED_HFS_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_HFS)
@@ -451,6 +455,8 @@ class ExtractionTool(
 
     elif self._vfs_back_end == 'tsk':
       dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+          dfvfs_definitions.TYPE_INDICATOR_TSK)
+      dfvfs_definitions.PREFERRED_FAT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK)
       dfvfs_definitions.PREFERRED_GPT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
