@@ -4,7 +4,9 @@
 import logging
 import os
 
+from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
+
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
 try:
@@ -12,6 +14,7 @@ try:
 except ImportError:
   opensearchpy = None
 
+from plaso.containers import interface as containers_interface
 from plaso.lib import errors
 from plaso.output import formatting_helper
 from plaso.output import interface
@@ -33,6 +36,7 @@ class SharedOpenSearchFieldFormattingHelper(
   _FIELD_FORMAT_CALLBACKS = {
       'datetime': '_FormatDateTime',
       'display_name': '_FormatDisplayName',
+      'inode': '_FormatInode',
       'message': '_FormatMessage',
       'source_long': '_FormatSource',
       'source_short': '_FormatSourceShort',
@@ -75,6 +79,25 @@ class SharedOpenSearchFieldFormattingHelper(
       list[str]: event tag labels.
     """
     return getattr(event_tag, 'labels', None) or []
+
+  def _FormatInode(self, output_mediator, event, event_data, event_data_stream):
+    """Formats an inode field.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: inode field.
+    """
+    inode = getattr(event_data, 'inode', None)
+    if isinstance(inode, int):
+      inode = '{0:d}'.format(inode)
+
+    return inode
 
   def _FormatTimestamp(
       self, output_mediator, event, event_data, event_data_stream):
@@ -304,6 +327,15 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     if event_data:
       for attribute_name, attribute_value in event_data.GetAttributes():
+        # Ignore attribute container identifier values.
+        if isinstance(attribute_value,
+                      containers_interface.AttributeContainerIdentifier):
+          continue
+
+        # Ignore date and time values.
+        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+          continue
+
         event_values[attribute_name] = attribute_value
 
     if event_data_stream:
