@@ -16,8 +16,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a Snort fast-log alert log file."""
     plugin = snort_fastlog.SnortFastLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['snort3_alert_fast.log'], plugin,
-        knowledge_base_values={'year': 2021})
+        ['snort3_alert_fast.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -39,7 +38,7 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
         'data_type': 'snort:fastlog:alert',
         'destination_ip': '2001:4860:4860:0:0:0:0:8888',
         'message': 'PROTOCOL-ICMP PING Unix',
-        'last_written_time': '2021-12-28T12:55:38.765402',
+        'last_written_time': '0000-12-28T12:55:38.765402',
         'priority': 3,
         'protocol': 'ICMP',
         'rule_identifier': '1:366:11',

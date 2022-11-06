@@ -7,8 +7,6 @@ import time
 
 import pytz
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 from plaso.containers import artifacts
 from plaso.containers import warnings
 from plaso.engine import path_helper
@@ -16,7 +14,6 @@ from plaso.engine import profilers
 from plaso.helpers import language_tags
 from plaso.helpers.windows import languages
 from plaso.lib import errors
-from plaso.parsers import logger
 
 
 class ParserMediator(object):
@@ -77,7 +74,6 @@ class ParserMediator(object):
     self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
     self._preferred_codepage = None
-    self._preferred_year = None
     self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = None
@@ -149,64 +145,6 @@ class ParserMediator(object):
       self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
 
     return self._time_zone
-
-  @property
-  def year(self):
-    """int: year."""
-    return self._knowledge_base.year
-
-  def _GetEarliestYearFromFileEntry(self):
-    """Retrieves the year from the file entry date and time values.
-
-    This function uses the creation time if available otherwise the change
-    time (metadata last modification time) is used.
-
-    Returns:
-      int: year of the file entry or None.
-    """
-    file_entry = self.GetFileEntry()
-    if not file_entry:
-      return None
-
-    date_time = file_entry.creation_time
-    if not date_time:
-      date_time = file_entry.change_time
-
-    # Gzip files do not store a creation or change time, but its modification
-    # time is a good alternative.
-    if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
-      date_time = file_entry.modification_time
-
-    if date_time is None:
-      logger.warning('File entry has no creation or change time.')
-      return None
-
-    year, _, _ = date_time.GetDate()
-    return year
-
-  def _GetLatestYearFromFileEntry(self):
-    """Retrieves the maximum (highest value) year from the file entry.
-
-    This function uses the modification time if available otherwise the change
-    time (metadata last modification time) is used.
-
-    Returns:
-      int: year of the file entry or None if the year cannot be retrieved.
-    """
-    file_entry = self.GetFileEntry()
-    if not file_entry:
-      return None
-
-    date_time = file_entry.modification_time
-    if not date_time:
-      date_time = file_entry.change_time
-
-    if date_time is None:
-      logger.warning('File entry has no modification or change time.')
-      return None
-
-    year, _, _ = date_time.GetDate()
-    return year
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -313,37 +251,6 @@ class ParserMediator(object):
     return path_helper.PathHelper.GetDisplayNameForPathSpec(
         path_spec, text_prepend=self._text_prepend)
 
-  def GetEstimatedYear(self):
-    """Retrieves an estimate of the year.
-
-    This function determines the year in the following manner:
-    * determine if the user provided a preferred year;
-    * determine if knowledge base defines a year derived from preprocessing;
-    * determine the year based on the file entry metadata;
-    * default to the current year;
-
-    Returns:
-      int: estimated year.
-    """
-    # TODO: improve this method to get a more reliable estimate.
-    # Preserve the year-less date and sort this out in the psort phase.
-    if self._preferred_year:
-      return self._preferred_year
-
-    if self._knowledge_base.year:
-      return self._knowledge_base.year
-
-    # TODO: Find a decent way to actually calculate the correct year
-    # instead of relying on file entry timestamps.
-    year = self._GetEarliestYearFromFileEntry()
-    if not year:
-      year = self._GetLatestYearFromFileEntry()
-
-    if not year:
-      year = self.GetCurrentYear()
-
-    return year
-
   def GetFileEntry(self):
     """Retrieves the active file entry.
 
@@ -375,21 +282,6 @@ class ParserMediator(object):
     """
     datetime_object = datetime.datetime.now()
     return datetime_object.year
-
-  def GetLatestYear(self):
-    """Retrieves the latest (newest) year for an event from a file.
-
-    This function tries to determine the year based on the file entry metadata,
-    if that fails the current year is used.
-
-    Returns:
-      int: year of the file entry or the current year.
-    """
-    year = self._GetLatestYearFromFileEntry()
-    if not year:
-      year = self.GetCurrentYear()
-
-    return year
 
   def GetParserChain(self):
     """Retrieves the current parser chain.
@@ -769,15 +661,6 @@ class ParserMediator(object):
             time_zone_string))
 
     self._time_zone = time_zone
-
-  def SetPreferredYear(self, year):
-    """Sets the preferred year for year-less date and time values.
-
-    Args:
-      year (int): initial year value such as 2012 or None if the year of
-          year-less date and time values should be estimated.
-    """
-    self._preferred_year = year
 
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.

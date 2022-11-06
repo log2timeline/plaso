@@ -215,7 +215,9 @@ class SnortFastLogTextPlugin(
           the time elements.
     """
     try:
-      if len(time_elements_structure) == 7:
+      has_year = len(time_elements_structure) == 7
+
+      if has_year:
         year, month, day_of_month, hours, minutes, seconds, microseconds = (
             time_elements_structure)
 
@@ -226,13 +228,14 @@ class SnortFastLogTextPlugin(
 
         self._UpdateYear(month)
 
-        year = self._GetYear()
+        year = self._GetRelativeYear()
 
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, microseconds)
 
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
+          is_delta=(not has_year), time_elements_tuple=time_elements_tuple)
+
       date_time.is_local_time = True
 
       return date_time

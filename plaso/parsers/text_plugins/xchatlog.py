@@ -47,8 +47,8 @@ If parsing is True, set parsing=False and log debug
 2.1) If parsing = True, try to parse line and generate event
 2.2) If parsing = False, skip until next good header is found
 
-References
-http://xchat.org
+Also see:
+  http://xchat.org
 """
 
 import pyparsing
@@ -245,7 +245,7 @@ class XChatLogTextPlugin(
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
       # is found.
-      parser_mediator.ProduceExtractionWarning('unsupported locale header')
+      parser_mediator.ProduceExtractionWarning('header in unsupported locale')
       self._year = None
 
   def _ParseTimeElements(self, time_elements_structure):

@@ -150,9 +150,11 @@ class EventDataTimeliner(object):
 
     event_data_identifier = event_data.GetIdentifier()
 
+    # If preferred year is set considered it a user override, otherwise try
+    # to determine the year based on the file entry or fallback to the current
+    # year.
+
     base_year = self._preferred_year
-    if not base_year:
-      base_year = self._knowledge_base.year
     if not base_year:
       event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
       if event_data_stream_identifier:
@@ -164,6 +166,10 @@ class EventDataTimeliner(object):
             filter_expression=filter_expression))
         if year_less_log_helpers:
           base_year = year_less_log_helpers[0].estimated_creation_year
+
+      # TODO: use relative_year to determine base_year
+
+    # TODO: fallback to current year
 
     if event_data.parser:
       parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]

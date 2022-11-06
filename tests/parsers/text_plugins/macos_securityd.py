@@ -15,8 +15,7 @@ class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_securityd.MacOSSecuritydLogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
-        ['security.log'], plugin, knowledge_base_values={'year': 2013})
+    storage_writer = self._ParseTextFileWithPlugin(['security.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

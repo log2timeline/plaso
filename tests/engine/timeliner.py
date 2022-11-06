@@ -77,26 +77,37 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876))
 
-    # Test date time delta.
+    # Test date time delta of February 29 with leap year.
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-        is_delta=True, time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
+        is_delta=True, time_elements_tuple=(0, 2, 29, 20, 6, 31, 429876))
 
     event = event_data_timeliner._GetEvent(
-        date_time, 'Test Time', event_data_identifier, 2009)
+        date_time, 'Test Time', event_data_identifier, 2012)
     self.assertIsNotNone(event)
     self.assertIsNotNone(event.date_time)
-    self.assertEqual(event.date_time.year, 2010)
-    self.assertEqual(event.timestamp, 1281643591429876)
+    self.assertEqual(event.date_time.year, 2012)
+    self.assertEqual(event.timestamp, 1330545991429876)
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         is_delta=True, time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
 
+    # Test date time delta of February 29 with non-leap year.
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        is_delta=True, time_elements_tuple=(0, 2, 29, 20, 6, 31, 429876))
+
+    with self.assertRaises(ValueError):
+      event_data_timeliner._GetEvent(
+          date_time, 'Test Time', event_data_identifier, 2013)
+
+    # Test date time delta without a base year.
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=(4, 2, 29, 20, 6, 31, 429876))
     event = event_data_timeliner._GetEvent(
         date_time, 'Test Time', event_data_identifier, None)
     self.assertIsNotNone(event)
     self.assertIsNotNone(event.date_time)
-    self.assertEqual(event.date_time.year, 1)
-    self.assertEqual(event.timestamp, -62116257208570124)
+    self.assertEqual(event.date_time.year, 4)
+    self.assertEqual(event.timestamp, -62035818808570124)
 
   def testProcessEventData(self):
     """Tests the ProcessEventData function."""

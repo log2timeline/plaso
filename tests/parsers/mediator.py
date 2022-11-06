@@ -26,32 +26,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def testGetEarliestYearFromFileEntry(self):
-    """Tests the _GetEarliestYearFromFileEntry function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
-
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-
-    earliest_year = parser_mediator._GetEarliestYearFromFileEntry()
-    self.assertIsNone(earliest_year)
-
-    # TODO: improve test coverage.
-
-  def testGetLatestYearFromFileEntry(self):
-    """Tests the _GetLatestYearFromFileEntry function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
-
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-
-    latest_year = parser_mediator._GetLatestYearFromFileEntry()
-    self.assertIsNone(latest_year)
-
-    # TODO: improve test coverage.
-
   # TODO: add tests for AppendToParserChain.
   # TODO: add tests for ClearParserChain.
 
@@ -134,20 +108,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     display_name = parser_mediator.GetDisplayNameForPathSpec(os_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
-  def testGetEstimatedYear(self):
-    """Tests the GetEstimatedYear function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
-
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-
-    expected_estimated_year = parser_mediator.GetCurrentYear()
-    estimated_year = parser_mediator.GetEstimatedYear()
-    self.assertEqual(estimated_year, expected_estimated_year)
-
-    # TODO: improve test coverage.
-
   def testGetFileEntry(self):
     """Tests the GetFileEntry function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -169,18 +129,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     filename = parser_mediator.GetFilename()
     self.assertIsNone(filename)
-
-  def testGetLatestYear(self):
-    """Tests the GetLatestYear function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
-
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-
-    expected_latest_year = parser_mediator.GetCurrentYear()
-    latest_year = parser_mediator.GetLatestYear()
-    self.assertEqual(latest_year, expected_latest_year)
 
   # TODO: add tests for GetParserChain.
   # TODO: add tests for GetRelativePathForPathSpec.

@@ -314,8 +314,6 @@ class SingleProcessEngine(engine.BaseEngine):
         processing_configuration.preferred_language)
     parser_mediator.SetPreferredTimeZone(
         processing_configuration.preferred_time_zone)
-    parser_mediator.SetPreferredYear(
-        processing_configuration.preferred_year)
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
     parser_mediator.SetTextPrepend(

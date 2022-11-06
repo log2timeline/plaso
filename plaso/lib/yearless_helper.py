@@ -32,6 +32,27 @@ class YearLessLogFormatHelper(object):
     self._relative_year = 0
     self._year = 0
 
+  def _GetYearsFromFileEntry(self, file_entry):
+    """Retrieves the years from the file entry date and time values.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry.
+
+    Returns:
+      set[int]: years of the file entry.
+    """
+    years = set()
+
+    for attribute_name in ('change_time', 'creation_time', 'modification_time'):
+      date_time = getattr(file_entry, attribute_name, None)
+      if date_time:
+        year, _, _ = date_time.GetDate()
+        years.add(year)
+
+    # TODO: for compressed streams obtain years from parent.
+
+    return years
+
   def _GetMonthFromString(self, month_string):
     """Retrieves a numeric month value from a string.
 
@@ -67,11 +88,19 @@ class YearLessLogFormatHelper(object):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
     """
-    self._base_year = parser_mediator.GetEstimatedYear()
+    self._base_year = None
+    self._maximum_year = None
     self._month = None
-    self._maximum_year = parser_mediator.GetLatestYear()
     self._relative_year = 0
-    self._year = self._base_year
+    self._year = 0
+
+    file_entry = parser_mediator.GetFileEntry()
+    if file_entry:
+      years = self._GetYearsFromFileEntry(file_entry)
+      if years:
+        self._base_year = min(years)
+        self._maximum_year = max(years)
+        self._year = self._base_year
 
   def _SetMonthAndYear(self, month, year):
     """Sets the month and year.
@@ -87,7 +116,6 @@ class YearLessLogFormatHelper(object):
       raise ValueError('Invalid month: {0!s}'.format(month))
 
     self._month = month
-    self._maximum_year = None
     self._relative_year = 0
     self._year = year
 
@@ -109,9 +137,7 @@ class YearLessLogFormatHelper(object):
 
     if self._month and (month + 1) < self._month:
       self._relative_year += 1
-
-      if not self._maximum_year or self._year < self._maximum_year:
-        self._year += 1
+      self._year += 1
 
     self._month = month
 
@@ -122,7 +148,8 @@ class YearLessLogFormatHelper(object):
       YearLessLogHelper: year-less log helper.
     """
     year_less_log_helper = events.YearLessLogHelper()
+    year_less_log_helper.earliest_year = self._base_year
     year_less_log_helper.estimated_creation_year = self._base_year
-    # TODO: use relative_year to determine base_year
+    year_less_log_helper.latest_year = self._maximum_year
 
     return year_less_log_helper
