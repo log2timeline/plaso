@@ -196,12 +196,8 @@ class MacOSSecuritydLogTextPlugin(
       time_elements_tuple = (
           relative_year, month, day_of_month, hours, minutes, seconds)
 
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
-
-      date_time.is_delta = True
-
-      return date_time
+      return dfdatetime_time_elements.TimeElements(
+          is_delta=True, time_elements_tuple=time_elements_tuple)
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(

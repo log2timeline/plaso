@@ -168,16 +168,13 @@ class SyslogParser(
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
-      text_parser.PyParseIntCast)
-
   _DATE_TIME = (
       _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Optional(
           pyparsing.Suppress('.') +
-          pyparsing.Word(pyparsing.nums))).setResultsName('date_time')
+          pyparsing.Word(pyparsing.nums)))
 
   _DATE_TIME_RFC3339 = (
       _FOUR_DIGITS + pyparsing.Suppress('-') +
@@ -190,10 +187,15 @@ class SyslogParser(
       _TWO_DIGITS + pyparsing.Optional(
           pyparsing.Suppress(':') + _TWO_DIGITS))
 
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
+
   _CHROMEOS_SYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
-      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
+      _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
           pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
@@ -205,7 +207,7 @@ class SyslogParser(
   _RSYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
+      _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(
           pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
           pyparsing.Suppress(']')) +
@@ -218,9 +220,9 @@ class SyslogParser(
       pyparsing.lineEnd())
 
   _RSYSLOG_TRADITIONAL_LINE = (
-      _DATE_TIME +
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
+      _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(
           pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
           pyparsing.Suppress(']')) +
@@ -240,7 +242,7 @@ class SyslogParser(
           pyparsing.Word(pyparsing.nums, max=1)) +
       _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      pyparsing.Word(_REPORTER_CHARACTERS).setResultsName('reporter') +
+      _REPORTER.setResultsName('reporter') +
       pyparsing.Or([
           pyparsing.Suppress('-'), _PROCESS_IDENTIFIER.setResultsName('pid')]) +
       pyparsing.Word(pyparsing.printables).setResultsName(
@@ -250,13 +252,14 @@ class SyslogParser(
       pyparsing.lineEnd())
 
   _SYSLOG_COMMENT = (
-      _DATE_TIME + pyparsing.Suppress(':') +
+      _DATE_TIME.setResultsName('date_time') + pyparsing.Suppress(':') +
       pyparsing.Suppress('---') +
       pyparsing.SkipTo(' ---').setResultsName('body') +
       pyparsing.Suppress('---') + pyparsing.LineEnd())
 
   _KERNEL_SYSLOG_LINE = (
-      _DATE_TIME + pyparsing.Literal('kernel').setResultsName('reporter') +
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Literal('kernel').setResultsName('reporter') +
       pyparsing.Suppress(':') +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       pyparsing.lineEnd())
@@ -292,6 +295,7 @@ class SyslogParser(
     """
     try:
       if len(time_elements_structure) >= 9:
+        has_year = True
         time_zone_minutes = 0
 
         if len(time_elements_structure) == 9:
@@ -308,6 +312,7 @@ class SyslogParser(
           time_zone_offset *= -1
 
       else:
+        has_year = False
         microseconds = None
         time_zone_offset = None
 
@@ -324,14 +329,14 @@ class SyslogParser(
 
         self._UpdateYear(month)
 
-        year = self._GetYear()
+        year = self._GetRelativeYear()
 
       if microseconds is None:
         time_elements_tuple = (
             year, month, day_of_month, hours, minutes, seconds)
 
         date_time = dfdatetime_time_elements.TimeElements(
-            time_elements_tuple=time_elements_tuple,
+            is_delta=(not has_year), time_elements_tuple=time_elements_tuple,
             time_zone_offset=time_zone_offset)
 
       else:
@@ -339,7 +344,7 @@ class SyslogParser(
             year, month, day_of_month, hours, minutes, seconds, microseconds)
 
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple,
+            is_delta=(not has_year), time_elements_tuple=time_elements_tuple,
             time_zone_offset=time_zone_offset)
 
       date_time.is_local_time = time_zone_offset is None
@@ -435,6 +440,11 @@ class SyslogParser(
         try:
           # TODO: pass event_data instead of attributes.
           plugin.Process(parser_mediator, date_time, attributes)
+
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse message: {0:s} with error: {1!s}'.format(
+                  event_data.body, exception))
 
         except errors.WrongPlugin:
           plugin = None

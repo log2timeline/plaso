@@ -246,16 +246,17 @@ class MacOSWiFiLogTextPlugin(
       if milliseconds is None:
         time_elements_tuple = (
             relative_year, month, day_of_month, hours, minutes, seconds)
+
         date_time = dfdatetime_time_elements.TimeElements(
-            time_elements_tuple=time_elements_tuple)
+            is_delta=True, time_elements_tuple=time_elements_tuple)
+
       else:
         time_elements_tuple = (
             relative_year, month, day_of_month, hours, minutes, seconds,
             milliseconds)
-        date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-            time_elements_tuple=time_elements_tuple)
 
-      date_time.is_delta = True
+        date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+            is_delta=True, time_elements_tuple=time_elements_tuple)
 
       return date_time
 

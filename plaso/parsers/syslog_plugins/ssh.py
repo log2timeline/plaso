@@ -3,8 +3,7 @@
 
 import pyparsing
 
-from plaso.containers import time_events
-from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import syslog
 from plaso.parsers.syslog_plugins import interface
 
@@ -16,6 +15,8 @@ class SSHEventData(syslog.SyslogLineEventData):
     address (str): IP address.
     authentication_method (str): authentication method.
     fingerprint (str): fingerprint.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     port (str): port.
     protocol (str): protocol.
     username (str): name of user the command was executed.
@@ -27,6 +28,7 @@ class SSHEventData(syslog.SyslogLineEventData):
     self.address = None
     self.authentication_method = None
     self.fingerprint = None
+    self.last_written_time = None
     self.port = None
     self.protocol = None
     self.username = None
@@ -110,17 +112,18 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the matching grammar.
       date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): tokens derived from a syslog message based on
           the defined grammar.
 
     Raises:
-      ValueError: If an unknown key is provided.
+      ParseError: when the structure type is unknown.
     """
     if key not in self._SUPPORTED_KEYS:
-      raise ValueError('Unsupported grammar: {0:s}'.format(key))
+      raise errors.ParseError(
+          'Unable to parse message, unknown structure: {0:s}'.format(key))
 
     if key == 'login':
       event_data = SSHLoginEventData()
@@ -137,6 +140,7 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     event_data.body = tokens.get('body', None)
     event_data.fingerprint = tokens.get('fingerprint', None)
     event_data.hostname = tokens.get('hostname', None)
+    event_data.last_written_time = date_time
     event_data.pid = tokens.get('pid', None)
     event_data.protocol = tokens.get('protocol', None)
     event_data.port = tokens.get('port', None)
@@ -144,10 +148,7 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     event_data.severity = tokens.get('severity', None)
     event_data.username = tokens.get('username', None)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 syslog.SyslogParser.RegisterPlugin(SSHSyslogPlugin)

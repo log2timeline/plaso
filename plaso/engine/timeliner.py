@@ -78,6 +78,9 @@ class EventDataTimeliner(object):
       seconds_delta = int(datetime_delta.total_seconds())
       timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
+      date_time.is_local_time = False
+      date_time.time_zone_offset = seconds_delta // 60
+
     event = events.EventObject()
     event.date_time = date_time
     event.timestamp = timestamp
@@ -139,6 +142,8 @@ class EventDataTimeliner(object):
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
     """
+    self.number_of_produced_events = 0
+
     attribute_mappings = self._attribute_mappings.get(event_data.data_type)
     if not attribute_mappings:
       return

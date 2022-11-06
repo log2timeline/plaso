@@ -79,8 +79,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     # Test date time delta.
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-        time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
-    date_time.is_delta = True
+        is_delta=True, time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
 
     event = event_data_timeliner._GetEvent(
         date_time, 'Test Time', event_data_identifier, 2009)
@@ -90,8 +89,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     self.assertEqual(event.timestamp, 1281643591429876)
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-        time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
-    date_time.is_delta = True
+        is_delta=True, time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
 
     event = event_data_timeliner._GetEvent(
         date_time, 'Test Time', event_data_identifier, None)

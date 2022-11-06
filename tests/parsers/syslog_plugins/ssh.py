@@ -18,6 +18,10 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         ['syslog_ssh.log'], 'ssh',
         knowledge_base_values=knowledge_base_values)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 9)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)
 
@@ -29,91 +33,41 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'syslog:line',
-        'date_time': '2016-03-11T00:00:00'}
+        'last_written_time': '0000-03-11T00:00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_body = (
-        'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
-        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
-
-    expected_fingerprint = (
-        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'address': '192.168.0.1',
-        'body': expected_body,
+        'body': (
+            'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
+            'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99'),
         'data_type': 'syslog:ssh:login',
-        'date_time': '2016-03-11T19:26:39',
-        'fingerprint': expected_fingerprint}
+        'fingerprint': 'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99',
+        'last_written_time': '0000-03-11T19:26:39'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'address': '001:db8:a0b:12f0::1',
         'data_type': 'syslog:ssh:failed_connection',
-        'date_time': '2016-03-11T22:55:30',
+        'last_written_time': '0000-03-11T22:55:30',
         'port': '8759'}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'address': '188.124.3.41',
         'data_type': 'syslog:ssh:opened_connection',
-        'date_time': '2016-03-11T22:55:31'}
+        'last_written_time': '0000-03-11T22:55:31'}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_event_values = {
-        'address': '192.0.2.60',
-        'data_type': 'syslog:ssh:login',
-        'date_time': '2016-03-11T22:55:34',
-        'port': '20042',
-        'username': 'fred'}
-
-    self.CheckEventValues(storage_writer, events[7], expected_event_values)
-
-  def testParseWithTimeZone(self):
-    """Tests the Parse function with a time zone."""
-    knowledge_base_values = {'year': 2016}
-
-    storage_writer = self._ParseFileWithPlugin(
-        ['syslog_ssh.log'], 'ssh',
-        knowledge_base_values=knowledge_base_values, time_zone_string='CET')
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetSortedEvents())
-
-    expected_body = (
-        'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
-        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
-
-    expected_fingerprint = (
-        'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
-
-    expected_event_values = {
-        'address': '192.168.0.1',
-        'body': expected_body,
-        'data_type': 'syslog:ssh:login',
-        'date_time': '2016-03-11T19:26:39',
-        'fingerprint': expected_fingerprint,
-        'timestamp': '2016-03-11 18:26:39.000000'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

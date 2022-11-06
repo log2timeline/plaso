@@ -95,6 +95,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_YEAR_LESS_LOG_HELPER = events.YearLessLogHelper.CONTAINER_TYPE
 
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
@@ -280,7 +281,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 identifier_string, event_data_lookup_key))
         return
 
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+    elif container.CONTAINER_TYPE in (
+        self._CONTAINER_TYPE_EVENT_DATA,
+        self._CONTAINER_TYPE_YEAR_LESS_LOG_HELPER):
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
       event_data_stream_lookup_key = None
       if event_data_stream_identifier:
@@ -300,9 +303,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         # TODO: store this as a merge warning so this is preserved
         # in the storage file.
         logger.error((
-            'Unable to merge event data attribute container: {0:s} since '
-            'corresponding event data stream: {1:s} could not be '
-            'found.').format(identifier_string, event_data_stream_lookup_key))
+            'Unable to merge {0:s} attribute container: {1:s} since '
+            'corresponding event data stream: {2:s} could not be '
+            'found.').format(
+                container.CONTAINER_TYPE, identifier_string,
+                event_data_stream_lookup_key))
         return
 
     elif container.CONTAINER_TYPE in (
@@ -364,8 +369,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_TIMELINING
 
       # Generate events on merge.
-      self._event_data_timeliner.number_of_produced_events = 0
-
       self._event_data_timeliner.ProcessEventData(storage_writer, container)
 
       self._number_of_produced_events += (

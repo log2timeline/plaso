@@ -227,11 +227,35 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'syslog:cron:task_run'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'syslog:line'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
-place_holder_event: true
+place_holder_event: false
+---
+data_type: 'syslog:ssh:failed_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:login'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:opened_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'

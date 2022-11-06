@@ -37,6 +37,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
+    self._number_of_produced_events = 0
     self._parser_mediator = None
     self._parsers_counter = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
@@ -76,6 +77,49 @@ class SingleProcessEngine(engine.BaseEngine):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
+  def _ProcessEventData(self):
+    """Generate events from event data."""
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('process_event_data')
+
+    self._status = definitions.STATUS_INDICATOR_TIMELINING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('get_event_data')
+
+    event_data = self._storage_writer.GetFirstWrittenEventData()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming('get_event_data')
+
+    while event_data:
+      if self._abort:
+        break
+
+      self._event_data_timeliner.ProcessEventData(
+          self._storage_writer, event_data)
+
+      self._number_of_produced_events += (
+          self._event_data_timeliner.number_of_produced_events)
+
+      # TODO: track number of consumed event data containers?
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming('get_event_data')
+
+      event_data = self._storage_writer.GetNextWrittenEventData()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming('get_event_data')
+
+    if self._abort:
+      self._status = definitions.STATUS_INDICATOR_ABORTED
+    else:
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming('process_event_data')
+
   def _ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -97,6 +141,9 @@ class SingleProcessEngine(engine.BaseEngine):
     try:
       self._extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
+
+      self._number_of_produced_events = (
+          parser_mediator.number_of_produced_events)
 
     except KeyboardInterrupt:
       self._abort = True
@@ -123,46 +170,6 @@ class SingleProcessEngine(engine.BaseEngine):
         pdb.post_mortem()
 
         self._StartStatusUpdateThread()
-
-  def _ProcessEventData(self):
-    """Generate events from event data."""
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming('process_event_data')
-
-    self._status = definitions.STATUS_INDICATOR_TIMELINING
-
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming('get_event_data')
-
-    event_data = self._storage_writer.GetFirstWrittenEventData()
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming('get_event_data')
-
-    while event_data:
-      if self._abort:
-        break
-
-      self._event_data_timeliner.ProcessEventData(
-          self._storage_writer, event_data)
-
-      # TODO: track number of consumed event data containers?
-
-      if self._processing_profiler:
-        self._processing_profiler.StartTiming('get_event_data')
-
-      event_data = self._storage_writer.GetNextWrittenEventData()
-
-      if self._processing_profiler:
-        self._processing_profiler.StopTiming('get_event_data')
-
-    if self._abort:
-      self._status = definitions.STATUS_INDICATOR_ABORTED
-    else:
-      self._status = definitions.STATUS_INDICATOR_COMPLETED
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming('process_event_data')
 
   def _ProcessSources(self, source_configurations, parser_mediator):
     """Processes the sources.
@@ -275,7 +282,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._name, status, self._pid, used_memory, self._current_display_name,
         self._number_of_consumed_sources,
         self._parser_mediator.number_of_produced_event_sources,
-        0, self._parser_mediator.number_of_produced_events,
+        0, self._number_of_produced_events,
         0, 0,
         0, 0)
 
