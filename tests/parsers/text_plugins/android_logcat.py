@@ -16,7 +16,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function."""
     plugin = android_logcat.AndroidLogcatTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['android_logcat.log'], plugin, knowledge_base_values={'year': 1990})
+        ['android_logcat.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

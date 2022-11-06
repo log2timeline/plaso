@@ -15,8 +15,7 @@ class MacOSWiFiLogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_wifi.MacOSWiFiLogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
-        ['wifi.log'], plugin, knowledge_base_values={'year': 2013})
+    storage_writer = self._ParseTextFileWithPlugin(['wifi.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -60,7 +59,7 @@ class MacOSWiFiLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a turned over log file."""
     plugin = macos_wifi.MacOSWiFiLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['wifi_turned_over.log'], plugin, knowledge_base_values={'year': 2017})
+        ['wifi_turned_over.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

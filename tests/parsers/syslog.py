@@ -32,9 +32,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseRsyslog(self):
     """Tests the Parse function on a rsyslog file."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2020}
-    storage_writer = self._ParseFile(
-        ['syslog_rsyslog'], parser, knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['syslog_rsyslog'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -64,10 +62,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseRsyslogTraditional(self):
     """Tests the Parse function on a traditional rsyslog file."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2016}
-    storage_writer = self._ParseFile(
-        ['syslog_rsyslog_traditional'], parser,
-        knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['syslog_rsyslog_traditional'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -97,10 +92,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseRsyslogProtocol23(self):
     """Tests the Parse function on a protocol 23 rsyslog file."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2021}
     storage_writer = self._ParseFile(
-        ['syslog_rsyslog_SyslogProtocol23Format'], parser,
-        knowledge_base_values=knowledge_base_values)
+        ['syslog_rsyslog_SyslogProtocol23Format'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -130,10 +123,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseRsyslogSysklogd(self):
     """Tests the Parse function on a syslogkd format rsyslog file."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2021}
     storage_writer = self._ParseFile(
-        ['syslog_rsyslog_SysklogdFileFormat'], parser,
-        knowledge_base_values=knowledge_base_values)
+        ['syslog_rsyslog_SysklogdFileFormat'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -163,10 +154,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2016}
-    storage_writer = self._ParseFile(
-        ['syslog_osx'], parser,
-        knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['syslog_osx'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -196,10 +184,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParseChromeOS(self):
     """Tests the Parse function."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2016}
-    storage_writer = self._ParseFile(
-        ['syslog_chromeos'], parser,
-        knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['syslog_chromeos'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -230,9 +215,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2012}
-    storage_writer = self._ParseFile(
-        ['syslog'], parser, knowledge_base_values=knowledge_base_values)
+    storage_writer = self._ParseFile(['syslog'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -271,33 +254,6 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
-
-  # TODO: move this to timeliner tests.
-  def testParseNonLeapYear(self):
-    """Tests the Parse function with a non-leap year."""
-    parser = syslog.SyslogParser()
-    knowledge_base_values = {'year': 2013}
-    storage_writer = self._ParseFile(
-        ['syslog'], parser, knowledge_base_values=knowledge_base_values)
-
-    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    self.assertEqual(number_of_event_data, 16)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 15)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 1)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'timelining_warning')
-    self.assertEqual(number_of_warnings, 1)
 
 
 if __name__ == '__main__':

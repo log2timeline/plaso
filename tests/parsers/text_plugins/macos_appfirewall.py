@@ -15,8 +15,7 @@ class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
-        ['appfirewall.log'], plugin, knowledge_base_values={'year': 2013})
+    storage_writer = self._ParseTextFileWithPlugin(['appfirewall.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

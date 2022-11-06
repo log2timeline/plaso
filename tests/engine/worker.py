@@ -159,20 +159,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testAnalyzeDataStream(self):
     """Tests the _AnalyzeDataStream function."""
-    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -208,20 +203,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testAnalyzeFileObject(self):
     """Tests the _AnalyzeFileObject function."""
-    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -276,20 +266,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testExtractContentFromDataStream(self):
     """Tests the _ExtractContentFromDataStream function."""
-    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -319,20 +304,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testExtractMetadataFromFileEntry(self):
     """Tests the _ExtractMetadataFromFileEntry function."""
-    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -362,20 +342,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testGetCompressedStreamTypes(self):
     """Tests the _GetCompressedStreamTypes function."""
-    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_writer.FakeStorageWriter()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
 
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object, resolver_context=resolver_context)
-    parser_mediator.SetPreferredYear(2016)
     parser_mediator.SetStorageWriter(storage_writer)
 
     extraction_worker = worker.EventExtractionWorker()
@@ -424,8 +399,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testProcessPathSpecFile(self):
     """Tests the ProcessPathSpec function on a file."""
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['syslog'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -435,13 +408,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 13}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecCompressedFileGZIP(self):
     """Tests the ProcessPathSpec function on a gzip compressed file."""
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['syslog.gz'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -451,13 +421,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 9}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecCompressedFileBZIP2(self):
     """Tests the ProcessPathSpec function on a bzip2 compressed file."""
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['syslog.bz2'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -467,13 +434,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 9}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecCompressedFileXZ(self):
     """Tests the ProcessPathSpec function on a xz compressed file."""
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['syslog.xz'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -483,13 +447,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 9}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['syslog.tar'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -507,8 +468,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 9}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
     # Process an archive file without "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
@@ -518,8 +478,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'fs:stat': 1}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
@@ -532,13 +491,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,zip',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar,zip')
 
   def testProcessPathSpecCompressedArchive(self):
     """Tests the ProcessPathSpec function on a compressed archive file."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['syslog.tgz'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -558,8 +514,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'syslog:line': 9}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
@@ -572,13 +527,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,zip',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar,zip')
 
   def testProcessPathSpecDMG(self):
     """Tests the ProcessPathSpec function on a DMG image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -598,13 +550,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'fs:stat': 7}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecTarWithDMG(self):
     """Tests the ProcessPathSpec function on a TAR with a DMG image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg.tar'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -617,21 +566,17 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar')
 
     expected_event_data_counts = {
         'fs:stat': 9}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='modi,tar',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='modi,tar')
 
   def testProcessPathSpecISO(self):
     """Tests the ProcessPathSpec function on an ISO image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['iso9660.raw'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -648,13 +593,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'fs:stat': 5}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecTarWithISO(self):
     """Tests the ProcessPathSpec function on a TAR with an ISO image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['iso9660.raw.tar'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -667,21 +609,17 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar')
 
     expected_event_data_counts = {
         'fs:stat': 7}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='iso9660,tar',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='iso9660,tar')
 
   def testProcessPathSpecVHD(self):
     """Tests the ProcessPathSpec function on a VHD image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['image.vhd'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -698,13 +636,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'fs:stat': 5}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   def testProcessPathSpecTarWithVHD(self):
     """Tests the ProcessPathSpec function on a TAR with a VHD image."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['image.vhd.tar'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -717,21 +652,17 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar')
 
     expected_event_data_counts = {
         'fs:stat': 7}
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,vhdi',
-        knowledge_base_values=knowledge_base_values)
+        archive_types_string='tar,vhdi')
 
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
-    knowledge_base_values = {'year': 2016}
-
     test_file_path = self._GetTestFilePath(['image.vmdk'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -748,8 +679,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         'fs:stat': 6}
 
     self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        knowledge_base_values=knowledge_base_values)
+        storage_writer, path_spec, expected_event_data_counts)
 
   # TODO: add tests for SetExtractionConfiguration
   # TODO: add tests for SetAnalyzersProfiler
@@ -763,8 +693,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._SetHashers('md5')
     self.assertIn('hashing', extraction_worker.GetAnalyzerNames())
 
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['empty_file'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -773,8 +701,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        extraction_worker=extraction_worker,
-        knowledge_base_values=knowledge_base_values)
+        extraction_worker=extraction_worker)
 
     storage_writer.Open()
 
@@ -800,8 +727,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._SetYaraRules(rule_string)
     self.assertIn('yara', extraction_worker.GetAnalyzerNames())
 
-    knowledge_base_values = {'year': 2016}
-
     path_spec = self._GetTestFilePathSpec(['test_pe.exe'])
     storage_writer = fake_writer.FakeStorageWriter()
 
@@ -812,8 +737,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self._TestProcessPathSpec(
         storage_writer, path_spec, expected_event_data_counts,
-        extraction_worker=extraction_worker,
-        knowledge_base_values=knowledge_base_values)
+        extraction_worker=extraction_worker)
 
     storage_writer.Open()
 
