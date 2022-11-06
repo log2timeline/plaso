@@ -12,8 +12,8 @@ environment:
     PYTHON: "C:\\Python310-x64"
     PYTHON_VERSION: "3.10"
     L2TBINARIES_TRACK: "dev"
-  - DESCRIPTION: "Mac OS with Python 3.10"
-    APPVEYOR_BUILD_WORKER_IMAGE: macos
+  - DESCRIPTION: "Mac OS with Python 3.11"
+    APPVEYOR_BUILD_WORKER_IMAGE: macos-monterey
     HOMEBREW_NO_INSTALL_CLEANUP: 1
 
 install:
