@@ -251,6 +251,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
           date_time_value = value.CopyToDateTimeString()
         value = date_time_value
 
+      elif isinstance(value, list) and value and isinstance(
+          value[0], dfdatetime_interface.DateTimeValues):
+        value = [date_time_value.CopyToDateTimeStringISO8601()
+                 for date_time_value in value]
+
       error_message = (
           'event value: "{0:s}" does not match expected value').format(name)
       self.assertEqual(value, expected_value, error_message)

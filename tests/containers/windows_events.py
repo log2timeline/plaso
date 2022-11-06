@@ -71,6 +71,7 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_data_stream_row_identifier',
+        'creation_time',
         'data_type',
         'device_path',
         'origin',

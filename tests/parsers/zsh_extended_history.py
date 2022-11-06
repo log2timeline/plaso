@@ -17,6 +17,10 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
     parser = zsh_extended_history.ZshExtendedHistoryParser()
     storage_writer = self._ParseFile(['zsh_extended_history.txt'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)
 
@@ -28,29 +32,14 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'command': 'cd plaso',
         'data_type': 'shell:zsh:history',
-        'date_time': '2016-03-12T08:26:50+00:00',
-        'elapsed_seconds': 0}
+        'elapsed_seconds': 0,
+        'last_written_time': '2016-03-12T08:26:50+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'command': 'echo dfgdfg \\\\\n& touch /tmp/afile',
-        'data_type': 'shell:zsh:history',
-        'date_time': '2016-03-26T11:54:53+00:00',
-        'elapsed_seconds': 0}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'shell:zsh:history',
-        'date_time': '2016-03-26T11:54:57+00:00'}
-
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testVerification(self):
     """Tests for the VerifyStructure method"""

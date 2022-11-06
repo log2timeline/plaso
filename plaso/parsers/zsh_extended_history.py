@@ -12,9 +12,7 @@ import pyparsing
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -25,6 +23,8 @@ class ZshHistoryEventData(events.EventData):
   Attributes:
     command (str): command that was run.
     elapsed_seconds (int): number of seconds that the command took to execute.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
   DATA_TYPE = 'shell:zsh:history'
 
@@ -33,6 +33,7 @@ class ZshHistoryEventData(events.EventData):
     super(ZshHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
     self.elapsed_seconds = None
+    self.last_written_time = None
 
 
 class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -65,7 +66,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure parsed from the log file.
 
@@ -76,23 +77,23 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+
     event_data = ZshHistoryEventData()
     event_data.command = self._GetValueFromStructure(structure, 'command')
     event_data.elapsed_seconds = self._GetValueFromStructure(
         structure, 'elapsed_seconds')
+    event_data.last_written_time =dfdatetime_posix_time.PosixTime(
+        timestamp=timestamp)
 
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies whether content corresponds to a ZSH extended_history file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:

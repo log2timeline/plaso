@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import winprefetch
 
 from tests.parsers import test_lib
@@ -18,6 +17,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['CMD.EXE-087B4001.pf'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -28,8 +31,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
 
     # Check the prefetch last run event.
     expected_mapped_files = [
@@ -74,31 +75,35 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2013-03-10T10:11:49.2812500+00:00',
         'executable': 'CMD.EXE',
+        'last_run_time': '2013-03-10T10:11:49.2812500+00:00',
         'mapped_files': expected_mapped_files,
         'prefetch_hash': 0x087b4001,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 17,
         'volume_serial_numbers': [0x24cb074b]}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
     # Check the volume creation event.
     expected_event_values = {
+        'creation_time': '2013-03-10T10:19:46.2343750+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2013-03-10T10:19:46.2343750+00:00',
         'device_path': '\\DEVICE\\HARDDISKVOLUME1',
         'origin': 'CMD.EXE-087B4001.pf',
-        'serial_number': 0x24cb074b,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'serial_number': 0x24cb074b}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['PING.EXE-B29F6629.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
@@ -111,36 +116,41 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # The prefetch last run event.
+    # Check the prefetch execution event data.
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2012-04-06T19:00:55.9329556+00:00',
         'executable': 'PING.EXE',
+        'last_run_time': '2012-04-06T19:00:55.9329556+00:00',
         'path_hints': ['\\WINDOWS\\SYSTEM32\\PING.EXE'],
         'prefetch_hash': 0xb29f6629,
         'run_count': 14,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 23,
         'volume_device_paths': ['\\DEVICE\\HARDDISKVOLUME1'],
         'volume_serial_numbers': [0xac036525]}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # The volume creation event.
+    # Check the volume creation event data.
     expected_event_values = {
+        'creation_time': '2010-11-10T17:37:26.4843750+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2010-11-10T17:37:26.4843750+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'device_path': '\\DEVICE\\HARDDISKVOLUME1',
+        'origin': 'PING.EXE-B29F6629.pf',
+        'serial_number': 0xac036525}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['WUAUCLT.EXE-830BCC14.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
@@ -153,17 +163,14 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # The prefetch last run event.
+    # Check the prefetch execution event data.
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2012-03-15T21:17:39.8079963+00:00',
         'executable': 'WUAUCLT.EXE',
+        'last_run_time': '2012-03-15T21:17:39.8079963+00:00',
         'path_hints': ['\\WINDOWS\\SYSTEM32\\WUAUCLT.EXE'],
         'prefetch_hash': 0x830bcc14,
         'run_count': 25,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 23,
         'volume_device_paths': [
             '\\DEVICE\\HARDDISKVOLUME1',
@@ -174,21 +181,29 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'volume_serial_numbers': [
             0xac036525, 0xac036525, 0xac036525, 0xac036525, 0xac036525]}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # The volume creation event.
+    # Check the volume creation event data.
     expected_event_values = {
+        'creation_time': '2010-11-10T17:37:26.4843750+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2010-11-10T17:37:26.4843750+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'device_path': '\\DEVICE\\HARDDISKVOLUME1',
+        'origin': 'WUAUCLT.EXE-830BCC14.pf',
+        'serial_number': 0xac036525}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['TASKHOST.EXE-3AE259FC.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
@@ -201,21 +216,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # The prefetch last run event.
-    expected_event_values = {
-        'data_type': 'windows:prefetch:execution',
-        'date_time': '2013-10-04T15:40:09.0378333+00:00',
-        'executable': 'TASKHOST.EXE',
-        'prefetch_hash': 0x3ae259fc,
-        'run_count': 4,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
-        'version': 26}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    # The prefetch previous last run event.
+    # Check the prefetch execution event data.
     expected_mapped_files = [
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL [46299-1]',
         '\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKHOST.EXE',
@@ -280,26 +281,40 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2013-10-04T15:28:09.0103565+00:00',
+        'executable': 'TASKHOST.EXE',
+        'last_run_time': '2013-10-04T15:40:09.0378333+00:00',
         'mapped_files': expected_mapped_files,
-        'timestamp_desc': 'Previous {0:s}'.format(
-            definitions.TIME_DESCRIPTION_LAST_RUN)}
+        'prefetch_hash': 0x3ae259fc,
+        'previous_run_times': [
+            '2013-10-04T15:28:09.0103565+00:00',
+            '2013-10-04T06:19:54.5960606+00:00',
+            '2013-10-04T06:11:13.6429375+00:00'],
+        'run_count': 4,
+        'version': 26}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # The volume creation event.
+    # Check the volume creation event data.
     expected_event_values = {
+        'creation_time': '2013-10-04T15:57:26.1465476+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2013-10-04T15:57:26.1465476+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'device_path': '\\DEVICE\\HARDDISKVOLUME2',
+        'origin': 'TASKHOST.EXE-3AE259FC.pf',
+        'serial_number': 0x686c4249}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParse30Compressed(self):
     """Tests the Parse function on a compressed version 30 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
         ['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 8)
@@ -312,44 +327,46 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # The prefetch last run event.
+    # Check the prefetch execution event data.
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2015-05-14T22:11:58.0911341+00:00',
         'executable': 'BYTECODEGENERATOR.EXE',
+        'last_run_time': '2015-05-14T22:11:58.0911341+00:00',
         'prefetch_hash': 0xc1e9bce6,
+        'previous_run_times': [
+            '2015-05-14T22:11:55.3576520+00:00',
+            '2015-05-14T22:11:45.5135991+00:00',
+            '2015-05-14T22:11:25.8427278+00:00',
+            '2015-05-14T22:11:19.8586549+00:00',
+            '2015-05-14T22:11:05.9066547+00:00',
+            '2015-05-14T22:10:38.2515193+00:00'],
         'run_count': 7,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 30}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # The prefetch previous last run event.
-    expected_event_values = {
-        'data_type': 'windows:prefetch:execution',
-        'date_time': '2015-05-14T22:11:55.3576520+00:00',
-        'timestamp_desc': 'Previous {0:s}'.format(
-            definitions.TIME_DESCRIPTION_LAST_RUN)}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self.assertEqual(len(event_data.mapped_files), 1085)
 
-    # The volume creation event.
+    # Check the volume creation event data.
     expected_event_values = {
+        'creation_time': '2015-05-15T06:54:55.1392941+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2015-05-15T06:54:55.1392941+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'device_path': '\\VOLUME{01d08edc0cbccaad-3e0d2d25}',
+        'origin': 'BYTECODEGENERATOR.EXE-C1E9BCE6.pf',
+        'serial_number': 0x3e0d2d25}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParse30Variant2Compressed(self):
     """Tests the Parse function on a compressed version 30 variant 2 file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['NOTEPAD.EXE-D8414F97.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -362,39 +379,32 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # The prefetch last run event.
+    # Check the prefetch execution event data.
     expected_event_values = {
         'data_type': 'windows:prefetch:execution',
-        'date_time': '2019-06-05T19:55:04.8777787+00:00',
         'executable': 'NOTEPAD.EXE',
+        'last_run_time': '2019-06-05T19:55:04.8777787+00:00',
         'prefetch_hash': 0xd8414f97,
+        'previous_run_times': [
+            '2019-06-05T19:23:00.8157052+00:00'],
         'run_count': 2,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_RUN,
         'version': 30}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # The prefetch previous last run event.
-    expected_event_values = {
-        'data_type': 'windows:prefetch:execution',
-        'date_time': '2019-06-05T19:23:00.8157052+00:00',
-        'timestamp_desc': 'Previous {0:s}'.format(
-            definitions.TIME_DESCRIPTION_LAST_RUN)}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    event_data = self._GetEventDataOfEvent(storage_writer, events[2])
     self.assertEqual(len(event_data.mapped_files), 56)
 
-    # The volume creation event.
+    # Check the volume creation event data.
     expected_event_values = {
+        'creation_time': '2017-07-30T19:40:03.5487843+00:00',
         'data_type': 'windows:volume:creation',
-        'date_time': '2017-07-30T19:40:03.5487843+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'device_path': '\\VOLUME{01d3096ba3a46863-2ca3d1ae}',
+        'origin': 'NOTEPAD.EXE-D8414F97.pf',
+        'serial_number': 0x2ca3d1ae}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

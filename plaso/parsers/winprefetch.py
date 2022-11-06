@@ -4,12 +4,9 @@
 import pyscca
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -21,10 +18,14 @@ class WinPrefetchExecutionEventData(events.EventData):
   Attributes:
     executable (str): executable filename.
     format_version (int): format version.
+    last_run_time (dfdatetime.DateTimeValues): executable (binary) last run
+        date and time.
     mapped_files (list[str]): mapped filenames.
     number_of_volumes (int): number of volumes.
     path_hints (list[str]): possible full paths to the executable.
     prefetch_hash (int): prefetch hash.
+    previous_run_times (list[dfdatetime.DateTimeValues]): previous executable
+        (binary) run date and time.
     run_count (int): run count.
     volume_device_paths (list[str]): volume device paths.
     volume_serial_numbers (list[int]): volume serial numbers.
@@ -37,10 +38,12 @@ class WinPrefetchExecutionEventData(events.EventData):
     super(WinPrefetchExecutionEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.executable = None
+    self.last_run_time = None
     self.mapped_files = None
     self.number_of_volumes = None
     self.path_hints = None
     self.prefetch_hash = None
+    self.previous_run_times = None
     self.run_count = None
     self.version = None
     self.volume_device_paths = None
@@ -72,7 +75,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       scca_file (pyscca.file): Windows Prefetch (SCCA) file
 
     Raises:
@@ -98,14 +101,13 @@ class WinPrefetchParser(interface.FileObjectParser):
       timestamp = volume_information.get_creation_time_as_integer()
       if timestamp:
         event_data = windows_events.WindowsVolumeEventData()
+        event_data.creation_time = dfdatetime_filetime.Filetime(
+            timestamp=timestamp)
         event_data.device_path = volume_device_path
         event_data.origin = parser_mediator.GetFilename()
         event_data.serial_number = volume_serial_number
 
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
       for filename in iter(scca_file.filenames):
         if not filename:
@@ -146,37 +148,31 @@ class WinPrefetchParser(interface.FileObjectParser):
     event_data.volume_serial_numbers = volume_serial_numbers
 
     timestamp = scca_file.get_last_run_time_as_integer(0)
-    if not timestamp:
-      parser_mediator.ProduceExtractionWarning('missing last run time')
-      date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    if timestamp:
+      event_data.last_run_time = dfdatetime_filetime.Filetime(
+          timestamp=timestamp)
 
     # Check for the 7 older last run time values available since
     # format version 26.
     if format_version >= 26:
+      previous_run_times = []
       for last_run_time_index in range(1, 8):
         timestamp = scca_file.get_last_run_time_as_integer(last_run_time_index)
-        if not timestamp:
-          continue
+        if timestamp:
+          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+          previous_run_times.append(date_time)
 
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        date_time_description = 'Previous {0:s}'.format(
-            definitions.TIME_DESCRIPTION_LAST_RUN)
-        event = time_events.DateTimeValuesEvent(
-            date_time, date_time_description)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      if previous_run_times:
+        event_data.previous_run_times = previous_run_times
+
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Prefetch file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
     scca_file = pyscca.file()

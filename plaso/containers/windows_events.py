@@ -109,6 +109,7 @@ class WindowsVolumeEventData(events.EventData):
   """Windows volume event data attribute container.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): volume creation date and time.
     device_path (str): volume device path.
     origin (str): origin of the event (event source), for example
         the corresponding Prefetch file name.
@@ -120,6 +121,7 @@ class WindowsVolumeEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(WindowsVolumeEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.device_path = None
     # TODO: replace origin with something machine readable.
     self.origin = None
