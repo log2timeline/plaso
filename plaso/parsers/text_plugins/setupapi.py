@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for Windows SetupAPI log files.
 
-The format is documented at:
-https://docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi-text-logs
+Also see:
+  https://learn.microsoft.com/en-us/windows-hardware/drivers/install/setupapi-text-logs
 """
 
 import pyparsing

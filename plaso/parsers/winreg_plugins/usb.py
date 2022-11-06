@@ -2,7 +2,7 @@
 """File containing a Windows Registry plugin to parse the USB Device key.
 
 Also see:
-  https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/
+  https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/
 """
 
 from plaso.containers import events

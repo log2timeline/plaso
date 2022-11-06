@@ -23,8 +23,7 @@ Start by setting up a development environment:
 
 Once you've set up your development environment we recommend start simple:
 
-* [How to write a parser](How-to-write-a-parser-plugin.md)
-* [How to write a parser plugin](How-to-write-a-parser-plugin.md)
+* [How to write a parser or (parser) plugin](How-to-write-a-parser.md)
 * [How to write an analysis plugin](How-to-write-an-analysis-plugin.md)
 * [How to write an output module](How-to-write-an-output-module.md)
 * [How to write a tagging rule](How-to-write-a-tagging-rule.md)

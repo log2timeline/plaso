@@ -12,7 +12,7 @@ xcode-select --install
 
 ## Git
 
-Install the [git tools](http://git-scm.com/downloads).
+Install the [git tools](https://git-scm.com/downloads).
 
 Checkout the plaso source from the git repo:
 

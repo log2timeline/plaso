@@ -38,13 +38,6 @@ plugin gives you a quick way to see if your code is doing what you expect.
   * REPORTER
   * MESSAGE_GRAMMARS
 
-## Write the formatter
-
-The event message format is defined in `data/formatters/*.yaml`.
-
-For more information about the configuration file format see:
-[message formatting](../user/Output-and-formatting.html#message-formatting)
-
 ## Expand tests
 
 * Add additional tests that test your plugin and formatter
@@ -56,4 +49,12 @@ alphabetical order.
 * Edit `plaso/formatters/__init__.py` to import your formatter in
 alphabetical order.
 
+## Extend the timeliner and formatters configurations
+
+Extend the timeliner and formatters configurations with the necessary
+definitions for new event data types.
+
+See: [How to write a parser or (parser) plugin](How-to-write-a-parser.md)
+
 ## Code review/submit
+
