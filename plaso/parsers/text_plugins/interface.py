@@ -238,11 +238,14 @@ class TextPlugin(plugins.BasePlugin):
 
     line_structure.weight += 1
 
-    if index:
+    while index > 0:
       previous_weight = self._line_structures[index - 1].weight
-      if previous_weight and line_structure.weight > previous_weight:
-        self._line_structures[index] = self._line_structures[index - 1]
-        self._line_structures[index - 1] = line_structure
+      if line_structure.weight < previous_weight:
+        break
+
+      self._line_structures[index] = self._line_structures[index - 1]
+      self._line_structures[index - 1] = line_structure
+      index -= 1
 
   @abc.abstractmethod
   def _ParseRecord(self, parser_mediator, key, structure):
