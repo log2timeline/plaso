@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""A parser for Portable Executable (PE) files."""
+"""A parser for Portable Executable (PE) files.
+
+Also see:
+  https://www.mandiant.com/resources/blog/tracking-malware-import-hashing
+"""
 
 import os
 
@@ -48,8 +52,7 @@ class PEFileEventData(events.EventData):
     export_dll_name (str): name of the exported DLL.
     export_table_modification_time (dfdatetime.DateTimeValues): export table
         last modification date and time.
-    imphash (str): "Import Hash" of the Portable Executable (PE) file. Also see:
-        https://www.mandiant.com/resources/tracking-malware-import-hashing
+    imphash (str): "Import Hash" of the Portable Executable (PE) file.
     load_configuration_table_modification_time (dfdatetime.DateTimeValues):
         load configuration table last modification date and time.
     pe_type (str): type of Portable Executable (PE) file.

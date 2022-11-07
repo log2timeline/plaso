@@ -81,7 +81,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 ### JSON-L File formats
 
 * [Amazon Web Services CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
-* [Azure Activity logs](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
+* [Azure Activity logs](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
 * Azure application gateway access log file
 * Docker container configuration file
 * Docker container log file

@@ -3,7 +3,7 @@
 ## Git
 
 To download the latest version of Plaso you'll need to install the
-[git tools](http://git-scm.com/downloads).
+[git tools](https://git-scm.com/downloads).
 
 Checkout the Plaso source from the git repo:
 

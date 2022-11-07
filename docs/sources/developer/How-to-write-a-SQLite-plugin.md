@@ -40,13 +40,6 @@ $ l2t_scaffolder.py plaso
 * There will be TODO's and missing code inside the newly generated files. Fill
   these in with your code.
 
-## Write the formatter
-
-The event message format is defined in `data/formatters/*.yaml`.
-
-For more information about the configuration file format see:
-[message formatting](../user/Output-and-formatting.html#message-formatting)
-
 ## Expand tests
 
 * Add additional tests that test your plugin and formatter
@@ -56,6 +49,13 @@ For more information about the configuration file format see:
 * Edit `plaso/parsers/sqlite_plugins/__init__.py` to correct alphabetical
   order of the imports.
 * Edit `plaso/formatters/__init__.py` to correct alphabetical order of imports.
+
+## Extend the timeliner and formatters configurations
+
+Extend the timeliner and formatters configurations with the necessary
+definitions for new event data types.
+
+See: [How to write a parser or (parser) plugin](How-to-write-a-parser.md)
 
 ## Code review/submit
 
