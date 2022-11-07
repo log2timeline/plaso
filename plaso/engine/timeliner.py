@@ -178,8 +178,11 @@ class EventDataTimeliner(object):
 
     number_of_events = 0
     for attribute_name, time_description in attribute_mappings.items():
-      attribute_value = getattr(event_data, attribute_name, None)
-      if attribute_value:
+      attribute_values = getattr(event_data, attribute_name, None) or []
+      if not isinstance(attribute_values, list):
+        attribute_values = [attribute_values]
+
+      for attribute_value in attribute_values:
         try:
           event = self._GetEvent(
               attribute_value, time_description, event_data_identifier,

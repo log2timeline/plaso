@@ -94,6 +94,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'shell:zsh:history'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
@@ -296,6 +302,14 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:prefetch:execution'
+attribute_mappings:
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+- name: 'previous_run_times'
+  description: 'Previous Last Time Executed'
 place_holder_event: true
 ---
 data_type: 'windows:registry:amcache'
@@ -513,6 +527,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:restore_point:info'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'windows:shell_item:file_entry'
 attribute_mappings:
 - name: 'access_time'
@@ -521,6 +541,12 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:volume:creation'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
