@@ -815,6 +815,21 @@ source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
 data_type: 'windows:tasks:job'
+message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+short_message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+short_source: 'JOB'
+source: 'Windows Scheduled Task Job'
+---
+type: 'conditional'
+data_type: 'windows:tasks:trigger'
 enumeration_helpers:
 - input_attribute: 'trigger_type'
   output_attribute: 'trigger_type'
@@ -841,7 +856,7 @@ short_message:
 - 'Working directory: {working_directory}'
 - 'Trigger type: {trigger_type}'
 short_source: 'JOB'
-source: 'Windows Scheduled Task Job'
+source: 'Windows Scheduled Task Trigger'
 ---
 type: 'conditional'
 data_type: 'windows:timeline:generic'
