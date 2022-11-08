@@ -159,6 +159,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: job_variable_length_data_section.application_name_size
+  elements_terminator: "\x00\x00"
 - name: parameters_size
   data_type: uint16
 - name: parameters
@@ -166,6 +167,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: job_variable_length_data_section.parameters_size
+  elements_terminator: "\x00\x00"
 - name: working_directory_size
   data_type: uint16
 - name: working_directory
@@ -173,6 +175,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: job_variable_length_data_section.working_directory_size
+  elements_terminator: "\x00\x00"
 - name: author_size
   data_type: uint16
 - name: author
@@ -180,6 +183,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: job_variable_length_data_section.author_size
+  elements_terminator: "\x00\x00"
 - name: comment_size
   data_type: uint16
 - name: comment
@@ -187,6 +191,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: job_variable_length_data_section.comment_size
+  elements_terminator: "\x00\x00"
 - name: user_data_size
   data_type: uint16
 - name: user_data

@@ -8,8 +8,6 @@ from dfdatetime import systemtime as dfdatetime_systemtime
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -21,9 +19,10 @@ class WinJobEventData(events.EventData):
 
   Attributes:
     application (str): path to job executable.
-    description (str): description of the scheduled task.
+    comment (str): description of the scheduled task.
+    last_run_time (dfdatetime.DateTimeValues): executable (binary) last run
+        date and time.
     parameters (str): application command line parameters.
-    trigger_type (int): trigger type.
     username (str): username that scheduled the task.
     working_directory (str): working directory of the scheduled task.
   """
@@ -35,7 +34,37 @@ class WinJobEventData(events.EventData):
     super(WinJobEventData, self).__init__(data_type=self.DATA_TYPE)
     self.application = None
     self.comment = None
+    self.last_run_time = None
     self.parameters = None
+    self.username = None
+    self.working_directory = None
+
+
+class WinJobTriggerEventData(events.EventData):
+  """Windows Scheduled Task trigger event data.
+
+  Attributes:
+    application (str): path to job executable.
+    comment (str): description of the scheduled task.
+    end_time (dfdatetime.DateTimeValues): date and time the end of the trigger.
+    parameters (str): application command line parameters.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the trigger.
+    trigger_type (int): trigger type.
+    username (str): username that scheduled the task.
+    working_directory (str): working directory of the scheduled task.
+  """
+
+  DATA_TYPE = 'windows:tasks:trigger'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WinJobTriggerEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application = None
+    self.comment = None
+    self.end_time = None
+    self.parameters = None
+    self.start_time = None
     self.trigger_type = None
     self.username = None
     self.working_directory = None
@@ -74,14 +103,12 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       WinJobEventData: event data of the job file.
     """
     event_data = WinJobEventData()
-    event_data.application = (
-        variable_length_section.application_name.rstrip('\x00'))
-    event_data.comment = variable_length_section.comment.rstrip('\x00')
-    event_data.parameters = (
-        variable_length_section.parameters.rstrip('\x00'))
-    event_data.username = variable_length_section.author.rstrip('\x00')
+    event_data.application = variable_length_section.application_name or None
+    event_data.comment = variable_length_section.comment or None
+    event_data.parameters = variable_length_section.parameters or None
+    event_data.username = variable_length_section.author or None
     event_data.working_directory = (
-        variable_length_section.working_directory.rstrip('\x00'))
+        variable_length_section.working_directory or None)
 
     return event_data
 
@@ -90,7 +117,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       fixed_length_section (job_fixed_length_data_section): a Windows
           Scheduled Task job fixed-length data section.
 
@@ -116,12 +143,32 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     return date_time
 
+  def _ParseTriggerEventData(self, variable_length_section):
+    """Parses the trigger event data form a variable-length data section.
+
+    Args:
+      variable_length_section (job_variable_length_data_section): a
+          Windows Scheduled Task job variable-length data section.
+
+    Returns:
+      WinJobTriggerEventData: event data of the job file.
+    """
+    event_data = WinJobTriggerEventData()
+    event_data.application = variable_length_section.application_name or None
+    event_data.comment = variable_length_section.comment or None
+    event_data.parameters = variable_length_section.parameters or None
+    event_data.username = variable_length_section.author or None
+    event_data.working_directory = (
+        variable_length_section.working_directory or None)
+
+    return event_data
+
   def _ParseTriggerEndTime(self, parser_mediator, trigger):
     """Parses the end time from a trigger.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       trigger (job_trigger): a trigger.
 
     Returns:
@@ -136,10 +183,11 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if time_elements_tuple != (0, 0, 0, 0, 0, 0):
       try:
         date_time = dfdatetime_time_elements.TimeElements(
+            precision=dfdatetime_definitions.PRECISION_1_DAY,
             time_elements_tuple=time_elements_tuple)
+
         date_time.is_local_time = True
-        # TODO: add functionality to dfdatetime to control precision.
-        date_time._precision = dfdatetime_definitions.PRECISION_1_DAY  # pylint: disable=protected-access
+
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
             'invalid trigger end time: {0!s}'.format(time_elements_tuple))
@@ -151,7 +199,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       trigger (job_trigger): a trigger.
 
     Returns:
@@ -167,10 +215,11 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if time_elements_tuple != (0, 0, 0, 0, 0, 0):
       try:
         date_time = dfdatetime_time_elements.TimeElements(
+            precision=dfdatetime_definitions.PRECISION_1_MINUTE,
             time_elements_tuple=time_elements_tuple)
+
         date_time.is_local_time = True
-        # TODO: add functionality to dfdatetime to control precision.
-        date_time._precision = dfdatetime_definitions.PRECISION_1_MINUTE  # pylint: disable=protected-access
+
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
             'invalid trigger start time: {0!s}'.format(time_elements_tuple))
@@ -182,7 +231,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
@@ -223,45 +272,32 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     file_offset += data_size
 
     event_data = self._ParseEventData(variable_length_section)
+    event_data.last_run_time = self._ParseLastRunTime(
+        parser_mediator, fixed_length_section)
 
-    date_time = self._ParseLastRunTime(parser_mediator, fixed_length_section)
-    if date_time:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     trigger_data_map = self._GetDataTypeMap('job_trigger')
 
-    for trigger_index in range(0, variable_length_section.number_of_triggers):
+    for trigger_index in range(variable_length_section.number_of_triggers):
       try:
         trigger, data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, trigger_data_map)
       except (ValueError, errors.ParseError) as exception:
-        raise errors.WrongParser((
-            'Unable to parse trigger: {0:d} with error: {1!s}').format(
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parse trigger: {0:d} with error: {1!s}').format(
                 trigger_index, exception))
+        break
 
       file_offset += data_size
 
+      event_data = self._ParseTriggerEventData(variable_length_section)
+      event_data.end_time = self._ParseTriggerEndTime(parser_mediator, trigger)
+      event_data.start_time = self._ParseTriggerStartTime(
+          parser_mediator, trigger)
       event_data.trigger_type = trigger.trigger_type
 
-      date_time = self._ParseTriggerStartTime(parser_mediator, trigger)
-      if date_time:
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_SCHEDULED_TO_START,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      date_time = self._ParseTriggerEndTime(parser_mediator, trigger)
-      if date_time:
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_SCHEDULED_TO_START,
-            time_zone=parser_mediator.timezone)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    # TODO: create a timeless event object if last_run_time and
-    # trigger_start_time are None? What should be the description of
-    # this event?
+      parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)

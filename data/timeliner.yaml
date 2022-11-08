@@ -543,6 +543,20 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:tasks:job'
+attribute_mappings:
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+place_holder_event: true
+---
+data_type: 'windows:tasks:trigger'
+attribute_mappings:
+- name: 'end_time'
+  description: 'Scheduled to end'
+- name: 'start_time'
+  description: 'Scheduled to start'
+place_holder_event: true
+---
 data_type: 'windows:volume:creation'
 attribute_mappings:
 - name: 'creation_time'
