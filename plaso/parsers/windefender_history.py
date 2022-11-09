@@ -8,17 +8,13 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
-from plaso.containers import time_events
-
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import specification
-
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class WinDefenderHistoryEventData(events.EventData):
+class WindowsDefenderHistoryEventData(events.EventData):
   """Windows Defender scan DetectionHistory event data.
 
   Attributes:
@@ -28,6 +24,8 @@ class WinDefenderHistoryEventData(events.EventData):
     filename (str): name of the file that the threat was detected in.
     host_and_user (str): name of the host and user in "DOMAIN\\USER" format.
     process (str): name of the process that caused the detection.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
     sha256 (str): SHA-256 hash of the file.
     threat_name (str): name of the threat that was detected.
     web_filenames (list[str]): URI of files detected as downloaded from the web.
@@ -37,11 +35,13 @@ class WinDefenderHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinDefenderHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(WindowsDefenderHistoryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.additional_filenames = None
     self.container_filenames = None
     self.filename = None
     self.host_and_user = None
+    self.recorded_time = None
     self.process = None
     self.sha256 = None
     self.threat_name = None
@@ -298,22 +298,21 @@ class WinDefenderHistoryParser(
         for threat_attribute in threat_attributes['Resources']
         if 'file' not in threat_attribute['Type']]
 
-    event_data = WinDefenderHistoryEventData()
+    timestamp = threat_attributes.get('ThreatTrackingStartTime', 0)
+
+    event_data = WindowsDefenderHistoryEventData()
     event_data.additional_filenames = additional_filenames
     event_data.container_filenames = container_files
     event_data.filename = filenames[0]
     event_data.host_and_user = threat_attributes.get('Domain user1', None)
     event_data.process = threat_attributes.get('Process name', None)
+    event_data.recorded_time = dfdatetime_filetime.Filetime(
+        timestamp=timestamp)
     event_data.sha256 = threat_attributes.get('ThreatTrackingSha256', None)
     event_data.threat_name = threat_attributes.get('Threat name', None)
     event_data.web_filenames = web_files
 
-    timestamp = threat_attributes.get('ThreatTrackingStartTime', 0)
-    date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
-
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(WinDefenderHistoryParser)
