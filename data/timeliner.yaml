@@ -294,6 +294,22 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:evt:record'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:evtx:record'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:lnk:link'
 attribute_mappings:
 - name: 'access_time'

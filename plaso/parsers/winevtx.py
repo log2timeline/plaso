@@ -4,11 +4,8 @@
 import pyevtx
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -18,6 +15,8 @@ class WinEvtxRecordEventData(events.EventData):
   """Windows XML EventLog (EVTX) record event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): event record creation date
+        and time.
     computer_name (str): computer name stored in the event record.
     event_identifier (int): event identifier.
     event_level (int): event level.
@@ -31,6 +30,8 @@ class WinEvtxRecordEventData(events.EventData):
     source_name (str): name of the event source.
     strings (list[str]): event strings.
     user_sid (str): user security identifier (SID) stored in the event record.
+    written_time (dfdatetime.DateTimeValues): event record written date and
+        time.
     xml_string (str): XML representation of the event.
   """
 
@@ -39,6 +40,7 @@ class WinEvtxRecordEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(WinEvtxRecordEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.computer_name = None
     self.event_identifier = None
     self.event_level = None
@@ -51,6 +53,7 @@ class WinEvtxRecordEventData(events.EventData):
     self.source_name = None
     self.strings = None
     self.user_sid = None
+    self.written_time = None
     self.xml_string = None
 
 
@@ -158,28 +161,6 @@ class WinEvtxParser(interface.FileObjectParser):
         parser_mediator, record_index, evtx_record, recovered=recovered)
 
     try:
-      written_time = evtx_record.get_written_time_as_integer()
-    except OverflowError as exception:
-      warning_message = (
-          'unable to read written time from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
-      if recovered:
-        parser_mediator.ProduceRecoveryWarning(warning_message)
-      else:
-        parser_mediator.ProduceExtractionWarning(warning_message)
-
-      written_time = None
-
-    if written_time is None:
-      date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      date_time = dfdatetime_filetime.Filetime(timestamp=written_time)
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    try:
       creation_time = evtx_record.get_creation_time_as_integer()
     except OverflowError as exception:
       warning_message = (
@@ -193,10 +174,27 @@ class WinEvtxParser(interface.FileObjectParser):
       creation_time = None
 
     if creation_time:
-      date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.creation_time = dfdatetime_filetime.Filetime(
+          timestamp=creation_time)
+
+    try:
+      written_time = evtx_record.get_written_time_as_integer()
+    except OverflowError as exception:
+      warning_message = (
+          'unable to read written time from event record: {0:d} '
+          'with error: {1!s}').format(record_index, exception)
+      if recovered:
+        parser_mediator.ProduceRecoveryWarning(warning_message)
+      else:
+        parser_mediator.ProduceExtractionWarning(warning_message)
+
+      written_time = None
+
+    if written_time:
+      event_data.written_time = dfdatetime_filetime.Filetime(
+          timestamp=written_time)
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecords(self, parser_mediator, evtx_file):
     """Parses Windows XML EventLog (EVTX) records.

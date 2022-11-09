@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import winevt
 
 from tests.parsers import test_lib
@@ -24,6 +23,10 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 438
     #	Log type                    : System
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6501)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, (6063 + 438) * 2)
 
@@ -34,15 +37,6 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
-
-    expected_event_values = {
-        'data_type': 'windows:evt:record',
-        'date_time': '2011-07-27T06:41:47+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
-
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -59,9 +53,9 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #                     server that authenticated you.\r\n (0xc0000388)"
 
     expected_event_values = {
+        'creation_time': '2011-07-27T06:41:47+00:00',
         'computer_name': 'WKS-WINXP32BIT',
         'data_type': 'windows:evt:record',
-        'date_time': '2011-07-27T06:41:47+00:00',
         'event_category': 3,
         'event_identifier': 40961,
         'event_type': 2,
@@ -72,9 +66,10 @@ class WinEvtParserTest(test_lib.ParserTestCase):
             '"The system detected a possible attempt to compromise security. '
             'Please ensure that you can contact the server that authenticated '
             'you.\r\n (0xc0000388)"')],
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
+        'written_time': '2011-07-27T06:41:47+00:00'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

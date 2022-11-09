@@ -4,11 +4,8 @@
 import pyevt
 
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -18,13 +15,15 @@ class WinEvtRecordEventData(events.EventData):
   """Windows EventLog (EVT) record event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): event record creation date
+        and time.
     computer_name (str): computer name stored in the event record.
     event_category (int): event category.
     event_identifier (int): event identifier.
     event_type (int): event type.
     facility (int): event facility.
     message_identifier (int): event message identifier.
-    offset (int): offset of the EVT record relative to the start of the file,
+    offset (int): offset of the event record relative to the start of the file,
         from which the event data was extracted.
     record_number (int): event record number.
     recovered (bool): True if the record was recovered.
@@ -32,6 +31,8 @@ class WinEvtRecordEventData(events.EventData):
     source_name (str): name of the event source.
     strings (list[str]): event strings.
     user_sid (str): user security identifier (SID) stored in the event record.
+    written_time (dfdatetime.DateTimeValues): event record written date and
+        time.
   """
 
   DATA_TYPE = 'windows:evt:record'
@@ -39,6 +40,7 @@ class WinEvtRecordEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(WinEvtRecordEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.computer_name = None
     self.event_category = None
     self.event_identifier = None
@@ -52,6 +54,7 @@ class WinEvtRecordEventData(events.EventData):
     self.source_name = None
     self.strings = None
     self.user_sid = None
+    self.written_time = None
 
 
 class WinEvtParser(interface.FileObjectParser):
@@ -165,10 +168,8 @@ class WinEvtParser(interface.FileObjectParser):
       creation_time = None
 
     if creation_time:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=creation_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.creation_time = dfdatetime_posix_time.PosixTime(
+          timestamp=creation_time)
 
     try:
       written_time = evt_record.get_written_time_as_integer()
@@ -184,16 +185,10 @@ class WinEvtParser(interface.FileObjectParser):
       written_time = None
 
     if written_time:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=written_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.written_time = dfdatetime_posix_time.PosixTime(
+          timestamp=written_time)
 
-    if not creation_time and not written_time:
-      date_time = dfdatetime_semantic_time.NotSet()
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecords(self, parser_mediator, evt_file):
     """Parses Windows EventLog (EVT) records.
