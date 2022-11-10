@@ -20,7 +20,6 @@ from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.winreg_plugins import amcache
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
-from plaso.parsers.winreg_plugins import default
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import mrulistex
