@@ -91,6 +91,16 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     # Test: data_type is 'windows:evtx:record' AND
     #       source_name is 'Microsoft-Windows-Security-Auditing' AND
+    #       event_identifier is 4798
+    attribute_values_per_name = {
+        'event_identifier': [4798],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing' AND
     #       event_identifier is 4799
     attribute_values_per_name = {
         'event_identifier': [4799],
