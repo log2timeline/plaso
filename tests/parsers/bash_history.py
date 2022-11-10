@@ -21,6 +21,10 @@ class BashHistoryTest(test_lib.ParserTestCase):
       expected_number_of_extraction_warnings (Optional[int]): number of expected
           extraction warnings.
     """
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
 
@@ -32,28 +36,13 @@ class BashHistoryTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'command': '/usr/lib/plaso',
         'data_type': 'bash:history:command',
-        'date_time': '2013-10-01T12:36:17+00:00'}
+        'last_written_time': '2013-10-01T12:36:17+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'command': '/bin/bash',
-        'data_type': 'bash:history:command',
-        'date_time': '2013-10-01T12:36:18+00:00'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'command': '/usr/local/bin/splunk -p 8080',
-        'data_type': 'bash:history:command',
-        'date_time': '2013-10-01T12:36:19+00:00'}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParsingExtractionDesync(self):
     """Tests that the parser correctly handles a desynchronized file.

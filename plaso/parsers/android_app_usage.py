@@ -4,12 +4,11 @@
 import os
 
 from defusedxml import ElementTree
+
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -18,16 +17,19 @@ class AndroidAppUsageEventData(events.EventData):
   """Android application usage event data.
 
   Attributes:
-    package (str): name of the Android application.
     component (str): name of the individual component of the application.
+    last_resume_time (dfdatetime.DateTimeValues): date and time the application
+        was last resumed.
+    package (str): name of the Android application.
   """
 
-  DATA_TYPE = 'android:event:last_resume_time'
+  DATA_TYPE = 'android:app_usage'
 
   def __init__(self):
     """Initializes event data."""
     super(AndroidAppUsageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.component = None
+    self.last_resume_time = None
     self.package = None
 
 
@@ -88,12 +90,11 @@ class AndroidAppUsageParser(interface.FileObjectParser):
 
         event_data = AndroidAppUsageEventData()
         event_data.component = part_node.get('name', None)
+        event_data.last_resume_time = dfdatetime_java_time.JavaTime(
+            timestamp=last_resume_time)
         event_data.package = package_name
 
-        date_time = dfdatetime_java_time.JavaTime(timestamp=last_resume_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_RESUME)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(AndroidAppUsageParser)

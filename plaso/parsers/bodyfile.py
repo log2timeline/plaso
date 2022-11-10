@@ -12,11 +12,10 @@ More information about the format specifications can be read here:
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from dfvfs.helpers import text_file
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -27,6 +26,12 @@ class BodyfileEventData(events.EventData):
   """Bodyfile event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): file entry last access date
+        and time.
+    change_time (dfdatetime.DateTimeValues): file entry inode change
+        (or metadata last modification) date and time.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     filename (str): name of the file.
     group_identifier (int): group identifier (GID), equivalent to st_gid.
     inode (int): "inode" of the file. Note that inode is an overloaded term
@@ -34,6 +39,8 @@ class BodyfileEventData(events.EventData):
         well.
     md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
     mode_as_string (str): protection mode.
+    modification_time (dfdatetime.DateTimeValues): file entry last modification
+        date and time.
     offset (int): number of the corresponding line, from which the event data
         was extracted.
     owner_identifier (str): user identifier (UID or SID) of the owner.
@@ -46,11 +53,15 @@ class BodyfileEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(BodyfileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
+    self.change_time = None
+    self.creation_time = None
     self.filename = None
     self.group_identifier = None
     self.inode = None
     self.md5 = None
     self.mode_as_string = None
+    self.modification_time = None
     self.offset = None
     self.owner_identifier = None
     self.size = None
@@ -84,15 +95,18 @@ class BodyfileParser(interface.FileObjectParser):
 
     Returns:
       dfdatetime.TimeElements: date and time based on the floating-point
-          timestamp.
+          timestamp or None if not set.
     """
+    if not float_value:
+      return None
+
     integer_value = int(float_value)
-    if integer_value != float_value:
+    if integer_value == float_value:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=integer_value)
+    else:
       integer_value = int(float_value * definitions.NANOSECONDS_PER_SECOND)
       date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
           timestamp=integer_value)
-    else:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=integer_value)
 
     date_time.is_local_time = True
     return date_time
@@ -273,49 +287,22 @@ class BodyfileParser(interface.FileObjectParser):
           filename, _, symbolic_link_target = filename.rpartition(' -> ')
 
         event_data = BodyfileEventData()
+        event_data.access_time = self._GetDateTimeFromTimestamp(atime_value)
+        event_data.change_time = self._GetDateTimeFromTimestamp(ctime_value)
+        event_data.creation_time = self._GetDateTimeFromTimestamp(crtime_value)
         event_data.filename = filename
         event_data.group_identifier = gid_value
         event_data.inode = inode_value
         event_data.md5 = md5_value
         event_data.mode_as_string = mode_as_string_value
+        event_data.modification_time = self._GetDateTimeFromTimestamp(
+            mtime_value)
         event_data.offset = file_object.tell()
         event_data.owner_identifier = uid_value
         event_data.size = size_value
         event_data.symbolic_link_target = symbolic_link_target
 
-        if atime_value:
-          date_time = self._GetDateTimeFromTimestamp(atime_value)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS,
-              time_zone=parser_mediator.timezone)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        if ctime_value:
-          date_time = self._GetDateTimeFromTimestamp(ctime_value)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
-              time_zone=parser_mediator.timezone)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        if crtime_value:
-          date_time = self._GetDateTimeFromTimestamp(crtime_value)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_CREATION,
-              time_zone=parser_mediator.timezone)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        if mtime_value:
-          date_time = self._GetDateTimeFromTimestamp(mtime_value)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_MODIFICATION,
-              time_zone=parser_mediator.timezone)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        elif not atime_value and not ctime_value and not crtime_value:
-          date_time = dfdatetime_semantic_time.NotSet()
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
       line_number += 1
 
