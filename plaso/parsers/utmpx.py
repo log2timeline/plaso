@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Parser for utmpx files."""
+"""Parser for MacOS utmpx files."""
 
 import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -27,9 +26,10 @@ class UtmpxMacOSEventData(events.EventData):
     terminal_identifier (int): inittab identifier.
     type (int): type of login.
     username (str): user name.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
-  DATA_TYPE = 'mac:utmpx:event'
+  DATA_TYPE = 'macos:utmpx:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -41,6 +41,7 @@ class UtmpxMacOSEventData(events.EventData):
     self.terminal_identifier = None
     self.type = None
     self.username = None
+    self.written_time = None
 
 
 class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
@@ -68,11 +69,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           the file-like object.
 
     Returns:
-      tuple: containing:
-
-        int: timestamp, which contains the number of microseconds
-            since January 1, 1970, 00:00:00 UTC.
-        UtmpxMacOSEventData: event data of the utmpx entry read.
+      UtmpxMacOSEventData: event data of the utmpx entry read.
 
     Raises:
       ParseError: if the entry cannot be parsed.
@@ -94,7 +91,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       username = entry.username.split(b'\x00')[0]
-      username = username.decode(encoding)
+      username = username.decode(encoding).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode username string')
@@ -102,7 +99,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       terminal = entry.terminal.split(b'\x00')[0]
-      terminal = terminal.decode(encoding)
+      terminal = terminal.decode(encoding).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode terminal string')
@@ -113,7 +110,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       hostname = entry.hostname.split(b'\x00')[0]
-      hostname = hostname.decode(encoding)
+      hostname = hostname.decode(encoding).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode hostname string')
@@ -122,18 +119,21 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if not hostname:
       hostname = 'localhost'
 
+    timestamp = entry.microseconds + (
+        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
+
     event_data = UtmpxMacOSEventData()
     event_data.hostname = hostname
     event_data.pid = entry.pid
     event_data.offset = file_offset
-    event_data.terminal = terminal
+    event_data.terminal = terminal or None
     event_data.terminal_identifier = entry.terminal_identifier
     event_data.type = entry.type
-    event_data.username = username
+    event_data.username = username or None
+    event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
 
-    timestamp = entry.microseconds + (
-        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
-    return timestamp, event_data
+    return event_data
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -160,8 +160,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     file_offset = 0
 
     try:
-      timestamp, event_data = self._ReadEntry(
-          parser_mediator, file_object, file_offset)
+      event_data = self._ReadEntry(parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.WrongParser(
           'Unable to parse utmpx file header with error: {0!s}'.format(
@@ -184,16 +183,11 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         break
 
       try:
-        timestamp, event_data = self._ReadEntry(
-            parser_mediator, file_object, file_offset)
+        event_data = self._ReadEntry(parser_mediator, file_object, file_offset)
       except errors.ParseError:
         break
 
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_START)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
       file_offset = file_object.tell()
 

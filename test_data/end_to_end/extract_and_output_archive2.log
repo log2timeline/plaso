@@ -1,8 +1,8 @@
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
-1970-01-01T00:00:00.000000+00:00,Start Time,LOG,UTMP session,User:  Hostname: localhost Terminal:  PID: 0 Terminal identifier: 0 Status: EMPTY IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
-1970-01-01T00:00:00.000000+00:00,Start Time,LOG,UTMP session,User:  Hostname: localhost Terminal:  PID: 0 Terminal identifier: 0 Status: EMPTY IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
-2011-12-01T17:36:38.432935+00:00,Start Time,LOG,UTMP session,User: userA Hostname: 10.10.122.1 Terminal: pts/32 PID: 20060 Terminal identifier: 842084211 Status: USER_PROCESS IP Address: 10.10.122.1 Exit status: 0,utmp,ZIP:/wtmp.1,-
-2011-12-02T00:21:18.725048+00:00,Start Time,LOG,UTMP session,User:  Hostname: localhost Terminal: pts/89 PID: 20060 Terminal identifier: 0 Status: DEAD_PROCESS IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
+1970-01-01T00:00:00.000000+00:00,Content Modification Time,LOG,UTMP session,Hostname: localhost PID: 0 Terminal identifier: 0 Status: EMPTY IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
+1970-01-01T00:00:00.000000+00:00,Content Modification Time,LOG,UTMP session,Hostname: localhost PID: 0 Terminal identifier: 0 Status: EMPTY IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
+2011-12-01T17:36:38.432935+00:00,Content Modification Time,LOG,UTMP session,User: userA Hostname: 10.10.122.1 Terminal: pts/32 PID: 20060 Terminal identifier: 842084211 Status: USER_PROCESS IP Address: 10.10.122.1 Exit status: 0,utmp,ZIP:/wtmp.1,-
+2011-12-02T00:21:18.725048+00:00,Content Modification Time,LOG,UTMP session,Hostname: localhost Terminal: pts/89 PID: 20060 Terminal identifier: 0 Status: DEAD_PROCESS IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
 2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No change in [/etc/netgroup]. Done,syslog,ZIP:/syslog,-
 2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No new content.,syslog,ZIP:/syslog,-
 2012-01-22T07:53:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051,syslog,ZIP:/syslog,-

@@ -12,6 +12,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'av:defender:detection_history'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'aws:elb:access'
 attribute_mappings:
 - name: 'request_time'
@@ -129,6 +135,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'linux:utmp:event'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'macos:appfirewall_log:entry'
 attribute_mappings:
 - name: 'added_time'
@@ -139,6 +151,12 @@ data_type: 'macos:securityd_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'macos:utmpx:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:wifi_log:entry'

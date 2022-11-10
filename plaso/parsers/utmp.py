@@ -6,7 +6,6 @@ import os
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -28,6 +27,7 @@ class UtmpEventData(events.EventData):
     terminal (str): type of terminal.
     type (int): type of login.
     username (str): user name.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
   DATA_TYPE = 'linux:utmp:event'
@@ -44,6 +44,7 @@ class UtmpEventData(events.EventData):
     self.terminal = None
     self.type = None
     self.username = None
+    self.written_time = None
 
 
 class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
@@ -74,8 +75,6 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     Returns:
       tuple: containing:
 
-        int: timestamp, which contains the number of microseconds
-            since January 1, 1970, 00:00:00 UTC.
         UtmpEventData: event data of the utmp entry read.
         list[str]: warning messages emitted by the parser.
 
@@ -100,14 +99,14 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       username = entry.username.split(b'\x00')[0]
-      username = username.decode(encoding)
+      username = username.decode(encoding).rstrip()
     except UnicodeDecodeError:
       warning_strings.append('unable to decode username string')
       username = None
 
     try:
       terminal = entry.terminal.split(b'\x00')[0]
-      terminal = terminal.decode(encoding)
+      terminal = terminal.decode(encoding).rstrip()
     except UnicodeDecodeError:
       warning_strings.append('unable to decode terminal string')
       terminal = None
@@ -117,7 +116,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       hostname = entry.hostname.split(b'\x00')[0]
-      hostname = hostname.decode(encoding)
+      hostname = hostname.decode(encoding).rstrip()
     except UnicodeDecodeError:
       warning_strings.append('unable to decode hostname string')
       hostname = None
@@ -130,6 +129,9 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     else:
       ip_address = self._FormatPackedIPv6Address(entry.ip_address)
 
+    timestamp = entry.microseconds + (
+        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
+
     # TODO: add termination status.
     event_data = UtmpEventData()
     event_data.hostname = hostname
@@ -137,14 +139,14 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data.ip_address = ip_address
     event_data.offset = file_offset
     event_data.pid = entry.pid
-    event_data.terminal = terminal
+    event_data.terminal = terminal or None
     event_data.terminal_identifier = entry.terminal_identifier
     event_data.type = entry.type
-    event_data.username = username
+    event_data.username = username or None
+    event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
 
-    timestamp = entry.microseconds + (
-        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
-    return timestamp, event_data, warning_strings
+    return event_data, warning_strings
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an utmp file-like object.
@@ -160,16 +162,16 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     file_offset = 0
 
     try:
-      timestamp, event_data, warning_strings = self._ReadEntry(
+      event_data, warning_strings = self._ReadEntry(
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.WrongParser(
           'Unable to parse first utmp entry with error: {0!s}'.format(
               exception))
 
-    if not timestamp:
+    if not event_data.written_time:
       raise errors.WrongParser(
-          'Unable to parse first utmp entry with error: missing timestamp')
+          'Unable to parse first utmp entry with error: missing written time')
 
     if not event_data.username and event_data.type != self._DEAD_PROCESS_TYPE:
       raise errors.WrongParser(
@@ -181,11 +183,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           'Unable to parse first utmp entry with error: {0:s}'.format(
               all_warnings))
 
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_START)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     file_offset = file_object.tell()
     file_size = file_object.get_size()
@@ -195,17 +193,13 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         break
 
       try:
-        timestamp, event_data, warning_strings = self._ReadEntry(
+        event_data, warning_strings = self._ReadEntry(
             parser_mediator, file_object, file_offset)
       except errors.ParseError:
         # Note that the utmp file can contain trailing data.
         break
 
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_START)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
       for warning_string in warning_strings:
         parser_mediator.ProduceExtractionWarning(warning_string)
