@@ -4,10 +4,8 @@
 import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -23,21 +21,22 @@ class ASLEventData(events.EventData):
     computer_name (str): name of the host.
     extra_information (str): extra fields associated to the event.
     facility (str): facility.
-    group_id (int): group identifier (GID).
+    group_identifier (int): group identifier (GID).
     level (str): level of criticality of the event.
-    message_id (int): message identifier.
     message (str): message of the event.
-    pid (int): process identifier (PID).
-    read_uid (int): user identifier that can read this file, where -1
-        represents all.
-    read_gid (int): the group identifier that can read this file, where -1
-        represents all.
+    message_identifier (int): message identifier.
+    process_identifier (int): process identifier (PID).
+    read_group_identifier (int): the group identifier that can read this file,
+        where -1 represents all.
+    read_user_identifier (int): user identifier that can read this file,
+        where -1 represents all.
     record_position (int): position of the event record.
     sender (str): sender or process that created the event.
-    user_sid (str): user identifier (UID).
+    user_identifier (int): user identifier (UID).
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
-  DATA_TYPE = 'mac:asl:event'
+  DATA_TYPE = 'macos:asl:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -45,32 +44,35 @@ class ASLEventData(events.EventData):
     self.computer_name = None
     self.extra_information = None
     self.facility = None
-    self.group_id = None
+    self.group_identifier = None
     self.level = None
-    self.message_id = None
     self.message = None
-    self.pid = None
-    self.read_gid = None
-    self.read_uid = None
+    self.message_identifier = None
+    self.process_identifier = None
+    self.read_group_identifier = None
+    self.read_user_identifier = None
     self.record_position = None
     self.sender = None
-    self.user_sid = None
+    self.user_identifier = None
+    self.written_time = None
 
 
 class ASLFileEventData(events.EventData):
   """Apple System Log (ASL) file event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): creation date and time.
     format_version (int): ASL file format version.
     is_dirty (bool): True if the last log entry offset does not match value
         in file header and the file is considered dirty.
   """
 
-  DATA_TYPE = 'mac:asl:file'
+  DATA_TYPE = 'macos:asl:file'
 
   def __init__(self):
     """Initializes event data."""
     super(ASLFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.format_version = None
     self.is_dirty = None
 
@@ -92,7 +94,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (file): file-like object.
       record_offset (int): offset of the record relative to the start of
           the file.
@@ -154,32 +156,29 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     # TODO: implement determine previous record offset
 
+    timestamp = ((record.written_time * definitions.NANOSECONDS_PER_SECOND) +
+                 record.written_time_nanoseconds)
+
     event_data = ASLEventData()
     event_data.computer_name = hostname
     event_data.extra_information = ', '.join([
         '{0:s}: {1!s}'.format(name, value)
         for name, value in sorted(extra_fields.items())])
     event_data.facility = facility
-    event_data.group_id = record.group_identifier
+    event_data.group_identifier = record.group_identifier
     event_data.level = record.alert_level
-    event_data.message_id = record.message_identifier
     event_data.message = message
-    event_data.pid = record.process_identifier
-    event_data.read_gid = record.real_group_identifier
-    event_data.read_uid = record.real_user_identifier
+    event_data.message_identifier = record.message_identifier
+    event_data.process_identifier = record.process_identifier
+    event_data.read_group_identifier = record.read_group_identifier
+    event_data.read_user_identifier = record.read_user_identifier
     event_data.record_position = record_offset
     event_data.sender = sender
-    # Note that the user_sid value is expected to be a string.
-    event_data.user_sid = '{0:d}'.format(record.user_identifier)
-
-    timestamp = (
-        (record.written_time * 1000000000) + record.written_time_nanoseconds)
-
-    date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+    event_data.user_identifier = record.user_identifier
+    event_data.written_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    parser_mediator.ProduceEventData(event_data)
 
     return record.next_record_offset
 
@@ -274,7 +273,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
@@ -321,14 +320,10 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data.is_dirty = is_dirty
 
     if file_header.creation_time:
-      date_time = dfdatetime_posix_time.PosixTime(
+      event_data.creation_time = dfdatetime_posix_time.PosixTime(
           timestamp=file_header.creation_time)
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(ASLParser)

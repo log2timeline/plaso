@@ -107,9 +107,9 @@ members:
   data_type: int32
 - name: group_identifier
   data_type: int32
-- name: real_user_identifier
+- name: read_user_identifier
   data_type: int32
-- name: real_group_identifier
+- name: read_group_identifier
   data_type: int32
 - name: reference_process_identifier
   data_type: uint64

@@ -6,7 +6,6 @@ import os
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -25,9 +24,10 @@ class BSMEventData(events.EventData):
         from which the event data was extracted.
     record_length (int): record length in bytes (trailer number).
     return_value (str): processed return value and exit status.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
-  DATA_TYPE = 'bsm:event'
+  DATA_TYPE = 'bsm:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,6 +37,7 @@ class BSMEventData(events.EventData):
     self.offset = None
     self.record_length = None
     self.return_value = None
+    self.written_time = None
 
 
 class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
@@ -852,12 +853,10 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data.offset = header_record_offset
     event_data.record_length = header_record_size
     event_data.return_value = return_token_values
-
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+    event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseToken(self, file_object, file_offset):
     """Parses a token.

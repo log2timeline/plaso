@@ -176,8 +176,9 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -209,8 +210,9 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -225,6 +227,10 @@ class ASLParserTest(test_lib.ParserTestCase):
     parser = asl.ASLParser()
     storage_writer = self._ParseFile(['applesystemlog.asl'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
 
@@ -236,73 +242,78 @@ class ASLParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
-        'data_type': 'mac:asl:file',
+        'creation_time': '2013-11-25T09:45:35+00:00',
+        'data_type': 'macos:asl:file',
         'format_version': 2,
-        'is_dirty': False,
-        'timestamp': '2013-11-25 09:45:35.000000'}
+        'is_dirty': False}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
     expected_event_values = {
         'computer_name': 'DarkTemplar-2.local',
-        'data_type': 'mac:asl:event',
+        'data_type': 'macos:asl:entry',
         'extra_information': (
             'CFLog Local Time: 2013-11-25 09:45:35.701, '
             'CFLog Thread: 1007, '
             'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51'),
         'facility': 'com.apple.locationd',
-        'group_id': 205,
+        'group_identifier': 205,
         'level': 4,
         'message': (
             'Incorrect NSStringEncoding value 0x8000100 detected. '
             'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
             'mapping behavior in the near future.'),
-        'message_id': 101406,
-        'pid': 69,
-        'read_gid': -1,
-        'read_uid': 205,
+        'message_identifier': 101406,
+        'process_identifier': 69,
+        'read_group_identifier': -1,
+        'read_user_identifier': 205,
         'record_position': 442,
         'sender': 'locationd',
-        'timestamp': '2013-11-25 09:45:35.705481',
-        'user_sid': '205'}
+        'user_identifier': 205,
+        'written_time': '2013-11-25T09:45:35.705481000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check a second event to ensure record strings are parsed correctly.
+    # Check a second event data to ensure record strings are parsed correctly.
     expected_event_values = {
         'computer_name': 'DarkTemplar-2.local',
-        'data_type': 'mac:asl:event',
+        'data_type': 'macos:asl:entry',
         'extra_information': (
             'CFLog Local Time: 2013-11-25 17:12:43.537, '
             'CFLog Thread: 1007, '
             'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51'),
         'facility': 'com.apple.locationd',
-        'group_id': 205,
+        'group_identifier': 205,
         'level': 4,
         'message': (
             'Incorrect NSStringEncoding value 0x8000100 detected. '
             'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
             'mapping behavior in the near future.'),
-        'message_id': 102643,
-        'pid': 69,
-        'read_gid': -1,
-        'read_uid': 205,
+        'message_identifier': 102643,
+        'process_identifier': 69,
+        'read_group_identifier': -1,
+        'read_user_identifier': 205,
         'record_position': 974,
         'sender': 'locationd',
-        'timestamp': '2013-11-25 17:12:43.571140',
-        'user_sid': '205'}
+        'user_identifier': 205,
+        'written_time': '2013-11-25T17:12:43.571140000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseDirtyFile(self):
     """Tests the Parse function on a dirty file."""
     parser = asl.ASLParser()
     storage_writer = self._ParseFile(['2019.09.26.asl'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 319)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 319)
@@ -315,15 +326,14 @@ class ASLParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 1)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
-        'data_type': 'mac:asl:file',
+        'creation_time': '2019-09-25T22:50:16+00:00',
+        'data_type': 'macos:asl:file',
         'format_version': 2,
-        'is_dirty': True,
-        'timestamp': '2019-09-25 22:50:16.000000'}
+        'is_dirty': True}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 318)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

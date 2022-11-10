@@ -1,7 +1,7 @@
 # Plaso event formatters.
 ---
 type: 'conditional'
-data_type: 'bsm:event'
+data_type: 'bsm:entry'
 enumeration_helpers:
 - input_attribute: 'event_type'
   output_attribute: 'event_type_string'
