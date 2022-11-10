@@ -12,8 +12,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
@@ -30,6 +28,7 @@ class TrendMicroAVEventData(events.EventData):
     path (str): path.
     scan_type (str): scan_type.
     threat (str): threat.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
   DATA_TYPE = 'av:trendmicro:scan'
@@ -43,6 +42,7 @@ class TrendMicroAVEventData(events.EventData):
     self.path = None
     self.scan_type = None
     self.threat = None
+    self.written_time = None
 
 
 class TrendMicroUrlEventData(events.EventData):
@@ -61,7 +61,9 @@ class TrendMicroUrlEventData(events.EventData):
     policy_identifier (int): policy identifier.
     threshold (int): threshold value.
     url (str): accessed URL.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
+
   DATA_TYPE = 'av:trendmicro:webrep'
 
   def __init__(self):
@@ -78,6 +80,7 @@ class TrendMicroUrlEventData(events.EventData):
     self.policy_identifier = None
     self.threshold = None
     self.url = None
+    self.written_time = None
 
 
 class TrendMicroBaseParser(dsv_parser.DSVParser):
@@ -256,11 +259,9 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     event_data.path = row['path']
     event_data.scan_type = scan_type
     event_data.threat = row['threat']
+    event_data.written_time = date_time
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
@@ -318,12 +319,13 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    timestamp = self._ParseTimestamp(parser_mediator, row)
-    if timestamp is None:
+    date_time = self._ParseTimestamp(parser_mediator, row)
+    if date_time is None:
       return
 
     event_data = TrendMicroUrlEventData()
     event_data.offset = row_offset
+    event_data.written_time = date_time
 
     # Convert and store integer values.
     for field in (
@@ -339,9 +341,7 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     for field in ('url', 'group_name', 'group_code', 'application_name', 'ip'):
       setattr(event_data, field, row[field])
 
-    event = time_events.DateTimeValuesEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
