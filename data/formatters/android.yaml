@@ -1,6 +1,17 @@
 # Plaso Android related event formatters.
 ---
 type: 'conditional'
+data_type: 'android:app_usage'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
 data_type: 'android:event:call'
 message:
 - '{call_type}'
@@ -11,17 +22,6 @@ short_message:
 - '{call_type} Call'
 short_source: 'LOG'
 source: 'Android Call History'
----
-type: 'conditional'
-data_type: 'android:event:last_resume_time'
-message:
-- 'Package: {package}'
-- 'Component: {component}'
-short_message:
-- 'Package: {package}'
-- 'Component: {component}'
-short_source: 'LOG'
-source: 'Android App Usage'
 ---
 type: 'conditional'
 data_type: 'android:logcat'

@@ -1,6 +1,17 @@
 # Plaso event formatters that are no longer used and kept for backwards compatibility.
 ---
 type: 'conditional'
+data_type: 'android:event:last_resume_time'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
 data_type: 'apache:access'
 message:
 - 'http_request: {http_request}'

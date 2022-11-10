@@ -8,9 +8,7 @@ import pyparsing
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -20,6 +18,8 @@ class BashHistoryEventData(events.EventData):
 
   Attributes:
     command (str): command that was executed.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
   """
 
   DATA_TYPE = 'bash:history:command'
@@ -28,6 +28,7 @@ class BashHistoryEventData(events.EventData):
     """Initializes event data."""
     super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
+    self.last_written_time = None
 
 
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -54,30 +55,32 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
+  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Bash history event.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != 'log_entry':
+    if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+
     event_data = BashHistoryEventData()
     event_data.command = self._GetValueFromStructure(structure, 'command')
+    event_data.last_written_time = dfdatetime_posix_time.PosixTime(
+        timestamp=timestamp)
 
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   # pylint: disable=unused-argument
   def VerifyStructure(self, parser_mediator, lines):
@@ -85,7 +88,7 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
+          parsers and other components, such as storage and dfVFS.
       lines (str): one or more lines from the text file.
 
     Returns:

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-"""This file contains a Symantec parser in plaso."""
+"""Symantec AV Corporate Edition and Endpoint Protection log file parser."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -42,6 +41,8 @@ class SymantecEventData(events.EventData):
     flags (str): flags.
     groupid (str): group identifier.
     guid (str): guid.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
     license_expiration_dt (str): license expiration date.
     license_feature_name (str): license feature name.
     license_feature_ver (str): license feature ver.
@@ -110,6 +111,7 @@ class SymantecEventData(events.EventData):
     self.flags = None
     self.groupid = None
     self.guid = None
+    self.last_written_time = None
     self.license_expiration_dt = None
     self.license_feature_name = None
     self.license_feature_ver = None
@@ -170,8 +172,8 @@ class SymantecParser(dsv_parser.DSVParser):
       'domain_guid', 'log_session_guid', 'vbin_session_id',
       'login_domain', 'extra']
 
-  def _GetTimeElementsTuple(self, timestamp):
-    """Retrieves a time elements tuple from the timestamp.
+  def _ParseTimestamp(self, timestamp):
+    """Parses a Symantec log timestamp.
 
     A Symantec log timestamp consist of six hexadecimal octets, that represent:
       First octet: Number of years since 1970
@@ -187,19 +189,29 @@ class SymantecParser(dsv_parser.DSVParser):
       timestamp (str): hexadecimal encoded date and time values.
 
     Returns:
-      tuple: containing:
-        year (int): year.
-        month (int): month, where 1 represents January.
-        day_of_month (int): day of month, where 1 is the first day of the month.
-        hours (int): hours.
-        minutes (int): minutes.
-        seconds (int): seconds.
-    """
-    year, month, day_of_month, hours, minutes, seconds = (
-        int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
-            timestamp[::2], timestamp[1::2]))
+      dfdatetime.TimeElements: date and time value.
 
-    return year + 1970, month + 1, day_of_month, hours, minutes, seconds
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      year, month, day_of_month, hours, minutes, seconds = (
+          int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
+              timestamp[::2], timestamp[1::2]))
+
+      time_elements_tuple = (
+          1970 + year, month + 1, day_of_month, hours, minutes, seconds)
+
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -211,16 +223,6 @@ class SymantecParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     timestamp = row['time']
-
-    try:
-      time_elements_tuple = self._GetTimeElementsTuple(timestamp)
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
-      date_time.is_local_time = True
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid timestamp value: {0!s}'.format(timestamp))
-      return
 
     # TODO: remove unused attributes.
     event_data = SymantecEventData()
@@ -252,6 +254,7 @@ class SymantecParser(dsv_parser.DSVParser):
     event_data.flags = row.get('flags', None)
     event_data.groupid = row.get('groupid', None)
     event_data.guid = row.get('guid', None)
+    event_data.last_written_time = self._ParseTimestamp(timestamp)
     event_data.license_expiration_dt = row.get('license_expiration_dt', None)
     event_data.license_feature_name = row.get('license_feature_name', None)
     event_data.license_feature_ver = row.get('license_feature_ver', None)
@@ -286,10 +289,7 @@ class SymantecParser(dsv_parser.DSVParser):
     event_data.virus = row.get('virus', None)
     event_data.virustype = row.get('virustype', None)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
@@ -302,10 +302,10 @@ class SymantecParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+    timestamp = row['time']
+
     try:
-      time_elements_tuple = self._GetTimeElementsTuple(row['time'])
-      dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+      self._ParseTimestamp(timestamp)
     except (TypeError, ValueError):
       return False
 
