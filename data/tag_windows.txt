@@ -22,7 +22,6 @@ application_execution
   data_type is 'windows:registry:key_value' AND key_path contains '\\Explorer\\FeatureUsage\\ShowJumpView'
   data_type is 'windows:registry:key_value' AND key_path contains '\\Search\\RecentApps\\'
   data_type is 'windows:registry:key_value' AND key_path contains '\\Services\\bam\\UserSettings\\'
-  data_type is 'windows:registry:key_value' AND key_path contains 'Software\\Microsoft\\Windows\\Current Version\\Search\\RecentApps'
   data_type is 'windows:registry:key_value' AND key_path contains 'WinClient\\SoftwareMonitoring\\MonitorLog\\'
   data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications\\'
   data_type is 'windows:tasks:job'
