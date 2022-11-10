@@ -3,7 +3,7 @@ application_execution
   data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 592
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Program-Compatibility-Assistant' AND event_identifier is 17
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688 OR event_identifier is 4799)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688 OR event_identifier is 4798 OR event_identifier is 4799)
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 500 OR event_identifier is 505)
   data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
