@@ -272,7 +272,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data = {}
     event_data.data_type = 'windows:registry:key_value'
     event_data.key_path = 'HKCU\\Software\\Microsoft\\CurrentVersion\\Explorer\\FeatureUsage\\AppSwitched'
-    event_data.values = '{00000000-0000-0000-0000-000000000000}\zzzzzzzz.exe: [REG_DWORD_LE] 1 {00000000-0000-0000-0000-000000000000}\yyyy\xxxxxxxx.exe: [REG_DWORD_LE] 7'
+    event_data.values = '{00000000-0000-0000-0000-000000000000}\\zzzzzzzz.exe: [REG_DWORD_LE] 1 {00000000-0000-0000-0000-000000000000}\\yyyy\\xxxxxxxx.exe: [REG_DWORD_LE] 7'
     event_data.parser = 'winreg/winreg_default'
 
     storage_writer = self._TagEvent(event, event_data, None)
@@ -335,8 +335,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = {}
     event_data.data_type = 'windows:registry:key_value'
-    event_data.key_path = 'HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Search\RecentApps\{00000000-0000-0000-0000-000000000000}'
-    event_data.values = 'AppId: [REG_SZ] C:\xxxx.exe LastAccessedTime: [REG_QWORD] 131581731096750000 LaunchCount: [REG_DWORD_LE] 1'
+    event_data.key_path = 'HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Search\\RecentApps\\{00000000-0000-0000-0000-000000000000}'
+    event_data.values = 'AppId: [REG_SZ] C:\\xxxx.exe LastAccessedTime: [REG_QWORD] 131581731096750000 LaunchCount: [REG_DWORD_LE] 1'
     event_data.parser = 'winreg/winreg_default'
 
     storage_writer = self._TagEvent(event, event_data, None)
@@ -350,7 +350,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data = {}
     event_data.data_type = 'windows:registry:key_value'
     event_data.key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\bam\\UserSettings\\S-1-5-18'
-    event_data.values = 'SequenceNumber: [REG_DWORD_LE] 8 Version: [REG_DWORD_LE] 1 \Device\HarddiskVolume4\Program Files\uvnc bvba\UltraVNC\winvnc.exe: [REG_BINARY] (24 bytes) \Device\HarddiskVolume4\Windows\System32\csrss.exe: [REG_BINARY] (24 bytes)'
+    event_data.values = 'SequenceNumber: [REG_DWORD_LE] 8 Version: [REG_DWORD_LE] 1 \\Device\\HarddiskVolume4\\Program Files\\uvnc bvba\\UltraVNC\\winvnc.exe: [REG_BINARY] (24 bytes) \\Device\\HarddiskVolume4\\Windows\\System32\\csrss.exe: [REG_BINARY] (24 bytes)'
     event_data.parser = 'winreg/winreg_default'
 
     storage_writer = self._TagEvent(event, event_data, None)
@@ -365,7 +365,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = {}
     event_data.data_type = 'windows:registry:key_value'
-    event_data.key_path = 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\LANDesk\ManagementSuite\WinClient\SoftwareMonitoring\MonitorLog\C:/Program Files (x86)/Google/Temp/GUMEFD7.tmp/GoogleUpdate.exe'
+    event_data.key_path = 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\LANDesk\\ManagementSuite\\WinClient\\SoftwareMonitoring\\MonitorLog\\C:/Program Files (x86)/Google/Temp/GUMEFD7.tmp/GoogleUpdate.exe'
     event_data.values = 'Current Duration: [REG_BINARY] (8 bytes) Current User: [REG_SZ] Système First Started: [REG_BINARY] (8 bytes) Last Duration: [REG_BINARY] (8 bytes) Last Started: [REG_BINARY] (8 bytes) Total Duration: [REG_BINARY] (8 bytes) Total Runs: [REG_DWORD_LE] 1'
     event_data.parser = 'winreg/winreg_default'
 
@@ -381,7 +381,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = {}
     event_data.data_type = 'windows:registry:key_value'
-    event_data.key_path = 'HKEY_LOCAL_MACHINE\Software\Microsoft\RADAR\HeapLeakDetection\DiagnosedApplications\java.exe'
+    event_data.key_path = 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications\\java.exe'
     event_data.values = 'LastDetectionTime: [REG_QWORD] 131581732255493203'
     event_data.parser = 'winreg/winreg_default'
 
