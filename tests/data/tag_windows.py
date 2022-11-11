@@ -59,7 +59,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         ['application_execution'])
 
     # Test: data_type is 'windows:evt:record'
-    #       AND source_name is 'Microsoft-Windows-Program-Compatibility-Assistant'
+    #       AND source_name is 
+    #       'Microsoft-Windows-Program-Compatibility-Assistant'
     #       AND event_identifier is 17
     attribute_values_per_name = {
         'event_identifier': [17],
@@ -370,7 +371,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
                         '[REG_DWORD_LE] 1 \\Device\\HarddiskVolume4\\' + \
                         'Program Files\\uvnc bvba\\UltraVNC\\winvnc.exe: ' + \
                         '[REG_BINARY] (24 bytes) \\Device\\HarddiskVolume4' + \
-                        '\\Windows\\System32\\csrss.exe: [REG_BINARY] (24 bytes)'
+                        '\\Windows\\System32\\csrss.exe:' + \
+                        ' [REG_BINARY] (24 bytes)'
     event_data.parser = 'winreg/winreg_default'
 
     storage_writer = self._TagEvent(event, event_data, None)
@@ -403,7 +405,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckLabels(storage_writer, ['application_execution'])
 
     # Test: data_type is 'windows:registry:key_value' AND
-    #       key_path contains 
+    #       key_path contains
     #       'Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications\\'
     event = events.EventObject()
     event.timestamp = self._TEST_TIMESTAMP
@@ -430,7 +432,8 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'windows:timeline:user_engaged'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        windows_timeline.WindowsTimelineUserEngagedEventData, attribute_values_per_name,
+        windows_timeline.WindowsTimelineUserEngagedEventData,
+        attribute_values_per_name,
         ['application_execution'])
 
   def testApplicationInstall(self):
