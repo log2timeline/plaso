@@ -59,7 +59,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         ['application_execution'])
 
     # Test: data_type is 'windows:evt:record'
-    #       AND source_name is 
+    #       AND source_name is
     #       'Microsoft-Windows-Program-Compatibility-Assistant'
     #       AND event_identifier is 17
     attribute_values_per_name = {
