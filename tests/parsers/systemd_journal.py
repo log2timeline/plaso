@@ -19,6 +19,10 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2101)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2101)
 
@@ -30,34 +34,38 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'body': 'Started User Manager for UID 1000.',
         'data_type': 'systemd:journal',
-        'date_time': '2017-01-27T09:40:55.913258+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '1',
-        'reporter': 'systemd'}
+        'reporter': 'systemd',
+        'written_time': '2017-01-27T09:40:55.913258+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test an event with XZ compressed data.
+    # Test a XZ compressed data log entry.
     expected_event_values = {
         'body': 'a' * 692,
         'data_type': 'systemd:journal',
-        'date_time': '2017-02-06T16:24:32.564585+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '22921',
-        'reporter': 'root'}
+        'reporter': 'root',
+        'written_time': '2017-02-06T16:24:32.564585+00:00'}
 
-    self.CheckEventValues(storage_writer, events[2098], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2098)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseLZ4(self):
     """Tests the Parse function on a journal with LZ4 compressed events."""
     parser = systemd_journal.SystemdJournalParser()
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal.lz4'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 85)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 85)
@@ -70,19 +78,18 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'body': 'Reached target Paths.',
         'data_type': 'systemd:journal',
-        'date_time': '2018-07-03T15:00:16.682340+00:00',
         'hostname': 'testlol',
         'pid': '822',
-        'reporter': 'systemd'}
+        'reporter': 'systemd',
+        'written_time': '2018-07-03T15:00:16.682340+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test an event with LZ4 compressed data.
+    # Test a LZ4 compressed data log entry.
     # The text used in the test message was triplicated to make it long enough
     # to trigger the LZ4 compression.
     # Source: https://github.com/systemd/systemd/issues/6237
@@ -97,26 +104,25 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'body': expected_body,
         'data_type': 'systemd:journal',
-        'date_time': '2018-07-03T15:19:04.667807+00:00',
         'hostname': 'testlol',
         'pid': '34757',
-        'reporter': 'test'}
+        'reporter': 'test',
+        'written_time': '2018-07-03T15:19:04.667807+00:00'}
 
-    self.CheckEventValues(storage_writer, events[84], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 84)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
     parser = systemd_journal.SystemdJournalParser()
 
-    path_segments = [
+    storage_writer = self._ParseFile([
         'systemd', 'journal',
-        'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE']
-    file_entry = self._GetTestFileEntry(path_segments)
-    file_object = file_entry.GetFileObject()
+        'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE'], parser)
 
-    parser.ParseFileObject(parser_mediator, file_object)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2211)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2211)
@@ -129,19 +135,17 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'body': (
-            'Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M '
-            'free.'),
+        'body': ('Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M '
+                 'free.'),
         'data_type': 'systemd:journal',
-        'date_time': '2016-10-24T13:20:01.063423+00:00',
         'hostname': 'test-VirtualBox',
         'pid': '569',
-        'reporter': 'systemd-journald'}
+        'reporter': 'systemd-journald',
+        'written_time': '2016-10-24T13:20:01.063423+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     generator = storage_writer.GetAttributeContainers(
         warnings.ExtractionWarning.CONTAINER_TYPE)

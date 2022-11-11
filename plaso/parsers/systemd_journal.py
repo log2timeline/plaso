@@ -9,8 +9,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from lz4 import block as lz4_block
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -26,6 +24,8 @@ class SystemdJournalEventData(events.EventData):
     hostname (str): hostname.
     pid (int): process identifier (PID).
     reporter (str): reporter.
+    written_time (dfdatetime.DateTimeValues): date and time the log entry
+        was written.
   """
 
   DATA_TYPE = 'systemd:journal'
@@ -37,6 +37,7 @@ class SystemdJournalEventData(events.EventData):
     self.hostname = None
     self.pid = None
     self.reporter = None
+    self.written_time = None
 
 
 class SystemdJournalParser(
@@ -322,20 +323,20 @@ class SystemdJournalParser(
             'error: {1!s}').format(entry_object_offset, exception))
         return
 
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=fields['real_time'])
+
       event_data = SystemdJournalEventData()
 
       event_data.body = fields.get('MESSAGE', None)
       event_data.hostname = fields.get('_HOSTNAME', None)
       event_data.reporter = fields.get('SYSLOG_IDENTIFIER', None)
+      event_data.written_time = date_time
 
       if event_data.reporter and event_data.reporter != 'kernel':
         event_data.pid = fields.get('_PID', fields.get('SYSLOG_PID', None))
 
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=fields['real_time'])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)

@@ -154,12 +154,6 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
-data_type: 'shell:zsh:history'
-attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
-place_holder_event: true
----
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
@@ -299,6 +293,12 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'shell:zsh:history'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'skydrive:log:line'
 attribute_mappings:
 - name: 'added_time'
@@ -353,6 +353,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: false
 ---
+data_type: 'systemd:journal'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'
 attribute_mappings:
@@ -364,6 +370,12 @@ attribute_mappings:
   description: 'Launch Time'
 - name: 'unknown_time'
   description: 'Unknown Time'
+place_holder_event: true
+---
+data_type: 'viminfo:history'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'vsftpd:log'
