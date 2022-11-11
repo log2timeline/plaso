@@ -6,8 +6,6 @@ import pyparsing
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -21,6 +19,8 @@ class VimInfoEventData(events.EventData):
     history_type (str): the Vim history type.
     history_value (str): the Vim history value.
     item_number (int): the item number of the history type.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
   """
 
   DATA_TYPE = 'viminfo:history'
@@ -32,6 +32,7 @@ class VimInfoEventData(events.EventData):
     self.history_type = None
     self.history_value = None
     self.item_number = None
+    self.recorded_time = None
 
 
 class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
@@ -290,11 +291,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = item[1]
       event_data.history_type = 'Command Line History'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseSearchStringHistory(self, parser_mediator, structure):
     """Parses search string history items and creates VimInfoEventData objects.
@@ -310,11 +310,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = item[1]
       event_data.history_type = 'Search String History'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseExpressionHistory(self, parser_mediator, structure):
     """Parses expression history items and creates VimInfoEventData objects.
@@ -330,11 +329,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = item[1]
       event_data.history_type = 'Expression History'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseInputLineHistory(self, parser_mediator, structure):
     """Parses input line history items and creates VimInfoEventData objects.
@@ -350,11 +348,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = item[1]
       event_data.history_type = 'Input Line History'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseDebugLineHistory(self, parser_mediator, structure):
     """Parses debug line history items and creates VimInfoEventData objects.
@@ -370,11 +367,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = item[1]
       event_data.history_type = 'Debug Line History'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseRegistersHistory(self, parser_mediator, structure):
     """Parses register history items and creates VimInfoEventData objects.
@@ -390,11 +386,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.history_value = '\n'.join(item[4])
       event_data.history_type = 'Register'
       event_data.item_number = item[1]
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[12])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[12])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseFilemarksHistory(self, parser_mediator, structure):
     """Parses filemarks history items and creates VimInfoEventData objects.
@@ -410,11 +405,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.filename = item[4].strip()
       event_data.history_type = 'File mark'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[5][5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[5][5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseJumplistHistory(self, parser_mediator, structure):
     """Parses jumplist items and creates VimInfoEventData objects.
@@ -430,11 +424,10 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       event_data.filename = item[3].strip()
       event_data.history_type = 'Jumplist'
       event_data.item_number = index
+      event_data.recorded_time = dfdatetime_posix_time.PosixTime(
+           timestamp=item[4][5])
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=item[4][5])
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse the record and create a viminfo event object
