@@ -76,6 +76,12 @@ attribute_mappings:
   description: 'Update Time'
 place_holder_event: true
 ---
+data_type: 'chrome:cache:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'confluence:access'
 attribute_mappings:
 - name: 'recorded_time'
@@ -205,6 +211,12 @@ data_type: 'macos:asl:file'
 attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
+place_holder_event: true
+---
+data_type: 'macos:fseventsd:record'
+attribute_mappings:
+- name: 'file_entry_modification_time'
+  description: 'File Last Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:securityd_log:entry'

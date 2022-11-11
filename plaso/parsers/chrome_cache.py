@@ -8,8 +8,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -299,6 +297,8 @@ class ChromeCacheEntryEventData(events.EventData):
   """Chrome Cache event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the cache entry.
     original_url (str): original URL.
   """
 
@@ -307,6 +307,7 @@ class ChromeCacheEntryEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(ChromeCacheEntryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.original_url = None
 
 
@@ -359,13 +360,11 @@ class ChromeCacheParser(interface.FileEntryParser):
           break
 
         event_data = ChromeCacheEntryEventData()
+        event_data.creation_time = dfdatetime_webkit_time.WebKitTime(
+            timestamp=cache_entry.creation_time)
         event_data.original_url = cache_entry.original_url
 
-        date_time = dfdatetime_webkit_time.WebKitTime(
-            timestamp=cache_entry.creation_time)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
         cache_address = cache_entry.next
         cache_address_chain_length += 1

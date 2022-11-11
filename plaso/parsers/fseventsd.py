@@ -7,13 +7,9 @@ Also see:
 
 import os
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -26,6 +22,8 @@ class FseventsdEventData(events.EventData):
 
   Attributes:
     event_identifier (int): the record event identifier.
+    file_entry_modification_time (dfdatetime.DateTimeValues): file entry
+        last modification date and time.
     flags (int): flags stored in the record.
     node_identifier (int): file system node identifier related to the file
         system event.
@@ -38,6 +36,7 @@ class FseventsdEventData(events.EventData):
     """Initializes an Fseventsd event data."""
     super(FseventsdEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_identifier = None
+    self.file_entry_modification_time = None
     self.flags = None
     self.node_identifier = None
     self.path = None
@@ -172,14 +171,6 @@ class FseventsdParser(
 
     file_entry = parser_mediator.GetFileEntry()
     date_time = self._GetParentModificationTime(file_entry)
-    # TODO: Change this to use a more representative time definition (time span)
-    # when https://github.com/log2timeline/dfdatetime/issues/65 is resolved.
-    if date_time:
-      timestamp_description = definitions.TIME_DESCRIPTION_RECORDED
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
-      timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
-    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
 
     file_size = file_object.get_size()
     while file_offset < file_size:
@@ -213,7 +204,9 @@ class FseventsdParser(
         break
 
       event_data = self._BuildEventData(record)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.file_entry_modification_time = date_time
+
+      parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(FseventsdParser)

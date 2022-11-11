@@ -29,6 +29,10 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 12)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 12)
 
@@ -40,19 +44,20 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # The date and time are derived from the file entry.
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    date_time_string = (
+        os_file_entry.modification_time.CopyToDateTimeStringISO8601())
 
     expected_event_values = {
         'data_type': 'macos:fseventsd:record',
-        'date_time': os_file_entry.modification_time,
         'event_identifier': 47747061,
+        'file_entry_modification_time': date_time_string,
         'flags': 0x01000080,
         'path': '.Spotlight-V100/Store-V1'}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseV2(self):
     """Tests the Parse function on a version 2 file."""
@@ -67,6 +72,10 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
 
@@ -78,19 +87,20 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # The date and time are derived from the file entry.
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    date_time_string = (
+        os_file_entry.modification_time.CopyToDateTimeStringISO8601())
 
     expected_event_values = {
         'data_type': 'macos:fseventsd:record',
-        'date_time': os_file_entry.modification_time,
         'event_identifier': 1706838,
+        'file_entry_modification_time': date_time_string,
         'flags': 0x01000008,
         'path': 'Hi, Sierra'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
