@@ -60,29 +60,6 @@ short_source: 'HISTORY'
 source: 'MacOS Document Versions'
 ---
 type: 'conditional'
-data_type: 'mac:keychain:application'
-message:
-- 'Name: {entry_name}'
-- 'Account: {account_name}'
-short_message:
-- '{entry_name}'
-short_source: 'LOG'
-source: 'MacOS Keychain (application password)'
----
-type: 'conditional'
-data_type: 'mac:keychain:internet'
-message:
-- 'Name: {entry_name}'
-- 'Account: {account_name}'
-- 'Where: {where}'
-- 'Protocol: {protocol}'
-- '({type_protocol})'
-short_message:
-- '{entry_name}'
-short_source: 'LOG'
-source: 'MacOS Keychain (Internet password)'
----
-type: 'conditional'
 data_type: 'mac:knowledgec:application'
 message:
 - 'Application {bundle_identifier} executed'
@@ -299,6 +276,29 @@ message: 'Installation of [{name} {version}] using [{process_name}] Packages {id
 short_message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
 short_source: 'PLIST'
 source: 'MacOS install history plist'
+---
+type: 'conditional'
+data_type: 'macos:keychain:application'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (application password)'
+---
+type: 'conditional'
+data_type: 'macos:keychain:internet'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+- 'Where: {where}'
+- 'Protocol: {protocol}'
+- '({type_protocol})'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (Internet password)'
 ---
 type: 'basic'
 data_type: 'macos:launchd:entry'

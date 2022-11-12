@@ -11,9 +11,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.helpers import text_file
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import interface
 
@@ -23,14 +21,17 @@ class FishHistoryEventData(events.EventData):
 
   Attributes:
     command (str): command that was executed.
+    written_time (dfdatetime.DateTimeValues): date and time the entry was
+        written.
   """
 
-  DATA_TYPE = 'fish:history:command'
+  DATA_TYPE = 'fish:history:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(FishHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
+    self.written_time = None
 
 
 class FishHistoryParser(interface.FileObjectParser):
@@ -89,28 +90,29 @@ class FishHistoryParser(interface.FileObjectParser):
       return
 
     for entry_index, history_entry in enumerate(fish_history):
-      if not ('cmd' in history_entry and 'when' in history_entry):
+      command = history_entry.get('cmd', None)
+      timestamp = history_entry.get('when', None)
+
+      if None in (command, timestamp):
         parser_mediator.ProduceExtractionWarning(
             'Unsupported history entry: {0:d}'.format(entry_index))
-        return
+        continue
 
-      event_data = FishHistoryEventData()
-      event_data.command = history_entry.get('cmd')
-
-      last_executed = history_entry.get('when')
-      if not isinstance(last_executed, int):
+      if not isinstance(timestamp, int):
         try:
-          last_executed = int(last_executed, 10)
+          timestamp = int(timestamp, 10)
         except (TypeError, ValueError):
           parser_mediator.ProduceExtractionWarning(
               'Unsupported timestamp: {0!s} in history entry: {1:s}'.format(
-                  last_executed, entry_index))
+                  timestamp, entry_index))
           continue
 
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=last_executed)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data = FishHistoryEventData()
+      event_data.command = command
+      event_data.written_time = dfdatetime_posix_time.PosixTime(
+          timestamp=timestamp)
+
+      parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(FishHistoryParser)

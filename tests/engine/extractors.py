@@ -77,8 +77,9 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
 
     test_extractor.ParseDataStream(parser_mediator, file_entry, '')
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 4)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

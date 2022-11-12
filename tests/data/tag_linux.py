@@ -7,6 +7,7 @@ import unittest
 from plaso.containers import events
 from plaso.lib import definitions
 from plaso.parsers import bash_history
+from plaso.parsers import fish_history
 from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers import zsh_extended_history
@@ -40,6 +41,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         docker_layer_config.DockerLayerConfigurationEventData,
         attribute_values_per_name, ['application_execution'])
+
+    # Test: data_type is 'fish:history:command'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        fish_history.FishHistoryEventData, attribute_values_per_name,
+        ['application_execution'])
 
     # Test: data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR
     #       audit_type is 'USER_CMD')

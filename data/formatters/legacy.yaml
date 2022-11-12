@@ -39,6 +39,13 @@ short_message:
 short_source: 'LOG'
 source: 'APT History Log'
 ---
+type: 'basic'
+data_type: 'bash:history:command'
+message: 'Command executed: {command}'
+short_message: '{command}'
+short_source: 'LOG'
+source: 'Bash History'
+---
 type: 'conditional'
 data_type: 'bsm:event'
 enumeration_helpers:
@@ -730,6 +737,13 @@ short_source: 'LOG'
 source: 'dpkg log file'
 ---
 type: 'basic'
+data_type: 'fish:history:command'
+message: 'Command executed: {command}'
+short_message: '{command}'
+short_source: 'LOG'
+source: 'Fish History'
+---
+type: 'basic'
 data_type: 'fs:mactime:line'
 message: '{filename}'
 short_message: '{filename}'
@@ -817,6 +831,29 @@ short_message:
 - '{is_dirty_string}'
 short_source: 'LOG'
 source: 'MacOS ASL Log'
+---
+type: 'conditional'
+data_type: 'mac:keychain:application'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (application password)'
+---
+type: 'conditional'
+data_type: 'mac:keychain:internet'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+- 'Where: {where}'
+- 'Protocol: {protocol}'
+- '({type_protocol})'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (Internet password)'
 ---
 type: 'conditional'
 data_type: 'mac:securityd:line'

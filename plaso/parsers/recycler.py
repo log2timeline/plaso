@@ -4,11 +4,8 @@
 import os
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -19,6 +16,8 @@ class WinRecycleBinEventData(events.EventData):
   """Windows Recycle Bin event data.
 
   Attributes:
+    deletion_time (dfdatetime.DateTimeValues): file entry deletion date
+        and time.
     drive_number (int): drive number.
     file_size (int): file size.
     offset (int): offset of the Recycle Bin record relative to the start of
@@ -34,6 +33,7 @@ class WinRecycleBinEventData(events.EventData):
   def __init__(self):
     """Initializes Windows Recycle Bin event data."""
     super(WinRecycleBinEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.deletion_time = None
     self.drive_number = None
     self.file_size = None
     self.offset = None
@@ -122,13 +122,9 @@ class WinRecycleBinParser(
           'Unsupported format version: {0:d}.'.format(
               file_header.format_version))
 
-    if file_header.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      date_time = dfdatetime_filetime.Filetime(
-          timestamp=file_header.deletion_time)
-
     event_data = WinRecycleBinEventData()
+    event_data.file_size = file_header.original_file_size
+
     try:
       event_data.original_filename = self._ParseOriginalFilename(
           file_object, file_header.format_version)
@@ -137,11 +133,11 @@ class WinRecycleBinParser(
           'unable to parse original filename with error: {0!s}.'.format(
               exception))
 
-    event_data.file_size = file_header.original_file_size
+    if file_header.deletion_time:
+      event_data.deletion_time = dfdatetime_filetime.Filetime(
+          timestamp=file_header.deletion_time)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_DELETED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class WinRecyclerInfo2Parser(
@@ -211,11 +207,6 @@ class WinRecyclerInfo2Parser(
             'Unable to map record data at offset: 0x{0:08x} with error: '
             '{1!s}').format(record_offset, exception))
 
-    if record.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      date_time = dfdatetime_filetime.Filetime(timestamp=record.deletion_time)
-
     event_data = WinRecycleBinEventData()
     event_data.drive_number = record.drive_number
     event_data.original_filename = unicode_filename or ascii_filename
@@ -226,9 +217,11 @@ class WinRecyclerInfo2Parser(
     if ascii_filename != unicode_filename:
       event_data.short_filename = ascii_filename
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_DELETED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    if record.deletion_time:
+      event_data.deletion_time = dfdatetime_filetime.Filetime(
+          timestamp=record.deletion_time)
+
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Recycler INFO2 file-like object.

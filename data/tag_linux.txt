@@ -1,7 +1,8 @@
 # Tags Linux application execution events.
 application_execution
-  data_type is 'bash:history:command'
+  data_type is 'bash:history:entry'
   data_type is 'docker:layer:configuration'
+  data_type is 'fish:history:entry'
   data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR audit_type is 'USER_CMD')
   data_type is 'shell:zsh:history'
   data_type is 'syslog:cron:task_run'

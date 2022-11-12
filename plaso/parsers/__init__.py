@@ -24,7 +24,7 @@ from plaso.parsers import ios_sysdiag_log
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
-from plaso.parsers import mac_keychain
+from plaso.parsers import macos_keychain
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
 from plaso.parsers import networkminer

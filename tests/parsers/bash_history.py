@@ -38,8 +38,8 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'command': '/usr/lib/plaso',
-        'data_type': 'bash:history:command',
-        'last_written_time': '2013-10-01T12:36:17+00:00'}
+        'data_type': 'bash:history:entry',
+        'written_time': '2013-10-01T12:36:17+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
