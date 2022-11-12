@@ -6,9 +6,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -18,23 +16,27 @@ class GoogleDriveSyncLogEventData(events.EventData):
   """Google Drive Sync log event data.
 
   Attributes:
-    log_level (str): logging level of event such as "DEBUG", "WARN", "INFO",
+    added_time (dfdatetime.DateTimeValues): date and time the log entry
+        was added.
+    level (str): logging level of event such as "DEBUG", "WARN", "INFO" and
         "ERROR".
     message (str): log message.
-    pid (int): process identifier of process which logged event.
+    process_identifier (int): process identifier of process which logged event.
     source_code (str): filename:line_number of source file which logged event.
     thread (str): colon-separated thread identifier in the form "ID:name"
         which logged event.
   """
 
   DATA_TYPE = 'gdrive_sync:log:line'
+  DATA_TYPE = 'google_drive_sync_log:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(GoogleDriveSyncLogEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.log_level = None
+    self.added_time = None
+    self.level = None
     self.message = None
-    self.pid = None
+    self.process_identifier = None
     self.source_code = None
     self.thread = None
 
@@ -51,6 +53,9 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   # object dumps or similar. The default is too small for this and results in
   # premature end of string matching on multi-line log entries.
   BUFFER_SIZE = 16384
+
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
@@ -76,16 +81,23 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       _FRACTION_OF_SECOND +
       _TIME_ZONE_OFFSET).setResultsName('date_time')
 
+  _PROCESS_IDENTIFIER = (
+      pyparsing.Suppress('pid=') +
+      _INTEGER.setResultsName('process_identifier'))
+
+  _THREAD = pyparsing.Combine(
+      pyparsing.Word(pyparsing.nums) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.printables))
+
   # Multiline entry end marker, matched from right to left.
   _GDS_ENTRY_END = pyparsing.StringEnd() | _DATE_TIME
 
   _GDS_LINE = (
       _DATE_TIME +
-      pyparsing.Word(pyparsing.alphas).setResultsName('log_level') +
-      # TODO: strip pid= out, cast to integers?
-      pyparsing.Word(pyparsing.printables).setResultsName('pid') +
+      pyparsing.Word(pyparsing.alphas).setResultsName('level') +
+      _PROCESS_IDENTIFIER +
       # TODO: consider stripping thread identifier/cleaning up thread name?
-      pyparsing.Word(pyparsing.printables).setResultsName('thread') +
+      _THREAD.setResultsName('thread') +
       pyparsing.Word(pyparsing.printables).setResultsName('source_code') +
       pyparsing.SkipTo(_GDS_ENTRY_END).setResultsName('message') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
@@ -142,25 +154,22 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    date_time = self._BuildDateTime(time_elements_structure)
-
     # Replace newlines with spaces in structure.message to preserve output.
     message = self._GetValueFromStructure(structure, 'message')
     if message:
       message = message.replace('\n', ' ').strip(' ')
 
     event_data = GoogleDriveSyncLogEventData()
-    event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
+    event_data.added_time = self._BuildDateTime(time_elements_structure)
+    event_data.level = self._GetValueFromStructure(structure, 'level')
+    event_data.process_identifier = self._GetValueFromStructure(
+        structure, 'process_identifier')
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
     event_data.message = message
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED)
-
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.

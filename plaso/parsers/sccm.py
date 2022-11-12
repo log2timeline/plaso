@@ -8,9 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -21,15 +19,18 @@ class SCCMLogEventData(events.EventData):
   Attributes:
     component (str): component.
     text (str): text.
+    written_time (dfdatetime.DateTimeValues): date and time the entry was
+        written.
   """
 
-  DATA_TYPE = 'software_management:sccm:log'
+  DATA_TYPE = 'sccm_log:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(SCCMLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.component = None
     self.text = None
+    self.written_time = None
 
 
 class SCCMParser(text_parser.PyparsingMultiLineTextParser):
@@ -168,15 +169,12 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     time_elements_structure = self._GetValueFromStructure(
          structure, 'date_time')
 
-    date_time = self._BuildDateTime(time_elements_structure)
-
     event_data = SCCMLogEventData()
     event_data.component = self._GetValueFromStructure(structure, 'component')
     event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.written_time = self._BuildDateTime(time_elements_structure)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies whether content corresponds to an SCCM log file.

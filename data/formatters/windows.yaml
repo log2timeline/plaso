@@ -60,6 +60,16 @@ short_source: 'LOG'
 source: 'IIS Log'
 ---
 type: 'conditional'
+data_type: 'sccm_log:entry'
+message:
+- '{component}'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SCCM Log'
+---
+type: 'conditional'
 data_type: 'setupapi:log:line'
 message:
 - '{entry_type}'
@@ -71,16 +81,6 @@ short_message:
 - '{entry_type}'
 short_source: 'LOG'
 source: 'Setup API Log'
----
-type: 'conditional'
-data_type: 'software_management:sccm:log'
-message:
-- '{component}'
-- '{text}'
-short_message:
-- '{text}'
-short_source: 'LOG'
-source: 'SCCM Log'
 ---
 type: 'conditional'
 data_type: 'task_scheduler:task_cache:entry'
