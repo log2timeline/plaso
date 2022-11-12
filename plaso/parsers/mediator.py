@@ -211,6 +211,15 @@ class ParserMediator(object):
     environment_variables = self._knowledge_base.GetEnvironmentVariables()
     return path_helper.PathHelper.ExpandWindowsPath(path, environment_variables)
 
+  def GetCurrentYear(self):
+    """Retrieves current year.
+
+    Returns:
+      int: the current year.
+    """
+    datetime_object = datetime.datetime.now()
+    return datetime_object.year
+
   def GetDisplayName(self, file_entry=None):
     """Retrieves the display name for a file entry.
 
@@ -255,7 +264,7 @@ class ParserMediator(object):
     """Retrieves the active file entry.
 
     Returns:
-      dfvfs.FileEntry: file entry.
+      dfvfs.FileEntry: file entry or None if not available.
     """
     return self._file_entry
 
@@ -273,15 +282,6 @@ class ParserMediator(object):
       return '{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
 
     return self._file_entry.name
-
-  def GetCurrentYear(self):
-    """Retrieves current year.
-
-    Returns:
-      int: the current year.
-    """
-    datetime_object = datetime.datetime.now()
-    return datetime_object.year
 
   def GetParserChain(self):
     """Retrieves the current parser chain.
