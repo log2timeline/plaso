@@ -88,6 +88,16 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'firefox:cache:record'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'last_fetched_time'
+  description: 'Last Visited Time'
+- name: 'last_modified_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'fs:bodyfile:entry'
 attribute_mappings:
 - name: 'access_time'

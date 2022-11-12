@@ -114,6 +114,22 @@ members:
 - name: information_size
   data_type: uint32
 ---
+name: firefox_cache1_entry_body
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: request
+  type: string
+  encoding: ascii
+  element_data_type: char
+  elements_data_size: firefox_cache1_entry_header.request_size
+  elements_terminator: "\x00"
+- name: information
+  type: stream
+  element_data_type: byte
+  elements_data_size: firefox_cache1_entry_header.information_size
+---
 name: firefox_cache2_file_metadata_header
 type: structure
 attributes:
