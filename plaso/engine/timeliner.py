@@ -165,7 +165,7 @@ class EventDataTimeliner(object):
             events.YearLessLogHelper.CONTAINER_TYPE,
             filter_expression=filter_expression))
         if year_less_log_helpers:
-          base_year = year_less_log_helpers[0].estimated_creation_year
+          base_year = year_less_log_helpers[0].earliest_year
 
       # TODO: use relative_year to determine base_year
 

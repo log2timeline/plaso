@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """The year-less log format helper mix-in."""
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.resolver import resolver as path_spec_resolver
+
 from plaso.containers import events
 
 
@@ -49,8 +52,6 @@ class YearLessLogFormatHelper(object):
         year, _, _ = date_time.GetDate()
         years.add(year)
 
-    # TODO: for compressed streams obtain years from parent.
-
     return years
 
   def _GetMonthFromString(self, month_string):
@@ -94,13 +95,27 @@ class YearLessLogFormatHelper(object):
     self._relative_year = 0
     self._year = 0
 
+    years = set()
+
     file_entry = parser_mediator.GetFileEntry()
     if file_entry:
       years = self._GetYearsFromFileEntry(file_entry)
-      if years:
-        self._base_year = min(years)
-        self._maximum_year = max(years)
-        self._year = self._base_year
+
+    if not years and file_entry in (
+        dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+        dfvfs_definitions.TYPE_INDICATOR_GZIP):
+
+      parent_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          file_entry.path_spec.parent,
+          resolver_context=parser_mediator.resolver_context)
+
+      if parent_file_entry:
+        years = self._GetYearsFromFileEntry(parent_file_entry)
+
+    if years:
+      self._base_year = min(years)
+      self._maximum_year = max(years)
+      self._year = self._base_year
 
   def _SetMonthAndYear(self, month, year):
     """Sets the month and year.
@@ -149,7 +164,6 @@ class YearLessLogFormatHelper(object):
     """
     year_less_log_helper = events.YearLessLogHelper()
     year_less_log_helper.earliest_year = self._base_year
-    year_less_log_helper.estimated_creation_year = self._base_year
     year_less_log_helper.latest_year = self._maximum_year
 
     return year_less_log_helper

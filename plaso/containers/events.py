@@ -337,8 +337,6 @@ class YearLessLogHelper(interface.AttributeContainer):
   Attributes:
     earliest_year (int): earliest possible year the event data stream was
         created.
-    estimated_creation_year (int): estimation of the year the event data stream
-        was created.
     latest_year (int): latest possible year the event data stream was created.
   """
   CONTAINER_TYPE = 'year_less_log_helper'
@@ -346,7 +344,6 @@ class YearLessLogHelper(interface.AttributeContainer):
   SCHEMA = {
       '_event_data_stream_identifier': 'AttributeContainerIdentifier',
       'earliest_year': 'int',
-      'estimated_creation_year': 'int',
       'latest_year': 'int'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
@@ -357,8 +354,6 @@ class YearLessLogHelper(interface.AttributeContainer):
     super(YearLessLogHelper, self).__init__()
     self._event_data_stream_identifier = None
     self.earliest_year = None
-    # TODO: remove in favor of earliest_year and latest_year.
-    self.estimated_creation_year = None
     self.latest_year = None
 
   def GetEventDataStreamIdentifier(self):
