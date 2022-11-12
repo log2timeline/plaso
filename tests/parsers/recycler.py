@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import recycler
 
 from tests.parsers import test_lib
@@ -18,6 +17,10 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$II3DF3L.zip'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -29,16 +32,15 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:metadata:deleted_item',
-        'date_time': '2012-03-12T20:49:58.6330000+00:00',
+        'deletion_time': '2012-03-12T20:49:58.6330000+00:00',
         'file_size': 724919,
         'original_filename': (
             'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
@@ -56,16 +58,15 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:metadata:deleted_item',
-        'date_time': '2016-06-29T21:37:45.6180000+00:00',
+        'deletion_time': '2016-06-29T21:37:45.6180000+00:00',
         'file_size': 222255,
         'original_filename': (
             'C:\\Users\\random\\Downloads\\bunnies.jpg')}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
@@ -75,6 +76,10 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a Windows Recycler INFO2 file."""
     parser = recycler.WinRecyclerInfo2Parser()
     storage_writer = self._ParseFile(['INFO2'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)
@@ -87,18 +92,16 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:metadata:deleted_item',
-        'date_time': '2004-08-25T16:18:25.2370000+00:00',
+        'deletion_time': '2004-08-25T16:18:25.2370000+00:00',
         'drive_number': 2,
         'original_filename': (
             'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe'),
-        'record_index': 1,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_DELETED}
+        'record_index': 1}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

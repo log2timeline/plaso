@@ -18,17 +18,17 @@ class BashHistoryEventData(events.EventData):
 
   Attributes:
     command (str): command that was executed.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
+    written_time (dfdatetime.DateTimeValues): date and time the entry was
+        written.
   """
 
-  DATA_TYPE = 'bash:history:command'
+  DATA_TYPE = 'bash:history:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = None
-    self.last_written_time = None
+    self.written_time = None
 
 
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -77,7 +77,7 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
     event_data = BashHistoryEventData()
     event_data.command = self._GetValueFromStructure(structure, 'command')
-    event_data.last_written_time = dfdatetime_posix_time.PosixTime(
+    event_data.written_time = dfdatetime_posix_time.PosixTime(
         timestamp=timestamp)
 
     parser_mediator.ProduceEventData(event_data)

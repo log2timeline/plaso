@@ -50,9 +50,9 @@ attribute_mappings:
   description: 'Response Sent Time'
 place_holder_event: true
 ---
-data_type: 'bash:history:command'
+data_type: 'bash:history:entry'
 attribute_mappings:
-- name: 'last_written_time'
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---
@@ -97,6 +97,12 @@ attribute_mappings:
 - name: 'last_modified_time'
   description: 'Content Modification Time'
 place_holder_event: true
+---
+data_type: 'fish:history:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
 ---
 data_type: 'fs:bodyfile:entry'
 attribute_mappings:
@@ -221,6 +227,22 @@ data_type: 'macos:fseventsd:record'
 attribute_mappings:
 - name: 'file_entry_modification_time'
   description: 'File Last Modification Time'
+place_holder_event: true
+---
+data_type: 'macos:keychain:application'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'macos:keychain:internet'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:securityd_log:entry'
@@ -430,6 +452,12 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:metadata:deleted_item'
+attribute_mappings:
+- name: 'deletion_time'
+  description: 'Content Deletion Time'
 place_holder_event: true
 ---
 data_type: 'windows:prefetch:execution'

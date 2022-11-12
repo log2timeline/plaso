@@ -10,8 +10,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -25,7 +23,11 @@ class KeychainInternetRecordEventData(events.EventData):
   Attributes:
     account_name (str): name of the account.
     comments (str): comments added by the user.
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the keychain record.
     entry_name (str): name of the entry.
+    modification_time (dfdatetime.DateTimeValues): modification date and time
+        of the keychain record.
     protocol (str): internet protocol used, for example "https".
     ssgp_hash (str): password/certificate hash formatted as a hexadecimal
         string.
@@ -34,7 +36,7 @@ class KeychainInternetRecordEventData(events.EventData):
     where (str): domain name or IP where the password is used.
   """
 
-  DATA_TYPE = 'mac:keychain:internet'
+  DATA_TYPE = 'macos:keychain:internet'
 
   def __init__(self):
     """Initializes event data."""
@@ -42,7 +44,9 @@ class KeychainInternetRecordEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.account_name = None
     self.comments = None
+    self.creation_time = None
     self.entry_name = None
+    self.modification_time = None
     self.protocol = None
     self.ssgp_hash = None
     self.text_description = None
@@ -57,13 +61,17 @@ class KeychainApplicationRecordEventData(events.EventData):
   Attributes:
     account_name (str): name of the account.
     comments (str): comments added by the user.
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the keychain record.
     entry_name (str): name of the entry.
+    modification_time (dfdatetime.DateTimeValues): modification date and time
+        of the keychain record.
     ssgp_hash (str): password/certificate hash formatted as a hexadecimal
         string.
     text_description (str): description.
   """
 
-  DATA_TYPE = 'mac:keychain:application'
+  DATA_TYPE = 'macos:keychain:application'
 
   def __init__(self):
     """Initializes event data."""
@@ -71,7 +79,9 @@ class KeychainApplicationRecordEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.account_name = None
     self.comments = None
+    self.creation_time = None
     self.entry_name = None
+    self.modification_time = None
     self.ssgp_hash = None
     self.text_description = None
 
@@ -120,7 +130,7 @@ class KeychainParser(
   DATA_FORMAT = 'MacOS keychain database file'
 
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'mac_keychain.yaml')
+      os.path.dirname(__file__), 'macos_keychain.yaml')
 
   _MAJOR_VERSION = 1
   _MINOR_VERSION = 0
@@ -790,28 +800,23 @@ class KeychainParser(
           'Unsupported application password record key value does not start '
           'with: "ssgp".'))
 
+    ssgp_hash = codecs.encode(key[4:], 'hex')
+
     event_data = KeychainApplicationRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
     event_data.comments = self._ParseIntegerTagString(record['crtr'])
+    event_data.creation_time = self._ParseDateTimeValue(
+        parser_mediator, record['cdat'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
-    ssgp_hash = codecs.encode(key[4:], 'hex')
+    event_data.modification_time = self._ParseDateTimeValue(
+        parser_mediator, record['mdat'])
     event_data.ssgp_hash = codecs.decode(ssgp_hash, 'utf-8')
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
 
-    date_time = self._ParseDateTimeValue(parser_mediator, record['cdat'])
-    if date_time:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    date_time = self._ParseDateTimeValue(parser_mediator, record['mdat'])
-    if date_time:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseInternetPasswordRecord(self, parser_mediator, record):
     """Extracts the information from an Internet password record.
@@ -837,8 +842,12 @@ class KeychainParser(
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
     event_data.comments = self._ParseIntegerTagString(record['crtr'])
+    event_data.creation_time = self._ParseDateTimeValue(
+        parser_mediator, record['cdat'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
+    event_data.modification_time = self._ParseDateTimeValue(
+        parser_mediator, record['mdat'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
         protocol_string, protocol_string)
     ssgp_hash = codecs.encode(key[4:], 'hex')
@@ -850,17 +859,7 @@ class KeychainParser(
     event_data.where = self._ParseBinaryDataAsString(
         parser_mediator, record['srvr'])
 
-    date_time = self._ParseDateTimeValue(parser_mediator, record['cdat'])
-    if date_time:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    date_time = self._ParseDateTimeValue(parser_mediator, record['mdat'])
-    if date_time:
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   @classmethod
   def GetFormatSpecification(cls):
