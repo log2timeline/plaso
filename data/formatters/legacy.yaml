@@ -751,6 +751,19 @@ short_source: 'FILE'
 source: 'Mactime Bodyfile'
 ---
 type: 'conditional'
+data_type: 'gdrive_sync:log:line'
+message:
+- '[{log_level}'
+- '{pid}'
+- '{thread}'
+- '{source_code}]'
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'GoogleDriveSync Log'
+---
+type: 'conditional'
 data_type: 'ios:mobile_installation:line'
 message:
 - 'Originating call: {originating_call}'
@@ -1013,6 +1026,16 @@ short_message:
 - '{status}'
 short_source: 'LOG'
 source: 'Popularity Contest Session'
+---
+type: 'conditional'
+data_type: 'software_management:sccm:log'
+message:
+- '{component}'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SCCM Log'
 ---
 type: 'conditional'
 data_type: 'windows:firewall:log_entry'

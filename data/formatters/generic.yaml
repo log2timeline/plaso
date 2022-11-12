@@ -393,17 +393,17 @@ short_source: 'LOG'
 source: 'Google Drive (local entry)'
 ---
 type: 'conditional'
-data_type: 'gdrive_sync:log:line'
+data_type: 'google_drive_sync_log:entry'
 message:
-- '[{log_level}'
-- '{pid}'
+- '[{level}'
+- '{process_identifier}'
 - '{thread}'
 - '{source_code}]'
 - '{message}'
 short_message:
 - '{message}'
 short_source: 'LOG'
-source: 'GoogleDriveSync Log'
+source: 'Google Drive Sync Log'
 ---
 type: 'conditional'
 data_type: 'googlelog:log'

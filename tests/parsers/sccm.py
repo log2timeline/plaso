@@ -17,6 +17,10 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     parser = sccm.SCCMParser()
     storage_writer = self._ParseFile(['sccm_various.log'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 10)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
 
@@ -28,58 +32,30 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
+    # Test log entry with milliseconds precision and time zone offset.
     # time="19:33:19.766-330" date="11-28-2014"
     expected_event_values = {
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2014-11-28T19:33:19.766-06:30',
-        'timestamp': '2014-11-29 01:03:19.766000'}
+        'component': 'AppEnforce',
+        'data_type': 'sccm_log:entry',
+        'text': ('+++ Starting Install enforcement for App DT "Application '
+                 'Foo Version 2.2" ApplicationDeliveryType - ScopeId_AD87A846-'
+                 'E6A5-4088-875F-066CF1082D30/DeploymentType_14a11199-ee14-'
+                 '4c06-a5a7-68eadf501337, Revision - 10, ContentPath - '
+                 'C:\\Windows\\ccmcache\\u, Execution Context - System'),
+        'written_time': '2014-11-28T19:33:19.766-06:30'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test timestamps with seven digits after seconds.
+    # Test log entry with 100ns precision and time zone offset.
     # time="10:22:50.8422964" date="1-2-2015"
     expected_event_values = {
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2015-01-02T10:22:50.873496+00:00'}
+        'component': 'SCClient',
+        'data_type': 'sccm_log:entry',
+        'written_time': '2015-01-02T10:22:50.873496+00:00'}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    # Test timestamps with '-' in microseconds.
-    expected_event_values = {
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2014-12-28T13:29:43.373-06:30',
-        'timestamp': '2014-12-28 18:59:43.373000'}
-
-    self.CheckEventValues(storage_writer, events[7], expected_event_values)
-
-    # Test timestamps with '+' in microseconds.
-    expected_event_values = {
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2014-11-24T01:52:13.827+08:00',
-        'timestamp': '2014-11-23 17:52:13.827000'}
-
-    self.CheckEventValues(storage_writer, events[9], expected_event_values)
-
-    # Test timestamps with 2 digit UTC offset.
-    expected_event_values = {
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2014-11-26T04:20:47.594-01:00',
-        'timestamp': '2014-11-26 05:20:47.594000'}
-
-    self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    # Test component and text.
-    expected_event_values = {
-        'component': 'ContentAccess',
-        'data_type': 'software_management:sccm:log',
-        'date_time': '2014-12-23T07:03:10.647-06:30',
-        'text': (
-            'Releasing content request {4EA97AD6-E7E2-4583-92B9-21F532501337}'),
-        'timestamp': '2014-12-23 12:33:10.647000'}
-
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
