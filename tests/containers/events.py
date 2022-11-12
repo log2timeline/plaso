@@ -144,6 +144,7 @@ class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         'earliest_year',
+        'last_relative_year',
         'latest_year']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())

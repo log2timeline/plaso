@@ -39,6 +39,8 @@ class EventDataTimeliner(object):
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
+    self._base_year_warnings = set()
+    self._current_year = self._GetCurrentYear()
     self._data_location = data_location
     self._knowledge_base = knowledge_base
     self._place_holder_event = set()
@@ -49,6 +51,15 @@ class EventDataTimeliner(object):
     self.parsers_counter = collections.Counter()
 
     self._ReadConfigurationFile()
+
+  def _GetCurrentYear(self):
+    """Retrieves current year.
+
+    Returns:
+      int: the current year.
+    """
+    datetime_object = datetime.datetime.now()
+    return datetime_object.year
 
   def _GetEvent(
       self, date_time, date_time_description, event_data_identifier, base_year):
@@ -135,6 +146,82 @@ class EventDataTimeliner(object):
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     storage_writer.AddAttributeContainer(warning)
 
+  def _GetBaseYear(self, storage_writer, event_data):
+    """Retrieves the base year.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      event_data (EventData): event data.
+
+    Returns:
+      int: base year.
+    """
+    # If preferred year is set considered it a user override, otherwise try
+    # to determine the year based on the year-less log helper or fallback to
+    # the current year.
+
+    if self._preferred_year:
+      return self._preferred_year
+
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    if not event_data_stream_identifier:
+      message = (
+          'missing event data stream, defaulting to current year: '
+          '{0:d}').format(self._current_year)
+      self._ProducTimeliningWarning(storage_writer, event_data, message)
+
+      return self._current_year
+
+    lookup_key = event_data_stream_identifier.CopyToString()
+    filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
+        lookup_key)
+    year_less_log_helpers = list(storage_writer.GetAttributeContainers(
+        events.YearLessLogHelper.CONTAINER_TYPE,
+        filter_expression=filter_expression))
+    if not year_less_log_helpers:
+      if lookup_key not in self._base_year_warnings:
+        message = (
+            'missing year-less log helper, defaulting to current year: '
+            '{0:d}').format(self._current_year)
+        self._ProducTimeliningWarning(storage_writer, event_data, message)
+        self._base_year_warnings.add(lookup_key)
+
+      return self._current_year
+
+    earliest_year = year_less_log_helpers[0].earliest_year
+    last_relative_year = year_less_log_helpers[0].last_relative_year
+    latest_year = year_less_log_helpers[0].latest_year
+
+    base_year = earliest_year
+
+    if base_year + last_relative_year < self._current_year:
+      return base_year
+
+    if latest_year < self._current_year:
+      message = (
+          'earliest year: {0:d} as base year would exceed current year: '
+          '{1:d} + {2:d}, using latest year: {3:d}').format(
+              earliest_year, self._current_year, last_relative_year,
+              latest_year)
+
+      base_year = latest_year - last_relative_year
+
+    else:
+      message = (
+          'earliest year: {0:d} and latest: year: {1:d} as base year '
+          'would exceed current year: {2:d} + {3:d}, using current '
+          'year').format(
+              earliest_year, latest_year, self._current_year,
+              last_relative_year)
+
+      base_year = self._current_year - last_relative_year
+
+    if lookup_key not in self._base_year_warnings:
+      self._ProducTimeliningWarning(storage_writer, event_data, message)
+      self._base_year_warnings.add(lookup_key)
+
+    return base_year
+
   def ProcessEventData(self, storage_writer, event_data):
     """Generate events from event data.
 
@@ -150,26 +237,7 @@ class EventDataTimeliner(object):
 
     event_data_identifier = event_data.GetIdentifier()
 
-    # If preferred year is set considered it a user override, otherwise try
-    # to determine the year based on the file entry or fallback to the current
-    # year.
-
-    base_year = self._preferred_year
-    if not base_year:
-      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
-      if event_data_stream_identifier:
-        lookup_key = event_data_stream_identifier.CopyToString()
-        filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
-            lookup_key)
-        year_less_log_helpers = list(storage_writer.GetAttributeContainers(
-            events.YearLessLogHelper.CONTAINER_TYPE,
-            filter_expression=filter_expression))
-        if year_less_log_helpers:
-          base_year = year_less_log_helpers[0].earliest_year
-
-      # TODO: use relative_year to determine base_year
-
-    # TODO: fallback to current year
+    base_year = self._GetBaseYear(storage_writer, event_data)
 
     if event_data.parser:
       parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]

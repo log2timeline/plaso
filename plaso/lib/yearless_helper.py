@@ -101,14 +101,13 @@ class YearLessLogFormatHelper(object):
     if file_entry:
       years = self._GetYearsFromFileEntry(file_entry)
 
-    if not years and file_entry in (
+    if not years and file_entry.type_indicator in (
         dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
         dfvfs_definitions.TYPE_INDICATOR_GZIP):
 
       parent_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
           file_entry.path_spec.parent,
           resolver_context=parser_mediator.resolver_context)
-
       if parent_file_entry:
         years = self._GetYearsFromFileEntry(parent_file_entry)
 
@@ -146,13 +145,19 @@ class YearLessLogFormatHelper(object):
     if month not in self._VALID_MONTHS:
       raise ValueError('Invalid month: {0!s}'.format(month))
 
-    # Some format allow out-of-order sequences, so allow some leeway
-    # to not cause Apr->May->Apr to cause the year to increment.
-    # See http://bugzilla.adiscon.com/show_bug.cgi?id=527
+    if self._month:
+      # Account for log formats that allow out-of-order date and time values
+      # (Apr->May->Apr) such as rsyslog with the RepeatedMsgReduction setting
+      # enabled.
+      if (month + 1) < self._month:
+        self._relative_year += 1
+        self._year += 1
 
-    if self._month and (month + 1) < self._month:
-      self._relative_year += 1
-      self._year += 1
+      # Account for out-of-order Jan->Dec->Jan with the exception of the start
+      # of the log file.
+      elif self._relative_year > 0 and self._month == 1 and month == 12:
+        self._relative_year -= 1
+        self._year -= 1
 
     self._month = month
 
@@ -164,6 +169,7 @@ class YearLessLogFormatHelper(object):
     """
     year_less_log_helper = events.YearLessLogHelper()
     year_less_log_helper.earliest_year = self._base_year
+    year_less_log_helper.last_relative_year = self._relative_year
     year_less_log_helper.latest_year = self._maximum_year
 
     return year_less_log_helper
