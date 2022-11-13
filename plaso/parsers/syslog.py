@@ -264,7 +264,7 @@ class SyslogParser(
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       pyparsing.lineEnd())
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE),
       ('kernel_syslog_line', _KERNEL_SYSLOG_LINE),
       ('rsyslog_line', _RSYSLOG_LINE),
@@ -272,7 +272,7 @@ class SyslogParser(
       ('rsyslog_protocol_23_line', _RSYSLOG_PROTOCOL_23_LINE),
       ('syslog_comment', _SYSLOG_COMMENT)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def __init__(self):
     """Initializes a parser."""
@@ -370,6 +370,24 @@ class SyslogParser(
     severity = self._SYSLOG_SEVERITY[priority % 8]
     return severity
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    if not bool(self._VERIFICATION_REGEX.match(text_reader.lines)):
+      return False
+
+    self._SetEstimatedYear(parser_mediator)
+
+    return True
+
   def EnablePlugins(self, plugin_includes):
     """Enables parser plugins.
 
@@ -453,24 +471,6 @@ class SyslogParser(
       event_data.last_written_time = date_time
 
       parser_mediator.ProduceEventData(event_data)
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is a syslog-formatted file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    if not bool(self._VERIFICATION_REGEX.match(lines)):
-      return False
-
-    self._SetEstimatedYear(parser_mediator)
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

@@ -27,7 +27,6 @@ class GoogleDriveSyncLogEventData(events.EventData):
         which logged event.
   """
 
-  DATA_TYPE = 'gdrive_sync:log:line'
   DATA_TYPE = 'google_drive_sync_log:entry'
 
   def __init__(self):
@@ -73,13 +72,10 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS +
-      _FRACTION_OF_SECOND +
-      _TIME_ZONE_OFFSET).setResultsName('date_time')
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
+      _FRACTION_OF_SECOND + _TIME_ZONE_OFFSET).setResultsName('date_time')
 
   _PROCESS_IDENTIFIER = (
       pyparsing.Suppress('pid=') +
@@ -102,9 +98,9 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.SkipTo(_GDS_ENTRY_END).setResultsName('message') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  LINE_STRUCTURES = [('logline', _GDS_LINE)]
+  _LINE_STRUCTURES = [('logline', _GDS_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _BuildDateTime(self, time_elements_structure):
     """Builds time elements from a PostgreSQL log time stamp.
@@ -171,6 +167,35 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
     parser_mediator.ProduceEventData(event_data)
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      structure = self._GDS_LINE.parseString(text_reader.lines)
+    except pyparsing.ParseException as exception:
+      logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
+      return False
+
+    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    date_time = self._BuildDateTime(time_elements_structure)
+
+    if not date_time:
+      return False
+
+    return True
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
@@ -189,35 +214,6 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     self._ParseRecordLogline(parser_mediator, structure)
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verify that this file is a Google Drive Sync log file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    try:
-      structure = self._GDS_LINE.parseString(lines)
-    except pyparsing.ParseException as exception:
-      logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
-      return False
-
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    date_time = self._BuildDateTime(time_elements_structure)
-
-    if not date_time:
-      return False
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(GoogleDriveSyncLogParser)

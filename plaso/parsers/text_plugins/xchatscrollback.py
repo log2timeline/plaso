@@ -109,9 +109,6 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     functions, slightly modified to get pure text. From the parsing point
     of view, after having stripped, the code takes everything as is,
     simply replacing tabs with spaces (as the original XChat code).
-    So the VerifyStructure plays an important role in checking if
-    the source file has the right format, since the method will not raise
-    any parse exception and every content will be good.
 
     Args:
       raw_text (str): raw text obtained from the log record.

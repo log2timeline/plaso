@@ -90,11 +90,11 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
       pyparsing.restOfLine + pyparsing.lineEnd)
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('log_entry', _LOG_ENTRY),
       ('log_entry_at_end', _LAST_LOG_ENTRY)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _BuildDateTime(self, time_elements_structure):
     """Builds time elements from a PostgreSQL log time stamp.
@@ -149,6 +149,23 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     except (TypeError, ValueError):
       return None
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    # Because logs files can lead with a partial event,
+    # we can't assume that the first character (post-BOM)
+    # in the file is the beginning of our match - so we
+    # look for match anywhere in lines.
+    return pyparsing.Literal('<![LOG[').match in text_reader.lines
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse the record and return an SCCM log event object.
 
@@ -175,23 +192,6 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     event_data.written_time = self._BuildDateTime(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies whether content corresponds to an SCCM log file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    # Because logs files can lead with a partial event,
-    # we can't assume that the first character (post-BOM)
-    # in the file is the beginning of our match - so we
-    # look for match anywhere in lines.
-    return pyparsing.Literal('<![LOG[').match in lines
 
 
 manager.ParsersManager.RegisterParser(SCCMParser)

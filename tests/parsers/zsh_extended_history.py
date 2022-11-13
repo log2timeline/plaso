@@ -2,8 +2,10 @@
 # -*_ coding: utf-8 -*-
 """Tests for the Zsh extended_history parser."""
 
+import io
 import unittest
 
+from plaso.parsers import text_parser
 from plaso.parsers import zsh_extended_history
 
 from tests.parsers import test_lib
@@ -11,6 +13,24 @@ from tests.parsers import test_lib
 
 class ZshExtendedHistoryTest(test_lib.ParserTestCase):
   """Tests for the Zsh extended_history parser."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat method."""
+    parser = zsh_extended_history.ZshExtendedHistoryParser()
+
+    file_object = io.BytesIO(b': 1457771210:0;cd plaso')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = parser.CheckRequiredFormat(None, text_reader)
+    self.assertTrue(result)
+
+    file_object = io.BytesIO(b': 2016-03-26 11:54:53;0;cd plaso')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = parser.CheckRequiredFormat(None, text_reader)
+    self.assertFalse(result)
 
   def testParse(self):
     """Tests for the Parse method."""
@@ -40,17 +60,6 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
-
-  def testVerification(self):
-    """Tests for the VerifyStructure method"""
-    mediator = None
-    parser = zsh_extended_history.ZshExtendedHistoryParser()
-
-    valid_lines = ': 1457771210:0;cd plaso'
-    self.assertTrue(parser.VerifyStructure(mediator, valid_lines))
-
-    invalid_lines = ': 2016-03-26 11:54:53;0;cd plaso'
-    self.assertFalse(parser.VerifyStructure(mediator, invalid_lines))
 
 
 if __name__ == '__main__':

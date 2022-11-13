@@ -104,9 +104,9 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
       _ELEMENT_ID + _ELEMENT_ORIGINATOR + _ELEMENT_BODY +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -137,6 +137,21 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    match_generator = self._LINE_GRAMMAR.scanString(
+        text_reader.lines, maxMatches=1)
+    return bool(list(match_generator))
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses an iOS mobile installation log record.
 
@@ -166,20 +181,6 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is an iOS mobile installation log file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-        parsers and other components, such as storage and dfvfs.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    match_generator = self._LINE_GRAMMAR.scanString(lines, maxMatches=1)
-    return bool(list(match_generator))
 
 
 manager.ParsersManager.RegisterParser(IOSSysdiagLogParser)
