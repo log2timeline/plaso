@@ -343,7 +343,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-10-30T07:14:34.330792+00:00
+  2022-11-13T06:02:03.235228+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -352,7 +352,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 1028289
+  {inode} 374793
   {parser} filestat
 
 [Additional attributes]:
@@ -369,7 +369,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-10-30T07:14:34.330792+00:00
+  2022-11-13T06:02:03.235228+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -378,7 +378,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 1028289
+  {inode} 374793
   {parser} filestat
 
 [Additional attributes]:
@@ -395,7 +395,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-10-30T07:14:36.544794+00:00
+  2022-11-13T06:02:05.654231+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -404,7 +404,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 1028289
+  {inode} 374793
   {parser} filestat
 
 [Additional attributes]:
@@ -421,7 +421,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-10-30T07:14:40.091797+00:00
+  2022-11-13T06:02:09.000234+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -430,7 +430,7 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 1028289
+  {inode} 374793
   {parser} filestat
 
 [Additional attributes]:

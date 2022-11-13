@@ -27,6 +27,20 @@ Parser (plugin) name : Number of events
                total : 3 (38)
 --------------------------------------------------------------------------------
 
+
+******************* Timelining warnings generated per parser *******************
+Parser (plugin) name : Number of warnings
+--------------------------------------------------------------------------------
+            filestat : 1 (0)
+--------------------------------------------------------------------------------
+
+
+******************* Pathspecs with most timelining warnings ********************
+Number of warnings : Pathspec
+--------------------------------------------------------------------------------
+             1 (0) : N/A
+--------------------------------------------------------------------------------
+
 Storage files are different.
 """
 
@@ -550,8 +564,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = 'fceffa2e-5f79-48d5-9c6f-392b7055ca2d'
-    session_start_time = '2022-10-30 07:14:55.610025'
+    session_identifier = '77a17b1a-ee8c-4745-9852-8bd0e1afee80'
+    session_start_time = '2022-11-13 06:02:24.968825'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -594,10 +608,10 @@ Storage files are different.
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
     format_version = '20221023'
-    plaso_version = '20221030'
-    session_identifier = 'fceffa2e-5f79-48d5-9c6f-392b7055ca2d'
-    session_start_time = '2022-10-30T07:14:55.610025+00:00'
-    session_completion_time = '2022-10-30T07:15:04.347208+00:00'
+    plaso_version = '20221113'
+    session_identifier = '77a17b1a-ee8c-4745-9852-8bd0e1afee80'
+    session_start_time = '2022-11-13T06:02:24.968825+00:00'
+    session_completion_time = '2022-11-13T06:02:33.777517+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '

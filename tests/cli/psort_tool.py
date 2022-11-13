@@ -274,10 +274,9 @@ Test argument parser.
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        '2022-10-30T07:14:36.544793896+00:00,Last Access Time,FILE,File stat,'
-        'OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 '
-        'Group identifier: 1000 Mode: 0o644 Number of links: 1,filestat,'
-        'OS:/tmp/test/test_data/syslog,-')
+        '2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,'
+        '[/sbin/anacron  pid: 1234] Another one just like this (124 job run),'
+        'syslog,OS:/tmp/test/test_data/syslog,-')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(
