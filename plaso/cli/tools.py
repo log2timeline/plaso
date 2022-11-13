@@ -151,6 +151,9 @@ class CLITool(object):
     Returns:
       str: printable string representation of the path specification.
     """
+    if not path_spec:
+      return 'N/A'
+
     path_spec_string = path_spec.comparable
 
     if self._UNICODE_SURROGATES_RE.search(path_spec_string):

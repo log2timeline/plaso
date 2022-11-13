@@ -221,9 +221,6 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 16)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 16)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 1)
@@ -244,7 +241,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Testing year increment.
+    # Check if year is incremented.
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
         'data_type': 'syslog:line',
@@ -254,6 +251,14 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
+
+    # Check timeliner output.
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 15)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'timelining_warning')
+    self.assertEqual(number_of_warnings, 2)
 
 
 if __name__ == '__main__':
