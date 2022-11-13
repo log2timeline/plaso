@@ -70,24 +70,14 @@ short_source: 'Kik iOS'
 source: 'Kik iOS messages'
 ---
 type: 'conditional'
-data_type: 'ios:lockdown:log:line'
+data_type: 'ios:lockdownd_log:entry'
 message:
+- 'Process identifer: {process_identifier}'
 - 'Body: {body}'
-- 'Process Identifer: {process_identifier}'
 short_message:
 - 'Body: {body}'
 short_source: 'LOG'
 source: 'iOS lockdown daemon log'
----
-type: 'conditional'
-data_type: 'ios:sysdiag:log:line'
-message:
-- 'Originating call: {originating_call}'
-- 'Body: {body}'
-short_message:
-- 'Body: {body}'
-short_source: 'LOG'
-source: 'iOS sysdiag log'
 ---
 type: 'conditional'
 data_type: 'ios:netusage:route'
@@ -161,6 +151,16 @@ short_message:
 - 'Body: {body}'
 short_source: 'LOG'
 source: 'iOS sysdiagnose log'
+---
+type: 'conditional'
+data_type: 'ios:sysdiag_log:entry'
+message:
+- 'Originating call: {originating_call}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiag log'
 ---
 type: 'conditional'
 data_type: 'twitter:ios:contact'

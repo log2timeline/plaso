@@ -204,15 +204,6 @@ short_source: 'WEBHIST'
 source: 'Chrome History'
 ---
 type: 'conditional'
-data_type: 'chrome:preferences:clear_history'
-message:
-- '{message}'
-short_message:
-- '{message}'
-short_source: 'LOG'
-source: 'Chrome History Deletion'
----
-type: 'conditional'
 data_type: 'chrome:preferences:content_settings:exceptions'
 custom_helpers:
 - identifier: 'chrome_preferences_primary_url'
@@ -228,19 +219,22 @@ short_message:
 - 'used by {primary_url}'
 - 'embedded in {secondary_url}'
 short_source: 'LOG'
-source: 'Chrome Permission Event'
+source: 'Chrome Preferences'
 ---
+# TODO: extension_id is kept for backwards compatibility
 type: 'conditional'
 data_type: 'chrome:preferences:extension_installation'
 message:
-- 'CRX ID: {extension_id}'
-- 'CRX Name: {extension_name}'
+- 'CRX identifier: {extension_id}'
+- 'CRX identifier: {extension_identifier}'
+- 'CRX name: {extension_name}'
 - 'Path: {path}'
 short_message:
 - '{extension_id}'
+- '{extension_identifier}'
 - '{path}'
 short_source: 'LOG'
-source: 'Chrome Extension Installation'
+source: 'Chrome Preferences'
 ---
 type: 'conditional'
 data_type: 'chrome:preferences:extensions_autoupdater'
@@ -249,7 +243,7 @@ message:
 short_message:
 - '{message}'
 short_source: 'LOG'
-source: 'Chrome Extensions Autoupdater'
+source: 'Chrome Preferences'
 ---
 type: 'conditional'
 data_type: 'cookie:google:analytics:utma'
