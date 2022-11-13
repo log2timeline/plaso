@@ -41,7 +41,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-16-le'
 
-  _MAXIMUM_LINE_LENGTH = 4096
+  MAXIMUM_LINE_LENGTH = 4096
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
@@ -126,24 +126,24 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
-  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      line = self._ReadLineOfText(text_file_object)
+      line = text_reader.ReadLineOfText()
     except UnicodeDecodeError:
       return False
 
     # There should be spaces at position 9 and 16.
-    if len(line) < 16 or ' ' not in (line[8], line[15]):
+    if len(line) < 16 or line[8] != ' ' or line[15] != ' ':
       return False
 
     try:

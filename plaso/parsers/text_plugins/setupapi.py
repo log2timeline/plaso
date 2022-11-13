@@ -232,19 +232,19 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     """Resets stored values."""
     self._event_data = None
 
-  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      line = self._ReadLineOfText(text_file_object)
+      line = text_reader.ReadLineOfText()
     except UnicodeDecodeError:
       return False
 

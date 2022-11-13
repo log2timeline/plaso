@@ -2,8 +2,11 @@
 # -*_ coding: utf-8 -*-
 """Tests for the Zsh extended_history parser."""
 
-import io
 import unittest
+
+from dfvfs.file_io import fake_file_io
+from dfvfs.path import fake_path_spec
+from dfvfs.resolver import context as dfvfs_context
 
 from plaso.parsers import text_parser
 from plaso.parsers import zsh_extended_history
@@ -18,14 +21,23 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
     """Tests for the CheckRequiredFormat method."""
     parser = zsh_extended_history.ZshExtendedHistoryParser()
 
-    file_object = io.BytesIO(b': 1457771210:0;cd plaso')
+    resolver_context = dfvfs_context.Context()
+    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
+
+    file_object = fake_file_io.FakeFile(
+        resolver_context, test_path_spec, b': 1457771210:0;cd plaso')
+    file_object.Open()
+
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
     result = parser.CheckRequiredFormat(None, text_reader)
     self.assertTrue(result)
 
-    file_object = io.BytesIO(b': 2016-03-26 11:54:53;0;cd plaso')
+    file_object = fake_file_io.FakeFile(
+        resolver_context, test_path_spec, b': 2016-03-26 11:54:53;0;cd plaso')
+    file_object.Open()
+
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 

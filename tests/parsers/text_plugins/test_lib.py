@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin related functions and classes for testing."""
 
-from dfvfs.helpers import text_file
-
 from plaso.containers import events
 from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 
 from tests.parsers import test_lib
 
@@ -58,11 +57,10 @@ class TextPluginTestCase(test_lib.ParserTestCase):
     parser_mediator.AppendToParserChain('text')
 
     file_object = file_entry.GetFileObject()
-    text_file_object = text_file.TextFile(
+    text_reader = text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
 
-    required_format = plugin.CheckRequiredFormat(
-        parser_mediator, text_file_object)
+    required_format = plugin.CheckRequiredFormat(parser_mediator, text_reader)
     self.assertTrue(required_format)
 
     plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
