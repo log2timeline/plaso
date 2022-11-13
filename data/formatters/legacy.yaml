@@ -688,6 +688,15 @@ short_source: 'LOG'
 source: 'BSM Log'
 ---
 type: 'conditional'
+data_type: 'chrome:preferences:clear_history'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome History Deletion'
+---
+type: 'conditional'
 data_type: 'docker:json:container'
 message:
 - 'Action: {action}'
@@ -764,7 +773,27 @@ short_source: 'LOG'
 source: 'GoogleDriveSync Log'
 ---
 type: 'conditional'
+data_type: 'ios:lockdown:log:line'
+message:
+- 'Body: {body}'
+- 'Process Identifer: {process_identifier}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS lockdown daemon log'
+---
+type: 'conditional'
 data_type: 'ios:mobile_installation:line'
+message:
+- 'Originating call: {originating_call}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiag log'
+---
+type: 'conditional'
+data_type: 'ios:sysdiag:log:line'
 message:
 - 'Originating call: {originating_call}'
 - 'Body: {body}'

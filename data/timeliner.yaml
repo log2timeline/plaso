@@ -82,6 +82,24 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'chrome:preferences:content_settings:exceptions'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
+data_type: 'chrome:preferences:extension_installation'
+attribute_mappings:
+- name: 'installation_time'
+  description: 'Time of installation'
+place_holder_event: true
+---
+data_type: 'chrome:preferences:extensions_autoupdater'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'confluence:access'
 attribute_mappings:
 - name: 'recorded_time'
@@ -170,9 +188,21 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'ios:lockdownd_log:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'ios:sysdiag_log:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'ios:sysdiagnose:logd:line'
 attribute_mappings:
-- name: 'last_written_time'
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---

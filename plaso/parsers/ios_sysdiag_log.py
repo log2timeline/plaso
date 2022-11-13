@@ -6,9 +6,7 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -21,9 +19,11 @@ class IOSSysdiagLogEventData(events.EventData):
     originating_call (str): call that created the entry.
     process_identifier (str): process_identifier.
     severity (str): severity of the message.
+    written_time (dfdatetime.DateTimeValues): date and time the log entry was
+        written.
   """
 
-  DATA_TYPE = 'ios:sysdiag:log:line'
+  DATA_TYPE = 'ios:sysdiag_log:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -32,6 +32,7 @@ class IOSSysdiagLogEventData(events.EventData):
     self.originating_call = None
     self.process_identifier = None
     self.severity = None
+    self.written_time = None
 
 
 class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
@@ -40,19 +41,22 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
   NAME = 'ios_sysdiag_log'
   DATA_FORMAT = 'iOS sysdiag log'
 
-  MONTHS = {
-      'Jan': 1,
-      'Feb': 2,
-      'Mar': 3,
-      'Apr': 4,
-      'May': 5,
-      'Jun': 6,
-      'Jul': 7,
-      'Aug': 8,
-      'Sep': 9,
-      'Oct': 10,
-      'Nov': 11,
-      'Dec': 12}
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
+
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)
@@ -65,18 +69,15 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  _TIMESTAMP = (
-      _THREE_LETTERS.suppress() +
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') +
-      _FOUR_DIGITS.setResultsName('year'))
+  # Date and time values are formatted as: Wed Aug 11 05:51:02 2021
+  _DATE_TIME = (
+      _THREE_LETTERS.suppress() + _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
+      _FOUR_DIGITS).setResultsName('date_time')
 
   _ELEMENT_NUMBER = (
-      pyparsing.Suppress('[') +
-      pyparsing.Word(pyparsing.nums).setResultsName('process_identifier') +
+      pyparsing.Suppress('[') + _INTEGER.setResultsName('process_identifier') +
       pyparsing.Suppress(']'))
 
   _ELEMENT_SEVERITY = (
@@ -92,20 +93,49 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
   _ELEMENT_ORIGINATOR = pyparsing.SkipTo(
       pyparsing.Literal(': ')).setResultsName('originating_call')
 
-  _BODY_END = pyparsing.StringEnd() | _TIMESTAMP
+  _BODY_END = pyparsing.StringEnd() | _DATE_TIME
 
   _ELEMENT_BODY = (
       pyparsing.Optional(pyparsing.Suppress(pyparsing.Literal(': '))) +
       pyparsing.SkipTo(_BODY_END).setResultsName('body'))
 
   _LINE_GRAMMAR = (
-      _TIMESTAMP + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
+      _DATE_TIME + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
       _ELEMENT_ID + _ELEMENT_ORIGINATOR + _ELEMENT_BODY +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
   LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      month_string, day_of_month, hours, minutes, seconds, year = (
+          time_elements_structure)
+
+      month = self._MONTH_DICT.get(month_string.lower(), 0)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      return dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses an iOS mobile installation log record.
@@ -123,34 +153,19 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    month_string = self._GetValueFromStructure(structure, 'month')
-
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self.MONTHS.get(month_string)
-    day_of_month = self._GetValueFromStructure(structure, 'day_of_month')
-    hours = self._GetValueFromStructure(structure, 'hours')
-    minutes = self._GetValueFromStructure(structure, 'minutes')
-    seconds = self._GetValueFromStructure(structure, 'seconds')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     event_data = IOSSysdiagLogEventData()
+    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.originating_call = self._GetValueFromStructure(
+        structure, 'originating_call')
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
     event_data.severity = self._GetValueFromStructure(structure, 'severity')
-    event_data.originating_call = self._GetValueFromStructure(
-        structure, 'originating_call')
-    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
-    try:
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day_of_month, hours, minutes, seconds))
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning('invalid date time value')
-      return
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies that this is an iOS mobile installation log file.

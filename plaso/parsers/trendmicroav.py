@@ -28,7 +28,8 @@ class TrendMicroAVEventData(events.EventData):
     path (str): path.
     scan_type (str): scan_type.
     threat (str): threat.
-    written_time (dfdatetime.DateTimeValues): entry written date and time.
+    written_time (dfdatetime.DateTimeValues): date and time the log entry was
+        written.
   """
 
   DATA_TYPE = 'av:trendmicro:scan'
