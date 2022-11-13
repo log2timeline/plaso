@@ -192,6 +192,9 @@ class EventDataTimeliner(object):
     last_relative_year = year_less_log_helpers[0].last_relative_year
     latest_year = year_less_log_helpers[0].latest_year
 
+    if earliest_year is None and latest_year is None:
+      return self._current_year
+
     base_year = earliest_year
 
     if base_year + last_relative_year < self._current_year:

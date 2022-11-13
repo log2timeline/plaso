@@ -562,8 +562,31 @@ class AWSELBTextPlugin(interface.TextPlugin):
     except UnicodeDecodeError:
       return False
 
-    _, _, parsed_structure = self._GetMatchingLineStructure(line)
-    return bool(parsed_structure)
+    _, _, result_tuple = self._GetMatchingLineStructure(line)
+    if not result_tuple:
+      return False
+
+    parsed_structure, _, _ = result_tuple
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'response_time')
+
+    if time_elements_structure:
+      try:
+        self._ParseTimeElements(time_elements_structure)
+      except errors.ParseError:
+        return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'request_time')
+
+    if time_elements_structure:
+      try:
+        self._ParseTimeElements(time_elements_structure)
+      except errors.ParseError:
+        return False
+
+    return True
 
 
 text_parser.SingleLineTextParser.RegisterPlugin(AWSELBTextPlugin)

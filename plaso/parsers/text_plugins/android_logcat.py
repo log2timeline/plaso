@@ -276,9 +276,11 @@ class AndroidLogcatTextPlugin(
     except UnicodeDecodeError:
       return False
 
-    _, line_structure, parsed_structure = self._GetMatchingLineStructure(line)
-    if not parsed_structure:
+    _, line_structure, result_tuple = self._GetMatchingLineStructure(line)
+    if not result_tuple:
       return False
+
+    parsed_structure, _, _ = result_tuple
 
     self._SetEstimatedYear(parser_mediator)
 
