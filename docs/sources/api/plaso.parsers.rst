@@ -231,10 +231,10 @@ plaso.parsers.logger module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.mac\_keychain module
-----------------------------------
+plaso.parsers.macos\_keychain module
+------------------------------------
 
-.. automodule:: plaso.parsers.mac_keychain
+.. automodule:: plaso.parsers.macos_keychain
    :members:
    :undoc-members:
    :show-inheritance:
