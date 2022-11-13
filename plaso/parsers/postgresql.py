@@ -98,9 +98,9 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       _LOG_LEVEL + pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   # Extracted from /usr/share/postgresql/13/timezonesets/Default
   # See https://www.postgresql.org/docs/current/datetime-config-files.html
@@ -187,6 +187,24 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     except (TypeError, ValueError):
       return None
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      self._LOG_LINE.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    return True
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a PostgreSQL event.
 
@@ -247,25 +265,6 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED, time_zone=time_zone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is a PostgreSQL application log.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    try:
-      self._LOG_LINE.parseString(lines)
-    except pyparsing.ParseException:
-      return False
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(PostgreSQLParser)

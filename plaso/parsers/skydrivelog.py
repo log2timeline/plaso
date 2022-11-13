@@ -110,11 +110,11 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +
       pyparsing.lineEnd())
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('logline', _SDF_LINE),
       ('header', _SDF_HEADER)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parse header lines and store appropriate attributes.
@@ -244,6 +244,36 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      structure = self._SDF_HEADER.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      logger.debug('Not a SkyDrive log file')
+      return False
+
+    time_elements_tuple = self._GetValueFromStructure(
+        structure, 'header_date_time')
+    try:
+      dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
+      logger.debug(
+          'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
+              time_elements_tuple))
+      return False
+
+    return True
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse each record structure and return an EventObject if applicable.
 
@@ -274,36 +304,6 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse header line with error: {0!s}'.format(exception))
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verify that this file is a SkyDrive log file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    try:
-      structure = self._SDF_HEADER.parseString(lines)
-    except pyparsing.ParseException:
-      logger.debug('Not a SkyDrive log file')
-      return False
-
-    time_elements_tuple = self._GetValueFromStructure(
-        structure, 'header_date_time')
-    try:
-      dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple)
-    except ValueError:
-      logger.debug(
-          'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
-              time_elements_tuple))
-      return False
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(SkyDriveLog2Parser)

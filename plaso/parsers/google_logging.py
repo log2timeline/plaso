@@ -111,12 +111,12 @@ class GoogleLogParser(
   # Order is important here, as the structures are checked against each line
   # sequentially, so we put the most common first, and the most expensive
   # last.
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('log_entry', _LOG_LINE),
       ('greeting_start', pyparsing.Literal(_GREETING_START)),
       ('greeting', _GREETING)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _ParseGreeting(self, parser_mediator, structure):
     """Extract useful information from the logfile greeting.
@@ -196,6 +196,24 @@ class GoogleLogParser(
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    if not text_reader.lines.startswith(self._GREETING_START):
+      return False
+
+    self._SetEstimatedYear(parser_mediator)
+
+    return True
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
 
@@ -221,24 +239,6 @@ class GoogleLogParser(
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to parse log line with error: {0!s}'.format(exception))
-
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies that this is a google log-formatted file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    if not lines.startswith(self._GREETING_START):
-      return False
-
-    self._SetEstimatedYear(parser_mediator)
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(GoogleLogParser)

@@ -26,7 +26,20 @@ class TestPyparsingMultiLineTextParser(
 
   _LINE = pyparsing.Regex('.*') + pyparsing.lineEnd()
 
-  LINE_STRUCTURES = [('line', _LINE)]
+  _LINE_STRUCTURES = [('line', _LINE)]
+
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    return True
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -42,27 +55,69 @@ class TestPyparsingMultiLineTextParser(
     """
     return
 
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verify the structure of the file and return boolean based on that check.
 
-    This function should read enough text from the text file to confirm
-    that the file is the correct one for this particular parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    return True
-
-
-class PyparsingSingleLineTextParserTest(test_lib.ParserTestCase):
-  """Tests for the single-line PyParsing-based text parser."""
+class SingleLineTextParserTest(test_lib.ParserTestCase):
+  """Tests for the single-line text parser."""
 
   # TODO: add tests for ParseFileObject
+
+
+class EncodedTextReaderTest(test_lib.ParserTestCase):
+  """Tests for encoded text reader."""
+
+  _TEST_LINES ='\n'.join([
+      'Multiple lines',
+      'of text',
+      'in a single',
+      'file.'])
+
+  _TEST_DATA = _TEST_LINES.encode('utf-8')
+
+  def testReadLine(self):
+    """Tests the ReadLine function."""
+    resolver_context = dfvfs_context.Context()
+
+    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
+    file_object = fake_file_io.FakeFile(
+        resolver_context, test_path_spec, self._TEST_DATA)
+    file_object.Open()
+
+    text_reader = text_parser.EncodedTextReader(file_object)
+
+    line = text_reader.ReadLine()
+    self.assertEqual(line, 'Multiple lines')
+
+    line = text_reader.ReadLine()
+    self.assertEqual(line, 'of text')
+
+  def testReadLines(self):
+    """Tests the ReadLines function."""
+    resolver_context = dfvfs_context.Context()
+
+    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
+    file_object = fake_file_io.FakeFile(
+        resolver_context, test_path_spec, self._TEST_DATA)
+    file_object.Open()
+
+
+    text_reader = text_parser.EncodedTextReader(file_object)
+
+    text_reader.ReadLines()
+    self.assertEqual(text_reader.lines, self._TEST_LINES)
+
+  def testSkipAhead(self):
+    """Tests the SkipAhead function."""
+    resolver_context = dfvfs_context.Context()
+
+    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
+    file_object = fake_file_io.FakeFile(
+        resolver_context, test_path_spec, self._TEST_DATA)
+    file_object.Open()
+
+    text_reader = text_parser.EncodedTextReader(file_object)
+
+    text_reader.SkipAhead(10)
+    self.assertEqual(text_reader.lines, self._TEST_LINES[10:])
 
 
 class PyparsingMultiLineTextParserTest(test_lib.ParserTestCase):

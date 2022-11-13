@@ -259,7 +259,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Literal('# History of marks within files (newest to oldest):') +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
-  LINE_STRUCTURES = [
+  _LINE_STRUCTURES = [
       ('preamble', _PREAMBLE),
       ('command_line_history', _COMMAND_LINE_HISTORY),
       ('hlsearch', _HLSEARCH),
@@ -275,7 +275,7 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
       ('jumplist_history', _JUMPLIST_HISTORY),
       ('history_marks_history', _HISTORY_MARKS_HISTORY)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
   def _ParseCommandLineHistory(self, parser_mediator, structure):
     """Parses command line history items and creates VimInfoEventData objects.
@@ -429,6 +429,24 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
       parser_mediator.ProduceEventData(event_data)
 
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      self._PREAMBLE.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    return True
+
   def ParseRecord(self, parser_mediator, key, structure):
     """Parse the record and create a viminfo event object
 
@@ -465,25 +483,6 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
     # TODO(sydp): add support for history marks history lines
     # elif key == 'history_marks_history':
     #   self._ParseHistoryMarksHistory(self, parser_mediator, structure)
-
-  # pylint: disable=unused-argument
-  def VerifyStructure(self, parser_mediator, lines):
-    """Verifies whether content corresponds to a viminfo file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    try:
-      self._PREAMBLE.parseString(lines)
-    except pyparsing.ParseException:
-      return False
-
-    return True
 
 
 manager.ParsersManager.RegisterParser(VimInfoParser)

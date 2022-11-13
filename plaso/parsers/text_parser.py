@@ -156,37 +156,34 @@ class SingleLineTextParser(interface.FileObjectParser):
 
 class EncodedTextReader(object):
   """Encoded text reader.
-
   Attributes:
     lines (str): lines of text.
   """
 
-  def __init__(self, encoding, buffer_size=2048):
+  def __init__(self, file_object, buffer_size=2048, encoding='utf-8'):
     """Initializes the encoded text reader object.
-
     Args:
-      encoding (str): encoding.
+      file_object (FileIO): a file-like object to read from.
       buffer_size (Optional[int]): buffer size.
+      encoding (Optional[str]): text encoding.
     """
     super(EncodedTextReader, self).__init__()
     self._buffer = ''
     self._buffer_size = buffer_size
     self._current_offset = 0
     self._encoding = encoding
+    self._file_object = file_object
 
     self.lines = ''
 
-  def _ReadLine(self, file_object):
+  def _ReadLine(self):
     """Reads a line from the file object.
-
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
 
     Returns:
       str: line read from the file-like object.
     """
     if len(self._buffer) < self._buffer_size:
-      content = file_object.read(self._buffer_size)
+      content = self._file_object.read(self._buffer_size)
       content = content.decode(self._encoding)
       self._buffer = ''.join([self._buffer, content])
 
@@ -207,33 +204,26 @@ class EncodedTextReader(object):
 
     return line
 
-  def ReadLine(self, file_object):
+  def ReadLine(self):
     """Reads a line.
-
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
 
     Returns:
       str: line read from the lines buffer.
     """
     line, _, self.lines = self.lines.partition('\n')
     if not line:
-      self.ReadLines(file_object)
+      self.ReadLines()
       line, _, self.lines = self.lines.partition('\n')
 
     return line
 
-  def ReadLines(self, file_object):
-    """Reads lines into the lines buffer.
-
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
-    """
+  def ReadLines(self):
+    """Reads lines into the lines buffer."""
     lines_size = len(self.lines)
     if lines_size < self._buffer_size:
       lines_size = self._buffer_size - lines_size
       while lines_size > 0:
-        line = self._ReadLine(file_object)
+        line = self._ReadLine()
         if not line:
           break
 
@@ -246,11 +236,9 @@ class EncodedTextReader(object):
     self._current_offset = 0
     self.lines = ''
 
-  def SkipAhead(self, file_object, number_of_characters):
+  def SkipAhead(self, number_of_characters):
     """Skips ahead a number of characters.
-
     Args:
-      file_object (dfvfs.FileIO): file-like object.
       number_of_characters (int): number of characters.
     """
     lines_size = len(self.lines)
@@ -258,7 +246,7 @@ class EncodedTextReader(object):
       number_of_characters -= lines_size
 
       self.lines = ''
-      self.ReadLines(file_object)
+      self.ReadLines()
       lines_size = len(self.lines)
       if lines_size == 0:
         return
@@ -271,6 +259,12 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
 
   BUFFER_SIZE = 2048
 
+  # The maximum number of consecutive lines that don't match known line
+  # structures to encounter before aborting parsing.
+  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
+
+  _ENCODING = None
+
   # The actual structure, this needs to be defined by each parser.
   # This is defined as a list of tuples so that more than a single line
   # structure can be defined. That way the parser can support more than a
@@ -281,13 +275,8 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
   # The key is a comment or an identification that is passed to the ParseRecord
   # function so that the developer can identify which structure got parsed.
   # The value is the actual pyparsing structure.
-  LINE_STRUCTURES = []
 
-  # The maximum number of consecutive lines that don't match known line
-  # structures to encounter before aborting parsing.
-  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
-
-  _ENCODING = None
+  _LINE_STRUCTURES = []
 
   _MONTH_DICT = {
       'jan': 1,
@@ -306,15 +295,14 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
   def __init__(self):
     """Initializes a parser."""
     super(PyparsingMultiLineTextParser, self).__init__()
-    self._buffer_size = self.BUFFER_SIZE
     self._current_offset = 0
     self._line_structures = []
     self._parser_mediator = None
 
     codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
 
-    if self.LINE_STRUCTURES:
-      self._SetLineStructures(self.LINE_STRUCTURES)
+    if self._LINE_STRUCTURES:
+      self._SetLineStructures(self._LINE_STRUCTURES)
 
   def _EncodingErrorHandler(self, exception):
     """Encoding error handler.
@@ -365,13 +353,12 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
 
     return value
 
-  def _ParseLines(self, parser_mediator, file_object, text_reader):
+  def _ParseLines(self, parser_mediator, text_reader):
     """Parses lines of text using a pyparsing definition.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
       text_reader (EncodedTextReader): text reader.
 
     Raises:
@@ -419,10 +406,10 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   line_structure.name, exception))
 
-        text_reader.SkipAhead(file_object, end)
+        text_reader.SkipAhead(end)
 
       else:
-        odd_line = text_reader.ReadLine(file_object)
+        odd_line = text_reader.ReadLine()
         if odd_line:
           if len(odd_line) > 80:
             odd_line = '{0:s}...'.format(odd_line[:77])
@@ -438,7 +425,7 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 
       try:
-        text_reader.ReadLines(file_object)
+        text_reader.ReadLines()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning(
             'unable to read lines with error: {0!s}'.format(exception))
@@ -488,6 +475,19 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       line_structure = PyparsingLineStructure(key, expression)
       self._line_structures.append(line_structure)
 
+  @abc.abstractmethod
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
 
@@ -506,21 +506,19 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
 
     encoding = self._ENCODING or parser_mediator.codepage
     text_reader = EncodedTextReader(
-        encoding, buffer_size=self.BUFFER_SIZE)
-
-    text_reader.Reset()
+        file_object, buffer_size=self.BUFFER_SIZE, encoding=encoding)
 
     try:
-      text_reader.ReadLines(file_object)
+      text_reader.ReadLines()
     except UnicodeDecodeError as exception:
       raise errors.WrongParser('Not a text file, with error: {0!s}'.format(
           exception))
 
-    if not self.VerifyStructure(parser_mediator, text_reader.lines):
+    if not self.CheckRequiredFormat(parser_mediator, text_reader):
       raise errors.WrongParser('Wrong file structure.')
 
     try:
-      self._ParseLines(parser_mediator, file_object, text_reader)
+      self._ParseLines(parser_mediator, text_reader)
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning(
           '{0:s} unable to parse text file with error: {1!s}'.format(
@@ -542,22 +540,6 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-
-  @abc.abstractmethod
-  def VerifyStructure(self, parser_mediator, lines):  # pylint: disable=arguments-renamed
-    """Verify the structure of the file and return boolean based on that check.
-
-    This function should read enough text from the text file to confirm
-    that the file is the correct one for this particular parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      lines (str): one or more lines from the text file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
     """
 
 
