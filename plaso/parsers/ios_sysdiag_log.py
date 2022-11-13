@@ -108,6 +108,36 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    event_data = IOSSysdiagLogEventData()
+    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.originating_call = self._GetValueFromStructure(
+        structure, 'originating_call')
+    event_data.process_identifier = self._GetValueFromStructure(
+        structure, 'process_identifier')
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
+
+    parser_mediator.ProduceEventData(event_data)
+
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
 
@@ -151,36 +181,6 @@ class IOSSysdiagLogParser(text_parser.PyparsingMultiLineTextParser):
     match_generator = self._LINE_GRAMMAR.scanString(
         text_reader.lines, maxMatches=1)
     return bool(list(match_generator))
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses an iOS mobile installation log record.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    event_data = IOSSysdiagLogEventData()
-    event_data.body = self._GetValueFromStructure(structure, 'body')
-    event_data.originating_call = self._GetValueFromStructure(
-        structure, 'originating_call')
-    event_data.process_identifier = self._GetValueFromStructure(
-        structure, 'process_identifier')
-    event_data.severity = self._GetValueFromStructure(structure, 'severity')
-    event_data.written_time = self._ParseTimeElements(time_elements_structure)
-
-    parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(IOSSysdiagLogParser)

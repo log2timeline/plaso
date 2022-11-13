@@ -521,7 +521,7 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       ParseError: if the structure cannot be parsed.
     """
     # TODO: use a callback per line structure name.
-    self.ParseRecord(parser_mediator, line_structure.name, parsed_structure)
+    self._ParseRecord(parser_mediator, line_structure.name, parsed_structure)
 
     line_structure.weight += 1
 
@@ -533,6 +533,20 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       self._line_structures[index] = self._line_structures[index - 1]
       self._line_structures[index - 1] = line_structure
       index -= 1
+
+  @abc.abstractmethod
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
 
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
@@ -602,20 +616,6 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     if hasattr(self, 'GetYearLessLogHelper'):
       year_less_log_helper = self.GetYearLessLogHelper()
       parser_mediator.AddYearLessLogHelper(year_less_log_helper)
-
-  @abc.abstractmethod
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
 
 
 manager.ParsersManager.RegisterParser(SingleLineTextParser)

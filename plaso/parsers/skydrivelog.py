@@ -208,6 +208,36 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
 
     parser_mediator.ProduceEventData(event_data)
 
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    if key == 'logline':
+      try:
+        self._ParseLine(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse log line with error: {0!s}'.format(exception))
+
+    elif key == 'header':
+      try:
+        self._ParseHeader(parser_mediator, structure)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse header line with error: {0!s}'.format(exception))
+
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
 
@@ -273,37 +303,6 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
       return False
 
     return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    if key == 'logline':
-      try:
-        self._ParseLine(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line with error: {0!s}'.format(exception))
-
-    elif key == 'header':
-      try:
-        self._ParseHeader(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse header line with error: {0!s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(SkyDriveLog2Parser)

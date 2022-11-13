@@ -138,7 +138,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     except (TypeError, ValueError):
       return None
 
-  def _ParseRecordLogline(self, parser_mediator, structure):
+  def _ParseLogline(self, parser_mediator, structure):
     """Parses a logline record structure and produces events.
 
     Args:
@@ -166,6 +166,24 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.message = message
 
     parser_mediator.ProduceEventData(event_data)
+
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    self._ParseLogline(parser_mediator, structure)
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -195,25 +213,6 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       return False
 
     return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): identifier of the structure of tokens.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    self._ParseRecordLogline(parser_mediator, structure)
 
 
 manager.ParsersManager.RegisterParser(GoogleDriveSyncLogParser)
