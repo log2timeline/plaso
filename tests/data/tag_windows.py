@@ -135,7 +135,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     #       event_identifier is 505
     attribute_values_per_name = {
         'event_identifier': [505],
-        'source_name': ['Microsoft-Windows-Security-Auditing']}
+        'source_name': ['Microsoft-Windows-Application-Experience']}
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['application_execution'])
