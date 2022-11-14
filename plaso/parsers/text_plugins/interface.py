@@ -7,11 +7,10 @@ import os
 
 import pyparsing
 
-from dfvfs.helpers import text_file
-
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
+from plaso.parsers import text_parser
 
 
 class PyparsingLineStructure(object):
@@ -64,7 +63,8 @@ class TextPlugin(plugins.BasePlugin):
 
   ENCODING = None
 
-  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
+  # The maximum line length of a single read.
+  MAXIMUM_LINE_LENGTH = 400
 
   # List of tuples of pyparsing expression per unique identifier that define
   # the supported grammar.
@@ -73,12 +73,6 @@ class TextPlugin(plugins.BasePlugin):
   # The maximum number of consecutive lines that do not match the grammar before
   # aborting parsing.
   _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
-
-  # Allow for a maximum of 40 empty lines before we bail out.
-  _MAXIMUM_NUMBER_OF_EMPTY_LINES = 40
-
-  # The maximum line length of a single read.
-  _MAXIMUM_LINE_LENGTH = 400
 
   def __init__(self):
     """Initializes a parser."""
@@ -158,20 +152,21 @@ class TextPlugin(plugins.BasePlugin):
 
     return value
 
-  def _ParseLines(self, parser_mediator, text_file_object):
+  def _ParseLines(self, parser_mediator, text_reader):
     """Parses lines of text using a pyparsing definition.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
     """
-    line = self._ReadLineOfText(text_file_object)
-
-    consecutive_line_failures = 0
     # Set the offset to the beginning of the file.
     self._current_offset = 0
+
+    consecutive_line_failures = 0
+
     # Read every line in the text file.
+    line = text_reader.ReadLineOfText()
     while line:
       if parser_mediator.abort:
         break
@@ -207,10 +202,10 @@ class TextPlugin(plugins.BasePlugin):
                   self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
           break
 
-      self._current_offset = text_file_object.get_offset()
+      self._current_offset = text_reader.get_offset()
 
       try:
-        line = self._ReadLineOfText(text_file_object)
+        line = text_reader.ReadLineOfText()
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(
@@ -261,33 +256,6 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the structure type is unknown.
     """
 
-  def _ReadLineOfText(self, text_file_object, depth=0):
-    """Reads a line of text.
-
-    Args:
-      text_file_object (dfvfs.TextFile): text file.
-      depth (Optional[int]): number of new lines the parser encountered.
-
-    Returns:
-      str: single line read from the file-like object, or the maximum number of
-          characters.
-
-    Raises:
-      UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding and encoding errors is set to strict.
-    """
-    line = text_file_object.readline(size=self._MAXIMUM_LINE_LENGTH)
-    if not line:
-      return ''
-
-    if line in self._EMPTY_LINES:
-      if depth == self._MAXIMUM_NUMBER_OF_EMPTY_LINES:
-        return ''
-
-      return self._ReadLineOfText(text_file_object, depth=depth + 1)
-
-    return line
-
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
 
@@ -297,17 +265,21 @@ class TextPlugin(plugins.BasePlugin):
     """
     self._line_structures = []
     for key, expression in line_structures:
+      # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
+      # with spaces to SkipAhead() the correct number of bytes after a match.
+      expression.parseWithTabs()
+
       line_structure = PyparsingLineStructure(key, expression)
       self._line_structures.append(line_structure)
 
   @abc.abstractmethod
-  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
@@ -331,12 +303,12 @@ class TextPlugin(plugins.BasePlugin):
     try:
       file_object.seek(0, os.SEEK_SET)
 
-      text_file_object = text_file.TextFile(
-          file_object, encoding=self.ENCODING or parser_mediator.codepage,
+      encoding = self.ENCODING or parser_mediator.codepage
+      text_reader = text_parser.EncodedTextReader(
+          file_object, buffer_size=self.MAXIMUM_LINE_LENGTH, encoding=encoding,
           encoding_errors='text_parser_handler')
 
-      self._current_offset = 0
-      self._ParseLines(parser_mediator, text_file_object)
+      self._ParseLines(parser_mediator, text_reader)
 
     finally:
       self._parser_mediator = None

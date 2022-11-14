@@ -62,7 +62,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   NAME = 'confluence_access'
   DATA_FORMAT = 'Confluence access log (access.log) file'
 
-  _MAXIMUM_LINE_LENGTH = 2048
+  MAXIMUM_LINE_LENGTH = 2048
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
@@ -268,19 +268,19 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
-  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      line = self._ReadLineOfText(text_file_object)
+      line = text_reader.ReadLineOfText()
     except UnicodeDecodeError:
       return False
 

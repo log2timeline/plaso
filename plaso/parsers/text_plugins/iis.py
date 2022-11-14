@@ -80,7 +80,7 @@ class WinIISTextPlugin(interface.TextPlugin):
   # TODO: fix
   ENCODING = 'utf-8'
 
-  _MAXIMUM_LINE_LENGTH = 800
+  MAXIMUM_LINE_LENGTH = 800
 
   _BLANK = pyparsing.Literal('-')
 
@@ -366,19 +366,19 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._month = None
     self._year = None
 
-  def CheckRequiredFormat(self, parser_mediator, text_file_object):
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_file_object (dfvfs.TextFile): text file.
+      text_reader (EncodedTextReader): text reader.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      line = self._ReadLineOfText(text_file_object)
+      line = text_reader.ReadLineOfText()
     except UnicodeDecodeError:
       return False
 
@@ -389,7 +389,7 @@ class WinIISTextPlugin(interface.TextPlugin):
         break
 
       try:
-        line = self._ReadLineOfText(text_file_object)
+        line = text_reader.ReadLineOfText()
       except UnicodeDecodeError:
         break
 

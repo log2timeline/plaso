@@ -6,8 +6,6 @@ import codecs
 
 import pyparsing
 
-from dfvfs.helpers import text_file
-
 from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -112,79 +110,56 @@ class PyparsingLineStructure(object):
     return None
 
 
-class SingleLineTextParser(interface.FileObjectParser):
-  """Single-line text parser."""
-
-  NAME = 'text'
-  DATA_FORMAT = 'Single-line text log file'
-
-  _plugin_classes = {}
-
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a text file-like object using a pyparsing definition.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    for plugin in self._plugins:
-      if parser_mediator.abort:
-        break
-
-      text_file_object = text_file.TextFile(
-          file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
-
-      if not plugin.CheckRequiredFormat(parser_mediator, text_file_object):
-        continue
-
-      try:
-        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
-      except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse text file with error: '
-            '{1!s}').format(plugin.NAME, exception))
-        continue
-
-      if hasattr(plugin, 'GetYearLessLogHelper'):
-        year_less_log_helper = plugin.GetYearLessLogHelper()
-        parser_mediator.AddYearLessLogHelper(year_less_log_helper)
-
-
 class EncodedTextReader(object):
   """Encoded text reader.
+
   Attributes:
     lines (str): lines of text.
   """
 
-  def __init__(self, file_object, buffer_size=2048, encoding='utf-8'):
+  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
+
+  # Maximum number of empty lines before we bail out.
+  _MAXIMUM_NUMBER_OF_EMPTY_LINES = 40
+
+  def __init__(
+      self, file_object, buffer_size=2048, encoding='utf-8',
+      encoding_errors='strict'):
     """Initializes the encoded text reader object.
+
     Args:
       file_object (FileIO): a file-like object to read from.
       buffer_size (Optional[int]): buffer size.
       encoding (Optional[str]): text encoding.
+      encoding_errors (Optional[str]): text encoding errors handler.
     """
     super(EncodedTextReader, self).__init__()
     self._buffer = ''
     self._buffer_size = buffer_size
     self._current_offset = 0
     self._encoding = encoding
+    self._encoding_errors = encoding_errors
     self._file_object = file_object
 
     self.lines = ''
 
-  def _ReadLine(self):
+  def _ReadLine(self, size):
     """Reads a line from the file object.
+
+    Args:
+      size (int): maximum byte size to read.
 
     Returns:
       str: line read from the file-like object.
     """
-    if len(self._buffer) < self._buffer_size:
-      content = self._file_object.read(self._buffer_size)
-      content = content.decode(self._encoding)
+    if len(self._buffer) < size:
+      content = self._file_object.read(size)
+      content = content.decode(self._encoding, self._encoding_errors)
+
+      # Remove a byte-order mark at the start of the file.
+      if self._current_offset == 0 and content and content[0] == '\ufeff':
+        content = content[1:]
+
       self._buffer = ''.join([self._buffer, content])
 
     line, new_line, self._buffer = self._buffer.partition('\n')
@@ -217,27 +192,48 @@ class EncodedTextReader(object):
 
     return line
 
+  def ReadLineOfText(self, depth=0):
+    """Reads a line of text.
+
+    Args:
+      depth (Optional[int]): number of new lines the parser encountered.
+
+    Returns:
+      str: single line read from the file-like object, or the maximum number of
+          characters.
+
+    Raises:
+      UnicodeDecodeError: if the text cannot be decoded using the specified
+          encoding and encoding errors is set to strict.
+    """
+    line = self._ReadLine(size=self._buffer_size)
+    if not line:
+      return ''
+
+    if line in self._EMPTY_LINES:
+      if depth == self._MAXIMUM_NUMBER_OF_EMPTY_LINES:
+        return ''
+
+      return self.ReadLineOfText(depth=depth + 1)
+
+    return line
+
   def ReadLines(self):
     """Reads lines into the lines buffer."""
     lines_size = len(self.lines)
     if lines_size < self._buffer_size:
       lines_size = self._buffer_size - lines_size
       while lines_size > 0:
-        line = self._ReadLine()
+        line = self._ReadLine(self._buffer_size)
         if not line:
           break
 
         self.lines = ''.join([self.lines, line])
         lines_size -= len(line)
 
-  def Reset(self):
-    """Resets the encoded text reader."""
-    self._buffer = ''
-    self._current_offset = 0
-    self.lines = ''
-
   def SkipAhead(self, number_of_characters):
     """Skips ahead a number of characters.
+
     Args:
       number_of_characters (int): number of characters.
     """
@@ -252,6 +248,62 @@ class EncodedTextReader(object):
         return
 
     self.lines = self.lines[number_of_characters:]
+
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the file-like object interface.
+  # pylint: disable=invalid-name
+
+  def get_offset(self):
+    """Retrieves the current offset into the file-like object.
+
+    Returns:
+      int: current offset into the file-like object.
+    """
+    return self._current_offset
+
+
+class SingleLineTextParser(interface.FileObjectParser):
+  """Single-line text parser."""
+
+  NAME = 'text'
+  DATA_FORMAT = 'Single-line text log file'
+
+  _plugin_classes = {}
+
+  def ParseFileObject(self, parser_mediator, file_object):
+    """Parses a text file-like object using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      WrongParser: when the file cannot be parsed.
+    """
+    for plugin in self._plugins:
+      if parser_mediator.abort:
+        break
+
+      encoding = plugin.ENCODING or parser_mediator.codepage
+      text_reader = EncodedTextReader(
+          file_object, buffer_size=plugin.MAXIMUM_LINE_LENGTH,
+          encoding=encoding)
+
+      if not plugin.CheckRequiredFormat(parser_mediator, text_reader):
+        continue
+
+      try:
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse text file with error: '
+            '{1!s}').format(plugin.NAME, exception))
+        continue
+
+      if hasattr(plugin, 'GetYearLessLogHelper'):
+        year_less_log_helper = plugin.GetYearLessLogHelper()
+        parser_mediator.AddYearLessLogHelper(year_less_log_helper)
 
 
 class PyparsingMultiLineTextParser(interface.FileObjectParser):
@@ -329,6 +381,24 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return (escaped, exception.start + 1)
 
+  def _GetMatchingLineStructure(self, line):
+    """Retrieves the first matching line structure.
+
+    Args:
+      line (str): line.
+
+    Returns:
+      tuple[int, PyparsingLineStructure, pyparsing.ParseResults]: matching line
+          structure, its index in _line_structures, and resulting parsed
+          structure, or None if no matching line structure was found.
+    """
+    for index, line_structure in enumerate(self._line_structures):
+      parsed_structure = line_structure.ParseString(line)
+      if parsed_structure:
+        return index, line_structure, parsed_structure
+
+    return None, None, None
+
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
 
@@ -364,7 +434,11 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+    # Set the offset to the beginning of the file.
+    self._current_offset = 0
+
     consecutive_line_failures = 0
+
     # Read every line in the text file.
     while text_reader.lines:
       if parser_mediator.abort:
@@ -446,6 +520,7 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
+    # TODO: use a callback per line structure name.
     self.ParseRecord(parser_mediator, line_structure.name, parsed_structure)
 
     line_structure.weight += 1
