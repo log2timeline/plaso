@@ -149,32 +149,14 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     except (TypeError, ValueError):
       return None
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    # Because logs files can lead with a partial event,
-    # we can't assume that the first character (post-BOM)
-    # in the file is the beginning of our match - so we
-    # look for match anywhere in lines.
-    return pyparsing.Literal('<![LOG[').match in text_reader.lines
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse the record and return an SCCM log event object.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -192,6 +174,23 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     event_data.written_time = self._BuildDateTime(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
+
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    # Because logs files can lead with a partial event,
+    # we can't assume that the first character (post-BOM)
+    # in the file is the beginning of our match - so we
+    # look for match anywhere in lines.
+    return pyparsing.Literal('<![LOG[').match in text_reader.lines
 
 
 manager.ParsersManager.RegisterParser(SCCMParser)

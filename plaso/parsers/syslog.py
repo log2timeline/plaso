@@ -279,6 +279,76 @@ class SyslogParser(
     super(SyslogParser, self).__init__()
     self._plugin_by_reporter = {}
 
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    date_time = self._ParseTimeElements(time_elements_structure)
+
+    plugin = None
+    if key == 'syslog_comment':
+      event_data = SyslogCommentEventData()
+      event_data.body = self._GetValueFromStructure(structure, 'body')
+
+    else:
+      event_data = SyslogLineEventData()
+      event_data.body = self._GetValueFromStructure(structure, 'body')
+      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
+      event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.severity = self._GetValueFromStructure(structure, 'severity')
+
+      if key == 'rsyslog_protocol_23_line':
+        event_data.severity = self._PriorityToSeverity(
+            self._GetValueFromStructure(structure, 'priority'))
+
+      plugin = self._plugin_by_reporter.get(event_data.reporter, None)
+      if plugin:
+        attributes = {
+            'body': event_data.body,
+            'hostname': event_data.hostname,
+            'pid': event_data.pid,
+            'reporter': event_data.reporter,
+            'severity': event_data.severity}
+
+        file_entry = parser_mediator.GetFileEntry()
+        display_name = parser_mediator.GetDisplayName(file_entry)
+
+        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
+            display_name, plugin.NAME))
+
+        try:
+          # TODO: pass event_data instead of attributes.
+          plugin.Process(parser_mediator, date_time, attributes)
+
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to parse message: {0:s} with error: {1!s}'.format(
+                  event_data.body, exception))
+
+        except errors.WrongPlugin:
+          plugin = None
+
+    if not plugin:
+      event_data.last_written_time = date_time
+
+      parser_mediator.ProduceEventData(event_data)
+
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
 
@@ -401,76 +471,6 @@ class SyslogParser(
     self._plugin_by_reporter = {}
     for plugin in self._plugins:
       self._plugin_by_reporter[plugin.REPORTER] = plugin
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a matching entry.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): elements parsed from the file.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    date_time = self._ParseTimeElements(time_elements_structure)
-
-    plugin = None
-    if key == 'syslog_comment':
-      event_data = SyslogCommentEventData()
-      event_data.body = self._GetValueFromStructure(structure, 'body')
-
-    else:
-      event_data = SyslogLineEventData()
-      event_data.body = self._GetValueFromStructure(structure, 'body')
-      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
-      event_data.severity = self._GetValueFromStructure(structure, 'severity')
-
-      if key == 'rsyslog_protocol_23_line':
-        event_data.severity = self._PriorityToSeverity(
-            self._GetValueFromStructure(structure, 'priority'))
-
-      plugin = self._plugin_by_reporter.get(event_data.reporter, None)
-      if plugin:
-        attributes = {
-            'body': event_data.body,
-            'hostname': event_data.hostname,
-            'pid': event_data.pid,
-            'reporter': event_data.reporter,
-            'severity': event_data.severity}
-
-        file_entry = parser_mediator.GetFileEntry()
-        display_name = parser_mediator.GetDisplayName(file_entry)
-
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
-
-        try:
-          # TODO: pass event_data instead of attributes.
-          plugin.Process(parser_mediator, date_time, attributes)
-
-        except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse message: {0:s} with error: {1!s}'.format(
-                  event_data.body, exception))
-
-        except errors.WrongPlugin:
-          plugin = None
-
-    if not plugin:
-      event_data.last_written_time = date_time
-
-      parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

@@ -29,6 +29,20 @@ class TestPyparsingMultiLineTextParser(
 
   _LINE_STRUCTURES = [('line', _LINE)]
 
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    return
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
@@ -41,20 +55,6 @@ class TestPyparsingMultiLineTextParser(
       bool: True if this is the correct parser, False otherwise.
     """
     return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a log record structure and produces events.
-
-    This function takes as an input a parsed pyparsing structure
-    and produces an EventObject if possible from that structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-    return
 
 
 class EncodedTextReaderTest(test_lib.ParserTestCase):

@@ -429,33 +429,14 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
 
       parser_mediator.ProduceEventData(event_data)
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    try:
-      self._PREAMBLE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
-      return False
-
-    return True
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parse the record and create a viminfo event object
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -483,6 +464,24 @@ class VimInfoParser(text_parser.PyparsingMultiLineTextParser):
     # TODO(sydp): add support for history marks history lines
     # elif key == 'history_marks_history':
     #   self._ParseHistoryMarksHistory(self, parser_mediator, structure)
+
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      self._PREAMBLE.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    return True
 
 
 manager.ParsersManager.RegisterParser(VimInfoParser)

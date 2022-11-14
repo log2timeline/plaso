@@ -61,27 +61,14 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
-
-  def ParseRecord(self, parser_mediator, key, structure):
-    """Parses a record and produces a ZSH history event.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
       ParseError: when the structure type is unknown.
@@ -100,6 +87,19 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
         timestamp=timestamp)
 
     parser_mediator.ProduceEventData(event_data)
+
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
 
 
 manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)
