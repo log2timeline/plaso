@@ -67,7 +67,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         'event_identifier': [17],
         'source_name': ['Microsoft-Windows-Program-Compatibility-Assistant']}
     self._CheckTaggingRule(
-        winevt.WinEvtRecordEventData, attribute_values_per_name,
+        winevt.WinEvtxRecordEventData, attribute_values_per_name,
         ['application_execution'])
 
     # Test: data_type is 'windows:evtx:record' AND
