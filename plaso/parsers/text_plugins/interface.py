@@ -43,14 +43,15 @@ class PyparsingLineStructure(object):
       string (str): string to parse.
 
     Returns:
-      pyparsing.ParseResults: parsed tokens or None if the string could not
-          be parsed.
+      tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
+          offset or None if the string could not be parsed.
     """
     try:
-      return self.expression.parseString(string)
+      structure_generator = self.expression.scanString(string, maxMatches=1)
+      return next(structure_generator, None)
+
     except pyparsing.ParseException as exception:
-      logger.debug('Unable to parse string with error: {0!s}'.format(
-          exception))
+      logger.debug('Unable to parse string with error: {0!s}'.format(exception))
 
     return None
 
@@ -108,23 +109,29 @@ class TextPlugin(plugins.BasePlugin):
               self._current_offset + exception.start))
 
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
-    return (escaped, exception.start + 1)
+    return escaped, exception.start + 1
 
-  def _GetMatchingLineStructure(self, line):
+  def _GetMatchingLineStructure(self, string):
     """Retrieves the first matching line structure.
 
     Args:
-      line (str): line.
+      string (str): string.
 
     Returns:
-      tuple[int, PyparsingLineStructure, pyparsing.ParseResults]: matching line
-          structure, its index in _line_structures, and resulting parsed
-          structure, or None if no matching line structure was found.
+      tuple: containing:
+
+        int: index of matching line structure in _line_structures;
+        PyparsingLineStructure: matching line structure;
+        tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
+            offset.
     """
     for index, line_structure in enumerate(self._line_structures):
-      parsed_structure = line_structure.ParseString(line)
-      if parsed_structure:
-        return index, line_structure, parsed_structure
+      result_tuple = line_structure.ParseString(string)
+      if result_tuple:
+        # Only want to parse the structure if it starts at the beginning of
+        # the string.
+        if result_tuple[1] == 0:
+          return index, line_structure, result_tuple
 
     return None, None, None
 
@@ -172,10 +179,12 @@ class TextPlugin(plugins.BasePlugin):
         break
 
       # Try to parse the line using all the line structures.
-      index, line_structure, parsed_structure = self._GetMatchingLineStructure(
+      index, line_structure, result_tuple = self._GetMatchingLineStructure(
           line)
 
-      if parsed_structure:
+      if result_tuple:
+        parsed_structure, _, _ = result_tuple
+
         try:
           self._ParseLineStructure(
               parser_mediator, index, line_structure, parsed_structure)

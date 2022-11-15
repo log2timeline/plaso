@@ -98,14 +98,15 @@ class PyparsingLineStructure(object):
       string (str): string to parse.
 
     Returns:
-      pyparsing.ParseResults: parsed tokens or None if the string could not
-          be parsed.
+      tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
+          offset or None if the string could not be parsed.
     """
     try:
-      return self.expression.parseString(string)
+      structure_generator = self.expression.scanString(string, maxMatches=1)
+      return next(structure_generator, None)
+
     except pyparsing.ParseException as exception:
-      logger.debug('Unable to parse string with error: {0!s}'.format(
-          exception))
+      logger.debug('Unable to parse string with error: {0!s}'.format(exception))
 
     return None
 
@@ -379,23 +380,29 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
               self._current_offset + exception.start))
 
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
-    return (escaped, exception.start + 1)
+    return escaped, exception.start + 1
 
-  def _GetMatchingLineStructure(self, line):
+  def _GetMatchingLineStructure(self, string):
     """Retrieves the first matching line structure.
 
     Args:
-      line (str): line.
+      string (str): string.
 
     Returns:
-      tuple[int, PyparsingLineStructure, pyparsing.ParseResults]: matching line
-          structure, its index in _line_structures, and resulting parsed
-          structure, or None if no matching line structure was found.
+      tuple: containing:
+
+        int: index of matching line structure in _line_structures;
+        PyparsingLineStructure: matching line structure;
+        tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
+            offset.
     """
     for index, line_structure in enumerate(self._line_structures):
-      parsed_structure = line_structure.ParseString(line)
-      if parsed_structure:
-        return index, line_structure, parsed_structure
+      result_tuple = line_structure.ParseString(string)
+      if result_tuple:
+        # Only want to parse the structure if it starts at the beginning of
+        # the string.
+        if result_tuple[1] == 0:
+          return index, line_structure, result_tuple
 
     return None, None, None
 
@@ -444,35 +451,16 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
-      # Initialize pyparsing objects.
-      tokens = None
-      start = 0
-      end = 0
-
-      index = None
-      line_structure = None
-
       # Try to parse the line using all the line structures.
-      for index, line_structure in enumerate(self._line_structures):
-        try:
-          structure_generator = line_structure.expression.scanString(
-              text_reader.lines, maxMatches=1)
-          parsed_structure = next(structure_generator, None)
-        except pyparsing.ParseException:
-          parsed_structure = None
+      index, line_structure, result_tuple = self._GetMatchingLineStructure(
+          text_reader.lines)
 
-        if parsed_structure:
-          tokens, start, end = parsed_structure
+      if result_tuple:
+        parsed_structure, _, end = result_tuple
 
-          # Only want to parse the structure if it starts
-          # at the beginning of the buffer.
-          if start == 0:
-            break
-
-      if tokens and start == 0:
         try:
           self._ParseLineStructure(
-              parser_mediator, index, line_structure, tokens)
+              parser_mediator, index, line_structure, parsed_structure)
           consecutive_line_failures = 0
 
         except errors.ParseError as exception:
@@ -498,11 +486,15 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
                 'more than {0:d} consecutive failures to parse lines.'.format(
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 
+      self._current_offset = text_reader.get_offset()
+
       try:
         text_reader.ReadLines()
-      except UnicodeDecodeError as exception:
+      except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
-            'unable to read lines with error: {0!s}'.format(exception))
+            'unable to read and decode log line at offset {0:d}'.format(
+                self._current_offset))
+        break
 
   def _ParseLineStructure(
       self, parser_mediator, index, line_structure, parsed_structure):
