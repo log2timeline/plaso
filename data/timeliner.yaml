@@ -333,6 +333,14 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'safari:cookie:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
 data_type: 'santa:diskmount'
 attribute_mappings:
 - name: 'appearance_time'
