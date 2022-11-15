@@ -4,13 +4,10 @@
 import os
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -29,6 +26,10 @@ class SafariBinaryCookieEventData(events.EventData):
   Attributes:
     cookie_name (str): cookie name.
     cookie_value (str): cookie value.
+    creation_time (dfdatetime.DateTimeValues): date and time the cookie
+        was created.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cookie
+        expires.
     flags (int): cookie flags.
     path (str): path of the cookie.
     url (str): URL where this cookie is valid.
@@ -41,6 +42,8 @@ class SafariBinaryCookieEventData(events.EventData):
     super(SafariBinaryCookieEventData, self).__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.cookie_value = None
+    self.creation_time = None
+    self.expiration_time = None
     self.flags = None
     self.path = None
     self.url = None
@@ -158,21 +161,14 @@ class BinaryCookieParser(
       event_data.cookie_value = self._ParseCString(page_data, data_offset)
 
     if record_header.creation_time:
-      date_time = dfdatetime_cocoa_time.CocoaTime(
+      event_data.creation_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=record_header.creation_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if record_header.expiration_time:
-      date_time = dfdatetime_cocoa_time.CocoaTime(
+      event_data.expiration_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=record_header.expiration_time)
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     for plugin in self._cookie_plugins:
       if parser_mediator.abort:

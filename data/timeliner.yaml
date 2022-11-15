@@ -299,6 +299,18 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'opera:history:entry'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
+data_type: 'opera:history:typed_entry'
+attribute_mappings:
+- name: 'last_typed_time'
+  description: 'Last Typed Time'
+place_holder_event: true
+---
 data_type: 'pe_coff:dll_import'
 attribute_mappings:
 - name: 'modification_time'
@@ -319,6 +331,14 @@ data_type: 'pe_coff:resource'
 attribute_mappings:
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'safari:cookie:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
 place_holder_event: true
 ---
 data_type: 'santa:diskmount'
