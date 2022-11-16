@@ -84,9 +84,9 @@ class YAMLTimelinerConfigurationFile(object):
     attribute_mappings = timeliner_definition_values.get(
         'attribute_mappings', None)
     if not attribute_mappings:
-      raise errors.ParseError(
-          'Invalid event timeliner definition: {0:s} missing source.'.format(
-              data_type))
+      raise errors.ParseError((
+          'Invalid event timeliner definition: {0:s} missing attribute '
+          'mappings.').format(data_type))
 
     timeliner_definition = TimelinerDefinition(data_type)
     timeliner_definition.attribute_mappings = {

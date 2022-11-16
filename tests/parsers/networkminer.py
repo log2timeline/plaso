@@ -18,6 +18,10 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['networkminer.pcap.FileInfos.csv'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 4)
 
@@ -29,13 +33,8 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which DSVParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'networkminer:fileinfos:file',
-        'date_time': '2007-12-17T04:32:30.399052+00:00',
         'destination_ip': '192.168.151.130',
         'destination_port': 'TCP 48304',
         'file_details': 'travelocity.com/',
@@ -44,9 +43,11 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
         'file_path': 'D:\\case-export\\AssembledFiles\\index.html',
         'filename': 'index.html',
         'source_ip': '111.123.124.11',
-        'source_port': 'TCP 80'}
+        'source_port': 'TCP 80',
+        'written_time': '2007-12-17T04:32:30.399052+00:00'}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

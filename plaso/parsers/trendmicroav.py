@@ -95,11 +95,11 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
   DELIMITER = '<;>'
 
-  # Subclasses must define an integer MIN_COLUMNS value.
-  MIN_COLUMNS = None
-
-  # Subclasses must define a list of field names.
+  # Subclasses must define a list of column names.
   COLUMNS = ()
+
+  # Subclasses must define a minimum number of columns value.
+  _MINIMUM_NUMBER_OF_COLUMNS = None
 
   def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
@@ -119,10 +119,10 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       number_of_values = len(values)
       number_of_columns = len(self.COLUMNS)
 
-      if number_of_values < self.MIN_COLUMNS:
+      if number_of_values < self._MINIMUM_NUMBER_OF_COLUMNS:
         raise errors.WrongParser(
             'Expected at least {0:d} values, found {1:d}'.format(
-                self.MIN_COLUMNS, number_of_values))
+                self._MINIMUM_NUMBER_OF_COLUMNS, number_of_values))
 
       if number_of_values > number_of_columns:
         raise errors.WrongParser(
@@ -225,7 +225,8 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
   COLUMNS = [
       'date', 'time', 'threat', 'action', 'scan_type', 'unused1',
       'path', 'filename', 'unused2', 'timestamp', 'unused3', 'unused4']
-  MIN_COLUMNS = 8
+
+  _MINIMUM_NUMBER_OF_COLUMNS = 8
 
   _SUPPORTED_SCAN_RESULTS = frozenset([
       0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 25])
@@ -275,7 +276,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if len(row) < self.MIN_COLUMNS:
+    if len(row) < self._MINIMUM_NUMBER_OF_COLUMNS:
       return False
 
     # Check the date format!
@@ -299,6 +300,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
 
 class OfficeScanWebReputationParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Web Reputation detection log."""
+
   NAME = 'trendmicro_url'
   DATA_FORMAT = 'Trend Micro Office Web Reputation log file'
 
@@ -307,7 +309,7 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
       'credibility_rating', 'policy_identifier', 'application_name',
       'credibility_score', 'ip', 'threshold', 'timestamp', 'unused')
 
-  MIN_COLUMNS = 12
+  _MINIMUM_NUMBER_OF_COLUMNS = 12
 
   _SUPPORTED_BLOCK_MODES = frozenset([0, 1])
 
@@ -355,11 +357,9 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if len(row) < self.MIN_COLUMNS:
+    if len(row) < self._MINIMUM_NUMBER_OF_COLUMNS:
       return False
 
-    # Check the date format!
-    # If it doesn't parse, then this isn't a Trend Micro AV log.
     try:
       timestamp = self._ConvertToTimestamp(row['date'], row['time'])
     except ValueError:
