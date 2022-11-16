@@ -206,6 +206,16 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'java:download:idx'
+attribute_mappings:
+- name: 'downloaded_time'
+  description: 'File Downloaded Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
@@ -297,6 +307,12 @@ data_type: 'macos:wifi_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'networkminer:fileinfos:file'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'opera:history:entry'

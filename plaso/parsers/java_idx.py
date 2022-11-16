@@ -10,12 +10,9 @@
 import os
 
 from dfdatetime import java_time as dfdatetime_java_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -26,8 +23,14 @@ class JavaIDXEventData(events.EventData):
   """Java IDX cache file event data.
 
   Attributes:
+    downloaded_time (dfdatetime.DateTimeValues): date and time the content
+        was downloaded.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cached
+        download expires.
     idx_version (str): format version of IDX file.
     ip_address (str): IP address of the host in the URL.
+    modification_time (dfdatetime.DateTimeValues): date and time the cached
+        download expires.
     url (str): URL of the downloaded file.
   """
 
@@ -36,8 +39,11 @@ class JavaIDXEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(JavaIDXEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.downloaded_time = None
+    self.expiration_time = None
     self.idx_version = None
     self.ip_address = None
+    self.modification_time = None
     self.url = None
 
 
@@ -142,24 +148,6 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         date_http_header = http_header
         break
 
-    event_data = JavaIDXEventData()
-    event_data.idx_version = file_header.format_version
-    event_data.ip_address = getattr(section2, 'ip_address', None)
-    event_data.url = section2.url
-
-    date_time = dfdatetime_java_time.JavaTime(
-        timestamp=section1.modification_time)
-    # TODO: Move the timestamp description into definitions.
-    event = time_events.DateTimeValuesEvent(date_time, 'File Hosted Date')
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if section1.expiration_time:
-      date_time = dfdatetime_java_time.JavaTime(
-          timestamp=section1.expiration_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
     if date_http_header:
       # A HTTP header date and time should be formatted according to RFC 1123.
       # The date "should" be in UTC or have associated time zone information
@@ -167,17 +155,26 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       # method for Plaso to determine the proper time zone, so the assumption
       # is that the date and time is in UTC.
       try:
-        date_time = dfdatetime_time_elements.TimeElements()
-        date_time.CopyFromStringRFC1123(date_http_header.value)
+        downloaded_time = dfdatetime_time_elements.TimeElements()
+        downloaded_time.CopyFromStringRFC1123(date_http_header.value)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning((
             'Unable to parse date HTTP header string: {0:s} with error: '
             '{1!s}').format(date_http_header.value, exception))
-        date_time = dfdatetime_semantic_time.InvalidTime()
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data = JavaIDXEventData()
+    event_data.downloaded_time = downloaded_time
+    event_data.idx_version = file_header.format_version
+    event_data.ip_address = getattr(section2, 'ip_address', None)
+    event_data.modification_time = dfdatetime_java_time.JavaTime(
+        timestamp=section1.modification_time)
+    event_data.url = section2.url
+
+    if section1.expiration_time:
+      event_data.expiration_time = dfdatetime_java_time.JavaTime(
+          timestamp=section1.expiration_time)
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)
