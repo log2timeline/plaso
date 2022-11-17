@@ -17,6 +17,10 @@ class LocateUnitTest(test_lib.ParserTestCase):
     parser = locate.LocateDatabaseParser()
     storage_writer = self._ParseFile(['mlocate.db'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
 
@@ -28,43 +32,13 @@ class LocateUnitTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:36:19.606373200+00:00',
-        'paths': ['/home/user/temp']}
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+        'data_type': 'linux:locate_database:entry',
+        'paths': ['/home/user/temp'],
+        'written_time': '2021-07-09T04:36:19.606373200+00:00'}
 
-    expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:11:07.438810500+00:00',
-        'paths': ['/home/user/temp/1']}
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:10:54.884843500+00:00',
-        'paths': ['/home/user/temp/2']}
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:11:25.146217000+00:00',
-        'paths': ['/home/user/temp/3']}
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:11:25.146217000+00:00',
-        'paths': ['/home/user/temp/3/3c']}
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate',
-        'date_time': '2021-07-09T04:36:19.606373200+00:00',
-        'paths': ['/home/user/temp/À']}
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

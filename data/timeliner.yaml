@@ -24,6 +24,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'av:mcafee:accessprotectionlog'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'av:symantec:scanlog'
 attribute_mappings:
 - name: 'last_written_time'
@@ -229,6 +235,12 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'linux:locate_database:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'linux:popularity_contest_log:entry'
 attribute_mappings:
 - name: 'access_time'
@@ -346,6 +358,12 @@ place_holder_event: true
 data_type: 'pe_coff:resource'
 attribute_mappings:
 - name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'pls_recall:entry'
+attribute_mappings:
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---

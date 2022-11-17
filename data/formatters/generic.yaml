@@ -667,7 +667,7 @@ short_source: 'PE'
 source: 'PE/COFF DLL resource section'
 ---
 type: 'conditional'
-data_type: 'PLSRecall:event'
+data_type: 'pls_recall:entry'
 message:
 - 'Sequence number: {sequence_number}'
 - 'Username: {username}'

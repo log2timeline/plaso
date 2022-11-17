@@ -24,7 +24,7 @@ short_source: 'LOG'
 source: 'dpkg log file'
 ---
 type: 'basic'
-data_type: 'linux:locate'
+data_type: 'linux:locate_database:entry'
 message: 'Folder Paths: {paths}'
 short_message: '{paths}'
 short_source: 'LOCATE'

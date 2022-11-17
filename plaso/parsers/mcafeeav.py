@@ -2,15 +2,14 @@
 """Parser for McAfee Anti-Virus Logs.
 
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
-updated, and when files match the virus database."""
+updated, and when files match the virus database.
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
+"""
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import definitions
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
@@ -27,6 +26,7 @@ class McafeeAVEventData(events.EventData):
     status (str): status.
     trigger_location (str): trigger location.
     username (str): username.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
   DATA_TYPE = 'av:mcafee:accessprotectionlog'
@@ -41,6 +41,7 @@ class McafeeAVEventData(events.EventData):
     self.status = None
     self.trigger_location = None
     self.username = None
+    self.written_time = None
 
 
 class McafeeAccessProtectionParser(dsv_parser.DSVParser):
@@ -133,7 +134,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
           'Unable to create date time with error: {0!s}'.format(exception))
-      date_time = dfdatetime_semantic_time.InvalidTime()
+      date_time = None
 
     status = row['status']
     if status:
@@ -147,11 +148,9 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     event_data.status = status
     event_data.trigger_location = row['trigger_location']
     event_data.username = row['username']
+    event_data.written_time = date_time
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN,
-        time_zone=parser_mediator.timezone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.

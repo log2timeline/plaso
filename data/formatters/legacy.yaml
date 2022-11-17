@@ -802,6 +802,13 @@ short_message:
 short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
+type: 'basic'
+data_type: 'linux:locate'
+message: 'Folder Paths: {paths}'
+short_message: '{paths}'
+short_source: 'LOCATE'
+source: 'Locate Database record (updatedb)'
+---
 type: 'conditional'
 data_type: 'mac:appfirewall:line'
 message:
@@ -1031,6 +1038,21 @@ short_message:
 - 'pe_type'
 short_source: 'PE'
 source: 'PE Resource Creation Time'
+---
+type: 'conditional'
+data_type: 'PLSRecall:event'
+message:
+- 'Sequence number: {sequence_number}'
+- 'Username: {username}'
+- 'Database name: {database_name}'
+- 'Query: {query}'
+short_message:
+- '{sequence_number}'
+- '{username}'
+- '{database_name}'
+- '{query}'
+short_source: 'PLSRecall'
+source: 'PL/SQL Developer Recall file'
 ---
 type: 'conditional'
 data_type: 'popularity_contest:log:event'
