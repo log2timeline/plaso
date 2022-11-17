@@ -53,7 +53,7 @@ class LocateUnitTest(test_lib.ParserTestCase):
     expected_event_values = {
         'data_type': 'linux:locate_database:entry',
         'path': '/home/user/temp/À',
-        'contents': [],
+        'contents': None,
         'written_time': '2021-07-09T04:36:19.606373200+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
