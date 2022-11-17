@@ -52,33 +52,6 @@ class LocateUnitTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'linux:locate_database:entry',
-        'path': '/home/user/temp/2',
-        'contents': [],
-        'written_time': '2021-07-09T04:10:54.884843500+00:00'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
-    self.CheckEventData(event_data, expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate_database:entry',
-        'path': '/home/user/temp/3',
-        'contents': ['3a.txt', '3b.txt', '3c'],
-        'written_time': '2021-07-09T04:11:25.146217000+00:00'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
-    self.CheckEventData(event_data, expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate_database:entry',
-        'path': '/home/user/temp/3/3c',
-        'contents': [],
-        'written_time': '2021-07-09T04:11:25.146217000+00:00'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
-    self.CheckEventData(event_data, expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'linux:locate_database:entry',
         'path': '/home/user/temp/À',
         'contents': [],
         'written_time': '2021-07-09T04:36:19.606373200+00:00'}
