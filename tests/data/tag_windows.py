@@ -259,7 +259,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data.key_path = 'HKCU\\Software\\Microsoft\\Windows NT\\' + \
                           'CurrentVersion\\AppCompatFlags\\' + \
                           'Compatibility Assistant\\Store'
-    event_data.values = 'SIGN.MEDIA=XXXX setup.exe: [REG_BINARY] (108 bytes)'
+    event_data.values = 'SIGN.MEDIA=XXX setup.exe: [REG_BINARY] (108 bytes)'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
