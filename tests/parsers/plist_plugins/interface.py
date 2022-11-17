@@ -7,8 +7,6 @@ import unittest
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers.plist_plugins import interface
 
 from tests.parsers.plist_plugins import test_lib
