@@ -11,6 +11,8 @@ and operation of plugins for plist files which will be used by PlistParser.
 
 import abc
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
@@ -90,6 +92,25 @@ class PlistPlugin(plugins.BasePlugin):
   # This is expected to be overridden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
   PLIST_KEYS = frozenset(['any'])
+
+  def _GetDateTimeValueFromPlistKey(self, plist_key, plist_value_name):
+    """Retrieves a date and time value from a specific value in a plist key.
+
+    Args:
+      plist_key (object): plist key.
+      plist_value_name (str): name of the value in the plist key.
+
+    Returns:
+      dfdatetime.TimeElementsInMicroseconds: date and time or None if not
+          available.
+    """
+    datetime_value = plist_key.get(plist_value_name, None)
+    if not datetime_value:
+      return None
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+    date_time.CopyFromDatetime(datetime_value)
+    return date_time
 
   def _GetKeys(self, top_level, keys, depth=1):
     """Helper function to return keys nested in a plist dict.

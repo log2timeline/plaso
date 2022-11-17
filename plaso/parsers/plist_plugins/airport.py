@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS Airport plist files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -15,8 +10,10 @@ class MacOSAirportEventData(events.EventData):
   """MacOS airport event data.
 
   Attributes:
-    security_type (str): WiFI security type.
-    ssid (str): WiFI SSID.
+    last_connected_time (dfdatetime.DateTimeValues): last date and time MacOS
+        Airport connected to the Wi-Fi network.
+    security_type (str): Wi-Fi security type.
+    ssid (str): Wi-Fi SSID.
   """
 
   DATA_TYPE = 'macos:airport:entry'
@@ -24,6 +21,7 @@ class MacOSAirportEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MacOSAirportEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.last_connected_time = None
     self.security_type = None
     self.ssid = None
 
@@ -50,19 +48,12 @@ class MacOSAirportPlistPlugin(interface.PlistPlugin):
     """
     for plist_key in match.get('RememberedNetworks', []):
       event_data = MacOSAirportEventData()
+      event_data.last_connected_time = self._GetDateTimeValueFromPlistKey(
+          plist_key, 'LastConnected')
       event_data.security_type = plist_key.get('SecurityType', None)
       event_data.ssid = plist_key.get('SSIDString', None)
 
-      datetime_value = plist_key.get('LastConnected', None)
-      if not datetime_value:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_time_elements.TimeElements()
-        date_time.CopyFromDatetime(datetime_value)
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(MacOSAirportPlistPlugin)

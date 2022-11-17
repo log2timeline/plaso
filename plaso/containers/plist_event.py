@@ -9,11 +9,9 @@ class PlistTimeEventData(events.EventData):
   """Plist event data attribute container.
 
   Attributes:
-    desc (str): description.
-    hostname (str): hostname.
     key (str): name of plist key.
     root (str): path from the root to this plist key.
-    username (str): unique username.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
   DATA_TYPE = 'plist:key'
@@ -21,8 +19,6 @@ class PlistTimeEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(PlistTimeEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.desc = None
-    self.hostname = None
     self.key = None
     self.root = None
-    self.username = None
+    self.written_time = None

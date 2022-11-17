@@ -34,12 +34,10 @@ class MockPlugin(interface.PlistPlugin):
     event_data = plist_event.PlistTimeEventData()
     event_data.key = 'LastInquiryUpdate'
     event_data.root = '/DeviceCache/44-00-00-00-00-00'
-
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+    event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=1351827808261762)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
