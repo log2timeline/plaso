@@ -153,7 +153,7 @@ class LocateDatabaseParser(
 
       event_data = LocateDatabaseEvent()
       event_data.path = directory_header.path
-      event_data.contents = contents
+      event_data.contents = contents or None
       event_data.written_time = posix_time.PosixTimeInNanoseconds(
           timestamp=timestamp)
 
