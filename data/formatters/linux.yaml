@@ -25,8 +25,12 @@ source: 'dpkg log file'
 ---
 type: 'basic'
 data_type: 'linux:locate_database:entry'
-message: 'Folder Paths: {paths}'
-short_message: '{paths}'
+message: 
+- 'Folder Path: {path}'
+- 'Contents: {contents}'
+short_message: 
+- '{paths}'
+- '{contents}'
 short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
 ---
