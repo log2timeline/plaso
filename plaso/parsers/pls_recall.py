@@ -6,8 +6,6 @@ import os
 from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -24,9 +22,10 @@ class PlsRecallEventData(events.EventData):
     query (str): PL/SQL query.
     sequence_number (int): sequence number.
     username (str): username used to query.
+    written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
-  DATA_TYPE = 'PLSRecall:event'
+  DATA_TYPE = 'pls_recall:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -36,6 +35,7 @@ class PlsRecallEventData(events.EventData):
     self.query = None
     self.sequence_number = None
     self.username = None
+    self.written_time = None
 
 
 class PlsRecallParser(
@@ -66,6 +66,11 @@ class PlsRecallParser(
       'begin', 'commit', 'create', 'declare', 'drop', 'end', 'exception',
       'execute', 'insert', 'replace', 'rollback', 'select', 'set',
       'update'])
+
+  def __init__(self):
+    """Initializes a PL/SQL Recall file parser."""
+    super(PlsRecallParser, self).__init__()
+    self._record_map = self._GetDataTypeMap('pls_recall_record')
 
   def _VerifyRecord(self, parser_mediator, pls_record):
     """Verifies a PLS Recall record.
@@ -126,12 +131,11 @@ class PlsRecallParser(
     """
     file_offset = 0
     file_size = file_object.get_size()
-    record_map = self._GetDataTypeMap('pls_recall_record')
 
     while file_offset < file_size:
       try:
         pls_record, record_data_size = self._ReadStructureFromFileObject(
-            file_object, file_offset, record_map)
+            file_object, file_offset, self._record_map)
       except (ValueError, errors.ParseError) as exception:
         if file_offset == 0:
           raise errors.WrongParser('Unable to parse first record.')
@@ -146,17 +150,15 @@ class PlsRecallParser(
         raise errors.WrongParser('Verification of first record failed.')
 
       event_data = PlsRecallEventData()
-      event_data.database_name = pls_record.database_name.rstrip('\x00')
+      event_data.database_name = pls_record.database_name
       event_data.sequence_number = pls_record.sequence_number
       event_data.offset = file_offset
-      event_data.query = pls_record.query.rstrip('\x00')
-      event_data.username = pls_record.username.rstrip('\x00')
-
-      date_time = dfdatetime_delphi_date_time.DelphiDateTime(
+      event_data.query = pls_record.query
+      event_data.username = pls_record.username
+      event_data.written_time = dfdatetime_delphi_date_time.DelphiDateTime(
           timestamp=pls_record.last_written_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      parser_mediator.ProduceEventData(event_data)
 
       file_offset += record_data_size
 

@@ -42,15 +42,18 @@ members:
   encoding: ascii
   element_data_type: char
   elements_data_size: 31
+  elements_terminator: "\x00"
 - name: database_name
   aliases: [Database]
   type: string
   encoding: ascii
   element_data_type: char
   elements_data_size: 81
+  elements_terminator: "\x00"
 - name: query
   aliases: [Text]
   type: string
   encoding: ascii
   element_data_type: char
   elements_data_size: 4001
+  elements_terminator: "\x00"
