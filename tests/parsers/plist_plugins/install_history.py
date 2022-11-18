@@ -20,6 +20,10 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 7)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 7)
 
@@ -31,13 +35,8 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'macos:install_history:entry',
-        'date_time': '2013-11-12T02:59:35+00:00',
         'identifiers': [
             'com.apple.pkg.BaseSystemBinaries',
             'com.apple.pkg.BaseSystemResources',
@@ -55,9 +54,11 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
             'com.apple.pkg.update.compatibility.2013.001'],
         'name': 'OS X',
         'process_name': 'OS X Installer',
-        'version': '10.9 (13A603)'}
+        'version': '10.9 (13A603)',
+        'written_time': '2013-11-12T02:59:35.000000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

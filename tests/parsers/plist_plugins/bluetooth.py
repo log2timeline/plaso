@@ -18,6 +18,10 @@ class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, ['plist_binary'], 'com.apple.bluetooth.plist')
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 12)
 
@@ -29,19 +33,17 @@ class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'macos:bluetooth:entry',
-        'date_time': '2012-11-02T01:13:17.324095+00:00',
         'device_identifier': '44-00-00-00-00-04',
         'device_name': 'Apple Magic Trackpad 2',
+        'inquiry_time': '2012-11-02T01:13:17.324095+00:00',
         'is_paired': True,
-        'timestamp_desc': 'Last Inquiry Update Time'}
+        'name_update_time': '2012-11-02T01:21:38.997673+00:00',
+        'services_update_time': '2012-11-02T01:13:23.000000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[8], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for iPod, iPad and iPhone storage plist files."""
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-# TODO: add more attributes.
 class IPodPlistEventData(events.EventData):
   """iPod plist event data.
 
   Attributes:
-    device_id (str): unique identifier of the iPod device.
+    device_class (str): device class.
+    device_identifier (str): identifier of the device.
+    family_identifier (str): identifier of the device family.
+    firmware_version (str): firmware version.
+    imei (str): IMEI (International Mobile Equipment Identity).
+    last_connected_time (dfdatetime.DateTimeValues): last date and time
+        the iPod, iPad or iPhone storage (device) was connected.
+    serial_number (str): serial number.
+    use_count (str): number of times the device was used.
   """
 
   DATA_TYPE = 'ipod:device:entry'
@@ -23,7 +26,14 @@ class IPodPlistEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(IPodPlistEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.device_id = None
+    self.device_class = None
+    self.device_identifier = None
+    self.family_identifier = None
+    self.firmware_version = None
+    self.imei = None
+    self.last_connected_time = None
+    self.serial_number = None
+    self.use_count = None
 
 
 class IPodPlugin(interface.PlistPlugin):
@@ -47,28 +57,20 @@ class IPodPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     devices = match.get('Devices', {})
-    for device_identifier, device_information in devices.items():
-      datetime_value = device_information.get('Connected', None)
-      if not datetime_value:
-        continue
-
+    for device_identifier, plist_key in devices.items():
       event_data = IPodPlistEventData()
-      event_data.device_id = device_identifier
+      event_data.device_identifier = device_identifier
+      event_data.device_class = plist_key.get('Device Class', None)
+      event_data.family_identifier = plist_key.get('Family ID', None)
+      event_data.firmware_version = plist_key.get(
+          'Firmware Version String', None)
+      event_data.imei = plist_key.get('IMEI', None)
+      event_data.last_connected_time = self._GetDateTimeValueFromPlistKey(
+          plist_key, 'Connected')
+      event_data.serial_number = plist_key.get('Serial Number', None)
+      event_data.use_count = plist_key.get('Use Count', None)
 
-      # TODO: refactor.
-      for key, value in device_information.items():
-        if key == 'Connected':
-          continue
-
-        attribute_name = key.lower().replace(' ', '_')
-        setattr(event_data, attribute_name, value)
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromDatetime(datetime_value)
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(IPodPlugin)
