@@ -141,7 +141,8 @@ class LocateDatabaseParser(
           directory_header.seconds * definitions.NANOSECONDS_PER_SECOND)
 
       try:
-        contents, data_size = self._ParseDirectoryEntry(file_object, file_offset)
+        contents, data_size = self._ParseDirectoryEntry(
+            file_object, file_offset)
 
         file_offset += data_size
 
