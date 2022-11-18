@@ -119,8 +119,8 @@ apple_id | Parser for Apple account information plist files.
 ios_carplay | Parser for Apple iOS Car Play application plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
+macos_bluetooth | Parser for MacOS Bluetooth plist files.
 macos_software_update | Parser for MacOS software update plist files.
-macosx_bluetooth | Parser for MacOS Bluetooth plist files.
 macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.

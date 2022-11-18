@@ -4,11 +4,9 @@
 The plist contains history of opened applications in the Car Play application.
 """
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
@@ -19,6 +17,8 @@ class IOSCarPlayHistoryEventData(events.EventData):
 
   Attributes:
     application_identifier (str): application identifier.
+    last_run_time (dfdatetime.DateTimeValues): application last run date and
+        time.
   """
 
   DATA_TYPE = 'ios:carplay:history:entry'
@@ -27,6 +27,7 @@ class IOSCarPlayHistoryEventData(events.EventData):
     """Initializes event data."""
     super(IOSCarPlayHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.application_identifier = None
+    self.last_run_time = None
 
 
 class IOSCarPlayPlistPlugin(interface.PlistPlugin):
@@ -54,16 +55,12 @@ class IOSCarPlayPlistPlugin(interface.PlistPlugin):
       event_data = IOSCarPlayHistoryEventData()
       event_data.application_identifier = application_identifier
 
-      if not datetime_value:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        timestamp = int(datetime_value * 1000000000)
-        date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+      if datetime_value:
+        timestamp = int(datetime_value * definitions.NANOSECONDS_PER_SECOND)
+        event_data.last_run_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
             timestamp=timestamp)
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(IOSCarPlayPlistPlugin)

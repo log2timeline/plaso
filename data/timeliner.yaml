@@ -194,6 +194,18 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'ipod:device:entry'
+attribute_mappings:
+- name: 'last_connected_time'
+  description: 'Last Connection Time'
+place_holder_event: true
+---
+data_type: 'ios:carplay:history:entry'
+attribute_mappings:
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+place_holder_event: false
+---
 data_type: 'ios:lockdownd_log:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -297,10 +309,26 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'macos:bluetooth:entry'
+attribute_mappings:
+- name: 'inquiry_time'
+  description: 'Last Inquiry Update Time'
+- name: 'name_update_time'
+  description: 'Last Name Update Time'
+- name: 'services_update_time'
+  description: 'Last Services Update Time'
+place_holder_event: true
+---
 data_type: 'macos:fseventsd:record'
 attribute_mappings:
 - name: 'file_entry_modification_time'
   description: 'File Last Modification Time'
+place_holder_event: true
+---
+data_type: 'macos:install_history:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:keychain:application'
