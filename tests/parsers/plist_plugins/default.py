@@ -52,6 +52,10 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'single', self._TOP_LEVEL_DICT_SINGLE_KEY)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -63,23 +67,24 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'plist:key',
-        'date_time': '2012-11-02T01:21:38.997672+00:00',
         'key': 'LastUsed',
-        'root': '/DE-00-AD-00-BE-EF'}
+        'root': '/DE-00-AD-00-BE-EF',
+        'written_time': '2012-11-02T01:21:38.997672+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""
     plugin = default.DefaultPlugin()
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'nested', self._TOP_LEVEL_DICT_MULTIPLE_KEYS)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 5)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
@@ -92,17 +97,14 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'plist:key',
-        'date_time': '2011-04-07T17:56:53.524275+00:00',
         'key': 'LastNameUpdate',
-        'root': '/DeviceCache/44-00-00-00-00-02'}
+        'root': '/DeviceCache/44-00-00-00-00-02',
+        'written_time': '2011-04-07T17:56:53.524275+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

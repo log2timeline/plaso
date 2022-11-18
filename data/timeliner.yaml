@@ -263,10 +263,26 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'macos:airport:entry'
+attribute_mappings:
+- name: 'last_connected_time'
+  description: 'Last Connection Time'
+place_holder_event: true
+---
 data_type: 'macos:appfirewall_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'macos:apple_account:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'last_connected_time'
+  description: 'Connection Established'
+- name: 'validation_time'
+  description: 'Validation Time'
 place_holder_event: true
 ---
 data_type: 'macos:asl:entry'
@@ -358,6 +374,12 @@ place_holder_event: true
 data_type: 'pe_coff:resource'
 attribute_mappings:
 - name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'plist:key'
+attribute_mappings:
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---
@@ -756,7 +778,7 @@ place_holder_event: true
 data_type: 'windows:registry:usbstor:instance'
 attribute_mappings:
 - name: 'device_last_arrival_time'
-  description: 'Last Connect Time'
+  description: 'Last Connection Time'
 - name: 'device_last_removal_time'
   description: 'Last Disconnect Time'
 - name: 'driver_first_installation_time'
