@@ -28,7 +28,7 @@ class LocateDatabaseEvent(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(LocateDatabaseEvent, self).__init__(data_type=self.DATA_TYPE)
-    self.contents = None
+    self.entries = None
     self.path = None
     self.written_time = None
 
@@ -154,7 +154,7 @@ class LocateDatabaseParser(
 
       event_data = LocateDatabaseEvent()
       event_data.path = directory_header.path
-      event_data.contents = contents or None
+      event_data.entries = contents or None
       event_data.written_time = posix_time.PosixTimeInNanoseconds(
           timestamp=timestamp)
 
