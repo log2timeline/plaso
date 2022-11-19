@@ -97,7 +97,7 @@ class MacOSTimeMachinePlistPlugin(
       event_data = MacOSTimeMachineBackupEventData()
       event_data.backup_alias = backup_alias_string
       event_data.destination_identifier = destination.get('DestinationID', None)
-      event_data.snapshot_times = snapshot_times
+      event_data.snapshot_times = snapshot_times or None
 
       parser_mediator.ProduceEventData(event_data)
 
