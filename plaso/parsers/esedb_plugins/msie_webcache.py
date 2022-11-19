@@ -9,8 +9,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -19,9 +17,11 @@ class MsieWebCacheContainersEventData(events.EventData):
   """MSIE WebCache Containers table event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): last access date and time.
     container_identifier (int): container identifier.
     directory (str): name of the cache directory.
     name (str): name of the cache container.
+    scavenge_time (dfdatetime.DateTimeValues): last scavenge date and time.
     set_identifier (int): set identifier.
   """
 
@@ -31,9 +31,11 @@ class MsieWebCacheContainersEventData(events.EventData):
     """Initializes event data."""
     super(MsieWebCacheContainersEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.access_time = None
     self.container_identifier = None
     self.directory = None
     self.name = None
+    self.scavenge_time = None
     self.set_identifier = None
 
 
@@ -42,16 +44,23 @@ class MsieWebCacheContainerEventData(events.EventData):
 
   Attributes:
     access_count (int): access count.
+    access_time (dfdatetime.DateTimeValues): last access date and time.
     cached_filename (str): name of the cached file.
     cached_file_size (int): size of the cached file.
     cache_identifier (int): cache identifier.
     container_identifier (int): container identifier.
+    creation_time (dfdatetime.DateTimeValues): creation date and time.
     entry_identifier (int): entry identifier.
+    expiration_time (dfdatetime.DateTimeValues): expiration date and time.
     file_extension (str): file extension.
+    modification_time (dfdatetime.DateTimeValues): modification date and time.
+    post_check_time (dfdatetime.DateTimeValues): post check date and time.
     redirect_url (str): URL from which the request was redirected.
     request_headers (str): request headers.
     response_headers (str): response headers.
-    sync_count (int): sync count.
+    synchronization_count (int): synchronization count.
+    synchronization_time (dfdatetime.DateTimeValues): synchronization date
+        and time.
     url (str): URL.
   """
 
@@ -62,16 +71,22 @@ class MsieWebCacheContainerEventData(events.EventData):
     super(MsieWebCacheContainerEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.access_count = None
+    self.access_time = None
     self.cached_filename = None
     self.cached_file_size = None
     self.cache_identifier = None
     self.container_identifier = None
+    self.creation_time = None
     self.entry_identifier = None
+    self.expiration_time = None
     self.file_extension = None
+    self.modification_time = None
+    self.post_check_time = None
     self.redirect_url = None
     self.request_headers = None
     self.response_headers = None
-    self.sync_count = None
+    self.synchronization_count = None
+    self.synchronization_time = None
     self.url = None
 
 
@@ -80,6 +95,7 @@ class MsieWebCacheLeakFilesEventData(events.EventData):
 
   Attributes:
     cached_filename (str): name of the cached file.
+    creation_time (dfdatetime.DateTimeValues): creation date and time.
     leak_identifier (int): leak identifier.
   """
 
@@ -90,6 +106,7 @@ class MsieWebCacheLeakFilesEventData(events.EventData):
     super(MsieWebCacheLeakFilesEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.cached_filename = None
+    self.creation_time = None
     self.leak_identifier = None
 
 
@@ -100,6 +117,7 @@ class MsieWebCachePartitionsEventData(events.EventData):
     directory (str): directory.
     partition_identifier (int): partition identifier.
     partition_type (int): partition type.
+    scavenge_time (dfdatetime.DateTimeValues): last scavenge date and time.
     table_identifier (int): table identifier.
   """
 
@@ -112,6 +130,7 @@ class MsieWebCachePartitionsEventData(events.EventData):
     self.directory = None
     self.partition_identifier = None
     self.partition_type = None
+    self.scavenge_time = None
     self.table_identifier = None
 
 
@@ -162,6 +181,27 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
     return None
 
+  def _GetDateTimeValue(self, record_values, value_name):
+    """Retrieves a date and time record value.
+
+    Args:
+      record_values (dict[str,object]): values per column name.
+      value_name (str): name of the record value.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time or None if not set.
+    """
+    filetime = record_values.get(value_name, None)
+    if not filetime:
+      return None
+
+    # TODO: add support for filetime == 1 and other edge cases.
+
+    if filetime == 0x7fffffffffffffff:
+      return dfdatetime_semantic_time.SemanticTime(string='Infinite')
+
+    return dfdatetime_filetime.Filetime(timestamp=filetime)
+
   def _ParseContainerTable(self, parser_mediator, table, container_name):
     """Parses a Container_# table.
 
@@ -195,16 +235,6 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       if (container_name in self._SUPPORTED_CONTAINER_NAMES or
           container_name.startswith('MSHist')):
-        access_count = record_values.get('AccessCount', None)
-        cached_filename = record_values.get('Filename', None)
-        cached_file_size = record_values.get('FileSize', None)
-        cache_identifier = record_values.get('CacheId', None)
-        container_identifier = record_values.get('ContainerId', None)
-        entry_identifier = record_values.get('EntryId', None)
-        file_extension = record_values.get('FileExtension', None)
-        redirect_url = record_values.get('RedirectUrl', None)
-        sync_count = record_values.get('SyncCount', None)
-
         url = record_values.get('Url', '')
         # Ignore a URL that start with a binary value.
         if ord(url[0]) < 0x20 or ord(url[0]) == 0x7f:
@@ -221,64 +251,32 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           response_headers = None
 
         event_data = MsieWebCacheContainerEventData()
-        event_data.access_count = access_count
-        event_data.cached_filename = cached_filename
-        event_data.cached_file_size = cached_file_size
-        event_data.cache_identifier = cache_identifier
-        event_data.container_identifier = container_identifier
-        event_data.entry_identifier = entry_identifier
-        event_data.file_extension = file_extension
-        event_data.redirect_url = redirect_url
+        event_data.access_count = record_values.get('AccessCount', None)
+        event_data.access_time = self._GetDateTimeValue(
+            record_values, 'AccessedTime')
+        event_data.cached_filename = record_values.get('Filename', None)
+        event_data.cached_file_size = record_values.get('FileSize', None)
+        event_data.cache_identifier = record_values.get('CacheId', None)
+        event_data.container_identifier = record_values.get('ContainerId', None)
+        event_data.creation_time = self._GetDateTimeValue(
+            record_values, 'CreationTime')
+        event_data.entry_identifier = record_values.get('EntryId', None)
+        event_data.expiration_time = self._GetDateTimeValue(
+            record_values, 'ExpiryTime')
+        event_data.file_extension = record_values.get('FileExtension', None)
+        event_data.modification_time = self._GetDateTimeValue(
+            record_values, 'ModifiedTime')
+        event_data.post_check_time = self._GetDateTimeValue(
+            record_values, 'PostCheckTime')
+        event_data.redirect_url = record_values.get('RedirectUrl', None)
         event_data.request_headers = request_headers
         event_data.response_headers = response_headers
-        event_data.sync_count = sync_count
+        event_data.synchronization_count = record_values.get('SyncCount', None)
+        event_data.synchronization_time = self._GetDateTimeValue(
+            record_values, 'SyncTime')
         event_data.url = url
 
-        timestamp = record_values.get('SyncTime', None)
-        if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, 'Synchronization time')
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        timestamp = record_values.get('CreationTime', None)
-        if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_CREATION)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        timestamp = record_values.get('ExpiryTime', None)
-        if timestamp:
-          # TODO: add support for timestamp == 1 and other edge cases.
-          if timestamp == 0x7fffffffffffffff:
-            date_time = dfdatetime_semantic_time.SemanticTime(string='Infinite')
-          else:
-            date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        timestamp = record_values.get('ModifiedTime', None)
-        if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        timestamp = record_values.get('AccessedTime', None)
-        if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
-
-        timestamp = record_values.get('PostCheckTime', None)
-        if timestamp:
-          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-          event = time_events.DateTimeValuesEvent(
-              date_time, 'Post check time')
-          parser_mediator.ProduceEventWithEventData(event, event_data)
+        parser_mediator.ProduceEventData(event_data)
 
   def ParseContainersTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -307,24 +305,16 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCacheContainersEventData()
+      event_data.access_time = self._GetDateTimeValue(
+          record_values, 'LastAccessTime')
       event_data.container_identifier = record_values.get('ContainerId', None)
       event_data.directory = record_values.get('Directory', None)
       event_data.name = record_values.get('Name', None)
+      event_data.scavenge_time = self._GetDateTimeValue(
+          record_values, 'LastScavengeTime')
       event_data.set_identifier = record_values.get('SetId', None)
 
-      timestamp = record_values.get('LastScavengeTime', None)
-      if timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'Last Scavenge Time')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      timestamp = record_values.get('LastAccessTime', None)
-      if timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
       container_identifier = record_values.get('ContainerId', None)
       container_name = record_values.get('Name', None)
@@ -371,14 +361,11 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       event_data = MsieWebCacheLeakFilesEventData()
       event_data.cached_filename = record_values.get('Filename', None)
+      event_data.creation_time = self._GetDateTimeValue(
+          record_values, 'CreationTime')
       event_data.leak_identifier = record_values.get('LeakId', None)
 
-      timestamp = record_values.get('CreationTime', None)
-      if timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParsePartitionsTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -410,14 +397,11 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       event_data.directory = record_values.get('Directory', None)
       event_data.partition_identifier = record_values.get('PartitionId', None)
       event_data.partition_type = record_values.get('PartitionType', None)
+      event_data.scavenge_time = self._GetDateTimeValue(
+          record_values, 'LastScavengeTime')
       event_data.table_identifier = record_values.get('TableId', None)
 
-      timestamp = record_values.get('LastScavengeTime', None)
-      if timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'Last Scavenge Time')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 esedb.ESEDBParser.RegisterPlugin(MsieWebCacheESEDBPlugin)

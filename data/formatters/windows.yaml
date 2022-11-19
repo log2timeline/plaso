@@ -17,19 +17,6 @@ short_source: 'REG'
 source: 'CCleaner Registry key'
 ---
 type: 'conditional'
-data_type: 'file_history:namespace:event'
-message:
-- 'Filename: {original_filename}'
-- 'Identifier: {identifier}'
-- 'Parent Identifier: {parent_identifier}'
-- 'Attributes: {file_attribute}'
-- 'USN number: {usn_number}'
-short_message:
-- 'Filename: {original_filename}'
-short_source: 'REG'
-source: 'File History Namespace'
----
-type: 'conditional'
 data_type: 'iis:log:line'
 message:
 - '{http_method}'
@@ -187,6 +174,19 @@ short_message:
 - 'Strings: {strings}'
 short_source: 'EVT'
 source: 'WinEVTX'
+---
+type: 'conditional'
+data_type: 'windows:file_history:namespace'
+message:
+- 'Filename: {original_filename}'
+- 'Identifier: {identifier}'
+- 'Parent Identifier: {parent_identifier}'
+- 'Attributes: {file_attribute}'
+- 'USN number: {usn_number}'
+short_message:
+- 'Filename: {original_filename}'
+short_source: 'REG'
+source: 'File History Namespace'
 ---
 # TODO: Add more "elegant" formatting, as in transform ICMP code/type into
 # a more human readable format as well as translating the additional information
