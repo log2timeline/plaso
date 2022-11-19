@@ -745,6 +745,19 @@ short_message:
 short_source: 'LOG'
 source: 'dpkg log file'
 ---
+type: 'conditional'
+data_type: 'file_history:namespace:event'
+message:
+- 'Filename: {original_filename}'
+- 'Identifier: {identifier}'
+- 'Parent Identifier: {parent_identifier}'
+- 'Attributes: {file_attribute}'
+- 'USN number: {usn_number}'
+short_message:
+- 'Filename: {original_filename}'
+short_source: 'REG'
+source: 'File History Namespace'
+---
 type: 'basic'
 data_type: 'fish:history:command'
 message: 'Command executed: {command}'

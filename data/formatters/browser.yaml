@@ -460,13 +460,15 @@ short_message:
 short_source: 'WEBHIST'
 source: 'MSIE Cache File URL record'
 ---
+# TODO: sync_count is kept for backwards compatibility
 type: 'conditional'
 data_type: 'msie:webcache:container'
 message:
 - 'URL: {url}'
 - 'Redirect URL: {redirect_url}'
 - 'Access count: {access_count}'
-- 'Sync count: {sync_count}'
+- 'Synchronization count: {synchronization_count}'
+- 'Synchronization count: {sync_count}'
 - 'Filename: {cached_filename}'
 - 'File extension: {file_extension}'
 - 'Cached file size: {cached_file_size}'

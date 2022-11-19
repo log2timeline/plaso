@@ -383,6 +383,42 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'msie:webcache:container'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+- name: 'post_check_time'
+  description: 'Post Check Time'
+- name: 'synchronization_time'
+  description: 'Synchronization Time'
+place_holder_event: true
+---
+data_type: 'msie:webcache:containers'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'scavenge_time'
+  description: 'Last Scavenge Time'
+place_holder_event: true
+---
+data_type: 'msie:webcache:leak_file'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
+data_type: 'msie:webcache:partitions'
+attribute_mappings:
+- name: 'scavenge_time'
+  description: 'Last Scavenge Time'
+place_holder_event: false
+---
 data_type: 'networkminer:fileinfos:file'
 attribute_mappings:
 - name: 'written_time'
@@ -611,6 +647,14 @@ attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
 - name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:file_history:namespace'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---
