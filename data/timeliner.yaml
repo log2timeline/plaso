@@ -353,6 +353,24 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'macos:time_machine:backup'
+attribute_mappings:
+- name: 'snapshot_times'
+  description: 'Backup Snapshot Creation Time'
+place_holder_event: true
+---
+data_type: 'macos:user:entry'
+attribute_mappings:
+- name: 'last_login_attempt_time'
+  description: 'Last Login Attempt Time'
+- name: 'last_login_time'
+  description: 'Last Login Time'
+- name: 'last_password_set_time'
+  description: 'Last Password Set Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'macos:utmpx:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -423,6 +441,12 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'expiration_time'
   description: 'Expiration Time'
+place_holder_event: true
+---
+data_type: 'safari:history:visit'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
 place_holder_event: true
 ---
 data_type: 'santa:diskmount'

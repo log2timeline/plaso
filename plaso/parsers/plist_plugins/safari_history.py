@@ -4,8 +4,6 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -15,6 +13,8 @@ class SafariHistoryEventData(events.EventData):
 
   Attributes:
     display_title (str): display title of the webpage visited.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
+        last visited.
     title (str): title of the webpage visited.
     url (str): URL visited.
     visit_count (int): number of times the website was visited.
@@ -28,6 +28,7 @@ class SafariHistoryEventData(events.EventData):
     """Initializes event data."""
     super(SafariHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.display_title = None
+    self.last_visited_time = None
     self.title = None
     self.url = None
     self.visit_count = None
@@ -45,6 +46,33 @@ class SafariHistoryPlugin(interface.PlistPlugin):
 
   PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
+  def _GetDateTimeValueFromTimestamp(
+      self, parser_mediator, plist_key, plist_value_name):
+    """Retrieves a date and time value from a Cocoa timestamp.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      plist_key (object): plist key.
+      plist_value_name (str): name of the value in the plist key.
+
+    Returns:
+      dfdatetime.TimeElements: date and time or None if not available.
+    """
+    timestamp_string = plist_key.get(plist_value_name, None)
+    if not timestamp_string:
+      return None
+
+    try:
+      timestamp = float(timestamp_string)
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionWarning((
+          'unable to convert Cocoa timestamp: {0:s} to a floating-point '
+          'value').format(timestamp_string))
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts Safari history items.
@@ -60,42 +88,23 @@ class SafariHistoryPlugin(interface.PlistPlugin):
           'unsupported Safari history version: {0!s}'.format(format_version))
       return
 
-    if 'WebHistoryDates' not in match:
-      return
-
     for history_entry in match.get('WebHistoryDates', {}):
-      last_visited_date = history_entry.get('lastVisitedDate', None)
-      if last_visited_date is None:
-        parser_mediator.ProduceExtractionWarning('missing last visited date')
-        continue
-
-      try:
-        # Last visited date is a string containing a floating point value.
-        timestamp = float(last_visited_date)
-      except (TypeError, ValueError):
-        parser_mediator.ProduceExtractionWarning(
-            'unable to convert last visited date {0:s}'.format(
-                last_visited_date))
-        continue
-
       display_title = history_entry.get('displayTitle', None)
+      title = history_entry.get('title', None)
 
       event_data = SafariHistoryEventData()
-      if display_title != event_data.title:
-        event_data.display_title = display_title
-      event_data.title = history_entry.get('title', None)
+      event_data.last_visited_time = self._GetDateTimeValueFromTimestamp(
+          parser_mediator, history_entry, 'lastVisitedDate')
+      event_data.title = title
       event_data.url = history_entry.get('', None)
       event_data.visit_count = history_entry.get('visitCount', None)
       event_data.was_http_non_get = history_entry.get(
           'lastVisitWasHTTPNonGet', None)
 
-      # Convert the floating point value to an integer.
-      # TODO: add support for the fractional part of the floating point value.
-      timestamp = int(timestamp)
-      date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      if display_title != title:
+        event_data.display_title = display_title
+
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(SafariHistoryPlugin)
