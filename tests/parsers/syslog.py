@@ -253,12 +253,15 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     # Check timeliner output.
+    # Note that this test can be flaky due to base year determination remove
+    # check of number_of_events from parser tests after completion of event
+    # and event data migration.
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 15)
+    self.assertEqual(number_of_events, 16)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'timelining_warning')
-    self.assertEqual(number_of_warnings, 2)
+    self.assertEqual(number_of_warnings, 1)
 
 
 if __name__ == '__main__':
