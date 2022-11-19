@@ -604,7 +604,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     if self._output_format == 'json':
       json_string = json.dumps(analysis_reports_counter)
       self._output_writer.Write(
-          ', "analysis_reports": {0:s}'.format(json_string))
+          '"analysis_reports": {0:s}'.format(json_string))
 
     elif (self._output_format in ('markdown', 'text') and
           analysis_reports_counter):
@@ -721,7 +721,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     if self._output_format == 'json':
       json_string = json.dumps(event_labels_counter)
-      self._output_writer.Write(', "event_labels": {0:s}'.format(json_string))
+      self._output_writer.Write('"event_labels": {0:s}'.format(json_string))
 
     elif self._output_format in ('markdown', 'text'):
       if self._output_format == 'text' and not event_labels_counter:
@@ -1116,31 +1116,54 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     elif self._output_format in ('markdown', 'text'):
       self._PrintStorageOverviewAsTable(storage_reader)
 
+    section_written = False
+
     if self._sections == 'all' or 'sessions' in self._sections:
       self._PrintSessionsSection(storage_reader)
+      section_written = True
 
     if self._sections == 'all' or 'sources' in self._sections:
+      if self._output_format == 'json' and section_written:
+        self._output_writer.Write(', ')
+
       self._PrintSourcesOverview(storage_reader)
+      section_written = True
+
+    if self._output_format == 'json' and section_written:
+      self._output_writer.Write(', ')
 
     storage_counters = self._CalculateStorageCounters(storage_reader)
 
     if self._output_format == 'json':
-      self._output_writer.Write(', "storage_counters": {')
+      self._output_writer.Write('"storage_counters": {')
+
+    section_written = False
 
     if self._sections == 'all' or 'events' in self._sections:
       parsers = storage_counters.get('parsers', collections.Counter())
 
       self._PrintParsersCounter(parsers)
+      section_written = True
 
       event_labels = storage_counters.get(
           'event_labels', collections.Counter())
 
+      if self._output_format == 'json' and section_written:
+        self._output_writer.Write(', ')
+
       self._PrintEventLabelsCounter(event_labels)
 
     if self._sections == 'all' or 'warnings' in self._sections:
+      if self._output_format == 'json' and section_written:
+        self._output_writer.Write(', ')
+
       self._PrintWarningsSection(storage_reader, storage_counters)
+      section_written = True
 
     if self._sections == 'all' or 'reports' in self._sections:
+      if self._output_format == 'json' and section_written:
+        self._output_writer.Write(', ')
+
       analysis_reports = storage_counters.get(
           'analysis_reports', collections.Counter())
 
@@ -1161,7 +1184,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
     """
     if self._output_format == 'json':
-      self._output_writer.Write(', "event_sources": {')
+      self._output_writer.Write('"event_sources": {')
 
     elif self._output_format in ('markdown', 'text'):
       table_view = views.ViewsFactory.GetTableView(
@@ -1232,7 +1255,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     """
     json_string = json.dumps(warnings_by_parser_chain)
     self._output_writer.Write(
-        ', "warnings_by_parser": {0:s}'.format(json_string))
+        '"warnings_by_parser": {0:s}'.format(json_string))
 
     json_string = json.dumps(warnings_by_path_spec)
     self._output_writer.Write(
