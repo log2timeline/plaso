@@ -619,15 +619,18 @@ short_message:
 short_source: 'TORRENT'
 source: 'Transmission Active Torrents'
 ---
+# TODO: path is kept for backwards compatibility
 type: 'conditional'
 data_type: 'p2p:bittorrent:utorrent'
 message:
 - 'Torrent {caption}'
+- 'Saved to {destination}'
 - 'Saved to {path}'
 - 'Minutes seeded: {seedtime}'
 separator: '; '
 short_message:
 - 'Torrent {caption}'
+- 'Saved to {destination}'
 - 'Saved to {path}'
 - 'Minutes seeded: {seedtime}'
 short_source: 'TORRENT'
