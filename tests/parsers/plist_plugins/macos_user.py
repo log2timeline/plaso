@@ -4,8 +4,7 @@
 
 import unittest
 
-from plaso.lib import definitions
-from plaso.parsers.plist_plugins import mac_user
+from plaso.parsers.plist_plugins import macos_user
 
 from tests.parsers.plist_plugins import test_lib
 
@@ -17,9 +16,13 @@ class MacOSUserPlistPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = 'user.plist'
 
-    plugin = mac_user.MacOSUserPlistPlugin()
+    plugin = macos_user.MacOSUserPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -32,14 +35,12 @@ class MacOSUserPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'macos:user:entry',
-        'date_time': '2013-12-28T04:35:47+00:00',
         'fullname': 'Joaquin Moreno',
+        'last_login_attempt_time': None,
+        'last_login_time': None,
+        'last_password_set_time': '2013-12-28T04:35:47+00:00',
         'password_hash': (
             '$ml$37313$fa6cac1869263baa85cffc5e77a3d4ee164b7'
             '5536cae26ce8547108f60e3f554$a731dbb0e386b169af8'
@@ -48,11 +49,11 @@ class MacOSUserPlistPluginTest(test_lib.PlistPluginTestCase):
             'e0d819a1b0aba20646fd61345d98c0c9a411bfd1144dd4b'
             '3c40ec0f148b66d5b9ab014449f9b2e103928ef21db6e25'
             'b536a60ff17a84e985be3aa7ba3a4c16b34e0d1d2066ae178'),
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_PASSWORD_SET,
         'user_identifier': '501',
         'username': 'user'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

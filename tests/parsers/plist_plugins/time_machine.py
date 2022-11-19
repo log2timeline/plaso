@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.plist_plugins import time_machine
 
 from tests.parsers.plist_plugins import test_lib
@@ -21,6 +20,10 @@ class MacOSTimeMachinePlistPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 13)
 
@@ -32,18 +35,27 @@ class MacOSTimeMachinePlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'backup_alias': 'BackUpFast',
         'data_type': 'macos:time_machine:backup',
-        'date_time': '2013-09-25T08:40:55.000000+00:00',
         'destination_identifier': '5B33C22B-A4A1-4024-A2F5-C9979C4AAAAA',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'snapshot_times': [
+            '2013-09-14T13:24:11.000000+00:00',
+            '2013-09-25T08:40:55.000000+00:00',
+            '2013-10-03T14:24:36.000000+00:00',
+            '2013-10-16T00:32:18.000000+00:00',
+            '2013-10-24T20:51:30.000000+00:00',
+            '2013-11-02T00:22:19.000000+00:00',
+            '2013-11-10T13:27:00.000000+00:00',
+            '2013-11-22T14:35:14.000000+00:00',
+            '2013-12-05T17:51:51.000000+00:00',
+            '2013-12-10T15:37:32.000000+00:00',
+            '2013-12-22T14:38:11.000000+00:00',
+            '2014-01-04T13:09:10.000000+00:00',
+            '2014-01-04T13:38:38.000000+00:00']}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
