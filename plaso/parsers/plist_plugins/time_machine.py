@@ -18,7 +18,7 @@ class MacOSTimeMachineBackupEventData(events.EventData):
   Attributes:
     backup_alias (str): alias of the backup.
     destination_identifier (str): identifier of the destination volume.
-    snapshot_times (list[dfdatetime.DateTimeValues]): date and time of
+    snapshot_times (list[dfdatetime.DateTimeValues]): dates and times of
         the creation of backup snaphots.
   """
 
