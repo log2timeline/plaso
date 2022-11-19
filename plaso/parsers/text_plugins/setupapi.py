@@ -79,25 +79,25 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   _SECTION_HEADER = (
-      pyparsing.Literal('>>>  [').suppress() +
+      pyparsing.Suppress('>>>  [') +
       pyparsing.CharsNotIn(']').setResultsName('entry_type') +
       pyparsing.Literal(']') + pyparsing.lineEnd())
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   _SECTION_HEADER_START = (
-      pyparsing.Literal('>>>  Section start').suppress() +
+      pyparsing.Suppress('>>>  Section start') +
       _DATE_TIME.setResultsName('start_time') +
       pyparsing.lineEnd())
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END = (
-      pyparsing.Literal('<<<  Section end ').suppress() +
+      pyparsing.Suppress('<<<  Section end ') +
       _DATE_TIME.setResultsName('end_time') +
       pyparsing.lineEnd())
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END_EXIT_STATUS = (
-      pyparsing.Literal('<<<  [Exit status: ').suppress() +
+      pyparsing.Suppress('<<<  [Exit status: ') +
       pyparsing.CharsNotIn(']').setResultsName('exit_status') +
       pyparsing.Literal(']') +
       pyparsing.lineEnd())

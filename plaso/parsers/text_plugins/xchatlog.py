@@ -121,7 +121,7 @@ class XChatLogTextPlugin(
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
 
-  _HEADER_SIGNATURE = pyparsing.Keyword('****')
+  _HEADER_SIGNATURE = pyparsing.Suppress('****')
 
   # Header date and time values are formatted as: Mon Dec 31 21:11:55 2011
   _HEADER_DATE_TIME = pyparsing.Group(
@@ -136,7 +136,7 @@ class XChatLogTextPlugin(
       pyparsing.Word(pyparsing.printables))
 
   _HEADER = (
-      _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName('log_action') +
+      _HEADER_SIGNATURE + _LOG_ACTION.setResultsName('log_action') +
       _HEADER_DATE_TIME.setResultsName('date_time'))
 
   # Body (nickname, text and/or service messages) pyparsing structures.
@@ -151,10 +151,12 @@ class XChatLogTextPlugin(
   _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
       'nickname')
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Optional(_NICKNAME) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text'))
 
   _LINE_STRUCTURES = [
       ('logline', _LOG_LINE),

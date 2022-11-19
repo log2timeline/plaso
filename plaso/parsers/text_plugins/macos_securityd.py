@@ -81,21 +81,21 @@ class MacOSSecuritydLogTextPlugin(
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.CharsNotIn('[').setResultsName('sender') +
-      pyparsing.Literal('[').suppress() +
+      pyparsing.Suppress('[') +
       _PROCESS_IDENTIFIER.setResultsName('sender_pid') +
-      pyparsing.Literal(']').suppress() +
-      pyparsing.Literal('<').suppress() +
+      pyparsing.Suppress(']') +
+      pyparsing.Suppress('<') +
       pyparsing.CharsNotIn('>').setResultsName('level') +
-      pyparsing.Literal('>').suppress() +
-      pyparsing.Literal('[').suppress() +
+      pyparsing.Suppress('>') +
+      pyparsing.Suppress('[') +
       pyparsing.CharsNotIn('{').setResultsName('facility') +
-      pyparsing.Literal('{').suppress() +
+      pyparsing.Suppress('{') +
       pyparsing.Optional(pyparsing.CharsNotIn(
           '}').setResultsName('security_api')) +
-      pyparsing.Literal('}').suppress() +
+      pyparsing.Suppress('}') +
       pyparsing.Optional(pyparsing.CharsNotIn(']:').setResultsName(
-          'caller')) + pyparsing.Literal(']:').suppress() +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message') +
+          'caller')) + pyparsing.Suppress(']:') +
+      pyparsing.restOfLine().setResultsName('message') +
       _END_OF_LINE)
 
   _REPEATED_LOG_LINE = (
@@ -140,36 +140,25 @@ class MacOSSecuritydLogTextPlugin(
     if key == 'logline':
       self._repeated_structure = structure
 
-      message = self._GetValueFromStructure(structure, 'message')
+      message = self._GetStringValueFromStructure(structure, 'message')
     else:
       repeat_count = self._GetValueFromStructure(structure, 'times')
 
       structure = self._repeated_structure
 
-      message = self._GetValueFromStructure(
-          structure, 'message', default_value='')
+      message = self._GetStringValueFromStructure(structure, 'message')
       message = 'Repeated {0:d} times: {1:s}'.format(repeat_count, message)
-
-    caller = self._GetValueFromStructure(structure, 'caller', default_value='')
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    caller = caller.strip()
-
-    sender = self._GetValueFromStructure(structure, 'sender', default_value='')
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    sender = sender.strip()
 
     event_data = MacOSSecuritydLogEventData()
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
-    event_data.caller = caller or None
+    event_data.caller = self._GetStringValueFromStructure(structure, 'caller')
     event_data.facility = self._GetValueFromStructure(structure, 'facility')
     event_data.level = self._GetValueFromStructure(structure, 'level')
-    event_data.message = message
+    event_data.message = message or None
     event_data.security_api = self._GetValueFromStructure(
         structure, 'security_api')
     event_data.sender_pid = self._GetValueFromStructure(structure, 'sender_pid')
-    event_data.sender = sender or None
+    event_data.sender = self._GetStringValueFromStructure(structure, 'sender')
 
     parser_mediator.ProduceEventData(event_data)
 

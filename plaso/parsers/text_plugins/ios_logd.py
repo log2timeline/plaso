@@ -62,7 +62,7 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       _LOGGER +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('body') +
+      pyparsing.restOfLine().setResultsName('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_entry', _LOG_LINE)]

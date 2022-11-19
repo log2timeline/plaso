@@ -184,12 +184,9 @@ class AndroidLogcatTextPlugin(
     if key == 'beginning_line':
       return
 
-    component_tag = self._GetValueFromStructure(
-        structure, 'tag', default_value='')
-    component_tag = component_tag.strip()
-
     event_data = AndroidLogcatEventData()
-    event_data.component_tag = component_tag or None
+    event_data.component_tag = self._GetStringValueFromStructure(
+        structure, 'tag')
     event_data.file_offset = self._current_offset
     event_data.message = self._GetValueFromStructure(structure, 'message')
     event_data.pid = self._GetValueFromStructure(structure, 'pid')

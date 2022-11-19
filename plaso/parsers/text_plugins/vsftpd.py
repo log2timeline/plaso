@@ -74,7 +74,7 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text'))
 
   _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
@@ -102,7 +102,7 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     event_data = VsftpdLogEventData()
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
     # TODO: extract pid and username.
-    event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.text = self._GetStringValueFromStructure(structure, 'text')
 
     parser_mediator.ProduceEventData(event_data)
 

@@ -74,13 +74,13 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
 
   _LOG_LEVEL = (
-      pyparsing.Literal('(').suppress() +
+      pyparsing.Suppress('(') +
       pyparsing.SkipTo(')').setResultsName('log_level') +
-      pyparsing.Literal(')').suppress())
+      pyparsing.Suppress(')'))
 
   _LINE = (
       _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Literal(':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text'))
 
   # Sometimes the timestamped log line is followed by an empty line,
   # then by a file name plus other data and finally by another empty
@@ -89,8 +89,8 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
   # ad-hoc (see source), based on the last one if available.
   _NO_HEADER_SINGLE_LINE = (
       pyparsing.NotAny(_DATE_TIME) +
-      pyparsing.Optional(pyparsing.Literal('->').suppress()) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.Optional(pyparsing.Suppress('->')) +
+      pyparsing.restOfLine().setResultsName('text'))
 
   # Define the available log line structures.
   _LINE_STRUCTURES = [
@@ -121,7 +121,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
-    event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.text = self._GetStringValueFromStructure(structure, 'text')
 
     parser_mediator.ProduceEventData(event_data)
 
