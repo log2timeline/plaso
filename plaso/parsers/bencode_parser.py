@@ -6,6 +6,8 @@ import re
 
 import bencode
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -24,6 +26,21 @@ class BencodeValues(object):
     """
     super(BencodeValues, self).__init__()
     self._decoded_values = decoded_values
+
+  def GetDateTimeValue(self, name):
+    """Retrieves a date and time value.
+
+    Args:
+      name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time or None if not available.
+    """
+    timestamp = self.GetDecodedValue(name)
+    if not timestamp:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
   def GetDecodedValue(self, name):
     """Retrieves a decoded value.
@@ -46,20 +63,28 @@ class BencodeValues(object):
 
     return value
 
+  def GetValues(self):
+    """Retrieves the values.
+
+    Yields:
+      tuple[str, object]: name and decoded value.
+    """
+    for key, value in self._decoded_values.items():
+      if isinstance(key, bytes):
+        # Work-around for issue in bencode 3.0.1 where keys are bytes.
+        key = key.decode('utf-8')
+
+      yield key, value
+
 
 class BencodeFile(object):
-  """Bencode file.
-
-  Attributes:
-    decoded_values (collections.OrderedDict[bytes|str, object]]): decoded
-        values.
-  """
+  """Bencode file."""
 
   def __init__(self):
     """Initializes a bencode file."""
     super(BencodeFile, self).__init__()
+    self._decoded_values = None
     self._key_names = set()
-    self.decoded_values = None
 
   @property
   def keys(self):
@@ -68,32 +93,23 @@ class BencodeFile(object):
 
   def Close(self):
     """Closes the file."""
-    self.decoded_values = None
+    self._decoded_values = None
 
-  def GetDecodedValue(self, name):
-    """Retrieves a decoded value.
-
-    Args:
-      name (str): name of the value.
+  def GetValues(self):
+    """Retrieves the values in the root of the bencode file.
 
     Returns:
-      object: decoded value or None if not available.
+      BencodeValues: values.
     """
-    bencoded_values = BencodeValues(self.decoded_values)
-    return bencoded_values.GetDecodedValue(name)
+    return BencodeValues(self._decoded_values)
 
-  def GetDecodedValues(self):
-    """Retrieves the decoded values.
+  def IsEmpty(self):
+    """Determines if the bencode file has no values (is empty).
 
-    Yields:
-      tuple[str, object]: name and decoded value.
+    Returns:
+      bool: True if the bencode file is empty, False otherwise.
     """
-    for key, value in self.decoded_values.items():
-      if isinstance(key, bytes):
-        # Work-around for issue in bencode 3.0.1 where keys are bytes.
-        key = key.decode('utf-8')
-
-      yield key, value
+    return not self._decoded_values
 
   def Open(self, file_object):
     """Opens a bencode file.
@@ -112,12 +128,12 @@ class BencodeFile(object):
     file_object.seek(0, os.SEEK_SET)
 
     try:
-      self.decoded_values = bencode.bread(file_object)
+      self._decoded_values = bencode.bread(file_object)
     except bencode.BencodeDecodeError as exception:
       raise IOError(exception)
 
     self._key_names = set()
-    for key in self.decoded_values.keys():
+    for key in self._decoded_values.keys():
       if isinstance(key, bytes):
         # Work-around for issue in bencode 3.0.1 where keys are bytes.
         key = key.decode('utf-8')
@@ -161,7 +177,7 @@ class BencodeParser(interface.FileObjectParser):
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 
-    if not bencode_file.decoded_values:
+    if bencode_file.IsEmpty():
       parser_mediator.ProduceExtractionWarning('missing decoded Bencode values')
       return
 

@@ -383,6 +383,26 @@ attribute_mappings:
   description: 'Last Typed Time'
 place_holder_event: true
 ---
+data_type: 'p2p:bittorrent:transmission'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'downloaded_time'
+  description: 'File Downloaded Time'
+- name: 'last_activity_time'
+  description: 'Last Activity Time'
+place_holder_event: true
+---
+data_type: 'p2p:bittorrent:utorrent'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'downloaded_time'
+  description: 'File Downloaded Time'
+- name: 'modification_times'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'pe_coff:dll_import'
 attribute_mappings:
 - name: 'modification_time'
