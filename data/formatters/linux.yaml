@@ -25,10 +25,10 @@ source: 'dpkg log file'
 ---
 type: 'basic'
 data_type: 'linux:locate_database:entry'
-message: 
+message:
 - 'Folder Path: {path}'
 - 'Contents: {contents}'
-short_message: 
+short_message:
 - '{paths}'
 - '{contents}'
 short_source: 'LOCATE'
