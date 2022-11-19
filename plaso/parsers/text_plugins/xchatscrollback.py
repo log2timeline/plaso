@@ -73,6 +73,9 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.ConvertTokenToInteger)
 
@@ -172,10 +175,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self.LOG_LINE.parseString(line)

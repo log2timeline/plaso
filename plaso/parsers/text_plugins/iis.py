@@ -125,20 +125,28 @@ class WinIISTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
-  FIELDS_METADATA = (
+  _DATE_TIME_METADATA = (
+      pyparsing.Literal('Date:') +
+      _DATE.setResultsName('date') +
+      _TIME.setResultsName('time'))
+
+  _FIELDS_METADATA = (
       pyparsing.Literal('Fields:') +
       pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('fields'))
 
-  _COMMENT_LINE = pyparsing.Literal('#') + (
-      pyparsing.Literal('Date:') + _DATE.setResultsName('date') +
-      _TIME.setResultsName('time') | FIELDS_METADATA |
-      pyparsing.SkipTo(pyparsing.LineEnd()))
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _COMMENT_LOG_LINE = (
+      pyparsing.Suppress('#') + (
+          _DATE_TIME_METADATA | _FIELDS_METADATA |
+          pyparsing.SkipTo(pyparsing.LineEnd())) +
+      _END_OF_LINE)
 
   # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
   # sc-substatus sc-win32-status
 
-  _LOG_LINE_6_0 = (
+  _IIS_6_0_LOG_LINE = (
       _DATE.setResultsName('date') +
       _TIME.setResultsName('time') +
       _URI.setResultsName('s_sitename') +
@@ -152,7 +160,8 @@ class WinIISTextPlugin(interface.TextPlugin):
       _URI.setResultsName('user_agent') +
       _INTEGER.setResultsName('sc_status') +
       _INTEGER.setResultsName('sc_substatus') +
-      _INTEGER.setResultsName('sc_win32_status'))
+      _INTEGER.setResultsName('sc_win32_status') +
+      _END_OF_LINE)
 
   # IIS 7.x fields: date time s-ip cs-method cs-uri-stem cs-uri-query
   # s-port cs-username c-ip cs(User-Agent) sc-status sc-substatus
@@ -197,8 +206,8 @@ class WinIISTextPlugin(interface.TextPlugin):
   # common format.
 
   _LINE_STRUCTURES = [
-      ('comment', _COMMENT_LINE),
-      ('logline', _LOG_LINE_6_0)]
+      ('comment', _COMMENT_LOG_LINE),
+      ('logline', _IIS_6_0_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -218,7 +227,7 @@ class WinIISTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure parsed from a comment in
           the log file.
     """
-    comment = structure[1]
+    comment = structure[0]
 
     if comment == 'Date:':
       date_elements_tuple = self._GetValueFromStructure(structure, 'date')
@@ -253,8 +262,10 @@ class WinIISTextPlugin(interface.TextPlugin):
 
       log_line_structure += field_structure
 
+    log_line_structure += self._END_OF_LINE
+
     line_structures = [
-        ('comment', self._COMMENT_LINE),
+        ('comment', self._COMMENT_LOG_LINE),
         ('logline', log_line_structure)]
     self._SetLineStructures(line_structures)
 
@@ -377,10 +388,7 @@ class WinIISTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     found_signature = False
     while line and line[0] == '#':
@@ -388,10 +396,7 @@ class WinIISTextPlugin(interface.TextPlugin):
         found_signature = True
         break
 
-      try:
-        line = text_reader.ReadLineOfText()
-      except UnicodeDecodeError:
-        break
+      line = text_reader.ReadLine()
 
     if not found_signature:
       return False

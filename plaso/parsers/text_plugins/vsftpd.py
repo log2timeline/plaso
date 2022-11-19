@@ -35,6 +35,9 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
   NAME = 'vsftpd'
   DATA_FORMAT = 'vsftpd log file'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _MONTH_DICT = {
       'jan': 1,
       'feb': 2,
@@ -145,10 +148,7 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     if line and (' [pid ' not in line or ': Client ' not in line):
       return False

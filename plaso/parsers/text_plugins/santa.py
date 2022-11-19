@@ -185,6 +185,9 @@ class SantaTextPlugin(interface.TextPlugin):
 
   MAXIMUM_LINE_LENGTH = 3000
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -536,10 +539,7 @@ class SantaTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     return bool(self._VERIFICATION_REGEX.match(line))
 

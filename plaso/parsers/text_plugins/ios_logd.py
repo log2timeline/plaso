@@ -57,12 +57,15 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
   _LOGGER = (pyparsing.SkipTo(':').setResultsName('logger') +
              pyparsing.Suppress(': '))
 
-  _LINE_GRAMMAR = (
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       _LOGGER +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('body'))
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('body') +
+      _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [('log_entry', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -135,13 +138,10 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._LINE_GRAMMAR.parseString(line)
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 

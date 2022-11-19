@@ -91,6 +91,9 @@ class XChatLogTextPlugin(
 
   ENCODING = 'utf-8'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -306,10 +309,7 @@ class XChatLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self._HEADER.parseString(line)

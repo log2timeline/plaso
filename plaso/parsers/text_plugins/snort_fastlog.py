@@ -73,6 +73,9 @@ class SnortFastLogTextPlugin(
   NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _VERIFICATION_REGEX = re.compile(''.join([
       # Date: "MM/DD" and "YY/MM/DD"
       r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*',
@@ -255,10 +258,7 @@ class SnortFastLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     if not self._VERIFICATION_REGEX.match(line):
       return False

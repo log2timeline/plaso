@@ -132,6 +132,8 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).setResultsName('user_name')
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b"
   _COMMON_LOG_FORMAT_LINE = (
@@ -142,7 +144,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _HTTP_REQUEST +
       _INTEGER.setResultsName('response_code') +
       _RESPONSE_BYTES +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
@@ -156,11 +158,11 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _RESPONSE_BYTES +
       _REFERER +
       _USER_AGENT +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # "vhost_combined" format as used by Debian and related distributions.
   # "%v:%p %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
-  _VHOST_COMBINED_LOG_FORMAT = (
+  _VHOST_COMBINED_LOG_FORMAT_LINE = (
       _SERVER_NAME +
       pyparsing.Suppress(':') +
       _INTEGER.setResultsName('port_number') +
@@ -173,12 +175,12 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _RESPONSE_BYTES +
       _REFERER +
       _USER_AGENT +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
       ('combined_log_format', _COMBINED_LOG_FORMAT_LINE),
       ('common_log_format', _COMMON_LOG_FORMAT_LINE),
-      ('vhost_combined_log_format', _VHOST_COMBINED_LOG_FORMAT)]
+      ('vhost_combined_log_format', _VHOST_COMBINED_LOG_FORMAT_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -283,10 +285,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     _, _, result_tuple = self._GetMatchingLineStructure(line)
     if not result_tuple:

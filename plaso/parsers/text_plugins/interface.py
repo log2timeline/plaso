@@ -75,6 +75,9 @@ class TextPlugin(plugins.BasePlugin):
   # aborting parsing.
   _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = False
+
   def __init__(self):
     """Initializes a parser."""
     super(TextPlugin, self).__init__()
@@ -170,20 +173,32 @@ class TextPlugin(plugins.BasePlugin):
     # Set the offset to the beginning of the file.
     self._current_offset = 0
 
+    try:
+      text_reader.ReadLines()
+      self._current_offset = text_reader.get_offset()
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionWarning(
+          'unable to read and decode log line at offset {0:d}'.format(
+              self._current_offset))
+      return
+
     consecutive_line_failures = 0
 
-    # Read every line in the text file.
-    line = text_reader.ReadLineOfText()
-    while line:
+    while text_reader.lines:
       if parser_mediator.abort:
         break
 
-      # Try to parse the line using all the line structures.
-      index, line_structure, result_tuple = self._GetMatchingLineStructure(
-          line)
+      if not self._SINGLE_LINE_MODE:
+        text = text_reader.lines
+      else:
+        text = text_reader.ReadLine()
+        if not text:
+          continue
+
+      index, line_structure, result_tuple = self._GetMatchingLineStructure(text)
 
       if result_tuple:
-        parsed_structure, _, _ = result_tuple
+        parsed_structure, _, end = result_tuple
 
         try:
           self._ParseLineStructure(
@@ -195,13 +210,21 @@ class TextPlugin(plugins.BasePlugin):
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   line_structure.name, exception))
 
+        if not self._SINGLE_LINE_MODE:
+          text_reader.SkipAhead(end)
+
       else:
+        if self._SINGLE_LINE_MODE:
+          line = text
+        else:
+          line = text_reader.ReadLine()
+
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
 
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line: "{0:s}" at offset: {1:d}'.format(
-                line, self._current_offset))
+            'unable to parse log line: {0:d} "{1:s}"'.format(
+                text_reader.line_number, line))
 
         consecutive_line_failures += 1
         if (consecutive_line_failures >
@@ -211,10 +234,9 @@ class TextPlugin(plugins.BasePlugin):
                   self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
           break
 
-      self._current_offset = text_reader.get_offset()
-
       try:
-        line = text_reader.ReadLineOfText()
+        text_reader.ReadLines()
+        self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(

@@ -115,9 +115,12 @@ class DpkgTextPlugin(interface.TextPlugin):
       pyparsing.Literal('conffile') + pyparsing.Word(pyparsing.printables) +
       _DPKG_CONFFILE_DECISION), joinString=' ', adjacent=False)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _DPKG_LOG_LINE = (_DATE_TIME + pyparsing.MatchFirst([
       _DPKG_STARTUP_BODY, _DPKG_STATUS_BODY, _DPKG_ACTION_BODY,
-      _DPKG_CONFFILE_BODY]).setResultsName('body'))
+      _DPKG_CONFFILE_BODY]).setResultsName('body') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [('line', _DPKG_LOG_LINE)]
 
@@ -192,10 +195,7 @@ class DpkgTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self._DPKG_LOG_LINE.parseString(line)

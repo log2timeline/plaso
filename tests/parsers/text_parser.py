@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the generic text parser."""
 
-import codecs
 import unittest
 
 import pyparsing
@@ -83,7 +82,7 @@ class EncodedTextReaderTest(test_lib.ParserTestCase):
     if not isinstance(exception, UnicodeDecodeError):
       raise TypeError('Unsupported exception type.')
 
-    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable=attribute-defined-outside-init,no-member
     self._encoding_errors.append(
         (exception.start, exception.object[exception.start]))
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
@@ -119,59 +118,6 @@ class EncodedTextReaderTest(test_lib.ParserTestCase):
 
     text_reader.ReadLines()
     self.assertEqual(text_reader.lines, self._TEST_LINES)
-
-  def testReadLineOfText(self):
-    """Tests the _ReadLineOfText function."""
-    resolver_context = dfvfs_context.Context()
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is another file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(file_object, encoding='utf-8')
-
-    line = text_reader.ReadLineOfText()
-    self.assertEqual(line, 'This is another file.')
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(file_object, encoding='utf8')
-
-    with self.assertRaises(UnicodeDecodeError):
-      text_reader.ReadLineOfText()
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(
-        file_object, encoding='utf8', encoding_errors='replace')
-
-    line = text_reader.ReadLineOfText()
-    self.assertEqual(line, 'This is an\ufffdther file.')
-
-    # pylint: disable=attribute-defined-outside-init
-    self._encoding_errors = []
-    codecs.register_error('test_handler', self._EncodingErrorHandler)
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is an\xbather file.'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(
-        file_object, encoding='utf8', encoding_errors='test_handler')
-
-    line = text_reader.ReadLineOfText()
-    self.assertEqual(line, 'This is an\\xbather file.')
-
-    self.assertEqual(len(self._encoding_errors), 1)
-    self.assertEqual(self._encoding_errors[0], (10, 0xba))
 
   def testSkipAhead(self):
     """Tests the SkipAhead function."""

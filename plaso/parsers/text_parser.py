@@ -143,6 +143,7 @@ class EncodedTextReader(object):
     self._file_object = file_object
 
     self.lines = ''
+    self.line_number = 0
 
   def _ReadLine(self, size):
     """Reads a line from the file object.
@@ -191,32 +192,7 @@ class EncodedTextReader(object):
       self.ReadLines()
       line, _, self.lines = self.lines.partition('\n')
 
-    return line
-
-  def ReadLineOfText(self, depth=0):
-    """Reads a line of text.
-
-    Args:
-      depth (Optional[int]): number of new lines the parser encountered.
-
-    Returns:
-      str: single line read from the file-like object, or the maximum number of
-          characters.
-
-    Raises:
-      UnicodeDecodeError: if the text cannot be decoded using the specified
-          encoding and encoding errors is set to strict.
-    """
-    line = self._ReadLine(size=self._buffer_size)
-    if not line:
-      return ''
-
-    if line in self._EMPTY_LINES:
-      if depth == self._MAXIMUM_NUMBER_OF_EMPTY_LINES:
-        return ''
-
-      return self.ReadLineOfText(depth=depth + 1)
-
+    self.line_number += 1
     return line
 
   def ReadLines(self):
@@ -230,6 +206,7 @@ class EncodedTextReader(object):
           break
 
         self.lines = ''.join([self.lines, line])
+
         lines_size -= len(line)
 
   def SkipAhead(self, number_of_characters):
@@ -248,6 +225,7 @@ class EncodedTextReader(object):
       if lines_size == 0:
         return
 
+    self.line_number += self.lines[:number_of_characters].count('\n')
     self.lines = self.lines[number_of_characters:]
 
   # Note: that the following functions do not follow the style guide
@@ -290,6 +268,13 @@ class SingleLineTextParser(interface.FileObjectParser):
       text_reader = EncodedTextReader(
           file_object, buffer_size=plugin.MAXIMUM_LINE_LENGTH,
           encoding=encoding)
+
+      # TODO: only read lines once for a specific encoding.
+      try:
+        text_reader.ReadLines()
+      except UnicodeDecodeError as exception:
+        raise errors.WrongParser(
+            'Unable to read lines with error: {0!s}'.format(exception))
 
       if not plugin.CheckRequiredFormat(parser_mediator, text_reader):
         continue
@@ -486,10 +471,9 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
                 'more than {0:d} consecutive failures to parse lines.'.format(
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 
-      self._current_offset = text_reader.get_offset()
-
       try:
         text_reader.ReadLines()
+        self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(
@@ -591,6 +575,7 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
 
     try:
       text_reader.ReadLines()
+      self._current_offset = text_reader.get_offset()
     except UnicodeDecodeError as exception:
       raise errors.WrongParser('Not a text file, with error: {0!s}'.format(
           exception))

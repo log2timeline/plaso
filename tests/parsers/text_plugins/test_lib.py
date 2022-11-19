@@ -60,6 +60,8 @@ class TextPluginTestCase(test_lib.ParserTestCase):
     text_reader = text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
 
+    text_reader.ReadLines()
+
     required_format = plugin.CheckRequiredFormat(parser_mediator, text_reader)
     self.assertTrue(required_format)
 

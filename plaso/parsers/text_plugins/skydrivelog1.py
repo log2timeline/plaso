@@ -43,6 +43,9 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -218,10 +221,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self._LINE.parseString(line)

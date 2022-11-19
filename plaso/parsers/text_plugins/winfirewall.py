@@ -66,6 +66,9 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'ascii'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _BLANK = pyparsing.Suppress(pyparsing.Literal('-'))
 
   _WORD = (
@@ -308,10 +311,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     found_signature = False
     while line and line[0] == '#':
@@ -319,10 +319,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         found_signature = True
         break
 
-      try:
-        line = text_reader.ReadLineOfText()
-      except UnicodeDecodeError:
-        break
+      line = text_reader.ReadLine()
 
     if not found_signature:
       return False
