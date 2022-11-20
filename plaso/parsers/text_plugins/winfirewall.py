@@ -66,19 +66,6 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'ascii'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
-  _BLANK = pyparsing.Suppress(pyparsing.Literal('-'))
-
-  _WORD = (
-      pyparsing.Word(pyparsing.alphanums) |
-      pyparsing.Word(pyparsing.alphanums + '-', min=2) |
-      _BLANK)
-
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.ConvertTokenToInteger) | _BLANK
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -93,14 +80,38 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
-  _IP_ADDRESS = (
+  _ACTION = pyparsing.Word(pyparsing.alphanums + '-', min=2)
+
+  _WORD_OR_BLANK = (
+      pyparsing.Word(pyparsing.alphanums) | pyparsing.Suppress('-'))
+
+  _IP_ADDRESS_OR_BLANK = (
       pyparsing.pyparsing_common.ipv4_address |
-      pyparsing.pyparsing_common.ipv6_address | _BLANK)
+      pyparsing.pyparsing_common.ipv6_address | pyparsing.Suppress('-'))
 
-  _PORT_NUMBER = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
-      text_parser.ConvertTokenToInteger) | _BLANK
+  _PORT_NUMBER_OR_BLANK = (
+      pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+          text_parser.ConvertTokenToInteger) | pyparsing.Suppress('-'))
 
-  _COMMENT_LINE = pyparsing.Literal('#') + pyparsing.restOfLine()
+  _INTEGER_OR_BLANK = (
+      pyparsing.Word(pyparsing.nums).setParseAction(
+          text_parser.ConvertTokenToInteger) | pyparsing.Suppress('-'))
+
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _FIELDS_METADATA = (
+      pyparsing.Literal('Fields:') +
+      pyparsing.restOfLine().setResultsName('fields'))
+
+  _TIME_FORMAT_METADATA = (
+      pyparsing.Literal('Time Format:') +
+      pyparsing.restOfLine().setResultsName('time_format'))
+
+  _METADATA = (
+      _FIELDS_METADATA | _TIME_FORMAT_METADATA | pyparsing.restOfLine())
+
+  _COMMENT_LINE = (
+      pyparsing.Suppress('#') + _METADATA + _END_OF_LINE)
 
   # Version 1.5 fields:
   # date time action protocol src-ip dst-ip src-port dst-port size tcpflags
@@ -109,50 +120,48 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _LOG_LINE_1_5 = (
       _DATE.setResultsName('date') +
       _TIME.setResultsName('time') +
-      _WORD.setResultsName('action') +
-      _WORD.setResultsName('protocol') +
-      _IP_ADDRESS.setResultsName('source_ip') +
-      _IP_ADDRESS.setResultsName('destination_ip') +
-      _PORT_NUMBER.setResultsName('source_port') +
-      _PORT_NUMBER.setResultsName('destination_port') +
-      _INTEGER.setResultsName('packet_size') +
-      _WORD.setResultsName('tcp_flags') +
-      _INTEGER.setResultsName('tcp_sequence_number') +
-      _INTEGER.setResultsName('tcp_ack') +
-      _INTEGER.setResultsName('tcp_window_size') +
-      _INTEGER.setResultsName('icmp_type') +
-      _INTEGER.setResultsName('icmp_code') +
-      _WORD.setResultsName('information') +
-      _WORD.setResultsName('path'))
-
-  _LOG_LINE_STRUCTURES = {}
+      _ACTION.setResultsName('action') +
+      _WORD_OR_BLANK.setResultsName('protocol') +
+      _IP_ADDRESS_OR_BLANK.setResultsName('source_ip') +
+      _IP_ADDRESS_OR_BLANK.setResultsName('destination_ip') +
+      _PORT_NUMBER_OR_BLANK.setResultsName('source_port') +
+      _PORT_NUMBER_OR_BLANK.setResultsName('destination_port') +
+      _INTEGER_OR_BLANK.setResultsName('packet_size') +
+      _WORD_OR_BLANK.setResultsName('tcp_flags') +
+      _INTEGER_OR_BLANK.setResultsName('tcp_sequence_number') +
+      _INTEGER_OR_BLANK.setResultsName('tcp_ack') +
+      _INTEGER_OR_BLANK.setResultsName('tcp_window_size') +
+      _INTEGER_OR_BLANK.setResultsName('icmp_type') +
+      _INTEGER_OR_BLANK.setResultsName('icmp_code') +
+      _WORD_OR_BLANK.setResultsName('information') +
+      _WORD_OR_BLANK.setResultsName('path') +
+      _END_OF_LINE)
 
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
 
-  _LOG_LINE_STRUCTURES['date'] = _DATE.setResultsName('date')
-  _LOG_LINE_STRUCTURES['time'] = _TIME.setResultsName('time')
-  _LOG_LINE_STRUCTURES['action'] = _WORD.setResultsName('action')
-  _LOG_LINE_STRUCTURES['protocol'] = _WORD.setResultsName('protocol')
-  _LOG_LINE_STRUCTURES['src-ip'] = _IP_ADDRESS.setResultsName('source_ip')
-  _LOG_LINE_STRUCTURES['dst-ip'] = _IP_ADDRESS.setResultsName('destination_ip')
-  _LOG_LINE_STRUCTURES['src-port'] = _PORT_NUMBER.setResultsName('source_port')
-  _LOG_LINE_STRUCTURES['dst-port'] = _PORT_NUMBER.setResultsName(
-      'destination_port')
-  _LOG_LINE_STRUCTURES['size'] = _INTEGER.setResultsName('packet_size')
-  _LOG_LINE_STRUCTURES['tcpflags'] = _WORD.setResultsName('tcp_flags')
-  _LOG_LINE_STRUCTURES['tcpsyn'] = _INTEGER.setResultsName(
-      'tcp_sequence_number')
-  _LOG_LINE_STRUCTURES['tcpack'] = _INTEGER.setResultsName('tcp_ack')
-  _LOG_LINE_STRUCTURES['tcpwin'] = _INTEGER.setResultsName('tcp_window_size')
-  _LOG_LINE_STRUCTURES['icmptype'] = _INTEGER.setResultsName('icmp_type')
-  _LOG_LINE_STRUCTURES['icmpcode'] = _INTEGER.setResultsName('icmp_code')
-  _LOG_LINE_STRUCTURES['info'] = _WORD.setResultsName('information')
-  _LOG_LINE_STRUCTURES['path'] = _WORD.setResultsName('path')
+  _LOG_LINE_STRUCTURES = {
+      'action': _ACTION.setResultsName('action'),
+      'date': _DATE.setResultsName('date'),
+      'dst-ip': _IP_ADDRESS_OR_BLANK.setResultsName('destination_ip'),
+      'dst-port': _PORT_NUMBER_OR_BLANK.setResultsName('destination_port'),
+      'icmpcode': _INTEGER_OR_BLANK.setResultsName('icmp_code'),
+      'icmptype': _INTEGER_OR_BLANK.setResultsName('icmp_type'),
+      'info': _WORD_OR_BLANK.setResultsName('information'),
+      'path': _WORD_OR_BLANK.setResultsName('path'),
+      'protocol': _WORD_OR_BLANK.setResultsName('protocol'),
+      'size': _INTEGER_OR_BLANK.setResultsName('packet_size'),
+      'src-ip': _IP_ADDRESS_OR_BLANK.setResultsName('source_ip'),
+      'src-port': _PORT_NUMBER_OR_BLANK.setResultsName('source_port'),
+      'tcpack': _INTEGER_OR_BLANK.setResultsName('tcp_ack'),
+      'tcpflags': _WORD_OR_BLANK.setResultsName('tcp_flags'),
+      'tcpsyn': _INTEGER_OR_BLANK.setResultsName('tcp_sequence_number'),
+      'tcpwin': _INTEGER_OR_BLANK.setResultsName('tcp_window_size'),
+      'time': _TIME.setResultsName('time')}
 
   _LINE_STRUCTURES = [
-      ('comment', _COMMENT_LINE),
-      ('logline', _LOG_LINE_1_5)]
+      ('comment_line', _COMMENT_LINE),
+      ('log_line', _LOG_LINE_1_5)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -167,14 +176,13 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     Args:
       structure (pyparsing.ParseResults): parsed log line.
     """
-    comment = structure[1]
+    comment = structure[0]
 
     if comment == 'Fields:':
       self._ParseFieldsMetadata(parser_mediator, structure)
 
-    if comment.startswith('Time Format'):
-      _, _, time_format = comment.partition(':')
-      self._use_local_time = 'local' in time_format.lower()
+    elif comment == 'Time Format:':
+      self._use_local_time = 'local' in structure[1].lower()
 
   def _ParseFieldsMetadata(self, parser_mediator, structure):
     """Parses the fields metadata and updates the log line definition to match.
@@ -195,16 +203,18 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
       field_structure = self._LOG_LINE_STRUCTURES.get(member, None)
       if not field_structure:
-        field_structure = self._WORD
-        parser_mediator.ProduceExtractionWarning(
-            'missing definition for field: {0:s} defaulting to WORD'.format(
-                member))
+        field_structure = self._WORD_OR_BLANK
+        parser_mediator.ProduceExtractionWarning((
+            'missing definition for field: {0:s} defaulting to '
+            'WORD_OR_BLANK').format(member))
 
       log_line_structure += field_structure
 
+    log_line_structure += self._END_OF_LINE
+
     line_structures = [
-        ('comment', self._COMMENT_LINE),
-        ('logline', log_line_structure)]
+        ('comment_line', self._COMMENT_LINE),
+        ('log_line', log_line_structure)]
     self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -258,10 +268,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'logline':
+    if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == 'comment':
+    elif key == 'comment_line':
       self._ParseCommentLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):

@@ -35,9 +35,6 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
   NAME = 'vsftpd'
   DATA_FORMAT = 'vsftpd log file'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _MONTH_DICT = {
       'jan': 1,
       'feb': 2,
@@ -63,20 +60,21 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  # Whitespace is suppressed by pyparsing.
-
   # Date and time values are formatted as: Mon Jun  6 18:43:28 2016
   _DATE_TIME = pyparsing.Group(
       _THREE_LETTERS + _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + _FOUR_DIGITS)
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
+      _FOUR_DIGITS)
+
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.restOfLine().setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text') +
+      _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

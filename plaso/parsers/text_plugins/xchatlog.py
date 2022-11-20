@@ -91,9 +91,6 @@ class XChatLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -116,12 +113,12 @@ class XChatLogTextPlugin(
       pyparsing.Keyword('Fri') |
       pyparsing.Keyword('Sat'))
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Header/footer pyparsing structures.
   # Sample: "**** BEGIN LOGGING AT Mon Dec 31 21:11:55 2011".
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
-
-  _HEADER_SIGNATURE = pyparsing.Suppress('****')
 
   # Header date and time values are formatted as: Mon Dec 31 21:11:55 2011
   _HEADER_DATE_TIME = pyparsing.Group(
@@ -135,9 +132,10 @@ class XChatLogTextPlugin(
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables))
 
-  _HEADER = (
-      _HEADER_SIGNATURE + _LOG_ACTION.setResultsName('log_action') +
-      _HEADER_DATE_TIME.setResultsName('date_time'))
+  _HEADER_LINE = (
+      pyparsing.Suppress('****') + _LOG_ACTION.setResultsName('log_action') +
+      _HEADER_DATE_TIME.setResultsName('date_time') +
+      _END_OF_LINE)
 
   # Body (nickname, text and/or service messages) pyparsing structures.
   # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
@@ -151,17 +149,16 @@ class XChatLogTextPlugin(
   _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
       'nickname')
 
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
-
-  _LOG_LINE = (
+  _CHAT_HISTORY_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Optional(_NICKNAME) +
-      pyparsing.restOfLine().setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-      ('header', _HEADER),
-      ('header_signature', _HEADER_SIGNATURE)]
+      ('chat_history_line', _CHAT_HISTORY_LINE),
+      ('header_line', _HEADER_LINE),
+      ('emtpy_line', _END_OF_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -240,18 +237,11 @@ class XChatLogTextPlugin(
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'logline':
+    if key == 'chat_history_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == 'header':
+    elif key == 'header_line':
       self._ParseHeader(parser_mediator, structure)
-
-    elif key == 'header_signature':
-      # If this key is matched (after others keys failed) we got a different
-      # localized header and we should stop parsing until a new good header
-      # is found.
-      parser_mediator.ProduceExtractionWarning('header in unsupported locale')
-      self._year = None
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -314,7 +304,7 @@ class XChatLogTextPlugin(
     line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._HEADER.parseString(line)
+      parsed_structure = self._HEADER_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 

@@ -43,9 +43,6 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   MAXIMUM_LINE_LENGTH = 4096
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -54,14 +51,18 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   # Date and time values are formatted as: YYYYMMDD hhmmss
   # For example: 20100720 183814
-  # Note that the whitespace is suppressed by pyparsing.
   _DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS + _TWO_DIGITS + _TWO_DIGITS +
-      _TWO_DIGITS + _TWO_DIGITS + _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS + _TWO_DIGITS + _TWO_DIGITS)
 
-  _LOG_LINE = (_DATE_TIME + pyparsing.restOfLine().setResultsName('text'))
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _LOG_LINE = (
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.restOfLine().setResultsName('text') +
+      _END_OF_LINE)
+
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
