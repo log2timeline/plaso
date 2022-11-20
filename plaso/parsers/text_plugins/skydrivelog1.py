@@ -43,9 +43,6 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -78,24 +75,29 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       pyparsing.SkipTo(')').setResultsName('log_level') +
       pyparsing.Suppress(')'))
 
-  _LINE = (
-      _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Literal(':') +
-      pyparsing.restOfLine().setResultsName('text'))
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = (
+      _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Suppress(':') +
+      pyparsing.restOfLine().setResultsName('text') +
+      _END_OF_LINE)
 
   # Sometimes the timestamped log line is followed by an empty line,
   # then by a file name plus other data and finally by another empty
-  # line. It could happen that a logline is split in two parts.
+  # line. It could happen that a log line is split in two parts.
   # These lines will not be discarded and an event will be generated
   # ad-hoc (see source), based on the last one if available.
   _NO_HEADER_SINGLE_LINE = (
       pyparsing.NotAny(_DATE_TIME) +
       pyparsing.Optional(pyparsing.Suppress('->')) +
-      pyparsing.restOfLine().setResultsName('text'))
+      pyparsing.restOfLine().setResultsName('text') +
+      _END_OF_LINE)
 
   # Define the available log line structures.
   _LINE_STRUCTURES = [
-      ('logline', _LINE),
-      ('no_header_single_line', _NO_HEADER_SINGLE_LINE)]
+      ('log_line', _LOG_LINE),
+      ('no_header_single_line', _NO_HEADER_SINGLE_LINE),
+      ('empty_line', _END_OF_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -105,7 +107,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     self._event_data = None
 
   def _ParseLogline(self, parser_mediator, structure):
-    """Parse a logline and store appropriate attributes.
+    """Parse a log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -136,7 +138,6 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    # TODO: change into a multi-line parser.
     if not self._event_data:
       logger.debug('SkyDrive, found isolated line with no previous events')
       return
@@ -165,7 +166,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'logline':
+    if key == 'log_line':
       self._ParseLogline(parser_mediator, structure)
 
     elif key == 'no_header_single_line':
@@ -224,7 +225,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._LINE.parseString(line)
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 

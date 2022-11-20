@@ -58,6 +58,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Date and time values are formatted as: 2015/11/22 17:59:28.110
   _DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('/') +
@@ -70,37 +72,35 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   # pylint: disable=line-too-long
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
-  _LOG_HEADER_START = (
-      pyparsing.Literal('[Device Install Log]') + pyparsing.lineEnd())
+  _LOG_HEADER_START =  pyparsing.Literal('[Device Install Log]') + _END_OF_LINE
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
-  _LOG_HEADER_END = (
-      pyparsing.Literal('[BeginLog]') + pyparsing.lineEnd())
+  _LOG_HEADER_END = pyparsing.Literal('[BeginLog]') + _END_OF_LINE
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   _SECTION_HEADER = (
       pyparsing.Suppress('>>>  [') +
       pyparsing.CharsNotIn(']').setResultsName('entry_type') +
-      pyparsing.Literal(']') + pyparsing.lineEnd())
+      pyparsing.Literal(']') + _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   _SECTION_HEADER_START = (
       pyparsing.Suppress('>>>  Section start') +
       _DATE_TIME.setResultsName('start_time') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END = (
       pyparsing.Suppress('<<<  Section end ') +
       _DATE_TIME.setResultsName('end_time') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END_EXIT_STATUS = (
       pyparsing.Suppress('<<<  [Exit status: ') +
       pyparsing.CharsNotIn(']').setResultsName('exit_status') +
       pyparsing.Literal(']') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
   _SECTION_BODY_LINE = (
@@ -109,7 +109,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('!!!  '),
           pyparsing.Literal('!    '),
           pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine).leaveWhitespace()
+      pyparsing.restOfLine()).leaveWhitespace()
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
   _NON_SECTION_LINE = (
@@ -119,7 +119,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('!!!  '),
           pyparsing.Literal('!    '),
           pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine).leaveWhitespace()
+      pyparsing.restOfLine()).leaveWhitespace()
 
   # These lines do not appear to be documented in the Microsoft documentation.
   _BOOT_SESSION_LINE = (

@@ -149,9 +149,6 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -160,33 +157,37 @@ class PopularityContestTextPlugin(interface.TextPlugin):
       if not chr(character).isspace())
 
   _MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
-  _PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName('package')
   _TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
 
-  _HEADER = (
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _HEADER_LINE = (
       pyparsing.Suppress('POPULARITY-CONTEST-') +
       _INTEGER.setResultsName('session') +
-      pyparsing.Suppress('TIME:') +
-      _INTEGER.setResultsName('timestamp') +
+      pyparsing.Suppress('TIME:') + _INTEGER.setResultsName('timestamp') +
       pyparsing.Suppress('ID:') +
       pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
-      pyparsing.restOfLine().setResultsName('details'))
+      pyparsing.restOfLine().setResultsName('details') +
+      _END_OF_LINE)
 
-  _FOOTER = (
+  _FOOTER_LINE = (
       pyparsing.Suppress('END-POPULARITY-CONTEST-') +
       _INTEGER.setResultsName('session') +
-      pyparsing.Suppress('TIME:') +
-      _INTEGER.setResultsName('timestamp'))
+      pyparsing.Suppress('TIME:') + _INTEGER.setResultsName('timestamp') +
+      _END_OF_LINE)
 
   _LOG_LINE = (
       _INTEGER.setResultsName('atime') +
       _INTEGER.setResultsName('ctime') +
-      (_PACKAGE + _TAG | _PACKAGE + _MRU + pyparsing.Optional(_TAG)))
+      pyparsing.Word(pyparsing.printables).setResultsName('package') +
+      (_TAG ^ (_MRU + _TAG) ^ _MRU) +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-      ('header', _HEADER),
-      ('footer', _FOOTER)]
+      ('log_line', _LOG_LINE),
+      ('header_line', _HEADER_LINE),
+      ('footer_line', _FOOTER_LINE),
+      ('empty_line', _END_OF_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -261,16 +262,16 @@ class PopularityContestTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'logline':
+    if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    else:
+    elif key in ('footer_line', 'header_line'):
       date_time = self._GetDateTimeValueFromStructure(
           structure, 'timestamp')
 
       session = self._GetValueFromStructure(structure, 'session')
 
-      if key == 'header':
+      if key == 'header_line':
         self._session_event_data = PopularityContestSessionEventData()
         self._session_event_data.session = session
         self._session_event_data.start_time = date_time
@@ -280,7 +281,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
         self._session_event_data.host_identifier = self._GetValueFromStructure(
             structure, 'id')
 
-      elif key == 'footer':
+      elif key == 'footer_line':
         # TODO: check session
 
         self._session_event_data.end_time = date_time
@@ -303,7 +304,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._HEADER.parseString(line)
+      parsed_structure = self._HEADER_LINE.parseString(line)
     except pyparsing.ParseException:
       parsed_structure = None
 

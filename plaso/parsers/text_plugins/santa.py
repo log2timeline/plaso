@@ -304,6 +304,8 @@ class SantaTextPlugin(interface.TextPlugin):
   _ARGS = (pyparsing.Suppress('args=') +
            pyparsing.restOfLine().setResultsName('args'))
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _EXECUTION_LINE = (
       pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
       _SANTAD_PREAMBLE + _EXEC_ACTION + _DECISION + _REASON +
