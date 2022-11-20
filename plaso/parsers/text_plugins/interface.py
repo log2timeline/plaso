@@ -75,9 +75,6 @@ class TextPlugin(plugins.BasePlugin):
   # aborting parsing.
   _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = False
-
   def __init__(self):
     """Initializes a parser."""
     super(TextPlugin, self).__init__()
@@ -202,14 +199,8 @@ class TextPlugin(plugins.BasePlugin):
       if parser_mediator.abort:
         break
 
-      if not self._SINGLE_LINE_MODE:
-        text = text_reader.lines
-      else:
-        text = text_reader.ReadLine()
-        if not text:
-          continue
-
-      index, line_structure, result_tuple = self._GetMatchingLineStructure(text)
+      index, line_structure, result_tuple = self._GetMatchingLineStructure(
+          text_reader.lines)
 
       if result_tuple:
         parsed_structure, _, end = result_tuple
@@ -224,15 +215,10 @@ class TextPlugin(plugins.BasePlugin):
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   line_structure.name, exception))
 
-        if not self._SINGLE_LINE_MODE:
-          text_reader.SkipAhead(end)
+        text_reader.SkipAhead(end)
 
       else:
-        if self._SINGLE_LINE_MODE:
-          line = text
-        else:
-          line = text_reader.ReadLine()
-
+        line = text_reader.ReadLine()
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
 
