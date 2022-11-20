@@ -60,11 +60,6 @@ class KnowledgeBase(object):
     """list[UserAccountArtifact]: user accounts of the current session."""
     return self._user_accounts.get(self._active_session, {}).values()
 
-  @property
-  def year(self):
-    """int: year of the current session."""
-    return self.GetValue('year', default_value=0)
-
   def AddAvailableTimeZone(self, time_zone):
     """Adds an available time zone.
 
