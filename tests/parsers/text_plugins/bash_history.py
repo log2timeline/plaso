@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- #
-"""Tests for the bash history parser."""
+"""Tests for the bash history text parser plugin."""
 
 import unittest
 
-from plaso.parsers import bash_history
+from plaso.parsers.text_plugins import bash_history
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class BashHistoryTest(test_lib.ParserTestCase):
-  """Test for the bash history parser."""
+class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
+  """Testd for the bash history text parser plugin."""
 
   def _TestEventsFromFile(
       self, storage_writer, expected_number_of_extraction_warnings=0):
@@ -44,24 +44,27 @@ class BashHistoryTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParsingExtractionDesync(self):
-    """Tests that the parser correctly handles a desynchronized file.
+  def testProcessWithDesynchronizedFile(self):
+    """Tests the Process function with a desynchronized file.
 
     A desynchronized file is one with half an event at the top. That is, it
     starts with a command line instead of a timestamp.
     """
-    parser = bash_history.BashHistoryParser()
-    storage_writer = self._ParseFile(['bash_history_desync'], parser)
+    plugin = bash_history.BashHistoryTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['bash_history_desync'], plugin)
+
     self._TestEventsFromFile(
         storage_writer, expected_number_of_extraction_warnings=1)
 
-  def testParsingExtractionSync(self):
-    """Tests that the parser correctly handles a synchronized file.
+  def testProcessWithSynchronizedFile(self):
+    """Tests the Process function with a synchronized file.
 
     A synchronized file is one that starts with a timestamp line.
     """
-    parser = bash_history.BashHistoryParser()
-    storage_writer = self._ParseFile(['bash_history'], parser)
+    plugin = bash_history.BashHistoryTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['bash_history'], plugin)
+
     self._TestEventsFromFile(storage_writer)
 
 
