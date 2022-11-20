@@ -73,9 +73,6 @@ class SnortFastLogTextPlugin(
   NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _VERIFICATION_REGEX = re.compile(''.join([
       # Date: "MM/DD" and "YY/MM/DD"
       r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*',
@@ -109,6 +106,7 @@ class SnortFastLogTextPlugin(
   # Date and time values are formatted as: MM/DD-hh:mm:ss.###### or
   # YY/MM/DD-hh:mm:ss.######
   # For example: 12/28-12:55:38.765402 or 10/05/10-10:08:59.667372
+
   _DATE_TIME = (
       (_DATE_YEAR_MONTH_DAY | _DATE_MONTH_DAY) + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
@@ -119,43 +117,64 @@ class SnortFastLogTextPlugin(
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
-  _MESSAGE = pyparsing.Combine(pyparsing.OneOrMore(
-      pyparsing.Word(pyparsing.printables, excludeChars='["') |
-      pyparsing.White(' ', max=2))).setResultsName('message')
+  _MESSAGE = (
+      pyparsing.Optional(pyparsing.Suppress('"')) +
+      pyparsing.Combine(pyparsing.OneOrMore(
+          pyparsing.Word(pyparsing.printables, excludeChars='["') |
+          pyparsing.White(' ', max=2))).setResultsName('message') +
+      pyparsing.Optional(pyparsing.Suppress('"')))
 
-  _RULE_IDENTIFIER = pyparsing.Combine(
-      _INTEGER + ':' + _INTEGER + ':' + _INTEGER).setResultsName(
-          'rule_identifier')
+  _RULE = (
+      pyparsing.Suppress('[') +
+      pyparsing.Combine(
+          _INTEGER + pyparsing.Literal(':') +
+          _INTEGER + pyparsing.Literal(':') +
+          _INTEGER).setResultsName('rule_identifier') +
+      pyparsing.Suppress(']'))
+
+  _CLASSIFICATION = (
+      pyparsing.Suppress('[Classification:') +
+      pyparsing.Regex('[^]]*').setResultsName('classification') +
+      pyparsing.Suppress(']'))
+
+  _PRIORITY = (
+      pyparsing.Suppress('[Priority:') +
+      _INTEGER.setResultsName('priority') +
+      pyparsing.Suppress(']'))
+
+  _SOURCE_IP_ADDRESS_AND_PORT = (
+      _IP_ADDRESS.setResultsName('source_ip_address') +
+      pyparsing.Suppress(':') +
+      _INTEGER.setResultsName('source_port'))
+
+  _DESTINATION_IP_ADDRESS_AND_PORT = (
+      _IP_ADDRESS.setResultsName('destination_ip_address') +
+      pyparsing.Suppress(':') +
+      _INTEGER.setResultsName('destination_port'))
+
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _FASTLOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Suppress('[**] [') + _RULE_IDENTIFIER +
-      pyparsing.Suppress('] ') + pyparsing.Optional(pyparsing.Suppress('"')) +
-      _MESSAGE + pyparsing.Optional(pyparsing.Suppress('"')) +
       pyparsing.Suppress('[**]') +
-      pyparsing.Optional(
-          pyparsing.Suppress(pyparsing.Literal('[Classification:')) +
-          pyparsing.Regex('[^]]*').setResultsName('classification') +
-          pyparsing.Suppress(']')) +
-      pyparsing.Optional(
-          pyparsing.Suppress('[Priority:') +
-          _INTEGER.setResultsName('priority') +
-          pyparsing.Suppress(']')) +
+      _RULE +
+      _MESSAGE +
+      pyparsing.Suppress('[**]') +
+      pyparsing.Optional(_CLASSIFICATION) +
+      pyparsing.Optional(_PRIORITY) +
       pyparsing.Suppress('{') +
       pyparsing.Word(pyparsing.alphanums).setResultsName('protocol') +
-      pyparsing.Suppress('}') +
-      _IP_ADDRESS.setResultsName('source_ip_address') +
-      pyparsing.Optional(
-          pyparsing.Suppress(':') +
-          _INTEGER.setResultsName('source_port')) +
-      pyparsing.Suppress('->') +
-      _IP_ADDRESS.setResultsName('destination_ip_address') +
-      pyparsing.Optional(
-          pyparsing.Suppress(':') +
-          _INTEGER.setResultsName('destination_port')) +
-      pyparsing.Suppress(pyparsing.lineEnd()))
+      pyparsing.Suppress('}') + (
+          _IP_ADDRESS.setResultsName('source_ip_address') ^
+          _SOURCE_IP_ADDRESS_AND_PORT) +
+      pyparsing.Suppress('->') + (
+          _IP_ADDRESS.setResultsName('destination_ip_address') ^
+          _DESTINATION_IP_ADDRESS_AND_PORT) +
+      _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('fastlog_line', _FASTLOG_LINE)]
+  _LINE_STRUCTURES = [
+      ('fastlog_line', _FASTLOG_LINE),
+      ('empty_line', _END_OF_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -175,29 +194,31 @@ class SnortFastLogTextPlugin(
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    if key == 'fastlog_line':
+      time_elements_structure = self._GetValueFromStructure(
+          structure, 'date_time')
 
-    event_data = SnortFastAlertEventData()
-    event_data.classification = self._GetValueFromStructure(
-        structure, 'classification')
-    event_data.destination_ip = self._GetValueFromStructure(
-        structure, 'destination_ip_address')
-    event_data.destination_port = self._GetValueFromStructure(
-        structure, 'destination_port')
-    event_data.last_written_time = self._ParseTimeElements(
-        time_elements_structure)
-    event_data.message = self._GetStringValueFromStructure(structure, 'message')
-    event_data.priority = self._GetValueFromStructure(structure, 'priority')
-    event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
-    event_data.source_ip = self._GetValueFromStructure(
-        structure, 'source_ip_address')
-    event_data.source_port = self._GetValueFromStructure(
-        structure, 'source_port')
-    event_data.rule_identifier = self._GetValueFromStructure(
-        structure, 'rule_identifier')
+      event_data = SnortFastAlertEventData()
+      event_data.classification = self._GetValueFromStructure(
+          structure, 'classification')
+      event_data.destination_ip = self._GetValueFromStructure(
+          structure, 'destination_ip_address')
+      event_data.destination_port = self._GetValueFromStructure(
+          structure, 'destination_port')
+      event_data.last_written_time = self._ParseTimeElements(
+          time_elements_structure)
+      event_data.message = self._GetStringValueFromStructure(
+          structure, 'message')
+      event_data.priority = self._GetValueFromStructure(structure, 'priority')
+      event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
+      event_data.source_ip = self._GetValueFromStructure(
+          structure, 'source_ip_address')
+      event_data.source_port = self._GetValueFromStructure(
+          structure, 'source_port')
+      event_data.rule_identifier = self._GetValueFromStructure(
+          structure, 'rule_identifier')
 
-    parser_mediator.ProduceEventData(event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
