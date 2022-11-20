@@ -118,11 +118,6 @@ class EncodedTextReader(object):
     lines (str): lines of text.
   """
 
-  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
-
-  # Maximum number of empty lines before we bail out.
-  _MAXIMUM_NUMBER_OF_EMPTY_LINES = 40
-
   def __init__(
       self, file_object, buffer_size=2048, encoding='utf-8',
       encoding_errors='strict'):
@@ -443,10 +438,10 @@ class PyparsingMultiLineTextParser(interface.FileObjectParser):
       try:
         text_reader.ReadLines()
         self._current_offset = text_reader.get_offset()
-      except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to read and decode log line at offset {0:d}'.format(
-                self._current_offset))
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to read and decode log line at offset {0:d} with error: '
+            '{1!s}').format(self._current_offset, exception))
         break
 
   def _ParseLineStructure(

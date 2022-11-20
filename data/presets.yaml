@@ -38,6 +38,11 @@ description: Preset for backwards compatibility of dpkg text parser plugin.
 parsers:
 - text/dpkg
 ---
+name: gdrive_synclog
+description: Preset for backwards compatibility of gdrive_synclog text parser plugin.
+parsers:
+- text/gdrive_synclog
+---
 name: ios
 description: Preset for iOS.
 parsers:
@@ -68,7 +73,6 @@ parsers:
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
 - filestat
-- gdrive_synclog
 - googlelog
 - olecf
 - pls_recall
@@ -80,6 +84,7 @@ parsers:
 - text/apt_history
 - text/bash_history
 - text/dpkg
+- text/gdrive_synclog
 - text/popularity_contest
 - text/selinux
 - text/vsftpd
@@ -111,7 +116,6 @@ parsers:
 - czip/oxml
 - filestat
 - fseventsd
-- gdrive_synclog
 - mac_keychain
 - olecf
 - plist
@@ -126,6 +130,7 @@ parsers:
 - sqlite/mac_knowledgec
 - sqlite/skype
 - text/bash_history
+- text/gdrive_synclog
 - text/mac_appfirewall_log
 - text/mac_securityd
 - text/mac_wifi
@@ -199,7 +204,6 @@ parsers:
 - bencode
 - czip/oxml
 - filestat
-- gdrive_synclog
 - lnk
 - mcafee_protection
 - olecf
@@ -210,6 +214,7 @@ parsers:
 - sqlite/google_drive
 - sqlite/skype
 - symantec_scanlog
+- text/gdrive_synclog
 - text/setupapi
 - text/skydrive_log_v1
 - text/winfirewall

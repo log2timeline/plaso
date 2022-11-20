@@ -16,7 +16,6 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
-from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
 from plaso.parsers import ios_lockdownd
 from plaso.parsers import ios_sysdiag_log

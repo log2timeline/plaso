@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Google Drive Sync log log parser."""
+"""Tests for the Google Drive Sync log log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import gdrive_synclog
+from plaso.parsers.text_plugins import gdrive_synclog
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
-  """Tests for the Google Drive Sync log parser."""
+class GoogleDriveSyncLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Google Drive Sync log text parser plugin."""
 
-  def testParseLog(self):
-    """Tests the Parse function."""
-    parser = gdrive_synclog.GoogleDriveSyncLogParser()
-    storage_writer = self._ParseFile(['sync_log.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['sync_log.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -44,10 +44,10 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testMacOSParseLog(self):
-    """Tests the Parse function on MacOS Google Drive sync log."""
-    parser = gdrive_synclog.GoogleDriveSyncLogParser()
-    storage_writer = self._ParseFile(['sync_log-osx.log'], parser)
+  def testProcessWithMacOSLog(self):
+    """Tests the Process function with a MacOS Google Drive sync log."""
+    plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['sync_log-osx.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
