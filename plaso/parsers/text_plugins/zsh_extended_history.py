@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for ZSH extended_history files.
+"""Text parser plugin for ZSH extended_history files.
 
 References:
   https://zsh.sourceforge.io/Doc/Release/Options.html#index-EXTENDEDHISTORY
@@ -13,8 +13,8 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class ZshHistoryEventData(events.EventData):
@@ -26,6 +26,7 @@ class ZshHistoryEventData(events.EventData):
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
   """
+
   DATA_TYPE = 'shell:zsh:history'
 
   def __init__(self):
@@ -36,8 +37,8 @@ class ZshHistoryEventData(events.EventData):
     self.last_written_time = None
 
 
-class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for ZSH extended history files"""
+class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
+  """Text parser plugin for ZSH extended history files."""
 
   NAME = 'zsh_extended_history'
   DATA_FORMAT = 'ZSH extended history file'
@@ -52,10 +53,12 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   _COMMAND = pyparsing.Regex(
       r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).setResultsName('command')
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _LINE_GRAMMAR = (
       pyparsing.Literal(':') + _INTEGER.setResultsName('timestamp') +
       pyparsing.Literal(':') + _INTEGER.setResultsName('elapsed_seconds') +
-      pyparsing.Literal(';') + _COMMAND + pyparsing.LineEnd())
+      pyparsing.Literal(';') + _COMMAND + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('command', _LINE_GRAMMAR)]
 
@@ -102,4 +105,4 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
 
 
-manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)
+text_parser.SingleLineTextParser.RegisterPlugin(ZshExtendedHistoryTextPlugin)
