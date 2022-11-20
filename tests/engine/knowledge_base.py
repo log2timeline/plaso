@@ -103,12 +103,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(knowledge_base_object.user_accounts), 1)
 
-  def testYearProperty(self):
-    """Tests the year property."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    self.assertEqual(knowledge_base_object.year, 0)
-
   def testAddUserAccount(self):
     """Tests the AddUserAccount function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
