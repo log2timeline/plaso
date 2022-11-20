@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
-"""Tests for the Zsh extended_history parser."""
+"""Tests for the ZSH extended history text parser plugin."""
 
 import unittest
 
@@ -9,17 +9,17 @@ from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
 from plaso.parsers import text_parser
-from plaso.parsers import zsh_extended_history
+from plaso.parsers.text_plugins import zsh_extended_history
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class ZshExtendedHistoryTest(test_lib.ParserTestCase):
-  """Tests for the Zsh extended_history parser."""
+class ZshExtendedHistoryTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the ZSH extended history text parser plugin."""
 
   def testCheckRequiredFormat(self):
     """Tests for the CheckRequiredFormat method."""
-    parser = zsh_extended_history.ZshExtendedHistoryParser()
+    plugin = zsh_extended_history.ZshExtendedHistoryTextPlugin()
 
     resolver_context = dfvfs_context.Context()
     test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
@@ -31,7 +31,7 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = parser.CheckRequiredFormat(None, text_reader)
+    result = plugin.CheckRequiredFormat(None, text_reader)
     self.assertTrue(result)
 
     file_object = fake_file_io.FakeFile(
@@ -41,13 +41,14 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = parser.CheckRequiredFormat(None, text_reader)
+    result = plugin.CheckRequiredFormat(None, text_reader)
     self.assertFalse(result)
 
-  def testParse(self):
-    """Tests for the Parse method."""
-    parser = zsh_extended_history.ZshExtendedHistoryParser()
-    storage_writer = self._ParseFile(['zsh_extended_history.txt'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = zsh_extended_history.ZshExtendedHistoryTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['zsh_extended_history.txt'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

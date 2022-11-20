@@ -80,9 +80,9 @@ parsers:
 - text/vsftpd
 - text/xchatlog
 - text/xchatscrollback
+- text/zsh_extended_history
 - utmp
 - webhist
-- zsh_extended_history
 ---
 name: mac_appfirewall_log
 description: Preset for backwards compatibility of mac_appfirewall_log text parser plugin.
@@ -124,10 +124,10 @@ parsers:
 - text/mac_appfirewall_log
 - text/mac_securityd
 - text/mac_wifi
+- text/zsh_extended_history
 - syslog
 - utmpx
 - webhist
-- zsh_extended_history
 ---
 name: mactime
 description: Backwards compatibility for mactime parser.
@@ -266,3 +266,8 @@ name: xchatscrollback
 description: Preset for backwards compatibility of xchatscrollback text parser plugin.
 parsers:
 - text/xchatscrollback
+---
+name: zsh_extended_history
+description: Preset for backwards compatibility of zsh_extended_history text parser plugin.
+parsers:
+- text/zsh_extended_history
