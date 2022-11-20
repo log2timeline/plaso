@@ -164,6 +164,11 @@ description: Preset for backwards compatibility of skydrive_log_old text parser 
 parsers:
 - text/skydrive_log_v1
 ---
+name: viminfo
+description: Preset for backwards compatibility of viminfo text parser plugin.
+parsers:
+- text/viminfo
+---
 name: vsftpd
 description: Preset for backwards compatibility of vsftpd text parser plugin.
 parsers:

@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Viminfo parser."""
+"""Tests for the Viminfo text parser plugin."""
 
 import unittest
 
-from plaso.parsers import viminfo
+from plaso.parsers.text_plugins import viminfo
 from plaso.containers import warnings
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class ViminfoParserTest(test_lib.ParserTestCase):
-  """Tests for the Viminfo parser."""
+class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the Viminfo text parser plugin."""
 
   # pylint: disable=protected-access
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = viminfo.VimInfoParser()
-    storage_writer = self._ParseFile(['.viminfo'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = viminfo.VimInfoTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['.viminfo'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -95,13 +96,12 @@ class ViminfoParserTest(test_lib.ParserTestCase):
     extraction_warnings = list(storage_writer.GetAttributeContainers(
         warnings.ExtractionWarning.CONTAINER_TYPE))
 
-    expected_message = 'unable to parse log line: \'> ~\\\\_vimrc\''
+    expected_message = 'unable to parse log line: 64 "> ~\\_vimrc"'
 
     self.assertEqual(extraction_warnings[0].message, expected_message)
 
     expected_message = (
-        'unable to parse log line: '
-        '\'> C:\\\\Program Files (x86)\\\\Vim\\\\.vimrc\'')
+        'unable to parse log line: 68 "> C:\\Program Files (x86)\\Vim\\.vimrc"')
 
     self.assertEqual(extraction_warnings[3].message, expected_message)
 
