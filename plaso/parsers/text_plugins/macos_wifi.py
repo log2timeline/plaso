@@ -89,24 +89,29 @@ class MacOSWiFiLogTextPlugin(
       _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
       _THREE_DIGITS.setResultsName('milliseconds'))
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Log line with a known function name.
-  _MAC_WIFI_KNOWN_FUNCTION_LINE = (
+  _KNOWN_FUNCTION_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') + _AGENT +
       pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName('function') +
       pyparsing.Literal(':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text') +
+      _END_OF_LINE)
 
   # Log line with an unknown function name.
-  _MAC_WIFI_LINE = (
+  _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') + pyparsing.NotAny(
           _AGENT +
           pyparsing.oneOf(_KNOWN_FUNCTIONS) +
           pyparsing.Literal(':')) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text') +
+      _END_OF_LINE)
 
-  _MAC_WIFI_HEADER = (
+  _HEADER_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Literal('***Starting Up***').setResultsName('text'))
+      pyparsing.Literal('***Starting Up***').setResultsName('text') +
+      _END_OF_LINE)
 
   _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
       _THREE_LETTERS.setResultsName('month') +
@@ -115,21 +120,21 @@ class MacOSWiFiLogTextPlugin(
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds'))
 
-  _MAC_WIFI_TURNED_OVER_HEADER = (
+  _TURNED_OVER_HEADER_LOG_LINE = (
       _DATE_TIME_TURNED_OVER_HEADER.setResultsName('date_time') +
       pyparsing.Combine(
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Word(pyparsing.printables) +
-          pyparsing.Literal('logfile turned over') +
-          pyparsing.LineEnd(),
-          joinString=' ', adjacent=False).setResultsName('text'))
+          pyparsing.Literal('logfile turned over'),
+          joinString=' ', adjacent=False).setResultsName('text') +
+      _END_OF_LINE)
 
   # Define the available log line structures.
   _LINE_STRUCTURES = [
-      ('header', _MAC_WIFI_HEADER),
-      ('turned_over_header', _MAC_WIFI_TURNED_OVER_HEADER),
-      ('known_function_logline', _MAC_WIFI_KNOWN_FUNCTION_LINE),
-      ('logline', _MAC_WIFI_LINE)]
+      ('header', _HEADER_LOG_LINE),
+      ('turned_over_header', _TURNED_OVER_HEADER_LOG_LINE),
+      ('known_function_logline', _KNOWN_FUNCTION_LOG_LINE),
+      ('logline', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -275,21 +280,18 @@ class MacOSWiFiLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       key = 'header'
-      parsed_structure = self._MAC_WIFI_HEADER.parseString(line)
+      parsed_structure = self._HEADER_LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       parsed_structure = None
 
     if not parsed_structure:
       try:
         key = 'turned_over_header'
-        parsed_structure = self._MAC_WIFI_TURNED_OVER_HEADER.parseString(line)
+        parsed_structure = self._TURNED_OVER_HEADER_LOG_LINE.parseString(line)
       except pyparsing.ParseException:
         parsed_structure = None
 

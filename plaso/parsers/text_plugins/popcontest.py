@@ -149,16 +149,18 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
 
-  _ASCII_PRINTABLES = pyparsing.printables
   _UNICODE_PRINTABLES = ''.join(
       chr(character) for character in range(65536)
       if not chr(character).isspace())
 
   _MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
-  _PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')
+  _PACKAGE = pyparsing.Word(pyparsing.printables).setResultsName('package')
   _TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
 
   _HEADER = (
@@ -298,10 +300,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self._HEADER.parseString(line)

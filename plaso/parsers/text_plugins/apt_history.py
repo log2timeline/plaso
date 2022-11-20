@@ -66,15 +66,17 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Start-Date: 2019-07-10  16:38:12
-  _RECORD_START = (
+  _RECORD_START_LINES = (
       # APT History logs may start with empty lines
-      pyparsing.ZeroOrMore(pyparsing.lineEnd()) +
+      pyparsing.ZeroOrMore(_END_OF_LINE) +
       pyparsing.Literal('Start-Date:') +
       _APTHISTORY_DATE_TIME.setResultsName('start_date') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
-  _RECORD_BODY = (
+  _RECORD_BODY_LINE = (
       pyparsing.MatchFirst([
           pyparsing.Literal('Commandline:'),
           pyparsing.Literal('Downgrade:'),
@@ -84,18 +86,19 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('Remove:'),
           pyparsing.Literal('Requested-By:'),
           pyparsing.Literal('Upgrade:')]) +
-      pyparsing.restOfLine())
+      pyparsing.restOfLine() +
+      _END_OF_LINE)
 
   # End-Date: 2019-07-10  16:38:10
-  _RECORD_END = (
+  _RECORD_END_LINES = (
       pyparsing.Literal('End-Date:') +
       _APTHISTORY_DATE_TIME.setResultsName('end_date') +
-      pyparsing.OneOrMore(pyparsing.lineEnd()))
+      pyparsing.OneOrMore(_END_OF_LINE))
 
   _LINE_STRUCTURES = [
-      ('record_start', _RECORD_START),
-      ('record_body', _RECORD_BODY),
-      ('record_end', _RECORD_END)]
+      ('record_start', _RECORD_START_LINES),
+      ('record_body', _RECORD_BODY_LINE),
+      ('record_end', _RECORD_END_LINES)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -238,13 +241,10 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._RECORD_START.parseString(line)
+      parsed_structure = self._RECORD_START_LINES.parseString(line)
     except pyparsing.ParseException:
       return False
 

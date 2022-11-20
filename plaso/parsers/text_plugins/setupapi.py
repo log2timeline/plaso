@@ -46,6 +46,9 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -243,10 +246,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
       parsed_structure = self._LOG_HEADER_START.parseString(line)

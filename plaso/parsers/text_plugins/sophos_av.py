@@ -43,6 +43,9 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   MAXIMUM_LINE_LENGTH = 4096
 
+  # TODO: remove after refactoring.
+  _SINGLE_LINE_MODE = True
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -137,10 +140,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     # There should be spaces at position 9 and 16.
     if len(line) < 16 or line[8] != ' ' or line[15] != ' ':

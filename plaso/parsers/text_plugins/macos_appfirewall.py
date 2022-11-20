@@ -67,7 +67,9 @@ class MacOSAppFirewallTextPlugin(
       _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       _TWO_DIGITS.setResultsName('seconds'))
 
-  _FIREWALL_LINE = (
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
       pyparsing.Word(pyparsing.printables).setResultsName('agent') +
@@ -76,20 +78,22 @@ class MacOSAppFirewallTextPlugin(
       pyparsing.Literal('>:').suppress() +
       pyparsing.CharsNotIn(':').setResultsName('process_name') +
       pyparsing.Literal(':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('action'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('action') +
+      _END_OF_LINE)
 
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
 
-  _REPEATED_LINE = (
+  _REPEATED_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Literal('---').suppress() +
       pyparsing.CharsNotIn('---').setResultsName('process_name') +
-      pyparsing.Literal('---').suppress())
+      pyparsing.Literal('---').suppress() +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _FIREWALL_LINE),
-      ('repeated', _REPEATED_LINE)]
+      ('logline', _LOG_LINE),
+      ('repeated', _REPEATED_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -186,13 +190,10 @@ class MacOSAppFirewallTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._FIREWALL_LINE.parseString(line)
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 

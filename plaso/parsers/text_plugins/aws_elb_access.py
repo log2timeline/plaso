@@ -235,8 +235,19 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS)
 
+  _REQUEST = pyparsing.quotedString.setResultsName(
+      'request').setParseAction(pyparsing.removeQuotes)
+
+  _USER_AGENT = pyparsing.quotedString.setResultsName(
+      'user_agent').setParseAction(pyparsing.removeQuotes)
+
+  _ALPN_CLIENT_PREFERENCE_LIST = pyparsing.quotedString.setResultsName(
+      'alpn_client_preference_list').setParseAction(pyparsing.removeQuotes)
+
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # A log line is defined as in the AWS ELB documentation
-  _LOG_LINE_APPLICATION = (
+  _APPLICATION_LOG_LINE = (
       _WORD.setResultsName('request_type') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('response_time') +
       _WORD.setResultsName('resource_identifier') +
@@ -249,10 +260,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
       _UNSIGNED_INTEGER.setResultsName('received_bytes') +
       _UNSIGNED_INTEGER.setResultsName('sent_bytes') +
-      pyparsing.quotedString.setResultsName('request').setParseAction(
-          pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('user_agent').setParseAction(
-          pyparsing.removeQuotes) +
+      _REQUEST +
+      _USER_AGENT +
       _WORD.setResultsName('ssl_cipher') +
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('destination_group_arn') +
@@ -278,9 +287,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.quotedString.setResultsName(
           'classification').setParseAction(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'classification_reason').setParseAction(pyparsing.removeQuotes))
+          'classification_reason').setParseAction(pyparsing.removeQuotes) +
+      _END_OF_LINE)
 
-  _LOG_LINE_NETWORK = (
+  _NETWORK_LOG_LINE = (
       _WORD.setResultsName('request_type') +
       _WORD.setResultsName('version') +
       _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE.setResultsName(
@@ -302,12 +312,10 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _WORD.setResultsName('domain_name') +
       _WORD.setResultsName('alpn_front_end_protocol') +
       _WORD.setResultsName('alpn_back_end_protocol') +
-      (pyparsing.quotedString.setResultsName(
-          'alpn_client_preference_list').setParseAction(
-              pyparsing.removeQuotes) | pyparsing.Literal('-')) |
-          pyparsing.Literal('-'))
+      (_ALPN_CLIENT_PREFERENCE_LIST | pyparsing.Literal('-')) +
+      _END_OF_LINE)
 
-  _LOG_LINE_CLASSIC = (
+  _CLASSIC_LOG_LINE = (
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('response_time') +
       _WORD.setResultsName('resource_identifier') +
       _SOURCE_IP_ADDRESS_AND_PORT.setResultsName('source_ip_port') +
@@ -319,17 +327,16 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
       _SIGNED_INTEGER.setResultsName('received_bytes') +
       _SIGNED_INTEGER.setResultsName('sent_bytes') +
-      pyparsing.quotedString.setResultsName('request').setParseAction(
-          pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName('user_agent').setParseAction(
-          pyparsing.removeQuotes) +
+      _REQUEST +
+      _USER_AGENT +
       _WORD.setResultsName('ssl_cipher') +
-      _WORD.setResultsName('ssl_protocol'))
+      _WORD.setResultsName('ssl_protocol') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('elb_application_accesslog', _LOG_LINE_APPLICATION),
-      ('elb_network_accesslog', _LOG_LINE_NETWORK),
-      ('elb_classic_accesslog', _LOG_LINE_CLASSIC)]
+      ('elb_application_accesslog', _APPLICATION_LOG_LINE),
+      ('elb_network_accesslog', _NETWORK_LOG_LINE),
+      ('elb_classic_accesslog', _CLASSIC_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -557,10 +564,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     _, _, result_tuple = self._GetMatchingLineStructure(line)
     if not result_tuple:

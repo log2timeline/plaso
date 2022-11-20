@@ -136,10 +136,12 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
   _REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 
-  # Default (pre 7.11) format:
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  # Default (pre 7.11) format log line:
   # %t %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i %{User-Agent}i
 
-  _PRE_711_FORMAT = (
+  _PRE_711_FORMAT_LOG_LINE = (
       _DATE_TIME +
       _USER_NAME +
       _THREAD_NAME +
@@ -152,13 +154,14 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER.setResultsName('referer') +
-      _USER_AGENT)
+      _USER_AGENT +
+      _END_OF_LINE)
 
-  # Post 7.11 format:
+  # Post 7.11 format log line:
   # %t %{X-Forwarded-For}i %{X-AUSERNAME}o %I %h %r %s %Dms %b %{Referer}i
   # %{User-Agent}i
 
-  _POST_711_FORMAT = (
+  _POST_711_FORMAT_LOG_LINE = (
       _DATE_TIME +
       _IP_ADDRESS.setResultsName('forwarded_for') +
       _USER_NAME +
@@ -172,11 +175,12 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
       _REFERER.setResultsName('referer') +
-      _USER_AGENT)
+      _USER_AGENT +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('pre_711_format', _PRE_711_FORMAT),
-      ('post_711_format', _POST_711_FORMAT)]
+      ('pre_711_format', _PRE_711_FORMAT_LOG_LINE),
+      ('post_711_format', _POST_711_FORMAT_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -279,10 +283,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     _, _, result_tuple = self._GetMatchingLineStructure(line)
     if not result_tuple:

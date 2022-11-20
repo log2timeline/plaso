@@ -111,8 +111,8 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
     test_warning = test_warnings[0]
 
     expected_message = (
-        'unable to parse log line: "46.118.127.106 - - [20/May/2015:12:05:17 '
-        '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589')
+        'unable to parse log line: 8 "46.118.127.106 - - [20/May/2015:12:05:17 '
+        '+0000] "GET /scripts/grok-py-test/co..."')
     self.assertEqual(test_warning.message, expected_message)
     self.assertEqual(test_warning.parser_chain, 'text/apache_access')
 

@@ -122,6 +122,8 @@ class AndroidLogcatTextPlugin(
       _INTEGER.setResultsName('user_identifier') +
       _PID_AND_THREAD_IDENTIFIER)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _THREADTIME_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Optional(_TIME_ZONE_OFFSET).setResultsName('time_zone_offset') +
@@ -131,7 +133,8 @@ class AndroidLogcatTextPlugin(
       pyparsing.Optional(pyparsing.Word(
           pyparsing.printables + ' ', excludeChars=':').setResultsName('tag')) +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine.setResultsName('message'))
+      pyparsing.restOfLine.setResultsName('message') +
+      _END_OF_LINE)
 
   _TIME_LINE = (
       _DATE_TIME.setResultsName('date_time') +
@@ -147,11 +150,13 @@ class AndroidLogcatTextPlugin(
            pyparsing.Suppress(':') + _INTEGER.setResultsName('pid'))]) +
       pyparsing.Suppress(')') +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine.setResultsName('message'))
+      pyparsing.restOfLine.setResultsName('message') +
+      _END_OF_LINE)
 
   _BEGINNING_LINE = (
       pyparsing.Suppress('--------- beginning of ') +
-      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']))
+      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']) +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
       ('beginning_line', _BEGINNING_LINE),
@@ -271,10 +276,7 @@ class AndroidLogcatTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     _, line_structure, result_tuple = self._GetMatchingLineStructure(line)
     if not result_tuple:

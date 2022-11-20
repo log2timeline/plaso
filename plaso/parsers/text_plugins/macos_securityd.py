@@ -76,7 +76,9 @@ class MacOSSecuritydLogTextPlugin(
   _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
       text_parser.PyParseIntCast)
 
-  _SECURITYD_LINE = (
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.CharsNotIn('[').setResultsName('sender') +
       pyparsing.Literal('[').suppress() +
@@ -93,17 +95,19 @@ class MacOSSecuritydLogTextPlugin(
       pyparsing.Literal('}').suppress() +
       pyparsing.Optional(pyparsing.CharsNotIn(']:').setResultsName(
           'caller')) + pyparsing.Literal(']:').suppress() +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message') +
+      _END_OF_LINE)
 
-  _REPEATED_LINE = (
+  _REPEATED_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Literal('--- last message repeated').suppress() +
+      pyparsing.Suppress('--- last message repeated') +
       _INTEGER.setResultsName('times') +
-      pyparsing.Literal('time ---').suppress())
+      pyparsing.Suppress('time ---') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _SECURITYD_LINE),
-      ('repeated', _REPEATED_LINE)]
+      ('logline', _LOG_LINE),
+      ('repeated', _REPEATED_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -214,13 +218,10 @@ class MacOSSecuritydLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      line = text_reader.ReadLineOfText()
-    except UnicodeDecodeError:
-      return False
+    line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._SECURITYD_LINE.parseString(line)
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       parsed_structure = None
 
