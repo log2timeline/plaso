@@ -138,6 +138,20 @@ class TextPlugin(plugins.BasePlugin):
 
     return None, None, None
 
+  def _GetStringValueFromStructure(self, structure, name):
+    """Retrieves a string value from a Pyparsing structure.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+
+    Returns:
+      str: string value or None if not available or empty.
+    """
+    string_value = self._GetValueFromStructure(
+        structure, name, default_value='')
+    return string_value.strip() or None
+
   def _GetValueFromStructure(self, structure, name, default_value=None):
     """Retrieves a token value from a Pyparsing structure.
 

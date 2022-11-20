@@ -73,12 +73,13 @@ class MacOSAppFirewallTextPlugin(
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
       pyparsing.Word(pyparsing.printables).setResultsName('agent') +
-      pyparsing.Literal('<').suppress() +
+      pyparsing.Suppress('<') +
       pyparsing.CharsNotIn('>').setResultsName('status') +
-      pyparsing.Literal('>:').suppress() +
+      pyparsing.Suppress('>:') +
       pyparsing.CharsNotIn(':').setResultsName('process_name') +
       pyparsing.Literal(':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('action') +
+      # TODO: replace by restOfLine()
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('action') +
       _END_OF_LINE)
 
   # Repeated line.
@@ -86,9 +87,9 @@ class MacOSAppFirewallTextPlugin(
 
   _REPEATED_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Literal('---').suppress() +
+      pyparsing.Suppress('---') +
       pyparsing.CharsNotIn('---').setResultsName('process_name') +
-      pyparsing.Literal('---').suppress() +
+      pyparsing.Suppress('---') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
@@ -128,19 +129,14 @@ class MacOSAppFirewallTextPlugin(
     else:
       structure = self._repeated_structure
 
-    process_name = self._GetValueFromStructure(
-        structure, 'process_name', default_value='')
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    process_name = process_name.strip()
-
     event_data = MacOSAppFirewallLogEventData()
     event_data.action = self._GetValueFromStructure(structure, 'action')
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
     event_data.agent = self._GetValueFromStructure(structure, 'agent')
     event_data.computer_name = self._GetValueFromStructure(
         structure, 'computer_name')
-    event_data.process_name = process_name or None
+    event_data.process_name = self._GetStringValueFromStructure(
+        structure, 'process_name')
     event_data.status = self._GetValueFromStructure(structure, 'status')
 
     parser_mediator.ProduceEventData(event_data)

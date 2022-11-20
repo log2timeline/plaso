@@ -203,10 +203,6 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    user_agent = self._GetValueFromStructure(
-        structure, 'user_agent', default_value='')
-    user_agent = user_agent.strip()
-
     event_data = ConfluenceAccessEventData()
     event_data.http_request_method = self._GetValueFromStructure(
         structure, 'http_method')
@@ -214,7 +210,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
         structure, 'referer')
     event_data.http_request_uri = self._GetValueFromStructure(
         structure, 'request_url')
-    event_data.http_request_user_agent = user_agent
+    event_data.http_request_user_agent = self._GetStringValueFromStructure(
+        structure, 'user_agent')
     event_data.http_response_code = self._GetValueFromStructure(
         structure, 'response_code')
     event_data.http_response_bytes = self._GetValueFromStructure(

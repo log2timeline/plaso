@@ -96,7 +96,7 @@ class MacOSWiFiLogTextPlugin(
       _DATE_TIME.setResultsName('date_time') + _AGENT +
       pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName('function') +
       pyparsing.Literal(':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text') +
+      pyparsing.restOfLine().setResultsName('text') +
       _END_OF_LINE)
 
   # Log line with an unknown function name.
@@ -105,7 +105,7 @@ class MacOSWiFiLogTextPlugin(
           _AGENT +
           pyparsing.oneOf(_KNOWN_FUNCTIONS) +
           pyparsing.Literal(':')) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text') +
+      pyparsing.restOfLine().setResultsName('text') +
       _END_OF_LINE)
 
   _HEADER_LOG_LINE = (
@@ -200,17 +200,12 @@ class MacOSWiFiLogTextPlugin(
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    text = self._GetValueFromStructure(structure, 'text', default_value='')
-    # Due to the use of pyparsing.lineEnd pyparsing structure contains
-    # whitespaces that need to be removed.
-    text = text.strip()
-
     event_data = MacOSWiFiLogEventData()
     event_data.added_time = self._ParseTimeElements(
         key, time_elements_structure)
     event_data.agent = self._GetValueFromStructure(structure, 'agent')
     event_data.function = self._GetValueFromStructure(structure, 'function')
-    event_data.text = text or None
+    event_data.text = self._GetStringValueFromStructure(structure, 'text')
 
     if key == 'known_function_logline':
       event_data.action = self._GetAction(event_data.function, event_data.text)

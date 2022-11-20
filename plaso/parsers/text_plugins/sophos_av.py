@@ -59,8 +59,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
       _FOUR_DIGITS + _TWO_DIGITS + _TWO_DIGITS +
       _TWO_DIGITS + _TWO_DIGITS + _TWO_DIGITS).setResultsName('date_time')
 
-  _LOG_LINE = (
-      _DATE_TIME + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+  _LOG_LINE = (_DATE_TIME + pyparsing.restOfLine().setResultsName('text'))
 
   _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
@@ -87,7 +86,7 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
     event_data = SophosAVLogEventData()
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
-    event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.text = self._GetStringValueFromStructure(structure, 'text')
 
     parser_mediator.ProduceEventData(event_data)
 

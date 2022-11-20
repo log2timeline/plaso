@@ -201,8 +201,6 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _SKIP_TO_SEPARATOR = pyparsing.SkipTo('|')
 
-  _SKIP_TO_END = pyparsing.SkipTo(pyparsing.lineEnd)
-
   # Date and time values are formatted as: 2018-08-19T03:09:13.120Z
   _DATE_AND_TIME = (
       _FOUR_DIGITS + pyparsing.Suppress('-') +
@@ -235,18 +233,20 @@ class SantaTextPlugin(interface.TextPlugin):
            _SKIP_TO_SEPARATOR.setResultsName('user') + _SEPARATOR)
 
   _GID = (pyparsing.Suppress('gid=') +
-          (_SKIP_TO_SEPARATOR | _SKIP_TO_END).setResultsName('gid') +
+          (_SKIP_TO_SEPARATOR | pyparsing.restOfLine()).setResultsName('gid') +
           pyparsing.Optional(_SEPARATOR))
 
-  _GROUP = (pyparsing.Suppress('group=') +
-            (_SKIP_TO_SEPARATOR | _SKIP_TO_END).setResultsName('group') +
+  _GROUP = (pyparsing.Suppress('group=') + (
+                _SKIP_TO_SEPARATOR |
+                pyparsing.restOfLine()).setResultsName('group') +
             pyparsing.Optional(_SEPARATOR))
 
   _VOLUME = (pyparsing.Suppress('volume=') +
              _SKIP_TO_SEPARATOR.setResultsName('volume') + _SEPARATOR)
 
-  _BSD_NAME = (pyparsing.Suppress('bsdname=') +
-               (_SKIP_TO_SEPARATOR | _SKIP_TO_END).setResultsName('bsd_name') +
+  _BSD_NAME = (pyparsing.Suppress('bsdname=') + (
+                   _SKIP_TO_SEPARATOR |
+                   pyparsing.restOfLine()).setResultsName('bsd_name') +
                pyparsing.Optional(_SEPARATOR))
 
   _EXIT_ACTION = (pyparsing.Suppress('action=') +
@@ -298,10 +298,11 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _PATH = (
       pyparsing.Suppress('path=') +
-      (_SKIP_TO_SEPARATOR | _SKIP_TO_END).setResultsName('path') +
+      (_SKIP_TO_SEPARATOR | pyparsing.restOfLine()).setResultsName('path') +
       pyparsing.Optional(_SEPARATOR))
 
-  _ARGS = (pyparsing.Suppress('args=') + _SKIP_TO_END.setResultsName('args'))
+  _ARGS = (pyparsing.Suppress('args=') +
+           pyparsing.restOfLine().setResultsName('args'))
 
   _EXECUTION_LINE = (
       pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +

@@ -164,18 +164,18 @@ class PopularityContestTextPlugin(interface.TextPlugin):
   _TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
 
   _HEADER = (
-      pyparsing.Literal('POPULARITY-CONTEST-').suppress() +
+      pyparsing.Suppress('POPULARITY-CONTEST-') +
       _INTEGER.setResultsName('session') +
-      pyparsing.Literal('TIME:').suppress() +
+      pyparsing.Suppress('TIME:') +
       _INTEGER.setResultsName('timestamp') +
-      pyparsing.Literal('ID:').suppress() +
+      pyparsing.Suppress('ID:') +
       pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
+      pyparsing.restOfLine().setResultsName('details'))
 
   _FOOTER = (
-      pyparsing.Literal('END-POPULARITY-CONTEST-').suppress() +
+      pyparsing.Suppress('END-POPULARITY-CONTEST-') +
       _INTEGER.setResultsName('session') +
-      pyparsing.Literal('TIME:').suppress() +
+      pyparsing.Suppress('TIME:') +
       _INTEGER.setResultsName('timestamp'))
 
   _LOG_LINE = (
@@ -275,7 +275,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
         self._session_event_data.session = session
         self._session_event_data.start_time = date_time
 
-        self._session_event_data.details = self._GetValueFromStructure(
+        self._session_event_data.details = self._GetStringValueFromStructure(
             structure, 'details')
         self._session_event_data.host_identifier = self._GetValueFromStructure(
             structure, 'id')

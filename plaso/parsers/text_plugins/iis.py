@@ -132,15 +132,14 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   _FIELDS_METADATA = (
       pyparsing.Literal('Fields:') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('fields'))
+      pyparsing.restOfLine().setResultsName('fields'))
+
+  _METADATA = (
+      _DATE_TIME_METADATA | _FIELDS_METADATA | pyparsing.restOfLine())
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _COMMENT_LOG_LINE = (
-      pyparsing.Suppress('#') + (
-          _DATE_TIME_METADATA | _FIELDS_METADATA |
-          pyparsing.SkipTo(pyparsing.LineEnd())) +
-      _END_OF_LINE)
+  _COMMENT_LOG_LINE = (pyparsing.Suppress('#') + _METADATA + _END_OF_LINE)
 
   # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status

@@ -100,7 +100,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _PORT_NUMBER = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       text_parser.ConvertTokenToInteger) | _BLANK
 
-  _COMMENT_LINE = pyparsing.Literal('#') + pyparsing.SkipTo(pyparsing.LineEnd())
+  _COMMENT_LINE = pyparsing.Literal('#') + pyparsing.restOfLine()
 
   # Version 1.5 fields:
   # date time action protocol src-ip dst-ip src-port dst-port size tcpflags

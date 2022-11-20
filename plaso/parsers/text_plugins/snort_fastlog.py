@@ -178,10 +178,6 @@ class SnortFastLogTextPlugin(
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    message = self._GetValueFromStructure(
-        structure, 'message', default_value='')
-    message = message.strip()
-
     event_data = SnortFastAlertEventData()
     event_data.classification = self._GetValueFromStructure(
         structure, 'classification')
@@ -191,7 +187,7 @@ class SnortFastLogTextPlugin(
         structure, 'destination_port')
     event_data.last_written_time = self._ParseTimeElements(
         time_elements_structure)
-    event_data.message = message or None
+    event_data.message = self._GetStringValueFromStructure(structure, 'message')
     event_data.priority = self._GetValueFromStructure(structure, 'priority')
     event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
     event_data.source_ip = self._GetValueFromStructure(

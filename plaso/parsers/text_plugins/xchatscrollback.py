@@ -73,21 +73,18 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.ConvertTokenToInteger)
 
-  # Define how a log line should look like.
-  LOG_LINE = (
-      pyparsing.Suppress('T') +
-      _INTEGER.setResultsName('timestamp') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('raw_text'))
-  LOG_LINE.parseWithTabs()
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = (
+      pyparsing.Suppress('T') + _INTEGER.setResultsName('timestamp') +
+      pyparsing.restOfLine().setResultsName('raw_text') +
+      _END_OF_LINE)
 
   # Define the available log line structures.
-  _LINE_STRUCTURES = [('logline', LOG_LINE)]
+  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -97,7 +94,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       pyparsing.Word('\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
 
   # Define the structure for parsing <text> and get <nickname> and <text>
-  _MESSAGE_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text')
+  _MESSAGE_TEXT = pyparsing.restOfLine().setResultsName('text')
   _MESSAGE = pyparsing.Optional(
       pyparsing.Suppress('<') +
       pyparsing.SkipTo(pyparsing.Literal('>')).setResultsName('nickname') +
@@ -178,7 +175,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self.LOG_LINE.parseString(line)
+      parsed_structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 
