@@ -10,7 +10,6 @@ from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
-from plaso.lib import errors
 from plaso.parsers import text_parser
 
 from tests.parsers import test_lib
@@ -174,19 +173,6 @@ class PyparsingMultiLineTextParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
-
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is another file.\nWith tw\xba lines.\n'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-
-    with self.assertRaises(errors.WrongParser):
-      test_parser.ParseFileObject(parser_mediator, file_object)
 
 
 if __name__ == '__main__':
