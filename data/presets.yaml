@@ -21,6 +21,11 @@ description: Preset for backwards compatibility of apt_history text parser plugi
 parsers:
 - text/apt_history
 ---
+name: bash_history
+description: Preset for backwards compatibility of bash_history text parser plugin.
+parsers:
+- text/bash_history
+---
 name: dockerjson
 description: Preset for backwards compatibility of Docker JSON parser.
 parsers:
@@ -57,7 +62,6 @@ description: Preset for Linux.
 operating_systems:
 - {family: Linux}
 parsers:
-- bash_history
 - bencode
 - czip/oxml
 - jsonl/docker_container_config
@@ -74,6 +78,7 @@ parsers:
 - syslog
 - systemd_journal
 - text/apt_history
+- text/bash_history
 - text/dpkg
 - text/popularity_contest
 - text/selinux
@@ -100,7 +105,6 @@ operating_systems:
 - {family: MacOS}
 parsers:
 - asl_log
-- bash_history
 - bencode
 - bsm_log
 - cups_ipp
@@ -121,6 +125,7 @@ parsers:
 - sqlite/mackeeper_cache
 - sqlite/mac_knowledgec
 - sqlite/skype
+- text/bash_history
 - text/mac_appfirewall_log
 - text/mac_securityd
 - text/mac_wifi

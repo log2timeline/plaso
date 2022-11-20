@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for bash history files."""
+"""Text parser plugin for bash history files."""
 
 import re
 
@@ -9,8 +9,8 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class BashHistoryEventData(events.EventData):
@@ -31,8 +31,8 @@ class BashHistoryEventData(events.EventData):
     self.written_time = None
 
 
-class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses events from Bash history files."""
+class BashHistoryTextPlugin(interface.TextPlugin):
+  """Text parser plugin for bash history files."""
 
   NAME = 'bash_history'
 
@@ -47,13 +47,15 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   _COMMAND = pyparsing.Regex(
       r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName('command')
 
-  _LINE_GRAMMAR = _TIMESTAMP + _COMMAND + pyparsing.lineEnd()
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE = _TIMESTAMP + _COMMAND + _END_OF_LINE
 
   _VERIFICATION_GRAMMAR = (
       pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
       pyparsing.NotAny(pyparsing.pythonStyleComment))
 
-  _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -98,4 +100,4 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(BashHistoryParser)
+text_parser.SingleLineTextParser.RegisterPlugin(BashHistoryTextPlugin)
