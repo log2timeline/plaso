@@ -198,6 +198,8 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _SKIP_TO_SEPARATOR = pyparsing.SkipTo('|')
 
+  _NOT_SEPARATOR = pyparsing.CharsNotIn('|\n')
+
   # Date and time values are formatted as: 2018-08-19T03:09:13.120Z
   _DATE_AND_TIME = (
       _FOUR_DIGITS + pyparsing.Suppress('-') +
@@ -220,126 +222,90 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _SANTAD_PREAMBLE = pyparsing.Suppress('I santad:')
 
-  _PID = pyparsing.Suppress('pid=') + _SKIP_TO_SEPARATOR.setResultsName('pid')
+  _CERT_CN = (pyparsing.Suppress('|cert_cn=') +
+              _NOT_SEPARATOR.setResultsName('cert_cn'))
 
-  _PID_VERSION = (pyparsing.Suppress('pidversion=') +
-                 _SKIP_TO_SEPARATOR.setResultsName('pidversion'))
+  _CERT_SHA256 = (pyparsing.Suppress('|cert_sha256=') +
+                  _NOT_SEPARATOR.setResultsName('cert_sha256'))
 
-  _PPID = (pyparsing.Suppress('ppid=') +
-           _SKIP_TO_SEPARATOR.setResultsName('ppid'))
+  _DECISION = (pyparsing.Suppress('|decision=') +
+               _NOT_SEPARATOR.setResultsName('decision'))
 
-  _UID = pyparsing.Suppress('uid=') + _SKIP_TO_SEPARATOR.setResultsName('uid')
+  _EXPLAIN = (pyparsing.Suppress('|explain=') +
+              _NOT_SEPARATOR.setResultsName('explain'))
 
-  _USER = (pyparsing.Suppress('user=') +
-           _SKIP_TO_SEPARATOR.setResultsName('user'))
+  _GID = (pyparsing.Suppress('|gid=') +
+          _NOT_SEPARATOR.setResultsName('gid'))
 
-  _GID = (pyparsing.Suppress('gid=') +
-          pyparsing.restOfLine().setResultsName('gid'))
+  _GROUP = (pyparsing.Suppress('|group=') +
+            _NOT_SEPARATOR.setResultsName('group'))
 
-  _EXIT_ACTION = (pyparsing.Suppress('action=') +
-                  pyparsing.Literal('EXIT').setResultsName('action') +
-                  _SEPARATOR)
+  _NEW_PATH = (pyparsing.Suppress('|newpath=') +
+               _NOT_SEPARATOR.setResultsName('newpath'))
 
-  _PROCESS_EXIT_LINE = (
-      _DATE_TIME_BLOCK +
-      _SANTAD_PREAMBLE + _EXIT_ACTION +
-      _PID + _SEPARATOR +
-      _PID_VERSION + _SEPARATOR +
-      _PPID + _SEPARATOR +
-      _UID + _SEPARATOR +
-      _GID + _END_OF_LINE)
+  _QUARANTINE_URL = (pyparsing.Suppress('|quarantine_url=') +
+                     _NOT_SEPARATOR.setResultsName('quarantine_url'))
 
-  _EXEC_ACTION = (pyparsing.Suppress('action=') +
-                  pyparsing.Literal('EXEC').setResultsName('action'))
+  _PID = (pyparsing.Suppress('|pid=') +
+          _NOT_SEPARATOR.setResultsName('pid'))
 
-  _DECISION = (pyparsing.Suppress('decision=') +
-               _SKIP_TO_SEPARATOR.setResultsName('decision'))
+  _PID_VERSION = (pyparsing.Suppress('|pidversion=') +
+                 _NOT_SEPARATOR.setResultsName('pidversion'))
 
-  _REASON = (pyparsing.Suppress('reason=') +
-             _SKIP_TO_SEPARATOR.setResultsName('reason'))
+  _PPID = (pyparsing.Suppress('|ppid=') +
+           _NOT_SEPARATOR.setResultsName('ppid'))
 
-  _EXPLAIN = (pyparsing.Suppress('explain=') +
-              _SKIP_TO_SEPARATOR.setResultsName('explain'))
+  _PROCESS = (pyparsing.Suppress('|process=') +
+              _NOT_SEPARATOR.setResultsName('process'))
 
-  _SHA256 = (pyparsing.Suppress('sha256=') +
-             _SKIP_TO_SEPARATOR.setResultsName('sha256'))
+  _PROCESS_PATH = (pyparsing.Suppress('|processpath=') +
+                   _NOT_SEPARATOR.setResultsName('processpath'))
 
-  _CERT_SHA256 = (pyparsing.Suppress('cert_sha256=') +
-                  _SKIP_TO_SEPARATOR.setResultsName('cert_sha256'))
+  _REASON = (pyparsing.Suppress('|reason=') +
+             _NOT_SEPARATOR.setResultsName('reason'))
 
-  _CERT_CN = (pyparsing.Suppress('cert_cn=') +
-              _SKIP_TO_SEPARATOR.setResultsName('cert_cn'))
+  _SHA256 = (pyparsing.Suppress('|sha256=') +
+             _NOT_SEPARATOR.setResultsName('sha256'))
 
-  _QUARANTINE_URL = (pyparsing.Suppress('quarantine_url=') +
-                     _SKIP_TO_SEPARATOR.setResultsName('quarantine_url'))
+  _UID = (pyparsing.Suppress('|uid=') +
+          _NOT_SEPARATOR.setResultsName('uid'))
 
-  _GID = pyparsing.Suppress('gid=') + _SKIP_TO_SEPARATOR.setResultsName('gid')
+  _USER = (pyparsing.Suppress('|user=') +
+           _NOT_SEPARATOR.setResultsName('user'))
 
-  _GROUP = (pyparsing.Suppress('group=') +
-            _SKIP_TO_SEPARATOR.setResultsName('group'))
+  _MODE = (pyparsing.Suppress('|mode=') +
+           _NOT_SEPARATOR.setResultsName('mode'))
 
-  _MODE = (pyparsing.Suppress('mode=') +
-           _SKIP_TO_SEPARATOR.setResultsName('mode'))
+  _PATH = (pyparsing.Suppress('|path=') +
+           _NOT_SEPARATOR.setResultsName('path'))
 
-  _PATH = (
-      pyparsing.Suppress('path=') +
-      (_SKIP_TO_SEPARATOR | pyparsing.restOfLine()).setResultsName('path') +
-      pyparsing.Optional(_SEPARATOR))
-
-  _ARGS = (pyparsing.Suppress('args=') +
-           pyparsing.restOfLine().setResultsName('args'))
+  _ARGS = (pyparsing.Suppress('|args=') +
+           _NOT_SEPARATOR.setResultsName('args'))
 
   _EXECUTION_LINE = (
-      _DATE_TIME_BLOCK +
-      _SANTAD_PREAMBLE +
-      _EXEC_ACTION + _SEPARATOR +
-      _DECISION + _SEPARATOR +
-      _REASON + _SEPARATOR +
-      pyparsing.Optional(_EXPLAIN + _SEPARATOR) +
-      _SHA256 + _SEPARATOR +
-      pyparsing.Optional(_CERT_SHA256 + _SEPARATOR) +
-      pyparsing.Optional(_CERT_CN + _SEPARATOR) +
-      pyparsing.Optional(_QUARANTINE_URL + _SEPARATOR) +
-      _PID + _SEPARATOR +
-      pyparsing.Optional(_PID_VERSION + _SEPARATOR) +
-      _PPID + _SEPARATOR +
-      _UID + _SEPARATOR +
-      _USER + _SEPARATOR +
-      _GID + _SEPARATOR +
-      _GROUP + _SEPARATOR +
-      _MODE + _SEPARATOR +
-      _PATH +
-      pyparsing.Optional(_ARGS) +
-      _END_OF_LINE)
-
-  _NEW_PATH = (pyparsing.Suppress('newpath=') +
-               _SKIP_TO_SEPARATOR.setResultsName('newpath'))
-
-  _PROCESS = (pyparsing.Suppress('process=') +
-              _SKIP_TO_SEPARATOR.setResultsName('process'))
-
-  _PROCESS_PATH = (pyparsing.Suppress('processpath=') +
-                   _SKIP_TO_SEPARATOR.setResultsName('processpath'))
-
-  _GROUP = (pyparsing.Suppress('group=') + (
-            pyparsing.restOfLine()).setResultsName('group'))
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('EXEC').setResultsName('action') +
+      _DECISION + _REASON + pyparsing.Optional(_EXPLAIN) + _SHA256 +
+      pyparsing.Optional(_CERT_SHA256) + pyparsing.Optional(_CERT_CN) +
+      pyparsing.Optional(_QUARANTINE_URL) + _PID +
+      pyparsing.Optional(_PID_VERSION) + _PPID + _UID + _USER + _GID + _GROUP +
+      _MODE + _PATH + pyparsing.Optional(_ARGS) + _END_OF_LINE)
 
   _FILE_OPERATION_LINE = (
       _DATE_TIME_BLOCK +
       _SANTAD_PREAMBLE + pyparsing.Suppress('action=') + (
-          pyparsing.Literal('WRITE') ^ pyparsing.Literal('RENAME') ^
-          pyparsing.Literal('DELETE') ^ pyparsing.Literal('LINK')
-      ).setResultsName('action') + _SEPARATOR + _PATH +
-      pyparsing.Optional(_NEW_PATH + _SEPARATOR) +
-      _PID + _SEPARATOR +
-      pyparsing.Optional(_PID_VERSION + _SEPARATOR) +
-      _PPID + _SEPARATOR +
-      _PROCESS + _SEPARATOR +
-      _PROCESS_PATH + _SEPARATOR +
-      _UID + _SEPARATOR +
-      _USER + _SEPARATOR +
-      _GID + _SEPARATOR +
-      _GROUP + _END_OF_LINE)
+          pyparsing.Literal('DELETE') ^
+          pyparsing.Literal('LINK') ^
+          pyparsing.Literal('RENAME') ^
+          pyparsing.Literal('WRITE')).setResultsName('action') +
+      _PATH + pyparsing.Optional(_NEW_PATH) + _PID +
+      pyparsing.Optional(_PID_VERSION) + _PPID + _PROCESS + _PROCESS_PATH +
+      _UID + _USER + _GID + _GROUP + _END_OF_LINE)
+
+  _PROCESS_EXIT_LINE = (
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('EXIT').setResultsName('action') +
+      _PID + _PID_VERSION + _PPID + _UID + _GID + _END_OF_LINE)
 
   _DISKAPPEAR_ACTION = (
       pyparsing.Suppress('action=') +
