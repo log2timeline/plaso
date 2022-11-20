@@ -141,7 +141,7 @@ class LocateDatabaseParser(
           directory_header.seconds * definitions.NANOSECONDS_PER_SECOND)
 
       try:
-        contents, data_size = self._ParseDirectoryEntry(
+        entries, data_size = self._ParseDirectoryEntry(
             file_object, file_offset)
 
         file_offset += data_size
@@ -154,7 +154,7 @@ class LocateDatabaseParser(
 
       event_data = LocateDatabaseEvent()
       event_data.path = directory_header.path
-      event_data.entries = contents or None
+      event_data.entries = entries or None
       event_data.written_time = posix_time.PosixTimeInNanoseconds(
           timestamp=timestamp)
 

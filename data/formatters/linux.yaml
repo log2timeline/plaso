@@ -27,10 +27,10 @@ type: 'basic'
 data_type: 'linux:locate_database:entry'
 message:
 - 'Folder Path: {path}'
-- 'Contents: {contents}'
+- 'Entries: {entries}'
 short_message:
 - '{paths}'
-- '{contents}'
+- '{entries}'
 short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
 ---
