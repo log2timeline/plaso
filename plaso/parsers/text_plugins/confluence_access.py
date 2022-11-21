@@ -114,7 +114,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   _THREAD_NAME = (
       pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name'))
 
-  _USER_AGENT = pyparsing.restOfLine.setResultsName('user_agent')
+  _USER_AGENT = pyparsing.restOfLine().setResultsName('user_agent')
 
   _USER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '@' + pyparsing.alphanums + '.') |

@@ -133,7 +133,7 @@ class AndroidLogcatTextPlugin(
       pyparsing.Optional(pyparsing.Word(
           pyparsing.printables + ' ', excludeChars=':').setResultsName('tag')) +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine.setResultsName('message') +
+      pyparsing.restOfLine().setResultsName('message') +
       _END_OF_LINE)
 
   _TIME_LINE = (
@@ -150,7 +150,7 @@ class AndroidLogcatTextPlugin(
            pyparsing.Suppress(':') + _INTEGER.setResultsName('pid'))]) +
       pyparsing.Suppress(')') +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine.setResultsName('message') +
+      pyparsing.restOfLine().setResultsName('message') +
       _END_OF_LINE)
 
   _BEGINNING_LINE = (
