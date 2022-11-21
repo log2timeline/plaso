@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for Google log parser"""
+"""Tests for Google log text parser plugin."""
 
 import unittest
 
-from plaso.lib import errors
-from plaso.parsers import google_logging
+from plaso.parsers.text_plugins import google_logging
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class GooglelogParserTest(test_lib.ParserTestCase):
-  """Tests for the Google logging parser"""
+class GooglelogParserTest(test_lib.TextPluginTestCase):
+  """Tests for the Google logging text parser plugin."""
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = google_logging.GoogleLogParser()
-    storage_writer = self._ParseFile(['googlelog_test.INFO'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = google_logging.GoogleLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['googlelog_test.INFO'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -52,17 +52,6 @@ class GooglelogParserTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
-
-  def testRaisesUnableToParseForInvalidFiles(self):
-    """Test that attempting to parse an invalid file should raise an error."""
-    parser = google_logging.GoogleLogParser()
-
-    invalid_file_name = 'apache_access.log'
-    invalid_file_path = self._GetTestFilePath([invalid_file_name])
-    self._SkipIfPathNotExists(invalid_file_path)
-
-    with self.assertRaises(errors.WrongParser):
-      self._ParseFile([invalid_file_name], parser)
 
 
 if __name__ == '__main__':

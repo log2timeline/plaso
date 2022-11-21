@@ -9,6 +9,7 @@ from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import confluence_access
 from plaso.parsers.text_plugins import dpkg
 from plaso.parsers.text_plugins import gdrive_synclog
+from plaso.parsers.text_plugins import google_logging
 from plaso.parsers.text_plugins import iis
 from plaso.parsers.text_plugins import ios_lockdownd
 from plaso.parsers.text_plugins import ios_logd

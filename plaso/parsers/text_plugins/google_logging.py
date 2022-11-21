@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Google-formatted log files.
+"""Text parser plugin for Google-formatted log files.
 
 Note that this format is also used by Kubernetes.
 
@@ -17,8 +17,8 @@ import pyparsing
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.lib import yearless_helper
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class GoogleLogEventData(events.EventData):
@@ -55,10 +55,9 @@ class GoogleLogEventData(events.EventData):
     self.thread_identifier = None
 
 
-class GoogleLogParser(
-    text_parser.PyparsingMultiLineTextParser,
-    yearless_helper.YearLessLogFormatHelper):
-  """Parser for Google-formatted log files."""
+class GoogleLogTextPlugin(
+    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
+  """Text parser plugin for Google-formatted log files."""
 
   NAME = 'googlelog'
   DATA_FORMAT = 'Google-formatted log file'
@@ -77,6 +76,8 @@ class GoogleLogParser(
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
       text_parser.PyParseIntCast)
 
+  # Date and time values are formatted as: MMDD hh:mm:ss.######
+  # For example: 1231 23:59:59.000001
   _DATE_TIME = (
       _TWO_DIGITS + _ONE_OR_TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
@@ -86,6 +87,8 @@ class GoogleLogParser(
 
   _PRIORITY = pyparsing.oneOf(['E', 'F', 'I', 'W']).setResultsName('priority')
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _LOG_LINE = (
       _PRIORITY + _DATE_TIME +
       pyparsing.Word(pyparsing.nums).setResultsName('thread_identifier') +
@@ -94,46 +97,50 @@ class GoogleLogParser(
       pyparsing.Word(pyparsing.nums).setResultsName('line_number') +
       pyparsing.Suppress('] ') +
       pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).setResultsName(
-          'message') + pyparsing.lineEnd())
+          'message') + _END_OF_LINE)
 
-  _GREETING = (
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('/') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('/') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') +
+  # Header date and time values are formatted as: 2019/07/18 06:07:40
+  _HEADER_DATE_TIME = (
+      _FOUR_DIGITS + pyparsing.Suppress('/') +
+      _TWO_DIGITS + pyparsing.Suppress('/') + _ONE_OR_TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
+
+  _HEADER_LINE = (
+      pyparsing.Suppress('Log file created at:') +
+      _HEADER_DATE_TIME.setResultsName('date_time') +
       pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL) +
-      pyparsing.lineEnd())
-
-  _GREETING_START = 'Log file created at: '
+      _END_OF_LINE)
 
   # Order is important here, as the structures are checked against each line
   # sequentially, so we put the most common first, and the most expensive
   # last.
   _LINE_STRUCTURES = [
-      ('log_entry', _LOG_LINE),
-      ('greeting_start', pyparsing.Literal(_GREETING_START)),
-      ('greeting', _GREETING)]
+      ('log_line', _LOG_LINE),
+      ('header_line', _HEADER_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _ParseGreeting(self, parser_mediator, structure):
-    """Extract useful information from the logfile greeting.
+  def _ParseHeaderLine(self, parser_mediator, structure):
+    """Extract useful information from the header line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): elements parsed from the file.
     """
-    year = self._GetValueFromStructure(structure, 'year')
-    month = self._GetValueFromStructure(structure, 'month')
+    # TODO: create log file event data with creation time.
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    year, month, _, _, _, _ = time_elements_structure
 
     try:
       self._SetMonthAndYear(month, year)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'invalid greeting date time value.')
+          'invalid header date time value.')
 
   def _ParseLine(self, parser_mediator, structure):
     """Process a single log line into a GoogleLogEvent.
@@ -175,10 +182,12 @@ class GoogleLogParser(
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'greeting':
-      self._ParseGreeting(parser_mediator, structure)
+    # TODO: parse log line format from header line.
 
-    elif key == 'log_entry':
+    if key == 'header_line':
+      self._ParseHeaderLine(parser_mediator, structure)
+
+    elif key == 'log_line':
       try:
         self._ParseLine(parser_mediator, structure)
       except errors.ParseError as exception:
@@ -233,7 +242,23 @@ class GoogleLogParser(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if not text_reader.lines.startswith(self._GREETING_START):
+    try:
+      parsed_structure = self._HEADER_LINE.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
+    try:
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except (TypeError, ValueError):
       return False
 
     self._SetEstimatedYear(parser_mediator)
@@ -241,4 +266,4 @@ class GoogleLogParser(
     return True
 
 
-manager.ParsersManager.RegisterParser(GoogleLogParser)
+text_parser.SingleLineTextParser.RegisterPlugin(GoogleLogTextPlugin)
