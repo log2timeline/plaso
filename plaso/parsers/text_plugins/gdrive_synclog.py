@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Google Drive Sync log files."""
+"""Text parser plugin for Google Drive Sync log files."""
 
 import pyparsing
 
@@ -8,8 +8,8 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class GoogleDriveSyncLogEventData(events.EventData):
@@ -40,18 +40,15 @@ class GoogleDriveSyncLogEventData(events.EventData):
     self.thread = None
 
 
-class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses events from Google Drive Sync log files."""
+class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for Google Drive Sync log files."""
 
   NAME = 'gdrive_synclog'
   DATA_FORMAT = 'Google Drive Sync log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
-  # Increase the buffer size, as log messages are often many lines of Python
-  # object dumps or similar. The default is too small for this and results in
-  # premature end of string matching on multi-line log entries.
-  BUFFER_SIZE = 16384
+  MAXIMUM_LINE_LENGTH = 16384
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
@@ -85,65 +82,35 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Word(pyparsing.nums) + pyparsing.Literal(':') +
       pyparsing.Word(pyparsing.printables))
 
-  # Multiline entry end marker, matched from right to left.
-  _GDS_ENTRY_END = pyparsing.StringEnd() | _DATE_TIME
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _GDS_LINE = (
+  _START_LOG_LINE = (
       _DATE_TIME +
       pyparsing.Word(pyparsing.alphas).setResultsName('level') +
       _PROCESS_IDENTIFIER +
       # TODO: consider stripping thread identifier/cleaning up thread name?
       _THREAD.setResultsName('thread') +
       pyparsing.Word(pyparsing.printables).setResultsName('source_code') +
-      pyparsing.SkipTo(_GDS_ENTRY_END).setResultsName('message') +
-      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
+      pyparsing.restOfLine().setResultsName('message') +
+      _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('logline', _GDS_LINE)]
+  # Note that this approach is slow.
+  _SUCCESSIVE_LOG_LINE = (
+      pyparsing.NotAny(_START_LOG_LINE) + pyparsing.restOfLine() + _END_OF_LINE)
+
+  _LINE_STRUCTURES = [
+      ('start_log_line', _START_LOG_LINE),
+      ('successive_log_line', _SUCCESSIVE_LOG_LINE),
+      ('empty_line', _END_OF_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _BuildDateTime(self, time_elements_structure):
-    """Builds time elements from a PostgreSQL log time stamp.
-
-    Args:
-      time_elements_structure (pyparsing.ParseResults): structure of tokens
-          derived from a PostgreSQL log time stamp.
-
-    Returns:
-      dfdatetime.TimeElements: date and time extracted from the structure or
-          None if the structure does not represent a valid string.
-    """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exist.
-    try:
-      (year, month, day_of_month, hours, minutes, seconds, milliseconds,
-       time_zone_group) = time_elements_structure
-
-      time_zone_sign, time_zone_hours, time_zone_minutes = time_zone_group
-
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, milliseconds)
-
-      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
-      if time_zone_sign == '-':
-        time_zone_offset *= -1
-
-      return dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple,
-          time_zone_offset=time_zone_offset)
-
-    except (TypeError, ValueError):
-      return None
-
   def _ParseLogline(self, parser_mediator, structure):
-    """Parses a logline record structure and produces events.
+    """Parses a log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
@@ -156,7 +123,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       message = message.replace('\n', ' ').strip(' ')
 
     event_data = GoogleDriveSyncLogEventData()
-    event_data.added_time = self._BuildDateTime(time_elements_structure)
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
     event_data.level = self._GetValueFromStructure(structure, 'level')
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
@@ -183,7 +150,47 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    self._ParseLogline(parser_mediator, structure)
+    if key == 'start_log_line':
+      self._ParseLogline(parser_mediator, structure)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+    # overriding __getattr__ with a function that returns an empty string when
+    # named token does not exist.
+    try:
+      (year, month, day_of_month, hours, minutes, seconds, milliseconds,
+       time_zone_group) = time_elements_structure
+
+      time_zone_sign, time_zone_hours, time_zone_minutes = time_zone_group
+
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds, milliseconds)
+
+      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
+      if time_zone_sign == '-':
+        time_zone_offset *= -1
+
+      return dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple,
+          time_zone_offset=time_zone_offset)
+
+    except (TypeError, ValueError):
+      return None
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -197,22 +204,20 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._GDS_LINE.parseString(text_reader.lines)
+      structure = self._START_LOG_LINE.parseString(text_reader.lines)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
       return False
 
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    date_time = self._BuildDateTime(time_elements_structure)
-
-    if not date_time:
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(GoogleDriveSyncLogParser)
+text_parser.SingleLineTextParser.RegisterPlugin(GoogleDriveSyncLogTextPlugin)

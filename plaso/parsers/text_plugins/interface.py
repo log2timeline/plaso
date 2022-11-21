@@ -190,10 +190,10 @@ class TextPlugin(plugins.BasePlugin):
     try:
       text_reader.ReadLines()
       self._current_offset = text_reader.get_offset()
-    except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to read and decode log line at offset {0:d}'.format(
-              self._current_offset))
+    except UnicodeDecodeError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'unable to read and decode log line at offset {0:d} with error: '
+          '{1!s}').format(self._current_offset, exception))
       return
 
     consecutive_line_failures = 0
@@ -251,10 +251,10 @@ class TextPlugin(plugins.BasePlugin):
       try:
         text_reader.ReadLines()
         self._current_offset = text_reader.get_offset()
-      except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to read and decode log line at offset {0:d}'.format(
-                self._current_offset))
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to read and decode log line at offset {0:d} with error: '
+            '{1!s}').format(self._current_offset, exception))
         break
 
   def _ParseLineStructure(
