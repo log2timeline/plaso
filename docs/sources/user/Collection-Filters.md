@@ -30,7 +30,7 @@ sources:
 conditions: [os_major_version < 6]
 labels: [Logs]
 supported_os: [Windows]
-urls: ['https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)']
+urls: ['https://forensics.wiki/windows_event_log_(evt)']
 ```
 
 'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\winevt\Logs\SysEvent.evt'.

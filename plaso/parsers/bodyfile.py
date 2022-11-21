@@ -6,7 +6,7 @@ MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
 0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
 
 More information about the format specifications can be read here:
-  https://forensicswiki.xyz/wiki/index.php?title=Bodyfile
+  https://forensics.wiki/bodyfile
 """
 
 import re

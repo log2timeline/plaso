@@ -14,12 +14,12 @@ json | Output events to JSON format.
 json_line | Output events to JSON line format.
 kml | Output events with geography data into a KML format.
 l2tcsv | Output events to log2timeline.pl legacy CSV format, with 17 fixed fields. Also see: [l2tcsv output format](Output-format-l2tcsv.html)
-l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed field. | delimited output. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
+l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed field. | delimited output. Also see: [TLN](https://forensics.wiki/tln).
 null | Do not output events.
 rawpy | Output events in "raw" (or native) Python format.
 opensearch | Saves the events into an OpenSearch database. Requires opensearchpy.
 opensearch_ts | Saves the events into an OpenSearch database for use with Timesketch. Requires opensearchpy
-tln | Output events to TLN format, with 5 fixed fields. Also see: [TLN](https://forensicswiki.xyz/wiki/index.php?title=TLN).
+tln | Output events to TLN format, with 5 fixed fields. Also see: [TLN](https://forensics.wiki/tln).
 xlsx | Output events to an Excel Spreadsheet (XLSX).
 
 ### Dynamic output module fields
