@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for iOS lockdown daemon log files (ios_lockdownd.log)."""
+"""Text parser plugin for iOS sysdiag log files."""
 
 import pyparsing
 
@@ -7,65 +7,104 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
-class IOSLockdowndLogData(events.EventData):
-  """iOS lockdown daemon (lockdownd) log event data.
+class IOSSysdiagLogEventData(events.EventData):
+  """iOS sysdiagnose log event data.
 
   Attributes:
-    body (str): body of the log entry.
-    process_identifier (int): identifier of the process making the request to
-        lockdownd.
+    body (str): body of the event line.
+    originating_call (str): call that created the entry.
+    process_identifier (str): process_identifier.
+    severity (str): severity of the message.
     written_time (dfdatetime.DateTimeValues): date and time the log entry was
         written.
   """
 
-  DATA_TYPE = 'ios:lockdownd_log:entry'
+  DATA_TYPE = 'ios:sysdiag_log:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSLockdowndLogData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSSysdiagLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
+    self.originating_call = None
     self.process_identifier = None
+    self.severity = None
     self.written_time = None
 
 
-class IOSLockdowndLogParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for iOS lockdown daemon log files (ios_lockdownd.log)."""
+class IOSSysdiagLogTextPlugin(interface.TextPlugin):
+  """Text parser plugin for iOS mobile installation log files."""
 
-  NAME = 'ios_lockdownd'
-  DATA_FORMAT = 'iOS lockdown daemon log'
+  NAME = 'ios_sysdiag_log'
+  DATA_FORMAT = 'iOS sysdiag log'
+
+  _MONTH_DICT = {
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'may': 5,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12}
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      text_parser.PyParseIntCast)
+
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
-  # Date and time values are formatted as: MM/DD/YY hh:mm:ss:######
-  # For example: 10/13/21 07:57:42.865446
+  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
+  # Date and time values are formatted as: Wed Aug 11 05:51:02 2021
   _DATE_TIME = (
-      _TWO_DIGITS + pyparsing.Suppress('/') +
-      _TWO_DIGITS + pyparsing.Suppress('/') + _TWO_DIGITS +
+      _THREE_LETTERS.suppress() + _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      pyparsing.Word('.,', exact=1).suppress() + _SIX_DIGITS).setResultsName(
-          'date_time')
+      _FOUR_DIGITS).setResultsName('date_time')
 
-  _PID = (pyparsing.Suppress('pid=') +
-          _INTEGER.setResultsName('process_identifier'))
+  _ELEMENT_NUMBER = (
+      pyparsing.Suppress('[') + _INTEGER.setResultsName('process_identifier') +
+      pyparsing.Suppress(']'))
+
+  _ELEMENT_SEVERITY = (
+      pyparsing.Suppress('<') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('severity') +
+      pyparsing.Suppress('>'))
+
+  _ELEMENT_ID = (
+      pyparsing.Suppress('(') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
+      pyparsing.Suppress(')'))
+
+  _ELEMENT_ORIGINATOR = pyparsing.SkipTo(
+      pyparsing.Literal(': ')).setResultsName('originating_call')
 
   _BODY_END = pyparsing.StringEnd() | _DATE_TIME
 
-  _BODY = pyparsing.SkipTo(_BODY_END).setResultsName('body')
+  _ELEMENT_BODY = (
+      pyparsing.Optional(pyparsing.Suppress(pyparsing.Literal(': '))) +
+      pyparsing.SkipTo(_BODY_END).setResultsName('body'))
 
-  _LINE_GRAMMAR = _DATE_TIME + _PID + _BODY + pyparsing.ZeroOrMore(
-      pyparsing.lineEnd())
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LINE_GRAMMAR = (
+      _DATE_TIME + _ELEMENT_NUMBER + _ELEMENT_SEVERITY +
+      _ELEMENT_ID + _ELEMENT_ORIGINATOR + _ELEMENT_BODY +
+      pyparsing.OneOrMore(_END_OF_LINE))
 
   _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
@@ -90,12 +129,13 @@ class IOSLockdowndLogParser(text_parser.PyparsingMultiLineTextParser):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    body = self._GetValueFromStructure(structure, 'body')
-
-    event_data = IOSLockdowndLogData()
-    event_data.body = body.replace('\n', '').strip(' ')
+    event_data = IOSSysdiagLogEventData()
+    event_data.body = self._GetValueFromStructure(structure, 'body')
+    event_data.originating_call = self._GetValueFromStructure(
+        structure, 'originating_call')
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
@@ -115,14 +155,14 @@ class IOSLockdowndLogParser(text_parser.PyparsingMultiLineTextParser):
           the time elements.
     """
     try:
-      month, day_of_month, year, hours, minutes, seconds, microseconds = (
+      month_string, day_of_month, hours, minutes, seconds, year = (
           time_elements_structure)
 
-      time_elements_tuple = (
-          2000 + year, month, day_of_month, hours, minutes, seconds,
-          microseconds)
+      month = self._MONTH_DICT.get(month_string.lower(), 0)
 
-      return dfdatetime_time_elements.TimeElementsInMicroseconds(
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      return dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
 
     except (TypeError, ValueError) as exception:
@@ -145,4 +185,4 @@ class IOSLockdowndLogParser(text_parser.PyparsingMultiLineTextParser):
     return bool(list(match_generator))
 
 
-manager.ParsersManager.RegisterParser(IOSLockdowndLogParser)
+text_parser.SingleLineTextParser.RegisterPlugin(IOSSysdiagLogTextPlugin)

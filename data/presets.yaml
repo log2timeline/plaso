@@ -46,8 +46,6 @@ parsers:
 name: ios
 description: Preset for iOS.
 parsers:
-- ios_lockdownd
-- ios_sysdiag_log
 - jsonl/ios_application_privacy
 - sqlite/imessage
 - sqlite/ios_netusage
@@ -55,12 +53,24 @@ parsers:
 - sqlite/ios_screentime
 - sqlite/kik_ios
 - sqlite/twitter_ios
+- text/ios_lockdownd
 - text/ios_logd
+- text/ios_sysdiag_log
+---
+name: ios_lockdownd
+description: Preset for backwards compatibility of ios_lockdownd text parser plugin.
+parsers:
+- text/ios_lockdownd
 ---
 name: ios_logd
 description: Preset for backwards compatibility of ios_logd text parser plugin.
 parsers:
 - text/ios_logd
+---
+name: ios_sysdiag_log
+description: Preset for backwards compatibility of ios_sysdiag_log text parser plugin.
+parsers:
+- text/ios_sysdiag_log
 ---
 name: linux
 description: Preset for Linux.

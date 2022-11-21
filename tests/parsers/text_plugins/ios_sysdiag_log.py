@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the iOS Mobile Installation log parser."""
+"""Tests for the iOS Mobile Installation log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import ios_sysdiag_log
+from plaso.parsers.text_plugins import ios_sysdiag_log
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class IOSSysdiagLogParserTest(test_lib.ParserTestCase):
-  """Tests for the iOS Mobile Installation log parser"""
+class IOSSysdiagLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the iOS Mobile Installation log text parser plugin."""
 
-  def testParseLog(self):
-    """Tests the Parse function"""
-    parser = ios_sysdiag_log.IOSSysdiagLogParser()
-    storage_writer = self._ParseFile(['ios_sysdiag.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = ios_sysdiag_log.IOSSysdiagLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['ios_sysdiag.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -26,7 +26,7 @@ class IOSSysdiagLogParserTest(test_lib.ParserTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
+    self.assertEqual(number_of_warnings, 2)
 
     expected_event_values = {
         'body': (
