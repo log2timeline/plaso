@@ -9,7 +9,9 @@ from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import confluence_access
 from plaso.parsers.text_plugins import dpkg
 from plaso.parsers.text_plugins import iis
+from plaso.parsers.text_plugins import ios_lockdownd
 from plaso.parsers.text_plugins import ios_logd
+from plaso.parsers.text_plugins import ios_sysdiag_log
 from plaso.parsers.text_plugins import macos_appfirewall
 from plaso.parsers.text_plugins import macos_securityd
 from plaso.parsers.text_plugins import macos_wifi

@@ -18,8 +18,6 @@ from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
 from plaso.parsers import google_logging
-from plaso.parsers import ios_lockdownd
-from plaso.parsers import ios_sysdiag_log
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate

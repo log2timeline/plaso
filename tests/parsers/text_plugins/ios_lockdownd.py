@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the iOS lockdown daemon log files parser."""
+"""Tests for the iOS lockdown daemon log files text parser plugin."""
 
 import unittest
 
-from plaso.parsers import ios_lockdownd
+from plaso.parsers.text_plugins import ios_lockdownd
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class IOSLockdowndLogParserTest(test_lib.ParserTestCase):
-  """Tests for the iOS lockdown daemon log files parser."""
+class IOSLockdowndLogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the iOS lockdown daemon log files text parser plugin."""
 
-  def testParseLog(self):
-    """Tests the Parse function."""
-    parser = ios_lockdownd.IOSLockdowndLogParser()
-    storage_writer = self._ParseFile(['ios_lockdownd.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = ios_lockdownd.IOSLockdowndLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['ios_lockdownd.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
