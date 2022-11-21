@@ -19,7 +19,7 @@ class LocateDatabaseEvent(events.EventData):
 
   Attributes:
     entries (list[str]): contents of the locate database (updatedb) entry.
-    path: path of the locate database (updatedb) entry.
+    path (str): path of the locate database (updatedb) entry.
     written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
