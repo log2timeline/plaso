@@ -48,12 +48,24 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'aws:cloudtrail:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'aws:elb:access'
 attribute_mappings:
 - name: 'request_time'
   description: 'Request Received Time'
 - name: 'response_time'
   description: 'Response Sent Time'
+place_holder_event: true
+---
+data_type: 'azure:activitylog:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'bash:history:entry'
