@@ -185,9 +185,6 @@ class SantaTextPlugin(interface.TextPlugin):
 
   MAXIMUM_LINE_LENGTH = 3000
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -199,7 +196,9 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _SEPARATOR = pyparsing.Suppress('|')
 
-  _SKIP_TO_SEPARATOR = pyparsing.SkipTo('|')
+  # Using CharsNotIn is more efficient than SkipTo('|'). Optional is needed
+  # since CharsNotIn does not support a minimum of 0.
+  _SKIP_TO_SEPARATOR = pyparsing.Optional(pyparsing.CharsNotIn('|\n'))
 
   # Date and time values are formatted as: 2018-08-19T03:09:13.120Z
   _DATE_AND_TIME = (
@@ -211,168 +210,138 @@ class SantaTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress('.') +
       _THREE_DIGITS + pyparsing.Suppress('Z')).setResultsName('date_time')
 
-  _QUOTA_EXCEEDED_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      pyparsing.Literal((
-          '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
-          'HAVE BEEN DISCARDED ***')))
-
-  _PID = (pyparsing.Suppress('pid=') +
-          _SKIP_TO_SEPARATOR.setResultsName('pid') + _SEPARATOR)
-
-  _PID_VERSION = (pyparsing.Suppress('pidversion=') +
-                 _SKIP_TO_SEPARATOR.setResultsName('pidversion') + _SEPARATOR)
-
-  _PPID = (pyparsing.Suppress('ppid=') +
-           _SKIP_TO_SEPARATOR.setResultsName('ppid') + _SEPARATOR)
-
-  _UID = (pyparsing.Suppress('uid=') +
-          _SKIP_TO_SEPARATOR.setResultsName('uid') + _SEPARATOR)
-
-  _USER = (pyparsing.Suppress('user=') +
-           _SKIP_TO_SEPARATOR.setResultsName('user') + _SEPARATOR)
-
-  _GID = (pyparsing.Suppress('gid=') +
-          (_SKIP_TO_SEPARATOR | pyparsing.restOfLine()).setResultsName('gid') +
-          pyparsing.Optional(_SEPARATOR))
-
-  _GROUP = (pyparsing.Suppress('group=') + (
-                _SKIP_TO_SEPARATOR |
-                pyparsing.restOfLine()).setResultsName('group') +
-            pyparsing.Optional(_SEPARATOR))
-
-  _VOLUME = (pyparsing.Suppress('volume=') +
-             _SKIP_TO_SEPARATOR.setResultsName('volume') + _SEPARATOR)
-
-  _BSD_NAME = (pyparsing.Suppress('bsdname=') + (
-                   _SKIP_TO_SEPARATOR |
-                   pyparsing.restOfLine()).setResultsName('bsd_name') +
-               pyparsing.Optional(_SEPARATOR))
-
-  _EXIT_ACTION = (pyparsing.Suppress('action=') +
-                  pyparsing.Literal('EXIT').setResultsName('action') +
-                  _SEPARATOR)
-
-  _SANTAD_PREAMBLE = pyparsing.Suppress('I santad:')
-
-  _PROCESS_EXIT_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      _SANTAD_PREAMBLE + _EXIT_ACTION + _PID + _PID_VERSION +
-      _PPID + _UID + _GID)
-
-  _EXEC_ACTION = (
-      pyparsing.Suppress('action=') +
-      pyparsing.Literal('EXEC').setResultsName('action') + _SEPARATOR)
-
-  _DECISION = (
-      pyparsing.Suppress('decision=') +
-      _SKIP_TO_SEPARATOR.setResultsName('decision') + _SEPARATOR)
-
-  _REASON = (
-      pyparsing.Suppress('reason=') +
-      _SKIP_TO_SEPARATOR.setResultsName('reason') + _SEPARATOR)
-
-  _EXPLAIN = (
-      pyparsing.Suppress('explain=') +
-      _SKIP_TO_SEPARATOR.setResultsName('explain') + _SEPARATOR)
-
-  _SHA256 = (
-      pyparsing.Suppress('sha256=') +
-      _SKIP_TO_SEPARATOR.setResultsName('sha256') + _SEPARATOR)
-
-  _CERT_SHA256 = (
-      pyparsing.Suppress('cert_sha256=') +
-      _SKIP_TO_SEPARATOR.setResultsName('cert_sha256') + _SEPARATOR)
-
-  _CERT_CN = (
-      pyparsing.Suppress('cert_cn=') +
-      _SKIP_TO_SEPARATOR.setResultsName('cert_cn') + _SEPARATOR)
-
-  _QUARANTINE_URL = (
-      pyparsing.Suppress('quarantine_url=') +
-      _SKIP_TO_SEPARATOR.setResultsName('quarantine_url') + _SEPARATOR)
-
-  _MODE = (
-      pyparsing.Suppress('mode=') + _SKIP_TO_SEPARATOR.setResultsName('mode') +
-      _SEPARATOR)
-
-  _PATH = (
-      pyparsing.Suppress('path=') +
-      (_SKIP_TO_SEPARATOR | pyparsing.restOfLine()).setResultsName('path') +
-      pyparsing.Optional(_SEPARATOR))
-
-  _ARGS = (pyparsing.Suppress('args=') +
-           pyparsing.restOfLine().setResultsName('args'))
+  _DATE_TIME_BLOCK = (
+      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
+  _QUOTA_EXCEEDED_LINE = (
+      _DATE_TIME_BLOCK + pyparsing.Literal((
+          '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
+          'HAVE BEEN DISCARDED ***')) + _END_OF_LINE)
+
+  _SANTAD_PREAMBLE = pyparsing.Suppress('I santad:')
+
+  _APPEARANCE = (pyparsing.Suppress('|appearance=') +
+                 _DATE_AND_TIME.setResultsName('appearance'))
+
+  _ARGS = (pyparsing.Suppress('|args=') +
+           _SKIP_TO_SEPARATOR.setResultsName('args'))
+
+  _BSD_NAME = (pyparsing.Suppress('|bsdname=') +
+               _SKIP_TO_SEPARATOR.setResultsName('bsd_name'))
+
+  _BUS = pyparsing.Suppress('|bus=') + _SKIP_TO_SEPARATOR.setResultsName('bus')
+
+  _CERT_CN = (pyparsing.Suppress('|cert_cn=') +
+              _SKIP_TO_SEPARATOR.setResultsName('cert_cn'))
+
+  _CERT_SHA256 = (pyparsing.Suppress('|cert_sha256=') +
+                  _SKIP_TO_SEPARATOR.setResultsName('cert_sha256'))
+
+  _DECISION = (pyparsing.Suppress('|decision=') +
+               _SKIP_TO_SEPARATOR.setResultsName('decision'))
+
+  _DMG_PATH = (pyparsing.Suppress('|dmgpath=') +
+               _SKIP_TO_SEPARATOR.setResultsName('dmg_path'))
+
+  _EXPLAIN = (pyparsing.Suppress('|explain=') +
+              _SKIP_TO_SEPARATOR.setResultsName('explain'))
+
+  _FILE_SYSTEM = (pyparsing.Suppress('|fs=') +
+                  _SKIP_TO_SEPARATOR.setResultsName('fs'))
+
+  _GID = (pyparsing.Suppress('|gid=') +
+          _SKIP_TO_SEPARATOR.setResultsName('gid'))
+
+  _GROUP = (pyparsing.Suppress('|group=') +
+            _SKIP_TO_SEPARATOR.setResultsName('group'))
+
+  _MODE = (pyparsing.Suppress('|mode=') +
+           _SKIP_TO_SEPARATOR.setResultsName('mode'))
+
+  _MODEL = (pyparsing.Suppress('|model=') +
+            _SKIP_TO_SEPARATOR.setResultsName('model'))
+
+  _MOUNT = (pyparsing.Suppress('|mount=') +
+            _SKIP_TO_SEPARATOR.setResultsName('mount'))
+
+  _NEW_PATH = (pyparsing.Suppress('|newpath=') +
+               _SKIP_TO_SEPARATOR.setResultsName('newpath'))
+
+  _QUARANTINE_URL = (pyparsing.Suppress('|quarantine_url=') +
+                     _SKIP_TO_SEPARATOR.setResultsName('quarantine_url'))
+
+  _PATH = (pyparsing.Suppress('|path=') +
+           _SKIP_TO_SEPARATOR.setResultsName('path'))
+
+  _PID = (pyparsing.Suppress('|pid=') +
+          _SKIP_TO_SEPARATOR.setResultsName('pid'))
+
+  _PID_VERSION = (pyparsing.Suppress('|pidversion=') +
+                 _SKIP_TO_SEPARATOR.setResultsName('pidversion'))
+
+  _PPID = (pyparsing.Suppress('|ppid=') +
+           _SKIP_TO_SEPARATOR.setResultsName('ppid'))
+
+  _PROCESS = (pyparsing.Suppress('|process=') +
+              _SKIP_TO_SEPARATOR.setResultsName('process'))
+
+  _PROCESS_PATH = (pyparsing.Suppress('|processpath=') +
+                   _SKIP_TO_SEPARATOR.setResultsName('processpath'))
+
+  _REASON = (pyparsing.Suppress('|reason=') +
+             _SKIP_TO_SEPARATOR.setResultsName('reason'))
+
+  _SERIAL = (pyparsing.Suppress('|serial=') +
+             _SKIP_TO_SEPARATOR.setResultsName('serial'))
+
+  _SHA256 = (pyparsing.Suppress('|sha256=') +
+             _SKIP_TO_SEPARATOR.setResultsName('sha256'))
+
+  _UID = (pyparsing.Suppress('|uid=') +
+          _SKIP_TO_SEPARATOR.setResultsName('uid'))
+
+  _USER = (pyparsing.Suppress('|user=') +
+           _SKIP_TO_SEPARATOR.setResultsName('user'))
+
+  _VOLUME = (pyparsing.Suppress('|volume=') +
+             _SKIP_TO_SEPARATOR.setResultsName('volume'))
+
+  _DISK_MOUNT_LINE = (
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('DISKAPPEAR').setResultsName('action') +
+      _MOUNT + _VOLUME + _BSD_NAME + _FILE_SYSTEM + _MODEL + _SERIAL + _BUS +
+      _DMG_PATH + _APPEARANCE + _END_OF_LINE)
+
+  _DISK_UMOUNT_LINE = (
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('DISKDISAPPEAR').setResultsName('action') +
+      _MOUNT + _VOLUME + _BSD_NAME + _END_OF_LINE)
+
   _EXECUTION_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      _SANTAD_PREAMBLE + _EXEC_ACTION + _DECISION + _REASON +
-      pyparsing.Optional(_EXPLAIN) + _SHA256 +
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('EXEC').setResultsName('action') +
+      _DECISION + _REASON + pyparsing.Optional(_EXPLAIN) + _SHA256 +
       pyparsing.Optional(_CERT_SHA256) + pyparsing.Optional(_CERT_CN) +
       pyparsing.Optional(_QUARANTINE_URL) + _PID +
       pyparsing.Optional(_PID_VERSION) + _PPID + _UID + _USER + _GID + _GROUP +
-      _MODE + _PATH + pyparsing.Optional(_ARGS))
-
-  _NEW_PATH = (
-      pyparsing.Suppress('newpath=') +
-      _SKIP_TO_SEPARATOR.setResultsName('newpath') + _SEPARATOR)
-
-  _PROCESS = (
-      pyparsing.Suppress('process=') +
-      _SKIP_TO_SEPARATOR.setResultsName('process') + _SEPARATOR)
-
-  _PROCESS_PATH = (
-      pyparsing.Suppress('processpath=') +
-      _SKIP_TO_SEPARATOR.setResultsName('processpath') + _SEPARATOR)
+      _MODE + _PATH + pyparsing.Optional(_ARGS) + _END_OF_LINE)
 
   _FILE_OPERATION_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      _SANTAD_PREAMBLE + pyparsing.Suppress('action=') + (
-          pyparsing.Literal('WRITE') ^ pyparsing.Literal('RENAME') ^
-          pyparsing.Literal('DELETE') ^ pyparsing.Literal('LINK')
-      ).setResultsName('action') + _SEPARATOR + _PATH +
-      pyparsing.Optional(_NEW_PATH) + _PID + pyparsing.Optional(_PID_VERSION) +
-      _PPID + _PROCESS + _PROCESS_PATH + _UID + _USER + _GID + _GROUP)
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') + (
+          pyparsing.Literal('DELETE') ^
+          pyparsing.Literal('LINK') ^
+          pyparsing.Literal('RENAME') ^
+          pyparsing.Literal('WRITE')).setResultsName('action') +
+      _PATH + pyparsing.Optional(_NEW_PATH) + _PID +
+      pyparsing.Optional(_PID_VERSION) + _PPID + _PROCESS + _PROCESS_PATH +
+      _UID + _USER + _GID + _GROUP + _END_OF_LINE)
 
-  _DISKAPPEAR_ACTION = (
-      pyparsing.Suppress('action=') +
-      pyparsing.Literal('DISKAPPEAR').setResultsName('action') + _SEPARATOR)
-
-  _MOUNT = (pyparsing.Suppress('mount=') +
-            _SKIP_TO_SEPARATOR.setResultsName('mount') + _SEPARATOR)
-
-  _FS = (pyparsing.Suppress('fs=') + _SKIP_TO_SEPARATOR.setResultsName('fs') +
-         _SEPARATOR)
-
-  _MODEL = (pyparsing.Suppress('model=') +
-            _SKIP_TO_SEPARATOR.setResultsName('model') + _SEPARATOR)
-
-  _SERIAL = (pyparsing.Suppress('serial=') +
-             _SKIP_TO_SEPARATOR.setResultsName('serial') + _SEPARATOR)
-
-  _BUS = (pyparsing.Suppress('bus=') +
-          _SKIP_TO_SEPARATOR.setResultsName('bus') + _SEPARATOR)
-
-  _DMG_PATH = (pyparsing.Suppress('dmgpath=') +
-               _SKIP_TO_SEPARATOR.setResultsName('dmg_path') + _SEPARATOR)
-
-  _APPEARANCE = (pyparsing.Suppress('appearance=') +
-                 _DATE_AND_TIME.setResultsName('appearance'))
-
-  _DISK_MOUNT_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      _SANTAD_PREAMBLE + _DISKAPPEAR_ACTION + _MOUNT + _VOLUME + _BSD_NAME +
-      _FS + _MODEL + _SERIAL + _BUS + _DMG_PATH + _APPEARANCE)
-
-  _DISKDISAPPEAR_ACTION = (
-      pyparsing.Suppress('action=') +
-      pyparsing.Literal('DISKDISAPPEAR').setResultsName('action') + _SEPARATOR)
-
-  _DISK_UMOUNT_LINE = (
-      pyparsing.Suppress('[') + _DATE_AND_TIME + pyparsing.Suppress(']') +
-      _SANTAD_PREAMBLE + _DISKDISAPPEAR_ACTION + _MOUNT + _VOLUME + _BSD_NAME)
+  _PROCESS_EXIT_LINE = (
+      _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
+      pyparsing.Literal('EXIT').setResultsName('action') +
+      _PID + _PID_VERSION + _PPID + _UID + _GID + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
