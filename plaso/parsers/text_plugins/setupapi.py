@@ -46,9 +46,6 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
 
-  # TODO: remove after refactoring.
-  _SINGLE_LINE_MODE = True
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
 
@@ -72,31 +69,33 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   # pylint: disable=line-too-long
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
-  _LOG_HEADER_START =  pyparsing.Literal('[Device Install Log]') + _END_OF_LINE
+  _LOG_HEADER_START_LINE = (
+      pyparsing.Literal('[Device Install Log]') + _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
-  _LOG_HEADER_END = pyparsing.Literal('[BeginLog]') + _END_OF_LINE
+  _LOG_HEADER_END_LINE = (
+      pyparsing.Literal('[BeginLog]') + _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
-  _SECTION_HEADER = (
+  _SECTION_HEADER_LINE = (
       pyparsing.Suppress('>>>  [') +
       pyparsing.CharsNotIn(']').setResultsName('entry_type') +
-      pyparsing.Literal(']') + _END_OF_LINE)
+      pyparsing.Suppress(']') + _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
-  _SECTION_HEADER_START = (
+  _SECTION_HEADER_START_LINE = (
       pyparsing.Suppress('>>>  Section start') +
       _DATE_TIME.setResultsName('start_time') +
       _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
-  _SECTION_END = (
+  _SECTION_END_LINE = (
       pyparsing.Suppress('<<<  Section end ') +
       _DATE_TIME.setResultsName('end_time') +
       _END_OF_LINE)
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
-  _SECTION_END_EXIT_STATUS = (
+  _SECTION_END_EXIT_STATUS_LINE = (
       pyparsing.Suppress('<<<  [Exit status: ') +
       pyparsing.CharsNotIn(']').setResultsName('exit_status') +
       pyparsing.Literal(']') +
@@ -109,7 +108,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('!!!  '),
           pyparsing.Literal('!    '),
           pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine()).leaveWhitespace()
+      pyparsing.restOfLine()).leaveWhitespace() + _END_OF_LINE
 
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
   _NON_SECTION_LINE = (
@@ -119,26 +118,28 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           pyparsing.Literal('!!!  '),
           pyparsing.Literal('!    '),
           pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine()).leaveWhitespace()
+      pyparsing.restOfLine()).leaveWhitespace() + _END_OF_LINE
 
   # These lines do not appear to be documented in the Microsoft documentation.
   _BOOT_SESSION_LINE = (
       pyparsing.Literal('[Boot Session:') +
       _DATE_TIME +
-      pyparsing.Literal(']'))
+      pyparsing.Literal(']') +
+      _END_OF_LINE)
 
   # pylint: enable=line-too-long
 
   _LINE_STRUCTURES = [
       ('ignorable_line', _BOOT_SESSION_LINE),
-      ('ignorable_line', _LOG_HEADER_END),
-      ('ignorable_line', _LOG_HEADER_START),
+      ('ignorable_line', _LOG_HEADER_END_LINE),
+      ('ignorable_line', _LOG_HEADER_START_LINE),
       ('ignorable_line', _NON_SECTION_LINE),
       ('ignorable_line', _SECTION_BODY_LINE),
-      ('section_end', _SECTION_END),
-      ('section_end_exit_status', _SECTION_END_EXIT_STATUS),
-      ('section_header', _SECTION_HEADER),
-      ('section_start', _SECTION_HEADER_START)]
+      ('ignorable_line', _END_OF_LINE),
+      ('section_end', _SECTION_END_LINE),
+      ('section_end_exit_status', _SECTION_END_EXIT_STATUS_LINE),
+      ('section_header', _SECTION_HEADER_LINE),
+      ('section_start', _SECTION_HEADER_START_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -249,7 +250,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     line = text_reader.ReadLine()
 
     try:
-      parsed_structure = self._LOG_HEADER_START.parseString(line)
+      parsed_structure = self._LOG_HEADER_START_LINE.parseString(line)
     except pyparsing.ParseException:
       return False
 
