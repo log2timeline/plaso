@@ -49,7 +49,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * [Windows Event Log (EVT)](https://forensics.wiki/windows_event_log_(evt)) using [libevt](https://github.com/libyal/libevt)
 * [Windows Job files](https://forensics.wiki/windows_job_file_format) (also known as "at jobs")
 * [Windows Prefetch files](https://forensics.wiki/windows_prefetch_file_format)
-* [Windows Recycle bin](https://forensics.wiki/windows#recycle_bin) (info2 and $i/$r)
+* [Windows Recycle bin](https://forensics.wiki/windows/#recyclebin) (info2 and $i/$r)
 * [Windows NT Registry File (REGF)](https://forensics.wiki/windows_nt_registry_file_(regf)) using [libregf](https://github.com/libyal/libregf)
 * [Windows Shortcut File (LNK) format](https://forensics.wiki/lnk) using [liblnk](https://github.com/libyal/liblnk) (including shell item support)
 * [Windows XML Event Log (EVTX)](https://forensics.wiki/windows_xml_event_log_(evtx)) using [libevtx](https://github.com/libyal/libevtx)

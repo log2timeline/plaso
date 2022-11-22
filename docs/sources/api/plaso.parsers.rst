@@ -39,14 +39,6 @@ plaso.parsers.asl module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.bash\_history module
-----------------------------------
-
-.. automodule:: plaso.parsers.bash_history
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.bencode\_parser module
 ------------------------------------
 
@@ -159,14 +151,6 @@ plaso.parsers.fseventsd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.gdrive\_synclog module
-------------------------------------
-
-.. automodule:: plaso.parsers.gdrive_synclog
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.google\_logging module
 ------------------------------------
 
@@ -179,22 +163,6 @@ plaso.parsers.interface module
 ------------------------------
 
 .. automodule:: plaso.parsers.interface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.ios\_lockdownd module
------------------------------------
-
-.. automodule:: plaso.parsers.ios_lockdownd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.ios\_sysdiag\_log module
---------------------------------------
-
-.. automodule:: plaso.parsers.ios_sysdiag_log
    :members:
    :undoc-members:
    :show-inheritance:
@@ -335,14 +303,6 @@ plaso.parsers.plugins module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.postgresql module
--------------------------------
-
-.. automodule:: plaso.parsers.postgresql
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.presets module
 ----------------------------
 
@@ -455,14 +415,6 @@ plaso.parsers.utmpx module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.viminfo module
-----------------------------
-
-.. automodule:: plaso.parsers.viminfo
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.windefender\_history module
 -----------------------------------------
 
@@ -523,14 +475,6 @@ plaso.parsers.winrestore module
 -------------------------------
 
 .. automodule:: plaso.parsers.winrestore
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.zsh\_extended\_history module
--------------------------------------------
-
-.. automodule:: plaso.parsers.zsh_extended_history
    :members:
    :undoc-members:
    :show-inheritance:

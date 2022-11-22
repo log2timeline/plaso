@@ -36,6 +36,14 @@ plaso.parsers.text\_plugins.aws\_elb\_access module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.bash\_history module
+------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.bash_history
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.confluence\_access module
 -----------------------------------------------------
 
@@ -48,6 +56,14 @@ plaso.parsers.text\_plugins.dpkg module
 ---------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.dpkg
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.gdrive\_synclog module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.gdrive_synclog
    :members:
    :undoc-members:
    :show-inheritance:
@@ -68,10 +84,26 @@ plaso.parsers.text\_plugins.interface module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.ios\_lockdownd module
+-------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.ios_lockdownd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.ios\_logd module
 --------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.ios_logd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.ios\_sysdiag\_log module
+----------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.ios_sysdiag_log
    :members:
    :undoc-members:
    :show-inheritance:
@@ -104,6 +136,14 @@ plaso.parsers.text\_plugins.popcontest module
 ---------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.popcontest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.postgresql module
+---------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.postgresql
    :members:
    :undoc-members:
    :show-inheritance:
@@ -156,6 +196,14 @@ plaso.parsers.text\_plugins.sophos\_av module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.viminfo module
+------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.viminfo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.vsftpd module
 -----------------------------------------
 
@@ -184,6 +232,14 @@ plaso.parsers.text\_plugins.xchatscrollback module
 --------------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.xchatscrollback
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.zsh\_extended\_history module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.zsh_extended_history
    :members:
    :undoc-members:
    :show-inheritance:
