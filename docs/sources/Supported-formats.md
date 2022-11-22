@@ -18,41 +18,41 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 * Android usage history (usage-history.xml) file
 * Apple System Log (ASL)
-* [Basic Security Module (BSM)](https://forensicswiki.xyz/wiki/index.php?title=Basic_Security_Module_(BSM)_file_format)
+* [Basic Security Module (BSM)](https://forensics.wiki/basic_security_module_(bsm)_file_format)
 * Bencode files
-* [Chrome Disk Cache Format](https://forensicswiki.xyz/wiki/index.php?title=Chrome_Disk_Cache_Format)
+* [Chrome Disk Cache Format](https://forensics.wiki/chrome_disk_cache_format)
 * Chrome preferences
 * CUPS IPP
-* [Extensible Storage Engine (ESE) Database File (EDB) format](https://forensicswiki.xyz/wiki/index.php?title=Extensible_Storage_Engine_(ESE)_Database_File_(EDB)_format) using [libesedb](https://github.com/libyal/libesedb)
+* [Extensible Storage Engine (ESE) Database File (EDB) format](https://forensics.wiki/extensible_storage_engine_(ese)_database_file_(edb)_format) using [libesedb](https://github.com/libyal/libesedb)
 * Firefox Cache
-* [Java WebStart IDX](https://forensicswiki.xyz/wiki/index.php?title=Java)
-* [Jump Lists](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists) .customDestinations-ms files
+* [Java WebStart IDX](https://forensics.wiki/java)
+* [Jump Lists](https://forensics.wiki/jump_lists) .customdestinations-ms files
 * [MacOS Keychain](https://github.com/libyal/dtformats/blob/main/documentation/MacOS%20keychain%20database%20file%20format.asciidoc)
-* [mactime logs](https://forensicswiki.xyz/wiki/index.php?title=Mactime)
+* [mactime logs](https://forensics.wiki/mactime)
 * McAfee Anti-Virus Logs
-* Microsoft [Internet Explorer History File Format](https://forensicswiki.xyz/wiki/index.php?title=Internet_Explorer_History_File_Format) (also known as MSIE 4 - 9 Cache Files or index.dat) using [libmsiecf](https://github.com/libyal/libmsiecf)
+* Microsoft [Internet Explorer History File Format](https://forensics.wiki/internet_explorer_history_file_format) (also known as msie 4 - 9 cache files or index.dat) using [libmsiecf](https://github.com/libyal/libmsiecf)
 * NTFS $MFT and $UsnJrnl:$J using [libfsntfs](https://github.com/libyal/libfsntfs)
-* [OLE Compound File](https://forensicswiki.xyz/wiki/index.php?title=OLE_Compound_File) using [libolecf](https://github.com/libyal/libolecf)
-* [Opera Browser history](https://forensicswiki.xyz/wiki/index.php?title=Opera)
+* [OLE Compound File](https://forensics.wiki/ole_compound_file) using [libolecf](https://github.com/libyal/libolecf)
+* [Opera Browser history](https://forensics.wiki/opera)
 * OpenXML
 * Portable Executable (PE) files using [pefile](https://github.com/erocarrera/pefile)
 * PL SQL cache file (PL-SQL developer recall files)
-* [Property list (plist) format](https://forensicswiki.xyz/wiki/index.php?title=Property_list_(plist)) using plistlib
+* [Property list (plist) format](https://forensics.wiki/property_list_(plist)) using plistlib
 * [Restore Point logs (rp.log)](https://github.com/libyal/dtformats/blob/main/documentation/Restore%20point%20formats.asciidoc)
 * [Safari Binary Cookies](https://github.com/libyal/dtformats/blob/main/documentation/Safari%20Cookies.asciidoc)
 * SCCM client logs
 * SkyDrive multi-line log and error log files
-* [SQLite database format](https://forensicswiki.xyz/wiki/index.php?title=SQLite_database_format) using [SQLite](https://forensicswiki.xyz/wiki/index.php?title=SQLite)
+* [SQLite database format](https://forensics.wiki/sqlite_database_format) using [sqlite](https://forensics.wiki/sqlite)
 * Symantec AV Corporate Edition and Endpoint Protection log
 * Syslog
 * [utmp, utmpx](https://github.com/libyal/dtformats/blob/main/documentation/Utmp%20login%20records%20format.asciidoc)
-* [Windows Event Log (EVT)](https://forensicswiki.xyz/wiki/index.php?title=Windows_Event_Log_(EVT)) using [libevt](https://github.com/libyal/libevt)
-* [Windows Job files](https://forensicswiki.xyz/wiki/index.php?title=Windows_Job_File_Format) (also known as "at jobs")
-* [Windows Prefetch files](https://forensicswiki.xyz/wiki/index.php?title=Windows_Prefetch_File_Format)
-* [Windows Recycle bin](https://forensicswiki.xyz/wiki/index.php?title=Windows#Recycle_Bin) (INFO2 and $I/$R)
-* [Windows NT Registry File (REGF)](https://forensicswiki.xyz/wiki/index.php?title=Windows_NT_Registry_File_(REGF)) using [libregf](https://github.com/libyal/libregf)
-* [Windows Shortcut File (LNK) format](https://forensicswiki.xyz/wiki/index.php?title=LNK) using [liblnk](https://github.com/libyal/liblnk) (including shell item support)
-* [Windows XML Event Log (EVTX)](https://forensicswiki.xyz/wiki/index.php?title=Windows_XML_Event_Log_(EVTX)) using [libevtx](https://github.com/libyal/libevtx)
+* [Windows Event Log (EVT)](https://forensics.wiki/windows_event_log_(evt)) using [libevt](https://github.com/libyal/libevt)
+* [Windows Job files](https://forensics.wiki/windows_job_file_format) (also known as "at jobs")
+* [Windows Prefetch files](https://forensics.wiki/windows_prefetch_file_format)
+* [Windows Recycle bin](https://forensics.wiki/windows/#recyclebin) (info2 and $i/$r)
+* [Windows NT Registry File (REGF)](https://forensics.wiki/windows_nt_registry_file_(regf)) using [libregf](https://github.com/libyal/libregf)
+* [Windows Shortcut File (LNK) format](https://forensics.wiki/lnk) using [liblnk](https://github.com/libyal/liblnk) (including shell item support)
+* [Windows XML Event Log (EVTX)](https://forensics.wiki/windows_xml_event_log_(evtx)) using [libevtx](https://github.com/libyal/libevtx)
 * Viminfo files
 * Zsh history files
 
@@ -91,7 +91,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 
 ### OLE Compound File formats
 
-* [Automatic destinations jump list OLE compound file (.automaticDestinations-ms)](https://forensicswiki.xyz/wiki/index.php?title=Jump_Lists)
+* [Automatic destinations jump list OLE compound file (.automaticDestinations-ms)](https://forensics.wiki/jump_lists)
 * Document summary information (\0x05DocumentSummaryInformation)
 * Summary information (\0x05SummaryInformation) (top-level only)
 
@@ -106,7 +106,7 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * MacOS installation history plist file
 * MacOS software update plist file
 * MacOS user plist file
-* [Safari history plist file](https://forensicswiki.xyz/wiki/index.php?title=Apple_Safari)
+* [Safari history plist file](https://forensics.wiki/apple_safari)
 * Spotlight searched terms plist file
 * Spotlight volume configuration plist file
 * MacOS TimeMachine plist file

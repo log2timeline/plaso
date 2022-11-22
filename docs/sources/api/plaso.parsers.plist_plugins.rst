@@ -76,18 +76,18 @@ plaso.parsers.plist\_plugins.launchd module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.mac\_user module
----------------------------------------------
+plaso.parsers.plist\_plugins.macos\_user module
+-----------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.mac_user
+.. automodule:: plaso.parsers.plist_plugins.macos_user
    :members:
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.plist\_plugins.safari module
-------------------------------------------
+plaso.parsers.plist\_plugins.safari\_history module
+---------------------------------------------------
 
-.. automodule:: plaso.parsers.plist_plugins.safari
+.. automodule:: plaso.parsers.plist_plugins.safari_history
    :members:
    :undoc-members:
    :show-inheritance:

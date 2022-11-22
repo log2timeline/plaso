@@ -2,7 +2,7 @@
 """File containing a Windows Registry plugin to parse the USBStor key.
 
 Also see:
-  https://forensicswiki.xyz/wiki/index.php?title=USB_History_Viewing
+  https://forensics.wiki/usb_history_viewing
 """
 
 import os

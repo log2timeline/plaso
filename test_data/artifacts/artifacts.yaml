@@ -96,8 +96,8 @@ sources:
 labels: [System]
 supported_os: [Darwin]
 urls:
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Info_Misc.'
+- 'https://forensics.wiki/mac_os_x'
+- 'https://forensics.wiki/mac_os_x_10.9_-_artifacts_location#system_info_misc.'
 ---
 name: MacOSSystemConfigurationPreferencesPlistFile
 doc: System configuration preferences plist file
@@ -115,8 +115,8 @@ sources:
 labels: [System]
 supported_os: [Darwin]
 urls:
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
+- 'https://forensics.wiki/mac_os_x'
+- 'https://forensics.wiki/mac_os_x_10.9_-_artifacts_location#system_settings_and_informations'
 ---
 name: MacOSUserPasswordHashesPlistFiles
 doc: User password hashes plist files
@@ -129,8 +129,8 @@ sources:
 labels: [System, Users, Authentication]
 supported_os: [Darwin]
 urls:
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X'
-- 'https://forensicswiki.xyz/wiki/index.php?title=Mac_OS_X_10.9_-_Artifacts_Location#System_Settings_and_Informations'
+- 'https://forensics.wiki/mac_os_x'
+- 'https://forensics.wiki/mac_os_x_10.9_-_artifacts_location#system_settings_and_informations'
 ---
 name: WindowsAvailableTimeZones
 doc: Timezones available on a Windows system.

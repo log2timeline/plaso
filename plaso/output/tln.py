@@ -2,7 +2,7 @@
 """Output module for the TLN format.
 
 For documentation on the TLN format see:
-https://forensicswiki.xyz/wiki/index.php?title=TLN
+https://forensics.wiki/tln
 """
 
 from plaso.output import formatting_helper
