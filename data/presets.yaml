@@ -43,6 +43,11 @@ description: Preset for backwards compatibility of gdrive_synclog text parser pl
 parsers:
 - text/gdrive_synclog
 ---
+name: googlelog
+description: Preset for backwards compatibility of googlelog text parser plugin.
+parsers:
+- text/googlelog
+---
 name: ios
 description: Preset for iOS.
 parsers:
@@ -83,7 +88,6 @@ parsers:
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
 - filestat
-- googlelog
 - olecf
 - pls_recall
 - sqlite/google_drive
@@ -95,6 +99,7 @@ parsers:
 - text/bash_history
 - text/dpkg
 - text/gdrive_synclog
+- text/googlelog
 - text/popularity_contest
 - text/selinux
 - text/vsftpd
