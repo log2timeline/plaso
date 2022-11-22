@@ -18,7 +18,8 @@ class LocateDatabaseEvent(events.EventData):
   """Linux locate database (updatedb) event data.
 
   Attributes:
-    paths (list[str]): paths of the locate database (updatedb) entry.
+    entries (list[str]): contents of the locate database (updatedb) entry.
+    path (str): path of the locate database (updatedb) entry.
     written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
 
@@ -27,7 +28,8 @@ class LocateDatabaseEvent(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(LocateDatabaseEvent, self).__init__(data_type=self.DATA_TYPE)
-    self.paths = None
+    self.entries = None
+    self.path = None
     self.written_time = None
 
 
@@ -139,7 +141,8 @@ class LocateDatabaseParser(
           directory_header.seconds * definitions.NANOSECONDS_PER_SECOND)
 
       try:
-        _, data_size = self._ParseDirectoryEntry(file_object, file_offset)
+        entries, data_size = self._ParseDirectoryEntry(
+            file_object, file_offset)
 
         file_offset += data_size
 
@@ -150,7 +153,8 @@ class LocateDatabaseParser(
         return
 
       event_data = LocateDatabaseEvent()
-      event_data.paths = [directory_header.path]
+      event_data.entries = entries or None
+      event_data.path = directory_header.path
       event_data.written_time = posix_time.PosixTimeInNanoseconds(
           timestamp=timestamp)
 

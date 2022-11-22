@@ -23,10 +23,17 @@ short_message:
 short_source: 'LOG'
 source: 'dpkg log file'
 ---
+# TODO: paths is kept for backwards compatibility
 type: 'basic'
 data_type: 'linux:locate_database:entry'
-message: 'Folder Paths: {paths}'
-short_message: '{paths}'
+message:
+- 'Folder Path: {path}'
+- 'Folder Paths: {paths}'
+- 'Entries: {entries}'
+short_message:
+- '{path}'
+- '{paths}'
+- '{entries}'
 short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
 ---
