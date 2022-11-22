@@ -164,6 +164,11 @@ description: Preset for backwards compatibility of popularity_contest text parse
 parsers:
 - text/popularity_contest
 ---
+name: postgresql
+description: Preset for backwards compatibility of postgresql text parser plugin.
+parsers:
+- text/postgresql
+---
 name: selinux
 description: Preset for backwards compatibility of selinux text parser plugin.
 parsers:

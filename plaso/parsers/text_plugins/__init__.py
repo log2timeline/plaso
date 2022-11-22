@@ -17,6 +17,7 @@ from plaso.parsers.text_plugins import macos_appfirewall
 from plaso.parsers.text_plugins import macos_securityd
 from plaso.parsers.text_plugins import macos_wifi
 from plaso.parsers.text_plugins import popcontest
+from plaso.parsers.text_plugins import postgresql
 from plaso.parsers.text_plugins import santa
 from plaso.parsers.text_plugins import selinux
 from plaso.parsers.text_plugins import setupapi

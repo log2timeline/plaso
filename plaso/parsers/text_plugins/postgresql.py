@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Parser for PostgreSQL application log files."""
+"""Text parser plugin for PostgreSQL application log files.
+
+This is a multi-line log format that records internal database application
+logs as well as authentication attempts.
+
+Also see:
+  https://www.postgresql.org/docs/current/runtime-config-logging.html
+"""
 
 import pytz
 
@@ -11,17 +18,17 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class PostgreSQLEventData(events.EventData):
   """PostgreSQL application log data.
 
   Attributes:
-    log_level (str): logging level of event.
     log_line (str): log message.
     pid (int): process identifier (PID).
+    severity (str): severity.
     user (str): "user@database" string if present. Records the user account and
         database name that was authenticated or attempting to authenticate.
   """
@@ -31,23 +38,19 @@ class PostgreSQLEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(PostgreSQLEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.log_level = None
     self.log_line = None
     self.pid = None
+    self.severity = None
     self.user = None
 
 
-class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses events from PostgreSQL application log files.
-
-  This is a multi-line log format that records internal database application
-  logs as well as authentication attempts.
-  """
+class PostgreSQLTextPlugin(interface.TextPlugin):
+  """Text parser plugin for PostgreSQL application log files."""
 
   NAME = 'postgresql'
   DATA_FORMAT = 'PostgreSQL application log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       text_parser.PyParseIntCast)
@@ -61,6 +64,8 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
+  # Date and time values are formatted as: YYYY-MM-DD hh:mm:ss.### UTC
+  # For example: 2022-04-12 00:16:05.526 UTC
   _DATE_TIME = (
       pyparsing.LineStart() +
       _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
@@ -87,16 +92,18 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Literal('@') +
       pyparsing.Word(pyparsing.alphanums)).setResultsName('user_and_database')
 
-  _LOG_LEVEL = (
-      pyparsing.Word(pyparsing.string.ascii_uppercase) +
-      pyparsing.Suppress(':')).setResultsName('log_level')
+  _SEVERITY = pyparsing.Word(pyparsing.string.ascii_uppercase)
 
   _LOG_LINE_END = pyparsing.StringEnd() | (_DATE_TIME + _TIME_ZONE)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _LOG_LINE = (
       _DATE_TIME + _TIME_ZONE + _PID + pyparsing.Optional(_USER_AND_DATABASE) +
-      _LOG_LEVEL + pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
-      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
+      _SEVERITY.setResultsName('severity') +
+      pyparsing.Suppress(':') +
+      pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
+      pyparsing.ZeroOrMore(_END_OF_LINE))
 
   _LINE_STRUCTURES = [('logline', _LOG_LINE)]
 
@@ -206,13 +213,7 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     event_data = PostgreSQLEventData()
     event_data.pid = ''.join(
         [str(pid) for pid in self._GetValueFromStructure(structure, 'pid')])
-
-    log_level = self._GetValueFromStructure(structure, 'log_level')
-    if log_level and len(log_level) != 1:
-      parser_mediator.ProduceExtractionWarning('no log level found')
-      return
-
-    event_data.log_level = log_level[0]
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
 
     user_and_database = self._GetValueFromStructure(
         structure, 'user_and_database')
@@ -267,4 +268,4 @@ class PostgreSQLParser(text_parser.PyparsingMultiLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(PostgreSQLParser)
+text_parser.SingleLineTextParser.RegisterPlugin(PostgreSQLTextPlugin)
