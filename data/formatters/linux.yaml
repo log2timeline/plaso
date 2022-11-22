@@ -23,7 +23,7 @@ short_message:
 short_source: 'LOG'
 source: 'dpkg log file'
 ---
-# # TODO: paths is kept for backwards compatibility
+# TODO: paths is kept for backwards compatibility
 type: 'basic'
 data_type: 'linux:locate_database:entry'
 message:
