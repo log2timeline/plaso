@@ -17,6 +17,10 @@ class AWSCloudTrailLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     storage_writer = self._ParseJSONLFileWithPlugin(
         ['aws_cloudtrail.jsonl'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 6)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 6)
 
@@ -28,71 +32,17 @@ class AWSCloudTrailLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'access_key': '0123456789ABCDEFGHIJ',
         'event_name': 'DescribeInstances',
         'event_source': 'ec2.amazonaws.com',
+        'recorded_time': '2022-02-08T09:23:37.000000+11:00',
         'source_ip': '1.2.3.4',
-        'timestamp': '2022-02-07 22:23:37.000000',
         'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
         'user_name': 'fakeusername'}
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
 
-    expected_event_values = {
-        'access_key': '0123456789ABCDEFGHIJ',
-        'event_name': 'TerminateInstances',
-        'event_source': 'ec2.amazonaws.com',
-        'resources': 'i-01234567890123456',
-        'source_ip': '1.2.3.4',
-        'timestamp': '2022-02-07 22:23:18.000000',
-        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
-        'user_name': 'fakeusername'}
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'access_key': '0123456789ABCDEFGHIJ',
-        'event_name': 'StopInstances',
-        'event_source': 'ec2.amazonaws.com',
-        'resources': 'i-01234567890123456',
-        'source_ip': '1.2.3.4',
-        'timestamp': '2022-02-07 22:23:03.000000',
-        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
-        'user_name': 'fakeusername'}
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    expected_event_values = {
-        'event_name': 'SharedSnapshotVolumeCreated',
-        'event_source': 'ec2.amazonaws.com',
-        'source_ip': 'ec2.amazonaws.com',
-        'timestamp': '2022-02-07 22:19:07.000000'}
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_event_values = {
-        'access_key': '0123456789ABCDEFGHIJ',
-        'event_name': 'RunInstances',
-        'event_source': 'ec2.amazonaws.com',
-        'resources': (
-            'vpc-01234567890123456, ami-01234567890123456, '
-            'eni-01234567890123456, i-01234567890123456, aws-testing, '
-            'no-access, sg-01234567890123456, subnet-01234567890123456'),
-        'source_ip': '1.2.3.4',
-        'timestamp': '2022-02-07 22:19:05.000000',
-        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
-        'user_name': 'fakeusername'}
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
-
-    expected_event_values = {
-        'access_key': '0123456789ABCDEFGHIJ',
-        'event_name': 'CreateSecurityGroup',
-        'event_source': 'ec2.amazonaws.com',
-        'resources': 'vpc-01234567890123456, no-access, sg-01234567890123456',
-        'source_ip': '1.2.3.4',
-        'timestamp': '2022-02-07 22:19:04.000000',
-        'user_identity_arn': 'arn:aws:iam::012345678901:user/fakeusername',
-        'user_name': 'fakeusername'}
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
