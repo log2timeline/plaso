@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains SkyDrive log file parser in plaso."""
+"""Text parser plugin for SkyDrive version 2 log files."""
 
 import pyparsing
 
@@ -8,12 +8,12 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.parsers import logger
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class SkyDriveLog2EventData(events.EventData):
-  """SkyDrive log event data.
+  """SkyDrive version 2 log event data.
 
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -37,13 +37,13 @@ class SkyDriveLog2EventData(events.EventData):
     self.source_code = None
 
 
-class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
-  """Parses SkyDrive log files."""
+class SkyDriveLog2TextPlugin(interface.TextPlugin):
+  """Text parser plugin for SkyDrive version 2 log files."""
 
-  NAME = 'skydrive_log'
-  DATA_FORMAT = 'OneDrive (or SkyDrive) log file'
+  NAME = 'skydrive_log_v2'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) version 2 log file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       text_parser.PyParseIntCast)
@@ -305,4 +305,4 @@ class SkyDriveLog2Parser(text_parser.PyparsingMultiLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(SkyDriveLog2Parser)
+text_parser.SingleLineTextParser.RegisterPlugin(SkyDriveLog2TextPlugin)

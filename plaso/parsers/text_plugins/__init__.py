@@ -24,6 +24,7 @@ from plaso.parsers.text_plugins import sccm
 from plaso.parsers.text_plugins import selinux
 from plaso.parsers.text_plugins import setupapi
 from plaso.parsers.text_plugins import skydrivelog1
+from plaso.parsers.text_plugins import skydrivelog2
 from plaso.parsers.text_plugins import snort_fastlog
 from plaso.parsers.text_plugins import sophos_av
 from plaso.parsers.text_plugins import viminfo

@@ -189,6 +189,11 @@ description: Preset for backwards compatibility of setupapi text parser plugin.
 parsers:
 - text/setupapi
 ---
+name: skydrive_log
+description: Preset for backwards compatibility of skydrive text parser plugin.
+parsers:
+- text/skydrive_log_v2
+---
 name: skydrive_log_old
 description: Preset for backwards compatibility of skydrive_log_old text parser plugin.
 parsers:
@@ -239,7 +244,6 @@ parsers:
 - olecf
 - pe
 - prefetch
-- skydrive_log
 - sqlite/google_drive
 - sqlite/skype
 - symantec_scanlog
@@ -247,6 +251,7 @@ parsers:
 - text/sccm
 - text/setupapi
 - text/skydrive_log_v1
+- text/skydrive_log_v2
 - text/winfirewall
 - usnjrnl
 - webhist
