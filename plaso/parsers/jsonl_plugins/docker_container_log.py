@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """JSON-L parser plugin for Docker container log files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import jsonl_parser
 from plaso.parsers.jsonl_plugins import interface
 
@@ -18,6 +15,8 @@ class DockerContainerLogEventData(events.EventData):
     container_identifier (str): identifier of the container (SHA256).
     log_line (str): log line.
     log_source (str): log source.
+    written_time (dfdatetime.DateTimeValues): date and time the entry was
+        written.
   """
 
   DATA_TYPE = 'docker:container:log:entry'
@@ -28,6 +27,7 @@ class DockerContainerLogEventData(events.EventData):
     self.container_identifier = None
     self.log_line = None
     self.log_source = None
+    self.written_time = None
 
 
 class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
@@ -74,31 +74,17 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
       self._container_identifier = self._GetContainerIdentifierFromPath(
           parser_mediator)
 
-    time = self._GetJSONValue(json_dict, 'time')
-    if not time:
-      parser_mediator.ProduceExtractionWarning(
-          'time value missing from log entry')
-
+    # TODO: escape special characters in log line.
     log_line = self._GetJSONValue(json_dict, 'log', default_value='')
 
     event_data = DockerContainerLogEventData()
     event_data.container_identifier = self._container_identifier
-    # TODO: escape special characters in log line.
-    event_data.log_line = log_line
+    event_data.log_line = log_line or None
     event_data.log_source = self._GetJSONValue(json_dict, 'stream')
+    event_data.written_time = self._ParseISO8601DateTimeString(
+        parser_mediator, json_dict, 'time')
 
-    try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(time)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning((
-          'Unable to parse written time string: {0:s} with error: '
-          '{1!s}').format(time, exception))
-      date_time = dfdatetime_semantic_time.InvalidTime()
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def CheckRequiredFormat(self, json_dict):
     """Check if the log record has the minimal structure required by the plugin.
@@ -116,8 +102,9 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
     if None in (log, stream, time):
       return False
 
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
     try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       date_time.CopyFromStringISO8601(time)
     except ValueError:
       return False

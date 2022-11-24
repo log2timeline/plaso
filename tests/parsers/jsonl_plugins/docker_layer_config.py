@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.jsonl_plugins import docker_layer_config
 
 from tests.parsers.jsonl_plugins import test_lib
@@ -22,6 +21,10 @@ class DockerLayerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     plugin = docker_layer_config.DockerLayerConfigurationJSONLPlugin()
     storage_writer = self._ParseJSONLFileWithPlugin(path_segments, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
 
@@ -33,18 +36,16 @@ class DockerLayerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'command': (
             '/bin/sh -c sed -i \'s/^#\\s*\\(deb.*universe\\)$/\\1/g\' '
             '/etc/apt/sources.list'),
+        'creation_time': '2015-10-12T17:27:03.079273+00:00',
         'data_type': 'docker:layer:configuration',
-        'date_time': '2015-10-12T17:27:03.079273+00:00',
-        'layer_identifier': layer_identifier,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_ADDED}
+        'layer_identifier': layer_identifier}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

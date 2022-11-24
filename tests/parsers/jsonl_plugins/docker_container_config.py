@@ -22,6 +22,10 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     plugin = docker_container_config.DockerContainerConfigurationJSONLPlugin()
     storage_writer = self._ParseJSONLFileWithPlugin(path_segments, plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -33,25 +37,15 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'action': 'Container Started',
         'container_identifier': container_identifier,
         'container_name': 'e7d0b7ea5ccf',
+        'creation_time': '2016-01-07T16:49:08.507979+00:00',
         'data_type': 'docker:container:configuration',
-        'date_time': '2016-01-07T16:49:08.674873+00:00'}
+        'start_time': '2016-01-07T16:49:08.674873+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'action': 'Container Created',
-        'container_identifier': container_identifier,
-        'container_name': 'e7d0b7ea5ccf',
-        'data_type': 'docker:container:configuration',
-        'date_time': '2016-01-07T16:49:08.507979+00:00'}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
