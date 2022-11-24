@@ -9,4 +9,4 @@ from plaso.parsers.jsonl_plugins import docker_container_log
 from plaso.parsers.jsonl_plugins import docker_layer_config
 from plaso.parsers.jsonl_plugins import gcp_log
 from plaso.parsers.jsonl_plugins import ios_app_privacy
-from plaso.parsers.jsonl_plugins import microsoft_audit_log
+from plaso.parsers.jsonl_plugins import microsoft365_audit_log

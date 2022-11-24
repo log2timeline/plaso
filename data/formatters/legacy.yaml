@@ -1015,6 +1015,25 @@ short_source: 'LOG'
 source: 'MacOS Wifi Log'
 ---
 type: 'conditional'
+data_type: 'microsoft:auditlog:entry'
+message:
+- 'User {user_identifier}'
+- 'performed {operation_name}'
+- 'from {client_ip}'
+- 'on {workload}'
+- 'Result Status: {result_status}'
+- 'Record Type: {record_type}'
+short_message:
+- 'User {user_identifier}'
+- 'performed {operation_name}'
+- 'from {client_ip}'
+- 'on {workload}'
+- 'Result Status: {result_status}'
+- 'Record Type: {record_type}'
+short_source: 'LOG'
+source: 'Microsoft (Office) 365 Audit Log'
+---
+type: 'conditional'
 data_type: 'pe'
 message:
 - 'PE Type: {pe_type}'
