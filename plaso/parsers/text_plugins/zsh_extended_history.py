@@ -43,7 +43,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
   NAME = 'zsh_extended_history'
   DATA_FORMAT = 'ZSH extended history file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 

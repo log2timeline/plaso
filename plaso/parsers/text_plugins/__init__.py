@@ -20,6 +20,7 @@ from plaso.parsers.text_plugins import macos_wifi
 from plaso.parsers.text_plugins import popcontest
 from plaso.parsers.text_plugins import postgresql
 from plaso.parsers.text_plugins import santa
+from plaso.parsers.text_plugins import sccm
 from plaso.parsers.text_plugins import selinux
 from plaso.parsers.text_plugins import setupapi
 from plaso.parsers.text_plugins import skydrivelog1

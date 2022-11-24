@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
-"""Tests for the SCCM Logs Parser."""
+"""Tests for the SCCM log text parser plugin."""
 
 import unittest
 
-from plaso.parsers import sccm
+from plaso.parsers.text_plugins import sccm
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class SCCMLogsUnitTest(test_lib.ParserTestCase):
-  """Tests for the SCCM Logs Parser."""
+class SCCMTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the SCCM log text parser plugin."""
 
-  def testParse(self):
-    """Tests for the Parse function."""
-    parser = sccm.SCCMParser()
-    storage_writer = self._ParseFile(['sccm_various.log'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = sccm.SCCMTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['sccm_various.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
