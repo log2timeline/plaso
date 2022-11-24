@@ -69,10 +69,7 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
     date_time = None
 
     event_timestamp = self._GetJSONValue(json_dict, 'event_timestamp')
-    if not event_timestamp:
-      parser_mediator.ProduceExtractionWarning(
-          'Event timestamp value missing from activity log entry')
-    else:
+    if event_timestamp:
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
         date_time.CopyFromStringISO8601(event_timestamp)

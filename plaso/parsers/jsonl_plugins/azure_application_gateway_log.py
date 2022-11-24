@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """JSON-L parser plugin for Azure application gateway access log files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import jsonl_parser
 from plaso.parsers.jsonl_plugins import interface
 
@@ -31,6 +28,8 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     original_host (str): Original request host name.
     original_request_uri (str): Original request URL, including arguments.
     received_bytes (int): Size of packet received, in bytes.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
     request_query (str): Server-Routed: Back-end pool instance that was sent
         the request. X-AzureApplicationGateway-LOG-ID: Correlation ID used for
         the request. It can be used to troubleshoot traffic issues on
@@ -65,7 +64,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     waf_mode (str): Value can be either Detection or Prevention.
   """
 
-  DATA_TYPE = 'azure:applicationgatewayaccess:entry'
+  DATA_TYPE = 'azure:application_gateway_access:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -82,6 +81,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
     self.original_host = None
     self.original_request_uri = None
     self.received_bytes = None
+    self.recorded_time = None
     self.request_query = None
     self.request_uri = None
     self.sent_bytes = None
@@ -107,36 +107,6 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'azure_application_gateway_access_log'
   DATA_FORMAT = 'Azure Application Gateway access log'
 
-  _PROPERTIES = {
-      'clientIP': 'client_ip',
-      'clientPort': 'client_port',
-      'clientResponseTime': 'client_response_time',
-      'host': 'host',
-      'httpMethod': 'http_method',
-      'httpStatus': 'http_status',
-      'httpVersion': 'http_version',
-      'instanceId': 'instance_identifier',
-      'originalHost': 'original_host',
-      'originalRequestUriWithArgs': 'original_request_uri',
-      'receivedBytes': 'received_bytes',
-      'requestQuery': 'request_query',
-      'requestUri': 'request_uri',
-      'sentBytes': 'sent_bytes',
-      'serverResponseLatency': 'server_response_latency',
-      'serverRouted': 'server_routed',
-      'serverStatus': 'server_status',
-      'sslCipher': 'ssl_cipher',
-      'sslClientCertificateFingerprint': 'ssl_client_certificate_fingerprint',
-      'sslClientCertificateIssuerName': 'ssl_client_certificate_issuer_name',
-      'sslClientVerify': 'ssl_client_verify',
-      'sslEnabled': 'ssl_enabled',
-      'sslProtocol': 'ssl_protocol',
-      'timeTaken': 'time_taken',
-      'transactionId': 'transaction_identifier',
-      'userAgent': 'user_agent',
-      'WAFEvaluationTime': 'waf_evaluation_time',
-      'WAFMode': 'waf_mode'}
-
   def _ParseRecord(self, parser_mediator, json_dict):
     """Parses an Azure application gateway access log record.
 
@@ -145,34 +115,82 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    timestamp = self._GetJSONValue(json_dict, 'timeStamp')
-    if not timestamp:
-      parser_mediator.ProduceExtractionWarning(
-          'Timestamp value missing from application gateway access log event')
+    date_time = None
 
-    properties_json_dict = json_dict.get('properties')
-    if not properties_json_dict:
-      parser_mediator.ProduceExtractionWarning(
-          'Properties value missing from application gateway access log event')
-      return
+    iso8601_string = self._GetJSONValue(json_dict, 'timeStamp')
+    if iso8601_string:
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(iso8601_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'Unable to parse timeStamp value: {0:s} with error: {1!s}'.format(
+                iso8601_string, exception))
+        date_time = None
+
+    properties_json_dict = self._GetJSONValue(
+        json_dict, 'properties', default_value={})
 
     event_data = AzureApplicationGatewayAccessEventData()
-    for json_name, attribute_name in self._PROPERTIES.items():
-      attribute_value = self._GetJSONValue(properties_json_dict, json_name)
-      setattr(event_data, attribute_name, attribute_value)
+    event_data.client_ip = self._GetJSONValue(
+        properties_json_dict, 'clientIP')
+    event_data.client_port = self._GetJSONValue(
+        properties_json_dict, 'clientPort')
+    event_data.client_response_time = self._GetJSONValue(
+        properties_json_dict, 'clientResponseTime')
+    event_data.host = self._GetJSONValue(
+        properties_json_dict, 'host')
+    event_data.http_method = self._GetJSONValue(
+        properties_json_dict, 'httpMethod')
+    event_data.http_status = self._GetJSONValue(
+        properties_json_dict, 'httpStatus')
+    event_data.http_version = self._GetJSONValue(
+        properties_json_dict, 'httpVersion')
+    event_data.instance_identifier = self._GetJSONValue(
+        properties_json_dict, 'instanceId')
+    event_data.original_host = self._GetJSONValue(
+        properties_json_dict, 'originalHost')
+    event_data.original_request_uri = self._GetJSONValue(
+        properties_json_dict, 'originalRequestUriWithArgs')
+    event_data.received_bytes = self._GetJSONValue(
+        properties_json_dict, 'receivedBytes')
+    event_data.recorded_time = date_time
+    event_data.request_query = self._GetJSONValue(
+        properties_json_dict, 'requestQuery')
+    event_data.request_uri = self._GetJSONValue(
+        properties_json_dict, 'requestUri')
+    event_data.sent_bytes = self._GetJSONValue(
+        properties_json_dict, 'sentBytes')
+    event_data.server_response_latency = self._GetJSONValue(
+        properties_json_dict, 'serverResponseLatency')
+    event_data.server_routed = self._GetJSONValue(
+        properties_json_dict, 'serverRouted')
+    event_data.server_status = self._GetJSONValue(
+        properties_json_dict, 'serverStatus')
+    event_data.ssl_cipher = self._GetJSONValue(
+        properties_json_dict, 'sslCipher')
+    event_data.ssl_client_certificate_fingerprint = self._GetJSONValue(
+        properties_json_dict, 'sslClientCertificateFingerprint')
+    event_data.ssl_client_certificate_issuer_name = self._GetJSONValue(
+        properties_json_dict, 'sslClientCertificateIssuerName')
+    event_data.ssl_client_verify = self._GetJSONValue(
+        properties_json_dict, 'sslClientVerify')
+    event_data.ssl_enabled = self._GetJSONValue(
+        properties_json_dict, 'sslEnabled')
+    event_data.ssl_protocol = self._GetJSONValue(
+        properties_json_dict, 'sslProtocol')
+    event_data.time_taken = self._GetJSONValue(
+        properties_json_dict, 'timeTaken')
+    event_data.transaction_identifier = self._GetJSONValue(
+        properties_json_dict, 'transactionId')
+    event_data.user_agent = self._GetJSONValue(
+        properties_json_dict, 'userAgent')
+    event_data.waf_evaluation_time = self._GetJSONValue(
+        properties_json_dict, 'WAFEvaluationTime')
+    event_data.waf_mode = self._GetJSONValue(
+        properties_json_dict, 'WAFMode')
 
-    try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(timestamp)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'Unable to parse timestamp value: {0:s} with error: {1!s}'.format(
-              timestamp, exception))
-      date_time = dfdatetime_semantic_time.InvalidTime()
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def CheckRequiredFormat(self, json_dict):
     """Check if the log record has the minimal structure required by the plugin.
@@ -183,17 +201,18 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    operation_name = json_dict.get('operationName') or None
-    properties = json_dict.get('properties') or None
-    timestamp = json_dict.get('timeStamp') or None
+    operation_name = self._GetJSONValue(json_dict, 'operationName')
+    properties = self._GetJSONValue(json_dict, 'properties')
+    iso8601_string = self._GetJSONValue(json_dict, 'timeStamp')
 
-    if (None in (operation_name, properties, timestamp) or
+    if (None in (operation_name, properties, iso8601_string) or
         operation_name != 'ApplicationGatewayAccess'):
       return False
 
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
     try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(timestamp)
+      date_time.CopyFromStringISO8601(iso8601_string)
     except ValueError:
       return False
 
