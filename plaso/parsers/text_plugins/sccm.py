@@ -1,5 +1,5 @@
 # -*_ coding: utf-8 -*-
-"""Parser for SCCM Logs."""
+"""Text parser plugin for System Center Configuration Manager (SCCM) logs."""
 
 import re
 
@@ -9,8 +9,8 @@ import pyparsing
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import manager
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface
 
 
 class SCCMLogEventData(events.EventData):
@@ -33,17 +33,15 @@ class SCCMLogEventData(events.EventData):
     self.written_time = None
 
 
-class SCCMParser(text_parser.PyparsingMultiLineTextParser):
-  """Parser for Windows System Center Configuration Manager (SCCM) logs."""
+class SCCMTextPlugin(interface.TextPlugin):
+  """Text parser plugin for System Center Configuration Manager (SCCM) logs."""
 
   NAME = 'sccm'
   DATA_FORMAT = 'System Center Configuration Manager (SCCM) client log file'
 
-  _ENCODING = 'utf-8-sig'
+  ENCODING = 'utf-8'
 
-  # Increasing the buffer size as SCCM messages are commonly well larger
-  # than the default value.
-  BUFFER_SIZE = 16384
+  MAXIMUM_LINE_LENGTH = 16384
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)
@@ -193,4 +191,4 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     return pyparsing.Literal('<![LOG[').match in text_reader.lines
 
 
-manager.ParsersManager.RegisterParser(SCCMParser)
+text_parser.SingleLineTextParser.RegisterPlugin(SCCMTextPlugin)

@@ -62,7 +62,7 @@ class GoogleLogTextPlugin(
   NAME = 'googlelog'
   DATA_FORMAT = 'Google-formatted log file'
 
-  BUFFER_SIZE = 5120
+  MAXIMUM_LINE_LENGTH = 5120
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       text_parser.PyParseIntCast)

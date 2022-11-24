@@ -38,7 +38,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
 
   DATA_FORMAT = 'Bash history file'
 
-  _ENCODING = 'utf-8'
+  ENCODING = 'utf-8'
 
   _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
       pyparsing.nums, min=9, max=10).setParseAction(

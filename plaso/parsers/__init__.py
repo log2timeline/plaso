@@ -31,7 +31,6 @@ from plaso.parsers import plist
 from plaso.parsers import pls_recall
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
-from plaso.parsers import sccm
 from plaso.parsers import skydrivelog
 from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
