@@ -275,15 +275,14 @@ class AndroidLogcatTextPlugin(
     """
     line = text_reader.ReadLine()
 
-    _, line_structure, result_tuple = self._GetMatchingLineStructure(line)
-    if not result_tuple:
+    try:
+      key, parsed_structure, _, _ = self._ParseString(line)
+    except errors.ParseError:
       return False
-
-    parsed_structure, _, _ = result_tuple
 
     self._SetEstimatedYear(parser_mediator)
 
-    if line_structure.name == 'beginning_line':
+    if key == 'beginning_line':
       return True
 
     return 'date_time' in parsed_structure and 'message' in parsed_structure

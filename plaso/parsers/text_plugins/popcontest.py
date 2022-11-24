@@ -186,8 +186,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
   _LINE_STRUCTURES = [
       ('log_line', _LOG_LINE),
       ('header_line', _HEADER_LINE),
-      ('footer_line', _FOOTER_LINE),
-      ('empty_line', _END_OF_LINE)]
+      ('footer_line', _FOOTER_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

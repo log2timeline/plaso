@@ -287,11 +287,10 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     """
     line = text_reader.ReadLine()
 
-    _, _, result_tuple = self._GetMatchingLineStructure(line)
-    if not result_tuple:
+    try:
+      _, parsed_structure, _, _ = self._ParseString(line)
+    except errors.ParseError:
       return False
-
-    parsed_structure, _, _ = result_tuple
 
     time_elements_structure = self._GetValueFromStructure(
         parsed_structure, 'date_time')

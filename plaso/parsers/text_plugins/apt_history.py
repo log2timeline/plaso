@@ -58,47 +58,41 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       text_parser.PyParseIntCast)
 
-  _APTHISTORY_DATE_TIME = pyparsing.Group(
+  _DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS)
+      _TWO_DIGITS).setResultsName('date_time')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # Start-Date: 2019-07-10  16:38:12
-  _RECORD_START_LINES = (
-      # APT History logs may start with empty lines
-      pyparsing.ZeroOrMore(_END_OF_LINE) +
-      pyparsing.Literal('Start-Date:') +
-      _APTHISTORY_DATE_TIME.setResultsName('start_date') +
-      _END_OF_LINE)
+  _RECORD_START_LINE = (
+      pyparsing.Literal('Start-Date:') + _DATE_TIME + _END_OF_LINE)
 
   _RECORD_BODY_LINE = (
-      pyparsing.MatchFirst([
-          pyparsing.Literal('Commandline:'),
-          pyparsing.Literal('Downgrade:'),
-          pyparsing.Literal('Error:'),
-          pyparsing.Literal('Install:'),
-          pyparsing.Literal('Purge:'),
-          pyparsing.Literal('Remove:'),
-          pyparsing.Literal('Requested-By:'),
-          pyparsing.Literal('Upgrade:')]) +
+      pyparsing.oneOf([
+          'Commandline:',
+          'Downgrade:',
+          'Error:',
+          'Install:',
+          'Purge:',
+          'Remove:',
+          'Requested-By:',
+          'Upgrade:']) +
       pyparsing.restOfLine() +
       _END_OF_LINE)
 
   # End-Date: 2019-07-10  16:38:10
-  _RECORD_END_LINES = (
-      pyparsing.Literal('End-Date:') +
-      _APTHISTORY_DATE_TIME.setResultsName('end_date') +
-      pyparsing.OneOrMore(_END_OF_LINE))
+  _RECORD_END_LINE = (
+      pyparsing.Literal('End-Date:') + _DATE_TIME + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('record_start', _RECORD_START_LINES),
+      ('record_start', _RECORD_START_LINE),
       ('record_body', _RECORD_BODY_LINE),
-      ('record_end', _RECORD_END_LINES)]
+      ('record_end', _RECORD_END_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -167,7 +161,8 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a log entry.
     """
-    time_elements_structure = self._GetValueFromStructure(structure, 'end_date')
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     self._event_data.end_time = self._ParseTimeElements(time_elements_structure)
 
@@ -185,7 +180,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     self._event_data = APTHistoryLogEventData()
 
     time_elements_structure = self._GetValueFromStructure(
-        structure, 'start_date')
+        structure, 'date_time')
 
     self._event_data.start_time = self._ParseTimeElements(
         time_elements_structure)
@@ -241,15 +236,15 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
+    # APT History logs can start with empty lines.
     try:
-      parsed_structure = self._RECORD_START_LINES.parseString(line)
+      parsed_structure = self._RECORD_START_LINE.parseString(
+          text_reader.lines)
     except pyparsing.ParseException:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'start_date')
+        parsed_structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)

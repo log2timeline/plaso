@@ -13,49 +13,6 @@ from plaso.parsers import plugins
 from plaso.parsers import text_parser
 
 
-class PyparsingLineStructure(object):
-  """Line structure.
-
-  Attributes:
-    expression (pyparsing.ParserElement): pyparsing expression to parse
-        the line structure.
-    name (str): name to identify the line structure.
-    weight (int): number of times the line structure was successfully used.
-  """
-
-  def __init__(self, name, expression):
-    """Initializes a line structure.
-
-    Args:
-      name (str): name to identify the line structure.
-      expression (pyparsing.ParserElement): pyparsing expression to parse
-          the line structure.
-    """
-    super(PyparsingLineStructure, self).__init__()
-    self.expression = expression
-    self.name = name
-    self.weight = 0
-
-  def ParseString(self, string):
-    """Parses a string.
-
-    Args:
-      string (str): string to parse.
-
-    Returns:
-      tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
-          offset or None if the string could not be parsed.
-    """
-    try:
-      structure_generator = self.expression.scanString(string, maxMatches=1)
-      return next(structure_generator, None)
-
-    except pyparsing.ParseException as exception:
-      logger.debug('Unable to parse string with error: {0!s}'.format(exception))
-
-    return None
-
-
 class TextPlugin(plugins.BasePlugin):
   """The interface for text plugins."""
 
@@ -79,8 +36,8 @@ class TextPlugin(plugins.BasePlugin):
     """Initializes a parser."""
     super(TextPlugin, self).__init__()
     self._current_offset = 0
-    self._line_structures = []
     self._parser_mediator = None
+    self._pyparsing_grammar = None
 
     codecs.register_error('text_parser_handler', self._EncodingErrorHandler)
 
@@ -110,30 +67,6 @@ class TextPlugin(plugins.BasePlugin):
 
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return escaped, exception.start + 1
-
-  def _GetMatchingLineStructure(self, string):
-    """Retrieves the first matching line structure.
-
-    Args:
-      string (str): string.
-
-    Returns:
-      tuple: containing:
-
-        int: index of matching line structure in _line_structures;
-        PyparsingLineStructure: matching line structure;
-        tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
-            offset.
-    """
-    for index, line_structure in enumerate(self._line_structures):
-      result_tuple = line_structure.ParseString(string)
-      if result_tuple:
-        # Only want to parse the structure if it starts at the beginning of
-        # the string.
-        if result_tuple[1] == 0:
-          return index, line_structure, result_tuple
-
-    return None, None, None
 
   def _GetStringValueFromStructure(self, structure, name):
     """Retrieves a string value from a Pyparsing structure.
@@ -199,26 +132,25 @@ class TextPlugin(plugins.BasePlugin):
       if parser_mediator.abort:
         break
 
-      index, line_structure, result_tuple = self._GetMatchingLineStructure(
-          text_reader.lines)
+      if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
+        parser_mediator.ProduceExtractionWarning(
+            'more than {0:d} consecutive failures to parse lines.'.format(
+                self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
+        break
 
-      if result_tuple:
-        parsed_structure, _, end = result_tuple
+      try:
+        key, parsed_structure, _, end = self._ParseString(text_reader.lines)
 
-        try:
-          self._ParseLineStructure(
-              parser_mediator, index, line_structure, parsed_structure)
-          consecutive_line_failures = 0
-
-        except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse record: {0:s} with error: {1!s}'.format(
-                  line_structure.name, exception))
-
-        text_reader.SkipAhead(end)
-
-      else:
+      except errors.ParseError as exception:
         line = text_reader.ReadLine()
+        # Pyparsing does not appear to detect single empty lines hence that
+        # we ignore them here.
+        if not line:
+          continue
+
+        logger.debug('unable to parse string with error: {0!s}'.format(
+            exception))
+
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
 
@@ -227,12 +159,21 @@ class TextPlugin(plugins.BasePlugin):
                 text_reader.line_number, line))
 
         consecutive_line_failures += 1
-        if (consecutive_line_failures >
-            self._MAXIMUM_CONSECUTIVE_LINE_FAILURES):
-          parser_mediator.ProduceExtractionWarning(
-              'more than {0:d} consecutive failures to parse lines.'.format(
-                  self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
-          break
+
+        continue
+
+      consecutive_line_failures = 0
+
+      try:
+        # TODO: use a callback per key.
+        self._ParseRecord(parser_mediator, key, parsed_structure)
+
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'unable to parse record: {0:s} with error: {1!s}'.format(
+                key, exception))
+
+      text_reader.SkipAhead(end)
 
       try:
         text_reader.ReadLines()
@@ -242,36 +183,6 @@ class TextPlugin(plugins.BasePlugin):
             'unable to read and decode log line at offset {0:d} with error: '
             '{1!s}').format(self._current_offset, exception))
         break
-
-  def _ParseLineStructure(
-      self, parser_mediator, index, line_structure, parsed_structure):
-    """Parses a line structure and produces events.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      index (int): index of the line structure in the run-time list of line
-          structures.
-      line_structure (PyparsingLineStructure): line structure.
-      parsed_structure (pyparsing.ParseResults): tokens from a string parsed
-          with pyparsing.
-
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    # TODO: use a callback per line structure name.
-    self._ParseRecord(parser_mediator, line_structure.name, parsed_structure)
-
-    line_structure.weight += 1
-
-    while index > 0:
-      previous_weight = self._line_structures[index - 1].weight
-      if line_structure.weight < previous_weight:
-        break
-
-      self._line_structures[index] = self._line_structures[index - 1]
-      self._line_structures[index - 1] = line_structure
-      index -= 1
 
   @abc.abstractmethod
   def _ParseRecord(self, parser_mediator, key, structure):
@@ -287,6 +198,43 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the structure type is unknown.
     """
 
+  def _ParseString(self, string):
+    """Parses a string for known grammar.
+
+    Args:
+      string (str): string.
+
+    Returns:
+      tuple[str, pyparsing.ParseResults, int, int]: key, parsed tokens, start
+          and end offset.
+
+    Raises:
+      ParseError: when the string cannot be parsed by the grammar.
+    """
+    try:
+      structure_generator = self._pyparsing_grammar.scanString(
+          string, maxMatches=1)
+      parsed_structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      parsed_structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not parsed_structure:
+      raise errors.ParseError('No match found.')
+
+    if start > 0 and '\n' in string[:start + 1]:
+      raise errors.ParseError('Found a line preceeding match.')
+
+    # Unwrap the line structure and retrieve its name (key).
+    keys = list(parsed_structure.keys())
+    if len(keys) != 1:
+      raise errors.ParseError('Missing key of line structructure.')
+
+    return keys[0], parsed_structure[0], start, end
+
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
 
@@ -294,14 +242,25 @@ class TextPlugin(plugins.BasePlugin):
       line_structures ([(str, pyparsing.ParserElement)]): tuples of pyparsing
           expressions to parse a line and their names.
     """
-    self._line_structures = []
-    for key, expression in line_structures:
-      # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
-      # with spaces to SkipAhead() the correct number of bytes after a match.
-      expression.parseWithTabs()
+    self._pyparsing_grammar = None
 
-      line_structure = PyparsingLineStructure(key, expression)
-      self._line_structures.append(line_structure)
+    for key, expression in line_structures:
+      # Wrap the line structures in groups with a result name to build a single
+      # pyparsing grammar.
+      if not isinstance(expression, pyparsing.Group):
+        expression = pyparsing.Group(expression).setResultsName(key)
+
+      if not self._pyparsing_grammar:
+        self._pyparsing_grammar = expression
+      else:
+        self._pyparsing_grammar ^= expression
+
+    # Override Pyparsing's default replacement of tabs with spaces to
+    # SkipAhead() the correct number of bytes after a match.
+    self._pyparsing_grammar.parseWithTabs()
+
+    # Override Pyparsing's whitespace characters to spaces only.
+    self._pyparsing_grammar.setDefaultWhitespaceChars(' ')
 
   @abc.abstractmethod
   def CheckRequiredFormat(self, parser_mediator, text_reader):

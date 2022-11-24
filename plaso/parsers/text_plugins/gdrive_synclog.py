@@ -84,24 +84,25 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _START_LOG_LINE = (
+  # Note that this approach is slow.
+  _LOG_LINE_START = (
       _DATE_TIME +
       pyparsing.Word(pyparsing.alphas).setResultsName('level') +
       _PROCESS_IDENTIFIER +
       # TODO: consider stripping thread identifier/cleaning up thread name?
       _THREAD.setResultsName('thread') +
-      pyparsing.Word(pyparsing.printables).setResultsName('source_code') +
-      pyparsing.restOfLine().setResultsName('message') +
+      pyparsing.Word(pyparsing.printables).setResultsName('source_code'))
+
+  _LOG_LINE = (
+      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('message') +
       _END_OF_LINE)
 
-  # Note that this approach is slow.
   _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_START_LOG_LINE) + pyparsing.restOfLine() + _END_OF_LINE)
+      pyparsing.NotAny(_LOG_LINE_START) + pyparsing.restOfLine() + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('start_log_line', _START_LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE),
-      ('empty_line', _END_OF_LINE)]
+      ('log_line', _LOG_LINE),
+      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -150,7 +151,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'start_log_line':
+    if key == 'log_line':
       self._ParseLogline(parser_mediator, structure)
 
   def _ParseTimeElements(self, time_elements_structure):
@@ -204,7 +205,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._START_LOG_LINE.parseString(text_reader.lines)
+      structure = self._LOG_LINE.parseString(text_reader.lines)
     except pyparsing.ParseException as exception:
       logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
       return False
