@@ -63,17 +63,13 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
     date_time = None
 
     event_time = self._GetJSONValue(json_dict, 'EventTime')
-    if not event_time:
-      parser_mediator.ProduceExtractionWarning(
-          'Event time value missing from CloudTrail log entry')
-
-    else:
+    if event_time:
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
         date_time.CopyFromDateTimeString(event_time)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse event time: {0:s} with error: {1!s}'.format(
+            'Unable to parse EventTime value: {0:s} with error: {1!s}'.format(
                event_time, exception))
         date_time = None
 

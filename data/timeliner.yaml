@@ -68,6 +68,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'azure:application_gateway_access:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'bash:history:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -186,6 +192,12 @@ attribute_mappings:
   description: 'Metadata Modification Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'gcp:log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'google_drive_sync_log:entry'

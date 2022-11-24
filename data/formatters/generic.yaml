@@ -76,7 +76,7 @@ short_source: 'LOG'
 source: 'Azure Activity Log'
 ---
 type: 'conditional'
-data_type: 'azure:applicationgatewayaccess:entry'
+data_type: 'azure:application_gateway_access:entry'
 message:
 - 'instance: {instance_identifier}'
 - 'client IP address: {client_ip}'

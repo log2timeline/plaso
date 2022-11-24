@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """JSON-L parser plugin for Google Cloud (GCP) log files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import jsonl_parser
 from plaso.parsers.jsonl_plugins import interface
 
@@ -25,6 +22,8 @@ class GCPLogEventData(events.EventData):
     log_name (str): name of the log entry.
     message (str): TODO
     policy_deltas (list[str]): TODO
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
     request_account_identifier (str): GCP account identifier of the request.
     request_description (str): description of the request.
     request_direction (str): direction of the request.
@@ -58,6 +57,7 @@ class GCPLogEventData(events.EventData):
     self.log_name = None
     self.message = None
     self.policy_deltas = None
+    self.recorded_time = None
     self.request_account_identifier = None
     self.request_description = None
     self.request_direction = None
@@ -228,39 +228,35 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    timestamp = self._GetJSONValue(json_dict, 'timestamp')
-    if not timestamp:
-      parser_mediator.ProduceExtractionWarning(
-          'Timestamp value missing from GCP log event')
+    date_time = None
+
+    iso8601_string = self._GetJSONValue(json_dict, 'timestamp')
+    if iso8601_string:
+      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(iso8601_string)
+      except ValueError as exception:
+        parser_mediator.ProduceExtractionWarning(
+            'Unable to parse timestamp value: {0:s} with error: {1!s}'.format(
+                iso8601_string, exception))
+        date_time = None
+
+    resource = self._GetJSONValue(json_dict, 'resource', default_value={})
+    labels = self._GetJSONValue(resource, 'labels', default_value={})
+    resource_labels = [
+      '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
 
     event_data = GCPLogEventData()
-
-    resource = self._GetJSONValue(json_dict, 'resource')
-    if resource:
-      labels = self._GetJSONValue(resource, 'labels', default_value={})
-      event_data.resource_labels = [
-        '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
-
-    event_data.severity = self._GetJSONValue(json_dict, 'severity')
     event_data.log_name = self._GetJSONValue(json_dict, 'logName')
+    event_data.recorded_time = date_time
+    event_data.resource_labels = resource_labels or None
+    event_data.severity = self._GetJSONValue(json_dict, 'severity')
+    event_data.text_payload = self._GetJSONValue(json_dict, 'textPayload')
 
     self._ParseJSONPayload(json_dict, event_data)
     self._ParseProtoPayload(json_dict, event_data)
 
-    event_data.text_payload = self._GetJSONValue(json_dict, 'textPayload')
-
-    try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(timestamp)
-    except ValueError as exception:
-      parser_mediator.ProduceExtractionWarning((
-          'Unable to parse written time string: {0:s} with error: '
-          '{1!s}').format(timestamp, exception))
-      date_time = dfdatetime_semantic_time.InvalidTime()
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def CheckRequiredFormat(self, json_dict):
     """Check if the log record has the minimal structure required by the plugin.
