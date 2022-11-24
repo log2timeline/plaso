@@ -479,7 +479,7 @@ short_source: 'META'
 source: 'Open XML Metadata'
 ---
 type: 'conditional'
-data_type: microsoft:auditlog:entry
+data_type: 'microsoft365:audit_log:entry'
 message:
 - 'User {user_identifier}'
 - 'performed {operation_name}'

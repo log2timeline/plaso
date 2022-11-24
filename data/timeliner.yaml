@@ -224,6 +224,18 @@ attribute_mappings:
   description: 'Last Connection Time'
 place_holder_event: true
 ---
+data_type: 'ios:app_privacy:access'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'ios:app_privacy:network'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'ios:carplay:history:entry'
 attribute_mappings:
 - name: 'last_run_time'
@@ -405,6 +417,12 @@ data_type: 'macos:wifi_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'microsoft365:audit_log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'msie:webcache:container'

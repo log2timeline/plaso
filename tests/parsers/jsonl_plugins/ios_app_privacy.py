@@ -17,6 +17,10 @@ class IOSAppPrivacPluginTest(test_lib.JSONLPluginTestCase):
     storage_writer = self._ParseJSONLFileWithPlugin([
         'ios_app_privacy_report.ndjson'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 72)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 72)
 
@@ -24,21 +28,27 @@ class IOSAppPrivacPluginTest(test_lib.JSONLPluginTestCase):
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    expected_events_values = {
+    # Test access event data.
+    expected_event_values = {
         'accessor_identifier': 'com.apple.mobileslideshow',
         'accessor_identifier_type': 'bundleID',
+        'data_type': 'ios:app_privacy:access',
+        'recorded_time': '2022-04-27T10:53:24.555000-04:00',
         'resource_category': 'photos',
-        'resource_identifier': '0E0134C2-8E0C-40AD-8620-099F6D9C0BEB',
-        'timestamp': '2022-04-27 14:53:24.555000'}
-    self.CheckEventValues(storage_writer, events[0], expected_events_values)
+        'resource_identifier': '0E0134C2-8E0C-40AD-8620-099F6D9C0BEB'}
 
-    expected_events_values = {
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test network activity event data.
+    expected_event_values = {
         'bundle_identifier': 'com.apple.mobilecal',
+        'data_type': 'ios:app_privacy:network',
         'domain': 'calendars.icloud.com',
-        'timestamp': '2022-04-27 14:59:33.170000'}
-    self.CheckEventValues(storage_writer, events[8], expected_events_values)
+        'recorded_time': '2022-04-27T10:59:33.170000-04:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 8)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
