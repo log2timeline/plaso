@@ -4,8 +4,6 @@
 
 import unittest
 
-import pyparsing
-
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
@@ -13,46 +11,6 @@ from dfvfs.resolver import context as dfvfs_context
 from plaso.parsers import text_parser
 
 from tests.parsers import test_lib
-
-
-class TestPyparsingMultiLineTextParser(
-    text_parser.PyparsingMultiLineTextParser):
-  """Multi-line PyParsing-based text parser for testing purposes."""
-
-  NAME = 'test'
-
-  _ENCODING = 'utf-8'
-
-  _LINE = pyparsing.Regex('.*') + pyparsing.lineEnd()
-
-  _LINE_STRUCTURES = [('line', _LINE)]
-
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    return
-
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    return True
 
 
 class EncodedTextReaderTest(test_lib.ParserTestCase):
@@ -137,42 +95,6 @@ class SingleLineTextParserTest(test_lib.ParserTestCase):
   """Tests for the single-line text parser."""
 
   # TODO: add tests for ParseFileObject
-
-
-class PyparsingMultiLineTextParserTest(test_lib.ParserTestCase):
-  """Tests for the multi-line PyParsing-based text parser."""
-
-  # pylint: disable=protected-access
-
-  # TODO: add tests for _GetValueFromStructure
-
-  # TODO: add tests for _ParseLineStructure
-
-  def testParseFileObject(self):
-    """Tests the ParseFileObject function."""
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator = self._CreateParserMediator(storage_writer)
-    resolver_context = dfvfs_context.Context()
-
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-    data = b'This is another file.\nWith two lines.\n'
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
-    file_object.Open()
-
-    test_parser = TestPyparsingMultiLineTextParser()
-    test_parser.ParseFileObject(parser_mediator, file_object)
-
-    # The test parser does not generate events.
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
 
 
 if __name__ == '__main__':
