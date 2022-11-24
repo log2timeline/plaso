@@ -115,19 +115,6 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    date_time = None
-
-    iso8601_string = self._GetJSONValue(json_dict, 'timeStamp')
-    if iso8601_string:
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(iso8601_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'Unable to parse timeStamp value: {0:s} with error: {1!s}'.format(
-                iso8601_string, exception))
-        date_time = None
-
     properties_json_dict = self._GetJSONValue(
         json_dict, 'properties', default_value={})
 
@@ -154,7 +141,8 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         properties_json_dict, 'originalRequestUriWithArgs')
     event_data.received_bytes = self._GetJSONValue(
         properties_json_dict, 'receivedBytes')
-    event_data.recorded_time = date_time
+    event_data.recorded_time = self._ParseISO8601DateTimeString(
+        parser_mediator, json_dict, 'timeStamp')
     event_data.request_query = self._GetJSONValue(
         properties_json_dict, 'requestQuery')
     event_data.request_uri = self._GetJSONValue(

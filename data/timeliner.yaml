@@ -130,6 +130,28 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'docker:container:configuration'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'docker:container:log:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'docker:layer:configuration'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: false
+---
 data_type: 'firefox:cache:record'
 attribute_mappings:
 - name: 'expiration_time'
@@ -262,7 +284,7 @@ data_type: 'linux:apt_history_log:entry'
 attribute_mappings:
 # TODO: add end_time
 - name: 'start_time'
-  description: 'Added Time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'linux:dpkg_log:entry'

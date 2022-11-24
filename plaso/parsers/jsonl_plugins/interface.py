@@ -5,6 +5,8 @@ import abc
 import json
 import os
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from dfvfs.helpers import text_file
 
 from plaso.parsers import plugins
@@ -35,6 +37,34 @@ class JSONLPlugin(plugins.BasePlugin):
     if json_value == '':
       json_value = default_value
     return json_value
+
+  def _ParseISO8601DateTimeString(self, parser_mediator, json_dict, name):
+    """Parses an ISO8601 date and time string.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      json_dict (dict): JSON dictionary.
+      name (str): name of the value to retrieve.
+
+    Returns:
+      dfdatetime.TimeElementsInMicroseconds: date and time value or None if
+          not available.
+    """
+    iso8601_string = self._GetJSONValue(json_dict, name)
+    if not iso8601_string:
+      return None
+
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      date_time.CopyFromStringISO8601(iso8601_string)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning((
+          'Unable to parse value: {0:s} ISO8601 string: {1:s} with error: '
+          '{2!s}').format(name, iso8601_string, exception))
+      return None
+
+    return date_time
 
   @abc.abstractmethod
   def _ParseRecord(self, parser_mediator, json_dict):

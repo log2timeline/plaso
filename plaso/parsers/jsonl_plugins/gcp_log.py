@@ -228,27 +228,16 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
           and other components, such as storage and dfVFS.
       json_dict (dict): JSON dictionary of the log record.
     """
-    date_time = None
-
-    iso8601_string = self._GetJSONValue(json_dict, 'timestamp')
-    if iso8601_string:
-      try:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromStringISO8601(iso8601_string)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'Unable to parse timestamp value: {0:s} with error: {1!s}'.format(
-                iso8601_string, exception))
-        date_time = None
-
     resource = self._GetJSONValue(json_dict, 'resource', default_value={})
     labels = self._GetJSONValue(resource, 'labels', default_value={})
+
     resource_labels = [
       '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
 
     event_data = GCPLogEventData()
     event_data.log_name = self._GetJSONValue(json_dict, 'logName')
-    event_data.recorded_time = date_time
+    event_data.recorded_time = self._ParseISO8601DateTimeString(
+        parser_mediator, json_dict, 'timestamp')
     event_data.resource_labels = resource_labels or None
     event_data.severity = self._GetJSONValue(json_dict, 'severity')
     event_data.text_payload = self._GetJSONValue(json_dict, 'textPayload')
@@ -273,8 +262,9 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     if None in (log_name, timestamp):
       return False
 
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
     try:
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       date_time.CopyFromStringISO8601(timestamp)
     except ValueError:
       return False
