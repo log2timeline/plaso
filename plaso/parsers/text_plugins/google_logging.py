@@ -266,4 +266,4 @@ class GoogleLogTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(GoogleLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(GoogleLogTextPlugin)

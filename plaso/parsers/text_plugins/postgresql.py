@@ -268,4 +268,4 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(PostgreSQLTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(PostgreSQLTextPlugin)

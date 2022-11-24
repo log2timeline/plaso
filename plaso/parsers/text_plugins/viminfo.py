@@ -484,4 +484,4 @@ class VimInfoTextPlugin(interface.TextPlugin,):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(VimInfoTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(VimInfoTextPlugin)

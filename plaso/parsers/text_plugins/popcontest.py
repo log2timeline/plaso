@@ -313,4 +313,4 @@ class PopularityContestTextPlugin(interface.TextPlugin):
     return bool(parsed_structure)
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(PopularityContestTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(PopularityContestTextPlugin)

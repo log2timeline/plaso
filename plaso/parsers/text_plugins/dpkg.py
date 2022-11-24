@@ -216,4 +216,4 @@ class DpkgTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(DpkgTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(DpkgTextPlugin)

@@ -191,4 +191,4 @@ class SCCMTextPlugin(interface.TextPlugin):
     return pyparsing.Literal('<![LOG[').match in text_reader.lines
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SCCMTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SCCMTextPlugin)

@@ -407,4 +407,4 @@ class WinIISTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(WinIISTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(WinIISTextPlugin)

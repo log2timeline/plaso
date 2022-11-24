@@ -166,4 +166,4 @@ class SELinuxTextPlugin(interface.TextPlugin):
     return 'timestamp' in parsed_structure
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SELinuxTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SELinuxTextPlugin)

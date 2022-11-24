@@ -304,4 +304,4 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(ApacheAccessLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(ApacheAccessLogTextPlugin)

@@ -285,4 +285,4 @@ class SnortFastLogTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SnortFastLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SnortFastLogTextPlugin)

@@ -156,4 +156,4 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(IOSSysdiagnoseLogdTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(IOSSysdiagnoseLogdTextPlugin)

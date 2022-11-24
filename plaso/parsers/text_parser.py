@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Base parser for text formats."""
+"""Text log parser."""
 
 import codecs
 
@@ -159,8 +159,8 @@ class EncodedTextReader(object):
     return self._file_object.get_offset()
 
 
-class SingleLineTextParser(interface.FileObjectParser):
-  """Single-line text parser."""
+class TextLogParser(interface.FileObjectParser):
+  """Text log parser."""
 
   NAME = 'text'
   DATA_FORMAT = 'Text log file'
@@ -210,4 +210,4 @@ class SingleLineTextParser(interface.FileObjectParser):
         parser_mediator.AddYearLessLogHelper(year_less_log_helper)
 
 
-manager.ParsersManager.RegisterParser(SingleLineTextParser)
+manager.ParsersManager.RegisterParser(TextLogParser)

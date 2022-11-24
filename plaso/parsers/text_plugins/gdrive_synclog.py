@@ -220,4 +220,4 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(GoogleDriveSyncLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(GoogleDriveSyncLogTextPlugin)

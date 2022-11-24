@@ -165,4 +165,4 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SophosAVLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SophosAVLogTextPlugin)

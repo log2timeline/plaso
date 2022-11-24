@@ -216,4 +216,4 @@ class MacOSAppFirewallTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(MacOSAppFirewallTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(MacOSAppFirewallTextPlugin)

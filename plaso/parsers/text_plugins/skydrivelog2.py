@@ -305,4 +305,4 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SkyDriveLog2TextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SkyDriveLog2TextPlugin)

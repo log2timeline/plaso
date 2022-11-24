@@ -147,4 +147,4 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
     return bool(list(match_generator))
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(IOSLockdowndLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(IOSLockdowndLogTextPlugin)
