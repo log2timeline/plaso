@@ -97,10 +97,16 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _TWO_DIGITS +
       _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).setResultsName('date_time')
 
-  _HTTP_REQUEST = (
-      pyparsing.Suppress('"') +
-      pyparsing.SkipTo('" ').setResultsName('http_request') +
-      pyparsing.Suppress('"'))
+  _HTTP_METHOD = pyparsing.oneOf([
+      'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
+      'TRACE'])
+
+  _HTTP_VERSION = pyparsing.Combine(
+      pyparsing.Literal('HTTP/') + pyparsing.Word(pyparsing.nums + '.'))
+
+  _HTTP_REQUEST = pyparsing.Suppress('"') + pyparsing.Group(
+      _HTTP_METHOD + pyparsing.Regex(r'\S*') + _HTTP_VERSION).setResultsName(
+          'http_request') + pyparsing.Suppress('"')
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -113,18 +119,13 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   _RESPONSE_BYTES = (
       pyparsing.Literal('-') | _INTEGER).setResultsName('response_bytes')
 
-  _REFERER = (
-      pyparsing.Suppress('"') +
-      pyparsing.SkipTo('" ').setResultsName('referer') +
-      pyparsing.Suppress('"'))
-
   _SERVER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '-' + '.').setResultsName(
           'server_name'))
 
   _USER_AGENT = (
       pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').setResultsName('user_agent') +
+      pyparsing.CharsNotIn('"').setResultsName('user_agent') +
       pyparsing.Suppress('"'))
 
   _USER_NAME = (
@@ -156,7 +157,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _HTTP_REQUEST +
       _INTEGER.setResultsName('response_code') +
       _RESPONSE_BYTES +
-      _REFERER +
+      pyparsing.QuotedString('"').setResultsName('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 
@@ -173,7 +174,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _HTTP_REQUEST +
       _INTEGER.setResultsName('response_code') +
       _RESPONSE_BYTES +
-      _REFERER +
+      pyparsing.QuotedString('"').setResultsName('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 
@@ -203,6 +204,10 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
+    http_request = self._GetValueFromStructure(structure, 'http_request')
+    if http_request:
+      http_request = ' '.join(http_request)
+
     remote_name = self._GetValueFromStructure(structure, 'remote_name')
     if remote_name == '-':
       remote_name = None
@@ -212,8 +217,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       user_name = None
 
     event_data = ApacheAccessLogEventData()
-    event_data.http_request = self._GetValueFromStructure(
-        structure, 'http_request')
+    event_data.http_request = http_request
     event_data.http_response_bytes = self._GetValueFromStructure(
         structure, 'response_bytes')
     event_data.http_response_code = self._GetValueFromStructure(
