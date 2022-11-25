@@ -100,4 +100,4 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     return bool(list(match_generator))
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(BashHistoryTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(BashHistoryTextPlugin)

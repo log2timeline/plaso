@@ -299,4 +299,4 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(ConfluenceAccessTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(ConfluenceAccessTextPlugin)

@@ -91,8 +91,8 @@ class EncodedTextReaderTest(test_lib.ParserTestCase):
     self.assertEqual(text_reader.lines, self._TEST_LINES[10:])
 
 
-class SingleLineTextParserTest(test_lib.ParserTestCase):
-  """Tests for the single-line text parser."""
+class TextLogParserTest(test_lib.ParserTestCase):
+  """Tests for the text log parser."""
 
   # TODO: add tests for ParseFileObject
 

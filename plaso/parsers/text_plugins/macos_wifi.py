@@ -306,4 +306,4 @@ class MacOSWiFiLogTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(MacOSWiFiLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(MacOSWiFiLogTextPlugin)

@@ -185,4 +185,4 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
     return bool(list(match_generator))
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(IOSSysdiagLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(IOSSysdiagLogTextPlugin)

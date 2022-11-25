@@ -189,4 +189,4 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(XChatScrollbackLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(XChatScrollbackLogTextPlugin)

@@ -289,4 +289,4 @@ class AndroidLogcatTextPlugin(
     return 'date_time' in parsed_structure and 'message' in parsed_structure
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(AndroidLogcatTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(AndroidLogcatTextPlugin)

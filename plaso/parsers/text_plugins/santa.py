@@ -516,4 +516,4 @@ class SantaTextPlugin(interface.TextPlugin):
     return bool(self._VERIFICATION_REGEX.match(line))
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(SantaTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(SantaTextPlugin)

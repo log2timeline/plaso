@@ -321,4 +321,4 @@ class XChatLogTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(XChatLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(XChatLogTextPlugin)

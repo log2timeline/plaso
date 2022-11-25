@@ -167,4 +167,4 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(VsftpdLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(VsftpdLogTextPlugin)

@@ -593,4 +593,4 @@ class AWSELBTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(AWSELBTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(AWSELBTextPlugin)

@@ -261,4 +261,4 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(APTHistoryLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(APTHistoryLogTextPlugin)

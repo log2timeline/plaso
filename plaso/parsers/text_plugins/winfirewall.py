@@ -339,4 +339,4 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(WinFirewallLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(WinFirewallLogTextPlugin)

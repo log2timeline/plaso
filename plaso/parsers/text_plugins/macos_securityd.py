@@ -232,4 +232,4 @@ class MacOSSecuritydLogTextPlugin(
     return True
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(MacOSSecuritydLogTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(MacOSSecuritydLogTextPlugin)

@@ -105,4 +105,4 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
     return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
 
 
-text_parser.SingleLineTextParser.RegisterPlugin(ZshExtendedHistoryTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(ZshExtendedHistoryTextPlugin)
