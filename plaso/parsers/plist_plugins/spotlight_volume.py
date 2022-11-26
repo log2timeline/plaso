@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for Spotlight volume configuration plist files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -15,6 +10,7 @@ class SpotlightVolumeConfigurationEventData(events.EventData):
   """Spotlight volume configuration event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): volume creation date and time.
     partial_path (str): part of the path.
     volume_identifier (str): identifier of the volume.
   """
@@ -25,6 +21,7 @@ class SpotlightVolumeConfigurationEventData(events.EventData):
     """Initializes event data."""
     super(SpotlightVolumeConfigurationEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.partial_path = None
     self.volume_identifier = None
 
@@ -50,21 +47,14 @@ class SpotlightVolumeConfigurationPlistPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     stores = match.get('Stores', {})
-    for volume_identifier, volume in stores.items():
+    for volume_identifier, plist_key in stores.items():
       event_data = SpotlightVolumeConfigurationEventData()
-      event_data.partial_path = volume.get('PartialPath', None)
+      event_data.creation_time = self._GetDateTimeValueFromPlistKey(
+          plist_key, 'CreationDate')
+      event_data.partial_path = plist_key.get('PartialPath', None)
       event_data.volume_identifier = volume_identifier
 
-      datetime_value = volume.get('CreationDate', None)
-      if not datetime_value:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromDatetime(datetime_value)
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(SpotlightVolumeConfigurationPlistPlugin)

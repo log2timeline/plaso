@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for Spotlight searched terms plist files."""
+"""Plist parser plugin for Spotlight searched terms plist files.
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-from dfdatetime import time_elements as dfdatetime_time_elements
+Fields within the plist key: com.apple.spotlight.plist, where the name of
+the key contains the search term.
+  DISPLAY_NAME: the display name of the program associated.
+  LAST_USED: last time when it was executed.
+  PATH: path of the program associated to the term.
+"""
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -16,6 +18,8 @@ class SpotlightSearchedTermsEventData(events.EventData):
 
   Attributes:
     display_name (str): display name.
+    last_used_time (dfdatetime.DateTimeValues): last date and time the search
+        term was last used.
     path (str): path.
     search_term (str): search term.
   """
@@ -27,26 +31,13 @@ class SpotlightSearchedTermsEventData(events.EventData):
     super(SpotlightSearchedTermsEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.display_name = None
+    self.last_used_time = None
     self.path = None
     self.search_term = None
 
 
 class SpotlightSearchedTermsPlistPlugin(interface.PlistPlugin):
-  """Plist parser plugin for Spotlight searched terms plist files.
-
-  Further information about extracted fields:
-    name of the item:
-      search term.
-
-    PATH:
-      path of the program associated to the term.
-
-    LAST_USED:
-      last time when it was executed.
-
-    DISPLAY_NAME:
-      the display name of the program associated.
-  """
+  """Plist parser plugin for Spotlight searched terms plist files."""
 
   NAME = 'spotlight'
   DATA_FORMAT = 'Spotlight searched terms plist file'
@@ -66,22 +57,15 @@ class SpotlightSearchedTermsPlistPlugin(interface.PlistPlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     shortcuts = match.get('UserShortcuts', {})
-    for search_term, data in shortcuts.items():
+    for search_term, plist_key in shortcuts.items():
       event_data = SpotlightSearchedTermsEventData()
-      event_data.display_name = data.get('DISPLAY_NAME', None)
-      event_data.path = data.get('PATH', None)
+      event_data.display_name = plist_key.get('DISPLAY_NAME', None)
+      event_data.last_used_time = self._GetDateTimeValueFromPlistKey(
+          plist_key, 'LAST_USED')
+      event_data.path = plist_key.get('PATH', None)
       event_data.search_term = search_term
 
-      datetime_value = data.get('LAST_USED', None)
-      if not datetime_value:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromDatetime(datetime_value)
-
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(SpotlightSearchedTermsPlistPlugin)
