@@ -612,8 +612,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp = self._TEST_TIMESTAMP
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
-    summary_information = summary.OLECFSummaryInformation(None)
-    event_data = summary_information.GetEventData()
+    event_data = summary.OLECFSummaryInformationEventData()
     event_data.parser = 'olecf/olecf_summary'
 
     storage_writer = self._TagEvent(event, event_data, None)

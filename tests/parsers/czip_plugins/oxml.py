@@ -95,28 +95,30 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'app_version': '14.0000',
+        'application': 'Microsoft Office Word',
+        'application_version': '14.0000',
         'author': 'Nides',
-        'creating_app': 'Microsoft Office Word',
         'creation_time': '2012-11-07T23:29:00.000000+00:00',
         'data_type': 'openxml:metadata',
-        'doc_security': '0',
-        'hyperlinks_changed': 'false',
-        'i4': '1',
+        'edit_duration': 1385,
+        'hyperlinks_changed': False,
         'last_printed_time': None,
         'last_saved_by': 'Nides',
-        'links_up_to_date': 'false',
+        'links_up_to_date': False,
         'modification_time': '2013-08-25T22:18:00.000000+00:00',
-        'number_of_characters': '13',
-        'number_of_characters_with_spaces': '14',
-        'number_of_lines': '1',
-        'number_of_pages': '1',
-        'number_of_paragraphs': '1',
-        'number_of_words': '2',
-        'revision_number': '3',
-        'scale_crop': 'false',
-        'template': 'Normal.dotm',
-        'total_time': '1385'}
+        'number_of_characters': 13,
+        'number_of_characters_with_spaces': 14,
+        'number_of_clips': None,
+        'number_of_hidden_slides': None,
+        'number_of_lines': 1,
+        'number_of_pages': 1,
+        'number_of_paragraphs': 1,
+        'number_of_slides': None,
+        'number_of_words': 2,
+        'revision_number': 3,
+        'scale': False,
+        'security_flags': 0,
+        'template': 'Normal.dotm'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
