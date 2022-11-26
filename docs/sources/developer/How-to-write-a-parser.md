@@ -44,8 +44,7 @@ for the following file formats:
 * Plist files
 * SQLite databases
 * [SQLite database files](How-to-write-a-SQLite-plugin.md)
-* [Syslog files](How-to-write-a-Syslog-plugin.md)
-* Single-line text-based log files
+* Text-based log files
 * Windows Registry files (CREG and REGF)
 
 If the data format you are trying to parse is in one of these formats, you

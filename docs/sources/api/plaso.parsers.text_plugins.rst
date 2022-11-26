@@ -68,6 +68,14 @@ plaso.parsers.text\_plugins.gdrive\_synclog module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.google\_logging module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.google_logging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.iis module
 --------------------------------------
 
@@ -156,6 +164,14 @@ plaso.parsers.text\_plugins.santa module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.sccm module
+---------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.sccm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.selinux module
 ------------------------------------------
 
@@ -176,6 +192,14 @@ plaso.parsers.text\_plugins.skydrivelog1 module
 -----------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.skydrivelog1
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.text\_plugins.skydrivelog2 module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.skydrivelog2
    :members:
    :undoc-members:
    :show-inheritance:

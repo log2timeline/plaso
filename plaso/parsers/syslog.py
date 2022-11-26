@@ -22,6 +22,24 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
+class SyslogCommentEventData(events.EventData):
+  """Syslog comment event data.
+
+  Attributes:
+    body (str): message body.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
+  """
+
+  DATA_TYPE = 'syslog:comment'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SyslogCommentEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
+    self.last_written_time = None
+
+
 class SyslogLineEventData(events.EventData):
   """Syslog line event data.
 
@@ -52,22 +70,69 @@ class SyslogLineEventData(events.EventData):
     self.severity = None
 
 
-class SyslogCommentEventData(events.EventData):
-  """Syslog comment event data.
+class SyslogCronTaskRunEventData(SyslogLineEventData):
+  """Syslog cron task run event data.
 
   Attributes:
-    body (str): message body.
+    command (str): command executed.
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
+    username (str): name of user the command was executed.
   """
 
-  DATA_TYPE = 'syslog:comment'
+  DATA_TYPE = 'syslog:cron:task_run'
 
   def __init__(self):
     """Initializes event data."""
-    super(SyslogCommentEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.body = None
+    super(SyslogCronTaskRunEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.command = None
     self.last_written_time = None
+    self.username = None
+
+
+class SyslogSSHEventData(SyslogLineEventData):
+  """SSH event data.
+
+  Attributes:
+    authentication_method (str): authentication method.
+    fingerprint (str): fingerprint.
+    ip_address (str): IP address.
+    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+        time.
+    port (str): port.
+    protocol (str): protocol.
+    username (str): name of user the command was executed.
+  """
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SyslogSSHEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.authentication_method = None
+    self.fingerprint = None
+    self.ip_address = None
+    self.last_written_time = None
+    self.port = None
+    self.protocol = None
+    self.username = None
+
+
+# TODO: merge separate SyslogSSHEventData classes.
+class SyslogSSHLoginEventData(SyslogSSHEventData):
+  """SSH login event data."""
+
+  DATA_TYPE = 'syslog:ssh:login'
+
+
+class SyslogSSHFailedConnectionEventData(SyslogSSHEventData):
+  """SSH failed connection event data."""
+
+  DATA_TYPE = 'syslog:ssh:failed_connection'
+
+
+class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
+  """SSH opened connection event data."""
+
+  DATA_TYPE = 'syslog:ssh:opened_connection'
 
 
 # TODO: remove after refactor.
@@ -427,8 +492,6 @@ class SyslogParser(
 
   _ENCODING = 'utf-8'
 
-  _plugin_classes = {}
-
   # The reporter and facility fields can contain any printable character, but
   # to allow for processing of syslog formats that delimit the reporter and
   # facility with printable characters, we remove certain common delimiters
@@ -624,10 +687,154 @@ class SyslogParser(
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def __init__(self):
-    """Initializes a parser."""
-    super(SyslogParser, self).__init__()
-    self._plugin_by_reporter = {}
+  _IP_ADDRESS = (
+      pyparsing.pyparsing_common.ipv4_address |
+      pyparsing.pyparsing_common.ipv6_address)
+
+  _PORT = pyparsing.Word(pyparsing.nums, max=5).setResultsName('port')
+
+  _USERNAME = pyparsing.Word(pyparsing.alphanums).setResultsName('username')
+
+  _CRON_USERNAME = (
+      pyparsing.Literal('(') +
+      pyparsing.Word(pyparsing.alphanums).setResultsName('username') +
+      pyparsing.Literal(')'))
+
+  _CRON_COMMAND = (
+      pyparsing.Literal('CMD') + pyparsing.Literal('(') +
+      pyparsing.Combine(pyparsing.SkipTo(
+          pyparsing.Literal(')') +
+          pyparsing.StringEnd())).setResultsName('command') +
+      pyparsing.Literal(')'))
+
+  _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
+
+  _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).setResultsName('task_run')
+
+  _SSHD_AUTHENTICATION_METHOD = (
+      pyparsing.Keyword('password') | pyparsing.Keyword('publickey'))
+
+  _SSHD_FINGER_PRINT = pyparsing.Combine(
+      pyparsing.Literal('RSA ') +
+      pyparsing.Word(':' + pyparsing.hexnums)).setResultsName('fingerprint')
+
+  _SSHD_FAILED_CONNECTION = (
+      pyparsing.Literal('Failed') +
+      _SSHD_AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      pyparsing.Literal('for') + _USERNAME +
+      pyparsing.Literal('from') + _IP_ADDRESS.setResultsName('ip_address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.StringEnd())
+
+  _SSHD_LOGIN = (
+      pyparsing.Literal('Accepted') +
+      _SSHD_AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      pyparsing.Literal('for') + _USERNAME +
+      pyparsing.Literal('from') + _IP_ADDRESS.setResultsName('ip_address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.Literal('ssh2').setResultsName('protocol') +
+      pyparsing.Optional(pyparsing.Literal(':') + _SSHD_FINGER_PRINT) +
+      pyparsing.StringEnd())
+
+  _SSHD_OPENED_CONNECTION = (
+      pyparsing.Literal('Connection from') +
+      _IP_ADDRESS.setResultsName('ip_address') +
+      pyparsing.Literal('port') + _PORT +
+      pyparsing.StringEnd())
+
+  _SSHD_MESSAGE = (
+      pyparsing.Group(_SSHD_FAILED_CONNECTION).setResultsName(
+          'failed_connection') ^
+      pyparsing.Group(_SSHD_LOGIN).setResultsName('login') ^
+      pyparsing.Group(_SSHD_OPENED_CONNECTION).setResultsName(
+          'opened_connection'))
+
+  def _ParseCronMessageBody(self, body):
+    """Parses a cron syslog message body.
+
+    Args:
+      body (str): syslog message body.
+
+    Returns:
+      SyslogCronTaskRunEventData: event data or None if not available.
+    """
+    try:
+      structure = self._CRON_MESSAGE.parseString(body)
+    except pyparsing.ParseException as exception:
+      logger.debug(
+          'Unable to parse cron message body with error: {0!s}'.format(
+              exception))
+      return None
+
+    keys = list(structure.keys())
+    if len(keys) != 1:
+      return None
+
+    key = keys[0]
+    structure = structure[0]
+
+    if key != 'task_run':
+      return None
+
+    event_data = SyslogCronTaskRunEventData()
+    event_data.body = structure.get('body', None)
+    event_data.command = structure.get('command', None)
+    event_data.hostname = structure.get('hostname', None)
+    event_data.pid = structure.get('pid', None)
+    event_data.reporter = structure.get('reporter', None)
+    event_data.severity = structure.get('severity', None)
+    event_data.username = structure.get('username', None)
+
+    return event_data
+
+  def _ParseSshdMessageBody(self, body):
+    """Parses a sshd syslog message body.
+
+    Args:
+      body (str): syslog message body.
+
+    Returns:
+      SyslogCronTaskRunEventData: event data or None if not available.
+    """
+    try:
+      structure = self._SSHD_MESSAGE.parseString(body)
+    except pyparsing.ParseException as exception:
+      logger.debug(
+          'Unable to parse sshd message body with error: {0!s}'.format(
+              exception))
+      return None
+
+    keys = list(structure.keys())
+    if len(keys) != 1:
+      return None
+
+    key = keys[0]
+    structure = structure[0]
+
+    if key not in ('failed_connection', 'login', 'opened_connection'):
+      return None
+
+    if key == 'failed_connection':
+      event_data = SyslogSSHFailedConnectionEventData()
+    elif key == 'login':
+      event_data = SyslogSSHLoginEventData()
+    elif key == 'opened_connection':
+      event_data = SyslogSSHOpenedConnectionEventData()
+
+    event_data.authentication_method = structure.get(
+        'authentication_method', None)
+    event_data.body = structure.get('body', None)
+    event_data.fingerprint = structure.get('fingerprint', None)
+    event_data.hostname = structure.get('hostname', None)
+    event_data.ip_address = structure.get('ip_address', None)
+    event_data.pid = structure.get('pid', None)
+    event_data.protocol = structure.get('protocol', None)
+    event_data.port = structure.get('port', None)
+    event_data.reporter = structure.get('reporter', None)
+    event_data.severity = structure.get('severity', None)
+    event_data.username = structure.get('username', None)
+
+    return event_data
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -648,56 +855,39 @@ class SyslogParser(
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    date_time = self._ParseTimeElements(time_elements_structure)
-
-    plugin = None
+    event_data = None
     if key == 'syslog_comment':
       event_data = SyslogCommentEventData()
       event_data.body = self._GetValueFromStructure(structure, 'body')
 
     else:
-      event_data = SyslogLineEventData()
-      event_data.body = self._GetValueFromStructure(structure, 'body')
-      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
-      event_data.severity = self._GetValueFromStructure(structure, 'severity')
+      body = self._GetValueFromStructure(structure, 'body')
+      reporter = self._GetValueFromStructure(structure, 'reporter')
 
       if key == 'rsyslog_protocol_23_line':
-        event_data.severity = self._PriorityToSeverity(
-            self._GetValueFromStructure(structure, 'priority'))
+        priority = self._GetValueFromStructure(structure, 'priority')
+        severity = self._PriorityToSeverity(priority)
+      else:
+        severity = self._GetValueFromStructure(structure, 'severity')
 
-      plugin = self._plugin_by_reporter.get(event_data.reporter, None)
-      if plugin:
-        attributes = {
-            'body': event_data.body,
-            'hostname': event_data.hostname,
-            'pid': event_data.pid,
-            'reporter': event_data.reporter,
-            'severity': event_data.severity}
+      if reporter == 'CRON':
+        event_data = self._ParseCronMessageBody(body)
+      elif reporter == 'sshd':
+        event_data = self._ParseSshdMessageBody(body)
 
-        file_entry = parser_mediator.GetFileEntry()
-        display_name = parser_mediator.GetDisplayName(file_entry)
+      if not event_data:
+        event_data = SyslogLineEventData()
 
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
+      event_data.body = body
+      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.reporter = reporter
+      event_data.severity = severity
 
-        try:
-          # TODO: pass event_data instead of attributes.
-          plugin.Process(parser_mediator, date_time, attributes)
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
 
-        except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionWarning(
-              'unable to parse message: {0:s} with error: {1!s}'.format(
-                  event_data.body, exception))
-
-        except errors.WrongPlugin:
-          plugin = None
-
-    if not plugin:
-      event_data.last_written_time = date_time
-
-      parser_mediator.ProduceEventData(event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -807,20 +997,6 @@ class SyslogParser(
     self._SetEstimatedYear(parser_mediator)
 
     return True
-
-  def EnablePlugins(self, plugin_includes):
-    """Enables parser plugins.
-
-    Args:
-      plugin_includes (list[str]): names of the plugins to enable, where None
-          or an empty list represents all plugins. Note that the default plugin
-          is handled separately.
-    """
-    super(SyslogParser, self).EnablePlugins(plugin_includes)
-
-    self._plugin_by_reporter = {}
-    for plugin in self._plugins:
-      self._plugin_by_reporter[plugin.REPORTER] = plugin
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

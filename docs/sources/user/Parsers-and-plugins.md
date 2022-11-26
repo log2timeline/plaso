@@ -19,7 +19,6 @@ firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or e
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
-googlelog | Parser for Google-formatted log files.
 java_idx | Parser for Java WebStart Cache IDX files.
 jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
@@ -39,14 +38,12 @@ prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
 rplog | Parser for Windows Restore Point log (rp.log) files.
-sccm | Parser for System Center Configuration Manager (SCCM) client log files.
-skydrive_log | Parser for OneDrive (or SkyDrive) log files.
 spotlight_storedb | Parser for Apple Spotlight store database (store.db) files.
 sqlite | Parser for SQLite database files.
 symantec_scanlog | Parser for AV Corporate Edition and Endpoint Protection log files.
 syslog | Parser for System log (syslog) files.
 systemd_journal | Parser for Systemd journal files.
-text | Parser for Single-line text log files.
+text | Parser for text-based log files.
 trendmicro_url | Parser for Trend Micro Office Web Reputation log files.
 trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
 usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
@@ -92,7 +89,7 @@ docker_container_log | Parser for Docker container log files.
 docker_layer_config | Parser for Docker layer configuration files.
 gcp_log | Parser for Google Cloud (GCP) log.
 ios_application_privacy | Parser for iOS Application Privacy report.
-microsoft_audit_log | Parser for Microsoft Audit Log.
+microsoft_audit_log | Parser for Microsoft (Office) 365 audit log.
 
 ### Parser plugins: olecf
 
@@ -166,13 +163,6 @@ windows_eventtranscript | Parser for Windows diagnosis EventTranscript SQLite da
 windows_timeline | Parser for Windows 10 Timeline SQLite database (ActivitiesCache.db) files.
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
-### Parser plugins: syslog
-
-Name | Description
---- | ---
-cron | Parser for Cron syslog line.
-ssh | Parser for SSH syslog line.
-
 ### Parser plugins: text
 
 Name | Description
@@ -185,6 +175,7 @@ bash_history | Parser for Bash history files.
 confluence_access | Parser for Confluence access log (access.log) files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.
 gdrive_synclog | Parser for Google Drive Sync log files.
+googlelog | Parser for Google-formatted log files.
 ios_lockdownd | Parser for iOS lockdown daemon log.
 ios_logd | Parser for iOS sysdiagnose logd files.
 ios_sysdiag_log | Parser for iOS sysdiag log.
@@ -194,9 +185,11 @@ mac_wifi | Parser for MacOS Wi-Fi log (wifi.log) files.
 popularity_contest | Parser for Popularity Contest log files.
 postgresql | Parser for PostgreSQL application log files.
 santa | Parser for Santa log (santa.log) files.
+sccm | Parser for System Center Configuration Manager (SCCM) client log files.
 selinux | Parser for SELinux audit log (audit.log) files.
 setupapi | Parser for Windows SetupAPI log files.
 skydrive_log_v1 | Parser for OneDrive (or SkyDrive) version 1 log files.
+skydrive_log_v2 | Parser for OneDrive (or SkyDrive) version 2 log files.
 snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 viminfo | Parser for Viminfo files.
@@ -258,11 +251,12 @@ bash_history | text/bash_history
 dockerjson | jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config
 dpkg | text/dpkg
 gdrive_synclog | text/gdrive_synclog
+googlelog | text/googlelog
 ios | jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
 ios_lockdownd | text/ios_lockdownd
 ios_logd | text/ios_logd
 ios_sysdiag_log | text/ios_sysdiag_log
-linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, googlelog, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/popularity_contest, text/selinux, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
+linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 mac_appfirewall_log | text/mac_appfirewall_log
 mac_securityd | text/mac_securityd
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/zsh_extended_history, syslog, utmpx, webhist
@@ -270,15 +264,17 @@ mactime | bodyfile
 macwifi | text/mac_wifi
 popularity_contest | text/popularity_contest
 postgresql | text/postgresql
+sccm | text/sccm
 selinux | text/selinux
 setupapi | text/setupapi
+skydrive_log | text/skydrive_log_v2
 skydrive_log_old | text/skydrive_log_v1
 viminfo | text/viminfo
 vsftpd | text/vsftpd
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | esedb, mft, win7
-win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sccm, skydrive_log, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/setupapi, text/skydrive_log_v1, text/winfirewall, usnjrnl, webhist, winjob, winreg
+win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/winfirewall, usnjrnl, webhist, winjob, winreg
 winfirewall | text/winfirewall
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | esedb, mft, winxp

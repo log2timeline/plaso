@@ -10,7 +10,6 @@ from plaso.parsers import fish_history
 from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers.jsonl_plugins import docker_layer_config
-from plaso.parsers.syslog_plugins import cron
 from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import dpkg
 from plaso.parsers.text_plugins import selinux
@@ -65,7 +64,7 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'syslog:cron:task_run'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        cron.CronTaskRunEventData, attribute_values_per_name,
+        syslog.SyslogCronTaskRunEventData, attribute_values_per_name,
         ['application_execution'])
 
     # Test: reporter is 'sudo' AND body contains 'COMMAND='

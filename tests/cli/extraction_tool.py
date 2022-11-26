@@ -281,7 +281,7 @@ Test argument parser.
 
     lines = frozenset(lines)
 
-    self.assertEqual(number_of_tables, 12)
+    self.assertEqual(number_of_tables, 11)
 
     expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)
@@ -304,9 +304,6 @@ Test argument parser.
     # the table.
     expected_line = (
         'chrome_27_history : Parser for Google Chrome 27 and later history')
-    self.assertIn(expected_line, lines)
-
-    expected_line = 'ssh : Parser for SSH syslog line.'
     self.assertIn(expected_line, lines)
 
     expected_line = 'winreg_default : Parser for Windows Registry data.'

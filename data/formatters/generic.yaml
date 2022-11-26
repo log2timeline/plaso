@@ -894,11 +894,13 @@ short_message:
 short_source: 'LOG'
 source: 'Log File'
 ---
+# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
 message:
 - 'Unsuccessful connection of user: {username} '
 - 'from {address}:'
+- 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '
 - 'ssh pid: {pid}'
@@ -908,11 +910,13 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
+# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:login'
 message:
 - 'Successful login of user: {username} '
 - 'from {address}:'
+- 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '
 - 'ssh pid: {pid}'
@@ -922,10 +926,12 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
+# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:opened_connection'
 message:
 - 'Connection opened {address}:'
+- 'Connection opened {ip_address}:'
 - '{port} '
 - 'ssh pid: {pid}'
 separator: ''
