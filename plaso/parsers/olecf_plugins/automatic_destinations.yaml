@@ -93,6 +93,7 @@ members:
   encoding: ascii
   element_data_type: char
   elements_data_size: 16
+  elements_terminator: "\x00"
 - name: entry_number
   data_type: uint32
 - name: unknown2
@@ -110,6 +111,7 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: dest_list_entry_v1.path_size
+  elements_terminator: "\x00\x00"
 ---
 name: dest_list_entry_v3
 type: structure
@@ -131,6 +133,7 @@ members:
   encoding: ascii
   element_data_type: char
   elements_data_size: 16
+  elements_terminator: "\x00"
 - name: entry_number
   data_type: uint32
 - name: unknown2
@@ -154,5 +157,6 @@ members:
   encoding: utf-16-le
   element_data_type: wchar16
   number_of_elements: dest_list_entry_v3.path_size
+  elements_terminator: "\x00\x00"
 - name: unknown7
   data_type: uint32

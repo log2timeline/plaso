@@ -489,6 +489,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'olecf:dest_list:entry'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'opera:history:entry'
 attribute_mappings:
 - name: 'last_visited_time'

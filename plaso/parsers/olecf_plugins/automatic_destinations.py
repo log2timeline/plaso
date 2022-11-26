@@ -5,13 +5,10 @@ import os
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import dtfabric_helper
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
@@ -27,10 +24,13 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     droid_file_identifier (str): droid file identifier.
     droid_volume_identifier (str): droid volume identifier.
     entry_number (int): DestList entry number.
-    path (str): path.
-    pin_status (int): pin status.
+    hostname (str): hostname.
+    modification_time (dfdatetime.DateTimeValues): last modification date and
+        time.
     offset (int): offset of the DestList entry relative to the start of
         the DestList stream, from which the event data was extracted.
+    path (str): path.
+    pin_status (int): pin status.
   """
 
   DATA_TYPE = 'olecf:dest_list:entry'
@@ -45,6 +45,7 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     self.droid_volume_identifier = None
     self.entry_number = None
     self.hostname = None
+    self.modification_time = None
     self.offset = None
     self.path = None
     self.pin_status = None
@@ -179,26 +180,22 @@ class AutomaticDestinationsOLECFPlugin(
             '{0:s}').format(
                 exception))
 
-      if entry.last_modification_time == 0:
-        date_time = dfdatetime_semantic_time.NotSet()
-      else:
-        date_time = dfdatetime_filetime.Filetime(
-            timestamp=entry.last_modification_time)
-
       event_data = AutomaticDestinationsDestListEntryEventData()
       event_data.birth_droid_file_identifier = birth_droid_file_identifier
       event_data.birth_droid_volume_identifier = birth_droid_volume_identifier
       event_data.droid_file_identifier = droid_file_identifier
       event_data.droid_volume_identifier = droid_volume_identifier
       event_data.entry_number = entry.entry_number
-      event_data.hostname = entry.hostname.rstrip('\x00')
+      event_data.hostname = entry.hostname or None
       event_data.offset = entry_offset
-      event_data.path = entry.path.rstrip('\x00')
+      event_data.path = entry.path or None
       event_data.pin_status = entry.pin_status
 
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      if entry.last_modification_time:
+        event_data.modification_time = dfdatetime_filetime.Filetime(
+            timestamp=entry.last_modification_time)
+
+      parser_mediator.ProduceEventData(event_data)
 
       entry_offset += entry_data_size
 
