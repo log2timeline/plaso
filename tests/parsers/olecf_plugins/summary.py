@@ -17,6 +17,10 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     plugin = summary.SummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
 
@@ -28,27 +32,27 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
-    # TODO: add support for: 'Total edit time (secs): 0'
-
     expected_event_values = {
         'application': 'Microsoft Office Word',
         'author': 'DAVID NIDES',
+        'creation_time': '2012-12-10T18:38:00.0000000+00:00',
         'data_type': 'olecf:summary_info',
-        'date_time': '2012-12-10T18:38:00.0000000+00:00',
+        'edit_duration': None,
+        'item_creation_time': None,
+        'item_modification_time': '2013-05-16T02:29:49.7950000+00:00',
+        'last_printed_time': None,
+        'last_save_time': '2013-05-16T02:29:00.0000000+00:00',
         'last_saved_by': 'Nides',
-        'name': 'Summary Information',
         'number_of_characters': 18,
         'number_of_pages': 1,
         'number_of_words': 3,
         'revision_number': '4',
-        'security': 0,
+        'security_flags': 0,
         'template': 'Normal.dotm',
-        'timestamp_desc': 'Document Creation Time',
         'title': 'Table of Context'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
@@ -58,6 +62,10 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     """Tests the Process function on a Document Summary Information stream."""
     plugin = summary.DocumentSummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1)
@@ -70,19 +78,19 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'application_version': '14.0',
         'company': 'KPMG',
         'data_type': 'olecf:document_summary_info',
-        'date_time': '2013-05-16T02:29:49.7950000+00:00',
-        'name': 'Document Summary Information',
+        'item_creation_time': None,
+        'item_modification_time': '2013-05-16T02:29:49.7950000+00:00',
+        'links_up_to_date': False,
         'number_of_lines': 1,
         'number_of_paragraphs': 1,
         'shared_document': False}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
