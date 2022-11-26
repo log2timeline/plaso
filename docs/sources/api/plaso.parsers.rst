@@ -342,14 +342,6 @@ plaso.parsers.symantec module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.syslog module
----------------------------
-
-.. automodule:: plaso.parsers.syslog
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.systemd\_journal module
 -------------------------------------
 

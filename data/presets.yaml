@@ -93,7 +93,6 @@ parsers:
 - sqlite/google_drive
 - sqlite/skype
 - sqlite/zeitgeist
-- syslog
 - systemd_journal
 - text/apt_history
 - text/bash_history
@@ -102,6 +101,7 @@ parsers:
 - text/googlelog
 - text/popularity_contest
 - text/selinux
+- text/syslog
 - text/vsftpd
 - text/xchatlog
 - text/xchatscrollback
@@ -149,8 +149,8 @@ parsers:
 - text/mac_appfirewall_log
 - text/mac_securityd
 - text/mac_wifi
+- text/syslog
 - text/zsh_extended_history
-- syslog
 - utmpx
 - webhist
 ---
@@ -198,6 +198,11 @@ name: skydrive_log_old
 description: Preset for backwards compatibility of skydrive_log_old text parser plugin.
 parsers:
 - text/skydrive_log_v1
+---
+name: syslog
+description: Preset for backwards compatibility of syslog text parser plugin.
+parsers:
+- text/syslog
 ---
 name: viminfo
 description: Preset for backwards compatibility of viminfo text parser plugin.

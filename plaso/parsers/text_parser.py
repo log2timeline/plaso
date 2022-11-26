@@ -2,6 +2,7 @@
 """Text log parser."""
 
 import codecs
+import os
 
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -181,6 +182,8 @@ class TextLogParser(interface.FileObjectParser):
     for plugin in self._plugins:
       if parser_mediator.abort:
         break
+
+      file_object.seek(0, os.SEEK_SET)
 
       encoding = plugin.ENCODING or parser_mediator.codepage
       text_reader = EncodedTextReader(

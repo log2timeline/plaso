@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the syslog parser."""
+"""Tests for the syslog text parser plugin."""
 
 import unittest
 
-from plaso.parsers import syslog
+from plaso.parsers.text_plugins import syslog
 
-from tests.parsers import test_lib
+from tests.parsers.text_plugins import test_lib
 
 
-class SyslogParserTest(test_lib.ParserTestCase):
-  """Tests for the syslog parser."""
+class SyslogTextPluginTest(test_lib.TextPluginTestCase):
+  """Tests for the syslog text parser plugin."""
 
   # pylint: disable=protected-access
 
-  def testParse(self):
-    """Tests the Parse function."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog'], parser)
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -65,10 +65,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
         'timelining_warning')
     self.assertEqual(number_of_warnings, 1)
 
-  def testParseChromeOS(self):
-    """Tests the Parse function."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_chromeos'], parser)
+  def testProcessChromeOS(self):
+    """Tests the Process function with a ChromeOS syslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog_chromeos'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -96,10 +96,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseCron(self):
-    """Tests the Parse function on a cron syslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_cron.log'], parser)
+  def testProcessCron(self):
+    """Tests the Process function with a cron syslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog_cron.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -125,10 +125,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseDarwin(self):
-    """Tests the Parse function on an Darwin-style syslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_osx'], parser)
+  def testProcessDarwin(self):
+    """Tests the Process function with a Darwin syslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog_osx'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -155,10 +155,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseRsyslog(self):
-    """Tests the Parse function on a rsyslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_rsyslog'], parser)
+  def testProcessRsyslog(self):
+    """Tests the Process function with a rsyslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog_rsyslog'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -185,41 +185,11 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseRsyslogTraditional(self):
-    """Tests the Parse function on a traditional rsyslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_rsyslog_traditional'], parser)
-
-    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    self.assertEqual(number_of_event_data, 8)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 8)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    expected_event_values = {
-        'data_type': 'syslog:line',
-        'hostname': 'myhostname.myhost.com',
-        'last_written_time': '0000-01-22T07:54:32',
-        'reporter': 'Job',
-        'severity': None}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
-
-  def testParseRsyslogProtocol23(self):
-    """Tests the Parse function on a protocol 23 rsyslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(
-        ['syslog_rsyslog_SyslogProtocol23Format'], parser)
+  def testProcessRsyslogProtocol23(self):
+    """Tests the Process function with a protocol 23 rsyslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog_rsyslog_SyslogProtocol23Format'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -246,11 +216,11 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseRsyslogSysklogd(self):
-    """Tests the Parse function on a syslogkd format rsyslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(
-        ['syslog_rsyslog_SysklogdFileFormat'], parser)
+  def testProcessRsyslogSysklogd(self):
+    """Tests the Process function with a syslogkd rsyslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog_rsyslog_SysklogdFileFormat'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -277,10 +247,41 @@ class SyslogParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParseSshd(self):
-    """Tests the Parse function on a sshd syslog file."""
-    parser = syslog.SyslogParser()
-    storage_writer = self._ParseFile(['syslog_ssh.log'], parser)
+  def testProcessRsyslogTraditional(self):
+    """Tests the Process function with a traditional rsyslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog_rsyslog_traditional'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 8)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
+    self.assertEqual(number_of_events, 8)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_event_values = {
+        'data_type': 'syslog:line',
+        'hostname': 'myhostname.myhost.com',
+        'last_written_time': '0000-01-22T07:54:32',
+        'reporter': 'Job',
+        'severity': None}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+  def testProcessSshd(self):
+    """Tests the Process function with a sshd syslog file."""
+    plugin = syslog.SyslogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['syslog_ssh.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

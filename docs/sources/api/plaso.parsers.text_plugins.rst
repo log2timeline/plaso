@@ -220,6 +220,14 @@ plaso.parsers.text\_plugins.sophos\_av module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.syslog module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.syslog
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.viminfo module
 ------------------------------------------
 

@@ -8,12 +8,12 @@ from plaso.containers import events
 from plaso.containers import plist_event
 from plaso.lib import definitions
 from plaso.parsers import filestat
-from plaso.parsers import syslog
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import ls_quarantine
+from plaso.parsers.text_plugins import syslog
 
 from tests.data import test_lib
 
