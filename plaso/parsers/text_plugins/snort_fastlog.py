@@ -172,9 +172,7 @@ class SnortFastLogTextPlugin(
           _DESTINATION_IP_ADDRESS_AND_PORT) +
       _END_OF_LINE)
 
-  _LINE_STRUCTURES = [
-      ('fastlog_line', _FASTLOG_LINE),
-      ('empty_line', _END_OF_LINE)]
+  _LINE_STRUCTURES = [('fastlog_line', _FASTLOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

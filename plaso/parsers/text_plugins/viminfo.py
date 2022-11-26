@@ -214,7 +214,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('"') +
       pyparsing.Or([_INTEGER, pyparsing.Word(pyparsing.printables)]) +
       pyparsing.Suppress(pyparsing.White('\t')) +
-      pyparsing.Or(['BLOCK', 'CHAR', 'LINE']) +
+      pyparsing.oneOf(['BLOCK', 'CHAR', 'LINE']) +
       pyparsing.Suppress(pyparsing.White('\t')) +
       _INTEGER + _END_OF_LINE +
       pyparsing.Group(pyparsing.ZeroOrMore(_REGISTERS_CONTENT)) +
@@ -272,8 +272,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       ('registers_history', _REGISTERS_HISTORY),
       ('filemarks_history', _FILEMARKS_HISTORY),
       ('jumplist_history', _JUMPLIST_HISTORY),
-      ('history_marks_history', _HISTORY_MARKS_HISTORY),
-      ('empty_line', _END_OF_LINE)]
+      ('history_marks_history', _HISTORY_MARKS_HISTORY)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

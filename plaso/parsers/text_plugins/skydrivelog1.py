@@ -96,8 +96,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
   # Define the available log line structures.
   _LINE_STRUCTURES = [
       ('log_line', _LOG_LINE),
-      ('no_header_single_line', _NO_HEADER_SINGLE_LINE),
-      ('empty_line', _END_OF_LINE)]
+      ('no_header_single_line', _NO_HEADER_SINGLE_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

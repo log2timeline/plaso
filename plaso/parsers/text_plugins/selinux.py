@@ -80,9 +80,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
       pyparsing.restOfLine().setResultsName('body') +
       _END_OF_LINE)
 
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('empty_line', _END_OF_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 

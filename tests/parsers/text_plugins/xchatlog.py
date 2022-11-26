@@ -17,18 +17,16 @@ class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
     plugin = xchatlog.XChatLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(['xchat.log'], plugin)
 
-    # Note that the entry on line 4 is currently skipped due to the leading
-    # space.
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 8)
+    self.assertEqual(number_of_event_data, 9)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 8)
+    self.assertEqual(number_of_events, 9)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 4)
+    self.assertEqual(number_of_warnings, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')

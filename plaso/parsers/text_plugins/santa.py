@@ -215,11 +215,6 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _QUOTA_EXCEEDED_LINE = (
-      _DATE_TIME_BLOCK + pyparsing.Literal((
-          '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
-          'HAVE BEEN DISCARDED ***')) + _END_OF_LINE)
-
   _SANTAD_PREAMBLE = pyparsing.Suppress('I santad:')
 
   _APPEARANCE = (pyparsing.Suppress('|appearance=') +
@@ -314,7 +309,7 @@ class SantaTextPlugin(interface.TextPlugin):
       _MOUNT + _VOLUME + _BSD_NAME + _FILE_SYSTEM + _MODEL + _SERIAL + _BUS +
       _DMG_PATH + _APPEARANCE + _END_OF_LINE)
 
-  _DISK_UMOUNT_LINE = (
+  _DISK_UNMOUNT_LINE = (
       _DATE_TIME_BLOCK + _SANTAD_PREAMBLE + pyparsing.Suppress('action=') +
       pyparsing.Literal('DISKDISAPPEAR').setResultsName('action') +
       _MOUNT + _VOLUME + _BSD_NAME + _END_OF_LINE)
@@ -343,12 +338,17 @@ class SantaTextPlugin(interface.TextPlugin):
       pyparsing.Literal('EXIT').setResultsName('action') +
       _PID + _PID_VERSION + _PPID + _UID + _GID + _END_OF_LINE)
 
+  _QUOTA_EXCEEDED_LINE = (
+      _DATE_TIME_BLOCK + pyparsing.Literal((
+          '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
+          'HAVE BEEN DISCARDED ***')) + _END_OF_LINE)
+
   _LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
       ('process_exit_line', _PROCESS_EXIT_LINE),
       ('file_system_event_line', _FILE_OPERATION_LINE),
       ('mount_line', _DISK_MOUNT_LINE),
-      ('umount_line', _DISK_UMOUNT_LINE),
+      ('unmount_line', _DISK_UNMOUNT_LINE),
       ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
@@ -438,7 +438,7 @@ class SantaTextPlugin(interface.TextPlugin):
       event_data.uid = self._GetValueFromStructure(structure, 'uid')
       event_data.user = self._GetValueFromStructure(structure, 'user')
 
-    elif key == 'umount_line':
+    elif key == 'unmount_line':
       event_data = SantaMountEventData()
       event_data.action = self._GetValueFromStructure(structure, 'action')
       event_data.bsd_name = self._GetValueFromStructure(structure, 'bsd_name')

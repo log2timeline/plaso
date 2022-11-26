@@ -100,12 +100,12 @@ class EncodedTextReader(object):
     Returns:
       str: line read from the lines buffer.
     """
-    line, _, self.lines = self.lines.partition('\n')
-    if not line:
+    if not self.lines:
       self.ReadLines()
-      line, _, self.lines = self.lines.partition('\n')
 
+    line, _, self.lines = self.lines.partition('\n')
     self.line_number += 1
+
     return line
 
   def ReadLines(self):

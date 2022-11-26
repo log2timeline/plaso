@@ -65,77 +65,77 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS)
 
-  # Disable pylint due to long URLs for documenting structures.
   # pylint: disable=line-too-long
-
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
+  # pylint: enable=line-too-long
   _LOG_HEADER_START_LINE = (
       pyparsing.Literal('[Device Install Log]') + _END_OF_LINE)
 
-  # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
+  _LOG_HEADER_BODY_LINE = (
+     pyparsing.oneOf([
+         'Architecture', 'OS Version', 'ProductType', 'Service Pack',
+         'Suite']) +
+     pyparsing.Literal('=') + pyparsing.restOfLine() + _END_OF_LINE)
+
   _LOG_HEADER_END_LINE = (
       pyparsing.Literal('[BeginLog]') + _END_OF_LINE)
 
+  # pylint: disable=line-too-long
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
+  # pylint: enable=line-too-long
   _SECTION_HEADER_LINE = (
       pyparsing.Suppress('>>>  [') +
       pyparsing.CharsNotIn(']').setResultsName('entry_type') +
       pyparsing.Suppress(']') + _END_OF_LINE)
 
-  # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   _SECTION_HEADER_START_LINE = (
       pyparsing.Suppress('>>>  Section start') +
       _DATE_TIME.setResultsName('start_time') +
       _END_OF_LINE)
 
+  # pylint: disable=line-too-long
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
+  # pylint: enable=line-too-long
   _SECTION_END_LINE = (
       pyparsing.Suppress('<<<  Section end ') +
       _DATE_TIME.setResultsName('end_time') +
       _END_OF_LINE)
 
-  # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   _SECTION_END_EXIT_STATUS_LINE = (
       pyparsing.Suppress('<<<  [Exit status: ') +
       pyparsing.CharsNotIn(']').setResultsName('exit_status') +
       pyparsing.Literal(']') +
       _END_OF_LINE)
 
-  # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
-  _SECTION_BODY_LINE = (
-      pyparsing.stringStart +
-      pyparsing.MatchFirst([
-          pyparsing.Literal('!!!  '),
-          pyparsing.Literal('!    '),
-          pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine()).leaveWhitespace() + _END_OF_LINE
+  # pylint: disable=line-too-long
+  # See https://learn.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-body
+  # and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
+  # pylint: enable=line-too-long
+  _ENTRY_PREFIX = pyparsing.oneOf(['.', '!!!', '!'])
 
-  # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
-  _NON_SECTION_LINE = (
-      pyparsing.stringStart +
-      pyparsing.MatchFirst([
-          pyparsing.Literal('   . '),
-          pyparsing.Literal('!!!  '),
-          pyparsing.Literal('!    '),
-          pyparsing.Literal('     ')]) +
-      pyparsing.restOfLine()).leaveWhitespace() + _END_OF_LINE
+  # Cannot rely on the documentation since undocumented event catagegories
+  # have been observed, like: "cmd:", "idb:" and "pol:".
+  _EVENT_CATEGORY = (
+      pyparsing.Word(pyparsing.alphas + '.', min=2, max=3) +
+      pyparsing.Literal(':'))
 
-  # These lines do not appear to be documented in the Microsoft documentation.
+  _SECTION_BODY_OR_NON_SECTION_LINE = (
+      pyparsing.Optional(_ENTRY_PREFIX) + _EVENT_CATEGORY +
+      pyparsing.restOfLine() + _END_OF_LINE)
+
+  # Undocumented observed lines.
   _BOOT_SESSION_LINE = (
       pyparsing.Literal('[Boot Session:') +
       _DATE_TIME +
       pyparsing.Literal(']') +
       _END_OF_LINE)
 
-  # pylint: enable=line-too-long
-
   _LINE_STRUCTURES = [
       ('ignorable_line', _BOOT_SESSION_LINE),
       ('ignorable_line', _LOG_HEADER_END_LINE),
       ('ignorable_line', _LOG_HEADER_START_LINE),
-      ('ignorable_line', _NON_SECTION_LINE),
-      ('ignorable_line', _SECTION_BODY_LINE),
-      ('ignorable_line', _END_OF_LINE),
+      ('ignorable_line', _LOG_HEADER_BODY_LINE),
+      ('ignorable_line', _SECTION_BODY_OR_NON_SECTION_LINE),
       ('section_end', _SECTION_END_LINE),
       ('section_end_exit_status', _SECTION_END_EXIT_STATUS_LINE),
       ('section_header', _SECTION_HEADER_LINE),
