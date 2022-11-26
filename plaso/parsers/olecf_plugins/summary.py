@@ -235,7 +235,7 @@ class OLECFPropertySetStream(object):
           properties_dict[property_name] = value
 
   def SetEventData(self, event_data):
-    """Set the properties as event data.
+    """Sets the properties as event data.
 
     Args:
       event_data (EventData): event data.
