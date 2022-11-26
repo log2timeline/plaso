@@ -16,7 +16,6 @@ Subpackages
    plaso.parsers.plist_plugins
    plaso.parsers.shared
    plaso.parsers.sqlite_plugins
-   plaso.parsers.syslog_plugins
    plaso.parsers.text_plugins
    plaso.parsers.winreg_plugins
 
@@ -147,14 +146,6 @@ plaso.parsers.fseventsd module
 ------------------------------
 
 .. automodule:: plaso.parsers.fseventsd
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.google\_logging module
-------------------------------------
-
-.. automodule:: plaso.parsers.google_logging
    :members:
    :undoc-members:
    :show-inheritance:
@@ -323,22 +314,6 @@ plaso.parsers.safari\_cookies module
 ------------------------------------
 
 .. automodule:: plaso.parsers.safari_cookies
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sccm module
--------------------------
-
-.. automodule:: plaso.parsers.sccm
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.skydrivelog module
---------------------------------
-
-.. automodule:: plaso.parsers.skydrivelog
    :members:
    :undoc-members:
    :show-inheritance:

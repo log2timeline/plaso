@@ -78,7 +78,7 @@ class DataFormatInformationExtractor(object):
       'plaso/parsers/olecf_plugins': 'OLE Compound File formats',
       'plaso/parsers/plist_plugins': 'Property list (plist) formats',
       'plaso/parsers/sqlite_plugins': 'SQLite database file formats',
-      'plaso/parsers/syslog_plugins': 'Syslog file formats',
+      'plaso/parsers/text_plugins': 'Text-based log file formats',
       'plaso/parsers/winreg_plugins': 'Windows Registry formats'}
 
   _DTFORMATS_URL_PREFIX = (
@@ -103,7 +103,7 @@ class DataFormatInformationExtractor(object):
       'plist_default',
       'plist_plugin',
       'sqlite_plugin',
-      'syslog_plugin',
+      'text_plugin',
       'winreg_default',
       'winreg_plugin'])
 

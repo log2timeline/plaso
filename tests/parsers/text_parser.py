@@ -94,6 +94,23 @@ class EncodedTextReaderTest(test_lib.ParserTestCase):
 class TextLogParserTest(test_lib.ParserTestCase):
   """Tests for the text log parser."""
 
+  # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser = text_parser.TextLogParser()
+
+    number_of_plugins = len(parser._plugin_classes)
+
+    parser.EnablePlugins([])
+    self.assertEqual(len(parser._plugins), 0)
+
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+    self.assertEqual(len(parser._plugins), number_of_plugins)
+
+    parser.EnablePlugins(['apache_access'])
+    self.assertEqual(len(parser._plugins), 1)
+
   # TODO: add tests for ParseFileObject
 
 

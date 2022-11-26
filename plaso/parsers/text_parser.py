@@ -160,10 +160,10 @@ class EncodedTextReader(object):
 
 
 class TextLogParser(interface.FileObjectParser):
-  """Text log parser."""
+  """Text-based log file parser."""
 
   NAME = 'text'
-  DATA_FORMAT = 'Text log file'
+  DATA_FORMAT = 'text-based log file'
 
   _plugin_classes = {}
 

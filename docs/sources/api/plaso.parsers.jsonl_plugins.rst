@@ -76,10 +76,10 @@ plaso.parsers.jsonl\_plugins.ios\_app\_privacy module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.jsonl\_plugins.microsoft\_audit\_log module
----------------------------------------------------------
+plaso.parsers.jsonl\_plugins.microsoft365\_audit\_log module
+------------------------------------------------------------
 
-.. automodule:: plaso.parsers.jsonl_plugins.microsoft_audit_log
+.. automodule:: plaso.parsers.jsonl_plugins.microsoft365_audit_log
    :members:
    :undoc-members:
    :show-inheritance:

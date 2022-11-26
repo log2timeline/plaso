@@ -57,7 +57,6 @@ from plaso.parsers import jsonl_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
 from plaso.parsers import sqlite_plugins
-from plaso.parsers import syslog_plugins
 from plaso.parsers import text_plugins
 from plaso.parsers import winreg_plugins
 
