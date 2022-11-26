@@ -8,15 +8,11 @@ Also see:
   https://www.postgresql.org/docs/current/runtime-config-logging.html
 """
 
-import pytz
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -28,6 +24,8 @@ class PostgreSQLEventData(events.EventData):
   Attributes:
     log_line (str): log message.
     pid (int): process identifier (PID).
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
     severity (str): severity.
     user (str): "user@database" string if present. Records the user account and
         database name that was authenticated or attempting to authenticate.
@@ -40,6 +38,7 @@ class PostgreSQLEventData(events.EventData):
     super(PostgreSQLEventData, self).__init__(data_type=self.DATA_TYPE)
     self.log_line = None
     self.pid = None
+    self.recorded_time = None
     self.severity = None
     self.user = None
 
@@ -109,6 +108,8 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
+  # TODO: move this into timeliner
+
   # Extracted from /usr/share/postgresql/13/timezonesets/Default
   # See https://www.postgresql.org/docs/current/datetime-config-files.html
   _PSQL_TIME_ZONE_MAPPING = {
@@ -157,16 +158,68 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
         'WET': 'Africa/Casablanca',
         'WETDST': 'Atlantic/Canary'}
 
-  def _BuildDateTime(self, time_elements_structure):
-    """Builds time elements from a PostgreSQL log time stamp.
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
-      time_elements_structure (pyparsing.ParseResults): structure of tokens
-          derived from a PostgreSQL log time stamp.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    log_line = self._GetValueFromStructure(
+        structure, 'log_line', default_value='')
+    log_line = log_line.lstrip().rstrip()
+
+    pids = self._GetValueFromStructure(structure, 'pid', default_value=[])
+
+    time_zone_string = self._GetValueFromStructure(structure, 'time_zone')
+
+    user_and_database = self._GetValueFromStructure(
+        structure, 'user_and_database', default_value='')
+    user_and_database = ''.join(user_and_database)
+
+    # TODO: move this into timeliner
+    time_zone_string = self._PSQL_TIME_ZONE_MAPPING.get(
+        time_zone_string, time_zone_string)
+
+    date_time = self._ParseTimeElements(time_elements_structure)
+    if time_zone_string != 'UTC':
+      date_time.is_local_time = True
+      date_time.time_zone_hint = time_zone_string
+
+    event_data = PostgreSQLEventData()
+    event_data.log_line = log_line or None
+    event_data.pid = ''.join([str(pid) for pid in pids])
+    event_data.recorded_time = date_time
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
+    event_data.user = user_and_database or None
+
+    parser_mediator.ProduceEventData(event_data)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
 
     Returns:
-      dfdatetime.TimeElements: date and time extracted from the structure or
-          None if the structure does not represent a valid string.
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
     """
     # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
     # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
@@ -191,63 +244,10 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
                 milliseconds))
 
       return date_time
-    except (TypeError, ValueError):
-      return None
 
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
+    except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    event_data = PostgreSQLEventData()
-    event_data.pid = ''.join(
-        [str(pid) for pid in self._GetValueFromStructure(structure, 'pid')])
-    event_data.severity = self._GetValueFromStructure(structure, 'severity')
-
-    user_and_database = self._GetValueFromStructure(
-        structure, 'user_and_database')
-    if user_and_database:
-      event_data.user = ''.join(user_and_database)
-
-    log_line = self._GetValueFromStructure(structure, 'log_line')
-    if log_line:
-      event_data.log_line = log_line.lstrip().rstrip()
-
-    time_zone_string = self._GetValueFromStructure(structure, 'time_zone')
-    time_zone_string = self._PSQL_TIME_ZONE_MAPPING.get(
-        time_zone_string, time_zone_string)
-
-    time_zone = None
-    if time_zone_string != 'UTC':
-      try:
-        time_zone = pytz.timezone(time_zone_string)
-      except pytz.UnknownTimeZoneError:
-        parser_mediator.ProduceExtractionWarning(
-            'unsupported time zone: {0!s}'.format(time_zone_string))
-        return
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    date_time = self._BuildDateTime(time_elements_structure)
-    if time_zone:
-      # TODO: set time_zone_offset in date_time instead of using local time.
-      date_time.is_local_time = True
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED, time_zone=time_zone)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.

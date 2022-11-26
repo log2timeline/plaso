@@ -2,6 +2,7 @@
 """The timeliner, which is used to generate events from event data."""
 
 import collections
+import copy
 import datetime
 import os
 import pytz
@@ -161,17 +162,41 @@ class EventDataTimeliner(object):
       date_time = date_time.NewFromDeltaAndYear(base_year)
 
     timestamp = date_time.GetPlasoTimestamp()
-    if (date_time.is_local_time and self._time_zone and
-        self._time_zone != pytz.UTC):
-      datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
-      datetime_object += datetime.timedelta(microseconds=timestamp)
+    if date_time.is_local_time:
+      time_zone = None
+      if date_time.time_zone_hint:
+        # TODO: cache time zones per hint.
+        try:
+          time_zone = pytz.timezone(date_time.time_zone_hint)
+        except pytz.UnknownTimeZoneError:
+          message = (
+              'unsupported time zone hint: {0:s}, using default time '
+              'zone').format(date_time.time_zone_hint)
+          self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      datetime_delta = self._time_zone.utcoffset(datetime_object, is_dst=False)
-      seconds_delta = int(datetime_delta.total_seconds())
-      timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
+      if not time_zone:
+        time_zone = self._time_zone
 
-      date_time.is_local_time = False
-      date_time.time_zone_offset = seconds_delta // 60
+      if not time_zone:
+        message = 'date and time is in local time and no time zone is defined'
+        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+
+        date_time = dfdatetime_semantic_time.NotSet()
+
+      else:
+        date_time = copy.deepcopy(date_time)
+        date_time.is_local_time = False
+
+        if time_zone != pytz.UTC:
+          datetime_object = datetime.datetime(
+              1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
+          datetime_object += datetime.timedelta(microseconds=timestamp)
+
+          datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
+          seconds_delta = int(datetime_delta.total_seconds())
+          timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
+
+          date_time.time_zone_offset = seconds_delta // 60
 
     event = events.EventObject()
     event.date_time = date_time
