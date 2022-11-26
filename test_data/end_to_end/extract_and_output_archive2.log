@@ -3,17 +3,17 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 1970-01-01T00:00:00.000000+00:00,Content Modification Time,LOG,UTMP session,Hostname: localhost PID: 0 Terminal identifier: 0 Status: EMPTY IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
 2011-12-01T17:36:38.432935+00:00,Content Modification Time,LOG,UTMP session,User: userA Hostname: 10.10.122.1 Terminal: pts/32 PID: 20060 Terminal identifier: 842084211 Status: USER_PROCESS IP Address: 10.10.122.1 Exit status: 0,utmp,ZIP:/wtmp.1,-
 2011-12-02T00:21:18.725048+00:00,Content Modification Time,LOG,UTMP session,Hostname: localhost Terminal: pts/89 PID: 20060 Terminal identifier: 0 Status: DEAD_PROCESS IP Address: 0.0.0.0 Exit status: 0,utmp,ZIP:/wtmp.1,-
-2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No change in [/etc/netgroup]. Done,syslog,ZIP:/syslog,-
-2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No new content.,syslog,ZIP:/syslog,-
-2012-01-22T07:53:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051,syslog,ZIP:/syslog,-
-2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: /sbin/status.mycheck) for user: root pid: 31067,syslog,ZIP:/syslog,-
-2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068,syslog,ZIP:/syslog,-
-2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,syslog,ZIP:/syslog,-
+2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No change in [/etc/netgroup]. Done,text/syslog,ZIP:/syslog,-
+2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No new content.,text/syslog,ZIP:/syslog,-
+2012-01-22T07:53:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051,text/syslog,ZIP:/syslog,-
+2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: /sbin/status.mycheck) for user: root pid: 31067,text/syslog,ZIP:/syslog,-
+2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068,text/syslog,ZIP:/syslog,-
+2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog,ZIP:/syslog,-
 2012-07-24T14:45:24+00:00,Content Modification Time,FILE,File stat,ZIP:/syslog Type: file Mode: 0o400,filestat,ZIP:/syslog,-
 2012-07-26T08:45:12+00:00,Content Modification Time,FILE,File stat,ZIP:/wtmp.1 Type: file Mode: 0o644,filestat,ZIP:/wtmp.1,-
-2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),syslog,ZIP:/syslog,-
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,syslog,ZIP:/syslog,-
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),syslog,ZIP:/syslog,-
-2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,syslog,ZIP:/syslog,-
-2013-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,ZIP:/syslog,-
-2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),syslog,ZIP:/syslog,-
+2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),text/syslog,ZIP:/syslog,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,text/syslog,ZIP:/syslog,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),text/syslog,ZIP:/syslog,-
+2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog,ZIP:/syslog,-
+2013-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog,ZIP:/syslog,-
+2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),text/syslog,ZIP:/syslog,-
