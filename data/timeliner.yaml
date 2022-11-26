@@ -691,6 +691,18 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'spotlight_searched_terms:entry'
+attribute_mappings:
+- name: 'last_used_time'
+  description: 'Last Used Time'
+place_holder_event: true
+---
+data_type: 'spotlight_volume_configuration:store'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'syslog:cron:task_run'
 attribute_mappings:
 - name: 'last_written_time'

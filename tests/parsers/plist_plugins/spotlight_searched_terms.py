@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.plist_plugins import spotlight_searched_terms
 
 from tests.parsers.plist_plugins import test_lib
@@ -21,6 +20,10 @@ class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 9)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 9)
 
@@ -32,19 +35,15 @@ class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which PlistParser generates events is nondeterministic
-    # hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'spotlight_searched_terms:entry',
-        'date_time': '2013-12-23T18:21:41.900938+00:00',
         'display_name': 'Grab',
+        'last_used_time': '2013-12-23T18:21:41.900938+00:00',
         'path': '/Applications/Utilities/Grab.app',
-        'search_term': 'gr',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_USED}
+        'search_term': 'gr'}
 
-    self.CheckEventValues(storage_writer, events[6], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 8)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
