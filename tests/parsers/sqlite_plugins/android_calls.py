@@ -17,6 +17,10 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     plugin = android_calls.AndroidCallPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['contacts2.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 5)
 
@@ -28,30 +32,16 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
-        'call_type': 'MISSED',
+        'call_type': 3,
         'data_type': 'android:event:call',
-        'date_time': '2013-11-06T21:17:16.690+00:00',
+        'duration': 0,
+        'end_time': None,
         'number': '5404561685',
-        'timestamp_desc': 'Call Started'}
+        'start_time': '2013-11-06T21:17:16.690+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'android:event:call',
-        'date_time': '2013-11-07T00:03:36.690+00:00'}
-
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'android:event:call',
-        'date_time': '2013-11-07T00:14:15.690+00:00',
-        'duration': 639,
-        'timestamp_desc': 'Call Ended'}
-
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

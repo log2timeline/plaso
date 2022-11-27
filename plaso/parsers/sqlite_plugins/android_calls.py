@@ -4,7 +4,7 @@
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -13,13 +13,15 @@ class AndroidCallEventData(events.EventData):
   """Android Call event data.
 
   Attributes:
-    call_type (str): type of call, such as: Incoming, Outgoing, or Missed.
+    call_type (int): type of call, such as: Incoming, Outgoing, or Missed.
     duration (int): number of seconds the call lasted.
+    end_time (dfdatetime.DateTimeValues): date and time the call was stopped.
     name (str): name associated to the remote party.
     number (str): phone number associated to the remote party.
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
+    start_time (dfdatetime.DateTimeValues): date and time the call was started.
   """
 
   DATA_TYPE = 'android:event:call'
@@ -29,10 +31,12 @@ class AndroidCallEventData(events.EventData):
     super(AndroidCallEventData, self).__init__(data_type=self.DATA_TYPE)
     self.call_type = None
     self.duration = None
+    self.end_time = None
     self.name = None
     self.number = None
     self.offset = None
     self.query = None
+    self.start_time = None
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):
@@ -155,52 +159,36 @@ class AndroidCallPlugin(interface.SQLitePlugin):
           'CREATE TABLE properties (property_key TEXT PRIMARY KEY, '
           'property_value TEXT )')}]
 
-  CALL_TYPE = {
-      1: 'INCOMING',
-      2: 'OUTGOING',
-      3: 'MISSED'}
-
   def ParseCallsRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Call record row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
-    call_type = self._GetRowValue(query_hash, row, 'type')
-    call_type = self.CALL_TYPE.get(call_type, 'UNKNOWN')
     duration = self._GetRowValue(query_hash, row, 'duration')
     timestamp = self._GetRowValue(query_hash, row, 'date')
 
     event_data = AndroidCallEventData()
-    event_data.call_type = call_type
+    event_data.call_type = self._GetRowValue(query_hash, row, 'type')
     event_data.duration = self._GetRowValue(query_hash, row, 'duration')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.number = self._GetRowValue(query_hash, row, 'number')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-
-    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(date_time, 'Call Started')
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data.start_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
 
     if duration:
-      if isinstance(duration, str):
-        try:
-          duration = int(duration, 10)
-        except ValueError:
-          duration = 0
-
       # The duration is in seconds and the date value in milliseconds.
-      timestamp += duration * 1000
+      timestamp += duration * definitions.MILLISECONDS_PER_SECOND
 
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Call Ended')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.end_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(AndroidCallPlugin)

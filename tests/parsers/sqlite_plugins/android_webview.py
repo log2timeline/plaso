@@ -14,8 +14,12 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Test the Process function on a WebView SQLite file."""
-    plugin = android_webview.WebViewPlugin()
+    plugin = android_webview.AndroidWebViewPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['webview.db'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 8)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 8)
@@ -28,19 +32,18 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'cookie_name': 'SC',
         'data': (
             'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER='),
-        'data_type': 'webview:cookie',
-        'date_time': '2014-03-05T15:04:44.000+00:00',
+        'data_type': 'android:webview:cookie',
+        'expiration_time': '2014-03-05T15:04:44.000+00:00',
         'host': 'skype.com',
         'path': '/',
         'secure': False}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

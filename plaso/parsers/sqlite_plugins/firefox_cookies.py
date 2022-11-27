@@ -5,12 +5,9 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
+from plaso.lib import cookie_plugins_helper
 from plaso.lib import definitions
-# Register the cookie plugins.
-from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
-from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -47,7 +44,8 @@ class FirefoxCookieEventData(events.EventData):
     self.url = None
 
 
-class FirefoxCookiePlugin(interface.SQLitePlugin):
+class FirefoxCookiePlugin(
+    interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Mozilla Firefox cookies database files.
 
   Also see:
@@ -75,12 +73,6 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
-
-  def __init__(self):
-    """Initializes a Firefox Cookies database SQLite parser plugin."""
-    super(FirefoxCookiePlugin, self).__init__()
-    self._cookie_plugins = (
-        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
@@ -151,15 +143,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # Go through all cookie plugins to see if there are is any specific parsing
-    # needed.
-    for cookie_plugin in self._cookie_plugins:
-      try:
-        cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=cookie_name, cookie_data=cookie_data,
-            url=url)
-      except errors.WrongPlugin:
-        pass
+    self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
 
 sqlite.SQLiteParser.RegisterPlugin(FirefoxCookiePlugin)

@@ -5,11 +5,9 @@ from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.lib import cookie_plugins_helper
 from plaso.lib import definitions
-# Register the cookie plugins.
-from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
-from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -46,7 +44,8 @@ class ChromeCookieEventData(events.EventData):
     self.url = None
 
 
-class BaseChromeCookiePlugin(interface.SQLitePlugin):
+class BaseChromeCookiePlugin(
+    interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Google Chrome cookies database files."""
 
   # Google Analytics __utmz variable translation.
@@ -56,12 +55,6 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
       'utmcmd': 'Last type of visit.',
       'utmctr': 'Keywords used to find site.',
       'utmcct': 'Path to the page of referring link.'}
-
-  def __init__(self):
-    """Initializes a plugin."""
-    super(BaseChromeCookiePlugin, self).__init__()
-    self._cookie_plugins = (
-        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
@@ -122,19 +115,7 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for plugin in self._cookie_plugins:
-      if cookie_name != plugin.COOKIE_NAME:
-        continue
-
-      try:
-        plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_data=cookie_data, cookie_name=cookie_name,
-            url=url)
-
-      except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning(
-            'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
-                plugin.NAME, exception))
+    self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
 
 class Chrome17CookiePlugin(BaseChromeCookiePlugin):

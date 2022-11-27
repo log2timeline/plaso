@@ -50,7 +50,7 @@ class SQLitePlugin(plugins.BasePlugin):
       value_name (str): name of the value.
 
     Returns:
-      object: value.
+      object: value or None if not available.
     """
     keys_name_to_index_map = self._keys_per_query.get(query_hash, None)
     if not keys_name_to_index_map:

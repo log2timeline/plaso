@@ -6,10 +6,38 @@ attribute_mappings:
   description: 'Last Resume Time'
 place_holder_event: true
 ---
+data_type: 'android:event:call'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'android:logcat'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'android:messaging:sms'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
+data_type: 'android:webview:cookie'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
+data_type: 'android:webviewcache'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'last_modified_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'apache:access_log:entry'

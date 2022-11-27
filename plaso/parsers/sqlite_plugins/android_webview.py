@@ -5,22 +5,19 @@ from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import errors
-from plaso.lib import definitions
-# Register the cookie plugins.
-from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
+from plaso.lib import cookie_plugins_helper
 from plaso.parsers import sqlite
-from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 from plaso.parsers.sqlite_plugins import interface
 
 
-class WebViewCookieEventData(events.EventData):
+class AndroidWebViewCookieEventData(events.EventData):
   """Android WebView cookie event data.
 
   Attributes:
     cookie_name (str): name of the cookie.
     data (str): data stored in the cookie.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cache
+        entry expires.
     host (str): host that set the cookie.
     offset (str): identifier of the row, from which the event data was
         extracted.
@@ -31,13 +28,15 @@ class WebViewCookieEventData(events.EventData):
     url (str): URL of the cookie.
   """
 
-  DATA_TYPE = 'webview:cookie'
+  DATA_TYPE = 'android:webview:cookie'
 
   def __init__(self):
     """Initializes event data."""
-    super(WebViewCookieEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AndroidWebViewCookieEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.data = None
+    self.expiration_time = None
     self.host = None
     self.offset = None
     self.path = None
@@ -46,7 +45,8 @@ class WebViewCookieEventData(events.EventData):
     self.url = None
 
 
-class WebViewPlugin(interface.SQLitePlugin):
+class AndroidWebViewPlugin(
+    interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Android WebView database files."""
 
   NAME = 'android_webview'
@@ -82,26 +82,26 @@ class WebViewPlugin(interface.SQLitePlugin):
           'username TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT '
           'REPLACE)')}]
 
-  def __init__(self):
-    """Initializes a plugin object."""
-    super(WebViewPlugin, self).__init__()
-    self._cookie_plugins = (
-        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
-
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     cookie_name = self._GetRowValue(query_hash, row, 'name')
-    cookie_value = self._GetRowValue(query_hash, row, 'value')
+    cookie_data = self._GetRowValue(query_hash, row, 'value')
     path = self._GetRowValue(query_hash, row, 'path')
+    timestamp = self._GetRowValue(query_hash, row, 'expires')
+
+    if timestamp:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime('Infinity')
 
     hostname = self._GetRowValue(query_hash, row, 'domain')
     if hostname.startswith('.'):
@@ -119,9 +119,10 @@ class WebViewPlugin(interface.SQLitePlugin):
 
     url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
-    event_data = WebViewCookieEventData()
+    event_data = AndroidWebViewCookieEventData()
     event_data.cookie_name = cookie_name
-    event_data.data = cookie_value
+    event_data.data = cookie_data
+    event_data.expiration_time = date_time
     event_data.host = hostname
     event_data.offset = self._GetRowValue(query_hash, row, '_id')
     event_data.path = path
@@ -129,25 +130,9 @@ class WebViewPlugin(interface.SQLitePlugin):
     event_data.secure = secure
     event_data.url = url
 
-    timestamp = self._GetRowValue(query_hash, row, 'expires')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Infinity')
+    parser_mediator.ProduceEventData(event_data)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    # Go through all cookie plugins to see if there are is any specific parsing
-    # needed.
-    for cookie_plugin in self._cookie_plugins:
-      try:
-        cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=cookie_name,
-            cookie_data=cookie_value, url=url)
-      except errors.WrongPlugin:
-        pass
+    self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
 
-sqlite.SQLiteParser.RegisterPlugin(WebViewPlugin)
+sqlite.SQLiteParser.RegisterPlugin(AndroidWebViewPlugin)
