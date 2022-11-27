@@ -4,56 +4,69 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacKnowledgeCApplicationEventData(events.EventData):
+class MacOSKnowledgeCApplicationEventData(events.EventData):
   """KnowledgeC application execution event data.
 
   Attributes:
     bundle_identifier (str): bundle identifier of the application.
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the KnowledgeC record.
     duration (int): duration of the activity.
+    end_time (dfdatetime.DateTimeValues): date and time the activity ended.
+    start_time (dfdatetime.DateTimeValues): date and time the activity started.
   """
 
-  DATA_TYPE = 'mac:knowledgec:application'
+  DATA_TYPE = 'macos:knowledgec:application'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacKnowledgeCApplicationEventData, self).__init__(
+    super(MacOSKnowledgeCApplicationEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.bundle_identifier = None
+    self.creation_time = None
     self.duration = None
+    self.end_time = None
+    self.start_time = None
 
 
-class MacKnowledgeCSafariEventData(events.EventData):
-  """MacOS Duet / KnowledgeC database event data for Safari.
+class MacOSKnowledgeCSafariEventData(events.EventData):
+  """MacOS Duet/KnowledgeC database event data for Safari.
 
   Attributes:
     bundle_identifier (str): bundle identifier of the application.
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the KnowledgeC record.
     duration (int): duration of the activity.
+    end_time (dfdatetime.DateTimeValues): date and time the activity ended.
+    start_time (dfdatetime.DateTimeValues): date and time the activity started.
     title (str): title of the webpage visited.
     url (str): URL visited.
   """
 
-  DATA_TYPE = 'mac:knowledgec:safari'
+  DATA_TYPE = 'macos:knowledgec:safari'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacKnowledgeCSafariEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(MacOSKnowledgeCSafariEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.bundle_identifier = None
+    self.creation_time = None
     self.duration = None
+    self.end_time = None
+    self.start_time = None
     self.title = None
     self.url = None
 
 
-class MacKnowledgeCPlugin(interface.SQLitePlugin):
+class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS Duet/KnowledgeC database files."""
 
   NAME = 'mac_knowledgec'
-  DATA_FORMAT = 'MacOS Duet / KnowledgeC SQLites database file'
+  DATA_FORMAT = 'MacOS Duet/KnowledgeC SQLites database file'
 
   # Define the needed queries.
   # entry_creation: when the entry was created in the database.
@@ -83,8 +96,7 @@ class MacKnowledgeCPlugin(interface.SQLitePlugin):
           'ZCREATIONDATE', 'ZENDDATE', 'ZSTARTDATE', 'ZSTREAMNAME',
           'ZVALUESTRING']),
       'ZSTRUCTUREDMETADATA': frozenset([
-          'Z_DKSAFARIHISTORYMETADATAKEY__TITLE']),
-  }
+          'Z_DKSAFARIHISTORYMETADATAKEY__TITLE'])}
 
   _SCHEMA_10_13 = {
       'ACHANGE': (
@@ -500,13 +512,31 @@ class MacKnowledgeCPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [_SCHEMA_10_13, _SCHEMA_10_14]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   def KnowledgeCRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses KnowledgeC application activity
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -515,46 +545,39 @@ class MacKnowledgeCPlugin(interface.SQLitePlugin):
     action = self._GetRowValue(query_hash, row, 'action')
 
     if action.startswith('/safari/'):
-      event_data = MacKnowledgeCSafariEventData()
+      event_data = MacOSKnowledgeCSafariEventData()
       event_data.url = self._GetRowValue(query_hash, row, 'zvaluestring')
       event_data.title = self._GetRowValue(query_hash, row, 'title')
+
     elif action.startswith('/app/'):
-      event_data = MacKnowledgeCApplicationEventData()
+      event_data = MacOSKnowledgeCApplicationEventData()
       event_data.bundle_identifier = self._GetRowValue(
           query_hash, row, 'zvaluestring')
+
     else:
       # TODO: Add support for additional action types.
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported action type: {0:s}'.format(action))
       return
 
-    entry_creation = self._GetRowValue(query_hash, row, 'entry_creation')
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'entry_creation')
+
     activity_starts = self._GetRowValue(query_hash, row, 'start')
     activity_ends = self._GetRowValue(query_hash, row, 'end')
+
+    if activity_starts:
+      event_data.start_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=activity_starts)
+
+    if activity_ends:
+      event_data.end_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=activity_ends)
 
     if activity_starts and activity_ends:
       event_data.duration = activity_ends - activity_starts
 
-    entry_creation_time = dfdatetime_cocoa_time.CocoaTime(
-        timestamp=entry_creation)
-    entry_creation_event = time_events.DateTimeValuesEvent(
-        entry_creation_time, definitions.TIME_DESCRIPTION_CREATION)
-    activity_starts_time = dfdatetime_cocoa_time.CocoaTime(
-        timestamp=activity_starts)
-    parser_mediator.ProduceEventWithEventData(
-        entry_creation_event, event_data)
-
-    if activity_starts:
-      activity_starts_event = time_events.DateTimeValuesEvent(
-          activity_starts_time, definitions.TIME_DESCRIPTION_START)
-      parser_mediator.ProduceEventWithEventData(
-          activity_starts_event, event_data)
-
-    if activity_ends:
-      activity_ends_time = dfdatetime_cocoa_time.CocoaTime(
-          timestamp=activity_ends)
-      activity_ends_event = time_events.DateTimeValuesEvent(
-          activity_ends_time, definitions.TIME_DESCRIPTION_END)
-      parser_mediator.ProduceEventWithEventData(
-          activity_ends_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(MacKnowledgeCPlugin)
+sqlite.SQLiteParser.RegisterPlugin(MacOSKnowledgeCPlugin)

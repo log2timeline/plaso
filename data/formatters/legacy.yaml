@@ -957,6 +957,27 @@ short_source: 'LOG'
 source: 'MacOS Keychain (Internet password)'
 ---
 type: 'conditional'
+data_type: 'mac:knowledgec:application'
+message:
+- 'Application {bundle_identifier} executed'
+- 'for {duration} seconds'
+short_message:
+- 'Application {bundle_identifier}'
+short_source: 'LOG'
+source: 'MacOS KnowledgeC'
+---
+type: 'conditional'
+data_type: 'mac:knowledgec:safari'
+message:
+- 'Visited: {url}'
+- '({title})'
+- 'Duration: {duration}'
+short_message:
+- 'Safari: {url}'
+short_source: 'WEBHIST'
+source: 'MacOS KnowledgeC (Safari)'
+---
+type: 'conditional'
 data_type: 'mac:securityd:line'
 message:
 - 'Sender: {sender}'
@@ -1013,6 +1034,13 @@ short_message:
 - 'Action: {action}'
 short_source: 'LOG'
 source: 'MacOS Wifi Log'
+---
+type: 'basic'
+data_type: 'macosx:application_usage'
+message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
+short_message: '{application} ({count} time(s))'
+short_source: 'LOG'
+source: 'MacOS Application Usage Log'
 ---
 type: 'conditional'
 data_type: 'metadata:openxml'
