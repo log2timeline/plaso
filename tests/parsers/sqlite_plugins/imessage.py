@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import imessage
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -19,6 +18,10 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['imessage_chat.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 10)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 10)
 
@@ -30,19 +33,17 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
+        'creation_time': '2015-11-30T10:48:40.000000+00:00',
         'data_type': 'imessage:event:chat',
-        'date_time': '2015-11-30T10:48:40.000000+00:00',
         'imessage_id': 'xxxxxx2015@icloud.com',
         'message_type': 0,
         'read_receipt': 1,
         'service': 'iMessage',
-        'text': 'Did you try to send me a message?',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'text': 'Did you try to send me a message?'}
 
-    self.CheckEventValues(storage_writer, events[7], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 7)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

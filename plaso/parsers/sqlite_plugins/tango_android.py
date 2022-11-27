@@ -18,8 +18,11 @@ class TangoAndroidMessageEventData(events.EventData):
   """Tango on Android message event data.
 
   Attributes:
-    message_identifier (int): message identifier.
+    creation_time (dfdatetime.DateTimeValues): date and time the message
+        was created.
     direction (int): flag indicating direction of the message.
+    message_identifier (int): message identifier.
+    sent_time (dfdatetime.DateTimeValues): date and time the message was sent.
   """
 
   DATA_TYPE = 'tango:android:message'
@@ -27,8 +30,10 @@ class TangoAndroidMessageEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(TangoAndroidMessageEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.message_identifier = None
+    self.creation_time = None
     self.direction = None
+    self.message_identifier = None
+    self.sent_time = None
 
 
 class TangoAndroidConversationEventData(events.EventData):
@@ -51,16 +56,16 @@ class TangoAndroidContactEventData(events.EventData):
   """Tango on Android contact event data.
 
   Attributes:
-    first_name (str): contact profile first name.
-    last_name (str): contact profile last name.
     birthday (str): contact profile birthday.
-    gender (str): contact profile gender.
-    status (str): contact status message.
     distance (int): contact profile distance.
-    is_friend (bool): True if the contact is considered a friend.
+    first_name (str): contact profile first name.
+    friend_request_message (str): message sent on friend request.
     friend_request_type (str): flag indicating the type of friend request sent
         for example outRequest for request sent or noRequest for no request.
-    friend_request_message (str): message sent on friend request.
+    gender (str): contact profile gender.
+    is_friend (bool): True if the contact is considered a friend.
+    last_name (str): contact profile last name.
+    status (str): contact status message.
   """
 
   DATA_TYPE = 'tango:android:contact'
@@ -68,15 +73,15 @@ class TangoAndroidContactEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(TangoAndroidContactEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.first_name = None
-    self.last_name = None
     self.birthday = None
-    self.gender = None
-    self.status = None
     self.distance = None
-    self.is_friend = None
-    self.friend_request_type = None
+    self.first_name = None
     self.friend_request_message = None
+    self.friend_request_type = None
+    self.gender = None
+    self.is_friend = None
+    self.last_name = None
+    self.status = None
 
 
 class TangoAndroidTCPlugin(interface.SQLitePlugin):
@@ -134,12 +139,30 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
           'CREATE TABLE `sms` (`msg_id` INTEGER PRIMARY KEY, `phonenumber` '
           'TEXT, `text` TEXT)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
   def ParseConversationRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a conversation row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
@@ -163,35 +186,26 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TangoAndroidMessageEventData()
-    event_data.message_identifier = self._GetRowValue(
-        query_hash, row, 'msg_id')
-
     # TODO: payload is a base64 encoded binary blob, we need to find the
     # structure to extract the relevant bits.
-    # event_data.payload = self._GetRowValue(query_hash, row, 'payload')
+    # payload = self._GetRowValue(query_hash, row, 'payload')
 
+    event_data = TangoAndroidMessageEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'create_time')
     event_data.direction = self._GetRowValue(query_hash, row, 'direction')
+    event_data.message_identifier = self._GetRowValue(
+        query_hash, row, 'msg_id')
+    event_data.sent_time = self._GetDateTimeRowValue(
+        query_hash, row, 'send_time')
 
-    timestamp = self._GetRowValue(query_hash, row, 'create_time')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'send_time')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_SENT)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class TangoAndroidProfilePlugin(interface.SQLitePlugin):
@@ -260,7 +274,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """

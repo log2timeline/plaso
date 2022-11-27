@@ -6,19 +6,19 @@ import plistlib
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacNotificationCenterEventData(events.EventData):
+class MacOSNotificationCenterEventData(events.EventData):
   """MacOS NotificationCenter event data.
 
   Attributes:
     body (str): body of the notification message.
     bundle_name (str): name of the application's bundle that generated
         the notification.
+    creation_time (dfdatetime.DateTimeValues): date and time the entry was
+        created.
     presented (int): either 1 or 0 if the notification has been shown to the
         user.
     subtitle (str): optional. Subtitle of the notification message.
@@ -27,20 +27,21 @@ class MacNotificationCenterEventData(events.EventData):
         of the notification for example, in case of chat messages.
   """
 
-  DATA_TYPE = 'mac:notificationcenter:db'
+  DATA_TYPE = 'macos:notification_center:entry'
 
   def __init__(self):
     """Initialize event data."""
-    super(MacNotificationCenterEventData, self).__init__(
+    super(MacOSNotificationCenterEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.body = None
     self.bundle_name = None
+    self.creation_time = None
     self.presented = None
     self.subtitle = None
     self.title = None
 
 
-class MacNotificationCenterPlugin(interface.SQLitePlugin):
+class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS Notification Center database files.
 
   The MacOS Notification Center database file is typically stored in:
@@ -90,21 +91,35 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
       'snoozed': (
           'CREATE TABLE snoozed (app_id INTEGER PRIMARY KEY, list BLOB)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   def ParseNotificationcenterRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
-
-    event_data = MacNotificationCenterEventData()
-    event_data.bundle_name = self._GetRowValue(query_hash, row, 'bundle_name')
-    event_data.presented = self._GetRowValue(query_hash, row, 'presented')
 
     data_blob = self._GetRowValue(query_hash, row, 'dataBlob')
 
@@ -118,17 +133,18 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
       parser_mediator.ProduceExtractionWarning(
           'unable to read plist from database with error: {0!s}'.format(
               exception))
-      return
+      req_property = {}
 
-    event_data.title = req_property.get('titl', None)
-    event_data.subtitle = req_property.get('subt', None)
+    event_data = MacOSNotificationCenterEventData()
     event_data.body = req_property.get('body', None)
+    event_data.bundle_name = self._GetRowValue(query_hash, row, 'bundle_name')
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
+    event_data.presented = self._GetRowValue(query_hash, row, 'presented')
+    event_data.subtitle = req_property.get('subt', None)
+    event_data.title = req_property.get('titl', None)
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(MacNotificationCenterPlugin)
+sqlite.SQLiteParser.RegisterPlugin(MacOSNotificationCenterPlugin)

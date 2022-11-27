@@ -12,7 +12,7 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class EventTranscriptEventData(events.EventData):
+class WindowsEventTranscriptEventData(events.EventData):
   """Windows diagnosis EventTranscript event data.
 
   Attributes:
@@ -39,7 +39,8 @@ class EventTranscriptEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(EventTranscriptEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(WindowsEventTranscriptEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.application_name = None
     self.application_root_directory = None
     self.application_version = None
@@ -137,7 +138,7 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = EventTranscriptEventData()
+    event_data = WindowsEventTranscriptEventData()
     # If the user identifier is an empty string set it to None.
     event_data.user_identifier = self._GetRowValue(
         query_hash, row, 'sid') or None
