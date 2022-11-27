@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for SkyDrive version 2 log files."""
+"""Text parser plugins for SkyDrive version 1 and 2 log files."""
 
 import pyparsing
 
@@ -12,8 +12,8 @@ from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
 
-class SkyDriveLog2EventData(events.EventData):
-  """SkyDrive version 2 log event data.
+class SkyDriveLogEventData(events.EventData):
+  """SkyDrive log event data.
 
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -25,16 +25,222 @@ class SkyDriveLog2EventData(events.EventData):
         message.
   """
 
-  DATA_TYPE = 'skydrive:log:line'
+  DATA_TYPE = 'skydrive:log:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(SkyDriveLog2EventData, self).__init__(data_type=self.DATA_TYPE)
+    super(SkyDriveLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.detail = None
     self.log_level = None
     self.module = None
     self.source_code = None
+
+
+class SkyDriveLog1TextPlugin(interface.TextPlugin):
+  """Text parser plugin for SkyDrive version 1 log files."""
+
+  NAME = 'skydrive_log_v1'
+  DATA_FORMAT = 'OneDrive (or SkyDrive) version 1 log file'
+
+  ENCODING = 'utf-8'
+
+  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+      lambda tokens: int(tokens[0], 10))
+
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      lambda tokens: int(tokens[0], 10))
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      lambda tokens: int(tokens[0], 10))
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      lambda tokens: int(tokens[0], 10))
+
+  # Format version 1 date and time values are formatted as:
+  # DD-MM-YYYY hhmmss.###
+  # For example: 08-01-2013 21:22:28.999
+  _DATE_TIME_V1 = pyparsing.Group(
+      _TWO_DIGITS + pyparsing.Suppress('-') +
+      _TWO_DIGITS + pyparsing.Suppress('-') + _FOUR_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
+      pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS).setResultsName(
+          'date_time')
+
+  _SOURCE_CODE = pyparsing.Combine(
+      pyparsing.CharsNotIn(':') + pyparsing.Literal(':') + _INTEGER +
+      pyparsing.Literal('!') +
+      pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
+
+  _LOG_LEVEL = (
+      pyparsing.Suppress('(') +
+      pyparsing.SkipTo(')').setResultsName('log_level') +
+      pyparsing.Suppress(')'))
+
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE_V1 = (
+      _DATE_TIME_V1 + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Suppress(':') +
+      pyparsing.restOfLine().setResultsName('detail') +
+      _END_OF_LINE)
+
+  # Sometimes the timestamped log line is followed by an empty line,
+  # then by a file name plus other data and finally by another empty
+  # line. It could happen that a log line is split in two parts.
+  # These lines will not be discarded and an event will be generated
+  # ad-hoc (see source), based on the last one if available.
+  _NO_HEADER_SINGLE_LINE = (
+      pyparsing.NotAny(_DATE_TIME_V1) +
+      pyparsing.Optional(pyparsing.Suppress('->')) +
+      pyparsing.restOfLine().setResultsName('detail') +
+      _END_OF_LINE)
+
+  # Define the available log line structures.
+  _LINE_STRUCTURES = [
+      ('log_line_v1', _LOG_LINE_V1),
+      ('no_header_single_line', _NO_HEADER_SINGLE_LINE)]
+
+  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(SkyDriveLog1TextPlugin, self).__init__()
+    self._event_data = None
+
+  def _ParseLoglineVersion1(self, parser_mediator, structure):
+    """Parse a version 1 log line.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    event_data = SkyDriveLogEventData()
+    event_data.added_time = self._ParseTimeElementsVersion1(
+        time_elements_structure)
+    event_data.detail = self._GetStringValueFromStructure(structure, 'detail')
+    event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
+    event_data.source_code = self._GetValueFromStructure(
+        structure, 'source_code')
+
+    parser_mediator.ProduceEventData(event_data)
+
+    self._event_data = event_data
+
+  def _ParseNoHeaderSingleLine(self, parser_mediator, structure):
+    """Parse an isolated header line and store appropriate attributes.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+    """
+    if not self._event_data:
+      logger.debug('SkyDrive, found isolated line with no previous events')
+      return
+
+    event_data = SkyDriveLogEventData()
+    event_data.added_time = self._event_data.added_time
+    event_data.detail = self._GetValueFromStructure(structure, 'detail')
+
+    parser_mediator.ProduceEventData(event_data)
+
+    self._ResetState()
+
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: when the structure type is unknown.
+    """
+    if key not in self._SUPPORTED_KEYS:
+      raise errors.ParseError(
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    if key == 'log_line_v1':
+      self._ParseLoglineVersion1(parser_mediator, structure)
+
+    elif key == 'no_header_single_line':
+      self._ParseNoHeaderSingleLine(parser_mediator, structure)
+
+  def _ParseTimeElementsVersion1(self, time_elements_structure):
+    """Parses date and time elements of a version 1 log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
+      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
+      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
+      # overriding __getattr__ with a function that returns an empty string
+      # when named token does not exists.
+
+      month, day_of_month, year, hours, minutes, seconds, milliseconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds, milliseconds)
+
+      # TODO: determine if this should be local time.
+      return dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
+
+  def _ResetState(self):
+    """Resets stored values."""
+    self._event_data = None
+
+  def CheckRequiredFormat(self, parser_mediator, text_reader):
+    """Check if the log record has the minimal structure required by the plugin.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    try:
+      parsed_structure = self._LOG_LINE_V1.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
+    try:
+      self._ParseTimeElementsVersion1(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    self._ResetState()
+
+    return True
 
 
 class SkyDriveLog2TextPlugin(interface.TextPlugin):
@@ -54,11 +260,12 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
-  IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
+  _IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
 
-  # Date and time values are formatted as: YYYY-MM-DD-hhmmss.###
+  # Format version 2 header date and time values are formatted as:
+  # YYYY-MM-DD-hhmmss.###
   # For example: 2013-07-25-160323.291
-  _HEADER_DATE_TIME = pyparsing.Group(
+  _HEADER_DATE_TIME_V2 = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress('-') +
@@ -66,9 +273,10 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       pyparsing.Suppress('.') + _THREE_DIGITS).setResultsName(
           'header_date_time')
 
-  # Date and time values are formatted as: MM-DD-YY,hh:mm:ss.###
+  # Formate version 2 date and time values are formatted as:
+  # MM-DD-YY,hh:mm:ss.###
   # For example: 07-25-13,16:06:31.820
-  _DATE_TIME = (
+  _DATE_TIME_V2 = (
       _TWO_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress('-') +
       _TWO_DIGITS + pyparsing.Suppress(',') +
@@ -81,38 +289,40 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       pyparsing.Literal('Logging started.').setResultsName('log_start'))
 
   # Multiline entry end marker, matched from right to left.
-  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _DATE_TIME
+  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _DATE_TIME_V2
 
-  _SDF_LINE = (
-      _DATE_TIME + pyparsing.Suppress(',') +
-      IGNORE_FIELD + pyparsing.Suppress(',') +
-      IGNORE_FIELD + pyparsing.Suppress(',') +
-      IGNORE_FIELD + pyparsing.Suppress(',') +
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOG_LINE_V2 = (
+      _DATE_TIME_V2 + pyparsing.Suppress(',') +
+      _IGNORE_FIELD + pyparsing.Suppress(',') +
+      _IGNORE_FIELD + pyparsing.Suppress(',') +
+      _IGNORE_FIELD + pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('module') +
       pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('source_code') +
       pyparsing.Suppress(',') +
-      IGNORE_FIELD + pyparsing.Suppress(',') +
-      IGNORE_FIELD + pyparsing.Suppress(',') +
+      _IGNORE_FIELD + pyparsing.Suppress(',') +
+      _IGNORE_FIELD + pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('log_level') +
       pyparsing.Suppress(',') +
       pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName('detail') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  _SDF_HEADER = (
+  _HEADER_LINE_V2 = (
       _SDF_HEADER_START +
       pyparsing.Literal('Version=').setResultsName('version_string') +
       pyparsing.Word(pyparsing.nums + '.').setResultsName('version_number') +
       pyparsing.Literal('StartSystemTime:').suppress() +
-      _HEADER_DATE_TIME +
+      _HEADER_DATE_TIME_V2 +
       pyparsing.Literal('StartLocalTime:').setResultsName(
           'local_time_string') +
-      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +
-      pyparsing.lineEnd())
+      pyparsing.restOfLine.setResultsName('details') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _SDF_LINE),
-      ('header', _SDF_HEADER)]
+      ('log_line_v2', _LOG_LINE_V2),
+      ('header_line_v2', _HEADER_LINE_V2)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -138,7 +348,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     version_number = self._GetValueFromStructure(structure, 'version_number')
     version_string = self._GetValueFromStructure(structure, 'version_string')
 
-    event_data = SkyDriveLog2EventData()
+    event_data = SkyDriveLogEventData()
     event_data.added_time = self._ParseHeaderTimeElements(
         time_elements_structure)
     # TODO: refactor detail to individual event data attributes.
@@ -181,8 +391,8 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
-  def _ParseLine(self, parser_mediator, structure):
-    """Parses a logline and store appropriate attributes.
+  def _ParseLoglineVersion2(self, parser_mediator, structure):
+    """Parse a version 2 log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -198,8 +408,9 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     detail = self._GetValueFromStructure(structure, 'detail', default_value='')
     detail = detail.replace('\n', ' ').strip(' ')
 
-    event_data = SkyDriveLog2EventData()
-    event_data.added_time = self._ParseTimeElements(time_elements_structure)
+    event_data = SkyDriveLogEventData()
+    event_data.added_time = self._ParseTimeElementsVersion2(
+        time_elements_structure)
     event_data.detail = detail or None
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
     event_data.module = self._GetValueFromStructure(structure, 'module')
@@ -224,22 +435,14 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'logline':
-      try:
-        self._ParseLine(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line with error: {0!s}'.format(exception))
+    if key == 'log_line_v2':
+      self._ParseLoglineVersion2(parser_mediator, structure)
 
-    elif key == 'header':
-      try:
-        self._ParseHeader(parser_mediator, structure)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'unable to parse header line with error: {0!s}'.format(exception))
+    elif key == 'header_line_v2':
+      self._ParseHeader(parser_mediator, structure)
 
-  def _ParseTimeElements(self, time_elements_structure):
-    """Parses date and time elements of a log line.
+  def _ParseTimeElementsVersion2(self, time_elements_structure):
+    """Parses date and time elements of a version 2 log line.
 
     Args:
       time_elements_structure (pyparsing.ParseResults): date and time elements
@@ -286,7 +489,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._SDF_HEADER.parseString(text_reader.lines)
+      structure = self._HEADER_LINE_V2.parseString(text_reader.lines)
     except pyparsing.ParseException:
       logger.debug('Not a SkyDrive log file')
       return False
@@ -305,4 +508,5 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     return True
 
 
+text_parser.TextLogParser.RegisterPlugin(SkyDriveLog1TextPlugin)
 text_parser.TextLogParser.RegisterPlugin(SkyDriveLog2TextPlugin)

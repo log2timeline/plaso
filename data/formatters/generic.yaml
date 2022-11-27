@@ -758,18 +758,7 @@ short_source: 'HIST'
 source: 'Santa FSEvent'
 ---
 type: 'conditional'
-data_type: 'skydrive:log:old:line'
-message:
-- '[{source_code}]'
-- '({log_level})'
-- '{text}'
-short_message:
-- '{text}'
-short_source: 'LOG'
-source: 'SkyDrive Log File'
----
-type: 'conditional'
-data_type: 'skydrive:log:line'
+data_type: 'skydrive:log:entry'
 message:
 - '[{module}'
 - '{source_code}'
