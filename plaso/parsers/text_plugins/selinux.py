@@ -19,6 +19,7 @@ import pyparsing
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -84,24 +85,6 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _GetDateTimeValueFromStructure(self, structure):
-    """Retrieves a date and time value from a Pyparsing structure.
-
-    Args:
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Returns:
-      dfdatetime.TimeElements: date and time value or None if not available.
-    """
-    timestamp_structure = self._GetValueFromStructure(
-        structure, 'timestamp')
-
-    seconds, milliseconds = timestamp_structure
-
-    timestamp = (seconds * 1000) + milliseconds
-
-    return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
-
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
@@ -119,7 +102,8 @@ class SELinuxTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'log_line':
-      process_identifier = None
+      time_elements_structure = self._GetValueFromStructure(
+          structure, 'timestamp')
 
       # Try to parse the body text as key value pairs. Note that not
       # all log lines will be properly formatted key value pairs.
@@ -132,16 +116,38 @@ class SELinuxTextPlugin(interface.TextPlugin):
         process_identifier = self._GetValueFromStructure(
             body_structure, 'pid')
       except pyparsing.ParseException:
-        pass
+        process_identifier = None
 
       event_data = SELinuxLogEventData()
       event_data.audit_type = self._GetValueFromStructure(structure, 'type')
       event_data.body = body or None
-      event_data.last_written_time = self._GetDateTimeValueFromStructure(
-          structure)
+      event_data.last_written_time = self._ParseTimeElements(
+          time_elements_structure)
       event_data.pid = process_identifier
 
       parser_mediator.ProduceEventData(event_data)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+    Returns:
+      dfdatetime.PosixTimeInMilliseconds: date and time value.
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      seconds, milliseconds = time_elements_structure
+
+      timestamp = (seconds * definitions.MILLISECONDS_PER_SECOND) + milliseconds
+
+      return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -154,14 +160,20 @@ class SELinuxTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     try:
-      parsed_structure = self._LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
+      _, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+    except errors.ParseError:
       return False
 
-    return 'timestamp' in parsed_structure
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'timestamp')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(SELinuxTextPlugin)

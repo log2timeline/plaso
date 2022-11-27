@@ -289,10 +289,8 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     try:
-      _, parsed_structure, _, _ = self._ParseString(line)
+      _, parsed_structure, _, _ = self._ParseString(text_reader.lines)
     except errors.ParseError:
       return False
 

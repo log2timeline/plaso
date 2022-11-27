@@ -146,7 +146,8 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
+    # TODO: refactor.
+    line = text_reader.lines.split('\n', maxsplit=1)[0]
 
     if line and (' [pid ' not in line or ': Client ' not in line):
       return False

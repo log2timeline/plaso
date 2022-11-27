@@ -275,22 +275,12 @@ class MacOSWiFiLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     try:
-      key = 'header'
-      parsed_structure = self._HEADER_LOG_LINE.parseString(line)
-    except pyparsing.ParseException:
-      parsed_structure = None
+      key, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+    except errors.ParseError:
+      return False
 
-    if not parsed_structure:
-      try:
-        key = 'turned_over_header'
-        parsed_structure = self._TURNED_OVER_HEADER_LOG_LINE.parseString(line)
-      except pyparsing.ParseException:
-        parsed_structure = None
-
-    if not parsed_structure:
+    if key not in ('header', 'turned_over_header'):
       return False
 
     self._SetEstimatedYear(parser_mediator)

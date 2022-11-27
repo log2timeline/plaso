@@ -273,10 +273,8 @@ class AndroidLogcatTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     try:
-      key, parsed_structure, _, _ = self._ParseString(line)
+      key, parsed_structure, _, _ = self._ParseString(text_reader.lines)
     except errors.ParseError:
       return False
 

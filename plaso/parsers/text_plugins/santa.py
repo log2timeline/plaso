@@ -511,9 +511,7 @@ class SantaTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
-    return bool(self._VERIFICATION_REGEX.match(line))
+    return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
 
 
 text_parser.TextLogParser.RegisterPlugin(SantaTextPlugin)
