@@ -65,27 +65,6 @@ short_source: 'HISTORY'
 source: 'MacOS Document Versions'
 ---
 type: 'conditional'
-data_type: 'mac:knowledgec:application'
-message:
-- 'Application {bundle_identifier} executed'
-- 'for {duration} seconds'
-short_message:
-- 'Application {bundle_identifier}'
-short_source: 'LOG'
-source: 'MacOS KnowledgeC'
----
-type: 'conditional'
-data_type: 'mac:knowledgec:safari'
-message:
-- 'Visited: {url}'
-- '({title})'
-- 'Duration: {duration}'
-short_message:
-- 'Safari: {url}'
-short_source: 'WEBHIST'
-source: 'MacOS KnowledgeC (Safari)'
----
-type: 'conditional'
 data_type: 'mac:notes:note'
 message:
 - 'title:{title}'
@@ -161,6 +140,13 @@ message: 'Apple account: {account_name} ({first_name} {last_name})'
 short_message: 'Apple account: {account_name} ({first_name} {last_name})'
 short_source: 'PLIST'
 source: 'Apple account plist'
+---
+type: 'basic'
+data_type: 'macos:application_usage:entry'
+message: '{application} {application_version} (bundle: {bundle_identifier}). {event}: {count} time(s)'
+short_message: '{application} ({event} {count} time(s))'
+short_source: 'LOG'
+source: 'MacOS Application Usage Log'
 ---
 type: 'conditional'
 data_type: 'macos:asl:entry'
@@ -305,6 +291,27 @@ short_message:
 short_source: 'LOG'
 source: 'MacOS Keychain (Internet password)'
 ---
+type: 'conditional'
+data_type: 'macos:knowledgec:application'
+message:
+- 'Application {bundle_identifier} executed'
+- 'for {duration} seconds'
+short_message:
+- 'Application {bundle_identifier}'
+short_source: 'LOG'
+source: 'MacOS KnowledgeC'
+---
+type: 'conditional'
+data_type: 'macos:knowledgec:safari'
+message:
+- 'Visited: {url}'
+- '({title})'
+- 'Duration: {duration}'
+short_message:
+- 'Safari: {url}'
+short_source: 'WEBHIST'
+source: 'MacOS KnowledgeC (Safari)'
+---
 type: 'basic'
 data_type: 'macos:launchd:entry'
 message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
@@ -423,13 +430,6 @@ short_message:
 - 'Action: {action}'
 short_source: 'LOG'
 source: 'MacOS Wifi Log'
----
-type: 'basic'
-data_type: 'macosx:application_usage'
-message: '{application} v.{app_version} (bundle: {bundle_id}). Launched: {count} time(s)'
-short_message: '{application} ({count} time(s))'
-short_source: 'LOG'
-source: 'MacOS Application Usage Log'
 ---
 type: 'conditional'
 data_type: 'macosx:lsquarantine'

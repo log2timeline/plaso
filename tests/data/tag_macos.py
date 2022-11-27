@@ -10,9 +10,9 @@ from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.plist_plugins import ipod
-from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import ls_quarantine
+from plaso.parsers.sqlite_plugins import macos_appusage
 from plaso.parsers.text_plugins import syslog
 
 from tests.data import test_lib
@@ -32,8 +32,8 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'macosx:application_usage'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        appusage.MacOSApplicationUsageEventData, attribute_values_per_name,
-        ['application_execution'])
+        macos_appusage.MacOSApplicationUsageEventData,
+        attribute_values_per_name, ['application_execution'])
 
     # Test: data_type is 'syslog:line' AND
     #       body contains 'COMMAND=/bin/launchctl'

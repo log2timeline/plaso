@@ -128,6 +128,14 @@ attribute_mappings:
   description: 'Update Time'
 place_holder_event: true
 ---
+data_type: 'chrome:autofill:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'last_used_time'
+  description: 'Last Used Time'
+place_holder_event: true
+---
 data_type: 'chrome:cache:entry'
 attribute_mappings:
 - name: 'creation_time'
@@ -383,6 +391,12 @@ attribute_mappings:
   description: 'Validation Time'
 place_holder_event: true
 ---
+data_type: 'macos:application_usage:entry'
+attribute_mappings:
+- name: 'last_used_time'
+  description: 'Last Used Time'
+place_holder_event: true
+---
 data_type: 'macos:asl:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -431,6 +445,26 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'macos:knowledgec:application'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'macos:knowledgec:safari'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Added Time'
 place_holder_event: true
 ---
 data_type: 'macos:securityd_log:entry'
