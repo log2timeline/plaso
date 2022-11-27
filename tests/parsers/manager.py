@@ -161,20 +161,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     available_parser_names = [name for name, _ in plugins_information]
     self.assertIn('olecf_default', available_parser_names)
 
-  def testGetParserObjectByName(self):
-    """Tests the GetParserObjectByName function."""
-    manager.ParsersManager.RegisterParser(TestParser)
-
-    parser = manager.ParsersManager.GetParserObjectByName(
-        'test_parser')
-    self.assertIsNotNone(parser)
-    self.assertEqual(parser.NAME, 'test_parser')
-
-    parser = manager.ParsersManager.GetParserObjectByName('bogus')
-    self.assertIsNone(parser)
-
-    manager.ParsersManager.DeregisterParser(TestParser)
-
   def testGetParserObjects(self):
     """Tests the GetParserObjects function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)

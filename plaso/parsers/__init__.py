@@ -34,7 +34,6 @@ from plaso.parsers import safari_cookies
 from plaso.parsers import spotlight_storedb
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
-from plaso.parsers import syslog
 from plaso.parsers import systemd_journal
 from plaso.parsers import text_parser
 from plaso.parsers import trendmicroav
