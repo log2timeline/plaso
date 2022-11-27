@@ -663,6 +663,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'postgresql:application_log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'safari:cookie:entry'
 attribute_mappings:
 - name: 'creation_time'
