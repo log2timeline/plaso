@@ -54,16 +54,16 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
       _TIME_ZONE_OFFSET)
 
-  _LOGGER = (pyparsing.SkipTo(':').setResultsName('logger') +
-             pyparsing.Suppress(': '))
-
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
+  _LOGGER = pyparsing.Combine(
+      pyparsing.Word(pyparsing.alphas + '_') + pyparsing.Literal('[') +
+      pyparsing.Word(pyparsing.nums) + pyparsing.Literal(']'))
 
   _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      _LOGGER +
-      pyparsing.restOfLine().setResultsName('body') +
-      _END_OF_LINE)
+      _LOGGER.setResultsName('logger') + pyparsing.Suppress(': ') +
+      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_entry', _LOG_LINE)]
 
@@ -89,8 +89,10 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
         structure, 'date_time')
 
     event_data = IOSSysdiagnoseLogdData()
-    event_data.body = self._GetValueFromStructure(structure, 'body')
-    event_data.logger = self._GetValueFromStructure(structure, 'logger')
+    event_data.body = self._GetValueFromStructure(
+        structure, 'body', default_value='')
+    event_data.logger = self._GetValueFromStructure(
+        structure, 'logger', default_value='')
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)

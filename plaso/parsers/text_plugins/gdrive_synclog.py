@@ -84,7 +84,6 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  # Note that this approach is slow.
   _LOG_LINE_START = (
       _DATE_TIME +
       pyparsing.Word(pyparsing.alphas).setResultsName('level') +
@@ -94,11 +93,12 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables).setResultsName('source_code'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('message') +
+      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
       _END_OF_LINE)
 
   _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) + pyparsing.restOfLine() + _END_OF_LINE)
+      pyparsing.NotAny(_LOG_LINE_START) +
+      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
       ('log_line', _LOG_LINE),
@@ -106,22 +106,34 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
-  def _ParseLogline(self, parser_mediator, structure):
-    """Parses a log line.
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(GoogleDriveSyncLogTextPlugin, self).__init__()
+    self._event_data = None
+
+  def _ParseFinalize(self, parser_mediator):
+    """Finalizes parsing.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
+    """
+    if self._event_data:
+      parser_mediator.ProduceEventData(self._event_data)
+      self._event_data = None
+
+  def _ParseLogline(self, structure):
+    """Parses a log line.
+
+    Args:
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    # Replace newlines with spaces in structure.message to preserve output.
-    message = self._GetValueFromStructure(structure, 'message')
-    if message:
-      message = message.replace('\n', ' ').strip(' ')
+    body = self._GetValueFromStructure(structure, 'body', default_value='')
+    body = body.strip()
 
     event_data = GoogleDriveSyncLogEventData()
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
@@ -131,9 +143,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
-    event_data.message = message
+    event_data.message = body
 
-    parser_mediator.ProduceEventData(event_data)
+    self._event_data = event_data
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -152,7 +164,17 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'log_line':
-      self._ParseLogline(parser_mediator, structure)
+      if self._event_data:
+        parser_mediator.ProduceEventData(self._event_data)
+        self._event_data = None
+
+      self._ParseLogline(structure)
+
+    elif key == 'successive_log_line':
+      body = self._GetValueFromStructure(structure, 'body', default_value='')
+      body = body.strip()
+
+      self._event_data.message = ' '.join([self._event_data.message, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -217,6 +239,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       self._ParseTimeElements(time_elements_structure)
     except errors.ParseError:
       return False
+
+    self._event_data = None
 
     return True
 

@@ -106,6 +106,15 @@ class TextPlugin(plugins.BasePlugin):
 
     return value
 
+  def _ParseFinalize(self, parser_mediator):  # pylint: disable=unused-argument
+    """Finalizes parsing.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    return
+
   def _ParseLines(self, parser_mediator, text_reader):
     """Parses lines of text using a pyparsing definition.
 
@@ -299,6 +308,8 @@ class TextPlugin(plugins.BasePlugin):
           encoding_errors='text_parser_handler')
 
       self._ParseLines(parser_mediator, text_reader)
+
+      self._ParseFinalize(parser_mediator)
 
     finally:
       self._parser_mediator = None

@@ -29,6 +29,10 @@ class IOSLockdowndLogTextPluginTest(test_lib.TextPluginTestCase):
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
     expected_event_values = {
         'body': (
             'handle_get_value: AMPDevicesAgent attempting to get '
@@ -43,10 +47,10 @@ class IOSLockdowndLogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': (
             'spawn_xpc_service_block_invoke: description of xpc reply: '
-            '<dictionary: 0x2029c5070> { count = 1, transaction: 0, voucher'
-            ' = 0x0, contents =	"XPCErrorDescription" => <string: '
+            '<dictionary: 0x2029c5070> { count = 1, transaction: 0, '
+            'voucher = 0x0, contents = "XPCErrorDescription" => <string: '
             '0x2029c5230> { length = 22, contents = "Connection '
-            'interrupted" }}'),
+            'interrupted" } }'),
         'data_type': 'ios:lockdownd_log:entry',
         'process_identifier': 69,
         'written_time': '2021-10-13T07:57:42.950704+00:00'}

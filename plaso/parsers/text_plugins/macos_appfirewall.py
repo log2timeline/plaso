@@ -60,12 +60,11 @@ class MacOSAppFirewallTextPlugin(
   #          '<Info>: Dropbox: Allow (in:0 out:2)'
   # INFO: process_name is going to have a white space at the beginning.
 
-  _DATE_TIME = pyparsing.Group(
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds'))
+  _DATE_TIME = (
+      _THREE_LETTERS +
+      _ONE_OR_TWO_DIGITS +
+      _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -77,9 +76,8 @@ class MacOSAppFirewallTextPlugin(
       pyparsing.CharsNotIn('>').setResultsName('status') +
       pyparsing.Suppress('>:') +
       pyparsing.CharsNotIn(':').setResultsName('process_name') +
-      pyparsing.Literal(':') +
-      # TODO: replace by restOfLine()
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('action') +
+      pyparsing.Suppress(': ') +
+      pyparsing.restOfLine().setResultsName('action') +
       _END_OF_LINE)
 
   # Repeated line.
@@ -87,14 +85,12 @@ class MacOSAppFirewallTextPlugin(
 
   _REPEATED_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Suppress('---') +
-      pyparsing.CharsNotIn('---').setResultsName('process_name') +
-      pyparsing.Suppress('---') +
-      _END_OF_LINE)
+      pyparsing.Suppress('---') + pyparsing.CharsNotIn('-') +
+      pyparsing.Suppress('---') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-      ('repeated', _REPEATED_LOG_LINE)]
+      ('log_line', _LOG_LINE),
+      ('repeated_log_line', _REPEATED_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
 
@@ -124,7 +120,7 @@ class MacOSAppFirewallTextPlugin(
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but use the timestamp from the actual entry.
-    if key == 'logline':
+    if key == 'log_line':
       self._repeated_structure = structure
     else:
       structure = self._repeated_structure
