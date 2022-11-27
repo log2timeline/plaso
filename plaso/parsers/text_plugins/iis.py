@@ -87,20 +87,20 @@ class WinIISTextPlugin(interface.TextPlugin):
   _WORD = pyparsing.Word(pyparsing.alphanums + '-') | _BLANK
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.ConvertTokenToInteger) | _BLANK
+      lambda tokens: int(tokens[0], 10)) | _BLANK
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address | _BLANK)
 
   PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
-      text_parser.ConvertTokenToInteger) | _BLANK
+      lambda tokens: int(tokens[0], 10)) | _BLANK
 
   # Username can consist of: domain.username
   _USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | _BLANK

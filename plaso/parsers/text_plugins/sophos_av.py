@@ -44,10 +44,10 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
   MAXIMUM_LINE_LENGTH = 4096
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   # Date and time values are formatted as: YYYYMMDD hhmmss
   # For example: 20100720 183814

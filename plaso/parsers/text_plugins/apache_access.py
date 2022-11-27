@@ -74,13 +74,13 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       'dec': 12}
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 

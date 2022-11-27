@@ -56,13 +56,13 @@ class MacOSSecuritydLogTextPlugin(
   ENCODING = 'utf-8'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
@@ -74,7 +74,7 @@ class MacOSSecuritydLogTextPlugin(
       _TWO_DIGITS.setResultsName('seconds'))
 
   _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 

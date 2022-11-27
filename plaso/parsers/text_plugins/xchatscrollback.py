@@ -74,7 +74,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
   ENCODING = 'utf-8'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.ConvertTokenToInteger)
+      lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 

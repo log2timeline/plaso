@@ -42,7 +42,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
 
   _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
       pyparsing.nums, min=9, max=10).setParseAction(
-          text_parser.PyParseIntCast).setResultsName('timestamp')
+          lambda tokens: int(tokens[0], 10)).setResultsName('timestamp')
 
   _COMMAND = pyparsing.Regex(
       r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName('command')

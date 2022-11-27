@@ -150,7 +150,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
   ENCODING = 'utf-8'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _UNICODE_PRINTABLES = ''.join(
       chr(character) for character in range(65536)

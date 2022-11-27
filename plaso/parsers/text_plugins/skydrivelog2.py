@@ -46,13 +46,13 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
   ENCODING = 'utf-8'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
 

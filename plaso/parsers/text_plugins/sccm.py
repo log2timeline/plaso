@@ -44,16 +44,17 @@ class SCCMTextPlugin(interface.TextPlugin):
   MAXIMUM_LINE_LENGTH = 16384
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_OR_THREE_DIGITS = pyparsing.Word(
-      pyparsing.nums, min=2, max=3).setParseAction(text_parser.PyParseIntCast)
+      pyparsing.nums, min=2, max=3).setParseAction(
+          lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   # Date formatted as: date="M-D-YYYY"
   _DATE = (pyparsing.Suppress('" date="') + _ONE_OR_TWO_DIGITS +

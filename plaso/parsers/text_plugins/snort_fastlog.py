@@ -89,13 +89,13 @@ class SnortFastLogTextPlugin(
       r'(:\d*)?$']))  # Optional TCP/UDP destination port
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _DATE_MONTH_DAY = (
       _TWO_DIGITS + pyparsing.Suppress('/') + _TWO_DIGITS)

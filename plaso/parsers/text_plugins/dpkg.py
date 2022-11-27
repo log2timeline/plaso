@@ -59,10 +59,10 @@ class DpkgTextPlugin(interface.TextPlugin):
   ENCODING = 'utf-8'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('-') +

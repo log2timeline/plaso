@@ -53,7 +53,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
   DATA_FORMAT = 'SELinux audit log (audit.log) file'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.ConvertTokenToInteger)
+      lambda tokens: int(tokens[0], 10))
 
   _KEY_VALUE_GROUP = pyparsing.Group(
       pyparsing.Word(pyparsing.alphanums) +
