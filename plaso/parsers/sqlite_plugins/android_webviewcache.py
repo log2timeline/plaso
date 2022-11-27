@@ -4,8 +4,6 @@
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -15,6 +13,10 @@ class AndroidWebViewCacheEventData(events.EventData):
 
   Attributes:
     content_length (int): size of the cached content.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cache
+        entry expires.
+    last_modified_time (dfdatetime.DateTimeValues): date and time the cache
+        entry was last modified.
     query (str): SQL query that was used to obtain the event data.
     url (str): URL the content was retrieved from.
   """
@@ -25,6 +27,8 @@ class AndroidWebViewCacheEventData(events.EventData):
     """Initializes event data."""
     super(AndroidWebViewCacheEventData, self).__init__(data_type=self.DATA_TYPE)
     self.content_length = None
+    self.expiration_time = None
+    self.last_modified_time = None
     self.query = None
     self.url = None
 
@@ -53,6 +57,24 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
           'TEXT, contentlength INTEGER, contentdisposition TEXT, UNIQUE (url) '
           'ON CONFLICT REPLACE)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
   def ParseRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the database.
 
@@ -67,22 +89,14 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
     event_data = AndroidWebViewCacheEventData()
     event_data.content_length = self._GetRowValue(
         query_hash, row, 'contentlength')
+    event_data.expiration_time = self._GetDateTimeRowValue(
+        query_hash, row, 'expires')
+    event_data.last_modified_time = self._GetDateTimeRowValue(
+        query_hash, row, 'lastmodify')
     event_data.query = query
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'expires')
-    if timestamp is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'lastmodify')
-    if timestamp is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(AndroidWebViewCachePlugin)

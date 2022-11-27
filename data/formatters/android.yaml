@@ -13,6 +13,14 @@ source: 'Android App Usage'
 ---
 type: 'conditional'
 data_type: 'android:event:call'
+enumeration_helpers:
+- input_attribute: 'call_type'
+  output_attribute: 'call_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'INCOMING'
+    2: 'OUTGOING'
+    3: 'MISSED'
 message:
 - '{call_type}'
 - 'Number: {number}'
@@ -63,6 +71,19 @@ source: 'Google Hangouts Message'
 ---
 type: 'conditional'
 data_type: 'android:messaging:sms'
+enumeration_helpers:
+- input_attribute: 'sms_type'
+  output_attribute: 'sms_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'RECEIVED'
+    2: 'SENT'
+- input_attribute: 'sms_read'
+  output_attribute: 'sms_read'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'UNREAD'
+    1: 'READ'
 message:
 - 'Type: {sms_type}'
 - 'Address: {address}'
@@ -72,6 +93,21 @@ short_message:
 - '{body}'
 short_source: 'LOG'
 source: 'Android SMS messages'
+---
+type: 'conditional'
+data_type: 'android:webview:cookie'
+message:
+- 'Host: {host}'
+- 'Path: {path}'
+- 'Cookie name: {name}'
+- 'Value: {value}'
+- 'Secure: {secure}'
+short_message:
+- '{host}'
+- '{name}'
+- '{value}'
+short_source: 'WebView'
+source: 'Android WebView'
 ---
 type: 'conditional'
 data_type: 'android:webviewcache'
@@ -182,18 +218,3 @@ short_message:
 - 'Status: {content}'
 short_source: 'Twitter Android'
 source: 'Twitter Android Status'
----
-type: 'conditional'
-data_type: 'webview:cookie'
-message:
-- 'Host: {host}'
-- 'Path: {path}'
-- 'Cookie name: {name}'
-- 'Value: {value}'
-- 'Secure: {secure}'
-short_message:
-- '{host}'
-- '{name}'
-- '{value}'
-short_source: 'WebView'
-source: 'Android WebView'

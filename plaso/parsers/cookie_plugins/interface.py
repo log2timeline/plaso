@@ -28,7 +28,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cookie_data (Optional[bytes]): cookie data, as a byte sequence.
       url (Optional[str]): URL or path where the cookie was set.
     """
@@ -39,7 +39,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cookie_name (str): the name of the cookie value.
       cookie_data (bytes): the cookie data, as a byte sequence.
       url (str): the full URL or path where the cookie was set.

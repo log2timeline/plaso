@@ -4,8 +4,6 @@
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -16,11 +14,13 @@ class AndroidSMSEventData(events.EventData):
   Attributes:
     address (str): phone number associated to the sender or receiver.
     body (str): content of the SMS text message.
+    creation_time (dfdatetime.DateTimeValues): creation date and time of
+        the message.
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
-    sms_read (str): message read status, either Read or Unread.
-    sms_type (str): message type, either Sent or Received.
+    sms_read (int): message read status, either Read or Unread.
+    sms_type (int): message type, either Sent or Received.
   """
 
   DATA_TYPE = 'android:messaging:sms'
@@ -30,6 +30,7 @@ class AndroidSMSEventData(events.EventData):
     super(AndroidSMSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.address = None
     self.body = None
+    self.creation_time = None
     self.offset = None
     self.query = None
     self.sms_read = None
@@ -124,41 +125,46 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
           'CREATE TABLE \'words_segments\'(blockid INTEGER PRIMARY KEY, block '
           'BLOB)')}]
 
-  # TODO: Move this functionality to the formatter.
-  SMS_TYPE = {
-      1: 'RECEIVED',
-      2: 'SENT'}
-  SMS_READ = {
-      0: 'UNREAD',
-      1: 'READ'}
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_java_time.JavaTime(timestamp=timestamp)
 
   def ParseSmsRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an SMS row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
-    sms_read = self._GetRowValue(query_hash, row, 'read')
-    sms_type = self._GetRowValue(query_hash, row, 'type')
-
     event_data = AndroidSMSEventData()
     event_data.address = self._GetRowValue(query_hash, row, 'address')
     event_data.body = self._GetRowValue(query_hash, row, 'body')
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'date')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.sms_read = self.SMS_READ.get(sms_read, 'UNKNOWN')
-    event_data.sms_type = self.SMS_TYPE.get(sms_type, 'UNKNOWN')
+    event_data.sms_read = self._GetRowValue(query_hash, row, 'read')
+    event_data.sms_type = self._GetRowValue(query_hash, row, 'type')
 
-    timestamp = self._GetRowValue(query_hash, row, 'date')
-    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(AndroidSMSPlugin)

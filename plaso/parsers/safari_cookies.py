@@ -8,16 +8,12 @@ from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
+from plaso.lib import cookie_plugins_helper
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-
-# Register the cookie plugins.
-from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
-
 from plaso.parsers import interface
 from plaso.parsers import manager
-from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
 
 class SafariBinaryCookieEventData(events.EventData):
@@ -50,7 +46,8 @@ class SafariBinaryCookieEventData(events.EventData):
 
 
 class BinaryCookieParser(
-    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+    interface.FileObjectParser, cookie_plugins_helper.CookiePluginsHelper,
+    dtfabric_helper.DtFabricHelper):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
@@ -58,12 +55,6 @@ class BinaryCookieParser(
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'safari_cookies.yaml')
-
-  def __init__(self):
-    """Initializes a parser."""
-    super(BinaryCookieParser, self).__init__()
-    self._cookie_plugins = (
-        cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
   def _ParseCString(self, page_data, string_offset):
     """Parses a C string from the page data.
@@ -170,22 +161,9 @@ class BinaryCookieParser(
 
     parser_mediator.ProduceEventData(event_data)
 
-    for plugin in self._cookie_plugins:
-      if parser_mediator.abort:
-        break
-
-      if event_data.cookie_name != plugin.COOKIE_NAME:
-        continue
-
-      try:
-        plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=event_data.cookie_name,
-            cookie_data=event_data.cookie_value, url=event_data.url)
-
-      except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning(
-            'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
-                plugin.NAME, exception))
+    self._ParseCookie(
+        parser_mediator, event_data.cookie_name, event_data.cookie_value,
+        event_data.cookie_name)
 
   @classmethod
   def GetFormatSpecification(cls):

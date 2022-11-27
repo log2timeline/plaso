@@ -1199,6 +1199,21 @@ short_source: 'LOG'
 source: 'SCCM Log'
 ---
 type: 'conditional'
+data_type: 'webview:cookie'
+message:
+- 'Host: {host}'
+- 'Path: {path}'
+- 'Cookie name: {name}'
+- 'Value: {value}'
+- 'Secure: {secure}'
+short_message:
+- '{host}'
+- '{name}'
+- '{value}'
+short_source: 'WebView'
+source: 'Android WebView'
+---
+type: 'conditional'
 data_type: 'windows:firewall:log_entry'
 message:
 - '{action}'
