@@ -4,9 +4,7 @@
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import cookie_plugins_helper
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -15,7 +13,14 @@ class ChromeCookieEventData(events.EventData):
   """Chrome Cookie event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): date and time the cookie
+        was last accessed.
     cookie_name (str): name of the cookie.
+    creation_time (dfdatetime.DateTimeValues): date and time the cookie
+        was created.
+    data (str): value of the cookie.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cookie
+        expires.
     host (str): hostname of host that set the cookie value.
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
@@ -25,7 +30,6 @@ class ChromeCookieEventData(events.EventData):
     secure (bool): True if the cookie should only be transmitted over a
         secure channel.
     url (str): URL or path where the cookie got set.
-    data (str): value of the cookie.
   """
 
   DATA_TYPE = 'chrome:cookie:entry'
@@ -33,8 +37,11 @@ class ChromeCookieEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(ChromeCookieEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
     self.cookie_name = None
+    self.creation_time = None
     self.data = None
+    self.expiration_time = None
     self.host = None
     self.httponly = None
     self.path = None
@@ -55,6 +62,24 @@ class BaseChromeCookiePlugin(
       'utmcmd': 'Last type of visit.',
       'utmctr': 'Keywords used to find site.',
       'utmcct': 'Path to the page of referring link.'}
+
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.WebKitTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
 
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
@@ -86,8 +111,14 @@ class BaseChromeCookiePlugin(
     url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
     event_data = ChromeCookieEventData()
+    event_data.access_time = self._GetDateTimeRowValue(
+        query_hash, row, 'last_access_utc')
     event_data.cookie_name = cookie_name
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'creation_utc')
     event_data.data = cookie_data
+    event_data.expiration_time = self._GetDateTimeRowValue(
+        query_hash, row, 'expires_utc')
     event_data.host = hostname
     event_data.httponly = bool(httponly)
     event_data.path = path
@@ -96,24 +127,7 @@ class BaseChromeCookiePlugin(
     event_data.secure = bool(secure)
     event_data.url = url
 
-    timestamp = self._GetRowValue(query_hash, row, 'creation_utc')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'last_access_utc')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'expires_utc')
-    if timestamp:
-      date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
