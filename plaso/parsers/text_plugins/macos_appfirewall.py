@@ -83,10 +83,12 @@ class MacOSAppFirewallTextPlugin(
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
 
+  _REPEATED_LOG_LINE_END = pyparsing.Suppress('---') + _END_OF_LINE
+
   _REPEATED_LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Suppress('---') + pyparsing.CharsNotIn('-') +
-      pyparsing.Suppress('---') + _END_OF_LINE)
+      pyparsing.Suppress('---') + pyparsing.SkipTo(_REPEATED_LOG_LINE_END) +
+      _REPEATED_LOG_LINE_END)
 
   _LINE_STRUCTURES = [
       ('log_line', _LOG_LINE),

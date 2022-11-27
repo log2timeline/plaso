@@ -88,6 +88,7 @@ class BaseParser(object):
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None
+    self._default_plugin_name = '{0:s}_default'.format(self.NAME)
     self._plugins = None
     self.EnablePlugins(self.ALL_PLUGINS)
 
@@ -123,9 +124,8 @@ class BaseParser(object):
     if not self._plugin_classes:
       return
 
-    default_plugin_name = '{0:s}_default'.format(self.NAME)
     for plugin_name, plugin_class in self._plugin_classes.items():
-      if plugin_name == default_plugin_name:
+      if plugin_name == self._default_plugin_name:
         self._default_plugin = plugin_class()
         continue
 

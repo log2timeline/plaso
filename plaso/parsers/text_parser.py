@@ -54,15 +54,12 @@ class EncodedTextReader(object):
 
   def ReadLines(self):
     """Reads lines into the lines buffer."""
-    while len(self.lines) < self._buffer_size:
-      current_offset = self._file_object.get_offset()
+    current_offset = self._file_object.get_offset()
 
-      decoded_data = self._stream_reader.read(size=self._buffer_size)
-      if not decoded_data:
-        break
-
+    decoded_data = self._stream_reader.read(size=self._buffer_size)
+    if decoded_data:
       # Remove a byte-order mark at the start of the file.
-      if current_offset == 0 and decoded_data and decoded_data[0] == '\ufeff':
+      if current_offset == 0 and decoded_data[0] == '\ufeff':
         decoded_data = decoded_data[1:]
 
       # Strip carriage returns from the text.

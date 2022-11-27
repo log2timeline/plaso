@@ -18,7 +18,7 @@ class SkyDriveLogEventData(events.EventData):
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the log entry
         was added.
-    detail (str): details.
+    detail (str): detail.
     log_level (str): log level.
     module (str): name of the module that generated the log message.
     source_code (str): source file and line number that generated the log
@@ -73,17 +73,13 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       pyparsing.Literal('!') +
       pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
 
-  _LOG_LEVEL = (
-      pyparsing.Suppress('(') +
-      pyparsing.SkipTo(')').setResultsName('log_level') +
-      pyparsing.Suppress(')'))
-
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_V1 = (
-      _DATE_TIME_V1 + _SOURCE_CODE + _LOG_LEVEL + pyparsing.Suppress(':') +
-      pyparsing.restOfLine().setResultsName('detail') +
-      _END_OF_LINE)
+      _DATE_TIME_V1 + _SOURCE_CODE +
+      pyparsing.QuotedString('(', endQuoteChar=')').setResultsName(
+          'log_level') + pyparsing.Suppress(':') +
+      pyparsing.restOfLine().setResultsName('detail') + _END_OF_LINE)
 
   # Sometimes the timestamped log line is followed by an empty line,
   # then by a file name plus other data and finally by another empty
@@ -260,8 +256,6 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
-  _IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
-
   # Format version 2 header date and time values are formatted as:
   # YYYY-MM-DD-hhmmss.###
   # For example: 2013-07-25-160323.291
@@ -284,53 +278,70 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress('.') + _THREE_DIGITS).setResultsName('date_time')
 
-  _SDF_HEADER_START = (
-      pyparsing.Literal('######').suppress() +
-      pyparsing.Literal('Logging started.').setResultsName('log_start'))
-
-  # Multiline entry end marker, matched from right to left.
-  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _DATE_TIME_V2
-
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _LOG_LINE_V2 = (
+  _HEADER_LINE_V2_START = (
+      pyparsing.Suppress('######') +
+      pyparsing.Literal('Logging started.').setResultsName('log_start') +
+      pyparsing.Literal('Version=').setResultsName('version_string') +
+      pyparsing.Word(pyparsing.nums + '.').setResultsName('version_number') +
+      pyparsing.Suppress('StartSystemTime:') + _HEADER_DATE_TIME_V2 +
+      pyparsing.Literal('StartLocalTime:').setResultsName('local_time_string'))
+
+  _HEADER_LINE_V2 = (
+      _HEADER_LINE_V2_START + pyparsing.restOfLine.setResultsName('detail') +
+      _END_OF_LINE)
+
+  _LOG_LINE_V2_START = (
       _DATE_TIME_V2 + pyparsing.Suppress(',') +
-      _IGNORE_FIELD + pyparsing.Suppress(',') +
-      _IGNORE_FIELD + pyparsing.Suppress(',') +
-      _IGNORE_FIELD + pyparsing.Suppress(',') +
+      pyparsing.Word(pyparsing.hexnums) + pyparsing.Suppress(',') +
+      pyparsing.Word(pyparsing.hexnums) + pyparsing.Suppress(',') +
+      pyparsing.Word(pyparsing.hexnums) + pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('module') +
       pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('source_code') +
       pyparsing.Suppress(',') +
-      _IGNORE_FIELD + pyparsing.Suppress(',') +
-      _IGNORE_FIELD + pyparsing.Suppress(',') +
+      pyparsing.Word(pyparsing.hexnums) + pyparsing.Suppress(',') +
+      pyparsing.Word(pyparsing.hexnums) + pyparsing.Suppress(',') +
       pyparsing.CharsNotIn(',').setResultsName('log_level') +
-      pyparsing.Suppress(',') +
-      pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName('detail') +
-      pyparsing.ZeroOrMore(pyparsing.lineEnd()))
+      pyparsing.Suppress(','))
 
-  _HEADER_LINE_V2 = (
-      _SDF_HEADER_START +
-      pyparsing.Literal('Version=').setResultsName('version_string') +
-      pyparsing.Word(pyparsing.nums + '.').setResultsName('version_number') +
-      pyparsing.Literal('StartSystemTime:').suppress() +
-      _HEADER_DATE_TIME_V2 +
-      pyparsing.Literal('StartLocalTime:').setResultsName(
-          'local_time_string') +
-      pyparsing.restOfLine.setResultsName('details') +
+  _LOG_LINE_V2 = (
+      _LOG_LINE_V2_START + pyparsing.restOfLine.setResultsName('detail') +
       _END_OF_LINE)
 
+  _SUCCESSIVE_LOG_LINE_V2 = (
+      pyparsing.NotAny(_HEADER_LINE_V2_START ^ _LOG_LINE_V2_START) +
+      pyparsing.restOfLine().setResultsName('detail') + _END_OF_LINE)
+
   _LINE_STRUCTURES = [
+      ('header_line_v2', _HEADER_LINE_V2),
       ('log_line_v2', _LOG_LINE_V2),
-      ('header_line_v2', _HEADER_LINE_V2)]
+      ('successive_log_line_v2', _SUCCESSIVE_LOG_LINE_V2)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(SkyDriveLog2TextPlugin, self).__init__()
+    self._event_data = None
+
+  def _ParseFinalize(self, parser_mediator):
+    """Finalizes parsing.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    if self._event_data:
+      parser_mediator.ProduceEventData(self._event_data)
+      self._event_data = None
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parse header lines and store appropriate attributes.
 
     ['Logging started.', 'Version=', '17.0.2011.0627',
-    [2013, 7, 25], 16, 3, 23, 291, 'StartLocalTime', '<details>']
+    [2013, 7, 25], 16, 3, 23, 291, 'StartLocalTime', '<detail>']
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -341,7 +352,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'header_date_time')
 
-    details = self._GetValueFromStructure(structure, 'details')
+    detail = self._GetValueFromStructure(structure, 'detail')
     local_time_string = self._GetValueFromStructure(
         structure, 'local_time_string')
     log_start = self._GetValueFromStructure(structure, 'log_start')
@@ -353,7 +364,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
         time_elements_structure)
     # TODO: refactor detail to individual event data attributes.
     event_data.detail = '{0!s} {1!s} {2!s} {3!s} {4!s}'.format(
-        log_start, version_string, version_number, local_time_string, details)
+        log_start, version_string, version_number, local_time_string, detail)
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -391,33 +402,29 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
-  def _ParseLoglineVersion2(self, parser_mediator, structure):
+  def _ParseLoglineVersion2(self, structure):
     """Parse a version 2 log line.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    # Replace newlines with spaces in structure.detail to preserve output.
-    # TODO: refactor detail to individual event data attributes.
     detail = self._GetValueFromStructure(structure, 'detail', default_value='')
-    detail = detail.replace('\n', ' ').strip(' ')
+    detail = detail.strip()
 
     event_data = SkyDriveLogEventData()
     event_data.added_time = self._ParseTimeElementsVersion2(
         time_elements_structure)
-    event_data.detail = detail or None
+    event_data.detail = detail
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
     event_data.module = self._GetValueFromStructure(structure, 'module')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
 
-    parser_mediator.ProduceEventData(event_data)
+    self._event_data = event_data
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -435,11 +442,22 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == 'log_line_v2':
-      self._ParseLoglineVersion2(parser_mediator, structure)
+    if self._event_data and key in ('header_line_v2', 'log_line_v2'):
+      parser_mediator.ProduceEventData(self._event_data)
+      self._event_data = None
 
-    elif key == 'header_line_v2':
+    if key == 'header_line_v2':
       self._ParseHeader(parser_mediator, structure)
+
+    elif key == 'log_line_v2':
+      self._ParseLoglineVersion2(structure)
+
+    elif key == 'successive_log_line_v2':
+      detail = self._GetValueFromStructure(
+          structure, 'detail', default_value='')
+      detail = detail.strip()
+
+      self._event_data.detail = ' '.join([self._event_data.detail, detail])
 
   def _ParseTimeElementsVersion2(self, time_elements_structure):
     """Parses date and time elements of a version 2 log line.
