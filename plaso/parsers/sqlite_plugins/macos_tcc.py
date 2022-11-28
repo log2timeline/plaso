@@ -4,18 +4,18 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
 class MacOSTCCEntry(events.EventData):
-  """macOS TCC event data.
+  """MacOS TCC event data.
 
   Attributes:
     allowed (bool): whether access to the service was allowed.
     client (str): name of the client requesting access to the service.
+    modification_time (dfdatetime.DateTimeValues): date and time of the entry
+        last modification.
     prompt_count (int): number of times an application prompted the user for
         access to a service.
     query (str): SQL query that was used to obtain the event data.
@@ -29,6 +29,7 @@ class MacOSTCCEntry(events.EventData):
     super(MacOSTCCEntry, self).__init__(data_type=self.DATA_TYPE)
     self.allowed = None
     self.client = None
+    self.modification_time = None
     self.prompt_count = None
     self.query = None
     self.service = None
@@ -94,30 +95,45 @@ class MacOSTCCPlugin(interface.SQLitePlugin):
           'TEXT NOT NULL, uuid TEXT NOT NULL, display TEXT NOT NULL, UNIQUE '
           '(bundle_id, uuid))')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def ParseTCCEntry(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     event_data = MacOSTCCEntry()
-    event_data.service = self._GetRowValue(query_hash, row, 'service')
-    event_data.client = self._GetRowValue(query_hash, row, 'client')
     event_data.allowed = self._GetRowValue(query_hash, row, 'allowed')
+    event_data.client = self._GetRowValue(query_hash, row, 'client')
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'last_modified')
     event_data.prompt_count = self._GetRowValue(query_hash, row, 'prompt_count')
     event_data.query = query
+    event_data.service = self._GetRowValue(query_hash, row, 'service')
 
-    timestamp = self._GetRowValue(query_hash, row, 'last_modified')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_PROMPTED_USER)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacOSTCCPlugin)

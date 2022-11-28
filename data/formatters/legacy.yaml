@@ -978,6 +978,27 @@ short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'conditional'
+data_type: 'mac:notificationcenter:db'
+enumeration_helpers:
+- input_attribute: 'presented'
+  output_attribute: 'presented'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Title: {title}'
+- '(, subtitle: {subtitle}),'
+- 'registered by: {bundle_name}.'
+- 'Presented: {presented},'
+- 'Content: {body}'
+short_message:
+- 'Title: {title},'
+- 'Content: {body}'
+short_source: 'NOTIFICATION'
+source: 'MacOS Notification Center'
+---
+type: 'conditional'
 data_type: 'mac:securityd:line'
 message:
 - 'Sender: {sender}'

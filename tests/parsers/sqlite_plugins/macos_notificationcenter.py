@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MacOS TCC plugin."""
+"""Tests for the MacOS Notification Center plugin."""
 
 import unittest
 
-from plaso.parsers.sqlite_plugins import macos_tcc
+from plaso.parsers.sqlite_plugins import macos_notificationcenter
 
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the MacOS TCC plugin."""
+class MacOSNotificationCenterTest(test_lib.SQLitePluginTestCase):
+  """Tests for the MacOS Notification Center plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a MacOS TCC file."""
-    plugin = macos_tcc.MacOSTCCPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['TCC-test.db'], plugin)
+    """Tests the Process function."""
+    plugin = macos_notificationcenter.MacOSNotificationCenterPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        ['mac_notificationcenter.db'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 21)
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 21)
+    self.assertEqual(number_of_events, 6)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -33,12 +34,12 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'allowed': 1,
-        'client': 'com.apple.weather',
-        'data_type': 'macos:tcc_entry',
-        'modification_time': '2020-05-29T12:09:51+00:00',
-        'prompt_count': 1,
-        'service': 'kTCCServiceUbiquity'}
+        'body': 'KeePassXC can now be run',
+        'bundle_name': 'com.google.santagui',
+        'creation_time': '2018-05-02T10:59:18.930155+00:00',
+        'data_type': 'macos:notification_center:entry',
+        'presented': 1,
+        'title': 'Santa'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

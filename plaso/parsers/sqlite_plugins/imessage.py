@@ -4,8 +4,6 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -15,6 +13,8 @@ class IMessageEventData(events.EventData):
 
   Attributes:
     attachment_location (str): location of the attachment.
+    creation_time (dfdatetime.DateTimeValues): date and time the message
+        was created.
     imessage_id (str): mobile number or email address the message was sent
         to or received from.
     message_type (int): value to indicate the message was sent (1) or
@@ -33,6 +33,7 @@ class IMessageEventData(events.EventData):
     """Initializes event data."""
     super(IMessageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.attachment_location = None
+    self.creation_time = None
     self.imessage_id = None
     self.message_type = None
     self.offset = None
@@ -45,9 +46,7 @@ class IMessageEventData(events.EventData):
 class IMessagePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS and iOS iMessage database files.
 
-  The iMessage database file is typically stored in:
-  chat.db
-  sms.db
+  The iMessage database file is typically stored in chat.db or sms.db
   """
 
   NAME = 'imessage'
@@ -136,12 +135,30 @@ class IMessagePlugin(interface.SQLitePlugin):
           'INTEGER REFERENCES attachment (ROWID) ON DELETE CASCADE, '
           'UNIQUE(message_id, attachment_id))')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -150,6 +167,8 @@ class IMessagePlugin(interface.SQLitePlugin):
     event_data = IMessageEventData()
     event_data.attachment_location = self._GetRowValue(
         query_hash, row, 'attachment_location')
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'date')
     event_data.imessage_id = self._GetRowValue(query_hash, row, 'imessage_id')
     event_data.message_type = self._GetRowValue(query_hash, row, 'message_type')
     event_data.offset = self._GetRowValue(query_hash, row, 'ROWID')
@@ -158,11 +177,7 @@ class IMessagePlugin(interface.SQLitePlugin):
     event_data.service = self._GetRowValue(query_hash, row, 'service')
     event_data.text = self._GetRowValue(query_hash, row, 'text')
 
-    timestamp = self._GetRowValue(query_hash, row, 'date')
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IMessagePlugin)
