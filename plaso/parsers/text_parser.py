@@ -6,64 +6,7 @@ import os
 
 from plaso.lib import errors
 from plaso.parsers import interface
-from plaso.parsers import logger
 from plaso.parsers import manager
-
-
-# TODO: determine if this method should be merged with PyParseIntCast.
-
-def ConvertTokenToInteger(string, location, tokens):  # pylint: disable=unused-argument
-  """Pyparsing parse action callback to convert a token into an integer value.
-
-  Args:
-    string (str): original string.
-    location (int): location in the string where the token was found.
-    tokens (list[str]): tokens.
-
-  Returns:
-    int: integer value or None.
-  """
-  try:
-    integer = int(tokens[0], 10)
-  except ValueError:
-    integer = None
-
-  return integer
-
-
-def PyParseIntCast(string, location, tokens):  # pylint: disable=unused-argument
-  """Return an integer from a string.
-
-  This is a pyparsing callback method that converts the matched
-  string into an integer.
-
-  The method modifies the content of the tokens list and converts
-  them all to an integer value.
-
-  Args:
-    string (str): original string.
-    location (int): location in the string where the match was made.
-    tokens (list[str]): extracted tokens, where the string to be converted
-        is stored.
-  """
-  # Cast the regular tokens.
-  for index, token in enumerate(tokens):
-    try:
-      tokens[index] = int(token)
-    except ValueError:
-      logger.error('Unable to cast [{0:s}] to an int, setting to 0'.format(
-          token))
-      tokens[index] = 0
-
-  # We also need to cast the dictionary built tokens.
-  for key in tokens.keys():
-    try:
-      tokens[key] = int(tokens[key], 10)
-    except ValueError:
-      logger.error(
-          'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
-              key, tokens[key]))
-      tokens[key] = 0
 
 
 class EncodedTextReader(object):

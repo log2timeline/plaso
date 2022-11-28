@@ -48,7 +48,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _COMMAND = pyparsing.Regex(
       r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).setResultsName('command')

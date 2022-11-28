@@ -217,16 +217,16 @@ class SyslogTextPlugin(
       _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN])))
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
@@ -250,7 +250,7 @@ class SyslogTextPlugin(
           pyparsing.Suppress(':') + _TWO_DIGITS))
 
   _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
 

@@ -39,13 +39,13 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
   DATA_FORMAT = 'iOS lockdown daemon log'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   # Date and time values are formatted as: MM/DD/YY hh:mm:ss:######
   # For example: 10/13/21 07:57:42.865446

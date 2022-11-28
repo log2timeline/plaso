@@ -67,10 +67,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   ENCODING = 'ascii'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _DATE = pyparsing.Group(
       _FOUR_DIGITS + pyparsing.Suppress('-') +
@@ -91,11 +91,11 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   _PORT_NUMBER_OR_BLANK = (
       pyparsing.Word(pyparsing.nums, max=6).setParseAction(
-          text_parser.ConvertTokenToInteger) | pyparsing.Suppress('-'))
+          lambda tokens: int(tokens[0], 10)) | pyparsing.Suppress('-'))
 
   _INTEGER_OR_BLANK = (
       pyparsing.Word(pyparsing.nums).setParseAction(
-          text_parser.ConvertTokenToInteger) | pyparsing.Suppress('-'))
+          lambda tokens: int(tokens[0], 10)) | pyparsing.Suppress('-'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 

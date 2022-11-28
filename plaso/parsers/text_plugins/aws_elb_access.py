@@ -180,20 +180,20 @@ class AWSELBTextPlugin(interface.TextPlugin):
   MAXIMUM_LINE_LENGTH = 3000
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      text_parser.PyParseIntCast)
+      lambda tokens: int(tokens[0], 10))
 
   _UNSIGNED_INTEGER = _INTEGER | _BLANK
 
@@ -207,7 +207,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.pyparsing_common.ipv6_address)
 
   _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
-      text_parser.ConvertTokenToInteger) | _BLANK
+      lambda tokens: int(tokens[0], 10)) | _BLANK
 
   _SOURCE_IP_ADDRESS_AND_PORT = pyparsing.Group(
       _IP_ADDRESS.setResultsName('source_ip_address') +
