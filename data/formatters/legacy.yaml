@@ -978,6 +978,16 @@ short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'conditional'
+data_type: 'mac:notes:note'
+message:
+- 'title:{title}'
+- 'note_text:{text}'
+short_message:
+- 'title:{title}'
+short_source: 'Mac Note'
+source: 'MacOS Notes'
+---
+type: 'conditional'
 data_type: 'mac:notificationcenter:db'
 enumeration_helpers:
 - input_attribute: 'presented'
@@ -1269,6 +1279,51 @@ short_message:
 - '{text}'
 short_source: 'LOG'
 source: 'SCCM Log'
+---
+type: 'conditional'
+data_type: 'tango:android:contact'
+message:
+- '{first_name}'
+- '{last_name}'
+- '{gender}'
+- 'birthday: {birthday}'
+- 'Status: {status}'
+- 'Friend: {is_friend}'
+- 'Request type: {friend_request_type}'
+- 'Request message: {friend_request_message}'
+short_message:
+- '{first_name}'
+- '{last_name}'
+- 'Status: {status}'
+short_source: 'Tango Android'
+source: 'Tango Android Contact'
+---
+type: 'conditional'
+data_type: 'tango:android:conversation'
+message:
+- 'Conversation ({conversation_identifier})'
+short_message:
+- 'Conversation ({conversation_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Conversation'
+---
+type: 'conditional'
+data_type: 'tango:android:message'
+enumeration_helpers:
+- input_attribute: 'direction'
+  output_attribute: 'direction'
+  default_value: 'Unknown'
+  values:
+    1: 'Incoming'
+    2: 'Outgoing'
+message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Message'
 ---
 type: 'conditional'
 data_type: 'twitter:android:contact'

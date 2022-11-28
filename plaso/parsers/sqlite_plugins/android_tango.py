@@ -14,7 +14,7 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class TangoAndroidMessageEventData(events.EventData):
+class AndroidTangoMessageEventData(events.EventData):
   """Tango on Android message event data.
 
   Attributes:
@@ -25,34 +25,34 @@ class TangoAndroidMessageEventData(events.EventData):
     sent_time (dfdatetime.DateTimeValues): date and time the message was sent.
   """
 
-  DATA_TYPE = 'tango:android:message'
+  DATA_TYPE = 'android:tango:message'
 
   def __init__(self):
     """Initializes event data."""
-    super(TangoAndroidMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AndroidTangoMessageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.direction = None
     self.message_identifier = None
     self.sent_time = None
 
 
-class TangoAndroidConversationEventData(events.EventData):
+class AndroidTangoConversationEventData(events.EventData):
   """Tango on Android conversation event data.
 
   Attributes:
     conversation_identifier (int): conversation identifier.
   """
 
-  DATA_TYPE = 'tango:android:conversation'
+  DATA_TYPE = 'android:tango:conversation'
 
   def __init__(self):
     """Initializes event data."""
-    super(TangoAndroidConversationEventData,
+    super(AndroidTangoConversationEventData,
           self).__init__(data_type=self.DATA_TYPE)
     self.conversation_identifier = None
 
 
-class TangoAndroidContactEventData(events.EventData):
+class AndroidTangoContactEventData(events.EventData):
   """Tango on Android contact event data.
 
   Attributes:
@@ -68,11 +68,11 @@ class TangoAndroidContactEventData(events.EventData):
     status (str): contact status message.
   """
 
-  DATA_TYPE = 'tango:android:contact'
+  DATA_TYPE = 'android:tango:contact'
 
   def __init__(self):
     """Initializes event data."""
-    super(TangoAndroidContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AndroidTangoContactEventData, self).__init__(data_type=self.DATA_TYPE)
     self.birthday = None
     self.distance = None
     self.first_name = None
@@ -84,7 +84,7 @@ class TangoAndroidContactEventData(events.EventData):
     self.status = None
 
 
-class TangoAndroidTCPlugin(interface.SQLitePlugin):
+class AndroidTangoTCPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Tango on Android TC database files."""
 
   NAME = 'tango_android_tc'
@@ -168,7 +168,7 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = TangoAndroidConversationEventData()
+    event_data = AndroidTangoConversationEventData()
     event_data.conversation_identifier = self._GetRowValue(
         query_hash, row, 'conv_id')
 
@@ -196,7 +196,7 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
     # structure to extract the relevant bits.
     # payload = self._GetRowValue(query_hash, row, 'payload')
 
-    event_data = TangoAndroidMessageEventData()
+    event_data = AndroidTangoMessageEventData()
     event_data.creation_time = self._GetDateTimeRowValue(
         query_hash, row, 'create_time')
     event_data.direction = self._GetRowValue(query_hash, row, 'direction')
@@ -208,7 +208,7 @@ class TangoAndroidTCPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-class TangoAndroidProfilePlugin(interface.SQLitePlugin):
+class AndroidTangoProfilePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Tango on Android profile database files."""
 
   NAME = 'tango_android_profile'
@@ -280,7 +280,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = TangoAndroidContactEventData()
+    event_data = AndroidTangoContactEventData()
 
     first_name = self._GetRowValue(query_hash, row, 'first_name')
     try:
@@ -355,4 +355,4 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
 
 
 sqlite.SQLiteParser.RegisterPlugins([
-    TangoAndroidTCPlugin, TangoAndroidProfilePlugin])
+    AndroidTangoTCPlugin, AndroidTangoProfilePlugin])

@@ -6,8 +6,6 @@ import html.parser as HTMLParser
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -32,10 +30,10 @@ class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
     self._text.append(data)
 
   def ExtractText(self, zhtmlstring):
-    """Extracts text from a Mac notes ZHTMLString.
+    """Extracts text from a MacOS notes ZHTMLString.
 
     Args:
-      zhtmlstring (str): zhtmlstring from a Mac notes database.
+      zhtmlstring (str): zhtmlstring from a MacOS notes database.
 
     Returns:
       str: the text of the note, with HTML removed.
@@ -49,25 +47,30 @@ class _ZHTMLStringTextExtractor(HTMLParser.HTMLParser):
     return ' '.join(self._text)
 
 
-class MacNotesEventData(events.EventData):
-  """Mac Notes event data.
+class MacOSNotesEventData(events.EventData):
+  """MacOS Notes event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the notes database
+        entry was created.
+    modification_time (dfdatetime.DateTimeValues): date and time the notes
+        database entry was last modified.
     text (str): note text.
     title (str): note title.
   """
 
-  DATA_TYPE = 'mac:notes:note'
+  DATA_TYPE = 'macos:notes:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacNotesEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super(MacOSNotesEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
+    self.modification_time = None
     self.text = None
     self.title = None
 
 
-class MacNotesPlugin(interface.SQLitePlugin):
+class MacOSNotesPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS notes database files.
 
   The MacOS Notes database file is typically stored in:
@@ -89,8 +92,7 @@ class MacNotesPlugin(interface.SQLitePlugin):
       'ZNOTEBODY': frozenset([
           'ZHTMLSTRING']),
       'ZNOTE': frozenset([
-          'ZDATECREATED', 'ZDATEEDITED', 'ZTITLE']),
-  }
+          'ZDATECREATED', 'ZDATEEDITED', 'ZTITLE'])}
 
   SCHEMAS = [{
       'ZACCOUNT': (
@@ -143,8 +145,25 @@ class MacNotesPlugin(interface.SQLitePlugin):
       'Z_MODELCACHE': ('CREATE TABLE Z_MODELCACHE (Z_CONTENT BLOB)'),
       'Z_PRIMARYKEY': (
           'CREATE TABLE Z_PRIMARYKEY (Z_ENT INTEGER PRIMARY KEY, Z_NAME'
-          'VARCHAR, Z_SUPER INTEGER, Z_MAX INTEGER)')
-  }]
+          'VARCHAR, Z_SUPER INTEGER, Z_MAX INTEGER)')}]
+
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
   def ParseZHTMLSTRINGRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the database.
@@ -158,29 +177,21 @@ class MacNotesPlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
     query_hash = hash(query)
-    event_data = MacNotesEventData()
 
     zhtmlstring = self._GetRowValue(query_hash, row, 'zhtmlstring')
 
     text_extractor = _ZHTMLStringTextExtractor()
     text = text_extractor.ExtractText(zhtmlstring)
+
+    event_data = MacOSNotesEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'last_modified_time')
     event_data.text = text
-
     event_data.title = self._GetRowValue(query_hash, row, 'title')
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'last_modified_time')
-    if timestamp:
-      date_time = dfdatetime_cocoa_time.CocoaTime(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(MacNotesPlugin)
+sqlite.SQLiteParser.RegisterPlugin(MacOSNotesPlugin)
