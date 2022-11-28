@@ -142,6 +142,16 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'chrome:cookie:entry'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
 data_type: 'chrome:preferences:content_settings:exceptions'
 attribute_mappings:
 - name: 'last_visited_time'
@@ -187,6 +197,12 @@ attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
 place_holder_event: false
+---
+data_type: 'dropbox:sync_history:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
 ---
 data_type: 'firefox:cache:record'
 attribute_mappings:

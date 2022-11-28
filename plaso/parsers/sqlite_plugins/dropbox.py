@@ -4,8 +4,6 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -19,6 +17,8 @@ class DropboxSyncHistoryEventData(events.EventData):
     direction (str): the source of the synchronisation event
     file_identifier (str): the Dropbox identifier of the file.
     local_path (str): the local path of the file.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+        was recorded.
   """
 
   DATA_TYPE = 'dropbox:sync_history:entry'
@@ -31,6 +31,7 @@ class DropboxSyncHistoryEventData(events.EventData):
     self.direction = None
     self.file_identifier = None
     self.local_path = None
+    self.recorded_time = None
 
 
 class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
@@ -61,6 +62,24 @@ class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
           ' TEXT, direction TEXT, file_id TEXT, local_path TEXT, timestamp '
           'INTEGER NOT NULL, other_user INTEGER')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def ParseSyncHistoryRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a sync_history row.
 
@@ -79,12 +98,10 @@ class DropboxSyncDatabasePlugin(interface.SQLitePlugin):
     event_data.direction = self._GetRowValue(query_hash, row, 'direction')
     event_data.file_identifier = self._GetRowValue(query_hash, row, 'file_id')
     event_data.local_path = self._GetRowValue(query_hash, row, 'local_path')
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_RECORDED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(DropboxSyncDatabasePlugin)
