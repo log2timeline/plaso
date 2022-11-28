@@ -1271,6 +1271,109 @@ short_source: 'LOG'
 source: 'SCCM Log'
 ---
 type: 'conditional'
+data_type: 'twitter:android:contact'
+message:
+- 'Screen name: {username}'
+- 'Profile picture URL: {image_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+- 'Number of followers: {followers}'
+- 'Number of following: {friend}'
+- 'Number of tweets: {statuses}'
+short_message:
+- 'Screen name: {username}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Contacts'
+---
+type: 'conditional'
+data_type: 'twitter:android:search'
+message:
+- 'Name: {name}'
+- 'Query: {search_query}'
+short_message:
+- 'Query: {search_query}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Search'
+---
+type: 'conditional'
+data_type: 'twitter:android:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'retweeted'
+  output_attribute: 'retweeted'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'User: {username}'
+- 'Status: {content}'
+- 'Favorited: {favorited}'
+- 'Retweeted: {retweeted}'
+short_message:
+- 'User: {username}'
+- 'Status: {content}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Status'
+---
+type: 'conditional'
+data_type: 'twitter:ios:contact'
+enumeration_helpers:
+- input_attribute: 'following'
+  output_attribute: 'following'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Screen name: {screen_name}'
+- 'Profile picture URL: {profile_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {url}'
+- 'Following: {following}'
+- 'Number of followers: {followers_count}'
+- 'Number of following: {following_count}'
+short_message:
+- 'Screen name: {screen_name}'
+- 'Description: {description}'
+- 'URL: {url}'
+short_source: 'Twitter iOS'
+source: 'Twitter iOS Contacts'
+---
+type: 'conditional'
+data_type: 'twitter:ios:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Name: {name}'
+- 'User Id: {user_id}'
+- 'Message: {text}'
+- 'Favorite: {favorited}'
+- 'Retweet Count: {retweet_count}'
+- 'Favorite Count: {favorite_count}'
+short_message:
+- 'Name: {name}'
+- 'Message: {text}'
+short_source: 'Twitter iOS'
+source: 'Twitter iOS Status'
+---
+type: 'conditional'
 data_type: 'webview:cookie'
 message:
 - 'Host: {host}'

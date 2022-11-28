@@ -4,22 +4,26 @@
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class TwitterAndroidContactEventData(events.EventData):
+class AndroidTwitterContactEventData(events.EventData):
   """Twitter on Android contact event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the contact was
+        created.
     description (str): twitter account profile description.
     followers (int): number of followers.
     friends (int): number of following.
+    friendship_time (dfdatetime.DateTimeValues): date and time the contact was
+        befriended.
     identifier (int): contact row id.
     image_url (str): profile picture url.
     location (str): twitter account profile location content.
+    modification_time (dfdatetime.DateTimeValues): date and time the contact was
+        last modified.
     name (str): twitter account name.
     query (str): SQL query that was used to obtain the event data.
     statuses (int): twitter account number of tweets.
@@ -28,18 +32,21 @@ class TwitterAndroidContactEventData(events.EventData):
     web_url (str): twitter account profile url content.
   """
 
-  DATA_TYPE = 'twitter:android:contact'
+  DATA_TYPE = 'android:twitter:contact'
 
   def __init__(self):
     """Initializes event data."""
-    super(TwitterAndroidContactEventData,
+    super(AndroidTwitterContactEventData,
           self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.description = None
     self.followers = None
+    self.friendship_time = None
     self.friends = None
     self.identifier = None
     self.image_url = None
     self.location = None
+    self.modification_time = None
     self.name = None
     self.query = None
     self.statuses = None
@@ -48,12 +55,36 @@ class TwitterAndroidContactEventData(events.EventData):
     self.web_url = None
 
 
-class TwitterAndroidStatusEventData(events.EventData):
+class AndroidTwitterSearchEventData(events.EventData):
+  """Twitter on Android search event data.
+
+  Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the search was
+        created.
+    name (str): twitter name handler.
+    query (str): SQL query that was used to obtain the event data.
+    search_query (str): search query.
+  """
+
+  DATA_TYPE = 'android:twitter:search'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(AndroidTwitterSearchEventData,self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
+    self.name = None
+    self.query = None
+    self.search_query = None
+
+
+class AndroidTwitterStatusEventData(events.EventData):
   """Twitter on Android status event data.
 
   Attributes:
     author_identifier (int): twitter account identifier.
     content (str): status content.
+    creation_time (dfdatetime.DateTimeValues): date and time the status was
+        created.
     favorited (int): favorited flag as 0/1 value.
     identifier (int): status row identifier.
     query (str): SQL query that was used to obtain the event data.
@@ -61,42 +92,22 @@ class TwitterAndroidStatusEventData(events.EventData):
     username (str): twitter account handler.
   """
 
-  DATA_TYPE = 'twitter:android:status'
+  DATA_TYPE = 'android:twitter:status'
 
   def __init__(self):
     """Initializes event data."""
-    super(TwitterAndroidStatusEventData,
-          self).__init__(data_type=self.DATA_TYPE)
-    self.identifier = None
+    super(AndroidTwitterStatusEventData,self).__init__(data_type=self.DATA_TYPE)
     self.author_identifier = None
-    self.username = None
     self.content = None
+    self.creation_time = None
     self.favorited = None
+    self.identifier = None
     self.query = None
     self.retweeted = None
+    self.username = None
 
 
-class TwitterAndroidSearchEventData(events.EventData):
-  """Twitter on Android search event data.
-
-  Attributes:
-    name (str): twitter name handler.
-    query (str): SQL query that was used to obtain the event data.
-    search_query (str): search query.
-  """
-
-  DATA_TYPE = 'twitter:android:search'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(TwitterAndroidSearchEventData,
-          self).__init__(data_type=self.DATA_TYPE)
-    self.name = None
-    self.query = None
-    self.search_query = None
-
-
-class TwitterAndroidPlugin(interface.SQLitePlugin):
+class AndroidTwitterPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Twitter on Android database files."""
 
   NAME = 'twitter_android'
@@ -332,102 +343,101 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
           'INT,link_color INT,advertiser_type TEXT,business_profile_state '
           'TEXT)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
   def ParseSearchRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a search row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TwitterAndroidSearchEventData()
+    event_data = AndroidTwitterSearchEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'time')
     event_data.query = query
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.search_query = self._GetRowValue(query_hash, row, 'query')
 
-    timestamp = self._GetRowValue(query_hash, row, 'time')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a status row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TwitterAndroidStatusEventData()
-    event_data.query = query
-    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
+    event_data = AndroidTwitterStatusEventData()
     event_data.author_identifier = self._GetRowValue(
         query_hash, row, 'author_id')
-    event_data.username = self._GetRowValue(query_hash, row, 'username')
     event_data.content = self._GetRowValue(query_hash, row, 'content')
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'time')
     event_data.favorited = self._GetRowValue(query_hash, row, 'favorited')
+    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
+    event_data.query = query
     event_data.retweeted = self._GetRowValue(query_hash, row, 'retweeted')
+    event_data.username = self._GetRowValue(query_hash, row, 'username')
 
-    timestamp = self._GetRowValue(query_hash, row, 'time')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a status row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TwitterAndroidContactEventData()
-    event_data.query = query
-    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
-    event_data.user_identifier = self._GetRowValue(query_hash, row, 'user_id')
-    event_data.username = self._GetRowValue(query_hash, row, 'username')
-    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data = AndroidTwitterContactEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'profile_created')
     event_data.description = self._GetRowValue(query_hash, row, 'description')
-    event_data.web_url = self._GetRowValue(query_hash, row, 'web_url')
-    event_data.location = self._GetRowValue(query_hash, row, 'location')
     event_data.followers = self._GetRowValue(query_hash, row, 'followers')
     event_data.friends = self._GetRowValue(query_hash, row, 'friends')
-    event_data.statuses = self._GetRowValue(query_hash, row, 'statuses')
+    event_data.friendship_time = self._GetDateTimeRowValue(
+        query_hash, row, 'friendship_time')
+    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
     event_data.image_url = self._GetRowValue(query_hash, row, 'image_url')
+    event_data.location = self._GetRowValue(query_hash, row, 'location')
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'updated')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data.query = query
+    event_data.statuses = self._GetRowValue(query_hash, row, 'statuses')
+    event_data.user_identifier = self._GetRowValue(query_hash, row, 'user_id')
+    event_data.username = self._GetRowValue(query_hash, row, 'username')
+    event_data.web_url = self._GetRowValue(query_hash, row, 'web_url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'profile_created')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'updated')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'friendship_time')
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(TwitterAndroidPlugin)
+sqlite.SQLiteParser.RegisterPlugin(AndroidTwitterPlugin)

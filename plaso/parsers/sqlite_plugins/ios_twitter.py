@@ -4,21 +4,23 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class TwitterIOSContactEventData(events.EventData):
+class IOSTwitterContactEventData(events.EventData):
   """Twitter on iOS 8+ contact event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the contact was
+        created.
     description (str): description of the profile.
     followers_count (int): number of accounts following the contact.
     following_count (int): number of accounts the contact is following.
     following (int): 1 if the contact is following the user's account, 0 if not.
     location (str): location of the profile.
+    modification_time (dfdatetime.DateTimeValues): date and time the contact was
+        last modified.
     name (str): name of the profile.
     profile_url (str): URL of the profile picture.
     query (str): SQL query that was used to obtain the event data.
@@ -26,16 +28,18 @@ class TwitterIOSContactEventData(events.EventData):
     url (str): URL of the profile.
   """
 
-  DATA_TYPE = 'twitter:ios:contact'
+  DATA_TYPE = 'ios:twitter:contact'
 
   def __init__(self):
     """Initializes event data."""
-    super(TwitterIOSContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSTwitterContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.description = None
     self.followers_count = None
     self.following = None
     self.following_count = None
     self.location = None
+    self.modification_time = None
     self.name = None
     self.profile_url = None
     self.query = None
@@ -43,34 +47,40 @@ class TwitterIOSContactEventData(events.EventData):
     self.url = None
 
 
-class TwitterIOSStatusEventData(events.EventData):
+class IOSTwitterStatusEventData(events.EventData):
   """Parent class for Twitter on iOS 8+ status events.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the status was
+        created.
     favorite_count (int): number of times the status message has been favorited.
     favorited (int): value to mark status as favorite by the account.
+    modification_time (dfdatetime.DateTimeValues): date and time the status was
+        last modified.
     name (str): user's profile name.
     query (str): SQL query that was used to obtain the event data.
     retweet_count (str): number of times the status message has been retweeted.
     text (str): content of the status message.
-    user_id (int): user unique identifier.
+    user_identifier (int): user identifier.
   """
 
-  DATA_TYPE = 'twitter:ios:status'
+  DATA_TYPE = 'ios:twitter:status'
 
   def __init__(self):
     """Initializes event data."""
-    super(TwitterIOSStatusEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSTwitterStatusEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.favorite_count = None
     self.favorited = None
+    self.modification_time = None
     self.name = None
     self.query = None
     self.retweet_count = None
     self.text = None
-    self.user_id = None
+    self.user_identifier = None
 
 
-class TwitterIOSPlugin(interface.SQLitePlugin):
+class IOSTwitterPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Twitter on iOS 8+ database files.
 
   The Twitter on iOS 8+ database file is typically stored in:
@@ -181,18 +191,40 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           'INTEGER, \'businessProfileState\' INTEGER, \'analyticsType\' '
           'INTEGER )')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    # Convert the floating point value to an integer.
+    timestamp = int(timestamp)
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TwitterIOSContactEventData()
+    event_data = IOSTwitterContactEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'createdDate')
     event_data.description = self._GetRowValue(query_hash, row, 'description')
     event_data.followers_count = self._GetRowValue(
         query_hash, row, 'followersCount')
@@ -200,6 +232,8 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
     event_data.following_count = self._GetRowValue(
         query_hash, row, 'followingCount')
     event_data.location = self._GetRowValue(query_hash, row, 'location')
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'updatedAt')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.profile_url = self._GetRowValue(
         query_hash, row, 'profileImageUrl')
@@ -207,63 +241,35 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
     event_data.screen_name = self._GetRowValue(query_hash, row, 'screenName')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'createdDate')
-    if timestamp:
-      # Convert the floating point value to an integer.
-      timestamp = int(timestamp)
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'updatedAt')
-    if timestamp:
-      # Convert the floating point value to an integer.
-      timestamp = int(timestamp)
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
     query_hash = hash(query)
 
-    event_data = TwitterIOSStatusEventData()
+    event_data = IOSTwitterStatusEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'date')
     event_data.favorite_count = self._GetRowValue(
         query_hash, row, 'favoriteCount')
     event_data.favorited = self._GetRowValue(query_hash, row, 'favorited')
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'updatedAt')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.query = query
     event_data.retweet_count = self._GetRowValue(
         query_hash, row, 'retweetCount')
     event_data.text = self._GetRowValue(query_hash, row, 'text')
-    event_data.user_id = self._GetRowValue(query_hash, row, 'user_id')
+    event_data.user_identifier = self._GetRowValue(query_hash, row, 'user_id')
 
-    timestamp = self._GetRowValue(query_hash, row, 'date')
-    if timestamp:
-      # Convert the floating point value to an integer.
-      timestamp = int(timestamp)
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'updatedAt')
-    if timestamp:
-      # Convert the floating point value to an integer.
-      timestamp = int(timestamp)
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(TwitterIOSPlugin)
+sqlite.SQLiteParser.RegisterPlugin(IOSTwitterPlugin)

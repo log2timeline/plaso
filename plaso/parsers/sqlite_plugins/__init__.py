@@ -3,6 +3,7 @@
 
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_sms
+from plaso.parsers.sqlite_plugins import android_twitter
 from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache
 from plaso.parsers.sqlite_plugins import chrome_autofill
@@ -16,10 +17,11 @@ from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import hangouts_messages
 from plaso.parsers.sqlite_plugins import imessage
+from plaso.parsers.sqlite_plugins import ios_kik
 from plaso.parsers.sqlite_plugins import ios_netusage
 from plaso.parsers.sqlite_plugins import ios_powerlog
 from plaso.parsers.sqlite_plugins import ios_screentime
-from plaso.parsers.sqlite_plugins import kik_ios
+from plaso.parsers.sqlite_plugins import ios_twitter
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import mac_document_versions
@@ -32,8 +34,6 @@ from plaso.parsers.sqlite_plugins import macos_tcc
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import tango_android
-from plaso.parsers.sqlite_plugins import twitter_android
-from plaso.parsers.sqlite_plugins import twitter_ios
 from plaso.parsers.sqlite_plugins import windows_eventtranscript
 from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.sqlite_plugins import zeitgeist
