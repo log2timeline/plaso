@@ -1238,6 +1238,29 @@ short_source: 'LOG'
 source: 'Popularity Contest Session'
 ---
 type: 'conditional'
+data_type: 'skydrive:log:old:line'
+message:
+- '[{source_code}]'
+- '({log_level})'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
+---
+type: 'conditional'
+data_type: 'skydrive:log:line'
+message:
+- '[{module}'
+- '{source_code}'
+- '{log_level}]'
+- '{detail}'
+short_message:
+- '{detail}'
+short_source: 'LOG'
+source: 'SkyDrive Log File'
+---
+type: 'conditional'
 data_type: 'software_management:sccm:log'
 message:
 - '{component}'
