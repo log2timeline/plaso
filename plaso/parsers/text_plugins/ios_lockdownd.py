@@ -47,6 +47,8 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
   _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   # Date and time values are formatted as: MM/DD/YY hh:mm:ss:######
   # For example: 10/13/21 07:57:42.865446
   _DATE_TIME = (
@@ -54,24 +56,63 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress('/') + _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      pyparsing.Word('.,', exact=1).suppress() + _SIX_DIGITS).setResultsName(
-          'date_time')
+      pyparsing.Word('.,', exact=1).suppress() + _SIX_DIGITS)
 
-  _PID = (pyparsing.Suppress('pid=') +
-          _INTEGER.setResultsName('process_identifier'))
+  _LOG_LINE_START = (
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Suppress('pid=') +
+      _INTEGER.setResultsName('process_identifier'))
 
-  _BODY_END = pyparsing.StringEnd() | _DATE_TIME
+  _LOG_LINE = (
+      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _END_OF_LINE)
 
-  _BODY = pyparsing.SkipTo(_BODY_END).setResultsName('body')
+  _SUCCESSIVE_LOG_LINE = (
+      pyparsing.NotAny(_LOG_LINE_START) +
+      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
 
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
-
-  _LINE_GRAMMAR = (
-      _DATE_TIME + _PID + _BODY + pyparsing.OneOrMore(_END_OF_LINE))
-
-  _LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [
+      ('log_line', _LOG_LINE),
+      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(IOSLockdowndLogTextPlugin, self).__init__()
+    self._event_data = None
+
+  def _ParseFinalize(self, parser_mediator):
+    """Finalizes parsing.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    if self._event_data:
+      parser_mediator.ProduceEventData(self._event_data)
+      self._event_data = None
+
+  def _ParseLogline(self, structure):
+    """Parses a log line.
+
+    Args:
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    body = self._GetValueFromStructure(structure, 'body', default_value='')
+    body = body.strip()
+
+    event_data = IOSLockdowndLogData()
+    event_data.body = body
+    event_data.process_identifier = self._GetValueFromStructure(
+        structure, 'process_identifier')
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
+
+    self._event_data = event_data
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -89,18 +130,18 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    if key == 'log_line':
+      if self._event_data:
+        parser_mediator.ProduceEventData(self._event_data)
+        self._event_data = None
 
-    body = self._GetValueFromStructure(structure, 'body')
+      self._ParseLogline(structure)
 
-    event_data = IOSLockdowndLogData()
-    event_data.body = body.replace('\n', '').strip(' ')
-    event_data.process_identifier = self._GetValueFromStructure(
-        structure, 'process_identifier')
-    event_data.written_time = self._ParseTimeElements(time_elements_structure)
+    elif key == 'successive_log_line':
+      body = self._GetValueFromStructure(structure, 'body', default_value='')
+      body = body.strip()
 
-    parser_mediator.ProduceEventData(event_data)
+      self._event_data.body = ' '.join([self._event_data.body, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -142,9 +183,22 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    match_generator = self._LINE_GRAMMAR.scanString(
-        text_reader.lines, maxMatches=1)
-    return bool(list(match_generator))
+    try:
+      parsed_structure = self._LOG_LINE.parseString(text_reader.lines)
+    except pyparsing.ParseException:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        parsed_structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    self._event_data = None
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(IOSLockdowndLogTextPlugin)

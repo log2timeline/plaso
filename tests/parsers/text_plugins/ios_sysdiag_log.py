@@ -26,7 +26,11 @@ class IOSSysdiagLogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
-    self.assertEqual(number_of_warnings, 2)
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
         'body': (
