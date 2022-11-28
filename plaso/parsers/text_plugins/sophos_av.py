@@ -140,7 +140,8 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
+    # TODO: refactor.
+    line = text_reader.lines.split('\n', maxsplit=1)[0]
 
     # There should be spaces at position 9 and 16.
     if len(line) < 16 or line[8] != ' ' or line[15] != ' ':

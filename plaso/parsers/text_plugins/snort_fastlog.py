@@ -86,7 +86,7 @@ class SnortFastLogTextPlugin(
       r'(:\d*)?\s*',  # Optional TCP/UDP source port
       r'\-\>\s*',  # Separator '->'
       regular_expressions.IP_ADDRESS,  # Destination IPv4 or IPv6 address
-      r'(:\d*)?$']))  # Optional TCP/UDP destination port
+      r'(:\d*)?\n']))  # Optional TCP/UDP destination port
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
@@ -273,9 +273,7 @@ class SnortFastLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
-    if not self._VERIFICATION_REGEX.match(line):
+    if not self._VERIFICATION_REGEX.match(text_reader.lines):
       return False
 
     self._SetEstimatedYear(parser_mediator)

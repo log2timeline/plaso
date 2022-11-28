@@ -195,10 +195,8 @@ class DpkgTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     try:
-      parsed_structure = self._DPKG_LOG_LINE.parseString(line)
+      parsed_structure = self._DPKG_LOG_LINE.parseString(text_reader.lines)
     except pyparsing.ParseException:
       return False
 

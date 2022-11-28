@@ -321,15 +321,11 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    line = text_reader.ReadLine()
-
     found_signature = False
-    while line and line[0] == '#':
+    for line in text_reader.lines.split('\n'):
       if line.startswith('#Software: Microsoft Windows Firewall'):
         found_signature = True
         break
-
-      line = text_reader.ReadLine()
 
     if not found_signature:
       return False
