@@ -4,13 +4,11 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class KikIOSMessageEventData(events.EventData):
+class IOSKikMessageEventData(events.EventData):
   """Kik message event data.
 
   Attributes:
@@ -21,6 +19,8 @@ class KikIOSMessageEventData(events.EventData):
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
+    received_time (dfdatetime.DateTimeValues): date and time the message was
+        received.
     username (str): unique username of the sender or receiver.
   """
 
@@ -28,17 +28,18 @@ class KikIOSMessageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(KikIOSMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSKikMessageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.displayname = None
     self.message_status = None
     self.message_type = None
     self.offset = None
     self.query = None
+    self.received_time = None
     self.username = None
 
 
-class KikIOSPlugin(interface.SQLitePlugin):
+class IOSKikPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for iOS Kik messenger database files.
 
   The OS Kik messenger database file is typically stored in:
@@ -121,33 +122,47 @@ class KikIOSPlugin(interface.SQLitePlugin):
           'INTEGER, Z_OPT INTEGER, ZLOCALFLAGS INTEGER, ZUSER INTEGER, '
           'ZPUBLICMESSAGINGKEY BLOB )')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
-    event_data = KikIOSMessageEventData()
+    event_data = IOSKikMessageEventData()
     event_data.body = self._GetRowValue(query_hash, row, 'ZBODY')
     event_data.displayname = self._GetRowValue(query_hash, row, 'ZDISPLAYNAME')
     event_data.message_status = self._GetRowValue(query_hash, row, 'ZSTATE')
     event_data.message_type = self._GetRowValue(query_hash, row, 'ZTYPE')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
+    event_data.received_time = self._GetDateTimeRowValue(
+        query_hash, row, 'ZRECEIVEDTIMESTAMP')
     event_data.username = self._GetRowValue(query_hash, row, 'ZUSERNAME')
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZRECEIVEDTIMESTAMP')
-    # Convert the floating point value to an integer.
-    timestamp = int(timestamp)
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(KikIOSPlugin)
+sqlite.SQLiteParser.RegisterPlugin(IOSKikPlugin)

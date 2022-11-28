@@ -163,7 +163,7 @@ short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
 type: 'conditional'
-data_type: 'twitter:ios:contact'
+data_type: 'ios:twitter:contact'
 enumeration_helpers:
 - input_attribute: 'following'
   output_attribute: 'following'
@@ -186,10 +186,10 @@ short_message:
 - 'Description: {description}'
 - 'URL: {url}'
 short_source: 'Twitter iOS'
-source: 'Twitter Android Contacts'
+source: 'Twitter iOS Contacts'
 ---
 type: 'conditional'
-data_type: 'twitter:ios:status'
+data_type: 'ios:twitter:status'
 enumeration_helpers:
 - input_attribute: 'favorited'
   output_attribute: 'favorited'
@@ -199,7 +199,7 @@ enumeration_helpers:
     1: 'Yes'
 message:
 - 'Name: {name}'
-- 'User Id: {user_id}'
+- 'User Id: {user_identifier}'
 - 'Message: {text}'
 - 'Favorite: {favorited}'
 - 'Retweet Count: {retweet_count}'
@@ -208,4 +208,4 @@ short_message:
 - 'Name: {name}'
 - 'Message: {text}'
 short_source: 'Twitter iOS'
-source: 'Twitter Android Status'
+source: 'Twitter iOS Status'

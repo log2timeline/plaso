@@ -66,8 +66,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         'history_visits.redirect_source '
         'FROM history_items, history_visits '
         'WHERE history_items.id = history_visits.history_item '
-        'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')
-  ]
+        'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')]
 
   SCHEMAS = [{
       'history_client_versions': (
@@ -116,6 +115,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
+
     was_http_non_get = self._GetRowValue(query_hash, row, 'http_non_get')
 
     event_data = SafariHistoryPageVisitedEventData()

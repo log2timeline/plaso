@@ -95,6 +95,61 @@ short_source: 'LOG'
 source: 'Android SMS messages'
 ---
 type: 'conditional'
+data_type: 'android:twitter:contact'
+message:
+- 'Screen name: {username}'
+- 'Profile picture URL: {image_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+- 'Number of followers: {followers}'
+- 'Number of following: {friend}'
+- 'Number of tweets: {statuses}'
+short_message:
+- 'Screen name: {username}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Contacts'
+---
+type: 'conditional'
+data_type: 'android:twitter:search'
+message:
+- 'Name: {name}'
+- 'Query: {search_query}'
+short_message:
+- 'Query: {search_query}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Search'
+---
+type: 'conditional'
+data_type: 'android:twitter:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'retweeted'
+  output_attribute: 'retweeted'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'User: {username}'
+- 'Status: {content}'
+- 'Favorited: {favorited}'
+- 'Retweeted: {retweeted}'
+short_message:
+- 'User: {username}'
+- 'Status: {content}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Status'
+---
+type: 'conditional'
 data_type: 'android:webview:cookie'
 message:
 - 'Host: {host}'
@@ -163,58 +218,3 @@ short_message:
 - 'Message ({message_identifier})'
 short_source: 'Tango Android'
 source: 'Tango Android Message'
----
-type: 'conditional'
-data_type: 'twitter:android:contact'
-message:
-- 'Screen name: {username}'
-- 'Profile picture URL: {image_url}'
-- 'Name: {name}'
-- 'Location: {location}'
-- 'Description: {description}'
-- 'URL: {web_url}'
-- 'Number of followers: {followers}'
-- 'Number of following: {friend}'
-- 'Number of tweets: {statuses}'
-short_message:
-- 'Screen name: {username}'
-- 'Description: {description}'
-- 'URL: {web_url}'
-short_source: 'Twitter Android'
-source: 'Twitter Android Contacts'
----
-type: 'conditional'
-data_type: 'twitter:android:search'
-message:
-- 'Name: {name}'
-- 'Query: {search_query}'
-short_message:
-- 'Query: {search_query}'
-short_source: 'Twitter Android'
-source: 'Twitter Android Search'
----
-type: 'conditional'
-data_type: 'twitter:android:status'
-enumeration_helpers:
-- input_attribute: 'favorited'
-  output_attribute: 'favorited'
-  default_value: 'UNKNOWN'
-  values:
-    0: 'No'
-    1: 'Yes'
-- input_attribute: 'retweeted'
-  output_attribute: 'retweeted'
-  default_value: 'UNKNOWN'
-  values:
-    0: 'No'
-    1: 'Yes'
-message:
-- 'User: {username}'
-- 'Status: {content}'
-- 'Favorited: {favorited}'
-- 'Retweeted: {retweeted}'
-short_message:
-- 'User: {username}'
-- 'Status: {content}'
-short_source: 'Twitter Android'
-source: 'Twitter Android Status'
