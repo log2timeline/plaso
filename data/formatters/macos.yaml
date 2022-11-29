@@ -65,16 +65,6 @@ short_source: 'HISTORY'
 source: 'MacOS Document Versions'
 ---
 type: 'conditional'
-data_type: 'mac:notes:note'
-message:
-- 'title:{title}'
-- 'note_text:{text}'
-short_message:
-- 'title:{title}'
-short_source: 'Mac Note'
-source: 'MacOS Notes'
----
-type: 'conditional'
 data_type: 'mackeeper:cache'
 message:
 - '{description}'
@@ -290,6 +280,16 @@ short_message:
 - 'Safari: {url}'
 short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
+---
+type: 'conditional'
+data_type: 'macos:notes:entry'
+message:
+- 'title:{title}'
+- 'note_text:{text}'
+short_message:
+- 'title:{title}'
+short_source: 'Mac Notes'
+source: 'MacOS Notes'
 ---
 type: 'conditional'
 data_type: 'macos:notification_center:entry'

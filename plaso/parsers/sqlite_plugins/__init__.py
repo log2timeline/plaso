@@ -3,6 +3,7 @@
 
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_sms
+from plaso.parsers.sqlite_plugins import android_tango
 from plaso.parsers.sqlite_plugins import android_twitter
 from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache
@@ -25,15 +26,14 @@ from plaso.parsers.sqlite_plugins import ios_twitter
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import mac_document_versions
-from plaso.parsers.sqlite_plugins import mac_notes
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import macos_appusage
 from plaso.parsers.sqlite_plugins import macos_knowledgec
+from plaso.parsers.sqlite_plugins import macos_notes
 from plaso.parsers.sqlite_plugins import macos_notificationcenter
 from plaso.parsers.sqlite_plugins import macos_tcc
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
-from plaso.parsers.sqlite_plugins import tango_android
 from plaso.parsers.sqlite_plugins import windows_eventtranscript
 from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.sqlite_plugins import zeitgeist

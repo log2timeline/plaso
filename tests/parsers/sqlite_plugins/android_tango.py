@@ -5,17 +5,17 @@
 import unittest
 
 from plaso.lib import definitions
-from plaso.parsers.sqlite_plugins import tango_android
+from plaso.parsers.sqlite_plugins import android_tango
 
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
+class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android profile database plugin."""
 
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
-    plugin = tango_android.TangoAndroidProfilePlugin()
+    plugin = android_tango.AndroidTangoProfilePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_profile.db'], plugin)
 
@@ -36,7 +36,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
     # Test a contact last active event.
     expected_event_values = {
         'birthday': '1980-10-01',
-        'data_type': 'tango:android:contact',
+        'data_type': 'android:tango:contact',
         'date_time': '2016-01-15T13:21:45.624+00:00',
         'distance': 39.04880905,
         'first_name': 'Rouel',
@@ -52,7 +52,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     # Test a contact last access event.
     expected_event_values = {
-        'data_type': 'tango:android:contact',
+        'data_type': 'android:tango:contact',
         'date_time': '2016-01-15T14:35:20.633+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
 
@@ -60,19 +60,19 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     # Test a contact request sent event.
     expected_event_values = {
-        'data_type': 'tango:android:contact',
+        'data_type': 'android:tango:contact',
         'date_time': '2016-01-15T14:35:20.436+00:00',
         'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
 
     self.CheckEventValues(storage_writer, events[56], expected_event_values)
 
 
-class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
+class AndroidTangoTCTest(test_lib.SQLitePluginTestCase):
   """Tests for Tango on Android tc databases plugin."""
 
   def testProcess(self):
     """Test the Process function on a Tango Android file."""
-    plugin = tango_android.TangoAndroidTCPlugin()
+    plugin = android_tango.AndroidTangoTCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_tc.db'], plugin)
 
@@ -93,7 +93,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
     # Test the a conversation event.
     expected_event_values = {
         'conversation_identifier': 'DyGWr_010wQM_ozkIe-9Ww',
-        'data_type': 'tango:android:conversation',
+        'data_type': 'android:tango:conversation',
         'date_time': 'Not set',
         'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
 
@@ -101,7 +101,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
 
     # Test a message creation event.
     expected_event_values = {
-        'data_type': 'tango:android:message',
+        'data_type': 'android:tango:message',
         'date_time': '2016-01-15T14:41:33.027+00:00',
         'direction': 2,
         'message_identifier': 16777224,
@@ -111,7 +111,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
 
     # Test a message sent event.
     expected_event_values = {
-        'data_type': 'tango:android:message',
+        'data_type': 'android:tango:message',
         'date_time': '2016-01-15T14:41:34.238+00:00',
         'direction': 2,
         'message_identifier': 16777224,

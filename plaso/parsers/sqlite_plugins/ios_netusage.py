@@ -4,32 +4,8 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
-
-
-class IOSNetusageRouteEventData(events.EventData):
-  """iOS netusage connection event data.
-
-  Attributes:
-    bytes_in (int): number of bytes received.
-    bytes_out (int): number of bytes sent.
-    network_identifier (str): name of network.
-    network_signature (str): signature of network.
-    network_type (int): integer indicating network type.
-  """
-  DATA_TYPE = 'ios:netusage:route'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(IOSNetusageRouteEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.bytes_in = None
-    self.bytes_out = None
-    self.network_identifier = None
-    self.network_signature = None
-    self.network_type = None
 
 
 class IOSNetusageProcessEventData(events.EventData):
@@ -37,6 +13,8 @@ class IOSNetusageProcessEventData(events.EventData):
 
   Attributes:
     process_name (str): name of the process.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the network connection was established.
     wifi_in (int): bytes received via wifi.
     wifi_out (int): bytes sent via wifi.
     wired_in (int): bytes received via wired connection.
@@ -50,12 +28,39 @@ class IOSNetusageProcessEventData(events.EventData):
     """Initializes event data."""
     super(IOSNetusageProcessEventData, self).__init__(data_type=self.DATA_TYPE)
     self.process_name = None
+    self.start_time = None
     self.wifi_in = None
     self.wifi_out = None
     self.wired_in = None
     self.wired_out = None
     self.wireless_wan_in = None
     self.wireless_wan_out = None
+
+
+class IOSNetusageRouteEventData(events.EventData):
+  """iOS netusage connection event data.
+
+  Attributes:
+    bytes_in (int): number of bytes received.
+    bytes_out (int): number of bytes sent.
+    network_identifier (str): name of network.
+    network_signature (str): signature of network.
+    network_type (int): integer indicating network type.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the network connection was established.
+  """
+
+  DATA_TYPE = 'ios:netusage:route'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(IOSNetusageRouteEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.bytes_in = None
+    self.bytes_out = None
+    self.network_identifier = None
+    self.network_signature = None
+    self.network_type = None
+    self.start_time = None
 
 
 class IOSNetusagePlugin(interface.SQLitePlugin):
@@ -137,6 +142,24 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
 
   REQUIRES_SCHEMA_MATCH = False
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   # pylint: disable=unused-argument
   def ParseNetusageRouteRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Netusage route row.
@@ -150,7 +173,6 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     event_data = IOSNetusageRouteEventData()
-
     event_data.bytes_in = int(self._GetRowValue(query_hash, row, 'ZBYTESIN'))
     event_data.bytes_out = int(self._GetRowValue(query_hash, row, 'ZBYTESOUT'))
     event_data.network_identifier = self._GetRowValue(
@@ -158,14 +180,10 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
     event_data.network_signature = self._GetRowValue(
         query_hash, row, 'ZNETSIGNATURE')
     event_data.network_type = self._GetRowValue(query_hash, row, 'ZKIND')
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'ZTIMESTAMP')
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP')
-
-    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    start_event = time_events.DateTimeValuesEvent(
-        date_time_stamp, definitions.TIME_DESCRIPTION_START)
-
-    parser_mediator.ProduceEventWithEventData(start_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   # pylint: disable=unused-argument
   def ParseNetusageProcessRow(
@@ -182,6 +200,8 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
 
     event_data = IOSNetusageProcessEventData()
     event_data.process_name = self._GetRowValue(query_hash, row, 'ZPROCNAME')
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'ZTIMESTAMP')
     event_data.wifi_in = int(self._GetRowValue(query_hash, row, 'ZWIFIIN'))
     event_data.wifi_out = int(self._GetRowValue(query_hash, row, 'ZWIFIOUT'))
     event_data.wired_in = int(self._GetRowValue(query_hash, row, 'ZWIREDIN'))
@@ -191,13 +211,7 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
     event_data.wireless_wan_out = int(self._GetRowValue(
         query_hash, row, 'ZWWANOUT'))
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZTIMESTAMP')
-
-    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    start_event = time_events.DateTimeValuesEvent(
-        date_time_stamp, definitions.TIME_DESCRIPTION_START)
-
-    parser_mediator.ProduceEventWithEventData(start_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IOSNetusagePlugin)

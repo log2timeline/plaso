@@ -26,6 +26,14 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'android:tango:message'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'sent_time'
+  description: 'Sent Time'
+place_holder_event: false
+---
 data_type: 'android:twitter:contact'
 attribute_mappings:
 - name: 'creation_time'
@@ -350,6 +358,18 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: false
 ---
+data_type: 'ios:netusage:process'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'ios:netusage:route'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'ios:sysdiag_log:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -531,6 +551,14 @@ attribute_mappings:
   description: 'End Time'
 - name: 'start_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'macos:notes:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:notification_center:entry'
@@ -878,14 +906,6 @@ attribute_mappings:
 - name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
----
-data_type: 'tango:android:message'
-attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'sent_time'
-  description: 'Sent Time'
-place_holder_event: false
 ---
 # TODO: prefix data_type with 'windows:registry:'.
 data_type: 'task_scheduler:task_cache:entry'
