@@ -93,14 +93,12 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       pyparsing.Word('\x03', pyparsing.nums, max=3).suppress() |
       pyparsing.Word('\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
 
-  # Define the structure for parsing <text> and get <nickname> and <text>
-  _MESSAGE_TEXT = pyparsing.restOfLine().setResultsName('text')
-  _MESSAGE = pyparsing.Optional(
-      pyparsing.Suppress('<') +
-      pyparsing.SkipTo(pyparsing.Literal('>')).setResultsName('nickname') +
-      pyparsing.Suppress('>')) + _MESSAGE_TEXT
+  _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
+      'nickname')
 
-  _MESSAGE.parseWithTabs()
+  # Define the structure for parsing <text> and get <nickname> and <text>
+  _MESSAGE = (pyparsing.Optional(_NICKNAME) +
+              pyparsing.restOfLine().setResultsName('text')).parseWithTabs()
 
   def _ParseRawText(self, raw_text):
     """Parses the raw text.

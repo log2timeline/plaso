@@ -254,6 +254,8 @@ class SyslogTextPlugin(
 
   _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
 
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+
   _CHROMEOS_SYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
@@ -264,7 +266,7 @@ class SyslogTextPlugin(
           pyparsing.Suppress(']')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   _RSYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
@@ -279,7 +281,7 @@ class SyslogTextPlugin(
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   _RSYSLOG_TRADITIONAL_LINE = (
       _DATE_TIME.setResultsName('date_time') +
@@ -294,7 +296,7 @@ class SyslogTextPlugin(
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
@@ -311,20 +313,22 @@ class SyslogTextPlugin(
           'message_identifier') +
       pyparsing.Word(pyparsing.printables).setResultsName('structured_data') +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
+
+  _SYSLOG_COMMENT_END = pyparsing.Suppress('---') + _END_OF_LINE
 
   _SYSLOG_COMMENT = (
       _DATE_TIME.setResultsName('date_time') + pyparsing.Suppress(':') +
       pyparsing.Suppress('---') +
-      pyparsing.SkipTo(' ---').setResultsName('body') +
-      pyparsing.Suppress('---') + pyparsing.LineEnd())
+      pyparsing.SkipTo(_SYSLOG_COMMENT_END).setResultsName('body') +
+      _SYSLOG_COMMENT_END)
 
   _KERNEL_SYSLOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Literal('kernel').setResultsName('reporter') +
       pyparsing.Suppress(':') +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      pyparsing.lineEnd())
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [
       ('chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE),
@@ -349,12 +353,12 @@ class SyslogTextPlugin(
       pyparsing.Word(pyparsing.alphanums).setResultsName('username') +
       pyparsing.Literal(')'))
 
+  _CRON_COMMAND_END = pyparsing.Literal(')') + pyparsing.StringEnd()
+
   _CRON_COMMAND = (
       pyparsing.Literal('CMD') + pyparsing.Literal('(') +
-      pyparsing.Combine(pyparsing.SkipTo(
-          pyparsing.Literal(')') +
-          pyparsing.StringEnd())).setResultsName('command') +
-      pyparsing.Literal(')'))
+      pyparsing.SkipTo(_CRON_COMMAND_END).setResultsName('command') +
+      _CRON_COMMAND_END)
 
   _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
 
