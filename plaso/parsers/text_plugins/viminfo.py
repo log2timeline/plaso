@@ -259,22 +259,22 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('preamble', _PREAMBLE),
       ('command_line_history', _COMMAND_LINE_HISTORY),
-      ('hlsearch', _HLSEARCH),
-      ('search_pattern', _SEARCH_PATTERN),
-      ('substitute_search', _SUBSTITUTE_SEARCH_PATTERN),
-      ('substitute_string', _SUBSTITUTE_STRING),
-      ('search_string_history', _SEARCH_STRING_HISTORY),
-      ('expression_history', _EXPRESSION_HISTORY),
-      ('input_line_history', _INPUT_LINE_HISTORY),
       ('debug_line_history', _DEBUG_LINE_HISTORY),
-      ('registers_history', _REGISTERS_HISTORY),
+      ('expression_history', _EXPRESSION_HISTORY),
       ('filemarks_history', _FILEMARKS_HISTORY),
+      ('history_marks_history', _HISTORY_MARKS_HISTORY),
+      ('hlsearch', _HLSEARCH),
+      ('input_line_history', _INPUT_LINE_HISTORY),
       ('jumplist_history', _JUMPLIST_HISTORY),
-      ('history_marks_history', _HISTORY_MARKS_HISTORY)]
+      ('preamble', _PREAMBLE),
+      ('registers_history', _REGISTERS_HISTORY),
+      ('search_pattern', _SEARCH_PATTERN),
+      ('search_string_history', _SEARCH_STRING_HISTORY),
+      ('substitute_search', _SUBSTITUTE_SEARCH_PATTERN),
+      ('substitute_string', _SUBSTITUTE_STRING)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _PREAMBLE
 
   def _ParseCommandLineHistory(self, parser_mediator, structure):
     """Parses command line history items and creates VimInfoEventData objects.
@@ -438,12 +438,8 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-        'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'command_line_history':
       self._ParseCommandLineHistory(parser_mediator, structure)
     elif key == 'search_string_history':
@@ -476,8 +472,8 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      self._PREAMBLE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
+      self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     return True

@@ -97,7 +97,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       ('log_line_v1', _LOG_LINE_V1),
       ('no_header_single_line', _NO_HEADER_SINGLE_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE_V1
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -159,12 +159,8 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'log_line_v1':
       self._ParseLoglineVersion1(parser_mediator, structure)
 
@@ -222,12 +218,12 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      parsed_structure = self._LOG_LINE_V1.parseString(text_reader.lines)
-    except pyparsing.ParseException:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
       self._ParseTimeElementsVersion1(time_elements_structure)
@@ -319,7 +315,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       ('log_line_v2', _LOG_LINE_V2),
       ('successive_log_line_v2', _SUCCESSIVE_LOG_LINE_V2)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _HEADER_LINE_V2
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -436,12 +432,8 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if self._event_data and key in ('header_line_v2', 'log_line_v2'):
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
@@ -507,20 +499,17 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._HEADER_LINE_V2.parseString(text_reader.lines)
-    except pyparsing.ParseException:
-      logger.debug('Not a SkyDrive log file')
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     time_elements_tuple = self._GetValueFromStructure(
         structure, 'header_date_time')
+
     try:
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logger.debug(
-          'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
-              time_elements_tuple))
       return False
 
     return True

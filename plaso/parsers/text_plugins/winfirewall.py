@@ -163,7 +163,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       ('comment_line', _COMMENT_LINE),
       ('log_line', _LOG_LINE_1_5)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = None
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -262,12 +262,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 

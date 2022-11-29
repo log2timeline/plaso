@@ -205,10 +205,10 @@ class WinIISTextPlugin(interface.TextPlugin):
   # common format.
 
   _LINE_STRUCTURES = [
-      ('comment', _COMMENT_LOG_LINE),
-      ('logline', _IIS_6_0_LOG_LINE)]
+      ('comment_line', _COMMENT_LOG_LINE),
+      ('log_line', _IIS_6_0_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = None
 
   def __init__(self):
     """Initializes a parser."""
@@ -264,8 +264,8 @@ class WinIISTextPlugin(interface.TextPlugin):
     log_line_structure += self._END_OF_LINE
 
     line_structures = [
-        ('comment', self._COMMENT_LOG_LINE),
-        ('logline', log_line_structure)]
+        ('comment_line', self._COMMENT_LOG_LINE),
+        ('log_line', log_line_structure)]
     self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -322,16 +322,12 @@ class WinIISTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    if key == 'logline':
+    if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == 'comment':
+    elif key == 'comment_line':
       self._ParseCommentLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):

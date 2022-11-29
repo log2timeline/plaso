@@ -182,7 +182,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       ('pre_711_format', _PRE_711_FORMAT_LOG_LINE),
       ('post_711_format', _POST_711_FORMAT_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _PRE_711_FORMAT_LOG_LINE ^ _POST_711_FORMAT_LOG_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -194,12 +194,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
@@ -281,12 +277,12 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+      structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)

@@ -163,7 +163,7 @@ class AndroidLogcatTextPlugin(
       ('threadtime_line', _THREADTIME_LINE),
       ('time_line', _TIME_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _BEGINNING_LINE ^ _THREADTIME_LINE ^ _TIME_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -175,29 +175,23 @@ class AndroidLogcatTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
+    if key != 'beginning_line':
+      event_data = AndroidLogcatEventData()
+      event_data.component_tag = self._GetStringValueFromStructure(
+          structure, 'tag')
+      event_data.file_offset = self._current_offset
+      event_data.message = self._GetValueFromStructure(structure, 'message')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.priority = self._GetValueFromStructure(structure, 'priority')
+      event_data.recorded_time = self._ParseTimeElements(structure)
+      event_data.thread_identifier = self._GetValueFromStructure(
+          structure, 'thread_identifier')
+      event_data.user_identifier = self._GetValueFromStructure(
+          structure, 'user_identifier')
 
-    if key == 'beginning_line':
-      return
-
-    event_data = AndroidLogcatEventData()
-    event_data.component_tag = self._GetStringValueFromStructure(
-        structure, 'tag')
-    event_data.file_offset = self._current_offset
-    event_data.message = self._GetValueFromStructure(structure, 'message')
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
-    event_data.priority = self._GetValueFromStructure(structure, 'priority')
-    event_data.recorded_time = self._ParseTimeElements(structure)
-    event_data.thread_identifier = self._GetValueFromStructure(
-        structure, 'thread_identifier')
-    event_data.user_identifier = self._GetValueFromStructure(
-        structure, 'user_identifier')
-
-    parser_mediator.ProduceEventData(event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, structure):
     """Parses date and time elements of a log line.
@@ -274,16 +268,21 @@ class AndroidLogcatTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      key, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+      structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
     self._SetEstimatedYear(parser_mediator)
 
-    if key == 'beginning_line':
-      return True
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+    if time_elements_structure:
+      try:
+        self._ParseTimeElements(time_elements_structure)
+      except errors.ParseError:
+        return False
 
-    return 'date_time' in parsed_structure and 'message' in parsed_structure
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(AndroidLogcatTextPlugin)

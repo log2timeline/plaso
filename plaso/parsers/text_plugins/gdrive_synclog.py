@@ -7,7 +7,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import logger
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -104,7 +103,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       ('log_line', _LOG_LINE),
       ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -157,12 +156,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'log_line':
       if self._event_data:
         parser_mediator.ProduceEventData(self._event_data)
@@ -227,9 +222,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._LOG_LINE.parseString(text_reader.lines)
-    except pyparsing.ParseException as exception:
-      logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(

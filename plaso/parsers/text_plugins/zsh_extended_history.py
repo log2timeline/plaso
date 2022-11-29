@@ -12,7 +12,7 @@ import pyparsing
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.lib import errors
+# from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -45,8 +45,6 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
@@ -55,14 +53,16 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _LINE_GRAMMAR = (
+  _LOG_LINE = (
       pyparsing.Literal(':') + _INTEGER.setResultsName('timestamp') +
       pyparsing.Literal(':') + _INTEGER.setResultsName('elapsed_seconds') +
       pyparsing.Literal(';') + _COMMAND + _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('command', _LINE_GRAMMAR)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
+
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -74,19 +74,15 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
 
     event_data = ZshHistoryEventData()
     event_data.command = self._GetValueFromStructure(structure, 'command')
     event_data.elapsed_seconds = self._GetValueFromStructure(
         structure, 'elapsed_seconds')
-    event_data.last_written_time =dfdatetime_posix_time.PosixTime(
+    event_data.last_written_time = dfdatetime_posix_time.PosixTime(
         timestamp=timestamp)
 
     parser_mediator.ProduceEventData(event_data)
@@ -102,6 +98,13 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+    # TODO: refactor.
+    # try:
+    #   structure, _, _ = self._VerifyString(text_reader.lines)
+    # except errors.ParseError:
+    #   return False
+
+    # return True
     return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
 
 

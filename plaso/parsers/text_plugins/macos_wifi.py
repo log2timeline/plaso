@@ -129,14 +129,15 @@ class MacOSWiFiLogTextPlugin(
           joinString=' ', adjacent=False).setResultsName('text') +
       _END_OF_LINE)
 
-  # Define the available log line structures.
   _LINE_STRUCTURES = [
-      ('header', _HEADER_LOG_LINE),
-      ('turned_over_header', _TURNED_OVER_HEADER_LOG_LINE),
-      ('known_function_logline', _KNOWN_FUNCTION_LOG_LINE),
-      ('logline', _LOG_LINE)]
+      ('header_line', _HEADER_LOG_LINE),
+      ('known_function_log_line', _KNOWN_FUNCTION_LOG_LINE),
+      ('log_line', _LOG_LINE),
+      ('turned_over_header_line', _TURNED_OVER_HEADER_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = (
+      _HEADER_LOG_LINE ^ _KNOWN_FUNCTION_LOG_LINE ^ _LOG_LINE ^
+      _TURNED_OVER_HEADER_LOG_LINE)
 
   def _GetAction(self, action, text):
     """Parse the well known actions for easy reading.
@@ -191,32 +192,26 @@ class MacOSWiFiLogTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
     event_data = MacOSWiFiLogEventData()
-    event_data.added_time = self._ParseTimeElements(
-        key, time_elements_structure)
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
     event_data.agent = self._GetValueFromStructure(structure, 'agent')
     event_data.function = self._GetValueFromStructure(structure, 'function')
     event_data.text = self._GetStringValueFromStructure(structure, 'text')
 
-    if key == 'known_function_logline':
+    if key == 'known_function_log_line':
       event_data.action = self._GetAction(event_data.function, event_data.text)
 
     parser_mediator.ProduceEventData(event_data)
 
-  def _ParseTimeElements(self, key, time_elements_structure):
+  def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
 
     Args:
-      key (str): name of the parsed structure.
       time_elements_structure (pyparsing.ParseResults): date and time elements
           of a log line.
 
@@ -228,7 +223,7 @@ class MacOSWiFiLogTextPlugin(
           the time elements.
     """
     try:
-      if key == 'turned_over_header':
+      if len(time_elements_structure) == 5:
         month_string, day_of_month, hours, minutes, seconds = (
             time_elements_structure)
 
@@ -276,20 +271,17 @@ class MacOSWiFiLogTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      key, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+      structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if key not in ('header', 'turned_over_header'):
       return False
 
     self._SetEstimatedYear(parser_mediator)
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
-      self._ParseTimeElements(key, time_elements_structure)
+      self._ParseTimeElements(time_elements_structure)
     except errors.ParseError:
       return False
 

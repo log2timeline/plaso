@@ -28,6 +28,8 @@ class TextPlugin(plugins.BasePlugin):
   # the supported grammar.
   _LINE_STRUCTURES = []
 
+  VERIFICATION_GRAMMAR = None
+
   # The maximum number of consecutive lines that do not match the grammar before
   # aborting parsing.
   _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
@@ -148,7 +150,7 @@ class TextPlugin(plugins.BasePlugin):
         break
 
       try:
-        key, parsed_structure, _, end = self._ParseString(text_reader.lines)
+        key, structure, _, end = self._ParseString(text_reader.lines)
 
       except errors.ParseError as exception:
         line = text_reader.ReadLine()
@@ -175,7 +177,7 @@ class TextPlugin(plugins.BasePlugin):
 
       try:
         # TODO: use a callback per key.
-        self._ParseRecord(parser_mediator, key, parsed_structure)
+        self._ParseRecord(parser_mediator, key, structure)
 
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
@@ -223,26 +225,26 @@ class TextPlugin(plugins.BasePlugin):
     try:
       structure_generator = self._pyparsing_grammar.scanString(
           string, maxMatches=1)
-      parsed_structure, start, end = next(structure_generator)
+      structure, start, end = next(structure_generator)
 
     except StopIteration:
-      parsed_structure = None
+      structure = None
 
     except pyparsing.ParseException as exception:
       raise errors.ParseError(exception)
 
-    if not parsed_structure:
+    if not structure:
       raise errors.ParseError('No match found.')
 
     if start > 0 and '\n' in string[:start + 1]:
       raise errors.ParseError('Found a line preceeding match.')
 
     # Unwrap the line structure and retrieve its name (key).
-    keys = list(parsed_structure.keys())
+    keys = list(structure.keys())
     if len(keys) != 1:
       raise errors.ParseError('Missing key of line structructure.')
 
-    return keys[0], parsed_structure[0], start, end
+    return keys[0], structure[0], start, end
 
   def _SetLineStructures(self, line_structures):
     """Sets the line structures.
@@ -270,6 +272,38 @@ class TextPlugin(plugins.BasePlugin):
 
     # Override Pyparsing's whitespace characters to spaces only.
     self._pyparsing_grammar.setDefaultWhitespaceChars(' ')
+
+  def _VerifyString(self, string):
+    """Checks a string for known grammar.
+
+    Args:
+      string (str): string.
+
+    Returns:
+      tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
+          offset.
+
+    Raises:
+      ParseError: when the string cannot be parsed by the grammar.
+    """
+    try:
+      structure_generator = self.VERIFICATION_GRAMMAR.scanString(
+          string, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure:
+      raise errors.ParseError('No match found.')
+
+    if start > 0 and '\n' in string[:start + 1]:
+      raise errors.ParseError('Found a line preceeding match.')
+
+    return structure, start, end
 
   @abc.abstractmethod
   def CheckRequiredFormat(self, parser_mediator, text_reader):

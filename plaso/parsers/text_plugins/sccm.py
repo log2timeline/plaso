@@ -8,7 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
-from plaso.lib import errors
+# from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -93,7 +93,7 @@ class SCCMTextPlugin(interface.TextPlugin):
       ('log_entry', _LOG_ENTRY),
       ('log_entry_at_end', _LAST_LOG_ENTRY)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = None
 
   def _BuildDateTime(self, time_elements_structure):
     """Builds time elements from a PostgreSQL log time stamp.
@@ -158,12 +158,8 @@ class SCCMTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     time_elements_structure = self._GetValueFromStructure(
          structure, 'date_time')
 

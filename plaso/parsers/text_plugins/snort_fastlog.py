@@ -18,15 +18,12 @@ Also see:
   https://suricata.readthedocs.io/en/suricata-6.0.0/configuration/suricata-yaml.html#line-based-alerts-log-fast-log
 """
 
-import re
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.lib import regular_expressions
 from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -72,21 +69,6 @@ class SnortFastLogTextPlugin(
 
   NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
-
-  _VERIFICATION_REGEX = re.compile(''.join([
-      # Date: "MM/DD" and "YY/MM/DD"
-      r'^(\d{2}\/)?\d{2}\/\d{2}\-\d{2}:\d{2}:\d{2}.\d{6}\s*',
-      r'\[\*\*\]\s*',  # Separator ([**])
-      r'\[\d*:\d*:\d*\]\s*',  # Rule identifier
-      r'"?.*\"?\s*\[\*\*\]\s*',  # Message
-      r'(\[Classification:\s.*\])?\s*',  # Optional Classification
-      r'(\[Priority\:\s*\d{1}\])?\s*',  # Optional Priority
-      r'\{\w+\}\s*',  # Procotol
-      regular_expressions.IP_ADDRESS,  # Source IPv4 or IPv6 address
-      r'(:\d*)?\s*',  # Optional TCP/UDP source port
-      r'\-\>\s*',  # Separator '->'
-      regular_expressions.IP_ADDRESS,  # Destination IPv4 or IPv6 address
-      r'(:\d*)?\n']))  # Optional TCP/UDP destination port
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
@@ -154,7 +136,7 @@ class SnortFastLogTextPlugin(
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _FASTLOG_LINE = (
+  _LOG_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Suppress('[**]') +
       _RULE +
@@ -172,9 +154,9 @@ class SnortFastLogTextPlugin(
           _DESTINATION_IP_ADDRESS_AND_PORT) +
       _END_OF_LINE)
 
-  _LINE_STRUCTURES = [('fastlog_line', _FASTLOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -186,37 +168,32 @@ class SnortFastLogTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
-    if key == 'fastlog_line':
-      time_elements_structure = self._GetValueFromStructure(
-          structure, 'date_time')
+    event_data = SnortFastAlertEventData()
+    event_data.classification = self._GetValueFromStructure(
+        structure, 'classification')
+    event_data.destination_ip = self._GetValueFromStructure(
+        structure, 'destination_ip_address')
+    event_data.destination_port = self._GetValueFromStructure(
+        structure, 'destination_port')
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
+    event_data.message = self._GetStringValueFromStructure(
+        structure, 'message')
+    event_data.priority = self._GetValueFromStructure(structure, 'priority')
+    event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
+    event_data.source_ip = self._GetValueFromStructure(
+        structure, 'source_ip_address')
+    event_data.source_port = self._GetValueFromStructure(
+        structure, 'source_port')
+    event_data.rule_identifier = self._GetValueFromStructure(
+        structure, 'rule_identifier')
 
-      event_data = SnortFastAlertEventData()
-      event_data.classification = self._GetValueFromStructure(
-          structure, 'classification')
-      event_data.destination_ip = self._GetValueFromStructure(
-          structure, 'destination_ip_address')
-      event_data.destination_port = self._GetValueFromStructure(
-          structure, 'destination_port')
-      event_data.last_written_time = self._ParseTimeElements(
-          time_elements_structure)
-      event_data.message = self._GetStringValueFromStructure(
-          structure, 'message')
-      event_data.priority = self._GetValueFromStructure(structure, 'priority')
-      event_data.protocol = self._GetValueFromStructure(structure, 'protocol')
-      event_data.source_ip = self._GetValueFromStructure(
-          structure, 'source_ip_address')
-      event_data.source_port = self._GetValueFromStructure(
-          structure, 'source_port')
-      event_data.rule_identifier = self._GetValueFromStructure(
-          structure, 'rule_identifier')
-
-      parser_mediator.ProduceEventData(event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -273,10 +250,20 @@ class SnortFastLogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if not self._VERIFICATION_REGEX.match(text_reader.lines):
+    try:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._SetEstimatedYear(parser_mediator)
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
 
     return True
 

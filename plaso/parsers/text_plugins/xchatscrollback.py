@@ -83,10 +83,9 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       pyparsing.restOfLine().setResultsName('raw_text') +
       _END_OF_LINE)
 
-  # Define the available log line structures.
-  _LINE_STRUCTURES = [('logline', _LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   # Define for the stripping phase.
   _STRIPPER = (
@@ -139,12 +138,8 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
 
     raw_text = self._GetValueFromStructure(
@@ -171,11 +166,11 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      parsed_structure = self._LOG_LINE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
-    timestamp = self._GetValueFromStructure(parsed_structure, 'timestamp')
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
 
     try:
       dfdatetime_posix_time.PosixTime(timestamp=timestamp)
