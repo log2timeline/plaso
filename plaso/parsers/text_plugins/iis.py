@@ -208,7 +208,15 @@ class WinIISTextPlugin(interface.TextPlugin):
       ('comment_line', _COMMENT_LOG_LINE),
       ('log_line', _IIS_6_0_LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = None
+  _COMMENT_SOFTWARE_LINE = (
+      pyparsing.Regex(
+          '#Software: Microsoft Internet Information Services [0-9]+.[0-9]+') +
+      _END_OF_LINE)
+
+  VERIFICATION_GRAMMAR = (
+      pyparsing.ZeroOrMore(
+          pyparsing.Regex('#(Date|Fields|Version): .*') + _END_OF_LINE) +
+      _COMMENT_SOFTWARE_LINE)
 
   def __init__(self):
     """Initializes a parser."""
@@ -372,6 +380,8 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._month = None
     self._year = None
 
+    self._SetLineStructures(self._LINE_STRUCTURES)
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -383,18 +393,12 @@ class WinIISTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    found_signature = False
-    for line in text_reader.lines.split('\n'):
-      if line.startswith('#Software: Microsoft Internet Information Services'):
-        found_signature = True
-        break
-
-    if not found_signature:
+    try:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._ResetState()
-
-    self._SetLineStructures(self._LINE_STRUCTURES)
 
     return True
 
