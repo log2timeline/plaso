@@ -66,19 +66,31 @@ class MacOSAppFirewallTextPlugin(
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
+  _REPORTER_CHARACTERS = ''.join(
+      [c for c in pyparsing.printables if c not in [':', '[', '<']])
+
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+      lambda tokens: int(tokens[0], 10))
+
+  _AGENT = pyparsing.Combine(
+      pyparsing.Word(_REPORTER_CHARACTERS) + pyparsing.Literal('[') +
+      _PROCESS_IDENTIFIER + pyparsing.Literal(']'))
+
+  _LOG_LINE_START = (
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
+      _AGENT.setResultsName('agent'))
+
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
-      pyparsing.Word(pyparsing.printables).setResultsName('agent') +
+      _LOG_LINE_START +
       pyparsing.Suppress('<') +
       pyparsing.CharsNotIn('>').setResultsName('status') +
       pyparsing.Suppress('>:') +
       pyparsing.CharsNotIn(':').setResultsName('process_name') +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('action') +
-      _END_OF_LINE)
+      pyparsing.restOfLine().setResultsName('action') + _END_OF_LINE)
 
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
@@ -94,7 +106,8 @@ class MacOSAppFirewallTextPlugin(
       ('log_line', _LOG_LINE),
       ('repeated_log_line', _REPEATED_LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = _LOG_LINE
+  VERIFICATION_GRAMMAR = _LOG_LINE_START + pyparsing.Literal(
+      '<Error>: Logging: creating /var/log/appfirewall.log') + _END_OF_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -183,14 +196,6 @@ class MacOSAppFirewallTextPlugin(
     try:
       structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    action = self._GetValueFromStructure(structure, 'action')
-    if action != 'creating /var/log/appfirewall.log':
-      return False
-
-    status = self._GetValueFromStructure(structure, 'status')
-    if status != 'Error':
       return False
 
     self._SetEstimatedYear(parser_mediator)

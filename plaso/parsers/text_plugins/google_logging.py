@@ -139,6 +139,33 @@ class GoogleLogTextPlugin(
       parser_mediator.ProduceExtractionWarning(
           'invalid header date time value.')
 
+  def _ParseHeaderTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a header line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      return dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
+
   def _ParseLine(self, parser_mediator, structure):
     """Process a single log line into a GoogleLogEvent.
 
@@ -240,15 +267,8 @@ class GoogleLogTextPlugin(
         structure, 'date_time')
 
     try:
-      # TODO: move to a _ParseHeaderTimeElements method.
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
-
-      dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
-    except (TypeError, ValueError):
+      self._ParseHeaderTimeElements(time_elements_structure)
+    except errors.ParseError:
       return False
 
     self._SetEstimatedYear(parser_mediator)
