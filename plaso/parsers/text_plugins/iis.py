@@ -394,7 +394,7 @@ class WinIISTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, _, _ = self._VerifyString(text_reader.lines)
+      self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
