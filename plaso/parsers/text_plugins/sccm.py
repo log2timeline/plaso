@@ -72,45 +72,84 @@ class SCCMTextPlugin(interface.TextPlugin):
 
   _DATE_TIME = (_TIME + _DATE).setResultsName('date_time')
 
+  _LOG_MESSAGE_START = pyparsing.Suppress('<![LOG[')
+
+  # Using a regular expression look ahead here is faster than pyparsing.SkipTo()
+  _LOG_MESSAGE_TEXT = pyparsing.Regex(r'.*?(?=(]LOG]!><))', re.DOTALL)
+
+  _LOG_MESSAGE_END = pyparsing.Suppress(']LOG]!><')
+
   _LOG_MESSAGE = (
-      pyparsing.Suppress('<![LOG[') +
-      pyparsing.Regex(r'.*?(?=(]LOG]!><))', re.DOTALL).setResultsName('text') +
-      pyparsing.Suppress(']LOG]!><'))
+      _LOG_MESSAGE_START + _LOG_MESSAGE_TEXT.setResultsName('text') +
+      _LOG_MESSAGE_END)
 
   _COMPONENT = (
       pyparsing.Suppress('" component="') +
       pyparsing.Word(pyparsing.alphanums).setResultsName('component'))
 
-  _LOG_ENTRY = (
-      _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
-      pyparsing.Regex(r'.*?(?=(\<!\[LOG\[))', re.DOTALL))
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _LAST_LOG_ENTRY = (
+  _LOG_LINE = (
       _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
-      pyparsing.restOfLine + pyparsing.lineEnd)
+      pyparsing.Regex(r'.*?(?=(<!\[LOG\[))', re.DOTALL))
+
+  _LAST_LOG_LINE = (
+      _LOG_MESSAGE + _DATE_TIME + _COMPONENT +
+      pyparsing.restOfLine() + _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('log_entry', _LOG_ENTRY),
-      ('log_entry_at_end', _LAST_LOG_ENTRY)]
+      ('log_line', _LOG_LINE),
+      ('last_log_line', _LAST_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  # Because logs files can lead with a partial event, we can't assume that
+  # the first character (post-BOM) in the file is the beginning of our match,
+  # so we look for match anywhere in lines.
 
-  def _BuildDateTime(self, time_elements_structure):
-    """Builds time elements from a PostgreSQL log time stamp.
+  VERIFICATION_GRAMMAR = (
+      pyparsing.Regex(r'.*?(?=(<!\[LOG\[))', re.DOTALL) + _LOG_LINE)
+
+  def _ParseRecord(self, parser_mediator, key, structure):
+    """Parses a pyparsing structure.
 
     Args:
-      time_elements_structure (pyparsing.ParseResults): structure of tokens
-          derived from a SCCM log time stamp.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Raises:
+      ParseError: if the structure cannot be parsed.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+         structure, 'date_time')
+
+    event_data = SCCMLogEventData()
+    event_data.component = self._GetValueFromStructure(structure, 'component')
+    event_data.text = self._GetValueFromStructure(structure, 'text')
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
+
+    parser_mediator.ProduceEventData(event_data)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
 
     Returns:
-      dfdatetime.TimeElements: date and time extracted from the structure or
-          None if the structure does not represent a valid string.
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
     """
     # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
     # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
     # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
     # overriding __getattr__ with a function that returns an empty string when
     # named token does not exist.
+
     try:
       if len(time_elements_structure) == 8:
         (hours, minutes, seconds, fraction_of_second, utc_offset_minutes, month,
@@ -145,34 +184,10 @@ class SCCMTextPlugin(interface.TextPlugin):
             time_zone_offset=time_zone_offset)
 
       return date_time
-    except (TypeError, ValueError):
-      return None
 
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: when the structure type is unknown.
-    """
-    if key not in self._SUPPORTED_KEYS:
+    except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    time_elements_structure = self._GetValueFromStructure(
-         structure, 'date_time')
-
-    event_data = SCCMLogEventData()
-    event_data.component = self._GetValueFromStructure(structure, 'component')
-    event_data.text = self._GetValueFromStructure(structure, 'text')
-    event_data.written_time = self._BuildDateTime(time_elements_structure)
-
-    parser_mediator.ProduceEventData(event_data)
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -185,11 +200,20 @@ class SCCMTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    # Because logs files can lead with a partial event,
-    # we can't assume that the first character (post-BOM)
-    # in the file is the beginning of our match - so we
-    # look for match anywhere in lines.
-    return pyparsing.Literal('<![LOG[').match in text_reader.lines
+    try:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(SCCMTextPlugin)

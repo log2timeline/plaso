@@ -163,7 +163,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       ('comment_line', _COMMENT_LINE),
       ('log_line', _LOG_LINE_1_5)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = (
+      pyparsing.ZeroOrMore(
+          pyparsing.Regex('#(Fields|Time Format|Version): .*') + _END_OF_LINE) +
+      pyparsing.Regex('#Software: Microsoft Windows Firewall') + _END_OF_LINE)
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -262,12 +265,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 
@@ -310,6 +309,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     """Resets stored values."""
     self._use_local_time = False
 
+    self._SetLineStructures(self._LINE_STRUCTURES)
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -321,13 +322,9 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    found_signature = False
-    for line in text_reader.lines.split('\n'):
-      if line.startswith('#Software: Microsoft Windows Firewall'):
-        found_signature = True
-        break
-
-    if not found_signature:
+    try:
+      self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._ResetState()

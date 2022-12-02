@@ -205,10 +205,18 @@ class WinIISTextPlugin(interface.TextPlugin):
   # common format.
 
   _LINE_STRUCTURES = [
-      ('comment', _COMMENT_LOG_LINE),
-      ('logline', _IIS_6_0_LOG_LINE)]
+      ('comment_line', _COMMENT_LOG_LINE),
+      ('log_line', _IIS_6_0_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  _COMMENT_SOFTWARE_LINE = (
+      pyparsing.Regex(
+          '#Software: Microsoft Internet Information Services [0-9]+.[0-9]+') +
+      _END_OF_LINE)
+
+  VERIFICATION_GRAMMAR = (
+      pyparsing.ZeroOrMore(
+          pyparsing.Regex('#(Date|Fields|Version): .*') + _END_OF_LINE) +
+      _COMMENT_SOFTWARE_LINE)
 
   def __init__(self):
     """Initializes a parser."""
@@ -264,8 +272,8 @@ class WinIISTextPlugin(interface.TextPlugin):
     log_line_structure += self._END_OF_LINE
 
     line_structures = [
-        ('comment', self._COMMENT_LOG_LINE),
-        ('logline', log_line_structure)]
+        ('comment_line', self._COMMENT_LOG_LINE),
+        ('log_line', log_line_structure)]
     self._SetLineStructures(line_structures)
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -322,16 +330,12 @@ class WinIISTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
-    if key == 'logline':
+    if key == 'log_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == 'comment':
+    elif key == 'comment_line':
       self._ParseCommentLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):
@@ -376,6 +380,8 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._month = None
     self._year = None
 
+    self._SetLineStructures(self._LINE_STRUCTURES)
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -387,18 +393,12 @@ class WinIISTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    found_signature = False
-    for line in text_reader.lines.split('\n'):
-      if line.startswith('#Software: Microsoft Internet Information Services'):
-        found_signature = True
-        break
-
-    if not found_signature:
+    try:
+      self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._ResetState()
-
-    self._SetLineStructures(self._LINE_STRUCTURES)
 
     return True
 

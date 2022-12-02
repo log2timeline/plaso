@@ -44,11 +44,18 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
+  def testProcess(self):
+    """Tests the Process function."""
+    plugin = bash_history.BashHistoryTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(['bash_history'], plugin)
+
+    self._TestEventsFromFile(storage_writer)
+
   def testProcessWithDesynchronizedFile(self):
     """Tests the Process function with a desynchronized file.
 
-    A desynchronized file is one with half an event at the top. That is, it
-    starts with a command line instead of a timestamp.
+    A desynchronized bash history file will start with the command line
+    instead of the timestamp.
     """
     plugin = bash_history.BashHistoryTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
@@ -56,16 +63,6 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
 
     self._TestEventsFromFile(
         storage_writer, expected_number_of_extraction_warnings=1)
-
-  def testProcessWithSynchronizedFile(self):
-    """Tests the Process function with a synchronized file.
-
-    A synchronized file is one that starts with a timestamp line.
-    """
-    plugin = bash_history.BashHistoryTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['bash_history'], plugin)
-
-    self._TestEventsFromFile(storage_writer)
 
 
 if __name__ == '__main__':

@@ -145,8 +145,10 @@ class SyslogTextPlugin(
   # to allow for processing of syslog formats that delimit the reporter and
   # facility with printable characters, we remove certain common delimiters
   # from the set of printable characters.
+
   _REPORTER_CHARACTERS = ''.join(
       [c for c in pyparsing.printables if c not in [':', '[', '<']])
+
   _FACILITY_CHARACTERS = ''.join(
       [c for c in pyparsing.printables if c not in [':', '>']])
 
@@ -166,55 +168,6 @@ class SyslogTextPlugin(
       r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|'
       r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
       r':\d{2}\s))')
-
-  # The rsyslog file format (RSYSLOG_FileFormat) consists of:
-  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
-  #
-  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
-  # 2020-05-31T00:00:45.698463+00:00
-  _RSYSLOG_VERIFICATION_PATTERN = (
-      r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
-      r'\d{6}[\+|-]\d{2}:\d{2} ' + _BODY_PATTERN)
-
-  # The rsyslog traditional file format (RSYSLOG_TraditionalFileFormat)
-  # consists of:
-  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
-  #
-  # Where %TIMESTAMP% is in yearless ctime date time format e.g.
-  # Jan 22 07:54:32
-  # TODO: change pattern to allow only spaces as a field separator.
-  _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN = (
-      r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s' + _BODY_PATTERN)
-
-  # The Chrome OS syslog messages are of a format beginning with an
-  # ISO 8601 combined date and time expression with timezone designator:
-  #   2016-10-25T12:37:23.297265-07:00
-  #
-  # This will then be followed by the SYSLOG Severity which will be one of:
-  #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
-  #
-  # 2016-10-25T12:37:23.297265-07:00 INFO
-  _CHROMEOS_VERIFICATION_PATTERN = (
-      r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
-      r'\d{6}[\+|-]\d{2}:\d{2}\s'
-      r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' + _BODY_PATTERN)
-
-  # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
-  # consists of:
-  # %PRI%1 %TIMESTAMP% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA%
-  #   %msg%
-  #
-  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
-  # 2020-05-31T00:00:45.698463+00:00
-  _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN = (
-      r'^<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:'
-      r'\d{2}\s' + _BODY_PATTERN)
-
-  # Bundle all verification patterns into a single regular expression.
-  _VERIFICATION_REGEX = re.compile('({0:s})'.format('|'.join([
-      _CHROMEOS_VERIFICATION_PATTERN, _RSYSLOG_VERIFICATION_PATTERN,
-      _RSYSLOG_TRADITIONAL_VERIFICATION_PATTERN,
-      _RSYSLOG_PROTOCOL_23_VERIFICATION_PATTERN])))
 
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
@@ -256,6 +209,15 @@ class SyslogTextPlugin(
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
+  # The Chrome OS syslog messages are of a format beginning with an
+  # ISO 8601 combined date and time expression with timezone designator:
+  #   2016-10-25T12:37:23.297265-07:00
+  #
+  # This will then be followed by the SYSLOG Severity which will be one of:
+  #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
+  #
+  # 2016-10-25T12:37:23.297265-07:00 INFO
+
   _CHROMEOS_SYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
       pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
@@ -267,6 +229,12 @@ class SyslogTextPlugin(
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       _END_OF_LINE)
+
+  # The rsyslog file format (RSYSLOG_FileFormat) consists of:
+  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
+  #
+  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
+  # 2020-05-31T00:00:45.698463+00:00
 
   _RSYSLOG_LINE = (
       _DATE_TIME_RFC3339.setResultsName('date_time') +
@@ -283,6 +251,13 @@ class SyslogTextPlugin(
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       _END_OF_LINE)
 
+  # The rsyslog traditional file format (RSYSLOG_TraditionalFileFormat)
+  # consists of:
+  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
+  #
+  # Where %TIMESTAMP% is in yearless ctime date time format e.g.
+  # Jan 22 07:54:32
+
   _RSYSLOG_TRADITIONAL_LINE = (
       _DATE_TIME.setResultsName('date_time') +
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
@@ -297,6 +272,14 @@ class SyslogTextPlugin(
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       _END_OF_LINE)
+
+  # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
+  # consists of:
+  # %PRI%1 %TIMESTAMP% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA%
+  #   %msg%
+  #
+  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
+  # 2020-05-31T00:00:45.698463+00:00
 
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
@@ -334,11 +317,13 @@ class SyslogTextPlugin(
       ('chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE),
       ('kernel_syslog_line', _KERNEL_SYSLOG_LINE),
       ('rsyslog_line', _RSYSLOG_LINE),
-      ('rsyslog_traditional_line', _RSYSLOG_TRADITIONAL_LINE),
       ('rsyslog_protocol_23_line', _RSYSLOG_PROTOCOL_23_LINE),
+      ('rsyslog_traditional_line', _RSYSLOG_TRADITIONAL_LINE),
       ('syslog_comment', _SYSLOG_COMMENT)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = (
+      _CHROMEOS_SYSLOG_LINE ^ _KERNEL_SYSLOG_LINE ^ _RSYSLOG_LINE ^
+      _RSYSLOG_PROTOCOL_23_LINE ^ _RSYSLOG_TRADITIONAL_LINE)
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -499,12 +484,8 @@ class SyslogTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
@@ -644,10 +625,20 @@ class SyslogTextPlugin(
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    if not self._VERIFICATION_REGEX.match(text_reader.lines):
+    try:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._SetEstimatedYear(parser_mediator)
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
 
     return True
 

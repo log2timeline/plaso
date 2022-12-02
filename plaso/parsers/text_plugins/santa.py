@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Text file parser plugin for Santa log files."""
 
-import re
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -345,16 +343,15 @@ class SantaTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
-      ('process_exit_line', _PROCESS_EXIT_LINE),
       ('file_system_event_line', _FILE_OPERATION_LINE),
       ('mount_line', _DISK_MOUNT_LINE),
-      ('unmount_line', _DISK_UNMOUNT_LINE),
-      ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE)]
+      ('process_exit_line', _PROCESS_EXIT_LINE),
+      ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE),
+      ('unmount_line', _DISK_UNMOUNT_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
-
-  _VERIFICATION_REGEX = re.compile(
-      r'^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] [EACWNID] santad:')
+  VERIFICATION_GRAMMAR = (
+      _DISK_MOUNT_LINE ^ _DISK_UNMOUNT_LINE ^ _EXECUTION_LINE ^
+      _FILE_OPERATION_LINE ^ _PROCESS_EXIT_LINE)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -366,12 +363,8 @@ class SantaTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'quota_exceeded_line':
       # skip this line
       return
@@ -511,7 +504,20 @@ class SantaTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    return bool(self._VERIFICATION_REGEX.match(text_reader.lines))
+    try:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(SantaTextPlugin)

@@ -157,10 +157,9 @@ class XChatLogTextPlugin(
 
   _LINE_STRUCTURES = [
       ('chat_history_line', _CHAT_HISTORY_LINE),
-      ('header_line', _HEADER_LINE),
-      ('emtpy_line', _END_OF_LINE)]
+      ('header_line', _HEADER_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _HEADER_LINE
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parses a log header.
@@ -231,12 +230,8 @@ class XChatLogTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'chat_history_line':
       self._ParseLogLine(parser_mediator, structure)
 
@@ -302,12 +297,12 @@ class XChatLogTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      parsed_structure = self._HEADER_LINE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)

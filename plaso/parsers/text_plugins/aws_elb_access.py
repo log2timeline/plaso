@@ -335,10 +335,11 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [
       ('elb_application_accesslog', _APPLICATION_LOG_LINE),
-      ('elb_network_accesslog', _NETWORK_LOG_LINE),
-      ('elb_classic_accesslog', _CLASSIC_LOG_LINE)]
+      ('elb_classic_accesslog', _CLASSIC_LOG_LINE),
+      ('elb_network_accesslog', _NETWORK_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = (
+      _APPLICATION_LOG_LINE ^ _CLASSIC_LOG_LINE ^ _NETWORK_LOG_LINE)
 
   def _GetValueFromGroup(self, structure, name, key_name):
     """Retrieves a value from a Pyparsing.Group structure.
@@ -367,12 +368,8 @@ class AWSELBTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     destination_list = self._GetValueFromStructure(
         structure, 'destination_list')
     if destination_list:
@@ -565,12 +562,12 @@ class AWSELBTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _, parsed_structure, _, _ = self._ParseString(text_reader.lines)
+      structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'response_time')
+        structure, 'response_time')
 
     if time_elements_structure:
       try:
@@ -579,7 +576,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
         return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'request_time')
+        structure, 'request_time')
 
     if time_elements_structure:
       try:

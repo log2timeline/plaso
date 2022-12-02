@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for bash history files."""
 
-import re
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -40,24 +38,27 @@ class BashHistoryTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
-      pyparsing.nums, min=9, max=10).setParseAction(
-          lambda tokens: int(tokens[0], 10)).setResultsName('timestamp')
-
-  _COMMAND = pyparsing.Regex(
-      r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName('command')
+  _TIMESTAMP = (
+      pyparsing.Suppress('#') +
+      pyparsing.Word(pyparsing.nums, min=9, max=10).setParseAction(
+          lambda tokens: int(tokens[0], 10)).setResultsName('timestamp'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _LOG_LINE = _TIMESTAMP + _COMMAND + _END_OF_LINE
+  _TIMESTAMP_LINE = _TIMESTAMP + _END_OF_LINE
 
-  _VERIFICATION_GRAMMAR = (
-      pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
-      pyparsing.NotAny(pyparsing.pythonStyleComment))
+  _COMMAND_LINE = (
+      pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
+
+  _LOG_LINE = _TIMESTAMP_LINE + _COMMAND_LINE
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  # A desynchronized bash history file will start with the command line
+  # instead of the timestamp.
+  VERIFICATION_GRAMMAR = (
+      (_TIMESTAMP_LINE + _COMMAND_LINE) ^
+      (_COMMAND_LINE + _TIMESTAMP_LINE + _COMMAND_LINE))
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -69,12 +70,8 @@ class BashHistoryTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
 
     event_data = BashHistoryEventData()
@@ -95,9 +92,12 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    match_generator = self._VERIFICATION_GRAMMAR.scanString(
-        text_reader.lines, maxMatches=1)
-    return bool(list(match_generator))
+    try:
+      self._VerifyString(text_reader.lines)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(BashHistoryTextPlugin)

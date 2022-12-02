@@ -106,10 +106,10 @@ class MacOSSecuritydLogTextPlugin(
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('logline', _LOG_LINE),
-      ('repeated', _REPEATED_LOG_LINE)]
+      ('log_liine', _LOG_LINE),
+      ('repeated_log_line', _REPEATED_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -126,18 +126,14 @@ class MacOSSecuritydLogTextPlugin(
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but use the timestamp from the actual entry.
-    if key == 'logline':
+    if key == 'log_liine':
       self._repeated_structure = structure
 
       message = self._GetStringValueFromStructure(structure, 'message')
@@ -208,17 +204,14 @@ class MacOSSecuritydLogTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      parsed_structure = self._LOG_LINE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
-      parsed_structure = None
-
-    if not parsed_structure:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     self._SetEstimatedYear(parser_mediator)
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)

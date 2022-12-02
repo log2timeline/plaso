@@ -111,7 +111,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
       ('log_line', _LOG_LINE),
       ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
-  _SUPPORTED_KEYS = frozenset([key for key, _ in _LINE_STRUCTURES])
+  VERIFICATION_GRAMMAR = _LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -160,12 +160,8 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Raises:
-      ParseError: when the structure type is unknown.
+      ParseError: if the structure cannot be parsed.
     """
-    if key not in self._SUPPORTED_KEYS:
-      raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
-
     if key == 'log_line':
       if self._event_data:
         parser_mediator.ProduceEventData(self._event_data)
@@ -220,12 +216,12 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      parsed_structure = self._LOG_LINE.parseString(text_reader.lines)
-    except pyparsing.ParseException:
+      structure, _, _ = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
-        parsed_structure, 'date_time')
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)
