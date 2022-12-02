@@ -3,6 +3,8 @@
 
 import abc
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import errors
 from plaso.parsers import plugins
 
@@ -32,6 +34,72 @@ class BaseCookiePlugin(plugins.BasePlugin):
       cookie_data (Optional[bytes]): cookie data, as a byte sequence.
       url (Optional[str]): URL or path where the cookie was set.
     """
+
+  def _ParseIntegerValue(self, string_value):
+    """Parses an integer time.
+
+    Args:
+      string_value (str): string value.
+
+    Returns:
+      int: integer value or None if not available.
+    """
+    try:
+      return int(string_value, 10)
+    except (TypeError, ValueError):
+      return None
+
+  def _ParsePosixTime(self, string_value):
+    """Parses a POSIX time.
+
+    Args:
+      string_value (str): string value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    try:
+      timestamp = int(string_value, 10)
+    except (TypeError, ValueError):
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
+  def _ParsePosixTimeInMilliseconds(self, string_value):
+    """Parses a POSIX time in milliseconds.
+
+    Args:
+      string_value (str): string value.
+
+    Returns:
+      dfdatetime.PosixTimeInMilliseconds: date and time value or None if not
+          available.
+    """
+    try:
+      timestamp = int(string_value, 10)
+    except (TypeError, ValueError):
+      return None
+
+    return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
+
+  def _ParsePosixTimeIn100Nanoseconds(self, string_value):
+    """Parses a POSIX time in 100 nanoseconds intervals.
+
+    Args:
+      string_value (str): string value.
+
+    Returns:
+      dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
+          available.
+    """
+    try:
+      timestamp = int(string_value, 10)
+      # TODO: fix that we're losing precision here.
+      timestamp //= 10
+    except (TypeError, ValueError):
+      return None
+
+    return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
 
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):

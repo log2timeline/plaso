@@ -3,12 +3,7 @@
 
 from urllib import parse as urlparse
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers.cookie_plugins import interface
 from plaso.parsers.cookie_plugins import manager
 
@@ -16,37 +11,100 @@ from plaso.parsers.cookie_plugins import manager
 # TODO: determine if __utmc always 0?
 
 
-class GoogleAnalyticsEventData(events.EventData):
-  """Google Analytics event data.
+class GoogleAnalyticsUtmaEventData(events.EventData):
+  """Google analytics __utma cookie event data.
 
   Attributes:
     cookie_name (str): name of cookie.
     domain_hash (str): domain hash.
+    sessions (int): number of sessions.
+    url (str): URL or path where the cookie got set.
+    visited_times (list[dfdatetime.DateTimeValues]): dates and times the URL
+        was visited.
+    visitor_identifier (str): visitor identifier.
+  """
+
+  DATA_TYPE = 'cookie:google:analytics:utma'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleAnalyticsUtmaEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cookie_name = None
+    self.domain_hash = None
+    self.sessions = None
+    self.url = None
+    self.visited_times = None
+    self.visitor_identifier = None
+
+
+class GoogleAnalyticsUtmbEventData(events.EventData):
+  """Google analytics __utmb cookie event data.
+
+  Attributes:
+    cookie_name (str): name of cookie.
+    domain_hash (str): domain hash.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
+        last visited.
     pages_viewed (int): number of pages viewed.
+    url (str): URL or path where the cookie got set.
+  """
+
+  DATA_TYPE = 'cookie:google:analytics:utmb'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleAnalyticsUtmbEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cookie_name = None
+    self.domain_hash = None
+    self.last_visited_time = None
+    self.pages_viewed = None
+    self.url = None
+
+
+class GoogleAnalyticsUtmtEventData(events.EventData):
+  """Google analytics __utmt cookie event data.
+
+  Attributes:
+    cookie_name (str): name of cookie.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
+        last visited.
+    url (str): URL or path where the cookie got set.
+  """
+
+  DATA_TYPE = 'cookie:google:analytics:utmt'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleAnalyticsUtmtEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cookie_name = None
+    self.last_visited_time = None
+    self.url = None
+
+
+class GoogleAnalyticsUtmzEventData(events.EventData):
+  """Google analytics __utmz cookie event data.
+
+  Attributes:
+    cookie_name (str): name of cookie.
+    domain_hash (str): domain hash.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
+        last visited.
     sessions (int): number of sessions.
     sources (int): number of sources.
     url (str): URL or path where the cookie got set.
-    visitor_id (str): visitor identifier.
   """
 
-  DATA_TYPE = 'cookie:google:analytics'
+  DATA_TYPE = 'cookie:google:analytics:utmz'
 
-  def __init__(self, cookie_identifier):
-    """Initializes event data.
-
-    Args:
-      cookie_identifier (str): unique identifier of the cookie.
-    """
-    data_type = '{0:s}:{1:s}'.format(self.DATA_TYPE, cookie_identifier)
-
-    super(GoogleAnalyticsEventData, self).__init__(data_type=data_type)
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleAnalyticsUtmzEventData, self).__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.domain_hash = None
-    self.pages_viewed = None
+    self.last_visited_time = None
     self.sessions = None
     self.sources = None
     self.url = None
-    self.visitor_id = None
 
 
 class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
@@ -89,80 +147,45 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
               number_of_fields, self.COOKIE_NAME))
       return
 
+    visited_times = []
+
     if number_of_fields == 1:
       domain_hash = None
       visitor_identifier = None
-      first_visit_posix_time = None
-      previous_visit_posix_time = None
-
-      try:
-        # TODO: fix that we're losing precision here use dfdatetime.
-        last_visit_posix_time = int(fields[0], 10) / 10000000
-      except ValueError:
-        last_visit_posix_time = None
-
       number_of_sessions = None
+
+      date_time = self._ParsePosixTimeIn100Nanoseconds(fields[0])
+      if date_time:
+        visited_times.append(date_time)
 
     elif number_of_fields == 6:
       domain_hash = fields[0]
       visitor_identifier = fields[1]
 
       # TODO: Double check this time is stored in UTC and not local time.
-      try:
-        first_visit_posix_time = int(fields[2], 10)
-      except ValueError:
-        first_visit_posix_time = None
+      date_time = self._ParsePosixTime(fields[2])
+      if date_time:
+        visited_times.append(date_time)
 
-      try:
-        previous_visit_posix_time = int(fields[3], 10)
-      except ValueError:
-        previous_visit_posix_time = None
+      date_time = self._ParsePosixTime(fields[3])
+      if date_time:
+        visited_times.append(date_time)
 
-      try:
-        last_visit_posix_time = int(fields[4], 10)
-      except ValueError:
-        last_visit_posix_time = None
+      date_time = self._ParsePosixTime(fields[4])
+      if date_time:
+        visited_times.append(date_time)
 
-      try:
-        number_of_sessions = int(fields[5], 10)
-      except ValueError:
-        number_of_sessions = None
+      number_of_sessions = self._ParseIntegerValue(fields[5])
 
-    event_data = GoogleAnalyticsEventData('utma')
+    event_data = GoogleAnalyticsUtmaEventData()
     event_data.cookie_name = self.COOKIE_NAME
     event_data.domain_hash = domain_hash
     event_data.sessions = number_of_sessions
     event_data.url = url
-    event_data.visitor_id = visitor_identifier
+    event_data.visited_times = visited_times or None
+    event_data.visitor_identifier = visitor_identifier
 
-    if first_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=first_visit_posix_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, 'Analytics Creation Time')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if previous_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=previous_visit_posix_time)
-      event = time_events.DateTimeValuesEvent(
-          date_time, 'Analytics Previous Time')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    date_time = None
-    if last_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=last_visit_posix_time)
-      timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
-    elif first_visit_posix_time is None and previous_visit_posix_time is None:
-      # If both creation_time and written_time are None produce an event
-      # object without a timestamp.
-      date_time = dfdatetime_semantic_time.NotSet()
-      timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
-
-    if date_time is not None:
-      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
@@ -208,48 +231,28 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields == 1:
       domain_hash = None
-
-      try:
-        # TODO: fix that we're losing precision here use dfdatetime.
-        last_visit_posix_time = int(fields[0], 10) / 10000000
-      except ValueError:
-        last_visit_posix_time = None
-
       number_of_pages_viewed = None
+
+      date_time = self._ParsePosixTimeIn100Nanoseconds(fields[0])
 
     elif number_of_fields == 4:
       domain_hash = fields[0]
 
-      try:
-        number_of_pages_viewed = int(fields[1], 10)
-      except ValueError:
-        number_of_pages_viewed = None
+      number_of_pages_viewed = self._ParseIntegerValue(fields[1])
 
-      try:
-        if fields[2] in ('8', '9'):
-          # TODO: fix that we're losing precision here use dfdatetime.
-          last_visit_posix_time = int(fields[3], 10) / 1000
-        else:
-          last_visit_posix_time = int(fields[3], 10)
-      except ValueError:
-        last_visit_posix_time = None
+      if fields[2] in ('8', '9'):
+        date_time = self._ParsePosixTimeInMilliseconds(fields[3])
+      else:
+        date_time = self._ParsePosixTime(fields[3])
 
-    if last_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=last_visit_posix_time)
-      timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
-      timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
-
-    event_data = GoogleAnalyticsEventData('utmb')
+    event_data = GoogleAnalyticsUtmbEventData()
     event_data.cookie_name = self.COOKIE_NAME
     event_data.domain_hash = domain_hash
+    event_data.last_visited_time = date_time
     event_data.pages_viewed = number_of_pages_viewed
     event_data.url = url
 
-    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
@@ -285,26 +288,13 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
               number_of_fields, self.COOKIE_NAME))
       return
 
-    try:
-      # TODO: fix that we're losing precision here use dfdatetime.
-      last_visit_posix_time = int(fields[0], 10) / 10000000
-    except ValueError:
-      last_visit_posix_time = None
-
-    if last_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=last_visit_posix_time)
-      timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
-      timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
-
-    event_data = GoogleAnalyticsEventData('utmt')
+    event_data = GoogleAnalyticsUtmtEventData()
     event_data.cookie_name = self.COOKIE_NAME
+    event_data.last_visited_time = self._ParsePosixTimeIn100Nanoseconds(
+        fields[0])
     event_data.url = url
 
-    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
@@ -355,34 +345,19 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields == 1:
       domain_hash = None
-
-      try:
-        # TODO: fix that we're losing precision here use dfdatetime.
-        last_visit_posix_time = int(fields[0], 10) / 10000000
-      except ValueError:
-        last_visit_posix_time = None
-
       number_of_sessions = None
       number_of_sources = None
       extra_attributes = {}
 
+      date_time = self._ParsePosixTimeIn100Nanoseconds(fields[0])
+
     elif number_of_fields == 5:
       domain_hash = fields[0]
 
-      try:
-        last_visit_posix_time = int(fields[1], 10)
-      except ValueError:
-        last_visit_posix_time = None
+      date_time = self._ParsePosixTime(fields[1])
 
-      try:
-        number_of_sessions = int(fields[2], 10)
-      except ValueError:
-        number_of_sessions = None
-
-      try:
-        number_of_sources = int(fields[3], 10)
-      except ValueError:
-        number_of_sources = None
+      number_of_sessions = self._ParseIntegerValue(fields[2])
+      number_of_sources = self._ParseIntegerValue(fields[3])
 
       extra_variables = fields[4].split('|')
 
@@ -391,26 +366,20 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         key, _, value = variable.partition('=')
         extra_attributes[key] = urlparse.unquote(value)
 
-    if last_visit_posix_time is not None:
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=last_visit_posix_time)
-      timestamp_description = definitions.TIME_DESCRIPTION_LAST_VISITED
-    else:
-      date_time = dfdatetime_semantic_time.NotSet()
-      timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
-
-    event_data = GoogleAnalyticsEventData('utmz')
+    event_data = GoogleAnalyticsUtmzEventData()
     event_data.cookie_name = self.COOKIE_NAME
     event_data.domain_hash = domain_hash
+    event_data.last_visited_time = date_time
     event_data.sessions = number_of_sessions
     event_data.sources = number_of_sources
     event_data.url = url
 
+    # TODO: explicitly define these as attributes of
+    # GoogleAnalyticsUtmzEventData.
     for key, value in extra_attributes.items():
       setattr(event_data, key, value)
 
-    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 manager.CookiePluginsManager.RegisterPlugins([
