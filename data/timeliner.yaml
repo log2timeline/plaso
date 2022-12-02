@@ -206,6 +206,30 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'cookie:google:analytics:utma'
+attribute_mappings:
+- name: 'visited_times'
+  description: 'Visited Time'
+place_holder_event: true
+---
+data_type: 'cookie:google:analytics:utmb'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
+data_type: 'cookie:google:analytics:utmt'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
+data_type: 'cookie:google:analytics:utmz'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
 data_type: 'docker:container:configuration'
 attribute_mappings:
 - name: 'creation_time'

@@ -245,6 +245,7 @@ short_message:
 short_source: 'LOG'
 source: 'Chrome Preferences'
 ---
+# TODO: visitor_id is kept for backwards compatibility
 type: 'conditional'
 data_type: 'cookie:google:analytics:utma'
 message:
@@ -252,7 +253,8 @@ message:
 - '({cookie_name})'
 - 'Sessions: {sessions}'
 - 'Domain Hash: {domain_hash}'
-- 'Visitor ID: {visitor_id}'
+- 'Visitor identifier: {visitor_id}'
+- 'Visitor identifier: {visitor_identifier}'
 short_message:
 - '{url}'
 - '({cookie_name})'

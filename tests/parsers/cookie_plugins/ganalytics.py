@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.cookie_plugins import ganalytics  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox_cookies
@@ -21,6 +20,10 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 105)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 295)
 
@@ -32,19 +35,11 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    cookie_events = []
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      if event_data.data_type.startswith('cookie:google:analytics'):
-        cookie_events.append(event)
-
-    self.assertEqual(len(cookie_events), 25)
-
     expected_event_values = {
         'cookie_name': '__utmz',
         'data_type': 'cookie:google:analytics:utmz',
-        'date_time': '2013-10-30T21:56:06+00:00',
         'domain_hash': '137167072',
+        'last_visited_time': '2013-10-30T21:56:06+00:00',
         'sessions': 1,
         'sources': 1,
         'url': 'http://ads.aha.is/',
@@ -54,13 +49,17 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'utmcmd': 'referral',
         'utmcsr': 'mbl.is'}
 
-    self.CheckEventValues(
-        storage_writer, cookie_events[14], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 48)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
     plugin = chrome_cookies.Chrome17CookiePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['cookies.db'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 603)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 1755)
@@ -73,22 +72,12 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    cookie_events = []
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      if event_data.data_type.startswith('cookie:google:analytics'):
-        cookie_events.append(event)
-
-    # There are 75 events created by the Google Analytics plugin.
-    self.assertEqual(len(cookie_events), 75)
-
-    # Check few "random" events to verify.
-
-    # Check an UTMZ Google Analytics event.
+    # Check an UTMZ Google Analytics entry.
     expected_event_values = {
         'cookie_name': '__utmz',
         'data_type': 'cookie:google:analytics:utmz',
         'domain_hash': '68898382',
+        'last_visited_time': '2012-03-22T01:57:06+00:00',
         'sessions': 1,
         'sources': 1,
         'url': 'http://imdb.com/',
@@ -97,35 +86,36 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         'utmcmd': 'organic',
         'utmcsr': 'google'}
 
-    self.CheckEventValues(
-        storage_writer, cookie_events[39], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 287)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the UTMA Google Analytics event.
+    # Check an UTMA Google Analytics entry.
     expected_event_values = {
         'cookie_name': '__utma',
         'data_type': 'cookie:google:analytics:utma',
-        'date_time': '2012-03-22T01:55:29+00:00',
         'domain_hash': '151488169',
         'sessions': 2,
-        'timestamp_desc': 'Analytics Previous Time',
         'url': 'http://assets.tumblr.com/',
-        'visitor_id': '1827102436'}
+        'visited_times': [
+           '2012-03-22T01:55:29+00:00',
+           '2012-03-22T01:55:29+00:00',
+           '2012-04-01T13:31:52+00:00'],
+        'visitor_identifier': '1827102436'}
 
-    self.CheckEventValues(
-        storage_writer, cookie_events[41], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 329)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the UTMB Google Analytics event.
+    # Check an UTMB Google Analytics entry.
     expected_event_values = {
         'cookie_name': '__utmb',
         'data_type': 'cookie:google:analytics:utmb',
-        'date_time': '2012-03-22T01:48:30+00:00',
         'domain_hash': '154523900',
+        'last_visited_time': '2012-03-22T01:48:30+00:00',
         'pages_viewed': 1,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'url': 'http://upressonline.com/'}
 
-    self.CheckEventValues(
-        storage_writer, cookie_events[34], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 180)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
