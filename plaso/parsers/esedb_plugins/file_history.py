@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for the Microsoft File History ESE database."""
 
-from dfdatetime import filetime as dfdatetime_filetime
-
 from plaso.containers import events
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
@@ -50,22 +48,6 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       'file': '',
       'library': '',
       'namespace': 'ParseNameSpace'}
-
-  def _GetDateTimeValue(self, record_values, value_name):
-    """Retrieves a date and time record value.
-
-    Args:
-      record_values (dict[str,object]): values per column name.
-      value_name (str): name of the record value.
-
-    Returns:
-      dfdatetime.DateTimeValues: date and time or None if not set.
-    """
-    filetime = record_values.get(value_name, None)
-    if not filetime:
-      return None
-
-    return dfdatetime_filetime.Filetime(timestamp=filetime)
 
   def _GetDictFromStringsTable(self, parser_mediator, table):
     """Build a dictionary of the value in the strings table.
@@ -133,11 +115,11 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
           parser_mediator, table.name, record_index, esedb_record)
 
       event_data = FileHistoryNamespaceEventData()
-      event_data.creation_time = self._GetDateTimeValue(
+      event_data.creation_time = self._GetFiletimeRecordValue(
            record_values, 'fileCreated')
       event_data.file_attribute = record_values.get('fileAttrib', None)
       event_data.identifier = record_values.get('id', None)
-      event_data.modification_time = self._GetDateTimeValue(
+      event_data.modification_time = self._GetFiletimeRecordValue(
           record_values, 'fileModified')
       event_data.original_filename = strings.get(event_data.identifier, None)
       event_data.parent_identifier = record_values.get('parentId', None)

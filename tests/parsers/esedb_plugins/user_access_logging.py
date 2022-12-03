@@ -3,7 +3,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.esedb_plugins import user_access_logging
 
 from tests.parsers.esedb_plugins import test_lib
@@ -24,6 +23,10 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['{C519A76A-D9B5-4F85-B667-5FAC08E0E1B4}.mdb'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 25)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers(
         'event')
     self.assertEqual(number_of_events, 42)
@@ -36,68 +39,49 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # The order in which ESEDBPlugin._GetRecordValues() generates events is
-    # nondeterministic hence we sort the events.
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'data_type': 'windows:user_access_logging:system_identity',
+        'creation_time': '2022-07-16T14:46:12.5700000+00:00',
         'operating_system_build': 17763,
         'system_dns_hostname': 'DC-1',
-        'system_domain_name': 'WORKGROUP',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'system_domain_name': 'WORKGROUP'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
+        'access_time': '2022-07-16T15:02:52.7424758+00:00',
         'authenticated_username': 'ual\\dc-1$',
         'client_name': None,
         'data_type': 'windows:user_access_logging:clients',
+        'insert_time': '2022-07-16T14:50:27.0773450+00:00',
         'role_identifier': '{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}',
         'role_name': 'Active Directory Domain Services',
         'source_ip_address': '::1',
         'tenant_identifier': '{3facd7dc-85cc-495b-823f-6c96a9e1c40c}',
-        'total_accesses': 62,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_ACCESS}
+        'total_accesses': 62}
 
-    self.CheckEventValues(storage_writer, events[4], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:user_access_logging:role_access',
+        'first_seen_time': '2022-07-16T14:52:50.2088607+00:00',
+        'last_seen_time': '2022-07-16T15:00:59.3156655+00:00',
         'role_identifier': '{10a9226f-50ee-49d8-a393-9a501d47ce04}',
-        'role_name': 'File Server',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FIRST_ACCESS}
+        'role_name': 'File Server'}
 
-    self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    expected_event_values = {
-        'authenticated_username': 'ual\\hunter',
-        'client_name': None,
-        'data_type': 'windows:user_access_logging:clients',
-        'role_identifier': '{10a9226f-50ee-49d8-a393-9a501d47ce04}',
-        'role_name': 'File Server',
-        'source_ip_address': '10.0.11.10',
-        'tenant_identifier': '{00000000-0000-0000-0000-000000000000}',
-        'total_accesses': 2,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
-
-    self.CheckEventValues(storage_writer, events[30], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 24)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'data_type': 'windows:user_access_logging:dns',
         'hostname': 'dc-1',
         'ip_address': '10.0.10.10',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SEEN}
+        'last_seen_time': '2022-07-16T15:02:53.0830000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[38], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'windows:user_access_logging:dns',
-        'hostname': 'XTOF-WKS',
-        'ip_address': '10.0.11.10',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_SEEN}
-
-    self.CheckEventValues(storage_writer, events[41], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 18)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testConvertGUIDToString(self):
     """Tests GUID to string conversion."""

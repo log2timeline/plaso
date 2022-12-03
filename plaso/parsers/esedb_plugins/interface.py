@@ -6,6 +6,8 @@ import uuid
 
 import pyesedb
 
+from dfdatetime import filetime as dfdatetime_filetime
+
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import logger
@@ -135,6 +137,22 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       raise errors.ParseError(
           'Unable to parse integer value with error: {0!s}'.format(
               exception))
+
+  def _GetFiletimeRecordValue(self, record_values, value_name):
+    """Retrieves a FILETIME record value.
+
+    Args:
+      record_values (dict[str,object]): values per column name.
+      value_name (str): name of the record value.
+
+    Returns:
+      dfdatetime.Filetime: date and time or None if not set.
+    """
+    filetime = record_values.get(value_name, None)
+    if not filetime:
+      return None
+
+    return dfdatetime_filetime.Filetime(timestamp=filetime)
 
   def _GetRecordValue(self, record, value_entry):
     """Retrieves a specific value from the record.
