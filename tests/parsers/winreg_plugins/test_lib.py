@@ -148,8 +148,4 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     plugin.UpdateChainAndProcess(parser_mediator, registry_key)
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer

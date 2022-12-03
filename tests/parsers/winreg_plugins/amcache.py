@@ -42,11 +42,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 3497)
 
-    # 1178 windows:registry:amcache events
-    # 2105 last written time events
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3283)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -109,9 +104,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 236)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 236)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

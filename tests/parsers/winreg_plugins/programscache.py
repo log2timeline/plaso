@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.winreg_plugins import programscache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -48,9 +47,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'event_data')
     self.assertEqual(number_of_event_data, 27)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 77)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -59,20 +55,18 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # The ProgramsCache entry shell item event.
     expected_event_values = {
         'data_type': 'windows:shell_item:file_entry',
-        'date_time': '2009-08-04T15:12:24+00:00',
+        'creation_time': '2009-08-04T15:12:24+00:00',
         'localized_name': '@shell32.dll,-21782',
         'long_name': 'Programs',
         'name': 'Programs',
         'origin': '{0:s} ProgramsCache'.format(key_path),
-        'shell_item_path': 'Programs',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'shell_item_path': 'Programs'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     # The ProgramsCache list event.
     expected_entries = (
@@ -99,12 +93,12 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
 
     expected_event_values = {
         'data_type': 'windows:registry:explorer:programcache',
-        'date_time': '2009-08-04T15:22:18.4196250+00:00',
         'entries': expected_entries,
         'key_path': key_path,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}
+        'last_written_time': '2009-08-04T15:22:18.4196250+00:00'}
 
-    self.CheckEventValues(storage_writer, events[75], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 25)
+    self.CheckEventData(event_data, expected_event_values)
 
     # The Windows Registry key event.
     expected_event_values = {
@@ -138,9 +132,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 42)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 118)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
