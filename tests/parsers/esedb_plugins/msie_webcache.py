@@ -42,9 +42,6 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 341)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1372)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -75,9 +72,6 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 978)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 4200)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

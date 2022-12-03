@@ -21,9 +21,6 @@ class DpkgTextPluginTest(test_lib.TextPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 4)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 4)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
