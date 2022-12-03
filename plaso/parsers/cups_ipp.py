@@ -25,8 +25,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
@@ -46,11 +44,17 @@ class CupsIppEventData(events.EventData):
     application (str): application that prints the document.
     computer_name (str): name of the computer.
     copies (int): number of copies.
+    creation_time (dfdatetime.DateTimeValues): date and time the print job
+        was created (added).
     doc_type (str): type of document.
+    end_time (dfdatetime.DateTimeValues): date and time the print job
+        was stopped.
     job_id (str): job identifier.
     job_name (str): job name.
     owner (str): real name of the user.
     printer_id (str): identification name of the print.
+    start_time (dfdatetime.DateTimeValues): date and time the print job
+        was started.
     uri (str): URL of the CUPS service.
     user (str): system user name.
   """
@@ -63,11 +67,14 @@ class CupsIppEventData(events.EventData):
     self.application = None
     self.computer_name = None
     self.copies = None
+    self.creation_time = None
     self.doc_type = None
+    self.end_time = None
     self.job_id = None
     self.job_name = None
     self.owner = None
     self.printer_id = None
+    self.start_time = None
     self.uri = None
     self.user = None
 
@@ -127,19 +134,6 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       _TAG_VALUE_TEXT_WITHOUT_LANGUAGE,
       _TAG_VALUE_NAME_WITHOUT_LANGUAGE])
 
-  _DATE_TIME_VALUES = {
-      'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
-      'date-time-at-processing': definitions.TIME_DESCRIPTION_START,
-      'date-time-at-completed': definitions.TIME_DESCRIPTION_END}
-
-  _POSIX_TIME_VALUES = {
-      'time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
-      'time-at-processing': definitions.TIME_DESCRIPTION_START,
-      'time-at-completed': definitions.TIME_DESCRIPTION_END}
-
-  _DATE_TIME_VALUE_NAMES = list(_DATE_TIME_VALUES.keys())
-  _DATE_TIME_VALUE_NAMES.extend(list(_POSIX_TIME_VALUES.keys()))
-
   _ATTRIBUTE_NAME_TRANSLATION = {
       'com.apple.print.JobInfo.PMApplicationName': 'application',
       'com.apple.print.JobInfo.PMJobOwner': 'owner',
@@ -156,19 +150,19 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     super(CupsIppParser, self).__init__()
     self._last_charset_attribute = 'ascii'
 
-  def _GetStringValue(self, data_dict, name, default_value=None):
+  def _GetStringValue(self, cupp_ipp_values, name, default_value=None):
     """Retrieves a specific string value from the data dict.
 
     Args:
-      data_dict (dict[str, list[str]]): values per name.
+      cupp_ipp_values (dict[str, list[str]]): CUPP IPP values per name.
       name (str): name of the value to retrieve.
-      default_value (Optional[object]): value to return if the name has no value
-          set in data_dict.
+      default_value (Optional[object]): default value if no CUPP IPP value is
+          available.
 
     Returns:
-      str: value represented as a string.
+      object: value represented as a string or default value.
     """
-    values = data_dict.get(name, None)
+    values = cupp_ipp_values.get(name, None)
     if not values:
       return default_value
 
@@ -382,18 +376,14 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     self._ParseHeader(parser_mediator, file_object)
 
-    data_dict = {}
-    time_dict = {}
+    cupp_ipp_values = {}
     is_first_attribute_group = True
 
     try:
       for name, value in self._ParseAttributesGroup(file_object):
         name = self._ATTRIBUTE_NAME_TRANSLATION.get(name, name)
 
-        if name in self._DATE_TIME_VALUE_NAMES:
-          time_dict.setdefault(name, []).append(value)
-        else:
-          data_dict.setdefault(name, []).append(value)
+        cupp_ipp_values.setdefault(name, []).append(value)
 
         is_first_attribute_group = False
 
@@ -407,27 +397,48 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       return
 
     event_data = CupsIppEventData()
-    event_data.application = self._GetStringValue(data_dict, 'application')
-    event_data.computer_name = self._GetStringValue(data_dict, 'computer_name')
-    event_data.copies = data_dict.get('copies', [0])[0]
-    event_data.doc_type = self._GetStringValue(data_dict, 'doc_type')
-    event_data.job_id = self._GetStringValue(data_dict, 'job_id')
-    event_data.job_name = self._GetStringValue(data_dict, 'job_name')
-    event_data.user = self._GetStringValue(data_dict, 'user')
-    event_data.owner = self._GetStringValue(data_dict, 'owner')
-    event_data.printer_id = self._GetStringValue(data_dict, 'printer_id')
-    event_data.uri = self._GetStringValue(data_dict, 'uri')
+    event_data.application = self._GetStringValue(
+        cupp_ipp_values, 'application')
+    event_data.computer_name = self._GetStringValue(
+        cupp_ipp_values, 'computer_name')
+    event_data.copies = cupp_ipp_values.get('copies', [0])[0]
+    event_data.doc_type = self._GetStringValue(cupp_ipp_values, 'doc_type')
+    event_data.job_id = self._GetStringValue(cupp_ipp_values, 'job_id')
+    event_data.job_name = self._GetStringValue(cupp_ipp_values, 'job_name')
+    event_data.user = self._GetStringValue(cupp_ipp_values, 'user')
+    event_data.owner = self._GetStringValue(cupp_ipp_values, 'owner')
+    event_data.printer_id = self._GetStringValue(
+        cupp_ipp_values, 'printer_id')
+    event_data.uri = self._GetStringValue(cupp_ipp_values, 'uri')
 
-    for name, usage in self._DATE_TIME_VALUES.items():
-      for date_time in time_dict.get(name, []):
-        event = time_events.DateTimeValuesEvent(date_time, usage)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+    # CUPS IPP version 1.1 date and time values
 
-    for name, usage in self._POSIX_TIME_VALUES.items():
-      for time_value in time_dict.get(name, []):
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value)
-        event = time_events.DateTimeValuesEvent(date_time, usage)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data.creation_time = cupp_ipp_values.get(
+        'date-time-at-creation', None)
+    event_data.end_time = cupp_ipp_values.get('date-time-at-completed', None)
+    event_data.start_time = cupp_ipp_values.get('date-time-at-processing', None)
+
+    # CUPS IPP version 1.0 date and time values
+
+    if not event_data.creation_time:
+      timestamp = cupp_ipp_values.get('time-at-creation', [])
+      if timestamp:
+        event_data.creation_time = dfdatetime_posix_time.PosixTime(
+            timestamp=timestamp[0])
+
+    if not event_data.end_time:
+      timestamp = cupp_ipp_values.get('time-at-completed', [])
+      if timestamp:
+        event_data.end_time = dfdatetime_posix_time.PosixTime(
+            timestamp=timestamp[0])
+
+    if not event_data.start_time:
+      timestamp = cupp_ipp_values.get('time-at-processing', [])
+      if timestamp:
+        event_data.start_time = dfdatetime_posix_time.PosixTime(
+            timestamp=timestamp[0])
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(CupsIppParser)

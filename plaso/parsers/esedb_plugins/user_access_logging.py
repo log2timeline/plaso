@@ -11,13 +11,10 @@ Also see:
 import ipaddress
 import uuid
 
-from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -26,9 +23,12 @@ class UserAccessLoggingClientsEventsData(events.EventData):
   """Windows User Access Logging CLIENTS table event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): last access date and time.
     authenticated_username (str): domain/user account name
         performing the access.
     client_name (str): client name, use unknown.
+    insert_time (dfdatetime.DateTimeValues): date and time the entry was
+        first inserted into the table.
     role_identifier (str): identifier of the service accessed.
     role_name (str): Name of the service accessed.
     source_ip_address (str): source IP address.
@@ -42,8 +42,10 @@ class UserAccessLoggingClientsEventsData(events.EventData):
     """Initializes event data."""
     super(UserAccessLoggingClientsEventsData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.access_time = None
     self.authenticated_username = None
     self.client_name = None
+    self.insert_time = None
     self.role_identifier = None
     self.role_name = None
     self.source_ip_address = None
@@ -55,8 +57,10 @@ class UserAccessLoggingDNSEventData(events.EventData):
   """Windows User Access Logging DNS table event data.
 
   Attributes:
-    hostname (str): Hostname.
+    hostname (str): hostname.
     ip_address (str): IP address.
+    last_seen_time (dfdatetime.DateTimeValues): date and time the hostname to
+        IP address mapping was last observed.
   """
 
   DATA_TYPE = 'windows:user_access_logging:dns'
@@ -67,12 +71,17 @@ class UserAccessLoggingDNSEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.hostname = None
     self.ip_address = None
+    self.last_seen_time = None
 
 
 class UserAccessLoggingRoleAccessEventsData(events.EventData):
   """Windows User Access Logging ROLE_ACCESS table event data.
 
   Attributes:
+    first_seen_time (dfdatetime.DateTimeValues): date and time the role was
+        first observed to be used.
+    last_seen_time (dfdatetime.DateTimeValues): date and time the role was
+        last observed to be used.
     role_identifier (str): identifier of the role.
     role_name (str): name of the role.
   """
@@ -83,6 +92,8 @@ class UserAccessLoggingRoleAccessEventsData(events.EventData):
     """Initializes event data."""
     super(UserAccessLoggingRoleAccessEventsData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.first_seen_time = None
+    self.last_seen_time = None
     self.role_identifier = None
     self.role_name = None
 
@@ -91,6 +102,8 @@ class UserAccessLoggingSystemIdentityEventdata(events.EventData):
   """Windows User Access Logging SYSTEM_IDENTITY table event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the system
+        identity was created.
     operating_system_build (int): operating system build.
     system_dns_hostname (str): System hostname.
     system_domain_name (str): System domain name.
@@ -102,6 +115,7 @@ class UserAccessLoggingSystemIdentityEventdata(events.EventData):
     """Initializes event data."""
     super(UserAccessLoggingSystemIdentityEventdata, self).__init__(
         data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.operating_system_build = None
     self.system_dns_hostname = None
     self.system_domain_name = None
@@ -112,6 +126,10 @@ class UserAccessLoggingVirtualMachinesEventData(events.EventData):
 
   Attributes:
     bios_identifier (str): BIOS identifier.
+    creation_time (dfdatetime.DateTimeValues): date and time the virtual
+        machine was created.
+    last_active_time (dfdatetime.DateTimeValues): date and time the virtual
+        machine was last observed to be active.
     serial_number (str): Serial number.
     vm_identifier (str): identifier of the virtual machine.
   """
@@ -123,6 +141,8 @@ class UserAccessLoggingVirtualMachinesEventData(events.EventData):
     super(UserAccessLoggingVirtualMachinesEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.bios_identifier = None
+    self.creation_time = None
+    self.last_active_time = None
     self.serial_number = None
     self.vm_identifier = None
 
@@ -237,31 +257,21 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingClientsEventsData()
+      event_data.access_time = self._GetFiletimeRecordValue(
+          record_values, 'LastAccess')
       event_data.authenticated_username = record_values.get(
           'AuthenticatedUserName', None)
       event_data.client_name = record_values.get('ClientName', None)
       event_data.role_identifier = record_values.get('RoleGuid', None)
+      event_data.insert_time = self._GetFiletimeRecordValue(
+          record_values, 'InsertDate')
       event_data.role_name = self._role_mappings.get(
           event_data.role_identifier, 'Unknown')
       event_data.source_ip_address = record_values.get('Address', None)
       event_data.tenant_identifier = record_values.get('TenantId', None)
       event_data.total_accesses = record_values.get('TotalAccesses', None)
 
-      last_access_timestamp = record_values.get('LastAccess', None)
-      if last_access_timestamp:
-        date_time = dfdatetime_filetime.Filetime(
-            timestamp=last_access_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      insert_date_timestamp = record_values.get('InsertDate', None)
-      if insert_date_timestamp:
-        date_time = dfdatetime_filetime.Filetime(
-            timestamp=insert_date_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_FIRST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParseRoleAccessTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -304,23 +314,15 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingRoleAccessEventsData()
+      event_data.first_seen_time = self._GetFiletimeRecordValue(
+          record_values, 'FirstSeen')
+      event_data.last_seen_time = self._GetFiletimeRecordValue(
+          record_values, 'LastSeen')
       event_data.role_identifier = record_values.get('RoleGuid', None)
       event_data.role_name = self._role_mappings.get(
           event_data.role_identifier, 'Unknown')
 
-      first_seen_timestamp = record_values.get('FirstSeen', None)
-      if first_seen_timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=first_seen_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_FIRST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      last_seen_timestamp = record_values.get('LastSeen', None)
-      if last_seen_timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=last_seen_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParseDNSTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -358,13 +360,10 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       event_data = UserAccessLoggingDNSEventData()
       event_data.hostname = record_values.get('HostName', None)
       event_data.ip_address = record_values.get('Address', None)
+      event_data.last_seen_time = self._GetFiletimeRecordValue(
+          record_values, 'LastSeen')
 
-      last_seen_timestamp = record_values.get('LastSeen', None)
-      if last_seen_timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=last_seen_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_SEEN)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def ParseVirtualMachinesTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
@@ -401,22 +400,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
 
       event_data = UserAccessLoggingVirtualMachinesEventData()
       event_data.bios_identifier = record_values.get('BIOSGuid', None)
+      event_data.creation_time = self._GetFiletimeRecordValue(
+          record_values, 'CreationTime')
+      event_data.last_active_time = self._GetFiletimeRecordValue(
+          record_values, 'LastSeenActive')
       event_data.serial_number = record_values.get('SerialNumber', None)
       event_data.vm_identifier = record_values.get('VMGuid', None)
 
-      creation_timestamp = record_values.get('CreationTime', None)
-      if creation_timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=creation_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      last_seen_timestamp = record_values.get('LastSeenActive', None)
-      if last_seen_timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=last_seen_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_LAST_ACTIVE)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _GetSystemIdentityDatabase(self, parser_mediator):
     """Locate SystemIdentity.mdb.
@@ -560,6 +551,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingSystemIdentityEventdata()
+      event_data.creation_time = self._GetFiletimeRecordValue(
+          record_values, 'CreationTime')
       event_data.operating_system_build = record_values.get(
           'OSBuildNumber', None)
       event_data.system_dns_hostname = record_values.get(
@@ -567,13 +560,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       event_data.system_domain_name = record_values.get(
           'SystemDomainName', None)
 
-      creation_timestamp = record_values.get('CreationTime', None)
-      if creation_timestamp:
-        date_time = dfdatetime_filetime.Filetime(
-            timestamp=creation_timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_CREATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
 
 esedb.ESEDBParser.RegisterPlugin(UserAccessLoggingESEDBPlugin)

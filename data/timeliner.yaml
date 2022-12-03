@@ -230,6 +230,16 @@ attribute_mappings:
   description: 'Last Visited Time'
 place_holder_event: true
 ---
+data_type: 'cups:ipp:event'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'docker:container:configuration'
 attribute_mappings:
 - name: 'creation_time'
@@ -1259,6 +1269,42 @@ attribute_mappings:
   description: 'Scheduled to end'
 - name: 'start_time'
   description: 'Scheduled to start'
+place_holder_event: true
+---
+data_type: 'windows:user_access_logging:clients'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'insert_time'
+  description: 'First Access Time'
+place_holder_event: true
+---
+data_type: 'windows:user_access_logging:dns'
+attribute_mappings:
+- name: 'last_seen_time'
+  description: 'Last Seen Time'
+place_holder_event: true
+---
+data_type: 'windows:user_access_logging:role_access'
+attribute_mappings:
+- name: 'first_seen_time'
+  description: 'First Seen Time'
+- name: 'last_seen_time'
+  description: 'Last Seen Time'
+place_holder_event: true
+---
+data_type: 'windows:user_access_logging:system_identity'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
+data_type: 'windows:user_access_logging:virtual_machines'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'last_active_time'
+  description: 'Last Active Time'
 place_holder_event: true
 ---
 data_type: 'windows:volume:creation'

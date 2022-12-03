@@ -7,7 +7,6 @@ import unittest
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.path import fake_path_spec
 
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import cups_ipp
 
@@ -312,8 +311,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -329,6 +329,10 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
 
@@ -340,38 +344,24 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
     expected_event_values = {
         'application': 'LibreOffice',
         'computer_name': 'localhost',
         'copies': 1,
+        'creation_time': '2013-11-03T18:07:21+00:00',
         'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03T18:07:21+00:00',
         'doc_type': 'application/pdf',
+        'end_time': '2013-11-03T18:07:32+00:00',
         'job_id': 'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a',
         'job_name': 'Assignament 1',
         'owner': 'Joaquin Moreno Garijo',
         'printer_id': 'RHULBW',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+        'start_time': '2013-11-03T18:07:21+00:00',
         'uri': 'ipp://localhost:631/printers/RHULBW',
         'user': 'moxilo'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03T18:07:21+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START}
-
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'cups:ipp:event',
-        'date_time': '2013-11-03T18:07:32+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_END}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
