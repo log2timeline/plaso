@@ -37,11 +37,6 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
       test_timeliner_file._ReadTimelinerDefinition({})
 
     with self.assertRaises(errors.ParseError):
-      test_timeliner_file._ReadTimelinerDefinition({
-          'data_type': 'test:fs:stat',
-          'attribute_mappings': []})
-
-    with self.assertRaises(errors.ParseError):
       test_timeliner_file._ReadTimelinerDefinition({'bogus': 'error'})
 
   def testReadFromFileObject(self):
@@ -55,7 +50,7 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
       timeliner_definitions = list(test_timeliner_file._ReadFromFileObject(
           file_object))
 
-    self.assertEqual(len(timeliner_definitions), 2)
+    self.assertEqual(len(timeliner_definitions), 3)
 
   def testReadFromFile(self):
     """Tests the ReadFromFile function."""
@@ -67,7 +62,7 @@ class YAMLTimelinerConfigurationFileTest(shared_test_lib.BaseTestCase):
     timeliner_definitions = list(test_timeliner_file.ReadFromFile(
         test_file_path))
 
-    self.assertEqual(len(timeliner_definitions), 2)
+    self.assertEqual(len(timeliner_definitions), 3)
 
     self.assertEqual(timeliner_definitions[0].data_type, 'test:fs:stat')
 
