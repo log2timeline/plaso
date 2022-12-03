@@ -21,9 +21,6 @@ class IOSAppPrivacPluginTest(test_lib.JSONLPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 72)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 72)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)

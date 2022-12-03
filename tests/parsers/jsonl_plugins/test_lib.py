@@ -70,8 +70,4 @@ class JSONLPluginTestCase(test_lib.ParserTestCase):
 
     plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer

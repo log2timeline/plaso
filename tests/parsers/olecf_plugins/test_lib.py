@@ -73,8 +73,4 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
     finally:
       olecf_file.close()
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer

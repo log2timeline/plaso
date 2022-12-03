@@ -3,13 +3,9 @@
 
 import pyfwnt
 
-from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import ole_automation_date as dfdatetime_ole_automation_date
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
@@ -43,6 +39,8 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     foreground_number_for_write_operations (int): foreground number of write
         operations.
     identifier (int): record identifier.
+    recorded_time (dfdatetime.DateTimeValues): date and time the sample was
+        recorded.
     user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
@@ -70,6 +68,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     self.foreground_number_for_read_operations = None
     self.foreground_number_for_write_operations = None
     self.identifier = None
+    self.recorded_time = None
     self.user_identifier = None
 
 
@@ -83,8 +82,12 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
     application (str): application.
     identifier (int): record identifier.
     interface_luid (int): interface locally unique identifier (LUID).
+    last_connected_time (dfdatetime.DateTimeValues): last date and time
+        the connection was established.
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
+    recorded_time (dfdatetime.DateTimeValues): date and time the sample was
+        recorded.
     user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
@@ -98,6 +101,7 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
     self.application = None
     self.identifier = None
     self.interface_luid = None
+    self.last_connected_time = None
     self.l2_profile_flags = None
     self.l2_profile_identifier = None
     self.user_identifier = None
@@ -117,6 +121,8 @@ class SRUMNetworkDataUsageEventData(events.EventData):
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
+    recorded_time (dfdatetime.DateTimeValues): date and time the sample was
+        recorded.
     user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
@@ -251,7 +257,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (ESEDBCache): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
       database (ESEDatabase): ESE database.
@@ -274,6 +280,23 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     return identifier_mappings
 
+  def _GetOLEAutomationDateRecordValue(self, record_values, value_name):
+    """Retrieves an OLE automation date record value.
+
+    Args:
+      record_values (dict[str,object]): values per column name.
+      value_name (str): name of the record value.
+
+    Returns:
+      dfdatetime.OLEAutomationDate: date and time or None if not set.
+    """
+    timestamp = record_values.get(value_name, None)
+    if not timestamp:
+      return None
+
+    return dfdatetime_ole_automation_date.OLEAutomationDate(
+        timestamp=timestamp)
+
   def _ParseGUIDTable(
       self, parser_mediator, cache, database, esedb_table, values_map,
       event_data_class):
@@ -281,7 +304,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (ESEDBCache): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
       database (ESEDatabase): ESE database.
@@ -326,24 +349,14 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
         setattr(event_data, attribute_name, record_value)
 
-      timestamp = record_values.get('TimeStamp')
-      if timestamp:
-        date_time = dfdatetime_ole_automation_date.OLEAutomationDate(
-            timestamp=timestamp)
-        timestamp_description = definitions.TIME_DESCRIPTION_SAMPLE
-      else:
-        date_time = dfdatetime_semantic_time.NotSet()
-        timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
+      event_data.recorded_time = self._GetOLEAutomationDateRecordValue(
+          record_values, 'TimeStamp')
 
-      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      if 'ConnectStartTime' in record_values:
+        event_data.last_connected_time = self._GetFiletimeRecordValue(
+            record_values, 'ConnectStartTime')
 
-      timestamp = record_values.get('ConnectStartTime')
-      if timestamp:
-        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseIdentifierMappingRecord(
       self, parser_mediator, table_name, record_index, esedb_record):
@@ -351,7 +364,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       table_name (str): name of the table the record is stored in.
       record_index (int): ESE record index.
       esedb_record (pyesedb.record): ESE record.
@@ -407,7 +420,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       esedb_table (pyesedb.table): table.
 
     Returns:
@@ -441,7 +454,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
       database (Optional[ESEDatabase]): ESE database.
@@ -459,7 +472,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
       database (Optional[ESEDatabase]): ESE database.
@@ -476,7 +489,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache (Optional[ESEDBCache]): cache, which contains information about
           the identifiers stored in the SruDbIdMapTable table.
       database (Optional[ESEDatabase]): ESE database.

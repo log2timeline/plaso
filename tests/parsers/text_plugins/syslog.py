@@ -54,17 +54,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Check timeliner output.
-    # Note that this test can be flaky due to base year determination remove
-    # check of number_of_events from parser tests after completion of event
-    # and event data migration.
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 16)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'timelining_warning')
-    self.assertEqual(number_of_warnings, 1)
-
   def testProcessChromeOS(self):
     """Tests the Process function with a ChromeOS syslog file."""
     plugin = syslog.SyslogTextPlugin()
@@ -73,9 +62,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 8)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 8)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -105,9 +91,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 9)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -133,9 +116,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 2)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 2)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -163,9 +143,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 5)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 5)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -195,9 +172,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 9)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -225,9 +199,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 9)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -257,9 +228,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 8)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 8)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -286,9 +254,6 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 9)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

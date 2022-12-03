@@ -65,8 +65,4 @@ class CompoundZIPPluginTestCase(test_lib.ParserTestCase):
 
       plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer
