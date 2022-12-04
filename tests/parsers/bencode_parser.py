@@ -22,13 +22,13 @@ class BencodeTest(test_lib.ParserTestCase):
     number_of_plugins = len(parser._plugin_classes)
 
     parser.EnablePlugins([])
-    self.assertEqual(len(parser._plugins), 0)
+    self.assertEqual(len(parser._plugins_per_name), 0)
 
     parser.EnablePlugins(parser.ALL_PLUGINS)
-    self.assertEqual(len(parser._plugins), number_of_plugins)
+    self.assertEqual(len(parser._plugins_per_name), number_of_plugins)
 
     parser.EnablePlugins(['bencode_transmission'])
-    self.assertEqual(len(parser._plugins), 1)
+    self.assertEqual(len(parser._plugins_per_name), 1)
 
 
 if __name__ == '__main__':

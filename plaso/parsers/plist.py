@@ -152,7 +152,7 @@ class PlistParser(interface.FileObjectParser):
               filename, exception))
 
     found_matching_plugin = False
-    for plugin in self._plugins:
+    for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:
         break
 
@@ -170,11 +170,11 @@ class PlistParser(interface.FileObjectParser):
       if (not path_filter_match or
           not top_level_keys.issuperset(plugin.PLIST_KEYS)):
         logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
+            display_name, plugin_name))
         continue
 
       logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-          display_name, plugin.NAME))
+          display_name, plugin_name))
 
       try:
         plugin.UpdateChainAndProcess(
@@ -184,7 +184,7 @@ class PlistParser(interface.FileObjectParser):
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
             'plugin: {0:s} unable to parse plist file with error: '
-            '{1!s}').format(plugin.NAME, exception))
+            '{1!s}').format(plugin_name, exception))
 
     if not found_matching_plugin and self._default_plugin:
       self._default_plugin.UpdateChainAndProcess(

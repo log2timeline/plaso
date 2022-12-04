@@ -50,7 +50,7 @@ class CompoundZIPParser(interface.FileObjectParser):
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 
-    for plugin in self._plugins:
+    for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:
         break
 
@@ -59,11 +59,11 @@ class CompoundZIPParser(interface.FileObjectParser):
 
       if not plugin.CheckRequiredPaths(zip_file):
         logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
+            display_name, plugin_name))
         continue
 
       logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-          display_name, plugin.NAME))
+          display_name, plugin_name))
 
       try:
         plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
@@ -71,7 +71,7 @@ class CompoundZIPParser(interface.FileObjectParser):
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
             'plugin: {0:s} unable to parse ZIP file: {1:s} with error: '
-            '{2!s}').format(plugin.NAME, display_name, exception))
+            '{2!s}').format(plugin_name, display_name, exception))
 
     zip_file.close()
 

@@ -62,7 +62,7 @@ class JSONLParser(interface.FileObjectParser):
     if not json_dict:
       raise errors.WrongParser('Not a JSON-L file, missing JSON.')
 
-    for plugin in self._plugins:
+    for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:
         break
 
@@ -74,7 +74,7 @@ class JSONLParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse JSON-L file with error: '
-              '{1!s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin_name, exception))
 
 
 manager.ParsersManager.RegisterParser(JSONLParser)

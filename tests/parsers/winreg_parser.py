@@ -59,14 +59,14 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     number_of_plugins = len(parser._plugin_classes)
 
     parser.EnablePlugins([])
-    self.assertEqual(len(parser._plugins), 0)
+    self.assertEqual(len(parser._plugins_per_name), 0)
 
     parser.EnablePlugins(parser.ALL_PLUGINS)
     # Extract 1 for the default plugin.
-    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+    self.assertEqual(len(parser._plugins_per_name), number_of_plugins - 1)
 
     parser.EnablePlugins(['appcompatcache'])
-    self.assertEqual(len(parser._plugins), 1)
+    self.assertEqual(len(parser._plugins_per_name), 1)
 
   def testParse(self):
     """Test the parse function on a Windows NT Registry file."""
@@ -105,6 +105,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
     parser = winreg_parser.WinRegistryParser()
+    parser.EnablePlugins(parser.ALL_PLUGINS)
     storage_writer = self._ParseFile(['NTUSER.DAT'], parser)
 
     parser_chains = self._GetParserChains(storage_writer)
@@ -133,6 +134,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
     parser = winreg_parser.WinRegistryParser()
+    parser.EnablePlugins(parser.ALL_PLUGINS)
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
     parser_chains = self._GetParserChains(storage_writer)
@@ -162,6 +164,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self._SkipIfPathNotExists(artifacts_path)
 
     parser = winreg_parser.WinRegistryParser()
+    parser.EnablePlugins(parser.ALL_PLUGINS)
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     artifact_filter_names = ['TestRegistryKey', 'TestRegistryValue']
