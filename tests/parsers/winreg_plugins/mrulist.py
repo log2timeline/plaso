@@ -101,9 +101,6 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 1)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -112,17 +109,16 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'windows:registry:mrulist',
-        'date_time': '2012-08-28T09:23:49.0020310+00:00',
         'entries': (
             'Index: 1 [MRU Value a]: Some random text here '
             'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-            'Index: 3 [MRU Value b]: c:/evil.exe')}
+            'Index: 3 [MRU Value b]: c:/evil.exe'),
+        'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class TestMRUListShellItemListWindowsRegistryPlugin(
@@ -197,9 +193,6 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 5)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 5)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

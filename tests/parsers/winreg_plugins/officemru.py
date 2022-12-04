@@ -76,9 +76,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 6)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 6)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
