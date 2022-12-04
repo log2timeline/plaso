@@ -17,6 +17,10 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['EventTranscript.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2526)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2526)
 
@@ -28,8 +32,6 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'application_install_date': None,
         'application_name': None,
@@ -37,7 +39,6 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         'application_version': None,
         'compressed_payload_size': 50,
         'data_type': 'windows:diagnosis:eventtranscript',
-        'date_time': '2021-08-17T11:27:06.2573347+00:00',
         'event_keywords': 0x800000000000,
         'event_name_hash': 2681079708,
         'event_name': 'TelClientSyntheticScenario.AcceptingScenario_0',
@@ -48,10 +49,12 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         'name': 'TelClientSyntheticScenario.AcceptingScenario_0',
         'producer_identifier': 1,
         'provider_group_identifier': 1,
+        'recorded_time': '2021-08-17T11:27:06.2573347+00:00',
         'user_identifier': None,
         'version': '4.0'}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

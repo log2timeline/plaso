@@ -6,8 +6,6 @@ import json
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -31,6 +29,8 @@ class WindowsEventTranscriptEventData(events.EventData):
     producer_identifier (int): Identifier of the EventTranscript event producer.
         provider group.
     provider_group_identifier (int): Identifier of the EventTranscript event
+    recorded_time (dfdatetime.DateTimeValues): date and time the entry
+        was recorded.
     user_identifier (str): Windows Security identifier (SID) of a user account.
     version (str): Payload version
   """
@@ -55,6 +55,7 @@ class WindowsEventTranscriptEventData(events.EventData):
     self.name = None
     self.producer_identifier = None
     self.provider_group_identifier = None
+    self.recorded_time = None
     self.user_identifier = None
     self.version = None
 
@@ -126,49 +127,69 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
           'FOREIGN KEY(producer_id) '
           'REFERENCES producers(producer_id) ON DELETE CASCADE)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.Filetime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_filetime.Filetime(timestamp=timestamp)
+
   def ParseEventTranscriptRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses EventTranscript row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     event_data = WindowsEventTranscriptEventData()
-    # If the user identifier is an empty string set it to None.
-    event_data.user_identifier = self._GetRowValue(
-        query_hash, row, 'sid') or None
+    event_data.compressed_payload_size = self._GetRowValue(
+        query_hash, row, 'compressed_payload_size')
+    event_data.event_keywords = self._GetRowValue(
+        query_hash, row, 'event_keywords')
     event_data.event_name = self._GetRowValue(
         query_hash, row, 'full_event_name')
     event_data.event_name_hash = self._GetRowValue(
         query_hash, row, 'full_event_name_hash')
-    event_data.event_keywords = self._GetRowValue(
-        query_hash, row, 'event_keywords')
-    event_data.is_core = self._GetRowValue(
-        query_hash, row, 'is_core')
-    event_data.provider_group_identifier = self._GetRowValue(
-        query_hash, row, 'provider_group_id')
-    event_data.logging_binary_name = self._GetRowValue(
-        query_hash, row, 'logging_binary_name')
     event_data.friendly_logging_binary_name = self._GetRowValue(
         query_hash, row, 'friendly_logging_binary_name')
-    event_data.compressed_payload_size = self._GetRowValue(
-        query_hash, row, 'compressed_payload_size')
+    event_data.is_core = self._GetRowValue(
+        query_hash, row, 'is_core')
+    event_data.logging_binary_name = self._GetRowValue(
+        query_hash, row, 'logging_binary_name')
     event_data.producer_identifier = self._GetRowValue(
         query_hash, row, 'producer_id')
+    event_data.provider_group_identifier = self._GetRowValue(
+        query_hash, row, 'provider_group_id')
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
+    # If the user identifier is an empty string set it to None.
+    event_data.user_identifier = self._GetRowValue(
+        query_hash, row, 'sid') or None
 
     # Parse the payload.
     payload = json.loads(self._GetRowValue(query_hash, row, 'payload'))
     payload_data = payload['data']
     payload_name = payload['name']
 
-    event_data.version = payload['ver']
-    event_data.name = payload_name
     event_data.ikey = payload['iKey']
+    event_data.name = payload_name
+    event_data.version = payload['ver']
 
     # TODO: add support for
     # data = json.dumps(payload_data, separators=(',',':'))
@@ -187,14 +208,9 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
     elif payload_name == 'Win32kTraceLogging.AppInteractivitySummary':
       event_data.application_version = payload_data['AppVersion']
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    if timestamp:
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_RECORDED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
     # TODO: generate event for: payload['time']
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(EventTranscriptPlugin)

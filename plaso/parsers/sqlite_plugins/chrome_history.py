@@ -163,7 +163,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
       cache (SQLiteCache): cache which contains cached results from querying
@@ -379,7 +379,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -997,7 +997,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
