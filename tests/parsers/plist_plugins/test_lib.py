@@ -83,8 +83,4 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     plugin.UpdateChainAndProcess(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer

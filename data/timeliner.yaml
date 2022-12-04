@@ -587,6 +587,9 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'macos:launchd:entry'
+place_holder_event: true
+---
 data_type: 'macos:notes:entry'
 attribute_mappings:
 - name: 'creation_time'
@@ -605,6 +608,14 @@ data_type: 'macos:securityd_log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'macos:software_updata:entry'
+attribute_mappings:
+- name: 'full_update_time'
+  description: 'Full Update Time'
+- name: 'update_time'
+  description: 'Update Time'
 place_holder_event: true
 ---
 data_type: 'macos:tcc_entry'

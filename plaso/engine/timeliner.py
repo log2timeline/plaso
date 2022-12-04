@@ -262,8 +262,10 @@ class EventDataTimeliner(object):
     """
     self.number_of_produced_events = 0
 
-    attribute_mappings = self._attribute_mappings.get(event_data.data_type)
-    if not attribute_mappings:
+    attribute_mappings = self._attribute_mappings.get(
+        event_data.data_type) or {}
+    if (not attribute_mappings and
+        event_data.data_type not in self._place_holder_event):
       return
 
     if event_data.parser:

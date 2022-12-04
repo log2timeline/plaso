@@ -11,3 +11,7 @@ attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
 place_holder_event: false
+---
+data_type: 'test:no_time:entry'
+attribute_mappings:
+place_holder_event: true

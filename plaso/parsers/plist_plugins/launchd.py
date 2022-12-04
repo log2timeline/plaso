@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS launchd plist files."""
 
-from dfdatetime import semantic_time as dfdatetime_semantic_time
-
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -87,11 +83,7 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
     event_data.program = program
     event_data.user_name = top_level.get('UserName')
 
-    date_time = dfdatetime_semantic_time.NotSet()
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(MacOSLaunchdPlistPlugin)
