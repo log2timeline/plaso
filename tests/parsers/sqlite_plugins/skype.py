@@ -78,7 +78,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'source': 'gen.beringer <Gen Beringer>',
         'transferred_filename': 'secret-project.pdf'}
 
-    self.CheckEventValues(storage_writer, events[17], expected_event_values)
+    self.CheckEventValues(storage_writer, events[1], expected_event_values)
 
     # Test SMS event.
     expected_event_values = {
@@ -89,7 +89,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             'If you want I can copy some documents for you, if you can pay '
             'it... ;)')}
 
-    self.CheckEventValues(storage_writer, events[16], expected_event_values)
+    self.CheckEventValues(storage_writer, events[23], expected_event_values)
 
     # Test file event.
     expected_event_values = {
@@ -102,7 +102,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'transferred_filepath': '/Users/gberinger/Desktop/secret-project.pdf',
         'transferred_filesize': 69986}
 
-    self.CheckEventValues(storage_writer, events[18], expected_event_values)
+    self.CheckEventValues(storage_writer, events[2], expected_event_values)
 
     # Test chat event.
     expected_event_values = {
@@ -113,7 +113,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'title': 'European Competitor | need to know if you got it..',
         'to_account': 'european.bbq.competitor'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    self.CheckEventValues(storage_writer, events[9], expected_event_values)
 
     # Test chat room event.
     expected_event_values = {
@@ -124,7 +124,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'title': 'European Competitor, Echo123',
         'to_account': 'gen.beringer, echo123'}
 
-    self.CheckEventValues(storage_writer, events[14], expected_event_values)
+    self.CheckEventValues(storage_writer, events[22], expected_event_values)
 
     # Test call event.
     expected_event_values = {
@@ -135,7 +135,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'user_start_call': False,
         'video_conference': False}
 
-    self.CheckEventValues(storage_writer, events[22], expected_event_values)
+    self.CheckEventValues(storage_writer, events[5], expected_event_values)
 
 
 if __name__ == '__main__':

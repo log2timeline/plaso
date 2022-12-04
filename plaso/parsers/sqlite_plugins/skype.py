@@ -9,29 +9,6 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class SkypeChatEventData(events.EventData):
-  """Skype chat event data.
-
-  Attributes:
-    from_account (str): from display name and the author.
-    query (str): SQL query that was used to obtain the event data.
-    text (str): body XML.
-    title (str): title.
-    to_account (str): accounts, excluding the author, of the conversation.
-  """
-
-  DATA_TYPE = 'skype:event:chat'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.from_account = None
-    self.query = None
-    self.text = None
-    self.title = None
-    self.to_account = None
-
-
 class SkypeAccountEventData(events.EventData):
   """Skype account event data.
 
@@ -56,25 +33,6 @@ class SkypeAccountEventData(events.EventData):
     self.offset = None
     self.query = None
     self.username = None
-
-
-class SkypeSMSEventData(events.EventData):
-  """Skype SMS event data.
-
-  Attributes:
-    number (str): phone number where the SMS was sent.
-    query (str): SQL query that was used to obtain the event data.
-    text (str): text (SMS body) that was sent.
-  """
-
-  DATA_TYPE = 'skype:event:sms'
-
-  def __init__(self):
-    """Initialize event data."""
-    super(SkypeSMSEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.number = None
-    self.query = None
-    self.text = None
 
 
 class SkypeCallEventData(events.EventData):
@@ -103,6 +61,54 @@ class SkypeCallEventData(events.EventData):
     self.src_call = None
     self.user_start_call = None
     self.video_conference = None
+
+
+class SkypeChatEventData(events.EventData):
+  """Skype chat event data.
+
+  Attributes:
+    from_account (str): from display name and the author.
+    query (str): SQL query that was used to obtain the event data.
+    recorded_time (dfdatetime.DateTimeValues): date and time the chat
+        was recorded.
+    text (str): body XML.
+    title (str): title.
+    to_account (str): accounts, excluding the author, of the conversation.
+  """
+
+  DATA_TYPE = 'skype:event:chat'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.from_account = None
+    self.query = None
+    self.recorded_time = None
+    self.text = None
+    self.title = None
+    self.to_account = None
+
+
+class SkypeSMSEventData(events.EventData):
+  """Skype SMS event data.
+
+  Attributes:
+    number (str): phone number where the SMS was sent.
+    query (str): SQL query that was used to obtain the event data.
+    recorded_time (dfdatetime.DateTimeValues): date and time the SMS
+        was recorded.
+    text (str): text (SMS body) that was sent.
+  """
+
+  DATA_TYPE = 'skype:event:sms'
+
+  def __init__(self):
+    """Initialize event data."""
+    super(SkypeSMSEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.number = None
+    self.query = None
+    self.recorded_time = None
+    self.text = None
 
 
 class SkypeTransferFileEventData(events.EventData):
@@ -465,6 +471,24 @@ class SkypePlugin(interface.SQLitePlugin):
           'INTEGER, size INTEGER, path TEXT, failures INTEGER, vflags '
           'INTEGER, xmsg TEXT, extprop_hide_from_history INTEGER)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def ParseAccountInformation(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses account information.
@@ -527,73 +551,6 @@ class SkypePlugin(interface.SQLitePlugin):
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Last Used')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  def ParseChat(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a chat message.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      query (str): query that created the row.
-      row (sqlite3.Row): row resulting from query.
-    """
-    query_hash = hash(query)
-
-    participants = self._GetRowValue(query_hash, row, 'participants')
-    author = self._GetRowValue(query_hash, row, 'author')
-    dialog_partner = self._GetRowValue(query_hash, row, 'dialog_partner')
-    from_displayname = self._GetRowValue(query_hash, row, 'from_displayname')
-
-    accounts = []
-    participants = participants.split(' ')
-    for participant in participants:
-      if participant != author:
-        accounts.append(participant)
-
-    to_account = ', '.join(accounts)
-    if not to_account:
-      to_account = dialog_partner or 'Unknown User'
-
-    from_account = '{0:s} <{1:s}>'.format(from_displayname, author)
-
-    event_data = SkypeChatEventData()
-    event_data.from_account = from_account
-    event_data.query = query
-    event_data.text = self._GetRowValue(query_hash, row, 'body_xml')
-    event_data.title = self._GetRowValue(query_hash, row, 'title')
-    event_data.to_account = to_account
-
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Chat from Skype')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses an SMS.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      query (str): query that created the row.
-      row (sqlite3.Row): row resulting from query.
-    """
-    query_hash = hash(query)
-
-    phone_number = self._GetRowValue(query_hash, row, 'dstnum_sms')
-    if phone_number:
-      phone_number = phone_number.replace(' ', '')
-
-    event_data = SkypeSMSEventData()
-    event_data.number = phone_number
-    event_data.query = query
-    event_data.text = self._GetRowValue(query_hash, row, 'msg_sms')
-
-    timestamp = self._GetRowValue(query_hash, row, 'time_sms')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'SMS from Skype')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseCall(self, parser_mediator, query, row, **unused_kwargs):
@@ -682,6 +639,45 @@ class SkypePlugin(interface.SQLitePlugin):
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def ParseChat(self, parser_mediator, query, row, **unused_kwargs):
+    """Parses a chat message.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      query (str): query that created the row.
+      row (sqlite3.Row): row resulting from query.
+    """
+    query_hash = hash(query)
+
+    participants = self._GetRowValue(query_hash, row, 'participants')
+    author = self._GetRowValue(query_hash, row, 'author')
+    dialog_partner = self._GetRowValue(query_hash, row, 'dialog_partner')
+    from_displayname = self._GetRowValue(query_hash, row, 'from_displayname')
+
+    accounts = []
+    participants = participants.split(' ')
+    for participant in participants:
+      if participant != author:
+        accounts.append(participant)
+
+    to_account = ', '.join(accounts)
+    if not to_account:
+      to_account = dialog_partner or 'Unknown User'
+
+    from_account = '{0:s} <{1:s}>'.format(from_displayname, author)
+
+    event_data = SkypeChatEventData()
+    event_data.from_account = from_account
+    event_data.query = query
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
+    event_data.text = self._GetRowValue(query_hash, row, 'body_xml')
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.to_account = to_account
+
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseFileTransfer(
       self, parser_mediator, query, row, cache=None, database=None,
@@ -797,6 +793,30 @@ class SkypePlugin(interface.SQLitePlugin):
         event = time_events.DateTimeValuesEvent(
             date_time, 'File transfer from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
+    """Parses a SMS.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      query (str): query that created the row.
+      row (sqlite3.Row): row resulting from query.
+    """
+    query_hash = hash(query)
+
+    phone_number = self._GetRowValue(query_hash, row, 'dstnum_sms')
+    if phone_number:
+      phone_number = phone_number.replace(' ', '')
+
+    event_data = SkypeSMSEventData()
+    event_data.number = phone_number
+    event_data.query = query
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'time_sms')
+    event_data.text = self._GetRowValue(query_hash, row, 'msg_sms')
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(SkypePlugin)

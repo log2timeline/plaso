@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import android_tango
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -19,6 +18,10 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_profile.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 57)
+
     # We should have 115 events in total with no warnings.
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 115)
@@ -31,40 +34,23 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
-    # Test a contact last active event.
     expected_event_values = {
+        'asccess_time': None,
         'birthday': '1980-10-01',
         'data_type': 'android:tango:contact',
-        'date_time': '2016-01-15T13:21:45.624+00:00',
         'distance': 39.04880905,
         'first_name': 'Rouel',
         'friend_request_message': 'I am following you on Tango',
+        'friend_request_time': '2016-01-15T14:35:20.436+00:00',
         'friend_request_type': 'outRequest',
         'gender': 'male',
         'is_friend': False,
+        'last_active_time': '2016-01-15T13:21:45.624+00:00',
         'last_name': 'Henry',
-        'status': 'Praying!',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACTIVE}
+        'status': 'Praying!'}
 
-    self.CheckEventValues(storage_writer, events[14], expected_event_values)
-
-    # Test a contact last access event.
-    expected_event_values = {
-        'data_type': 'android:tango:contact',
-        'date_time': '2016-01-15T14:35:20.633+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_ACCESS}
-
-    self.CheckEventValues(storage_writer, events[57], expected_event_values)
-
-    # Test a contact request sent event.
-    expected_event_values = {
-        'data_type': 'android:tango:contact',
-        'date_time': '2016-01-15T14:35:20.436+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
-
-    self.CheckEventValues(storage_writer, events[56], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class AndroidTangoTCTest(test_lib.SQLitePluginTestCase):
@@ -75,6 +61,10 @@ class AndroidTangoTCTest(test_lib.SQLitePluginTestCase):
     plugin = android_tango.AndroidTangoTCPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['tango_android_tc.db'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 25)
 
     # We should have 43 events in total with no warnings.
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
@@ -88,36 +78,24 @@ class AndroidTangoTCTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetSortedEvents())
-
-    # Test the a conversation event.
+    # Test the a conversation entry.
     expected_event_values = {
         'conversation_identifier': 'DyGWr_010wQM_ozkIe-9Ww',
-        'data_type': 'android:tango:conversation',
-        'date_time': 'Not set',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
+        'data_type': 'android:tango:conversation'}
 
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test a message creation event.
+    # Test a message creation entry.
     expected_event_values = {
         'data_type': 'android:tango:message',
-        'date_time': '2016-01-15T14:41:33.027+00:00',
+        'creation_time': '2016-01-15T14:41:33.027+00:00',
         'direction': 2,
         'message_identifier': 16777224,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}
+        'sent_time': '2016-01-15T14:41:34.238+00:00'}
 
-    self.CheckEventValues(storage_writer, events[21], expected_event_values)
-
-    # Test a message sent event.
-    expected_event_values = {
-        'data_type': 'android:tango:message',
-        'date_time': '2016-01-15T14:41:34.238+00:00',
-        'direction': 2,
-        'message_identifier': 16777224,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_SENT}
-
-    self.CheckEventValues(storage_writer, events[22], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
