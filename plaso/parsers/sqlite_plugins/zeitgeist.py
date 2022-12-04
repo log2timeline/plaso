@@ -4,8 +4,6 @@
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -17,6 +15,8 @@ class ZeitgeistActivityEventData(events.EventData):
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
+    recorded_time (dfdatetime.DateTimeValues): date and time the entry
+        was recorded.
     subject_uri (str): subject URI.
   """
 
@@ -27,6 +27,7 @@ class ZeitgeistActivityEventData(events.EventData):
     super(ZeitgeistActivityEventData, self).__init__(data_type=self.DATA_TYPE)
     self.offset = None
     self.query = None
+    self.recorded_time = None
     self.subject_uri = None
 
 
@@ -111,13 +112,31 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
           'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR '
           'UNIQUE )')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
   def ParseZeitgeistEventRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a zeitgeist event row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -126,13 +145,11 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
     event_data = ZeitgeistActivityEventData()
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
     event_data.subject_uri = self._GetRowValue(query_hash, row, 'subj_uri')
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_UNKNOWN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ZeitgeistActivityDatabasePlugin)

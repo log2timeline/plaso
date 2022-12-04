@@ -6,8 +6,6 @@ import json
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -16,16 +14,18 @@ class WindowsTimelineGenericEventData(events.EventData):
   """Windows Timeline database generic event data.
 
   Attributes:
-    package_identifier (str): the package ID or path to the executable run.
-        Depending on the program, this either looks like a path
-        (for example, c:\\python34\\python.exe) or like a package name
-        (for example Docker.DockerForWindows.Settings).
+    application_display_name (str): a more human-friendly version of the
+        package_identifier, such as 'Docker for Windows' or 'Microsoft Store'.
     description (str): this is an optional field, used to describe the action in
         the timeline view, and is usually populated with the path of the file
         currently open in the program described by package_identifier.
         Otherwise None.
-    application_display_name (str): a more human-friendly version of the
-        package_identifier, such as 'Docker for Windows' or 'Microsoft Store'.
+    package_identifier (str): the package ID or path to the executable run.
+        Depending on the program, this either looks like a path
+        (for example, c:\\python34\\python.exe) or like a package name
+        (for example Docker.DockerForWindows.Settings).
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the activity.
   """
 
   DATA_TYPE = 'windows:timeline:generic'
@@ -34,9 +34,10 @@ class WindowsTimelineGenericEventData(events.EventData):
     """Initialize event data"""
     super(WindowsTimelineGenericEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.package_identifier = None
-    self.description = None
     self.application_display_name = None
+    self.description = None
+    self.package_identifier = None
+    self.start_time = None
 
 
 class WindowsTimelineUserEngagedEventData(events.EventData):
@@ -46,13 +47,15 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
   for.
 
   Attributes:
+    active_duration_seconds (int): the number of seconds the user spent
+        interacting with the program.
     package_identifier (str): the package ID or location of the executable
         the user interacted with.
     reporting_app (str): the name of the application that reported the user's
         interaction. This is the name of a monitoring tool, for example
         "ShellActivityMonitor".
-    active_duration_seconds (int): the number of seconds the user spent
-        interacting with the program.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the activity.
   """
 
   DATA_TYPE = 'windows:timeline:user_engaged'
@@ -61,9 +64,10 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
     """Initialize event data"""
     super(WindowsTimelineUserEngagedEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.active_duration_seconds = None
     self.package_identifier = None
     self.reporting_app = None
-    self.active_duration_seconds = None
+    self.start_time = None
 
 
 class WindowsTimelinePlugin(interface.SQLitePlugin):
@@ -188,29 +192,52 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
           'CREATE TABLE [Metadata]([Key] TEXT PRIMARY KEY NOT NULL, [Value] '
           'TEXT)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def ParseGenericRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a generic windows timeline row.
 
       Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
-    event_data = WindowsTimelineGenericEventData()
-
     # Payload is JSON serialized as binary data in a BLOB field, with the text
     # encoded as UTF-8.
     payload_json_bytes = bytes(self._GetRowValue(query_hash, row, 'Payload'))
     payload_json_string = payload_json_bytes.decode('utf-8')
+    payload = json.loads(payload_json_string)
+
+    application_display_name = payload.get('appDisplayName', None)
+    if not application_display_name:
+      # Fall back to displayText if appDisplayName isn't available
+      application_display_name = payload.get('displayText', None)
+
     # AppId is JSON stored as unicode text.
     appid_entries_string = self._GetRowValue(query_hash, row, 'AppId')
-
-    payload = json.loads(payload_json_string)
     appid_entries = json.loads(appid_entries_string)
+
+    package_identifier = None
 
     # Attempt to populate the package_identifier field by checking each of
     # these fields in the AppId JSON.
@@ -220,28 +247,20 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     for location in package_id_locations:
       for entry in appid_entries:
         if entry['platform'] == location and entry['application'] != '':
-          event_data.package_identifier = entry['application']
+          package_identifier = entry['application']
           break
-      if event_data.package_identifier is None:
+      if package_identifier is None:
         # package_identifier has been populated and we're done.
         break
 
-    if 'description' in payload:
-      event_data.description = payload['description']
-    else:
-      event_data.description = ''
+    event_data = WindowsTimelineGenericEventData()
+    event_data.application_display_name = application_display_name
+    event_data.description = payload.get('description', None)
+    event_data.package_identifier = package_identifier
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'StartTime')
 
-    if 'appDisplayName' in payload and payload['appDisplayName'] != '':
-      event_data.application_display_name = payload['appDisplayName']
-    elif 'displayText' in payload and payload['displayText'] != '':
-      # Fall back to displayText if appDisplayName isn't available
-      event_data.application_display_name = payload['displayText']
-
-    timestamp = self._GetRowValue(query_hash, row, 'StartTime')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_START)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseUserEngagedRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -249,15 +268,11 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
-
-    event_data = WindowsTimelineUserEngagedEventData()
-    event_data.package_identifier = self._GetRowValue(
-        query_hash, row, 'PackageName')
 
     # Payload is JSON serialized as binary data in a BLOB field, with the text
     # encoded as UTF-8.
@@ -265,16 +280,19 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     payload_json_string = payload_json_bytes.decode('utf-8')
     payload = json.loads(payload_json_string)
 
-    if 'reportingApp' in payload:
-      event_data.reporting_app = payload['reportingApp']
-    if 'activeDurationSeconds' in payload:
-      event_data.active_duration_seconds = int(payload['activeDurationSeconds'])
+    active_duration_seconds = payload.get('activeDurationSeconds', None)
+    if active_duration_seconds is not None:
+      active_duration_seconds = int(active_duration_seconds)
 
-    timestamp = self._GetRowValue(query_hash, row, 'StartTime')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_START)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data = WindowsTimelineUserEngagedEventData()
+    event_data.active_duration_seconds = active_duration_seconds
+    event_data.package_identifier = self._GetRowValue(
+        query_hash, row, 'PackageName')
+    event_data.reporting_app = payload.get('reportingApp', None)
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'StartTime')
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(WindowsTimelinePlugin)

@@ -977,6 +977,12 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'windows:diagnosis:eventtranscript'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'windows:distributed_link_tracking:creation'
 attribute_mappings:
 - name: 'creation_time'
@@ -1306,6 +1312,18 @@ attribute_mappings:
   description: 'Scheduled to start'
 place_holder_event: true
 ---
+data_type: 'windows:timeline:generic'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'windows:timeline:user_engaged'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'windows:user_access_logging:clients'
 attribute_mappings:
 - name: 'access_time'
@@ -1364,4 +1382,10 @@ data_type: 'xchat:scrollback:line'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'zeitgeist:activity'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
