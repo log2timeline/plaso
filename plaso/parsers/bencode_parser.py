@@ -182,7 +182,7 @@ class BencodeParser(interface.FileObjectParser):
       return
 
     try:
-      for plugin in self._plugins:
+      for plugin_name, plugin in self._plugins_per_name.items():
         if parser_mediator.abort:
           break
 
@@ -191,11 +191,11 @@ class BencodeParser(interface.FileObjectParser):
 
         if not plugin.CheckRequiredKeys(bencode_file):
           logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin.NAME))
+              display_name, plugin_name))
           continue
 
         logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
+            display_name, plugin_name))
 
         try:
           plugin.UpdateChainAndProcess(
@@ -204,7 +204,7 @@ class BencodeParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse Bencode file with error: '
-              '{1!s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin_name, exception))
 
     finally:
       bencode_file.Close()

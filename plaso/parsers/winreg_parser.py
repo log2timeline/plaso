@@ -38,43 +38,9 @@ class WinRegistryParser(interface.FileObjectParser):
   def __init__(self):
     """Initializes a parser."""
     super(WinRegistryParser, self).__init__()
-    self._plugin_per_key_path = {}
+    self._path_filter = None
+    self._plugins_per_key_path = {}
     self._plugins_without_key_paths = []
-
-    default_plugin_list_index = None
-    key_paths = []
-
-    for list_index, plugin in enumerate(self._plugins):
-      if plugin.NAME == 'winreg_default':
-        default_plugin_list_index = list_index
-        continue
-
-      for registry_key_filter in plugin.FILTERS:
-        plugin_key_paths = getattr(registry_key_filter, 'key_paths', [])
-        if (not plugin_key_paths and
-            plugin not in self._plugins_without_key_paths):
-          self._plugins_without_key_paths.append(plugin)
-          continue
-
-        for plugin_key_path in plugin_key_paths:
-          plugin_key_path = plugin_key_path.lower()
-          if plugin_key_path in self._plugin_per_key_path:
-            logger.warning((
-                'Windows Registry key path: {0:s} defined by plugin: {1:s} '
-                'already set by plugin: {2:s}').format(
-                    plugin_key_path, plugin.NAME,
-                    self._plugin_per_key_path[plugin_key_path].NAME))
-            continue
-
-          self._plugin_per_key_path[plugin_key_path] = plugin
-
-          key_paths.append(plugin_key_path)
-
-    if default_plugin_list_index is not None:
-      self._default_plugin = self._plugins.pop(default_plugin_list_index)
-
-    self._path_filter = path_filter.PathFilterScanTree(
-        key_paths, case_sensitive=False, path_segment_separator='\\')
 
   def _CanProcessKeyWithPlugin(self, registry_key, plugin):
     """Determines if a plugin can process a Windows Registry key or its values.
@@ -96,6 +62,63 @@ class WinRegistryParser(interface.FileObjectParser):
         return True
 
     return False
+
+  def EnablePlugins(self, plugin_includes):
+    """Enables parser plugins.
+
+    Args:
+      plugin_includes (set[str]): names of the plugins to enable, where
+          set(['*']) represents all plugins. Note the default plugin, if
+          it exists, is always enabled and cannot be disabled.
+    """
+    self._plugins_per_name = {}
+    self._plugins_per_key_path = {}
+    self._plugins_without_key_paths = []
+
+    if not self._plugin_classes:
+      return
+
+    key_paths = []
+
+    for plugin_name, plugin_class in self._plugin_classes.items():
+      if plugin_name == self._default_plugin_name:
+        self._default_plugin = plugin_class()
+        continue
+
+      if (plugin_includes != self.ALL_PLUGINS and
+          plugin_name not in plugin_includes):
+        continue
+
+      plugin_object = plugin_class()
+      self._plugins_per_name[plugin_name] = plugin_object
+
+      if plugin_object.NAME == 'winreg_default':
+        self._default_plugin = plugin_object
+        continue
+
+      for registry_key_filter in plugin_object.FILTERS:
+        plugin_key_paths = getattr(registry_key_filter, 'key_paths', [])
+        if (not plugin_key_paths and
+            plugin_object not in self._plugins_without_key_paths):
+          self._plugins_without_key_paths.append(plugin_object)
+          continue
+
+        for plugin_key_path in plugin_key_paths:
+          plugin_key_path = plugin_key_path.lower()
+          if plugin_key_path in self._plugins_per_key_path:
+            logger.warning((
+                'Windows Registry key path: {0:s} defined by plugin: {1:s} '
+                'already set by plugin: {2:s}').format(
+                    plugin_key_path, plugin_object.NAME,
+                    self._plugins_per_key_path[plugin_key_path].NAME))
+            continue
+
+          self._plugins_per_key_path[plugin_key_path] = plugin_object
+
+          key_paths.append(plugin_key_path)
+
+    self._path_filter = path_filter.PathFilterScanTree(
+        key_paths, case_sensitive=False, path_segment_separator='\\')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -153,8 +176,8 @@ class WinRegistryParser(interface.FileObjectParser):
         registry_key.path))
 
     normalized_key_path = self._NormalizeKeyPath(registry_key.path)
-    if self._path_filter.CheckPath(normalized_key_path):
-      matching_plugin = self._plugin_per_key_path[normalized_key_path]
+    if self._path_filter and self._path_filter.CheckPath(normalized_key_path):
+      matching_plugin = self._plugins_per_key_path[normalized_key_path]
     else:
       for plugin in self._plugins_without_key_paths:
         if self._CanProcessKeyWithPlugin(registry_key, plugin):

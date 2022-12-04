@@ -119,7 +119,7 @@ class TextLogParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    for plugin in self._plugins:
+    for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:
         break
 
@@ -145,7 +145,7 @@ class TextLogParser(interface.FileObjectParser):
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
             'plugin: {0:s} unable to parse text file with error: '
-            '{1!s}').format(plugin.NAME, exception))
+            '{1!s}').format(plugin_name, exception))
         continue
 
       if hasattr(plugin, 'GetYearLessLogHelper'):

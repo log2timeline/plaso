@@ -19,10 +19,10 @@ class BaseParserTest(test_lib.ParserTestCase):
     parser = interface.BaseParser()
 
     parser.EnablePlugins([])
-    self.assertEqual(len(parser._plugins), 0)
+    self.assertEqual(len(parser._plugins_per_name), 0)
 
     parser.EnablePlugins(parser.ALL_PLUGINS)
-    self.assertEqual(len(parser._plugins), 0)
+    self.assertEqual(len(parser._plugins_per_name), 0)
 
   def testInitialize(self):
     """Tests the initialization."""
@@ -30,7 +30,7 @@ class BaseParserTest(test_lib.ParserTestCase):
 
     self.assertIsNotNone(parser)
     self.assertIsNone(parser._default_plugin)
-    self.assertEqual(parser._plugins, [])
+    self.assertEqual(parser._plugins_per_name, {})
 
   def testSupportsPlugins(self):
     """Tests the SupportsPlugins function."""

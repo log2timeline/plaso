@@ -73,7 +73,7 @@ class OLECFParser(interface.FileObjectParser):
     item_names = frozenset(item_names)
 
     try:
-      for plugin in self._plugins:
+      for plugin_name, plugin in self._plugins_per_name.items():
         if parser_mediator.abort:
           break
 
@@ -82,11 +82,11 @@ class OLECFParser(interface.FileObjectParser):
 
         if not plugin.REQUIRED_ITEMS.issubset(item_names):
           logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin.NAME))
+              display_name, plugin_name))
           continue
 
         logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin.NAME))
+            display_name, plugin_name))
 
         try:
           plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
@@ -94,7 +94,7 @@ class OLECFParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1!s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin_name, exception))
 
       if self._default_plugin and not parser_mediator.abort:
         try:
@@ -104,7 +104,7 @@ class OLECFParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1!s}').format(self._default_plugin.NAME, exception))
+              '{1!s}').format(self._default_plugin_name, exception))
 
     finally:
       olecf_file.close()

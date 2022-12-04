@@ -89,7 +89,7 @@ class BaseParser(object):
     super(BaseParser, self).__init__()
     self._default_plugin = None
     self._default_plugin_name = '{0:s}_default'.format(self.NAME)
-    self._plugins = None
+    self._plugins_per_name = None
     self.EnablePlugins(self.ALL_PLUGINS)
 
   @classmethod
@@ -120,7 +120,7 @@ class BaseParser(object):
           set(['*']) represents all plugins. Note the default plugin, if
           it exists, is always enabled and cannot be disabled.
     """
-    self._plugins = []
+    self._plugins_per_name = {}
     if not self._plugin_classes:
       return
 
@@ -134,7 +134,7 @@ class BaseParser(object):
         continue
 
       plugin_object = plugin_class()
-      self._plugins.append(plugin_object)
+      self._plugins_per_name[plugin_name] = plugin_object
 
   # TODO: move this to a filter.
   # pylint: disable=redundant-returns-doc

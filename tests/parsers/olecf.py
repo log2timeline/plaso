@@ -24,14 +24,14 @@ class OLECFParserTest(test_lib.ParserTestCase):
     number_of_plugins = len(parser._plugin_classes)
 
     parser.EnablePlugins([])
-    self.assertEqual(len(parser._plugins), 0)
+    self.assertEqual(len(parser._plugins_per_name), 0)
 
     parser.EnablePlugins(parser.ALL_PLUGINS)
     # Extract 1 for the default plugin.
-    self.assertEqual(len(parser._plugins), number_of_plugins - 1)
+    self.assertEqual(len(parser._plugins_per_name), number_of_plugins - 1)
 
     parser.EnablePlugins(['olecf_document_summary'])
-    self.assertEqual(len(parser._plugins), 1)
+    self.assertEqual(len(parser._plugins_per_name), 1)
 
   def testParse(self):
     """Tests the Parse function."""

@@ -431,7 +431,7 @@ class SQLiteParser(interface.FileEntryParser):
     display_name = parser_mediator.GetDisplayName(file_entry)
 
     try:
-      for plugin in self._plugins:
+      for plugin in self._plugins_per_name.values():
         self._ParseFileEntryWithPlugin(
             parser_mediator, plugin, database, display_name, cache)
     finally:
@@ -458,7 +458,7 @@ class SQLiteParser(interface.FileEntryParser):
     display_name = parser_mediator.GetDisplayName(wal_file_entry)
 
     try:
-      for plugin in self._plugins:
+      for plugin in self._plugins_per_name.values():
         self._ParseFileEntryWithPlugin(
             parser_mediator, plugin, database_wal, display_name, cache)
     finally:
