@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import chrome_history
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -19,6 +18,10 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 71)
+
     # The History file contains 71 events (69 page visits, 1 file downloads).
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 71)
@@ -31,32 +34,31 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # Check the first page visited entry.
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2011-04-07T12:03:11.000000+00:00',
+        'last_visited_time': '2011-04-07T12:03:11.000000+00:00',
         'page_transition_type': 0,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
         'title': 'Ubuntu Start Page',
         'typed_count': 0,
         'url': 'http://start.ubuntu.com/10.04/Google/',
         'visit_source': 3}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     # Check the first file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2011-05-23T08:35:30+00:00',
+        'end_time': None,
         'full_path': '/home/john/Downloads/funcats_scr.exe',
         'received_bytes': 1132155,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        'start_time': '2011-05-23T08:35:30+00:00',
         'total_bytes': 1132155,
         'url': 'http://fatloss4idiotsx.com/download/funcats/funcats_scr.exe'}
 
-    self.CheckEventValues(storage_writer, events[69], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 69)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
@@ -68,6 +70,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-57.0.2987.133'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     # The History file contains 3 events (1 page visit, 2 file downloads).
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -80,36 +86,35 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # Check the page visit event.
+    # Check the page visit entry.
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21T14:09:53.885478+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'last_visited_time': '2018-01-21T14:09:53.885478+00:00',
         'title': '',
         'typed_count': 0,
         'url': expected_url}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the file downloaded event.
+    # Check the file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21T14:09:53.900399+00:00',
+        'end_time': '2018-01-21T14:09:54.858738+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'start_time': '2018-01-21T14:09:53.900399+00:00',
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
             'win32/plaso-20171231.1.win32.msi')}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcess58(self):
     """Tests the Process function on a Google Chrome 58 History database."""
@@ -117,6 +122,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-58.0.3029.96'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     # The History file contains 3 events (1 page visit, 2 file downloads).
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -129,36 +138,35 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # Check the page visit event.
+    # Check the page visit entry.
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21T14:09:27.315765+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'last_visited_time': '2018-01-21T14:09:27.315765+00:00',
         'title': '',
         'typed_count': 0,
         'url': expected_url}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the file downloaded event.
+    # Check the file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21T14:09:27.200398+00:00',
+        'end_time': '2018-01-21T14:09:28.116062+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'start_time': '2018-01-21T14:09:27.200398+00:00',
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
             'win32/plaso-20171231.1.win32.msi')}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcess59(self):
     """Tests the Process function on a Google Chrome 59 History database."""
@@ -166,6 +174,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59.0.3071.86'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     # The History file contains 3 events (1 page visit, 2 file downloads).
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -178,36 +190,35 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # Check the page visit event.
+    # Check the page visit entry.
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21T14:08:52.037692+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'last_visited_time': '2018-01-21T14:08:52.037692+00:00',
         'title': '',
         'typed_count': 0,
         'url': expected_url}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the file downloaded event.
+    # Check the file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21T14:08:51.811123+00:00',
+        'end_time': '2018-01-21T14:08:52.662377+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'start_time': '2018-01-21T14:08:51.811123+00:00',
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
             'win32/plaso-20171231.1.win32.msi')}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcess59ExtraColumn(self):
     """Tests the Process function on a Google Chrome 59 History database,
@@ -217,6 +228,10 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59_added-fake-column'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
     # The History file contains 3 events (1 page visit, 2 file downloads).
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 3)
@@ -229,36 +244,35 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # Check the page visit event.
+    # Check the page visit entry.
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
         'generate-specimens.sh')
 
     expected_event_values = {
         'data_type': 'chrome:history:page_visited',
-        'date_time': '2018-01-21T14:08:52.037692+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'last_visited_time': '2018-01-21T14:08:52.037692+00:00',
         'title': '',
         'typed_count': 0,
         'url': expected_url}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Check the file downloaded event.
+    # Check the file downloaded entry.
     expected_event_values = {
         'data_type': 'chrome:history:file_downloaded',
-        'date_time': '2018-01-21T14:08:51.811123+00:00',
+        'end_time': '2018-01-21T14:08:52.662377+00:00',
         'full_path': '/home/ubuntu/Downloads/plaso-20171231.1.win32.msi',
         'received_bytes': 3080192,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'start_time': '2018-01-21T14:08:51.811123+00:00',
         'total_bytes': 3080192,
         'url': (
             'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
             'win32/plaso-20171231.1.win32.msi')}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

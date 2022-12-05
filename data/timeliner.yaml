@@ -201,6 +201,20 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'chrome:history:file_downloaded'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'chrome:history:page_visited'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
 data_type: 'chrome:preferences:content_settings:exceptions'
 attribute_mappings:
 - name: 'last_visited_time'
@@ -295,6 +309,14 @@ attribute_mappings:
   description: 'Last Visited Time'
 - name: 'last_modified_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'firefox:downloads:download'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'fish:history:entry'

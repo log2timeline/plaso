@@ -5,8 +5,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -17,6 +15,8 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
   Attributes:
     danger_type (int): assessment by Safe Browsing of the danger of the
         downloaded content.
+    end_time (dfdatetime.DateTimeValues): date and time the download was
+        finished.
     full_path (str): full path where the file was downloaded to.
     interrupt_reason (int): indication why the download was interrupted.
     offset (str): identifier of the row, from which the event data was
@@ -25,6 +25,8 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
         the browser.
     query (str): SQL query that was used to obtain the event data.
     received_bytes (int): number of bytes received while downloading.
+    start_time (dfdatetime.DateTimeValues): date and time the download was
+        started.
     state (int): state of the download, such as finished or cancelled.
     total_bytes (int): total number of bytes to download.
     url (str): URL of the downloaded file.
@@ -37,12 +39,14 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     super(ChromeHistoryFileDownloadedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.danger_type = None
+    self.end_time = None
     self.full_path = None
     self.interrupt_reason = None
     self.offset = None
     self.opened = None
     self.query = None
     self.received_bytes = None
+    self.start_time = None
     self.state = None
     self.total_bytes = None
     self.url = None
@@ -53,6 +57,8 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
   Attributes:
     from_visit (str): URL where the visit originated from.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
+        last visited.
     offset (str): identifier of the row, from which the event data was
         extracted.
     page_transition_type (int): type of transitions between pages.
@@ -71,6 +77,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     super(ChromeHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.from_visit = None
+    self.last_visited_time = None
     self.offset = None
     self.page_transition_type = None
     self.query = None
@@ -99,6 +106,42 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
   _PAGE_TRANSITION_CORE_MASK = 0xff
+
+  def _GetPosixDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a POSIX date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
+  def _GetWebKitDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a WebKit date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.WebKitTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
 
   def _GetUrl(self, url, cache, database):
     """Retrieves a URL from a reference to an entry in the from_visit table.
@@ -180,6 +223,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
     event_data = ChromeHistoryPageVisitedEventData()
     event_data.from_visit = self._GetUrl(from_visit, cache, database)
+    event_data.last_visited_time = self._GetWebKitDateTimeRowValue(
+        query_hash, row, 'visit_time')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.page_transition_type = (
@@ -191,11 +236,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
     event_data.visit_source = self._GetVisitSource(
         visit_identifier, cache, database)
 
-    timestamp = self._GetRowValue(query_hash, row, 'visit_time')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
@@ -391,15 +432,13 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     event_data.query = query
     event_data.received_bytes = self._GetRowValue(
         query_hash, row, 'received_bytes')
+    event_data.start_time = self._GetPosixDateTimeRowValue(
+        query_hash, row, 'start_time')
     event_data.state = self._GetRowValue(query_hash, row, 'state')
     event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'start_time')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
@@ -1005,6 +1044,8 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
     event_data = ChromeHistoryFileDownloadedEventData()
     event_data.danger_type = self._GetRowValue(query_hash, row, 'danger_type')
+    event_data.end_time = self._GetWebKitDateTimeRowValue(
+        query_hash, row, 'end_time')
     event_data.full_path = self._GetRowValue(query_hash, row, 'target_path')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.interrupt_reason = self._GetRowValue(
@@ -1013,25 +1054,13 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     event_data.query = query
     event_data.received_bytes = self._GetRowValue(
         query_hash, row, 'received_bytes')
+    event_data.start_time = self._GetWebKitDateTimeRowValue(
+        query_hash, row, 'start_time')
     event_data.state = self._GetRowValue(query_hash, row, 'state')
     event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    start_timestamp = self._GetRowValue(query_hash, row, 'start_time')
-    if start_timestamp:
-      start_date_time = dfdatetime_webkit_time.WebKitTime(
-          timestamp=start_timestamp)
-      start_event = time_events.DateTimeValuesEvent(
-          start_date_time, definitions.TIME_DESCRIPTION_START)
-      parser_mediator.ProduceEventWithEventData(start_event, event_data)
-
-    end_timestamp = self._GetRowValue(query_hash, row, 'end_time')
-    if end_timestamp:
-      end_date_time = dfdatetime_webkit_time.WebKitTime(
-          timestamp=end_timestamp)
-      end_event = time_events.DateTimeValuesEvent(
-          end_date_time, definitions.TIME_DESCRIPTION_END)
-      parser_mediator.ProduceEventWithEventData(end_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugins([
