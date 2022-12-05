@@ -96,6 +96,16 @@ class TextLogParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
+  def testContainsBinary(self):
+    """Tests the _ContainsBinary function."""
+    parser = text_parser.TextLogParser()
+
+    result = parser._ContainsBinary('this it text\n')
+    self.assertFalse(result)
+
+    result = parser._ContainsBinary('\x01\x00binary\x02\x00')
+    self.assertTrue(result)
+
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = text_parser.TextLogParser()

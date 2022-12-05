@@ -2,10 +2,12 @@
 """Text log parser."""
 
 import codecs
+import io
 import os
 
 from plaso.lib import errors
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -19,7 +21,7 @@ class EncodedTextReader(object):
   def __init__(
       self, file_object, buffer_size=2048, encoding='utf-8',
       encoding_errors='strict'):
-    """Initializes the encoded text reader object.
+    """Initializes a encoded text reader.
 
     Args:
       file_object (FileIO): a file-like object to read from.
@@ -54,7 +56,7 @@ class EncodedTextReader(object):
 
   def ReadLines(self):
     """Reads lines into the lines buffer."""
-    current_offset = self._file_object.get_offset()
+    current_offset = self._file_object.tell()
 
     decoded_data = self._stream_reader.read(size=self._buffer_size)
     if decoded_data:
@@ -97,7 +99,7 @@ class EncodedTextReader(object):
     Returns:
       int: current offset into the file-like object.
     """
-    return self._file_object.get_offset()
+    return self._file_object.tell()
 
 
 class TextLogParser(interface.FileObjectParser):
@@ -106,7 +108,59 @@ class TextLogParser(interface.FileObjectParser):
   NAME = 'text'
   DATA_FORMAT = 'text-based log file'
 
+  _NON_TEXT_CHARACTERS = frozenset([
+      '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x0b', '\x0e',
+      '\x0f', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17',
+      '\x18', '\x19', '\x1a', '\x1c', '\x1d', '\x1e', '\x1f', '\x7f'])
+
   _plugin_classes = {}
+
+  def __init__(self):
+    """Initializes a text-based log parser."""
+    super(TextLogParser, self).__init__()
+    self._plugins_per_encoding = {}
+
+  def _ContainsBinary(self, text):
+    """Determines if the text contains binary (non-text) characters.
+
+    Args:
+      text (str): text.
+
+    Returns:
+      bool: True if the text contains binary (non-text) characters.
+    """
+    return bool(self._NON_TEXT_CHARACTERS.intersection(set(text)))
+
+  def EnablePlugins(self, plugin_includes):
+    """Enables parser plugins.
+
+    Args:
+      plugin_includes (set[str]): names of the plugins to enable, where
+          set(['*']) represents all plugins. Note the default plugin, if
+          it exists, is always enabled and cannot be disabled.
+    """
+    self._plugins_per_name = {}
+    self._plugins_per_encoding = {}
+    if not self._plugin_classes:
+      return
+
+    for plugin_name, plugin_class in self._plugin_classes.items():
+      if plugin_name == self._default_plugin_name:
+        self._default_plugin = plugin_class()
+        continue
+
+      if (plugin_includes != self.ALL_PLUGINS and
+          plugin_name not in plugin_includes):
+        continue
+
+      plugin_object = plugin_class()
+      self._plugins_per_name[plugin_name] = plugin_object
+
+      encoding = plugin_class.ENCODING or 'default'
+      if encoding not in self._plugins_per_encoding:
+        self._plugins_per_encoding[encoding] = []
+
+      self._plugins_per_encoding[encoding].append(plugin_object)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text log file-like object.
@@ -119,38 +173,78 @@ class TextLogParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    for plugin_name, plugin in self._plugins_per_name.items():
+    file_object.seek(0, os.SEEK_SET)
+
+    # Cache the first 64k of encoded data so it does not need to be read for
+    # each encoding.
+    encoded_data_buffer = file_object.read(64 * 1024)
+
+    matching_plugin = False
+    for encoding, plugins in self._plugins_per_encoding.items():
       if parser_mediator.abort:
         break
 
-      file_object.seek(0, os.SEEK_SET)
+      if encoding == 'default':
+        encoding = parser_mediator.codepage
 
-      encoding = plugin.ENCODING or parser_mediator.codepage
-      text_reader = EncodedTextReader(
-          file_object, buffer_size=plugin.MAXIMUM_LINE_LENGTH,
-          encoding=encoding)
+      for plugin in plugins:
+        if parser_mediator.abort:
+          break
 
-      # TODO: only read lines once for a specific encoding.
-      try:
-        text_reader.ReadLines()
-      except UnicodeDecodeError as exception:
-        raise errors.WrongParser(
-            'Unable to read lines with error: {0!s}'.format(exception))
+        parser_chain = 'text/{0:s}'.format(plugin.NAME)
 
-      if not plugin.CheckRequiredFormat(parser_mediator, text_reader):
-        continue
+        parser_mediator.SampleStartTiming(parser_chain)
 
-      try:
-        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
-      except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse text file with error: '
-            '{1!s}').format(plugin_name, exception))
-        continue
+        try:
+          logger.debug(
+              'Checking required format of: {0:s} in encoding: {1:s}'.format(
+                  plugin.NAME, encoding))
 
-      if hasattr(plugin, 'GetYearLessLogHelper'):
-        year_less_log_helper = plugin.GetYearLessLogHelper()
-        parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+          encoded_data_file_object = io.BytesIO(encoded_data_buffer)
+          text_reader = EncodedTextReader(
+              encoded_data_file_object, buffer_size=plugin.MAXIMUM_LINE_LENGTH,
+              encoding=encoding)
+
+          try:
+            text_reader.ReadLines()
+          except UnicodeDecodeError:
+            logger.debug((
+                'Unable to read text-based log file with encoding: '
+                '{0:s}').format(encoding))
+            continue
+
+          if self._ContainsBinary(text_reader.lines):
+            logger.debug('Detected binary format')
+            continue
+
+          result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+
+        finally:
+          parser_mediator.SampleStopTiming(parser_chain)
+
+        if result:
+          matching_plugin = True
+
+          try:
+            plugin.UpdateChainAndProcess(
+                parser_mediator, file_object=file_object)
+          except Exception as exception:  # pylint: disable=broad-except
+            parser_mediator.ProduceExtractionWarning((
+                'plugin: {0:s} unable to parse text file with error: '
+                '{1!s}').format(plugin.NAME, exception))
+            continue
+
+          if hasattr(plugin, 'GetYearLessLogHelper'):
+            year_less_log_helper = plugin.GetYearLessLogHelper()
+            parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+
+          break
+
+      if matching_plugin:
+        break
+
+    if not matching_plugin:
+      raise errors.WrongParser('No matching text-based log plugin found.')
 
 
 manager.ParsersManager.RegisterParser(TextLogParser)
