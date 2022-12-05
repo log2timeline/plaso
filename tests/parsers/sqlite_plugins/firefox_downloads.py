@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import firefox_downloads
 
 from tests.parsers.sqlite_plugins import test_lib
@@ -19,6 +18,10 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['downloads.sqlite'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2)
 
@@ -30,21 +33,19 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
-    # Check the first page visited event.
     expected_event_values = {
         'data_type': 'firefox:downloads:download',
-        'date_time': '2013-07-18T18:59:59.312000+00:00',
+        'end_time': '2013-07-18T19:01:18.578000+00:00',
         'full_path': 'file:///D:/plaso-static-1.0.1-win32-vs2008.zip',
         'received_bytes': 15974599,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_START,
+        'start_time': '2013-07-18T18:59:59.312000+00:00',
         'total_bytes': 15974599,
         'url': (
             'https://plaso.googlecode.com/files/'
             'plaso-static-1.0.1-win32-vs2008.zip')}
 
-    self.CheckEventValues(storage_writer, events[0], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

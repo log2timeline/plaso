@@ -6,6 +6,7 @@ from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
+from plaso.engine import timeliner
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -149,7 +150,26 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     else:
       self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))
 
+    self._ProcessEventData(knowledge_base_object, storage_writer)
+
     return storage_writer
+
+  def _ProcessEventData(
+      self, knowledge_base_object, storage_writer):
+    """Generate events from event data.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): knowledge base.
+      storage_writer (StorageWriter): storage writer.
+    """
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        knowledge_base_object, data_location=shared_test_lib.DATA_PATH)
+
+    event_data = storage_writer.GetFirstWrittenEventData()
+    while event_data:
+      event_data_timeliner.ProcessEventData(storage_writer, event_data)
+
+      event_data = storage_writer.GetNextWrittenEventData()
 
   def _SetUpKnowledgeBase(self, knowledge_base_values=None):
     """Sets up a knowledge base.
