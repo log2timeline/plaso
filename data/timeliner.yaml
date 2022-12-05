@@ -26,6 +26,19 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'android:tango:contact'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'friend_request_time'
+  description: 'Friend Request Time'
+- name: 'last_active_time'
+  description: 'Last Active Time'
+place_holder_event: false
+---
+data_type: 'android:tango:conversation'
+place_holder_event: true
+---
 data_type: 'android:tango:message'
 attribute_mappings:
 - name: 'creation_time'
@@ -180,6 +193,12 @@ attribute_mappings:
   description: 'Creation Time'
 - name: 'expiration_time'
   description: 'Expiration Time'
+place_holder_event: true
+---
+data_type: 'chrome:extension_activity:activity_log'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'chrome:preferences:content_settings:exceptions'
@@ -834,6 +853,12 @@ attribute_mappings:
   description: 'Last Visited Time'
 place_holder_event: true
 ---
+data_type: 'safari:history:visit_sqlite'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
 data_type: 'santa:diskmount'
 attribute_mappings:
 - name: 'appearance_time'
@@ -890,6 +915,18 @@ data_type: 'skydrive:log:entry'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'skype:event:chat'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'skype:event:sms'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'snort:fastlog:alert'

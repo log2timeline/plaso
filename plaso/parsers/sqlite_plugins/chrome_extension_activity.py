@@ -4,8 +4,6 @@
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -24,6 +22,8 @@ class ChromeExtensionActivityEventData(events.EventData):
     page_title (str): title of webpage.
     page_url (str): URL of webpage.
     query (str): SQL query that was used to obtain the event data.
+    recorded_time (dfdatetime.DateTimeValues): date and time the entry
+        was recorded.
   """
 
   DATA_TYPE = 'chrome:extension_activity:activity_log'
@@ -42,6 +42,7 @@ class ChromeExtensionActivityEventData(events.EventData):
     self.page_title = None
     self.page_url = None
     self.query = None
+    self.recorded_time = None
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
@@ -79,6 +80,24 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
           'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
           'NULL)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.WebKitTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
+
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an activity log row.
@@ -102,12 +121,10 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
     event_data.page_title = self._GetRowValue(query_hash, row, 'page_title')
     event_data.page_url = self._GetRowValue(query_hash, row, 'page_url')
     event_data.query = query
+    event_data.recorded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'time')
 
-    timestamp = self._GetRowValue(query_hash, row, 'time')
-    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_UNKNOWN)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeExtensionActivityPlugin)
