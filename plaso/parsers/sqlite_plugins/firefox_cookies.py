@@ -4,9 +4,7 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.lib import cookie_plugins_helper
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -15,8 +13,14 @@ class FirefoxCookieEventData(events.EventData):
   """Firefox Cookie event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): date and time the cookie
+        was last accessed.
     cookie_name (str): name field of the cookie.
+    creation_time (dfdatetime.DateTimeValues): date and time the cookie
+        was created.
     data (str): cookie data.
+    expiration_time (dfdatetime.DateTimeValues): date and time the cookie
+        expires.
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
     host (str): hostname of host that set the cookie value.
@@ -33,8 +37,11 @@ class FirefoxCookieEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(FirefoxCookieEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
     self.cookie_name = None
+    self.creation_time = None
     self.data = None
+    self.expiration_time = None
     self.host = None
     self.httponly = None
     self.offset = None
@@ -74,6 +81,44 @@ class FirefoxCookiePlugin(
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
 
+  def _GetPosixTimeDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a POSIX time (in seconds) date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
+  def _GetPosixTimeInMicrosecondsDateTimeRowValue(
+      self, query_hash, row, value_name):
+    """Retrieves a POSIX time in microseconds date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
+          available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
+
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
 
@@ -102,7 +147,11 @@ class FirefoxCookiePlugin(
     url = '{0:s}://{1:s}{2:s}'.format(url_scheme, hostname, path)
 
     event_data = FirefoxCookieEventData()
+    event_data.access_time = self._GetPosixTimeInMicrosecondsDateTimeRowValue(
+        query_hash, row, 'lastAccessed')
     event_data.cookie_name = cookie_name
+    event_data.creation_time = self._GetPosixTimeInMicrosecondsDateTimeRowValue(
+        query_hash, row, 'creationTime')
     event_data.data = cookie_data
     event_data.host = hostname
     event_data.httponly = bool(self._GetRowValue(query_hash, row, 'isHttpOnly'))
@@ -112,36 +161,17 @@ class FirefoxCookiePlugin(
     event_data.secure = is_secure
     event_data.url = url
 
-    timestamp = self._GetRowValue(query_hash, row, 'creationTime')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    # Expiry time (nsCookieService::GetExpiry in
+    # netwerk/cookie/nsCookieService.cpp).
+    # It's calculated as the difference between the server time and the time
+    # the server wants the cookie to expire and adding that difference to the
+    # client time. This localizes the client time regardless of whether or not
+    # the TZ environment variable was set on the client.
 
-    timestamp = self._GetRowValue(query_hash, row, 'lastAccessed')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    event_data.expiration_time = self._GetPosixTimeDateTimeRowValue(
+        query_hash, row, 'expiry')
 
-    timestamp = self._GetRowValue(query_hash, row, 'expiry')
-    if timestamp:
-      # Expiry time (nsCookieService::GetExpiry in
-      # netwerk/cookie/nsCookieService.cpp).
-      # It's calculated as the difference between the server time and the time
-      # the server wants the cookie to expire and adding that difference to the
-      # client time. This localizes the client time regardless of whether or not
-      # the TZ environment variable was set on the client.
-
-      date_time = dfdatetime_posix_time.PosixTime(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
     self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
