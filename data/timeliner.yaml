@@ -20,6 +20,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'android:messaging:hangouts'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'android:messaging:sms'
 attribute_mappings:
 - name: 'creation_time'
@@ -419,6 +425,20 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'gdrive:snapshot:cloud_entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'gdrive:snapshot:local_entry'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'google_drive_sync_log:entry'
 attribute_mappings:
 - name: 'added_time'
@@ -480,6 +500,12 @@ attribute_mappings:
 place_holder_event: true
 ---
 data_type: 'ios:netusage:route'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'ios:powerlog:application_usage'
 attribute_mappings:
 - name: 'start_time'
   description: 'Start Time'

@@ -2,6 +2,7 @@
 """Imports for the SQLite database parser plugins."""
 
 from plaso.parsers.sqlite_plugins import android_calls
+from plaso.parsers.sqlite_plugins import android_hangouts
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_tango
 from plaso.parsers.sqlite_plugins import android_twitter
@@ -16,7 +17,6 @@ from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
-from plaso.parsers.sqlite_plugins import hangouts_messages
 from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_kik
 from plaso.parsers.sqlite_plugins import ios_netusage

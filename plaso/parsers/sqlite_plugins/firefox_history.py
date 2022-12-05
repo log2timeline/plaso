@@ -299,7 +299,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       2: 'Folder',
       3: 'Separator'}
 
-  def _GetPosixTimeDateTimeRowValue(self, query_hash, row, value_name):
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a POSIX time in microseconds date and time value from the row.
 
     Args:
@@ -383,10 +383,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     event_data = FirefoxPlacesBookmarkAnnotationEventData()
-    event_data.added_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.added_time = self._GetDateTimeRowValue(
         query_hash, row, 'dateAdded')
     event_data.content = self._GetRowValue(query_hash, row, 'content')
-    event_data.modification_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.modification_time = self._GetDateTimeRowValue(
         query_hash, row, 'lastModified')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
@@ -410,9 +410,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     title = self._GetRowValue(query_hash, row, 'title')
 
     event_data = FirefoxPlacesBookmarkFolderEventData()
-    event_data.added_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.added_time = self._GetDateTimeRowValue(
         query_hash, row, 'dateAdded')
-    event_data.modification_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.modification_time = self._GetDateTimeRowValue(
         query_hash, row, 'lastModified')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
@@ -435,10 +435,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     bookmark_type = self._GetRowValue(query_hash, row, 'type')
 
     event_data = FirefoxPlacesBookmarkEventData()
-    event_data.added_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.added_time = self._GetDateTimeRowValue(
         query_hash, row, 'dateAdded')
     event_data.host = rev_host or 'N/A'
-    event_data.modification_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.modification_time = self._GetDateTimeRowValue(
         query_hash, row, 'lastModified')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.places_title = self._GetRowValue(query_hash, row, 'places_title')
@@ -475,7 +475,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     event_data.from_visit = from_visit
     event_data.hidden = self._GetRowValue(query_hash, row, 'hidden')
     event_data.host = self._ReverseHostname(rev_host)
-    event_data.last_visited_time = self._GetPosixTimeDateTimeRowValue(
+    event_data.last_visited_time = self._GetDateTimeRowValue(
         query_hash, row, 'visit_date')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
