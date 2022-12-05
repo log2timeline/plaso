@@ -311,12 +311,52 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'firefox:cookie:entry'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
 data_type: 'firefox:downloads:download'
 attribute_mappings:
 - name: 'end_time'
   description: 'End Time'
 - name: 'start_time'
   description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'firefox:places:bookmark'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'firefox:places:bookmark_annotation'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'firefox:places:bookmark_folder'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'firefox:places:page_visited'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
 place_holder_event: true
 ---
 data_type: 'fish:history:entry'
