@@ -4,8 +4,6 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -14,7 +12,11 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
   """Google Drive snapshot cloud entry event data.
 
   Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the snapshot cloud
+        entry was created.
     doc_type (int): document type.
+    modification_time (dfdatetime.DateTimeValues): date and time the snapshot
+        cloud entry was last modified.
     path (str): path of the file.
     query (str): SQL query that was used to obtain the event data.
     shared (bool): True if the file is shared, False if the file is private.
@@ -28,7 +30,9 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
     """Initializes event data."""
     super(GoogleDriveSnapshotCloudEntryEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.creation_time = None
     self.document_type = None
+    self.modification_time = None
     self.path = None
     self.query = None
     self.shared = None
@@ -40,6 +44,8 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
   """Google Drive snapshot local entry event data.
 
   Attributes:
+    modification_time (dfdatetime.DateTimeValues): date and time the snapshot
+        local entry was last modified.
     path (str): path of the file.
     query (str): SQL query that was used to obtain the event data.
     size (int): size of the file.
@@ -51,6 +57,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
     """Initializes event data."""
     super(GoogleDriveSnapshotLocalEntryEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.modification_time = None
     self.path = None
     self.query = None
     self.size = None
@@ -133,6 +140,24 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       'FROM cloud_entry, cloud_relations '
       'WHERE cloud_entry.doc_type = 0 '
       'AND cloud_entry.resource_id = cloud_relations.child_resource_id')
+
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
   def GetLocalPath(self, inode, cache, database):
     """Return local path for a given inode.
@@ -231,31 +256,23 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     parent_resource_id = self._GetRowValue(
         query_hash, row, 'parent_resource_id')
-    filename = self._GetRowValue(query_hash, row, 'filename')
 
     cloud_path = self.GetCloudPath(parent_resource_id, cache, database)
-    cloud_filename = '{0:s}{1:s}'.format(cloud_path, filename)
+    filename = self._GetRowValue(query_hash, row, 'filename')
 
     event_data = GoogleDriveSnapshotCloudEntryEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'created')
     event_data.document_type = self._GetRowValue(query_hash, row, 'doc_type')
-    event_data.path = cloud_filename
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'modified')
+    event_data.path = ''.join([cloud_path, filename])
     event_data.query = query
     event_data.shared = bool(self._GetRowValue(query_hash, row, 'shared'))
     event_data.size = self._GetRowValue(query_hash, row, 'size')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = self._GetRowValue(query_hash, row, 'modified')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'created')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseLocalEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
@@ -276,15 +293,13 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     local_path = self.GetLocalPath(inode_number, cache, database)
 
     event_data = GoogleDriveSnapshotLocalEntryEventData()
+    event_data.modification_time = self._GetDateTimeRowValue(
+        query_hash, row, 'modified')
     event_data.path = local_path
     event_data.query = query
     event_data.size = self._GetRowValue(query_hash, row, 'size')
 
-    timestamp = self._GetRowValue(query_hash, row, 'modified')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(GoogleDrivePlugin)

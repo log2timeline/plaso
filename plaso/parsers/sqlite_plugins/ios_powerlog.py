@@ -4,8 +4,6 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -19,7 +17,10 @@ class IOSPowerlogApplicationUsageEventData(events.EventData):
     bundle_identifier (str): Name of the application.
     screen_on_time (str): Number of seconds that the application ran in the
         foreground.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the application.
   """
+
   DATA_TYPE = 'ios:powerlog:application_usage'
 
   def __init__(self):
@@ -29,6 +30,7 @@ class IOSPowerlogApplicationUsageEventData(events.EventData):
     self.background_time = None
     self.bundle_identifier = None
     self.screen_on_time = None
+    self.start_time = None
 
 
 class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
@@ -60,6 +62,24 @@ class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
 
   REQUIRES_SCHEMA_MATCH = False
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   # pylint: disable=unused-argument
   def ParseApplicationRunTime(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -80,14 +100,10 @@ class IOSPowerlogApplicationUsagePlugin(interface.SQLitePlugin):
         query_hash, row, 'BundleID')
     event_data.screen_on_time = self._GetRowValue(
         query_hash, row, 'ScreenOnTime')
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-
-    date_time_stamp = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    start_event = time_events.DateTimeValuesEvent(
-        date_time_stamp, definitions.TIME_DESCRIPTION_START)
-
-    parser_mediator.ProduceEventWithEventData(start_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IOSPowerlogApplicationUsagePlugin)

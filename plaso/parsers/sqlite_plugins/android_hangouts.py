@@ -4,17 +4,17 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class HangoutsMessageData(events.EventData):
-  """GoogleHangouts Message event data.
+class AndroidHangoutsMessageData(events.EventData):
+  """Google Hangouts Message event data.
 
   Attributes:
     body (str): content of the SMS text message.
+    creation_time (dfdatetime.DateTimeValues): date and time the Google Hangouts
+        message was created.
     message_status (int): message status.
     message_type (int): message type.
     offset (str): identifier of the row, from which the event data was
@@ -27,8 +27,9 @@ class HangoutsMessageData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(HangoutsMessageData, self).__init__(data_type=self.DATA_TYPE)
+    super(AndroidHangoutsMessageData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
+    self.creation_time = None
     self.message_status = None
     self.message_type = None
     self.offset = None
@@ -36,7 +37,7 @@ class HangoutsMessageData(events.EventData):
     self.sender = None
 
 
-class HangoutsMessagePlugin(interface.SQLitePlugin):
+class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Google Hangouts conversations database files.
 
   The Google Hangouts conversations database file is typically stored in:
@@ -270,6 +271,25 @@ class HangoutsMessagePlugin(interface.SQLitePlugin):
           'logging_id TEXT, affinity_score REAL DEFAULT (0.0), '
           'is_in_same_domain INT DEFAULT (0))')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a POSIX time in microseconds date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
+          available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if not timestamp:
+      return None
+
+    return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
+
   def ParseMessagesRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an Messages row.
 
@@ -281,21 +301,17 @@ class HangoutsMessagePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = HangoutsMessageData()
-    event_data.sender = self._GetRowValue(query_hash, row, 'full_name')
+    event_data = AndroidHangoutsMessageData()
     event_data.body = self._GetRowValue(query_hash, row, 'text')
-    event_data.offset = self._GetRowValue(query_hash, row, '_id')
-    event_data.query = query
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'timestamp')
     event_data.message_status = self._GetRowValue(query_hash, row, 'status')
     event_data.message_type = self._GetRowValue(query_hash, row, 'type')
+    event_data.offset = self._GetRowValue(query_hash, row, '_id')
+    event_data.query = query
+    event_data.sender = self._GetRowValue(query_hash, row, 'full_name')
 
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=timestamp)
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(HangoutsMessagePlugin)
+sqlite.SQLiteParser.RegisterPlugin(AndroidHangoutsMessagePlugin)
