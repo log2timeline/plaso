@@ -4,8 +4,6 @@
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -15,6 +13,8 @@ class KodiVideoEventData(events.EventData):
 
   Attributes:
     filename (str): video filename.
+    last_played_time (dfdatetime.DateTimeValues): date and time of the last
+        occurrence the video was played.
     play_count (int): number of times the video has been played.
     query (str): SQL query that was used to obtain the event data.
   """
@@ -25,6 +25,7 @@ class KodiVideoEventData(events.EventData):
     """Initializes event data."""
     super(KodiVideoEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
+    self.last_played_time = None
     self.play_count = None
     self.query = None
 
@@ -161,6 +162,26 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
           'CREATE TABLE writer_link(actor_id INTEGER, media_id INTEGER, '
           'media_type TEXT)')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    time_string = self._GetRowValue(query_hash, row, value_name)
+    if time_string is None:
+      return None
+
+    date_time = dfdatetime_time_elements.TimeElements()
+    date_time.CopyFromDateTimeString(time_string)
+    return date_time
+
   def ParseVideoRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Video row.
 
@@ -174,15 +195,12 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
 
     event_data = KodiVideoEventData()
     event_data.filename = self._GetRowValue(query_hash, row, 'strFilename')
+    event_data.last_played_time = self._GetDateTimeRowValue(
+        query_hash, row, 'lastPlayed')
     event_data.play_count = self._GetRowValue(query_hash, row, 'playCount')
     event_data.query = query
 
-    timestamp = self._GetRowValue(query_hash, row, 'lastPlayed')
-    date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromDateTimeString(timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(KodiMyVideosPlugin)

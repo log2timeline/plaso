@@ -511,6 +511,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'ios:screentime:event'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'ios:sysdiag_log:entry'
 attribute_mappings:
 - name: 'written_time'
@@ -553,6 +559,12 @@ attribute_mappings:
   description: 'Expiration Time'
 - name: 'modification_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'kodi:videos:viewing'
+attribute_mappings:
+- name: 'last_played_time'
+  description: 'Last Played Time'
 place_holder_event: true
 ---
 data_type: 'linux:apt_history_log:entry'
