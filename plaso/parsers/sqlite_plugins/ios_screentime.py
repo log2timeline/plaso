@@ -4,8 +4,6 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -18,6 +16,8 @@ class IOSScreenTimeEventData(events.EventData):
     device_identifier (str): GUID for the device.
     device_name (str): Name of the device in use (when available).
     domain (str): Domain of the website visited.
+    start_time (dfdatetime.DateTimeValues): date and time the start of
+        the application.
     total_time (int): Number of seconds where the application was in the
         foreground.
     user_family_name (str): Family name of the user.
@@ -33,6 +33,7 @@ class IOSScreenTimeEventData(events.EventData):
     self.device_identifier = None
     self.device_name = None
     self.domain = None
+    self.start_time = None
     self.total_time = None
     self.user_family_name = None
     self.user_given_name = None
@@ -116,6 +117,24 @@ class IOSScreenTimePlugin(interface.SQLitePlugin):
 
   REQUIRES_SCHEMA_MATCH = False
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   # pylint: disable=unused-argument
   def ParseScreenTimeRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Screen Time row.
@@ -131,25 +150,20 @@ class IOSScreenTimePlugin(interface.SQLitePlugin):
     event_data = IOSScreenTimeEventData()
     event_data.bundle_identifier = self._GetRowValue(
         query_hash, row, 'ZBUNDLEIDENTIFIER')
-    event_data.device_name = self._GetRowValue(query_hash, row, 'ZNAME')
-    event_data.domain = self._GetRowValue(query_hash, row, 'ZDOMAIN')
-    event_data.total_time = self._GetRowValue(
-        query_hash, row, 'ZTOTALTIMEINSECONDS')
     event_data.device_identifier = self._GetRowValue(
         query_hash, row, 'ZIDENTIFIER')
+    event_data.device_name = self._GetRowValue(query_hash, row, 'ZNAME')
+    event_data.domain = self._GetRowValue(query_hash, row, 'ZDOMAIN')
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'ZSTARTDATE')
+    event_data.total_time = self._GetRowValue(
+        query_hash, row, 'ZTOTALTIMEINSECONDS')
     event_data.user_family_name = self._GetRowValue(
         query_hash, row, 'ZFAMILYNAME')
     event_data.user_given_name = self._GetRowValue(
         query_hash, row, 'ZGIVENNAME')
 
-    timestamp = self._GetRowValue(query_hash, row, 'ZSTARTDATE')
-
-    date_time_stamp = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
-    start_event = time_events.DateTimeValuesEvent(
-        date_time_stamp, definitions.TIME_DESCRIPTION_START)
-
-    parser_mediator.ProduceEventWithEventData(start_event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IOSScreenTimePlugin)
