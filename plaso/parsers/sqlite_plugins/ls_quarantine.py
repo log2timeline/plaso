@@ -4,35 +4,36 @@
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
 # TODO: describe more clearly what the data value contains.
-class LsQuarantineEventData(events.EventData):
+class MacOSLSQuarantineEventData(events.EventData):
   """MacOS launch services quarantine event data.
 
   Attributes:
     agent (str): user agent that was used to download the file.
     data (bytes): data.
+    downloaded_time (dfdatetime.DateTimeValues): date and time the file
+        was downloaded.
     query (str): SQL query that was used to obtain the event data.
     url (str): original URL of the file.
   """
 
-  DATA_TYPE = 'macosx:lsquarantine'
+  DATA_TYPE = 'macos:lsquarantine:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(LsQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(MacOSLSQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
     self.agent = None
     self.data = None
+    self.downloaded_time = None
     self.query = None
     self.url = None
 
 
-class LsQuarantinePlugin(interface.SQLitePlugin):
+class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS LS quarantine events database files.
 
   The MacOS launch services (LS) quarantine database file is typically stored
@@ -64,6 +65,24 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
           'LSQuarantineOriginTitle TEXT, LSQuarantineOriginURLString TEXT, '
           'LSQuarantineOriginAlias BLOB )')}]
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.CocoaTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+
   def ParseLSQuarantineRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a launch services quarantine event row.
@@ -76,17 +95,15 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = LsQuarantineEventData()
+    event_data = MacOSLSQuarantineEventData()
     event_data.agent = self._GetRowValue(query_hash, row, 'Agent')
     event_data.data = self._GetRowValue(query_hash, row, 'Data')
+    event_data.downloaded_time = self._GetDateTimeRowValue(
+        query_hash, row, 'Time')
     event_data.query = query
     event_data.url = self._GetRowValue(query_hash, row, 'URL')
 
-    timestamp = self._GetRowValue(query_hash, row, 'Time')
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(LsQuarantinePlugin)
+sqlite.SQLiteParser.RegisterPlugin(MacOSLSQuarantinePlugin)

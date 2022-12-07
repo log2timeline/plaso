@@ -1074,6 +1074,17 @@ short_source: 'LOG'
 source: 'MacOS Application Usage Log'
 ---
 type: 'conditional'
+data_type: 'macosx:lsquarantine'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+short_source: 'LOG'
+source: 'MacOS LS Quarantine Database'
+---
+type: 'conditional'
 data_type: 'metadata:openxml'
 message:
 - 'Creating App: {creating_app}'

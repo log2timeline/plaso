@@ -709,6 +709,12 @@ place_holder_event: true
 data_type: 'macos:launchd:entry'
 place_holder_event: true
 ---
+data_type: 'macos:lsquarantine:entry'
+attribute_mappings:
+- name: 'downloaded_time'
+  description: 'File Downloaded Time'
+place_holder_event: true
+---
 data_type: 'macos:notes:entry'
 attribute_mappings:
 - name: 'creation_time'
