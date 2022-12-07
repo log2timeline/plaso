@@ -90,7 +90,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     # Test: data_type is 'macosx:lsquarantine'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
-        ls_quarantine.LsQuarantineEventData, attribute_values_per_name,
+        ls_quarantine.MacOSLSQuarantineEventData, attribute_values_per_name,
         ['file_download'])
 
     # Test: timestamp_desc is 'File Downloaded'

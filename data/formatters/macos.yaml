@@ -282,6 +282,17 @@ short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'conditional'
+data_type: 'macos:lsquarantine:entry'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+short_source: 'LOG'
+source: 'MacOS LS Quarantine Database'
+---
+type: 'conditional'
 data_type: 'macos:notes:entry'
 message:
 - 'title:{title}'
@@ -430,17 +441,6 @@ short_message:
 - 'Action: {action}'
 short_source: 'LOG'
 source: 'MacOS Wifi Log'
----
-type: 'conditional'
-data_type: 'macosx:lsquarantine'
-message:
-- '[{agent}]'
-- 'Downloaded: {url}'
-- '<{data}>'
-short_message:
-- '{url}'
-short_source: 'LOG'
-source: 'MacOS LS Quarantine Database'
 ---
 type: 'conditional'
 data_type: 'plist:key'
