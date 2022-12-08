@@ -25,12 +25,12 @@ from plaso.parsers.sqlite_plugins import ios_screentime
 from plaso.parsers.sqlite_plugins import ios_twitter
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
-from plaso.parsers.sqlite_plugins import mac_document_versions
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import macos_appusage
+from plaso.parsers.sqlite_plugins import macos_document_versions
 from plaso.parsers.sqlite_plugins import macos_knowledgec
 from plaso.parsers.sqlite_plugins import macos_notes
-from plaso.parsers.sqlite_plugins import macos_notificationcenter
+from plaso.parsers.sqlite_plugins import macos_notification_center
 from plaso.parsers.sqlite_plugins import macos_tcc
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype

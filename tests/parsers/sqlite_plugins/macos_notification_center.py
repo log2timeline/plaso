@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.parsers.sqlite_plugins import macos_notificationcenter
+from plaso.parsers.sqlite_plugins import macos_notification_center
 
 from tests.parsers.sqlite_plugins import test_lib
 
@@ -14,7 +14,7 @@ class MacOSNotificationCenterTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plugin = macos_notificationcenter.MacOSNotificationCenterPlugin()
+    plugin = macos_notification_center.MacOSNotificationCenterPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mac_notificationcenter.db'], plugin)
 

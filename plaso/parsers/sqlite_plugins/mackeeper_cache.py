@@ -5,12 +5,9 @@ import codecs
 import json
 
 from dfdatetime import java_time as dfdatetime_java_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -19,6 +16,8 @@ class MacKeeperCacheEventData(events.EventData):
   """MacKeeper Cache event data.
 
   Attributes:
+    added_time (dfdatetime.DateTimeValues): date and time the cache entry was
+        added.
     description (str): description.
     event_type (str): event type.
     offset (str): identifier of the row, from which the event data was
@@ -31,11 +30,13 @@ class MacKeeperCacheEventData(events.EventData):
     user_name (str): user name.
     user_sid (str): user security identifier (SID).
   """
+
   DATA_TYPE = 'mackeeper:cache'
 
   def __init__(self):
     """Initializes event data."""
     super(MacKeeperCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.added_time = None
     self.description = None
     self.event_type = None
     self.offset = None
@@ -132,6 +133,38 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       return {}
 
     return data_dict
+
+  def _GetDateTimeRowValue(self, parser_mediator, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
+    """
+    time_value = self._GetRowValue(query_hash, row, value_name)
+    if time_value is None:
+      return None
+
+    if isinstance(time_value, int):
+      return dfdatetime_java_time.JavaTime(timestamp=time_value)
+
+    try:
+      date_time = dfdatetime_time_elements.TimeElements()
+      date_time.CopyFromDateTimeString(time_value)
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          'Unable to parse time string: {0:s} with error: {1!s}'.format(
+              time_value, exception))
+      return None
+
+    return date_time
 
   def _ParseChatData(self, data):
     """Parses chat comment data.
@@ -238,6 +271,8 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
           data['text'] = 'No additional data.'
 
     event_data = MacKeeperCacheEventData()
+    event_data.added_time = self._GetDateTimeRowValue(
+        parser_mediator, query_hash, row, 'time_string')
     event_data.description = description
     event_data.event_type = data.get('event_type', None)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
@@ -249,22 +284,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data.user_name = data.get('user', None)
     event_data.user_sid = data.get('sid', None)
 
-    time_value = self._GetRowValue(query_hash, row, 'time_string')
-    if isinstance(time_value, int):
-      date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
-    else:
-      try:
-        date_time = dfdatetime_time_elements.TimeElements()
-        date_time.CopyFromDateTimeString(time_value)
-      except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            'Unable to parse time string: {0:s} with error: {1!s}'.format(
-                time_value, exception))
-        date_time = dfdatetime_semantic_time.InvalidTime()
-
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_ADDED)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacKeeperCachePlugin)

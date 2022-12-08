@@ -4,31 +4,33 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacDocumentVersionsEventData(events.EventData):
+class MacOSDocumentVersionsEventData(events.EventData):
   """MacOS document revision event data.
 
   Attributes:
-    last_time (str): the system user ID of the user that opened the file.
+    creation_time (dfdatetime.DateTimeValues): date and time the version
+        information was created.
+    last_seen_time (dfdatetime.DateTimeValues): date and time and the original
+       file was last seen (replicated).
     name (str): name of the original file.
     path (str): path from the original file.
     query (str): SQL query that was used to obtain the event data.
-    user_sid (str): identification user ID that open the file.
+    user_sid (str): user identifier that open the file.
     version_path (str): path to the version copy of the original file.
   """
 
-  DATA_TYPE = 'mac:document_versions:file'
+  DATA_TYPE = 'macos:document_versions:file'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacDocumentVersionsEventData, self).__init__(data_type=self.DATA_TYPE)
-    # TODO: shouldn't this be a separate event?
-    self.last_time = None
+    super(MacOSDocumentVersionsEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.creation_time = None
+    self.last_seen_time = None
     self.name = None
     self.path = None
     self.query = None
@@ -36,7 +38,7 @@ class MacDocumentVersionsEventData(events.EventData):
     self.version_path = None
 
 
-class MacDocumentVersionsPlugin(interface.SQLitePlugin):
+class MacOSDocumentVersionsPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS document revision database files."""
 
   NAME = 'mac_document_versions'
@@ -84,6 +86,24 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   # For this reason the Path to the program has to be added at the beginning.
   ROOT_VERSION_PATH = '/.DocumentRevisions-V100/'
 
+  def _GetDateTimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.PosixTime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
   def DocumentVersionsRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a document versions row.
@@ -109,9 +129,11 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     version_path = self.ROOT_VERSION_PATH + version_path
     path, _, _ = path.rpartition('/')
 
-    event_data = MacDocumentVersionsEventData()
-    # TODO: shouldn't this be a separate event?
-    event_data.last_time = self._GetRowValue(query_hash, row, 'last_time')
+    event_data = MacOSDocumentVersionsEventData()
+    event_data.creation_time = self._GetDateTimeRowValue(
+        query_hash, row, 'version_time')
+    event_data.last_seen_time = self._GetDateTimeRowValue(
+        query_hash, row, 'last_time')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.path = path
     event_data.query = query
@@ -119,11 +141,7 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     event_data.user_sid = '{0!s}'.format(user_sid)
     event_data.version_path = version_path
 
-    timestamp = self._GetRowValue(query_hash, row, 'version_time')
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(MacDocumentVersionsPlugin)
+sqlite.SQLiteParser.RegisterPlugin(MacOSDocumentVersionsPlugin)
