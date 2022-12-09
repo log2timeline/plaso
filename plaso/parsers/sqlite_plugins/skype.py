@@ -13,11 +13,23 @@ class SkypeAccountEventData(events.EventData):
   """Skype account event data.
 
   Attributes:
+    authentication_request_time (dfdatetime.DateTimeValues): date and time
+         the account was last requested to authenticate.
+    authentication_request_sent_time (dfdatetime.DateTimeValues): date and time
+         the last authentication request was sent.
     country (str): home country of the account holder.
     display_name (str): display name of the account holder.
     email (str): registered email address of the account holder.
+    last_online_time (dfdatetime.DateTimeValues): date and time the account
+         was last online.
+    last_used_time (dfdatetime.DateTimeValues): date and time the account
+         was last used.
+    mood_change_time (dfdatetime.DateTimeValues): date and time the mood was
+        last changed.
     offset (str): identifier of the row, from which the event data was
         extracted.
+    profile_change_time (dfdatetime.DateTimeValues): date and time the profile
+         was last changed.
     query (str): SQL query that was used to obtain the event data.
     username (str): full name of the Skype account holder and display name.
   """
@@ -27,10 +39,16 @@ class SkypeAccountEventData(events.EventData):
   def __init__(self):
     """Initialize event data."""
     super(SkypeAccountEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.authentication_request_time = None
+    self.authentication_request_sent_time = None
     self.country = None
     self.display_name = None
     self.email = None
+    self.last_online_time = None
+    self.last_used_time = None
+    self.mood_change_time = None
     self.offset = None
+    self.profile_change_time = None
     self.query = None
     self.username = None
 
@@ -39,12 +57,17 @@ class SkypeCallEventData(events.EventData):
   """Skype call event data.
 
   Attributes:
+    attempt_time (dfdatetime.DateTimeValues): date and time the call was
+        attempted.
     call_type (str): call type, such as: WAITING, STARTED, FINISHED.
     dst_call (str): account which received the call.
+    duration (int): number of seconds the call lasted.
+    end_time (dfdatetime.DateTimeValues): date and time the call was stopped.
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
     src_call (str): account which started the call.
+    start_time (dfdatetime.DateTimeValues): date and time the call was started.
     user_start_call (bool): True if the owner account started the call.
     video_conference (bool): True if the call was a video conference.
   """
@@ -54,11 +77,15 @@ class SkypeCallEventData(events.EventData):
   def __init__(self):
     """Initialize event data."""
     super(SkypeCallEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.attempt_time = None
     self.call_type = None
     self.dst_call = None
+    self.duration = None
+    self.end_time = None
     self.offset = None
     self.query = None
     self.src_call = None
+    self.start_time = None
     self.user_start_call = None
     self.video_conference = None
 
@@ -115,13 +142,18 @@ class SkypeTransferFileEventData(events.EventData):
   """Skype file transfer event data.
 
   Attributes:
-    action_type (str): action type such as: "GETSOLICITUDE", "SENDSOLICITUDE",
-        "ACCEPTED" or "FINISHED".
+    accept_time (dfdatetime.DateTimeValues): date and time the file transfer was
+        accepted.
     destination (str): account that received the file.
+    end_time (dfdatetime.DateTimeValues): date and time the file transfer was
+        stopped.
     offset (str): identifier of the row, from which the event data was
         extracted.
     query (str): SQL query that was used to obtain the event data.
     source (str): account that sent the file.
+    start_time (dfdatetime.DateTimeValues): date and time the file transfer was
+        started.
+    transfer_status (int): file transfer status.
     transferred_filename (str): name of the file transferred.
     transferred_filepath (str): path of the file transferred.
     transferred_filesize (int): size of the file transferred.
@@ -132,11 +164,12 @@ class SkypeTransferFileEventData(events.EventData):
   def __init__(self):
     """Initialize event data."""
     super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.action_type = None
     self.destination = None
+    self.end_time = None
     self.offset = None
     self.query = None
     self.source = None
+    self.start_time = None
     self.transferred_filename = None
     self.transferred_filepath = None
     self.transferred_filesize = None
@@ -484,7 +517,7 @@ class SkypePlugin(interface.SQLitePlugin):
       dfdatetime.PosixTime: date and time value or None if not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
-    if timestamp is None:
+    if not timestamp:
       return None
 
     return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -509,49 +542,26 @@ class SkypePlugin(interface.SQLitePlugin):
     username = '{0!s} <{1!s}>'.format(fullname, display_name)
 
     event_data = SkypeAccountEventData()
+    event_data.authentication_request_time = self._GetDateTimeRowValue(
+        query_hash, row, 'authreq_timestamp')
+    event_data.authentication_request_sent_time = self._GetDateTimeRowValue(
+        query_hash, row, 'sent_authrequest_time')
     event_data.country = self._GetRowValue(query_hash, row, 'country')
     event_data.display_name = display_name
     event_data.email = self._GetRowValue(query_hash, row, 'emails')
+    event_data.last_online_time = self._GetDateTimeRowValue(
+        query_hash, row, 'lastonline_timestamp')
+    event_data.last_used_time = self._GetDateTimeRowValue(
+        query_hash, row, 'lastused_timestamp')
+    event_data.mood_change_time = self._GetDateTimeRowValue(
+        query_hash, row, 'mood_timestamp')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
+    event_data.profile_change_time = self._GetDateTimeRowValue(
+        query_hash, row, 'profile_timestamp')
     event_data.query = query
     event_data.username = username
 
-    timestamp = self._GetRowValue(query_hash, row, 'profile_timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Profile Changed')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'authreq_timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, 'Authenticate Request')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'lastonline_timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Last Online')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'mood_timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Mood Event')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'sent_authrequest_time')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Auth Request Sent')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    timestamp = self._GetRowValue(query_hash, row, 'lastused_timestamp')
-    if timestamp:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Last Used')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseCall(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a call.
@@ -597,48 +607,29 @@ class SkypePlugin(interface.SQLitePlugin):
       destination = dst_aux
 
     call_identifier = self._GetRowValue(query_hash, row, 'id')
+    call_duration = self._GetRowValue(query_hash, row, 'call_duration')
 
     event_data = SkypeCallEventData()
+    event_data.attempt_time = self._GetDateTimeRowValue(
+        query_hash, row, 'try_call')
+    event_data.call_type = 'WAITING'
     event_data.dst_call = destination
+    event_data.duration = call_duration
     event_data.offset = call_identifier
     event_data.query = query
     event_data.src_call = source
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'accept_call')
     event_data.user_start_call = user_start_call
     event_data.video_conference = videostatus == '3'
 
-    timestamp = self._GetRowValue(query_hash, row, 'try_call')
-    event_data.call_type = 'WAITING'
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    try:
-      timestamp = self._GetRowValue(query_hash, row, 'accept_call')
-      timestamp = int(timestamp)
-    except (ValueError, TypeError):
-      timestamp = None
-
-    if timestamp:
+    start_timestamp = self._GetRowValue(query_hash, row, 'accept_call')
+    if start_timestamp and call_duration:
       event_data.call_type = 'ACCEPTED'
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.end_time = dfdatetime_posix_time.PosixTime(
+          timestamp=start_timestamp + call_duration)
 
-      try:
-        call_duration = self._GetRowValue(query_hash, row, 'call_duration')
-        call_duration = int(call_duration)
-      except (ValueError, TypeError):
-        parser_mediator.ProduceExtractionWarning(
-            'unable to determine when call: {0:s} was finished.'.format(
-                call_identifier))
-        call_duration = None
-
-      if call_duration:
-        timestamp += call_duration
-        event_data.call_type = 'FINISHED'
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseChat(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a chat message.
@@ -746,53 +737,23 @@ class SkypePlugin(interface.SQLitePlugin):
       file_size = 0
 
     event_data = SkypeTransferFileEventData()
+    event_data.accept_time = self._GetDateTimeRowValue(
+        query_hash, row, 'accepttime')
     event_data.destination = destination
+    event_data.end_time = self._GetDateTimeRowValue(
+        query_hash, row, 'finishtime')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.source = source
+    event_data.start_time = self._GetDateTimeRowValue(
+        query_hash, row, 'starttime')
+    event_data.transfer_status = self._GetRowValue(query_hash, row, 'status')
     event_data.transferred_filename = filename
     event_data.transferred_filepath = self._GetRowValue(
         query_hash, row, 'filepath')
     event_data.transferred_filesize = file_size
 
-    status = self._GetRowValue(query_hash, row, 'status')
-    starttime = self._GetRowValue(query_hash, row, 'starttime')
-
-    if status == 2:
-      if starttime:
-        event_data.action_type = 'SENDSOLICITUDE'
-
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=starttime)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'File transfer from Skype')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    elif status == 8:
-      if starttime:
-        event_data.action_type = 'GETSOLICITUDE'
-
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=starttime)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'File transfer from Skype')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      accepttime = self._GetRowValue(query_hash, row, 'accepttime')
-      if accepttime:
-        event_data.action_type = 'ACCEPTED'
-
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=accepttime)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'File transfer from Skype')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      finishtime = self._GetRowValue(query_hash, row, 'finishtime')
-      if finishtime:
-        event_data.action_type = 'FINISHED'
-
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=finishtime)
-        event = time_events.DateTimeValuesEvent(
-            date_time, 'File transfer from Skype')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a SMS.

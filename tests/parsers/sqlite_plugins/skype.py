@@ -33,6 +33,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['skype_main.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 20)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 24)
 
@@ -46,96 +50,56 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    number_of_calls = 0
-    number_of_files = 0
-    number_of_sms = 0
-    number_of_chats = 0
-    number_of_account_events = 0
-    for event in events:
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      if event_data.data_type == 'skype:event:call':
-        number_of_calls += 1
-      if event_data.data_type == 'skype:event:transferfile':
-        number_of_files += 1
-      if event_data.data_type == 'skype:event:sms':
-        number_of_sms += 1
-      if event_data.data_type == 'skype:event:chat':
-        number_of_chats += 1
-      if event_data.data_type == 'skype:event:account':
-        number_of_account_events += 1
-
-    self.assertEqual(number_of_files, 4)
-    self.assertEqual(number_of_sms, 1)
-    self.assertEqual(number_of_chats, 15)
-    self.assertEqual(number_of_calls, 3)
-
-    # Test transfer file event.
+    # Test transfer file entry.
     expected_event_values = {
-        'action_type': 'SENDSOLICITUDE',
+        'accept_time': None,
         'data_type': 'skype:event:transferfile',
-        'date_time': '2013-10-24T21:49:32+00:00',
+        'end_time': None,
         'destination': 'european.bbq.competitor <European BBQ>',
         'source': 'gen.beringer <Gen Beringer>',
+        'start_time': '2013-10-24T21:49:32+00:00',
+        'transfer_status': 2,
         'transferred_filename': 'secret-project.pdf'}
 
-    self.CheckEventValues(storage_writer, events[1], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 17)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test SMS event.
+    # Test SMS entry.
     expected_event_values = {
         'data_type': 'skype:event:sms',
-        'date_time': '2013-07-01T22:14:22+00:00',
         'number': '+34123456789',
-        'text': (
-            'If you want I can copy some documents for you, if you can pay '
-            'it... ;)')}
+        'recorded_time': '2013-07-01T22:14:22+00:00',
+        'text': ('If you want I can copy some documents for you, if you can '
+                 'pay it... ;)')}
 
-    self.CheckEventValues(storage_writer, events[23], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 16)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test file event.
-    expected_event_values = {
-        'action_type': 'GETSOLICITUDE',
-        'data_type': 'skype:event:transferfile',
-        'date_time': '2013-10-24T21:49:35+00:00',
-        'destination': 'european.bbq.competitor <European BBQ>',
-        'source': 'gen.beringer <Gen Beringer>',
-        'transferred_filename': 'secret-project.pdf',
-        'transferred_filepath': '/Users/gberinger/Desktop/secret-project.pdf',
-        'transferred_filesize': 69986}
-
-    self.CheckEventValues(storage_writer, events[2], expected_event_values)
-
-    # Test chat event.
+    # Test chat entry.
     expected_event_values = {
         'data_type': 'skype:event:chat',
-        'date_time': '2013-07-30T21:27:11+00:00',
         'from_account': 'Gen Beringer <gen.beringer>',
+        'recorded_time': '2013-07-30T21:27:11+00:00',
         'text': 'need to know if you got it this time.',
         'title': 'European Competitor | need to know if you got it..',
         'to_account': 'european.bbq.competitor'}
 
-    self.CheckEventValues(storage_writer, events[9], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
 
-    # Test chat room event.
+    # Test call entry.
     expected_event_values = {
-        'data_type': 'skype:event:chat',
-        'date_time': '2013-10-27T15:29:19+00:00',
-        'from_account': 'European Competitor <european.bbq.competitor>',
-        'text': 'He is our new employee',
-        'title': 'European Competitor, Echo123',
-        'to_account': 'gen.beringer, echo123'}
-
-    self.CheckEventValues(storage_writer, events[22], expected_event_values)
-
-    # Test call event.
-    expected_event_values = {
+        'attempt_time': '2013-07-01T22:12:17+00:00',
         'data_type': 'skype:event:call',
-        'date_time': '2013-07-01T22:12:17+00:00',
         'dst_call': 'european.bbq.competitor',
+        'end_time': '2013-07-01T22:23:03+00:00',
         'src_call': 'gen.beringer',
+        'start_time': '2013-07-01T22:12:17+00:00',
         'user_start_call': False,
         'video_conference': False}
 
-    self.CheckEventValues(storage_writer, events[5], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 19)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
