@@ -4,7 +4,6 @@
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.containers import time_events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -164,12 +163,14 @@ class SkypeTransferFileEventData(events.EventData):
   def __init__(self):
     """Initialize event data."""
     super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.accept_time = None
     self.destination = None
     self.end_time = None
     self.offset = None
     self.query = None
     self.source = None
     self.start_time = None
+    self.transfer_status = None
     self.transferred_filename = None
     self.transferred_filepath = None
     self.transferred_filesize = None

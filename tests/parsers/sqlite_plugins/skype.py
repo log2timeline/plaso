@@ -48,8 +48,6 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # Test transfer file entry.
     expected_event_values = {
         'accept_time': None,
