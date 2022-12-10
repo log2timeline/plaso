@@ -155,8 +155,7 @@ class SpotlightStoreDatabaseParser(
       name (str): name of the attribute.
 
     Returns:
-      dfdatetime.CocoaTime|list[dfdatetime.CocoaTime]: a date and time value or
-          None if not available.
+      dfdatetime.CocoaTime: a date and time value or None if not available.
     """
     value = self._GetMetadataItemValue(metadata_item, name)
     if not value:
