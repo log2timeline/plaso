@@ -15,7 +15,7 @@ autorun
 file_download
   data_type is 'chrome:history:file_downloaded'
   data_type is 'macos:lsquarantine:entry'
-  timestamp_desc is 'File Downloaded Time'
+  timestamp_desc is 'Downloaded Time'
 
 # Tags device connection events.
 device_connection

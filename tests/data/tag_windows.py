@@ -598,7 +598,7 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     self._CheckLabels(storage_writer, [])
 
-    event.timestamp_desc = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
+    event.timestamp_desc = 'Downloaded Time'
 
     storage_writer = self._TagEvent(event, event_data, None)
 

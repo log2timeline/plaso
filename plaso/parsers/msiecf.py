@@ -8,8 +8,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -65,15 +63,31 @@ class MSIECFURLEventData(events.EventData):
   """MSIECF URL event data.
 
   Attributes:
+    access_time (dfdatetime.DateTimeValues): date and time the MSIECF item was
+        last accessed.
     cached_filename (str): name of the cached file.
     cached_file_size (int): size of the cached file.
     cache_directory_index (int): index of the cache directory.
     cache_directory_name (str): name of the cache directory.
+    creation_time (dfdatetime.DateTimeValues): date and time the MSIECF item
+        was created.
+    expiration_time (dfdatetime.DateTimeValues): date and time the MSIECF item
+        expires.
     http_headers (str): HTTP headers.
+    modification_time (dfdatetime.DateTimeValues): date and time the MSIECF
+        item was last modified.
+    last_visited_time (dfdatetime.DateTimeValues): date and time the MSIECF
+        item was last visited.
     number_of_hits (int): number of hits.
     offset (int): offset of the MSIECF item relative to the start of the file,
         from which the event data was extracted.
+    primary_time (dfdatetime.DateTimeValues): unspecified primary date and time
+        of the MSIECF item.
     recovered (bool): True if the item was recovered.
+    secondary_time (dfdatetime.DateTimeValues): unspecified secondary date and
+        time of the MSIECF item.
+    synchronization_time (dfdatetime.DateTimeValues): synchronization date
+        and time.
     url (str): location URL.
   """
 
@@ -82,14 +96,23 @@ class MSIECFURLEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MSIECFURLEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.access_time = None
+    self.creation_time = None
     self.cached_filename = None
     self.cached_file_size = None
     self.cache_directory_index = None
     self.cache_directory_name = None
+    self.creation_time = None
+    self.expiration_time = None
     self.http_headers = None
+    self.modification_time = None
+    self.last_visited_time = None
     self.number_of_hits = None
     self.offset = None
+    self.primary_time = None
     self.recovered = None
+    self.secondary_time = None
+    self.synchronization_time = None
     self.url = None
 
 
@@ -114,7 +137,6 @@ class MSIECFParser(interface.FileObjectParser):
       recovered (Optional[bool]): True if the item was recovered.
     """
     # TODO: add support for possible last cache synchronization date and time.
-    date_time = dfdatetime_semantic_time.NotSet()
 
     event_data = MSIECFLeakEventData()
     event_data.cached_filename = msiecf_item.filename
@@ -128,9 +150,7 @@ class MSIECFParser(interface.FileObjectParser):
       event_data.cache_directory_name = (
           cache_directories[event_data.cache_directory_index])
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseItems(self, parser_mediator, msiecf_file):
     """Parses a MSIE Cache File (MSIECF) items.
@@ -209,16 +229,12 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_item (pymsiecf.redirected): MSIECF redirected item.
       recovered (Optional[bool]): True if the item was recovered.
     """
-    date_time = dfdatetime_semantic_time.NotSet()
-
     event_data = MSIECFRedirectedEventData()
     event_data.offset = msiecf_item.offset
     event_data.recovered = recovered
     event_data.url = msiecf_item.location
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseUrl(
       self, parser_mediator, format_version, cache_directories, msiecf_item,
@@ -235,51 +251,25 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_item (pymsiecf.url): MSIECF URL item.
       recovered (Optional[bool]): True if the item was recovered.
     """
-    # The secondary time can be stored in either UTC or local time
-    # this is dependent on what the index.dat file is used for.
-    # Either the file path or location string can be used to distinguish
-    # between the different type of files.
-    timestamp = msiecf_item.get_primary_time_as_integer()
-    if not timestamp:
-      primary_date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      primary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-    primary_date_time_description = 'Primary Time'
+    # The secondary time can be stored in either UTC or local time this is
+    # dependent on what the index.dat file is used for. Either the file path
+    # or location string can be used to distinguish between the different types
+    # of files.
 
-    timestamp = msiecf_item.get_secondary_time_as_integer()
-    secondary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-    secondary_date_time_description = 'Secondary Time'
+    primary_timestamp = msiecf_item.get_primary_time_as_integer()
+    secondary_timestamp = msiecf_item.get_secondary_time_as_integer()
 
-    if msiecf_item.type:
-      if msiecf_item.type == 'cache':
-        primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
-        secondary_date_time_description = (
-            definitions.TIME_DESCRIPTION_MODIFICATION)
+    primary_date_time = None
+    if primary_timestamp:
+      primary_date_time = dfdatetime_filetime.Filetime(
+          timestamp=primary_timestamp)
 
-      elif msiecf_item.type == 'cookie':
-        primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
-        secondary_date_time_description = (
-            definitions.TIME_DESCRIPTION_MODIFICATION)
+    secondary_date_time = None
+    if secondary_timestamp:
+      secondary_date_time = dfdatetime_filetime.Filetime(
+          timestamp=secondary_timestamp)
 
-      elif msiecf_item.type == 'history':
-        primary_date_time_description = (
-            definitions.TIME_DESCRIPTION_LAST_VISITED)
-        secondary_date_time_description = (
-            definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-      elif msiecf_item.type == 'history-daily':
-        primary_date_time_description = (
-            definitions.TIME_DESCRIPTION_LAST_VISITED)
-        secondary_date_time_description = (
-            definitions.TIME_DESCRIPTION_LAST_VISITED)
-        # The secondary_date_time is in localtime normalize it to be in UTC.
-        secondary_date_time.is_local_time = True
-
-      elif msiecf_item.type == 'history-weekly':
-        primary_date_time_description = definitions.TIME_DESCRIPTION_CREATION
-        secondary_date_time_description = (
-            definitions.TIME_DESCRIPTION_LAST_VISITED)
-        # The secondary_date_time is in localtime normalize it to be in UTC.
+      if msiecf_item.type in ('history-daily', 'history-weekly'):
         secondary_date_time.is_local_time = True
 
     http_headers = ''
@@ -321,18 +311,24 @@ class MSIECFParser(interface.FileObjectParser):
       event_data.cache_directory_name = (
           cache_directories[event_data.cache_directory_index])
 
-    event = time_events.DateTimeValuesEvent(
-        primary_date_time, primary_date_time_description)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    if msiecf_item.type in ('cache', 'cookie'):
+      event_data.access_time = primary_date_time
+      event_data.modification_time = secondary_date_time
 
-    if secondary_date_time.timestamp != 0:
-      event = time_events.DateTimeValuesEvent(
-          secondary_date_time, secondary_date_time_description,
-          time_zone=parser_mediator.timezone)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    elif msiecf_item.type in ('history', 'history-daily'):
+      event_data.last_visited_time = primary_date_time
+      event_data.secondary_time = secondary_date_time
+
+    elif msiecf_item.type == 'history-weekly':
+      event_data.creation_time = primary_date_time
+      event_data.last_visited_time = secondary_date_time
+
+    else:
+      event_data.primary_time = primary_date_time
+      event_data.secondary_time = secondary_date_time
 
     expiration_timestamp = msiecf_item.get_expiration_time_as_integer()
-    if expiration_timestamp != 0:
+    if expiration_timestamp:
       # The expiration time in MSIECF version 4.7 is stored as a FILETIME value
       # in version 5.2 it is stored as a FAT date time value.
       # Since the as_integer function returns the raw integer value we need to
@@ -350,18 +346,14 @@ class MSIECFParser(interface.FileObjectParser):
           expiration_date_time = dfdatetime_fat_date_time.FATDateTime(
               fat_date_time=expiration_timestamp)
 
-      event = time_events.DateTimeValuesEvent(
-          expiration_date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+      event_data.expiration_time = expiration_date_time
 
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
     if last_checked_timestamp != 0:
-      last_checked_date_time = dfdatetime_fat_date_time.FATDateTime(
+      event_data.synchronization_time = dfdatetime_fat_date_time.FATDateTime(
           fat_date_time=last_checked_timestamp)
 
-      event = time_events.DateTimeValuesEvent(
-          last_checked_date_time, definitions.TIME_DESCRIPTION_LAST_CHECKED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   @classmethod
   def GetFormatSpecification(cls):

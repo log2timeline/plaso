@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.lib import definitions
 from plaso.parsers import msiecf
 
 from tests.parsers import test_lib
@@ -24,6 +23,10 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 7
     #   Number of recovered items       : 11
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 18)
+
     # 7 + 11 records, each with 4 records.
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, (7 + 11) * 4)
@@ -36,8 +39,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
     # Location                : Visited: testing@http://www.trafficfusionx.com
@@ -49,39 +50,26 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     # Cache directory index   : -2 (0xfe)
 
     expected_event_values = {
+        'access_time': None,
         'cache_directory_index': -2,
         'cached_file_size': 0,
+        'creation_time': None,
         'data_type': 'msiecf:url',
-        'date_time': '2011-06-23T18:02:10.0660000+00:00',
+        'expiration_time': '2011-06-29T17:55:02+00:00',
+        'last_visited_time': '2011-06-23T18:02:10.0660000+00:00',
+        'modification_time': None,
         'number_of_hits': 6,
         'offset': 21376,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
+        'primary_time': None,
+        'recovered': False,
+        'secondary_time': '2011-06-23T18:02:10.0660000+00:00',
+        'synchronization_time': '2011-06-23T18:02:12+00:00',
         'url': (
             'Visited: testing@http://www.trafficfusionx.com/download/tfscrn2'
             '/funnycats.exe')}
 
-    self.CheckEventValues(storage_writer, events[8], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'msiecf:url',
-        'date_time': '2011-06-23T18:02:10.0660000+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED}
-
-    self.CheckEventValues(storage_writer, events[9], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'msiecf:url',
-        'date_time': '2011-06-29T17:55:02+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_EXPIRATION}
-
-    self.CheckEventValues(storage_writer, events[10], expected_event_values)
-
-    expected_event_values = {
-        'data_type': 'msiecf:url',
-        'date_time': '2011-06-23T18:02:12+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED}
-
-    self.CheckEventValues(storage_writer, events[11], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testParseLeakAndRedirect(self):
     """Tests the Parse function with leak and redirected records."""
@@ -94,6 +82,10 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 1027
     #   Number of recovered items       : 8
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1035)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 2898)
 
@@ -105,15 +97,17 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
+        'access_time': '2010-11-10T07:54:30.0920000+00:00',
         'cache_directory_index': 0,
         'cache_directory_name': 'R6QWCVX4',
         'cached_file_size': 4286,
         'cached_filename': 'favicon[1].ico',
+        'creation_time': None,
         'data_type': 'msiecf:url',
-        'date_time': '2010-11-10T07:54:32+00:00',
+        'expiration_time': '2011-09-13T21:36:18+00:00',
+        'last_visited_time': None,
+        'modification_time': '2010-08-10T00:03:00.0000000+00:00',
         'http_headers': (
             'HTTP/1.1 200 OK\r\n'
             'Content-Type: image/x-icon\r\n'
@@ -124,10 +118,15 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             '\r\n'
             '~U:nfury\r\n'),
         'number_of_hits': 1,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED,
+        'offset': 24576,
+        'primary_time': None,
+        'recovered': False,
+        'secondary_time': None,
+        'synchronization_time': '2010-11-10T07:54:32+00:00',
         'url': 'http://col.stc.s-msn.com/br/gbl/lg/csl/favicon.ico'}
 
-    self.CheckEventValues(storage_writer, events[3], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'cache_directory_index': 1,
@@ -135,69 +134,22 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         'cached_file_size': 1966,
         'cached_filename': 'ADSAdClient31[1].htm',
         'data_type': 'msiecf:leak',
-        'date_time': 'Not set',
-        'recovered': False,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME}
+        'offset': 26368,
+        'recovered': False}
 
-    self.CheckEventValues(storage_writer, events[16], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
         'data_type': 'msiecf:redirected',
-        'date_time': 'Not set',
+        'offset': 26880,
         'recovered': False,
-        'timestamp_desc': definitions.TIME_DESCRIPTION_NOT_A_TIME,
         'url': (
             'http://ad.doubleclick.net/ad/N2724.Meebo/B5343067.13;'
             'sz=1x1;pc=[TPAS_ID];ord=2642102')}
 
-    self.CheckEventValues(storage_writer, events[21], expected_event_values)
-
-  def testParseWithTimeZone(self):
-    """Tests the Parse function with a time zone."""
-    parser = msiecf.MSIECFParser()
-    storage_writer = self._ParseFile(
-        ['MSHist012013031020130311-index.dat'], parser,
-        time_zone_string='Europe/Amsterdam')
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 83)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    events = list(storage_writer.GetEvents())
-
-    # Test primary last visited time, in UTC, event.
-    expected_event_values = {
-        'date_time': '2013-03-10T10:18:17.2810000+00:00',
-        'timestamp': '2013-03-10 10:18:17.281000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
-        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
-
-    self.CheckEventValues(storage_writer, events[80], expected_event_values)
-
-    # Test secondary last visited time, in local time, event.
-    expected_event_values = {
-        'date_time': '2013-03-10T11:18:17.2810000',
-        'timestamp': '2013-03-10 10:18:17.281000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_VISITED,
-        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
-
-    self.CheckEventValues(storage_writer, events[81], expected_event_values)
-
-    # Test last checked time event.
-    expected_event_values = {
-        'date_time': '2013-03-10T10:18:18+00:00',
-        'timestamp': '2013-03-10 10:18:18.000000',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_LAST_CHECKED,
-        'url': ':2013031020130311: -@:Host: libmsiecf.googlecode.com'}
-
-    self.CheckEventValues(storage_writer, events[82], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 6)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
