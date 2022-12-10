@@ -608,6 +608,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'mackeeper:cache'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+place_holder_event: true
+---
 data_type: 'macos:airport:entry'
 attribute_mappings:
 - name: 'last_connected_time'
@@ -656,6 +662,14 @@ attribute_mappings:
   description: 'Last Name Update Time'
 - name: 'services_update_time'
   description: 'Last Services Update Time'
+place_holder_event: true
+---
+data_type: 'macos:document_versions:file'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'last_seen_time'
+  description: 'Last Seen Time'
 place_holder_event: true
 ---
 data_type: 'macos:fseventsd:record'

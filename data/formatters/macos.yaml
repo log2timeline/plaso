@@ -53,18 +53,6 @@ short_source: 'LOG'
 source: 'iPod Connections'
 ---
 type: 'conditional'
-data_type: 'mac:document_versions:file'
-message:
-- 'Version of [{name}]'
-- '({path})'
-- 'stored in {version_path}'
-- 'by {user_sid}'
-short_message:
-- 'Stored a document version of [{name}]'
-short_source: 'HISTORY'
-source: 'MacOS Document Versions'
----
-type: 'conditional'
 data_type: 'mackeeper:cache'
 message:
 - '{description}'
@@ -187,6 +175,18 @@ short_message:
 - 'Paired: {is_paired}'
 short_source: 'PLIST'
 source: 'MacOS Bluetooth plist'
+---
+type: 'conditional'
+data_type: 'macos:document_versions:file'
+message:
+- 'Version of [{name}]'
+- '({path})'
+- 'stored in {version_path}'
+- 'by {user_sid}'
+short_message:
+- 'Stored a document version of [{name}]'
+short_source: 'HISTORY'
+source: 'MacOS Document Versions'
 ---
 type: 'conditional'
 data_type: 'macos:fseventsd:record'

@@ -934,6 +934,18 @@ short_source: 'LOG'
 source: 'MacOS ASL Log'
 ---
 type: 'conditional'
+data_type: 'mac:document_versions:file'
+message:
+- 'Version of [{name}]'
+- '({path})'
+- 'stored in {version_path}'
+- 'by {user_sid}'
+short_message:
+- 'Stored a document version of [{name}]'
+short_source: 'HISTORY'
+source: 'MacOS Document Versions'
+---
+type: 'conditional'
 data_type: 'mac:keychain:application'
 message:
 - 'Name: {entry_name}'

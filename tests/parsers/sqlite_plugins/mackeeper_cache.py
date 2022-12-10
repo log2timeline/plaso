@@ -18,6 +18,10 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['mackeeper_cache.db'], plugin)
 
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 198)
+
     number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
     self.assertEqual(number_of_events, 198)
 
@@ -29,11 +33,9 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
+        'added_time': '2013-07-12T19:30:31+00:00',
         'data_type': 'mackeeper:cache',
-        'date_time': '2013-07-12T19:30:31+00:00',
         'description': 'Chat Outgoing Message',
         'record_id': 16059074,
         'room': '12828340738351e0593f987450z40787',
@@ -45,7 +47,8 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
             '0z40787/?client-id=51e0593fa1a24468673655&callback=jQuery18301357'
             '1173651143909_1373657420912&_=1373657423647')}
 
-    self.CheckEventValues(storage_writer, events[41], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 41)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
