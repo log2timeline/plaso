@@ -4,16 +4,11 @@
 
 import unittest
 
-from dfdatetime import fake_time
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator
 from plaso.storage.fake import writer as fake_writer
@@ -133,11 +128,9 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for GetParserChain.
   # TODO: add tests for GetRelativePathForPathSpec.
   # TODO: add tests for PopFromParserChain.
-  # TODO: add tests for ProcessEvent.
-  # TODO: add tests for ProduceEventSource.
 
-  def testProduceEventWithEventData(self):
-    """Tests the ProduceEventWithEventData method."""
+  def testProduceEventData(self):
+    """Tests the ProduceEventData method."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = mediator.ParserMediator(knowledge_base_object)
 
@@ -149,17 +142,14 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     event_data_stream = events.EventDataStream()
     parser_mediator.ProduceEventDataStream(event_data_stream)
 
-    date_time = fake_time.FakeTime()
-    event_with_timestamp = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    event_with_timestamp.parser = 'test_parser'
     event_data = events.EventData()
     event_data.parser = 'test_parser'
 
-    parser_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -169,11 +159,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    event_without_timestamp = events.EventObject()
-    event_without_timestamp.parser = 'test_parser'
-    with self.assertRaises(errors.InvalidEvent):
-      parser_mediator.ProduceEventWithEventData(
-          event_without_timestamp, event_data)
+  # TODO: add tests for ProduceEventDataStream.
+  # TODO: add tests for ProduceEventSource.
 
   def testProduceExtractionWarning(self):
     """Tests the ProduceExtractionWarning method."""
@@ -186,9 +173,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer.Open()
 
     parser_mediator.ProduceExtractionWarning('test')
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -209,9 +193,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer.Open()
 
     parser_mediator.ProduceRecoveryWarning('test')
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

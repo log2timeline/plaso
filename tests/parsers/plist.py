@@ -38,8 +38,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['plist_binary'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 12)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 12)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -48,41 +49,6 @@ class PlistParserTest(test_lib.ParserTestCase):
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
-
-    keys = set()
-    roots = set()
-    timestamps = set()
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      keys.add(event_data.key)
-      roots.add(event_data.root)
-      timestamps.add(event.timestamp)
-
-    expected_timestamps = frozenset([
-        1345251192528750, 1351827808261762, 1345251268370453,
-        1351818803000000, 1351819298997673, 1351818797324095,
-        1301012201414766, 1302199013524275, 1341957900020117,
-        1350666391557044, 1350666385239662, 1341957896010535])
-
-    self.assertEqual(len(timestamps), 12)
-    self.assertEqual(timestamps, expected_timestamps)
-
-    expected_roots = frozenset([
-        '/DeviceCache/00-0d-fd-00-00-00',
-        '/DeviceCache/44-00-00-00-00-00',
-        '/DeviceCache/44-00-00-00-00-01',
-        '/DeviceCache/44-00-00-00-00-02',
-        '/DeviceCache/44-00-00-00-00-03',
-        '/DeviceCache/44-00-00-00-00-04'])
-    self.assertEqual(len(roots), 6)
-    self.assertEqual(roots, expected_roots)
-
-    expected_keys = frozenset([
-        'LastInquiryUpdate',
-        'LastServicesUpdate',
-        'LastNameUpdate'])
-    self.assertEqual(len(keys), 3)
-    self.assertTrue(keys, expected_keys)
 
   def testParseWithTruncatedFile(self):
     """Tests the Parse function on a truncated plist file."""
@@ -96,8 +62,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['leading_whitespace.plist'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 4)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -112,8 +79,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['com.apple.security.KCN.plist'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -168,8 +136,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'com.apple.networkextension.uuidcache.plist'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -184,8 +153,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
     storage_writer = self._ParseFile(['empty.plist'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

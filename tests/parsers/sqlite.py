@@ -130,8 +130,9 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile(['contacts2.db'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 5)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -150,8 +151,9 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile(['data.db'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

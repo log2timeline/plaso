@@ -231,9 +231,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 3)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -314,9 +311,6 @@ class ASLParserTest(test_lib.ParserTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 319)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 319)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

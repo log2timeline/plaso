@@ -27,9 +27,6 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 6501)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, (6063 + 438) * 2)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)

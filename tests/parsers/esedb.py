@@ -42,8 +42,9 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     #     Current format:         0x620,17
     #     Page size:              32768 bytes
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -58,8 +59,9 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     parser = esedb.ESEDBParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

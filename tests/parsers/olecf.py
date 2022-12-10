@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.containers import warnings
-from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 
@@ -43,8 +42,9 @@ class OLECFParserTest(test_lib.ParserTestCase):
     #     Sector size         : 512
     #     Short sector size   : 64
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 9)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 12)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -54,14 +54,12 @@ class OLECFParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    events = list(storage_writer.GetEvents())
-
     expected_event_values = {
         'data_type': 'olecf:item',
-        'date_time': '2013-05-16T02:29:49.7850000+00:00',
-        'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
+        'modification_time': '2013-05-16T02:29:49.7850000+00:00'}
 
-    self.CheckEventValues(storage_writer, events[8], expected_event_values)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 8)
+    self.CheckEventData(event_data, expected_event_values)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
@@ -69,8 +67,9 @@ class OLECFParserTest(test_lib.ParserTestCase):
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

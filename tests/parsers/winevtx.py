@@ -21,9 +21,6 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 1601)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3202)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -113,9 +110,6 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 194)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 388)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

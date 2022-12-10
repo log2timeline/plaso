@@ -31,9 +31,6 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 31642)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 126349)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -121,9 +118,6 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 71)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 284)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -166,9 +160,6 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 46)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 184)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -220,9 +211,6 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 19)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 19)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
