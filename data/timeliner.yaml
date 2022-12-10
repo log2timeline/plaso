@@ -1037,6 +1037,32 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'skype:event:account'
+attribute_mappings:
+- name: 'authentication_request_time'
+  description: 'Authentication Request Time'
+- name: 'authentication_request_sent_time'
+  description: 'Authentication Request Sent Time'
+- name: 'last_online_time'
+  description: 'Last Online Time'
+- name: 'last_used_time'
+  description: 'Last Used Time'
+- name: 'mood_change_time'
+  description: 'Mood Change Time'
+- name: 'profile_change_time'
+  description: 'Profile Change Time'
+place_holder_event: true
+---
+data_type: 'skype:event:call'
+attribute_mappings:
+- name: 'attempt_time'
+  description: 'Attempt Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'skype:event:chat'
 attribute_mappings:
 - name: 'recorded_time'
@@ -1047,6 +1073,16 @@ data_type: 'skype:event:sms'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'skype:event:transferfile'
+attribute_mappings:
+- name: 'accept_time'
+  description: 'Accept Time'
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'snort:fastlog:alert'

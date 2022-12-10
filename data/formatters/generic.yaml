@@ -825,12 +825,10 @@ message:
 - 'Source: {source}'
 - 'Destination: {destination}'
 - 'File: {transferred_filename}'
-- '[{action_type}]'
 short_message:
 - 'Source: {source}'
 - 'Destination: {destination}'
 - 'File: {transferred_filename}'
-- '[{action_type}]'
 short_source: 'LOG'
 source: 'Skype File Transfer'
 ---
