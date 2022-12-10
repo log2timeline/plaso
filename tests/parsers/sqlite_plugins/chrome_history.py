@@ -22,10 +22,6 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 71)
 
-    # The History file contains 71 events (69 page visits, 1 file downloads).
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 71)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -73,10 +69,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 2)
-
-    # The History file contains 3 events (1 page visit, 2 file downloads).
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -126,10 +118,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 2)
 
-    # The History file contains 3 events (1 page visit, 2 file downloads).
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -177,10 +165,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 2)
-
-    # The History file contains 3 events (1 page visit, 2 file downloads).
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -231,10 +215,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 2)
-
-    # The History file contains 3 events (1 page visit, 2 file downloads).
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

@@ -22,9 +22,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 17)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 51)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 4)
@@ -53,9 +50,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 77)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 231)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

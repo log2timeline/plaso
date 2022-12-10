@@ -22,10 +22,6 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 57)
 
-    # We should have 115 events in total with no warnings.
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 115)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -65,10 +61,6 @@ class AndroidTangoTCTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 25)
-
-    # We should have 43 events in total with no warnings.
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 43)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
