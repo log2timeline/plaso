@@ -188,18 +188,10 @@ plaso.parsers.text\_plugins.setupapi module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.text\_plugins.skydrivelog1 module
------------------------------------------------
+plaso.parsers.text\_plugins.skydrivelog module
+----------------------------------------------
 
-.. automodule:: plaso.parsers.text_plugins.skydrivelog1
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.text\_plugins.skydrivelog2 module
------------------------------------------------
-
-.. automodule:: plaso.parsers.text_plugins.skydrivelog2
+.. automodule:: plaso.parsers.text_plugins.skydrivelog
    :members:
    :undoc-members:
    :show-inheritance:

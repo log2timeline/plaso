@@ -11,6 +11,12 @@ class ProcessStatus(object):
     display_name (str): human readable of the file entry currently being
         processed by the process.
     identifier (str): process identifier.
+    number_of_consumed_event_data (int): total number of event data consumed by
+        the process.
+    number_of_consumed_event_data_delta (int): number of event data consumed by
+        the process since the last status update.
+    number_of_consumed_events (int): total number of events consumed by
+        the process.
     number_of_consumed_event_tags (int): total number of event tags consumed by
         the process.
     number_of_consumed_event_tags_delta (int): number of event tags consumed by
@@ -27,6 +33,10 @@ class ProcessStatus(object):
         by the process.
     number_of_consumed_sources_delta (int): number of event sources consumed
         by the process since the last status update.
+    number_of_produced_event_data (int): total number of event data produced by
+        the process.
+    number_of_produced_event_data_delta (int): number of event data produced by
+        the process since the last status update.
     number_of_produced_event_tags (int): total number of event tags produced by
         the process.
     number_of_produced_event_tags_delta (int): number of event tags produced by
@@ -53,6 +63,8 @@ class ProcessStatus(object):
     super(ProcessStatus, self).__init__()
     self.display_name = None
     self.identifier = None
+    self.number_of_consumed_event_data = 0
+    self.number_of_consumed_event_data_delta = 0
     self.number_of_consumed_event_tags = 0
     self.number_of_consumed_event_tags_delta = 0
     self.number_of_consumed_events = 0
@@ -61,6 +73,8 @@ class ProcessStatus(object):
     self.number_of_consumed_reports_delta = 0
     self.number_of_consumed_sources = 0
     self.number_of_consumed_sources_delta = 0
+    self.number_of_produced_event_data = 0
+    self.number_of_produced_event_data_delta = 0
     self.number_of_produced_event_tags = 0
     self.number_of_produced_event_tags_delta = 0
     self.number_of_produced_events = 0
@@ -72,6 +86,38 @@ class ProcessStatus(object):
     self.pid = None
     self.status = None
     self.used_memory = 0
+
+  def UpdateNumberOfEventData(
+      self, number_of_consumed_event_data, number_of_produced_event_data):
+    """Updates the number of event data.
+
+    Args:
+      number_of_consumed_event_data (int): total number of event data consumed
+          by the process.
+      number_of_produced_event_data (int): total number of event data produced
+          by the process.
+
+    Raises:
+      ValueError: if the consumed or produced number of event data is smaller
+          than the value of the previous update.
+    """
+    if number_of_consumed_event_data is not None:
+      if number_of_consumed_event_data < self.number_of_consumed_event_data:
+        raise ValueError(
+            'Number of consumed event data smaller than previous update.')
+
+      self.number_of_consumed_event_data_delta = (
+          number_of_consumed_event_data - self.number_of_consumed_event_data)
+      self.number_of_consumed_event_data = number_of_consumed_event_data
+
+    if number_of_produced_event_data is not None:
+      if number_of_produced_event_data < self.number_of_produced_event_data:
+        raise ValueError(
+            'Number of produced event data smaller than previous update.')
+
+      self.number_of_produced_event_data_delta = (
+          number_of_produced_event_data - self.number_of_produced_event_data)
+      self.number_of_produced_event_data = number_of_produced_event_data
 
   def UpdateNumberOfEventReports(
       self, number_of_consumed_reports, number_of_produced_reports):
@@ -238,6 +284,7 @@ class ProcessingStatus(object):
   def _UpdateProcessStatus(
       self, process_status, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_event_data, number_of_produced_event_data,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_reports, number_of_produced_reports):
@@ -256,6 +303,10 @@ class ProcessingStatus(object):
           by the process.
       number_of_produced_sources (int): total number of event sources produced
           by the process.
+      number_of_consumed_event_data (int): total number of event data consumed
+          by the process.
+      number_of_produced_event_data (int): total number of event data produced
+          by the process.
       number_of_consumed_events (int): total number of events consumed by
           the process.
       number_of_produced_events (int): total number of events produced by
@@ -271,6 +322,9 @@ class ProcessingStatus(object):
     """
     process_status.UpdateNumberOfEventSources(
         number_of_consumed_sources, number_of_produced_sources)
+
+    process_status.UpdateNumberOfEventData(
+        number_of_consumed_event_data, number_of_produced_event_data)
 
     process_status.UpdateNumberOfEvents(
         number_of_consumed_events, number_of_produced_events)
@@ -293,6 +347,7 @@ class ProcessingStatus(object):
   def UpdateForemanStatus(
       self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_event_data, number_of_produced_event_data,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_reports, number_of_produced_reports):
@@ -309,6 +364,10 @@ class ProcessingStatus(object):
       number_of_consumed_sources (int): total number of event sources consumed
           by the foreman.
       number_of_produced_sources (int): total number of event sources produced
+          by the foreman.
+      number_of_consumed_event_data (int): total number of event data consumed
+          by the foreman.
+      number_of_produced_event_data (int): total number of event data produced
           by the foreman.
       number_of_consumed_events (int): total number of events consumed by
           the foreman.
@@ -329,6 +388,7 @@ class ProcessingStatus(object):
     self._UpdateProcessStatus(
         self.foreman_status, identifier, status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_event_data, number_of_produced_event_data,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_reports, number_of_produced_reports)
@@ -353,6 +413,7 @@ class ProcessingStatus(object):
   def UpdateWorkerStatus(
       self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_event_data, number_of_produced_event_data,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_reports, number_of_produced_reports):
@@ -369,6 +430,10 @@ class ProcessingStatus(object):
       number_of_consumed_sources (int): total number of event sources consumed
           by the worker.
       number_of_produced_sources (int): total number of event sources produced
+          by the worker.
+      number_of_consumed_event_data (int): total number of event data consumed
+          by the worker.
+      number_of_produced_event_data (int): total number of event data produced
           by the worker.
       number_of_consumed_events (int): total number of events consumed by
           the worker.
@@ -390,6 +455,7 @@ class ProcessingStatus(object):
     self._UpdateProcessStatus(
         process_status, identifier, status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_event_data, number_of_produced_event_data,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_reports, number_of_produced_reports)

@@ -167,13 +167,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
     self._merge_task_on_hold = None
-    self._number_of_consumed_events = 0
-    self._number_of_consumed_event_tags = 0
-    self._number_of_consumed_reports = 0
+    self._number_of_consumed_event_data = 0
     self._number_of_consumed_sources = 0
+    self._number_of_produced_event_data = 0
     self._number_of_produced_events = 0
-    self._number_of_produced_event_tags = 0
-    self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
     self._parsers_counter = collections.Counter()
@@ -366,11 +363,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       parser_name = container.parser.rsplit('/', maxsplit=1)[-1]
       merge_helper.event_data_parser_mappings[lookup_key] = parser_name
 
+      self._number_of_produced_event_data += 1
+
       self._status = definitions.STATUS_INDICATOR_TIMELINING
 
       # Generate events on merge.
       self._event_data_timeliner.ProcessEventData(storage_writer, container)
 
+      self._number_of_consumed_event_data += 1
       self._number_of_produced_events += (
           self._event_data_timeliner.number_of_produced_events)
 
@@ -561,13 +561,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._processing_profiler.StartTiming('process_sources')
 
     self._status = definitions.STATUS_INDICATOR_COLLECTING
-    self._number_of_consumed_event_tags = 0
-    self._number_of_consumed_events = 0
-    self._number_of_consumed_reports = 0
+    self._number_of_consumed_event_data = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_event_tags = 0
+    self._number_of_produced_event_data = 0
     self._number_of_produced_events = 0
-    self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
     stored_parsers_counter = collections.Counter({
@@ -867,10 +864,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._processing_status.UpdateForemanStatus(
         self._name, self._status, self._pid, used_memory, display_name,
         self._number_of_consumed_sources, self._number_of_produced_sources,
-        self._number_of_consumed_events, self._number_of_produced_events,
-        self._number_of_consumed_event_tags,
-        self._number_of_produced_event_tags, self._number_of_consumed_reports,
-        self._number_of_produced_reports)
+        self._number_of_consumed_event_data,
+        self._number_of_produced_event_data,
+        0, self._number_of_produced_events, 0, 0, 0, 0)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -897,20 +893,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     display_name = process_status.get('display_name', '')
 
-    number_of_consumed_event_tags = process_status.get(
-        'number_of_consumed_event_tags', None)
-    number_of_produced_event_tags = process_status.get(
-        'number_of_produced_event_tags', None)
+    number_of_consumed_event_data = process_status.get(
+        'number_of_consumed_event_data', None)
+    number_of_produced_event_data = process_status.get(
+        'number_of_produced_event_data', None)
 
     number_of_consumed_events = process_status.get(
         'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
         'number_of_produced_events', None)
-
-    number_of_consumed_reports = process_status.get(
-        'number_of_consumed_reports', None)
-    number_of_produced_reports = process_status.get(
-        'number_of_produced_reports', None)
 
     number_of_consumed_sources = process_status.get(
         'number_of_consumed_sources', None)
@@ -934,9 +925,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_event_data, number_of_produced_event_data,
         number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_reports, number_of_produced_reports)
+        0, 0, 0, 0)
 
     task_identifier = process_status.get('task_identifier', '')
     if not task_identifier:

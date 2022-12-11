@@ -100,14 +100,6 @@ plaso.containers.tasks module
    :undoc-members:
    :show-inheritance:
 
-plaso.containers.time\_events module
-------------------------------------
-
-.. automodule:: plaso.containers.time_events
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.containers.warnings module
 --------------------------------
 

@@ -76,14 +76,14 @@ class ProcessingStatusTest(unittest.TestCase):
     status = processing_status.ProcessingStatus()
     status._UpdateProcessStatus(
         process_status, 'test', 'Idle', 12345, 2000000, 'test process',
-        0, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   def testUpdateForemanStatus(self):
     """Tests the UpdateForemanStatus function."""
     status = processing_status.ProcessingStatus()
     status.UpdateForemanStatus(
         'test', 'Idle', 12345, 2000000, 'test process',
-        0, 0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   def testUpdateTasksStatus(self):
     """Tests the UpdateTasksStatus function."""
@@ -97,7 +97,7 @@ class ProcessingStatusTest(unittest.TestCase):
     status = processing_status.ProcessingStatus()
     status.UpdateWorkerStatus(
         'test', 'Idle', 12345, 2000000, 'test process', 0,
-        0, 0, 0, 0, 0, 0, 0)
+        0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 class TasksStatusTest(unittest.TestCase):
