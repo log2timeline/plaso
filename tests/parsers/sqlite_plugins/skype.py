@@ -13,22 +13,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Skype main.db history database plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a Skype History database file.
-
-    The History file contains 24 events:
-      3 call events
-      4 transfers file events
-      1 sms event
-      1 account event
-      15 chat events
-
-    Events used:
-      id = 16 -> SMS
-      id = 22 -> Call
-      id = 18 -> File
-      id =  1 -> Chat
-      id = 14 -> ChatRoom
-    """
+    """Tests the Process function."""
     plugin = skype.SkypePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['skype_main.db'], plugin)
@@ -36,9 +21,6 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 20)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 24)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

@@ -22,9 +22,6 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
         'event_data')
     self.assertEqual(number_of_event_data, 603)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 1755)
-
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
     self.assertEqual(number_of_warnings, 0)
@@ -64,9 +61,6 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 6)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 16)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
