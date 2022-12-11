@@ -147,7 +147,7 @@ kik_ios | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
 kodi | Parser for Kodi videos SQLite database (MyVideos.db) files.
 ls_quarantine | Parser for MacOS launch services quarantine events database SQLite database files.
 mac_document_versions | Parser for MacOS document revisions SQLite database files.
-mac_knowledgec | Parser for MacOS Duet / KnowledgeC SQLites database files.
+mac_knowledgec | Parser for MacOS Duet/KnowledgeC SQLites database files.
 mac_notes | Parser for MacOS Notes SQLite database (NotesV7.storedata) files.
 mac_notificationcenter | Parser for MacOS Notification Center SQLite database files.
 mackeeper_cache | Parser for MacOS MacKeeper cache SQLite database files.

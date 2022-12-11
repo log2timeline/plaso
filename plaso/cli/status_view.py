@@ -111,12 +111,15 @@ class StatusView(object):
         process_status.identifier, process_status.pid, process_status.status,
         used_memory, events, event_tags, reports])
 
-  def _AddExtractionProcessStatusTableRow(self, process_status, table_view):
+  def _AddExtractionProcessStatusTableRow(
+      self, process_status, table_view, show_events):
     """Adds an extraction process status table row.
 
     Args:
       process_status (ProcessStatus): processing status.
       table_view (CLITabularTableView): table view.
+      show_events (bool): True if number of events should be shown instead of
+          number of event data.
     """
     used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
 
@@ -127,18 +130,26 @@ class StatusView(object):
           process_status.number_of_produced_sources,
           process_status.number_of_produced_sources_delta)
 
-    events = ''
-    if (process_status.number_of_produced_events is not None and
-        process_status.number_of_produced_events_delta is not None):
-      events = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_events,
-          process_status.number_of_produced_events_delta)
+    events_or_event_data = ''
+    if show_events:
+      if (process_status.number_of_produced_events is not None and
+          process_status.number_of_produced_events_delta is not None):
+        events_or_event_data = '{0:d} ({1:d})'.format(
+            process_status.number_of_produced_events,
+            process_status.number_of_produced_events_delta)
+    else:
+      if (process_status.number_of_produced_event_data is not None and
+          process_status.number_of_produced_event_data_delta is not None):
+        events_or_event_data = '{0:d} ({1:d})'.format(
+            process_status.number_of_produced_event_data,
+            process_status.number_of_produced_event_data_delta)
 
     # TODO: shorten display name to fit in 80 chars and show the filename.
 
     table_view.AddRow([
         process_status.identifier, process_status.pid, process_status.status,
-        used_memory, sources, events, process_status.display_name])
+        used_memory, sources, events_or_event_data,
+        process_status.display_name])
 
   def _ClearScreen(self):
     """Clears the terminal/console screen."""
@@ -329,18 +340,19 @@ class StatusView(object):
         'Processing time: {0:s}\n'.format(processing_time))
 
     status_line = (
-        '{0:s} (PID: {1:d}) status: {2:s}, events produced: {3:d}, file: '
-        '{4:s}\n').format(
+        '{0:s} (PID: {1:d}) status: {2:s}, event data produced: {3:d}, events '
+        'produced: {4:d}, file: {5:s}\n').format(
             processing_status.foreman_status.identifier,
             processing_status.foreman_status.pid,
             processing_status.foreman_status.status,
+            processing_status.foreman_status.number_of_produced_event_data,
             processing_status.foreman_status.number_of_produced_events,
             processing_status.foreman_status.display_name)
     self._output_writer.Write(status_line)
 
     for worker_status in processing_status.workers_status:
       status_line = (
-          '{0:s} (PID: {1:d}) status: {2:s}, events produced: {3:d}, file: '
+          '{0:s} (PID: {1:d}) status: {2:s}, event data produced: {3:d}, file: '
           '{4:s}\n').format(
               worker_status.identifier, worker_status.pid, worker_status.status,
               worker_status.number_of_produced_events,
@@ -358,21 +370,35 @@ class StatusView(object):
     if self._stdout_output_writer:
       self._ClearScreen()
 
+    workers_status = processing_status.workers_status
+
+    show_events = bool(
+        processing_status.foreman_status.number_of_produced_events and
+        not workers_status)
+
     output_text = 'plaso - {0:s} version {1:s}\n\n'.format(
         self._tool_name, plaso.__version__)
     self._output_writer.Write(output_text)
 
     self.PrintExtractionStatusHeader(processing_status)
 
-    table_view = views.CLITabularTableView(column_names=[
-        'Identifier', 'PID', 'Status', 'Memory', 'Sources', 'Events',
-        'File'], column_sizes=[15, 7, 15, 15, 15, 15, 0])
+    if show_events:
+      column_name = [
+          'Identifier', 'PID', 'Status', 'Memory', 'Sources', 'Events', 'File']
+    else:
+      column_name = [
+          'Identifier', 'PID', 'Status', 'Memory', 'Sources', 'Event Data',
+          'File']
+
+    table_view = views.CLITabularTableView(
+        column_names=column_name, column_sizes=[15, 7, 15, 15, 15, 15, 0])
 
     self._AddExtractionProcessStatusTableRow(
-        processing_status.foreman_status, table_view)
+        processing_status.foreman_status, table_view, show_events)
 
-    for worker_status in processing_status.workers_status:
-      self._AddExtractionProcessStatusTableRow(worker_status, table_view)
+    for worker_status in workers_status:
+      self._AddExtractionProcessStatusTableRow(
+          worker_status, table_view, show_events)
 
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')

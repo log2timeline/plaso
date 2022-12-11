@@ -67,8 +67,8 @@ class ParserMediator(object):
     self._last_event_data_identifier = None
     self._lcid = self._DEFAULT_LCID
     self._memory_profiler = None
+    self._number_of_event_data = 0
     self._number_of_event_sources = 0
-    self._number_of_events = 0
     self._number_of_extraction_warnings = 0
     self._number_of_recovery_warnings = 0
     self._parser_chain_components = []
@@ -113,14 +113,14 @@ class ParserMediator(object):
     return self._language_tag
 
   @property
+  def number_of_produced_event_data(self):
+    """int: number of produced event data."""
+    return self._number_of_event_data
+
+  @property
   def number_of_produced_event_sources(self):
     """int: number of produced event sources."""
     return self._number_of_event_sources
-
-  @property
-  def number_of_produced_events(self):
-    """int: number of produced events."""
-    return self._number_of_events
 
   @property
   def number_of_produced_extraction_warnings(self):
@@ -401,6 +401,7 @@ class ParserMediator(object):
           self._event_data_stream_identifier)
 
     self._storage_writer.AddAttributeContainer(event_data)
+    self._number_of_event_data += 1
 
     self.last_activity_timestamp = time.time()
 

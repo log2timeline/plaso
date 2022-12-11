@@ -86,10 +86,12 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     status = {
         'display_name': '',
         'identifier': self._name,
+        'number_of_consumed_event_data': None,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
+        'number_of_produced_event_data': None,
         'number_of_produced_event_tags': number_of_produced_event_tags,
         'number_of_produced_events': None,
         'number_of_produced_reports': number_of_produced_reports,

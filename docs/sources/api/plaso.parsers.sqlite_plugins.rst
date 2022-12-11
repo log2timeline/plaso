@@ -12,10 +12,34 @@ plaso.parsers.sqlite\_plugins.android\_calls module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.android\_hangouts module
+------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_hangouts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.android\_sms module
 -------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_sms
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.android\_tango module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_tango
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.android\_twitter module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_twitter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,14 +56,6 @@ plaso.parsers.sqlite\_plugins.android\_webviewcache module
 ----------------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_webviewcache
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.appusage module
----------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.appusage
    :members:
    :undoc-members:
    :show-inheritance:
@@ -116,14 +132,6 @@ plaso.parsers.sqlite\_plugins.gdrive module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.sqlite\_plugins.hangouts\_messages module
--------------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.hangouts_messages
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.sqlite\_plugins.imessage module
 ---------------------------------------------
 
@@ -136,6 +144,14 @@ plaso.parsers.sqlite\_plugins.interface module
 ----------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.ios\_kik module
+---------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_kik
    :members:
    :undoc-members:
    :show-inheritance:
@@ -164,10 +180,10 @@ plaso.parsers.sqlite\_plugins.ios\_screentime module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.sqlite\_plugins.kik\_ios module
----------------------------------------------
+plaso.parsers.sqlite\_plugins.ios\_twitter module
+-------------------------------------------------
 
-.. automodule:: plaso.parsers.sqlite_plugins.kik_ios
+.. automodule:: plaso.parsers.sqlite_plugins.ios_twitter
    :members:
    :undoc-members:
    :show-inheritance:
@@ -188,42 +204,50 @@ plaso.parsers.sqlite\_plugins.ls\_quarantine module
    :undoc-members:
    :show-inheritance:
 
-plaso.parsers.sqlite\_plugins.mac\_document\_versions module
-------------------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.mac_document_versions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.mac\_knowledgec module
-----------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.mac_knowledgec
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.mac\_notes module
------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.mac_notes
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.mac\_notificationcenter module
-------------------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.mac_notificationcenter
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.parsers.sqlite\_plugins.mackeeper\_cache module
 -----------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.mackeeper_cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.macos\_appusage module
+----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.macos_appusage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.macos\_document\_versions module
+--------------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.macos_document_versions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.macos\_knowledgec module
+------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.macos_knowledgec
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.macos\_notes module
+-------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.macos_notes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.sqlite\_plugins.macos\_notification\_center module
+----------------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.macos_notification_center
    :members:
    :undoc-members:
    :show-inheritance:
@@ -248,30 +272,6 @@ plaso.parsers.sqlite\_plugins.skype module
 ------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.skype
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.tango\_android module
----------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.tango_android
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.twitter\_android module
------------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.twitter_android
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.parsers.sqlite\_plugins.twitter\_ios module
--------------------------------------------------
-
-.. automodule:: plaso.parsers.sqlite_plugins.twitter_ios
    :members:
    :undoc-members:
    :show-inheritance:

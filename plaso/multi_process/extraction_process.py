@@ -48,7 +48,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._extraction_worker = None
     self._file_system_cache = []
     self._knowledge_base = knowledge_base
-    self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._resolver_context = None
@@ -117,12 +116,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       dict[str, object]: status attributes, indexed by name.
     """
     if self._parser_mediator:
-      number_of_produced_events = (
-          self._parser_mediator.number_of_produced_events)
+      number_of_produced_event_data = (
+          self._parser_mediator.number_of_produced_event_data)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
     else:
-      number_of_produced_events = None
+      number_of_produced_event_data = None
       number_of_produced_sources = None
 
     if self._extraction_worker and self._parser_mediator:
@@ -152,11 +151,13 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         'display_name': self._current_display_name,
         'identifier': self._name,
         'last_activity_timestamp': last_activity_timestamp,
+        'number_of_consumed_event_data': None,
         'number_of_consumed_event_tags': None,
-        'number_of_consumed_events': self._number_of_consumed_events,
+        'number_of_consumed_events': None,
         'number_of_consumed_sources': self._number_of_consumed_sources,
+        'number_of_produced_event_data': number_of_produced_event_data,
         'number_of_produced_event_tags': None,
-        'number_of_produced_events': number_of_produced_events,
+        'number_of_produced_events': None,
         'number_of_produced_sources': number_of_produced_sources,
         'processing_status': processing_status,
         'task_identifier': task_identifier,

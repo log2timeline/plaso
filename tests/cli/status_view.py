@@ -76,13 +76,13 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         'f_identifier', 'f_status', 123, 0,
-        'f_test_file', 1, 29, 3, 456, 5, 6, 9, 10)
+        'f_test_file', 1, 29, 1, 2, 3, 456, 5, 6, 9, 10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     expected_output = (
         'Processing time: 00:00:00\n'
-        'f_identifier (PID: 123) status: f_status, events produced: 456, '
-        'file: f_test_file\n'
+        'f_identifier (PID: 123) status: f_status, event data produced: 2, '
+        'events produced: 456, file: f_test_file\n'
         '\n')
 
     output = output_writer.ReadOutput()
@@ -90,14 +90,14 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
-        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10)
+        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10, 11, 12)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     expected_output = (
         'Processing time: 00:00:00\n'
-        'f_identifier (PID: 123) status: f_status, events produced: 456, '
-        'file: f_test_file\n'
-        'w_identifier (PID: 123) status: w_status, events produced: 4, '
+        'f_identifier (PID: 123) status: f_status, event data produced: 2, '
+        'events produced: 456, file: f_test_file\n'
+        'w_identifier (PID: 123) status: w_status, event data produced: 6, '
         'file: w_test_file\n'
         '\n')
 
@@ -115,7 +115,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
         'f_identifier', 'f_status', 123, 0,
-        'f_test_file', 1, 29, 3, 456, 5, 6, 9, 10)
+        'f_test_file', 1, 29, 1, 2, 3, 456, 5, 6, 9, 10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
     table_header = (
@@ -153,8 +153,20 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
-        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10)
+        'w_test_file', 1, 2, 3, 4, 5, 6, 9, 10, 11, 12)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
+
+    table_header = (
+        'Identifier      '
+        'PID     '
+        'Status          '
+        'Memory          '
+        'Sources         '
+        'Event Data      '
+        'File')
+
+    if not sys.platform.startswith('win'):
+      table_header = '\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
     expected_output = [
         'plaso - test_tool version {0:s}'.format(plaso.__version__),
@@ -169,7 +181,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
          'f_status        '
          '0 B             '
          '29 (29)         '
-         '456 (456)       '
+         '2 (2)           '
          'f_test_file'),
         ('w_identifier    '
          '123     '

@@ -36,6 +36,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._event_data_timeliner = None
     self._extraction_worker = None
     self._file_system_cache = []
+    self._number_of_consumed_event_data = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_events = 0
     self._parser_mediator = None
@@ -99,6 +100,7 @@ class SingleProcessEngine(engine.BaseEngine):
       self._event_data_timeliner.ProcessEventData(
           self._storage_writer, event_data)
 
+      self._number_of_consumed_event_data += 1
       self._number_of_produced_events += (
           self._event_data_timeliner.number_of_produced_events)
 
@@ -141,9 +143,6 @@ class SingleProcessEngine(engine.BaseEngine):
     try:
       self._extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
-
-      self._number_of_produced_events = (
-          parser_mediator.number_of_produced_events)
 
     except KeyboardInterrupt:
       self._abort = True
@@ -282,6 +281,8 @@ class SingleProcessEngine(engine.BaseEngine):
         self._name, status, self._pid, used_memory, self._current_display_name,
         self._number_of_consumed_sources,
         self._parser_mediator.number_of_produced_event_sources,
+        self._number_of_consumed_event_data,
+        self._parser_mediator.number_of_produced_event_data,
         0, self._number_of_produced_events,
         0, 0,
         0, 0)
