@@ -8,15 +8,13 @@ import zlib
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from dtfabric import errors as dtfabric_errors
 from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 import lz4.block
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import definitions
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
@@ -28,14 +26,37 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
   """Apple Spotlight store database metadata item event data.
 
   Attributes:
+    added_time (dfdatetime.DateTimeValues): date and time the item was added
+        (kMDItemDateAdded).
+    attribute_change_time (dfdatetime.DateTimeValues): date and time
+        an attribute was last changed (kMDItemAttributeChangeDate).
+    content_creation_time (dfdatetime.DateTimeValues): date and time
+        the content was created (kMDItemContentCreationDate).
+    content_modification_time (dfdatetime.DateTimeValues): date and time
+        the content was last modified (kMDItemContentModificationDate).
     content_type (str): content type of the corresponding file (system) entry
         (kMDItemContentType).
+    creation_time (dfdatetime.DateTimeValues): date and time the item was
+        created (_kMDItemCreationDate).
+    downloaded_time (dfdatetime.DateTimeValues): date and time the item was
+        downloaded (kMDItemDownloadedDate).
     file_name (str): name of the corresponding file (system) entry
         (_kMDItemFileName).
     file_system_identifier (int): file system identifier, for example the
         catalog node identifier (CNID) on HFS.
     kind (str): item kind (kMDItemKind).
+    modification_time (dfdatetime.DateTimeValues): date and time the item was
+        last modified (_kMDItemContentChangeDate).
     parent_file_system_identifier (int): file system identifier of the parent.
+    purchase_time  (dfdatetime.DateTimeValues): date and time the item was
+        purchased in the AppStore (kMDItemAppStorePurchaseDate).
+    snapshot_times (list[dfdatetime.DateTimeValues]): dates and times of
+        the creation of backup snaphots (_kTimeMachineOldestSnapshot and
+        _kTimeMachineNewestSnapshot).
+    update_time (dfdatetime.DateTimeValues): date and time the item was last
+        updated.
+    used_times (list[dfdatetime.DateTimeValues]): dates and times when the item
+        was used (kMDItemUsedDates and kMDItemLastUsedDate).
   """
 
   DATA_TYPE = 'spotlight:metadata_item'
@@ -44,10 +65,22 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
     """Initializes event data."""
     super(SpotlightStoreMetadataItemEventData, self).__init__(
         data_type=self.DATA_TYPE)
+    self.added_time = None
+    self.attribute_change_time = None
+    self.content_creation_time = None
+    self.content_modification_time = None
     self.content_type = None
+    self.creation_time = None
+    self.downloaded_time = None
     self.file_name = None
     self.file_system_identifier = None
+    self.kind = None
+    self.modification_time = None
     self.parent_file_system_identifier = None
+    self.purchase_time  = None
+    self.snapshot_times = None
+    self.update_time = None
+    self.used_times = None
 
 
 class SpotlightStoreMetadataAttribute(object):
@@ -105,31 +138,6 @@ class SpotlightStoreDatabaseParser(
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'spotlight_storedb.yaml')
 
-  # Names of metadata attributes that contain date and time values.
-  _DATE_TIME_METADATA_ATTRIBUTES = [
-      ('_kMDItemContentChangeDate', definitions.TIME_DESCRIPTION_MODIFICATION),
-      ('_kMDItemCreationDate', definitions.TIME_DESCRIPTION_CREATION),
-      ('_kTimeMachineNewestSnapshot', definitions.TIME_DESCRIPTION_BACKUP),
-      ('_kTimeMachineOldestSnapshot', definitions.TIME_DESCRIPTION_BACKUP),
-      ('kMDItemAppStorePurchaseDate', definitions.TIME_DESCRIPTION_PURCHASED),
-      ('kMDItemAttributeChangeDate',
-       definitions.TIME_DESCRIPTION_METADATA_MODIFICATION),
-      ('kMDItemContentCreationDate', definitions.TIME_DESCRIPTION_CREATION),
-      ('kMDItemContentModificationDate',
-       definitions.TIME_DESCRIPTION_MODIFICATION),
-      ('kMDItemDateAdded', definitions.TIME_DESCRIPTION_ADDED),
-      ('kMDItemDownloadedDate', definitions.TIME_DESCRIPTION_FILE_DOWNLOADED),
-      ('kMDItemLastUsedDate', definitions.TIME_DESCRIPTION_LAST_USED),
-      ('kMDItemUsedDates', definitions.TIME_DESCRIPTION_LAST_USED)]
-
-  # TODO: add more attribute values.
-
-  # Names of metadata attributes that contain values to set as event data.
-  _EVENT_DATA_METADATA_ATTRIBUTES = [
-      ('_kMDItemFileName', 'file_name'),
-      ('kMDItemContentType', 'content_type'),
-      ('kMDItemKind', 'kind')]
-
   def __init__(self):
     """Initializes an Apple Spotlight store database parser."""
     super(SpotlightStoreDatabaseParser, self).__init__()
@@ -139,12 +147,64 @@ class SpotlightStoreDatabaseParser(
     self._metadata_types = {}
     self._metadata_values = {}
 
+  def _GetDateTimeMetadataItemValue(self, metadata_item, name):
+    """Retrieves a date and time value from a metadata item.
+
+    Args:
+      metadata_item (SpotlightStoreMetadataItem): a metadata item.
+      name (str): name of the attribute.
+
+    Returns:
+      dfdatetime.CocoaTime: a date and time value or None if not available.
+    """
+    value = self._GetMetadataItemValue(metadata_item, name)
+    if not value:
+      return None
+
+    if isinstance(value, collections.Sequence):
+      return dfdatetime_cocoa_time.CocoaTime(timestamp=value[0])
+
+    return dfdatetime_cocoa_time.CocoaTime(timestamp=value)
+
+  def _GetDateTimeMetadataItemValues(self, metadata_item, name):
+    """Retrieves a date and time value from a metadata item.
+
+    Args:
+      metadata_item (SpotlightStoreMetadataItem): a metadata item.
+      name (str): name of the attribute.
+
+    Returns:
+      list[dfdatetime.CocoaTime]: date and time values or None if not available.
+    """
+    value = self._GetMetadataItemValue(metadata_item, name)
+    if not value:
+      return None
+
+    return [dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+            for timestamp in value]
+
+  def _GetMetadataItemValue(self, metadata_item, name):
+    """Retrieves a value from a metadata item.
+
+    Args:
+      metadata_item (SpotlightStoreMetadataItem): a metadata item.
+      name (str): name of the attribute.
+
+    Returns:
+      object: a time value or None if not available.
+    """
+    metadata_attribute = metadata_item.attributes.get(name, None)
+    if not metadata_attribute:
+      return None
+
+    return metadata_attribute.value
+
   def _ParseMetadataItem(self, parser_mediator, metadata_item):
     """Parses an Apple Spotlight store metadata item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       metadata_item (SpotlightStoreMetadataItem): a metadata item.
     """
     event_data = SpotlightStoreMetadataItemEventData()
@@ -156,46 +216,64 @@ class SpotlightStoreDatabaseParser(
       event_data.file_system_identifier = metadata_item.identifier
       event_data.parent_file_system_identifier = metadata_item.parent_identifier
 
-    for metadata_attribute_name, attribute_name in (
-        self._EVENT_DATA_METADATA_ATTRIBUTES):
-      metadata_attribute = metadata_item.attributes.get(
-          metadata_attribute_name, None)
-      if metadata_attribute:
-        setattr(event_data, attribute_name, metadata_attribute.value)
+    snapshot_times = []
 
-    for metadata_attribute_name, timestamp_description in (
-        self._DATE_TIME_METADATA_ATTRIBUTES):
-      metadata_attribute = metadata_item.attributes.get(
-          metadata_attribute_name, None)
-      if metadata_attribute and metadata_attribute.value:
-        if isinstance(metadata_attribute.value, collections.Sequence):
-          timestamps = metadata_attribute.value
-        else:
-          timestamps = [metadata_attribute.value]
+    date_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, '_kTimeMachineOldestSnapshot')
+    if date_time:
+      snapshot_times.append(date_time)
 
-        for timestamp in timestamps:
-          date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    date_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, '_kTimeMachineNewestSnapshot')
+    if date_time:
+      snapshot_times.append(date_time)
 
-          event = time_events.DateTimeValuesEvent(
-              date_time, timestamp_description)
-          parser_mediator.ProduceEventWithEventData(event, event_data)
+    used_times = self._GetDateTimeMetadataItemValues(
+        metadata_item, 'kMDItemUsedDates') or []
 
-    if metadata_item.last_update_time == 0:
-      date_time = dfdatetime_semantic_time.NotSet()
-    else:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+    date_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemLastUsedDate')
+    if date_time:
+      used_times.append(date_time)
+
+    # TODO: add more attribute values.
+    event_data.added_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemDateAdded')
+    event_data.attribute_change_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemAttributeChangeDate')
+    event_data.content_creation_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemContentCreationDate')
+    event_data.content_modification_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemContentModificationDate')
+    event_data.content_type = self._GetMetadataItemValue(
+        metadata_item, 'kMDItemContentType')
+    event_data.creation_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, '_kMDItemCreationDate')
+    event_data.downloaded_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemDownloadedDate')
+    event_data.file_name = self._GetMetadataItemValue(
+        metadata_item, '_kMDItemFileName')
+    event_data.kind = self._GetMetadataItemValue(
+        metadata_item, 'kMDItemKind')
+    event_data.modification_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, '_kMDItemContentChangeDate')
+    event_data.purchase_time = self._GetDateTimeMetadataItemValue(
+        metadata_item, 'kMDItemAppStorePurchaseDate')
+    event_data.snapshot_times = snapshot_times or None
+    event_data.used_times = used_times or None
+
+    if metadata_item.last_update_time:
+      event_data.update_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=metadata_item.last_update_time)
 
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_UPDATE)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, page_data, page_data_offset):
     """Parses a record for its metadata item.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       page_data (bytes): page data.
       page_data_offset (int): offset of the page value relative to the start
           of the page data.
@@ -247,7 +325,7 @@ class SpotlightStoreDatabaseParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       page_data (bytes): page data.
 
     Raises:
@@ -1047,7 +1125,7 @@ class SpotlightStoreDatabaseParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:

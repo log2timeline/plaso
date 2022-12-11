@@ -111,7 +111,7 @@ autorun
 # Tags file download events.
 file_download
   data_type is 'chrome:history:file_downloaded'
-  timestamp_desc is 'File Downloaded Time'
+  timestamp_desc is 'Downloaded Time'
 
 # Tags OLE compound document print events.
 document_print

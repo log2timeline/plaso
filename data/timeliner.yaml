@@ -554,7 +554,7 @@ place_holder_event: true
 data_type: 'java:download:idx'
 attribute_mappings:
 - name: 'downloaded_time'
-  description: 'File Downloaded Time'
+  description: 'Downloaded Time'
 - name: 'expiration_time'
   description: 'Expiration Time'
 - name: 'modification_time'
@@ -726,7 +726,7 @@ place_holder_event: true
 data_type: 'macos:lsquarantine:entry'
 attribute_mappings:
 - name: 'downloaded_time'
-  description: 'File Downloaded Time'
+  description: 'Downloaded Time'
 place_holder_event: true
 ---
 data_type: 'macos:notes:entry'
@@ -835,6 +835,32 @@ attribute_mappings:
   description: 'Last Scavenge Time'
 place_holder_event: false
 ---
+data_type: 'msiecf:leak'
+place_holder_event: true
+---
+data_type: 'msiecf:redirected'
+place_holder_event: true
+---
+data_type: 'msiecf:url'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+- name: 'primary_time'
+  description: 'Unknown Time'
+- name: 'secondary_time'
+  description: 'Unknown Time'
+- name: 'synchronization_time'
+  description: 'Synchronization Time'
+place_holder_event: true
+---
 data_type: 'networkminer:fileinfos:file'
 attribute_mappings:
 - name: 'written_time'
@@ -904,7 +930,7 @@ attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
 - name: 'downloaded_time'
-  description: 'File Downloaded Time'
+  description: 'Downloaded Time'
 - name: 'last_activity_time'
   description: 'Last Activity Time'
 place_holder_event: true
@@ -914,7 +940,7 @@ attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
 - name: 'downloaded_time'
-  description: 'File Downloaded Time'
+  description: 'Downloaded Time'
 - name: 'modification_times'
   description: 'Content Modification Time'
 place_holder_event: true
@@ -1095,6 +1121,32 @@ data_type: 'sophos:av:log'
 attribute_mappings:
 - name: 'added_time'
   description: 'Added Time'
+place_holder_event: true
+---
+data_type: 'spotlight:metadata_item'
+attribute_mappings:
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'attribute_change_time'
+  description: 'Attribute Change Time'
+- name: 'content_creation_time'
+  description: 'Content Creation Time'
+- name: 'content_modification_time'
+  description: 'Content Modification Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'downloaded_time'
+  description: 'Downloaded Time'
+- name: 'modification_time'
+  description: 'Modification Time'
+- name: 'purchase_time'
+  description: 'AppStore Purchase Time'
+- name: 'snapshot_times'
+  description: 'Backup Snapshot Creation Time'
+- name: 'update_time'
+  description: 'Update Time'
+- name: 'used_times'
+  description: 'Used Time'
 place_holder_event: true
 ---
 data_type: 'spotlight_searched_terms:entry'
