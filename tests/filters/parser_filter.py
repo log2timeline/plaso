@@ -56,7 +56,7 @@ class ParserFilterExpressionHelperTest(test_lib.FilterTestCase):
 
     with self.assertRaises(RuntimeError):
       test_helper._JoinExpression(
-          {'excluded': set(['plugin1'])}, {'excluded': set(['plugin1'])})
+          {'excluded': set(['plugin1'])}, {'included': set(['plugin1'])})
 
     with self.assertRaises(RuntimeError):
       test_helper._JoinExpression({'excluded': set(['plugin1'])}, {})

@@ -69,9 +69,16 @@ class BasePlugin(object):
           and other components, such as storage and dfVFS.
     """
     parser_mediator.AppendToParserChain(self.NAME)
+
+    parser_chain = parser_mediator.GetParserChain()
+    parser_mediator.SampleStartTiming(parser_chain)
+
     try:
       self.Process(parser_mediator, **kwargs)
+
     finally:
+      parser_mediator.SampleStopTiming(parser_chain)
+
       parser_mediator.PopFromParserChain()
 
 

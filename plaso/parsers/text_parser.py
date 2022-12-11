@@ -191,9 +191,10 @@ class TextLogParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
-        parser_chain = 'text/{0:s}'.format(plugin.NAME)
+        profiling_name = 'check: {0:s}'.format(
+            '/'.join([self.NAME, plugin.NAME]))
 
-        parser_mediator.SampleStartTiming(parser_chain)
+        parser_mediator.SampleStartTiming(profiling_name)
 
         try:
           logger.debug(
@@ -220,7 +221,7 @@ class TextLogParser(interface.FileObjectParser):
           result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
 
         finally:
-          parser_mediator.SampleStopTiming(parser_chain)
+          parser_mediator.SampleStopTiming(profiling_name)
 
         if result:
           matching_plugin = True
