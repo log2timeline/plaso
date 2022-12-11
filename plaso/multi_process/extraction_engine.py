@@ -91,7 +91,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   * merge results returned by extraction worker processes.
   """
 
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
@@ -257,28 +256,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     """
     self._status = definitions.STATUS_INDICATOR_MERGING
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      event_data_identifier = container.GetEventDataIdentifier()
-      event_data_lookup_key = event_data_identifier.CopyToString()
-
-      event_data_identifier = merge_helper.GetAttributeContainerIdentifier(
-          event_data_lookup_key)
-
-      if event_data_identifier:
-        container.SetEventDataIdentifier(event_data_identifier)
-      else:
-        identifier = container.GetIdentifier()
-        identifier_string = identifier.CopyToString()
-
-        # TODO: store this as a merge warning so this is preserved
-        # in the storage file.
-        logger.error((
-            'Unable to merge event attribute container: {0:s} since '
-            'corresponding event data: {1:s} could not be found.').format(
-                identifier_string, event_data_lookup_key))
-        return
-
-    elif container.CONTAINER_TYPE in (
+    if container.CONTAINER_TYPE in (
         self._CONTAINER_TYPE_EVENT_DATA,
         self._CONTAINER_TYPE_YEAR_LESS_LOG_HELPER):
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
@@ -351,18 +329,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       identifier = container.GetIdentifier()
       merge_helper.SetAttributeContainerIdentifier(lookup_key, identifier)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      parser_name = merge_helper.event_data_parser_mappings.get(
-          event_data_lookup_key, 'N/A')
-      self._parsers_counter[parser_name] += 1
-      self._parsers_counter['total'] += 1
-
-      self._number_of_produced_events += 1
-
-    elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      parser_name = container.parser.rsplit('/', maxsplit=1)[-1]
-      merge_helper.event_data_parser_mappings[lookup_key] = parser_name
-
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       self._number_of_produced_event_data += 1
 
       self._status = definitions.STATUS_INDICATOR_TIMELINING

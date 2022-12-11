@@ -106,12 +106,7 @@ class AnalysisTaskMergeHelper(BaseTaskMergeHelper):
 
 
 class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
-  """Assists in merging attribute containers of an extraction task.
-
-  Attributes:
-    event_data_parser_mappings (dict[str, str]): maps event data lookup keys
-        to parser names.
-  """
+  """Assists in merging attribute containers of an extraction task."""
 
   # Container types produced by the extraction worker processes that need to be
   # merged. Note that some container types reference other container types and
@@ -126,21 +121,8 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       # data containers.
       events.YearLessLogHelper.CONTAINER_TYPE,
       events.EventData.CONTAINER_TYPE,
-      events.EventObject.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
       artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE)
-
-  def __init__(self, task_storage_reader, task_identifier):
-    """Initialize a helper for merging extraction task attribute containers.
-
-    Args:
-      task_storage_reader (StorageReader): task storage reader.
-      task_identifier (str): identifier of the task that is merged.
-    """
-    super(ExtractionTaskMergeHelper, self).__init__(
-        task_storage_reader, task_identifier)
-
-    self.event_data_parser_mappings = {}
