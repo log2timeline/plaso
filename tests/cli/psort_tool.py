@@ -222,16 +222,19 @@ Test argument parser.
 
     options = test_lib.TestOptions()
     options.output_format = 'null'
+    options.status_view_interval = 0.5
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
 
     test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
+    options.status_view_interval = 0.5
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
+    options.status_view_interval = 0.5
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
 
     with self.assertRaises(errors.BadConfigOption):
@@ -250,6 +253,7 @@ Test argument parser.
     options = test_lib.TestOptions()
     options.data_location = shared_test_lib.DATA_PATH
     options.dynamic_time = True
+    options.status_view_interval = 0.5
     options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.output_format = 'test_missing'
 

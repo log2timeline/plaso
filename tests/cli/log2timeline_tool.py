@@ -55,6 +55,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.data_location = shared_test_lib.DATA_PATH
     options.quiet = True
     options.single_process = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = source_path
 
@@ -138,6 +139,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.source = test_file_path
+    options.status_view_interval = 0.5
+    options.status_view_mode = 'none'
     options.storage_file = 'storage.plaso'
     options.storage_format = definitions.STORAGE_FORMAT_SQLITE
     options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE

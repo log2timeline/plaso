@@ -49,8 +49,10 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
-    options.storage_file = test_file_path
     options.source = 'unused_source'
+    options.status_view_interval = 0.5
+    options.status_view_mode = 'none'
+    options.storage_file = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -82,6 +84,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.source = 'source'
+    options.status_view_interval = 0.5
+    options.status_view_mode = 'none'
 
     expected_error = 'Output format: dynamic requires an output file'
     with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
@@ -89,6 +93,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     # Test when the source is missing.
     options = test_lib.TestOptions()
+    options.status_view_interval = 0.5
+    options.status_view_mode = 'none'
     options.write = 'output.csv'
 
     expected_error = 'Missing source path.'
@@ -140,6 +146,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = test_file_path
 
@@ -183,8 +190,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = test_artifacts_path
     options.credentials = ['password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
-    options.source = test_file_path
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
+    options.source = test_file_path
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.log_file = os.path.join(temp_directory, 'output.log')
@@ -223,6 +231,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = test_file_path
 
@@ -265,6 +274,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = test_artifacts_path
     options.partitions = 'all'
     options.quiet = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = test_file_path
 
@@ -306,6 +316,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
     options.single_process = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = test_file_path
     options.unattended = True
@@ -352,6 +363,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.quiet = True
+    options.status_view_interval = 0.5
     options.status_view_mode = 'none'
     options.source = test_file_path
 
@@ -396,6 +408,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
     options.dynamic_time = True
+    options.status_view_interval = 0.5
     options.storage_file = test_file_path
     options.source = 'unused_source'
 

@@ -62,8 +62,9 @@ class PsortTool(
     self._deduplicate_events = True
     self._preferred_language = None
     self._process_memory_limit = None
-    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._status_view_file = 'status.info'
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._time_slice = None
     self._use_time_slicer = False
 
@@ -472,6 +473,7 @@ class PsortTool(
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._status_view.SetMode(self._status_view_mode)
+    self._status_view.SetStatusFile(self._status_view_file)
     self._status_view.SetStorageFileInformation(self._storage_file_path)
 
     status_update_callback = (
@@ -528,6 +530,8 @@ class PsortTool(
       # TODO: add single process output and formatting engine support.
       output_engine = (
           multi_output_engine.OutputAndFormattingMultiProcessEngine())
+
+      output_engine.SetStatusUpdateInterval(self._status_view_interval)
 
       output_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,

@@ -352,6 +352,7 @@ class PstealTool(
 
     if self._output_format != 'null':
       self._status_view.SetMode(self._status_view_mode)
+      self._status_view.SetStatusFile(self._status_view_file)
       self._status_view.SetStorageFileInformation(self._storage_file_path)
 
       status_update_callback = (

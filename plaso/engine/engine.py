@@ -34,9 +34,6 @@ class BaseEngine(object):
     knowledge_base (KnowledgeBase): knowledge base.
   """
 
-  # The interval of status updates in number of seconds.
-  _STATUS_UPDATE_INTERVAL = 0.5
-
   _WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES = [
       'WindowsSystemRegistryFiles', 'WindowsUserRegistryFiles']
 
@@ -50,6 +47,8 @@ class BaseEngine(object):
     self._processing_status = processing_status.ProcessingStatus()
     self._processing_profiler = None
     self._serializers_profiler = None
+    # The interval of status updates in number of seconds.
+    self._status_update_interval = 0.5
     self._storage_profiler = None
     self._task_queue_profiler = None
 
@@ -348,3 +347,11 @@ class BaseEngine(object):
         raise errors.InvalidFilter((
             'No valid file system find specifications were built from filter '
             'file: {0:s}.').format(filter_file_path))
+
+  def SetStatusUpdateInterval(self, status_update_interval):
+    """Sets the status update interval.
+
+    Args:
+      status_update_interval (float): status update interval.
+    """
+    self._status_update_interval = status_update_interval

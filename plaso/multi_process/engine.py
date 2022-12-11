@@ -347,7 +347,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Main function of the status update thread."""
     while self._status_update_active:
       self._UpdateStatus()
-      time.sleep(self._STATUS_UPDATE_INTERVAL)
+      time.sleep(self._status_update_interval)
 
   def _StopMonitoringProcess(self, process):
     """Stops monitoring a process.
