@@ -371,9 +371,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     field_values = {}
     for attribute_name, attribute_value in event_values.items():
-      # Note that support for event_data.pathspec is kept for backwards
-      # compatibility. The current value is event_data_stream.path_spec.
-      if attribute_name in ('path_spec', 'pathspec'):
+      if attribute_name == 'path_spec':
         try:
           field_value = JsonPathSpecSerializer.WriteSerialized(attribute_value)
         except TypeError:

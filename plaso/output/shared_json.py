@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for JSON based output modules."""
 
-import json
-
 from dfdatetime import interface as dfdatetime_interface
 
 from plaso.containers import interface as containers_interface
@@ -127,23 +125,3 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_values['tag'] = event_tag_values
 
     return field_values
-
-  def GetFormattedEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: string representation of the event.
-    """
-    field_values = self.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-    return json.dumps(field_values, sort_keys=True)

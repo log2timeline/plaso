@@ -35,33 +35,15 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
       event_tag (EventTag): event tag.
 
     Returns:
-      list[str]: output field values.
-    """
-    return []
-
-  def GetFormattedEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: string representation of the event.
+      dict[str, str]: output field values.
     """
     # pylint: disable=protected-access
     date_time_string = self._field_formatting_helper._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)
 
-    return (
-        '<Event>\n'
-        '\t<DateTime>{0:s}</DateTime>\n'
-        '\t<Entry>{1:s}</Entry>\n'
-        '</Event>').format(date_time_string, event_data.entry)
+    return {
+        'datetime': date_time_string,
+        'entry': event_data.entry}
 
 
 class TestXMLOutputModule(interface.TextFileOutputModule):
@@ -69,6 +51,27 @@ class TestXMLOutputModule(interface.TextFileOutputModule):
 
   NAME = 'test_xml'
   DESCRIPTION = 'Test output that provides a simple mocked XML.'
+
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    field_values = self._event_formatting_helper.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
+    self.WriteLine('<Event>')
+    self.WriteLine('\t<DateTime>{0:s}</DateTime>'.format(
+        field_values['datetime']))
+    self.WriteLine('\t<Entry>{0:s}</Entry>'.format(field_values['entry']))
+    self.WriteLine('</Event>')
 
   def WriteFooter(self):
     """Writes the footer to the output."""

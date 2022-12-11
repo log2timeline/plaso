@@ -31,7 +31,7 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
        'display_name': 'OS: /var/log/syslog.1',
        'hostname': 'ubuntu',
        'inode': 12345678,
-       'pathspec': path_spec_factory.Factory.NewPathSpec(
+       'path_spec': path_spec_factory.Factory.NewPathSpec(
            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
            location='/var/log/syslog.1', parent=_OS_PATH_SPEC),
        'text': (

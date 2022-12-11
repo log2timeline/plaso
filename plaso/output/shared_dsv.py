@@ -8,7 +8,11 @@ from plaso.output import interface
 
 
 class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
-  """Delimiter separated values output module event formatting helper."""
+  """Delimiter separated values output module event formatting helper.
+
+  Attributes:
+    field_delimiter (str): field delimiter.
+  """
 
   def __init__(self, field_formatting_helper, field_names, field_delimiter=','):
     """Initializes a delimiter separated values event formatting helper.
@@ -20,9 +24,10 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     """
     super(DSVEventFormattingHelper, self).__init__()
     self._custom_fields = {}
-    self._field_delimiter = field_delimiter
     self._field_names = field_names
     self._field_formatting_helper = field_formatting_helper
+
+    self.field_delimiter = field_delimiter
 
   def _SanitizeField(self, field):
     """Sanitizes a field for output.
@@ -35,8 +40,8 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Returns:
       str: sanitized value of the field.
     """
-    if self._field_delimiter and isinstance(field, str):
-      return field.replace(self._field_delimiter, ' ')
+    if self.field_delimiter and isinstance(field, str):
+      return field.replace(self.field_delimiter, ' ')
     return field
 
   def GetFieldValues(
@@ -71,32 +76,13 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
 
     return field_values
 
-  def GetFormattedEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: string representation of the event.
-    """
-    field_values = self.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-    return self._field_delimiter.join(field_values.values())
-
   def GetFormattedFieldNames(self):
     """Retrieves a string representation of the field names.
 
     Returns:
       str: string representation of the field names.
     """
-    return self._field_delimiter.join(self._field_names)
+    return self.field_delimiter.join(self._field_names)
 
   def SetAdditionalFields(self, field_names):
     """Sets the names of additional fields to output.
@@ -122,7 +108,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Args:
       field_delimiter (str): field delimiter.
     """
-    self._field_delimiter = field_delimiter
+    self.field_delimiter = field_delimiter
 
   def SetFields(self, field_names):
     """Sets the names of the fields to output.
@@ -184,6 +170,26 @@ class DSVOutputModule(interface.TextFileOutputModule):
       field_names (list[str]): names of the fields to output.
     """
     self._event_formatting_helper.SetFields(field_names)
+
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    field_values = self.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
+    output_text = self._event_formatting_helper.field_delimiter.join(
+        field_values.values())
+
+    self.WriteLine(output_text)
 
   def WriteHeader(self, output_mediator):
     """Writes the header to the output.

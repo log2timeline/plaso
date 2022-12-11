@@ -216,6 +216,7 @@ class TextFileOutputModule(OutputModule):
 
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
+  @abc.abstractmethod
   def WriteEventBody(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Writes event values to the output.
@@ -228,10 +229,6 @@ class TextFileOutputModule(OutputModule):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    output_text = self._event_formatting_helper.GetFormattedEvent(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-    self.WriteLine(output_text)
 
   def WriteLine(self, text):
     """Writes a line of text to the output file.

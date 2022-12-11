@@ -5,6 +5,8 @@ JSON line format is a single JSON entry or event per line instead
 of grouping all the output into a single JSON entity.
 """
 
+import json
+
 from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json
@@ -33,8 +35,10 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    output_text = self._event_formatting_helper.GetFormattedEvent(
+    field_values = self._event_formatting_helper.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
+
+    output_text = json.dumps(field_values, sort_keys=True)
 
     self.WriteLine(output_text)
 
