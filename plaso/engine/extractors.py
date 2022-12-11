@@ -180,8 +180,6 @@ class EventDataExtractor(object):
 
     parser_mediator.ClearParserChain()
 
-    parser_mediator.SampleStartTiming(parser.NAME)
-
     try:
       if isinstance(parser, parsers_interface.FileEntryParser):
         parser.Parse(parser_mediator)
@@ -204,9 +202,7 @@ class EventDataExtractor(object):
               parser.NAME, display_name, exception))
       result = self._PARSE_RESULT_UNSUPPORTED
 
-    finally:
-      parser_mediator.SampleStopTiming(parser.NAME)
-      parser_mediator.SampleMemoryUsage(parser.NAME)
+    parser_mediator.SampleMemoryUsage(parser.NAME)
 
     return result
 

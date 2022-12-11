@@ -106,7 +106,8 @@ class SCCMTextPlugin(interface.TextPlugin):
   # so we look for match anywhere in lines.
 
   VERIFICATION_GRAMMAR = (
-      pyparsing.Regex(r'.*?(?=(<!\[LOG\[))', re.DOTALL) + _LOG_LINE)
+      pyparsing.Regex(r'.*<!\[LOG\[.*]LOG]!><', re.DOTALL) + _DATE_TIME +
+      _COMPONENT)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.

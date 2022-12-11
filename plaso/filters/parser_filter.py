@@ -72,8 +72,7 @@ class ParserFilterExpressionHelper(object):
     # excluded and included parsers.
     excluded_parsers = {
         name for name, plugins in excludes.items() if plugins != set(['*'])}
-    included_parsers = {
-        name for name, plugins in includes.items() if '*' in plugins}
+    included_parsers = {name for name, plugins in includes.items() if plugins}
     missing_parser_filters = excluded_parsers.difference(included_parsers)
     if missing_parser_filters:
       missing_parser_filters = self._GetParserAndPluginsList({

@@ -242,9 +242,16 @@ class FileEntryParser(BaseParser):
       raise errors.WrongParser('Invalid file entry')
 
     parser_mediator.AppendToParserChain(self.NAME)
+
+    parser_chain = parser_mediator.GetParserChain()
+    parser_mediator.SampleStartTiming(parser_chain)
+
     try:
       self.ParseFileEntry(parser_mediator, file_entry)
+
     finally:
+      parser_mediator.SampleStopTiming(parser_chain)
+
       parser_mediator.PopFromParserChain()
 
   @abc.abstractmethod
@@ -308,9 +315,16 @@ class FileObjectParser(BaseParser):
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)
 
     parser_mediator.AppendToParserChain(self.NAME)
+
+    parser_chain = parser_mediator.GetParserChain()
+    parser_mediator.SampleStartTiming(parser_chain)
+
     try:
       self.ParseFileObject(parser_mediator, file_object)
+
     finally:
+      parser_mediator.SampleStopTiming(parser_chain)
+
       parser_mediator.PopFromParserChain()
 
   @abc.abstractmethod
