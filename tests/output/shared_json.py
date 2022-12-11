@@ -39,8 +39,8 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def testWriteSerializedDict(self):
-    """Tests the _WriteSerializedDict function."""
+  def testGetFieldValues(self):
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -64,7 +64,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
       expected_os_location = '{0:s}{1:s}'.format(
           os.path.sep, os.path.join('cases', 'image.dd'))
 
-    expected_json_dict = {
+    expected_field_values = {
         '__container_type__': 'event',
         '__type__': 'AttributeContainer',
         'date_time': {
@@ -96,12 +96,12 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
             'session\n closed for user root)'),
         'timestamp': expected_timestamp,
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
-        'username': 'root',
-    }
-    json_dict = formatting_helper._WriteSerializedDict(
+        'username': 'root'}
+
+    field_values = formatting_helper.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    self.assertEqual(json_dict, expected_json_dict)
+    self.assertEqual(field_values, expected_field_values)
 
   def testGetFormattedEvent(self):
     """Tests the GetFormattedEvent function."""

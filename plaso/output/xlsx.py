@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
+import collections
 import datetime
 import os
 import re
@@ -103,6 +104,42 @@ class XLSXOutputModule(interface.OutputModule):
     self._workbook.close()
     self._workbook = None
 
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    field_values = collections.OrderedDict()
+    for field_name in self._field_names:
+      if field_name == 'datetime':
+        continue
+
+      field_value = self._field_formatting_helper.GetFormattedField(
+          output_mediator, field_name, event, event_data, event_data_stream,
+          event_tag)
+
+      if field_value is None and field_name in self._custom_fields:
+        field_value = self._custom_fields.get(field_name, None)
+
+      if field_value is None:
+        field_value = '-'
+      else:
+        field_value = self._SanitizeField(field_value)
+
+      field_values[field_name] = field_value
+
+    return field_values
+
   def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Creates a new workbook.
 
@@ -177,27 +214,17 @@ class XLSXOutputModule(interface.OutputModule):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
+    field_values = self.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
     for column_index, field_name in enumerate(self._field_names):
       if field_name == 'datetime':
         field_value = self._FormatDateTime(output_mediator, event, event_data)
 
-      else:
-        field_value = self._field_formatting_helper.GetFormattedField(
-            output_mediator, field_name, event, event_data, event_data_stream,
-            event_tag)
-
-      if field_value is None and field_name in self._custom_fields:
-        field_value = self._custom_fields.get(field_name, None)
-
-      if field_value is None:
-        field_value = '-'
-
-      if isinstance(field_value, datetime.datetime):
-        self._sheet.write_datetime(
-            self._current_row, column_index, field_value)
+        self._sheet.write_datetime(self._current_row, column_index, field_value)
         column_width = len(self._timestamp_format) + 2
       else:
-        field_value = self._SanitizeField(field_value)
+        field_value = field_values.get(field_name, '')
 
         self._sheet.write(self._current_row, column_index, field_value)
         column_width = len(field_value) + 2

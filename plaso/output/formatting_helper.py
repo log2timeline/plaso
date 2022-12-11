@@ -18,6 +18,23 @@ class EventFormattingHelper(object):
   """Output module event formatting helper."""
 
   @abc.abstractmethod
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      list[str]: output field values.
+    """
+
+  @abc.abstractmethod
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
@@ -314,8 +331,6 @@ class FieldFormattingHelper(object):
     Raises:
       NoFormatterFound: if no message formatter can be found to match the data
           type in the event data.
-      WrongFormatter: if the event data cannot be formatted by the message
-          formatter.
     """
     message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
@@ -346,8 +361,6 @@ class FieldFormattingHelper(object):
     Raises:
       NoFormatterFound: if no message formatter can be found to match the data
           type in the event data.
-      WrongFormatter: if the event data cannot be formatted by the message
-          formatter.
     """
     message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)

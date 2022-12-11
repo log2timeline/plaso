@@ -90,10 +90,6 @@ class UserAbort(Error):
   """Class that defines an user initiated abort exception."""
 
 
-class WrongFormatter(Error):
-  """Raised when the formatter is not applicable for a particular event."""
-
-
 class WrongPlugin(Error):
   """Raised when the plugin is of the wrong type."""
 

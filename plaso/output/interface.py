@@ -55,6 +55,23 @@ class OutputModule(object):
     """
     return []
 
+  @abc.abstractmethod
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+
   def Open(self, **kwargs):  # pylint: disable=unused-argument
     """Opens the output."""
     return
@@ -78,10 +95,6 @@ class OutputModule(object):
     except errors.NoFormatterFound as exception:
       error_message = 'unable to retrieve formatter with error: {0!s}'.format(
           exception)
-      self._ReportEventError(event, event_data, error_message)
-
-    except errors.WrongFormatter as exception:
-      error_message = 'wrong formatter with error: {0!s}'.format(exception)
       self._ReportEventError(event, event_data, error_message)
 
   @abc.abstractmethod
@@ -163,6 +176,24 @@ class TextFileOutputModule(OutputModule):
     if self._file_object:
       self._file_object.close()
       self._file_object = None
+
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    return self._event_formatting_helper.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
   def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Opens the output file.

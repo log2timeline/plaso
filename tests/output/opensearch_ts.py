@@ -21,15 +21,20 @@ class TestOpenSearchTimesketchOutputModule(
     self._client = MagicMock()
 
 
-@unittest.skipIf(
-    shared_opensearch.opensearchpy is None, 'missing opensearch-py')
 class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the OpenSearchTimesketch output module."""
 
   # pylint: disable=protected-access
 
   def testWriteHeader(self):
-    """Tests the WriteHeader function."""
+    """Tests the WriteHeader function.
+
+    Raises:
+      SkipTest: if opensearch-py is missing.
+    """
+    if shared_opensearch.opensearchpy is None:
+      raise unittest.SkipTest('missing opensearch-py')
+
     output_mediator = self._CreateOutputMediator()
     output_module = TestOpenSearchTimesketchOutputModule()
 

@@ -6,6 +6,7 @@ import io
 import os
 import unittest
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import dynamic
 
@@ -122,6 +123,54 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
+  def testGetFieldValues(self):
+    """Tests the GetFieldValues function."""
+    output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
+    output_module = dynamic.DynamicOutputModule()
+
+    output_module.SetFields([
+        'date', 'time', 'timezone', 'macb', 'source', 'sourcetype',
+        'type', 'user', 'host', 'message_short', 'message',
+        'filename', 'inode', 'notes', 'format', 'extra'])
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    event_tag = events.EventTag()
+    event_tag.AddLabels(['Malware', 'Printed'])
+
+    expected_field_values = {
+        'date': '2012-06-27',
+        'extra': '-',
+        'filename': 'log/syslog.1',
+        'format': '-',
+        'host': 'ubuntu',
+        'inode': '-',
+        'macb': '..C.',
+        'message': (
+            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+            'closed for user root)'),
+        'message_short': (
+            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+            'closed for user root)'),
+        'notes': '-',
+        'source': 'FILE',
+        'sourcetype': 'Test log file',
+        'time': '18:17:01',
+        'timezone': 'UTC',
+        'type': 'Metadata Modification Time',
+        'user': '-'}
+
+    field_values = output_module.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
+    self.assertEqual(field_values, expected_field_values)
+
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
     test_file_object = io.StringIO()
@@ -154,8 +203,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
+    event_tag = events.EventTag()
+    event_tag.AddLabels(['Malware', 'Printed'])
+
     output_module.WriteEventBody(
-        output_mediator, event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     expected_event_body = (
         '2012-06-27,18:17:01,UTC,..C.,FILE,Test log file,Metadata '
@@ -190,8 +242,11 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
+    event_tag = events.EventTag()
+    event_tag.AddLabels(['Malware', 'Printed'])
+
     output_module.WriteEventBody(
-        output_mediator, event, event_data, event_data_stream, None)
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     expected_event_body = (
         '2012-06-27T18:17:01.000000+00:00,-,ubuntu,Reporter <CRON> PID: 8442'

@@ -8,6 +8,7 @@ import zipfile
 
 from defusedxml import ElementTree
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import xlsx
 
@@ -96,6 +97,38 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     return rows
 
+  def testGetFieldValues(self):
+    """Tests the GetFieldValues function."""
+    output_mediator = self._CreateOutputMediator()
+
+    formatters_directory_path = self._GetTestFilePath(['formatters'])
+    output_mediator.ReadMessageFormattersFromDirectory(
+        formatters_directory_path)
+
+    output_module = xlsx.XLSXOutputModule()
+
+    event, event_data, event_data_stream = (
+        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+
+    event_tag = events.EventTag()
+    event_tag.AddLabels(['Malware', 'Printed'])
+
+    expected_field_values = {
+        'display_name': '-',
+        'message': (
+            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+            'closed for user root) Invalid character -> �'),
+        'parser': '-',
+        'source': 'FILE',
+        'source_long': 'Test log file',
+        'tag': 'Malware Printed',
+        'timestamp_desc': 'Metadata Modification Time'}
+
+    field_values = output_module.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
+    self.assertEqual(field_values, expected_field_values)
+
   def testWriteEvent(self):
     """Tests the WriteEvent function."""
     output_mediator = self._CreateOutputMediator()
@@ -115,8 +148,11 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
+      event_tag = events.EventTag()
+      event_tag.AddLabels(['Malware', 'Printed'])
+
       output_module.WriteEvent(
-          output_mediator, event, event_data, event_data_stream, None)
+          output_mediator, event, event_data, event_data_stream, event_tag)
 
       output_module.WriteFooter()
       output_module.Close()
@@ -134,7 +170,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
           'Test log file',
           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
           'closed for user root) Invalid character -> \ufffd',
-          '-', '-', '-']
+          '-', '-', 'Malware Printed']
 
       self.assertEqual(expected_header, rows[0])
       self.assertEqual(len(expected_event_body), len(rows[1]))
