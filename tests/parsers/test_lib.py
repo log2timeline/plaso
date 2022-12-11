@@ -13,7 +13,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.engine import knowledge_base
-from plaso.engine import timeliner
 from plaso.parsers import interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -209,30 +208,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser_type = type(parser)
       self.fail('Unsupported parser type: {0!s}'.format(parser_type))
 
-    self._ProcessEventData(
-        knowledge_base_object, storage_writer,
-        time_zone_string=time_zone_string)
-
     return storage_writer
-
-  def _ProcessEventData(
-      self, knowledge_base_object, storage_writer, time_zone_string=None):
-    """Generate events from event data.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): knowledge base.
-      storage_writer (StorageWriter): storage writer.
-      time_zone_string (Optional[str]): time zone.
-    """
-    event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base_object, data_location=shared_test_lib.DATA_PATH)
-    event_data_timeliner.SetPreferredTimeZone(time_zone_string)
-
-    event_data = storage_writer.GetFirstWrittenEventData()
-    while event_data:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
-
-      event_data = storage_writer.GetNextWrittenEventData()
 
   def CheckEventData(self, event_data, expected_event_values):
     """Asserts that event data matches the expected values.

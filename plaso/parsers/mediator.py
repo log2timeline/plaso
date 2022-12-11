@@ -13,7 +13,6 @@ from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.helpers import language_tags
 from plaso.helpers.windows import languages
-from plaso.lib import errors
 
 
 class ParserMediator(object):
@@ -381,32 +380,6 @@ class ParserMediator(object):
     self._cached_parser_chain = None
     self._parser_chain_components.pop()
 
-  def ProduceEvent(self, event):
-    """Produces an event.
-
-    Args:
-      event (EventObject): event.
-
-    Raises:
-      InvalidEvent: if the event date_time or timestamp value is not set, or
-          the timestamp value is out of bounds, or if the event data (attribute
-          container) values cannot be hashed.
-    """
-    if event.date_time is None:
-      raise errors.InvalidEvent('Missing event date time value.')
-
-    if event.timestamp is None:
-      raise errors.InvalidEvent('Missing event timestamp value.')
-
-    if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors.InvalidEvent('Event timestamp value out of bounds.')
-
-    self._storage_writer.AddAttributeContainer(event)
-
-    self._number_of_events += 1
-
-    self.last_activity_timestamp = time.time()
-
   def ProduceEventData(self, event_data):
     """Produces event data.
 
@@ -473,45 +446,6 @@ class ParserMediator(object):
     self._number_of_event_sources += 1
 
     self.last_activity_timestamp = time.time()
-
-  def ProduceEventWithEventData(self, event, event_data):
-    """Produces an event.
-
-    Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
-
-    Raises:
-      InvalidEvent: if the event date_time or timestamp value is not set, or
-          the timestamp value is out of bounds, or if the event data (attribute
-          container) values cannot be hashed.
-    """
-    parser_chain = self.GetParserChain()
-
-    # TODO: rename this to event_data.parser_chain or equivalent.
-    event_data.parser = parser_chain
-
-    try:
-      event_data_hash = event_data.GetAttributeValuesHash()
-    except TypeError as exception:
-      raise errors.InvalidEvent((
-          'Unable to hash event data values produced by: {0:s} with error: '
-          '{1!s}').format(parser_chain, exception))
-
-    if event_data_hash != self._last_event_data_hash:
-      self.ProduceEventData(event_data)
-      self._last_event_data_hash = event_data_hash
-      self._last_event_data_identifier = event_data.GetIdentifier()
-
-    if self._last_event_data_identifier:
-      event.SetEventDataIdentifier(self._last_event_data_identifier)
-
-    self.ProduceEvent(event)
-
-    if self._parser_chain_components:
-      parser_name = self._parser_chain_components[-1]
-      self.parsers_counter[parser_name] += 1
-    self.parsers_counter['total'] += 1
 
   def ProduceExtractionWarning(self, message, path_spec=None):
     """Produces an extraction warning.

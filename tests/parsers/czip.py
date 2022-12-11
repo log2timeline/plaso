@@ -36,8 +36,9 @@ class CompoundZIPTest(test_lib.ParserTestCase):
     parser = czip.CompoundZIPParser()
     storage_writer = self._ParseFile(['syslog.zip'], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
-    self.assertEqual(number_of_events, 0)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
