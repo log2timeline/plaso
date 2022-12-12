@@ -100,8 +100,8 @@ class BinaryCookieParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed, this will signal
-          the event extractor to apply other parsers.
+      WrongParser: when the format is not supported by the parser, this will
+          signal the event extractor to apply other parsers.
     """
     ...
 
