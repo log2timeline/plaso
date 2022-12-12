@@ -257,7 +257,7 @@ class SingleProcessEngine(engine.BaseEngine):
     while self._status_update_active:
       self._UpdateStatus()
 
-      time.sleep(self._STATUS_UPDATE_INTERVAL)
+      time.sleep(self._status_update_interval)
 
   def _StopStatusUpdateThread(self):
     """Stops the status update thread."""

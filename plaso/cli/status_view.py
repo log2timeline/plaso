@@ -24,6 +24,7 @@ from plaso.lib import definitions
 class StatusView(object):
   """Processing status view."""
 
+  MODE_FILE = 'file'
   MODE_LINEAR = 'linear'
   MODE_WINDOW = 'window'
 
@@ -65,6 +66,7 @@ class StatusView(object):
     self._output_writer = output_writer
     self._source_path = None
     self._source_type = None
+    self._status_file = 'status.info'
     self._stdout_output_writer = isinstance(
         output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
@@ -266,6 +268,26 @@ class StatusView(object):
 
     return path_spec_string
 
+  def _PrintAnalysisStatusUpdateFile(self, processing_status):
+    """Prints an analysis status update in file mode.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if processing_status and processing_status.events_status:
+      events_status = processing_status.events_status
+
+      with open(self._status_file, 'w', encoding='utf-8') as file_object:
+        status_line = (
+            'Events: Filtered: {0:d} In time slice: {1:d} Duplicates: {2:d} '
+            'MACB grouped: {3:d} Total: {4:d}\n').format(
+                events_status.number_of_filtered_events,
+                events_status.number_of_events_from_time_slice,
+                events_status.number_of_duplicate_events,
+                events_status.number_of_macb_grouped_events,
+                events_status.total_number_of_events)
+        file_object.write(status_line)
+
   def _PrintAnalysisStatusUpdateLinear(self, processing_status):
     """Prints an analysis status update in linear mode.
 
@@ -328,6 +350,26 @@ class StatusView(object):
     if self._stdout_output_writer:
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
+
+  def _PrintExtractionStatusUpdateFile(self, processing_status):
+    """Prints an extraction status update in file mode.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if processing_status and processing_status.tasks_status:
+      tasks_status = processing_status.tasks_status
+
+      with open(self._status_file, 'w', encoding='utf-8') as file_object:
+        status_line = (
+            'Tasks: Queued: {0:d} Processing: {1:d} Merging: {2:d} Abandoned: '
+            '{3:d} Total: {4:d}\n').format(
+                tasks_status.number_of_queued_tasks,
+                tasks_status.number_of_tasks_processing,
+                tasks_status.number_of_tasks_pending_merge,
+                tasks_status.number_of_abandoned_tasks,
+                tasks_status.total_number_of_tasks)
+        file_object.write(status_line)
 
   def _PrintExtractionStatusUpdateLinear(self, processing_status):
     """Prints an extraction status update in linear mode.
@@ -466,6 +508,9 @@ class StatusView(object):
     Returns:
       function: status update callback function or None if not available.
     """
+    if self._mode == self.MODE_FILE:
+      return self._PrintAnalysisStatusUpdateFile
+
     if self._mode == self.MODE_LINEAR:
       return self._PrintAnalysisStatusUpdateLinear
 
@@ -480,6 +525,9 @@ class StatusView(object):
     Returns:
       function: status update callback function or None if not available.
     """
+    if self._mode == self.MODE_FILE:
+      return self._PrintExtractionStatusUpdateFile
+
     if self._mode == self.MODE_LINEAR:
       return self._PrintExtractionStatusUpdateLinear
 
@@ -563,6 +611,14 @@ class StatusView(object):
       mode (str): status view mode.
     """
     self._mode = mode
+
+  def SetStatusFile(self, path):
+    """Sets the status file.
+
+    Args:
+      path (str): path of the status file.
+    """
+    self._status_file = path
 
   def SetSourceInformation(
       self, source_path, source_type, artifact_filters=None, filter_file=None):

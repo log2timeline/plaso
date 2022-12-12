@@ -102,8 +102,10 @@ class ExtractionTool(
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
-    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._status_view_file = 'status.info'
+    self._status_view_interval = 0.5
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._storage_file_path = None
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
@@ -467,6 +469,8 @@ class ExtractionTool(
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
 
+    extraction_engine.SetStatusUpdateInterval(self._status_view_interval)
+
     # If the source is a directory or a storage media image
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
@@ -719,6 +723,7 @@ class ExtractionTool(
         self._source_type = definitions.SOURCE_TYPE_ARCHIVE
 
     self._status_view.SetMode(self._status_view_mode)
+    self._status_view.SetStatusFile(self._status_view_file)
     self._status_view.SetSourceInformation(
         self._source_path, self._source_type,
         artifact_filters=self._artifact_filters,

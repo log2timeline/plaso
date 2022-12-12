@@ -47,6 +47,7 @@ class AnalysisTool(
     self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_stored_analysis_reports = 0
+    self._status_view_interval = 0.5
     self._storage_file_path = None
     self._worker_memory_limit = None
     self._worker_timeout = None
@@ -93,6 +94,8 @@ class AnalysisTool(
     analysis_engine = multi_analysis_engine.AnalysisMultiProcessEngine(
         worker_memory_limit=self._worker_memory_limit,
         worker_timeout=self._worker_timeout)
+
+    analysis_engine.SetStatusUpdateInterval(self._status_view_interval)
 
     storage_writer.Open(path=self._storage_file_path)
 

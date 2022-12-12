@@ -14,6 +14,8 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'status_view'
   DESCRIPTION = 'Status view command line arguments.'
 
+  _STATUS_VIEW_TYPES = ['file', 'linear', 'none', 'window']
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments to an argument group.
@@ -27,9 +29,21 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--status_view', '--status-view', dest='status_view_mode',
-        choices=['linear', 'none', 'window'], action='store',
-        metavar='TYPE', default=status_view.StatusView.MODE_WINDOW, help=(
-            'The processing status view mode: "linear", "none" or "window".'))
+        choices=cls._STATUS_VIEW_TYPES, action='store', metavar='TYPE',
+        default=status_view.StatusView.MODE_WINDOW, help=(
+            'The processing status view mode: "file", "linear", "none" or '
+            '"window".'))
+
+    argument_group.add_argument(
+        '--status_view_file', '--status-view-file', dest='status_view_file',
+        action='store', metavar='PATH', default='status.info', help=(
+            'The name of the status view file.'))
+
+    argument_group.add_argument(
+        '--status_view_interval', '--status-view-interval',
+        dest='status_view_interval', action='store', type=float,
+        metavar='SECONDS', default=0.5, help=(
+            'Number of seconds to update the status view.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -42,6 +56,7 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
@@ -51,7 +66,19 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
         options, 'status_view_mode',
         default_value=status_view.StatusView.MODE_WINDOW)
 
+    status_view_file = cls._ParseStringOption(
+        options, 'status_view_file', default_value='status.info')
+
+    status_view_interval = cls._ParseNumericOption(
+        options, 'status_view_interval')
+
+    if status_view_interval is None or status_view_interval <= 0.0:
+      raise errors.BadConfigOption(
+          'Invalid status view interval value must be larger than 0.0 seconds.')
+
     setattr(configuration_object, '_status_view_mode', status_view_mode)
+    setattr(configuration_object, '_status_view_file', status_view_file)
+    setattr(configuration_object, '_status_view_interval', status_view_interval)
 
 
 manager.ArgumentHelperManager.RegisterHelper(StatusViewArgumentsHelper)
