@@ -64,7 +64,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   NAME = 'winfirewall'
   DATA_FORMAT = 'Windows Firewall log file'
 
-  ENCODING = 'ascii'
+  # A Windows Firewall is encoded using the system codepage.
+  ENCODING = None
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
