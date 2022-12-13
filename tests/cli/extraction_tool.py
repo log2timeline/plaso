@@ -116,12 +116,14 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   _EXPECTED_TIME_ZONE_OPTION = """\
-usage: extraction_tool_test.py [--language LANGUAGE_TAG]
+usage: extraction_tool_test.py [--codepage CODEPAGE] [--language LANGUAGE_TAG]
                                [--no_extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
 {0:s}:
+  --codepage CODEPAGE   The preferred codepage, which is used for decoding
+                        single-byte or multi-byte character extracted strings.
   --language LANGUAGE_TAG
                         The preferred language, which is used for extracting
                         and formatting Windows EventLog message strings. Use "

@@ -32,6 +32,7 @@ class Session(interface.AttributeContainer):
     parser_filter_expression (str): parser filter expression.
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
+    preferred_codepage (str): preferred codepage.
     preferred_encoding (str): preferred encoding.
     preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
@@ -67,6 +68,7 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = None
     # TODO: kept for backwards compatibility.
     self.parsers_counter = None
+    self.preferred_codepage = None
     self.preferred_encoding = 'utf-8'
     self.preferred_language = None
     self.preferred_time_zone = 'UTC'
@@ -122,6 +124,7 @@ class Session(interface.AttributeContainer):
     self.filter_file = session_configuration.filter_file
     self.parser_filter_expression = (
         session_configuration.parser_filter_expression)
+    self.preferred_codepage = session_configuration.preferred_codepage
     self.preferred_encoding = session_configuration.preferred_encoding
     self.preferred_language = session_configuration.preferred_language
     self.preferred_time_zone = session_configuration.preferred_time_zone
@@ -154,6 +157,8 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = getattr(
         session_start, 'parser_filter_expression',
         self.parser_filter_expression)
+    self.preferred_codepage = getattr(
+        session_start, 'preferred_codepage', self.preferred_codepage)
     self.preferred_encoding = getattr(
         session_start, 'preferred_encoding', self.preferred_encoding)
     self.preferred_language = getattr(
@@ -247,6 +252,7 @@ class SessionConfiguration(interface.AttributeContainer):
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
+    preferred_codepage (str): preferred codepage.
     preferred_encoding (str): preferred encoding.
     preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
@@ -274,6 +280,7 @@ class SessionConfiguration(interface.AttributeContainer):
     self.filter_file = None
     self.identifier = identifier
     self.parser_filter_expression = None
+    self.preferred_codepage = None
     self.preferred_encoding = None
     self.preferred_language = None
     self.preferred_time_zone = None
