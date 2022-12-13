@@ -174,8 +174,8 @@ class PreprocessMediator(object):
     Raises:
       ValueError: if the codepage is not supported.
     """
-    if not self._knowledge_base.codepage:
-      self._knowledge_base.SetCodepage(codepage)
+    logger.debug('setting codepage to: "{0:s}"'.format(codepage))
+    self._knowledge_base.SetCodepage(codepage)
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
