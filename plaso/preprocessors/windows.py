@@ -285,7 +285,7 @@ class WindowsAvailableTimeZonesPlugin(
 
     mui_std_value = registry_key.GetValueByName('MUI_Std')
     if mui_std_value:
-      mui_form = std_value.GetDataAsObject()
+      mui_form = mui_std_value.GetDataAsObject()
     else:
       mui_form = None
 
