@@ -201,6 +201,11 @@ class SCCMTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+    # Format verification will be faster on average by checking the presence of
+    # fixed-text fragments first.
+    if ']LOG]!><time="' not in text_reader.lines:
+      return False
+
     try:
       structure, _, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
