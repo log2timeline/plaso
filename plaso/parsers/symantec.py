@@ -151,7 +151,7 @@ class SymantecParser(dsv_parser.DSVParser):
   """Parses Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'symantec_scanlog'
-  DATA_FORMAT = 'AV Corporate Edition and Endpoint Protection log file'
+  DATA_FORMAT = 'Symantec AV Corporate Edition and Endpoint Protection log file'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
@@ -306,7 +306,7 @@ class SymantecParser(dsv_parser.DSVParser):
 
     try:
       self._ParseTimestamp(timestamp)
-    except (TypeError, ValueError):
+    except errors.ParseError:
       return False
 
     try:
