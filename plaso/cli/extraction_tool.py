@@ -173,6 +173,7 @@ class ExtractionTool(
     configuration.log_filename = self._log_file
     configuration.parser_filter_expression = (
         self._expanded_parser_filter_expression)
+    configuration.preferred_codepage = self._preferred_codepage
     configuration.preferred_language = self._preferred_language
     configuration.preferred_time_zone = self._preferred_time_zone
     configuration.preferred_year = self._preferred_year
@@ -207,8 +208,9 @@ class ExtractionTool(
     session_configuration.identifier = session.identifier
     session_configuration.parser_filter_expression = (
         self._parser_filter_expression)
+    session_configuration.preferred_codepage = self._preferred_codepage
     session_configuration.preferred_encoding = self.preferred_encoding
-    session_configuration. preferred_language = (
+    session_configuration.preferred_language = (
         self._preferred_language or 'en-US')
     session_configuration.preferred_time_zone = self._preferred_time_zone
     session_configuration.preferred_year = self._preferred_year
@@ -317,7 +319,7 @@ class ExtractionTool(
       BadConfigOption: if the options are invalid.
     """
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['language'])
+        options, self, names=['codepage', 'language'])
 
     if self._process_archives:
       self._archive_types_string = 'tar,zip'
@@ -638,7 +640,7 @@ class ExtractionTool(
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=['language'])
+        argument_group, names=['codepage', 'language'])
 
     # Note defaults here are None so we can determine if an option was set.
 

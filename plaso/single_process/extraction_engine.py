@@ -311,6 +311,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     parser_mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
+    parser_mediator.SetPreferredCodepage(
+        processing_configuration.preferred_codepage)
     parser_mediator.SetPreferredLanguage(
         processing_configuration.preferred_language)
     parser_mediator.SetPreferredTimeZone(

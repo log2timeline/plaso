@@ -102,6 +102,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
+    mediator.SetPreferredCodepage(processing_configuration.preferred_codepage)
     mediator.SetPreferredLanguage(processing_configuration.preferred_language)
     mediator.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
     mediator.SetTemporaryDirectory(processing_configuration.temporary_directory)

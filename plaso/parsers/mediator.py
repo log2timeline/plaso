@@ -550,6 +550,14 @@ class ParserMediator(object):
     self._file_entry = file_entry
     self._event_data_stream_identifier = None
 
+  def SetPreferredCodepage(self, codepage):
+    """Sets the preferred codepage.
+
+    Args:
+      codepage (str): codepage.
+    """
+    self._preferred_codepage = codepage
+
   def SetPreferredLanguage(self, language_tag):
     """Sets the preferred language.
 
