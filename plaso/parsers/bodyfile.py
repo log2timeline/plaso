@@ -112,7 +112,7 @@ class BodyfileParser(interface.FileObjectParser):
     return date_time
 
   def _GetLastValueAsBase10Integer(
-      self, parser_mediator, values, description, line_number):
+      self, parser_mediator, values, description, line_number, first_line):
     """Retrieves the last value as a base 10 integer.
 
     Args:
@@ -121,6 +121,8 @@ class BodyfileParser(interface.FileObjectParser):
       values (list[str]): values extracted from the line.
       description (str): human readable description of the value.
       line_number (int): number of the line the values were extracted from.
+      first_line (int): True if this is first line from which values were
+          extracted.
 
     Returns:
       int: integer value or None if not available or invalid.
@@ -136,7 +138,7 @@ class BodyfileParser(interface.FileObjectParser):
       except ValueError:
         error_string = 'invalid {0:s} value in line: {1:d}'.format(
             description, line_number)
-        if line_number == 0:
+        if first_line:
           raise errors.WrongParser(error_string)
 
         parser_mediator.ProduceRecoveryWarning(error_string)
@@ -145,7 +147,7 @@ class BodyfileParser(interface.FileObjectParser):
     return integer_value
 
   def _GetLastValueAsFloatingPoint(
-      self, parser_mediator, values, description, line_number):
+      self, parser_mediator, values, description, line_number, first_line):
     """Retrieves the last value as floating-point.
 
     Args:
@@ -154,6 +156,8 @@ class BodyfileParser(interface.FileObjectParser):
       values (list[str]): values extracted from the line.
       description (str): human readable description of the value.
       line_number (int): number of the line the values were extracted from.
+      first_line (int): True if this is first line from which values were
+          extracted.
 
     Returns:
       float: floating-point value or None if not available or invalid.
@@ -169,7 +173,7 @@ class BodyfileParser(interface.FileObjectParser):
       except ValueError:
         error_string = 'invalid {0:s} value in line: {1:d}'.format(
             description, line_number)
-        if line_number == 0:
+        if first_line:
           raise errors.WrongParser(error_string)
 
         parser_mediator.ProduceRecoveryWarning(error_string)
@@ -193,6 +197,7 @@ class BodyfileParser(interface.FileObjectParser):
     line_reader = text_file.TextFile(
         file_object, encoding='UTF-8', end_of_line='\n')
 
+    first_line = True
     line_number = 0
 
     try:
@@ -211,7 +216,7 @@ class BodyfileParser(interface.FileObjectParser):
           error_string = (
               'invalid number of values: {0:d} in line: {1:d}').format(
                   number_of_values, line_number)
-          if line_number == 0:
+          if first_line:
             raise errors.WrongParser(error_string)
 
           parser_mediator.ProduceExtractionWarning(error_string)
@@ -223,26 +228,30 @@ class BodyfileParser(interface.FileObjectParser):
           elif md5_value and not self._MD5_RE.match(md5_value):
             error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
                 md5_value, line_number)
-            if line_number == 0:
+            if first_line:
               raise errors.WrongParser(error_string)
 
             parser_mediator.ProduceRecoveryWarning(error_string)
 
           crtime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'creation time', line_number)
+              parser_mediator, values, 'creation time', line_number, first_line)
           ctime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'inode change time', line_number)
+              parser_mediator, values, 'inode change time', line_number,
+              first_line)
           mtime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'modification time', line_number)
+              parser_mediator, values, 'modification time', line_number,
+              first_line)
           atime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'access time', line_number)
+              parser_mediator, values, 'access time', line_number, first_line)
 
           size_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'size', line_number)
+              parser_mediator, values, 'size', line_number, first_line)
           gid_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'group identifier (GID)', line_number)
+              parser_mediator, values, 'group identifier (GID)', line_number,
+              first_line)
           uid_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'user identifier (UID)', line_number)
+              parser_mediator, values, 'user identifier (UID)', line_number,
+              first_line)
 
           if uid_value is not None:
             # Note that the owner_identifier attribute of BodyfileEventData
@@ -308,6 +317,8 @@ class BodyfileParser(interface.FileObjectParser):
           event_data.symbolic_link_target = symbolic_link_target
 
           parser_mediator.ProduceEventData(event_data)
+
+          first_line = False
 
       line_number += 1
 
