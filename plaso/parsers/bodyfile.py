@@ -117,11 +117,11 @@ class BodyfileParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       values (list[str]): values extracted from the line.
       description (str): human readable description of the value.
       line_number (int): number of the line the values were extracted from.
-      first_line (int): True if this is first line from which values were
+      first_line (bool): True if this is first line from which values were
           extracted.
 
     Returns:
@@ -152,11 +152,11 @@ class BodyfileParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       values (list[str]): values extracted from the line.
       description (str): human readable description of the value.
       line_number (int): number of the line the values were extracted from.
-      first_line (int): True if this is first line from which values were
+      first_line (bool): True if this is first line from which values were
           extracted.
 
     Returns:
@@ -181,12 +181,132 @@ class BodyfileParser(interface.FileObjectParser):
 
     return float_value
 
+  def _ParseValues(
+      self, parser_mediator, file_offset, line_number, values, first_line):
+    """Parses bodyfile values.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      file_offset (int): offset of the line the values were extracted from,
+          relative from the start of the file.
+      line_number (int): number of the line the values were extracted from.
+      values (list[str]): values extracted from the line.
+      first_line (bool): True if this is first line from which values were
+          extracted.
+
+    Raises:
+      WrongParser: when the values cannot be parsed.
+    """
+    number_of_values = len(values)
+    if number_of_values < 11:
+      error_string = ('invalid number of values: {0:d} in line: {1:d}').format(
+          number_of_values, line_number)
+      if first_line:
+        raise errors.WrongParser(error_string)
+
+      parser_mediator.ProduceExtractionWarning(error_string)
+
+      return
+
+    md5_value = values.pop(0)
+    if md5_value == '0':
+      md5_value = None
+    elif md5_value and not self._MD5_RE.match(md5_value):
+      error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
+          md5_value, line_number)
+      if first_line:
+        raise errors.WrongParser(error_string)
+
+      parser_mediator.ProduceRecoveryWarning(error_string)
+
+    crtime_value = self._GetLastValueAsFloatingPoint(
+        parser_mediator, values, 'creation time', line_number, first_line)
+    ctime_value = self._GetLastValueAsFloatingPoint(
+        parser_mediator, values, 'inode change time', line_number, first_line)
+    mtime_value = self._GetLastValueAsFloatingPoint(
+        parser_mediator, values, 'modification time', line_number, first_line)
+    atime_value = self._GetLastValueAsFloatingPoint(
+        parser_mediator, values, 'access time', line_number, first_line)
+
+    size_value = self._GetLastValueAsBase10Integer(
+        parser_mediator, values, 'size', line_number, first_line)
+    gid_value = self._GetLastValueAsBase10Integer(
+        parser_mediator, values, 'group identifier (GID)', line_number,
+        first_line)
+    uid_value = self._GetLastValueAsBase10Integer(
+        parser_mediator, values, 'user identifier (UID)', line_number,
+        first_line)
+
+    if uid_value is not None:
+      # Note that the owner_identifier attribute of BodyfileEventData
+      # is expected to be a string or None.
+      uid_value = '{0:d}'.format(uid_value)
+
+    mode_as_string_value = values.pop(-1) or None
+
+    inode_value = values.pop(-1) or None
+    if '-' in inode_value:
+      inode_value, _, _ = inode_value.partition('-')
+
+    try:
+      inode_value = int(inode_value, 10)
+    except (TypeError, ValueError):
+      inode_value = None
+      parser_mediator.ProduceRecoveryWarning(
+          'invalid inode value: {0!s} in line: {1:d}'.format(
+              inode_value, line_number))
+
+    # Determine if the inode value is actually a 64-bit NTFS file
+    # reference.
+    if inode_value > self._UINT48_MAX:
+      mft_entry = inode_value & 0xffffffffffff
+      if mft_entry <= self._UINT32_MAX:
+        inode_value = mft_entry
+
+    filename = '|'.join(values)
+    escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
+    if filename != escaped_filename:
+      parser_mediator.ProduceRecoveryWarning((
+          'filename in line: {0:d} contains unescaped control '
+          'characters').format(line_number))
+
+    else:
+      for character in self._NON_PRINTABLE_CHARACTERS:
+        escaped_character = '\\x{0:02x}'.format(character)
+        filename = filename.replace(escaped_character, chr(character))
+
+      filename = filename.replace('\\|', '|')
+      filename = filename.replace('\\\\', '\\')
+
+    symbolic_link_target = ''
+    if (mode_as_string_value and mode_as_string_value[0] == 'l' and
+        ' -> ' in filename):
+      filename, _, symbolic_link_target = filename.rpartition(' -> ')
+
+    event_data = BodyfileEventData()
+    event_data.access_time = self._GetDateTimeFromTimestamp(atime_value)
+    event_data.change_time = self._GetDateTimeFromTimestamp(ctime_value)
+    event_data.creation_time = self._GetDateTimeFromTimestamp(crtime_value)
+    event_data.filename = filename
+    event_data.group_identifier = gid_value
+    event_data.inode = inode_value
+    event_data.md5 = md5_value
+    event_data.mode_as_string = mode_as_string_value
+    event_data.modification_time = self._GetDateTimeFromTimestamp(mtime_value)
+    event_data.offset = file_offset
+    event_data.owner_identifier = uid_value
+    event_data.size = size_value
+    event_data.symbolic_link_target = symbolic_link_target
+
+    parser_mediator.ProduceEventData(event_data)
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a bodyfile file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
@@ -198,7 +318,9 @@ class BodyfileParser(interface.FileObjectParser):
         file_object, encoding='UTF-8', end_of_line='\n')
 
     first_line = True
+    file_offset = 0
     line_number = 0
+    number_of_comment_lines = 0
 
     try:
       line = line_reader.readline()
@@ -209,117 +331,22 @@ class BodyfileParser(interface.FileObjectParser):
 
     while line:
       # Lines that start with '#' are ignored and treated as comments.
-      if line[0] != '#':
+      if line[0] == '#':
+        number_of_comment_lines += 1
+
+        # It is very uncommon for a bodyfile to have comments, so allow for 10
+        # leading comment lines before skipping the file.
+        if first_line and number_of_comment_lines > 10:
+          raise errors.WrongParser('more than 10 leading comment lines.')
+
+      else:
         values = line.split('|')
-        number_of_values = len(values)
-        if number_of_values < 11:
-          error_string = (
-              'invalid number of values: {0:d} in line: {1:d}').format(
-                  number_of_values, line_number)
-          if first_line:
-            raise errors.WrongParser(error_string)
+        self._ParseValues(
+            parser_mediator, file_offset, line_number, values, first_line)
 
-          parser_mediator.ProduceExtractionWarning(error_string)
+        first_line = False
 
-        else:
-          md5_value = values.pop(0)
-          if md5_value == '0':
-            md5_value = None
-          elif md5_value and not self._MD5_RE.match(md5_value):
-            error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
-                md5_value, line_number)
-            if first_line:
-              raise errors.WrongParser(error_string)
-
-            parser_mediator.ProduceRecoveryWarning(error_string)
-
-          crtime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'creation time', line_number, first_line)
-          ctime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'inode change time', line_number,
-              first_line)
-          mtime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'modification time', line_number,
-              first_line)
-          atime_value = self._GetLastValueAsFloatingPoint(
-              parser_mediator, values, 'access time', line_number, first_line)
-
-          size_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'size', line_number, first_line)
-          gid_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'group identifier (GID)', line_number,
-              first_line)
-          uid_value = self._GetLastValueAsBase10Integer(
-              parser_mediator, values, 'user identifier (UID)', line_number,
-              first_line)
-
-          if uid_value is not None:
-            # Note that the owner_identifier attribute of BodyfileEventData
-            # is expected to be a string or None.
-            uid_value = '{0:d}'.format(uid_value)
-
-          mode_as_string_value = values.pop(-1) or None
-
-          inode_value = values.pop(-1) or None
-          if '-' in inode_value:
-            inode_value, _, _ = inode_value.partition('-')
-
-          try:
-            inode_value = int(inode_value, 10)
-          except (TypeError, ValueError):
-            inode_value = None
-            parser_mediator.ProduceRecoveryWarning(
-                'invalid inode value: {0!s} in line: {1:d}'.format(
-                    inode_value, line_number))
-
-          # Determine if the inode value is actually a 64-bit NTFS file
-          # reference.
-          if inode_value > self._UINT48_MAX:
-            mft_entry = inode_value & 0xffffffffffff
-            if mft_entry <= self._UINT32_MAX:
-              inode_value = mft_entry
-
-          filename = '|'.join(values)
-          escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
-          if filename != escaped_filename:
-            parser_mediator.ProduceRecoveryWarning((
-                'filename in line: {0:d} contains unescaped control '
-                'characters').format(line_number))
-
-          else:
-            for character in self._NON_PRINTABLE_CHARACTERS:
-              escaped_character = '\\x{0:02x}'.format(character)
-              filename = filename.replace(escaped_character, chr(character))
-
-            filename = filename.replace('\\|', '|')
-            filename = filename.replace('\\\\', '\\')
-
-          symbolic_link_target = ''
-          if (mode_as_string_value and mode_as_string_value[0] == 'l' and
-              ' -> ' in filename):
-            filename, _, symbolic_link_target = filename.rpartition(' -> ')
-
-          event_data = BodyfileEventData()
-          event_data.access_time = self._GetDateTimeFromTimestamp(atime_value)
-          event_data.change_time = self._GetDateTimeFromTimestamp(ctime_value)
-          event_data.creation_time = self._GetDateTimeFromTimestamp(
-              crtime_value)
-          event_data.filename = filename
-          event_data.group_identifier = gid_value
-          event_data.inode = inode_value
-          event_data.md5 = md5_value
-          event_data.mode_as_string = mode_as_string_value
-          event_data.modification_time = self._GetDateTimeFromTimestamp(
-              mtime_value)
-          event_data.offset = file_object.tell()
-          event_data.owner_identifier = uid_value
-          event_data.size = size_value
-          event_data.symbolic_link_target = symbolic_link_target
-
-          parser_mediator.ProduceEventData(event_data)
-
-          first_line = False
-
+      file_offset = file_object.tell()
       line_number += 1
 
       try:
