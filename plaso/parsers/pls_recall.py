@@ -57,7 +57,7 @@ class PlsRecallParser(
   """
 
   NAME = 'pls_recall'
-  DATA_FORMATE = 'PL SQL cache file (PL-SQL developer recall file)'
+  DATA_FORMAT = 'PL SQL cache file (PL-SQL developer recall file) format'
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'pls_recall.yaml')
@@ -77,7 +77,7 @@ class PlsRecallParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       pls_record (pls_recall_record): a PLS Recall record to verify.
 
     Returns:
@@ -123,7 +123,7 @@ class PlsRecallParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:

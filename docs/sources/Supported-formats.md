@@ -1,18 +1,18 @@
 ## Supported Formats
 
-The information below is based of version 20210213
+The information below is based of version 20221212
 
 ### Storage media image file formats
 
-Storage media image file format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#storage-media-types).
+Storage media image file format support is provided by [dfVFS](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#storage-media-types).
 
 ### Volume system formats
 
-Volume system format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#volume-systems).
+Volume system format support is provided by [dfVFS](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#volume-systems).
 
 ### File system formats
 
-File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#file-systems).
+File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/en/latest/sources/Supported-formats.html#file-systems).
 
 ### File formats
 
@@ -78,16 +78,17 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * System Resource Usage Monitor (SRUM) ESE database file
 * Windows 8 File History ESE database file
 
-### JSON-L File formats
+### JSON-L log file formats
 
-* [Amazon Web Services CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
+* [AWS CloudTrail logs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
 * [Azure Activity logs](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log)
-* Azure application gateway access log file
+* Azure Application Gateway access log
 * Docker container configuration file
 * Docker container log file
-* Google Cloud (GCP) log file
-* Apple iOS application privacy report file
-* Microsoft (Office) 365 audit log file
+* Docker layer configuration file
+* Google Cloud (GCP) log
+* iOS Application Privacy report
+* Microsoft (Office) 365 audit log
 
 ### OLE Compound File formats
 
@@ -149,39 +150,45 @@ File System Format support is provided by [dfvfs](https://dfvfs.readthedocs.io/e
 * Windows 10 Timeline SQLite database (ActivitiesCache.db) file
 * Zeitgeist activity SQLite database file
 
-### Syslog file formats
+### Text-based log file formats
 
-* Cron syslog line
-* SSH syslog line
-
-### Text log file formats
-
+* Advanced Packaging Tool (APT) History log file
 * Android logcat file
 * Apache access log (access.log) file
-* Advanced Packaging Tool (APT) History log file
-* [Amazon Web Services Elastic Load Balancer access logs](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-log-file-format)
-* Confluence access log file
+* [AWS ELB Access log file](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-log-file-format)
+* Bash history file
+* Confluence access log (access.log) file
 * Debian package manager log (dpkg.log) file
-* Microsoft IIS log files
-* Apple iOS sysdiagnose logd (logd.0.log) file
-* MacOS Application firewall
-* MacOS Securityd
-* MacOS Wifi
-* Popularity Contest log
-* PostgreSQL application log
-* Santa logs
-* SELinux audit logs
-* Windows SetupAPI log file
-* SkyDrive single-line log and error log files
+* Google Drive Sync log file
+* Google-formatted log file
+* iOS lockdown daemon log
+* iOS sysdiag log
+* iOS sysdiagnose logd file
+* MacOS Application firewall log (appfirewall.log) file
+* MacOS security daemon (securityd) log file
+* MacOS Wi-Fi log (wifi.log) file
+* Microsoft IIS log file
+* OneDrive (or SkyDrive) version 1 log file
+* OneDrive (or SkyDrive) version 2 log file
+* Popularity Contest log file
+* PostgreSQL application log file
+* Santa log (santa.log) file
+* SELinux audit log (audit.log) file
 * Snort3/Suricata fast-log alert log (fast.log) file
-* Sophos anti-virus logs (SAV.txt) file
+* Sophos anti-virus log file (SAV.txt) file
+* System Center Configuration Manager (SCCM) client log file
+* System log (syslog) file
+* Viminfo file
 * vsftpd log file
 * Windows Firewall log file
-* Xchat log file
-* Xchat scrollback log file
+* Windows SetupAPI log file
+* XChat log file
+* XChat scrollback log file
+* ZSH extended history file
 
 ### Windows Registry formats
 
+* AMCache (AMCache.hve)
 * Application Compatibility Cache Registry data
 * Background Activity Moderator (BAM) Registry data
 * BagMRU (or ShellBags) Registry data

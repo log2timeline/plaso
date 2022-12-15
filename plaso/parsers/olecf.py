@@ -15,7 +15,7 @@ class OLECFParser(interface.FileObjectParser):
   # pylint: disable=no-member
 
   NAME = 'olecf'
-  DATA_FILE = 'OLE Compound file (OLECF)'
+  DATA_FORMAT = 'OLE Compound File (OLECF) format'
 
   _INITIAL_FILE_OFFSET = None
 
@@ -45,7 +45,7 @@ class OLECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
     olecf_file = pyolecf.file()
