@@ -61,10 +61,11 @@ class DataFormatInformationExtractor(object):
       'Browser cookie formats',
       'Compound ZIP file formats',
       'ESE database file formats',
+      'JSON-L log file formats',
       'OLE Compound File formats',
       'Property list (plist) formats',
       'SQLite database file formats',
-      'Syslog file formats',
+      'Text-based log file formats',
       'Windows Registry formats']
 
   # TODO: consider extending Plaso parsers and parser plugins with metadata that
@@ -75,6 +76,7 @@ class DataFormatInformationExtractor(object):
       'plaso/parsers/cookie_plugins': 'Browser cookie formats',
       'plaso/parsers/czip_plugins': 'Compound ZIP file formats',
       'plaso/parsers/esedb_plugins': 'ESE database file formats',
+      'plaso/parsers/jsonl_plugins': 'JSON-L log file formats',
       'plaso/parsers/olecf_plugins': 'OLE Compound File formats',
       'plaso/parsers/plist_plugins': 'Property list (plist) formats',
       'plaso/parsers/sqlite_plugins': 'SQLite database file formats',
@@ -93,6 +95,7 @@ class DataFormatInformationExtractor(object):
       'czip_plugin',
       'esedb_plugin',
       'filestat',
+      'jsonl_plugin',
       'mrulistex_shell_item_list',
       'mrulistex_string',
       'mrulistex_string_and_shell_item',
@@ -213,7 +216,10 @@ class DataFormatInformationExtractor(object):
         data_format_descriptors.extend(sub_data_format_descriptors)
       else:
         module_path = '.'.join(sub_package)
-        module_object = importlib.import_module(module_path)
+        try:
+          module_object = importlib.import_module(module_path)
+        except ImportError:
+          module_object = None
 
         for _, cls in inspect.getmembers(module_object, inspect.isclass):
           if issubclass(cls, (
@@ -228,6 +234,10 @@ class DataFormatInformationExtractor(object):
                 package_path, 'File formats')
 
             data_format = getattr(cls, 'DATA_FORMAT', None)
+            if not data_format:
+              print(('WARNING: parser or plugin: {0:s} missing '
+                     'DATA_FORMAT').format(parser_name))
+
             url = ''
 
             dtfabric_file = os.path.join(package_path, ''.join([name, '.yaml']))
