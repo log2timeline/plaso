@@ -31,8 +31,8 @@ The time reported in the log is the number of seconds since January 1, 1970
 'decorators' (bold, underline, colors indication, etc.), so the parser
 should strip those control fields.
 
-References
-http://xchat.org
+Also see:
+  http://xchat.org
 """
 
 import pyparsing
@@ -73,15 +73,8 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
-
-  _LOG_LINE = (
-      pyparsing.Suppress('T') + _INTEGER.setResultsName('timestamp') +
-      pyparsing.restOfLine().setResultsName('raw_text') +
-      _END_OF_LINE)
+  # Using a regular expression to include checking for spaces.
+  _LOG_LINE = pyparsing.Regex(r'T (?P<timestamp>\d{1,10}) (?P<raw_text>.*)\n')
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
@@ -141,6 +134,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
+    timestamp = int(timestamp, 10)
 
     raw_text = self._GetValueFromStructure(
         structure, 'raw_text', default_value='')
@@ -166,15 +160,8 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, _, _ = self._VerifyString(text_reader.lines)
+      self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
-
-    try:
-      dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-    except (TypeError, ValueError):
       return False
 
     return True

@@ -203,7 +203,7 @@ class SCCMTextPlugin(interface.TextPlugin):
     """
     # Format verification will be faster on average by checking the presence of
     # fixed-text fragments first.
-    if ']LOG]!><time="' not in text_reader.lines:
+    if '<![LOG[' not in text_reader.lines:
       return False
 
     try:
