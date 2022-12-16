@@ -50,7 +50,7 @@ class JSONLParser(interface.FileObjectParser):
       raise errors.WrongParser('Not a JSON-L file.')
 
     line = line.strip()
-    if line[0] != '{' and line[-1] != '}':
+    if not line or (line[0] != '{' and line[-1] != '}'):
       raise errors.WrongParser(
           'Not a JSON-L file, missing opening and closing braces.')
 
