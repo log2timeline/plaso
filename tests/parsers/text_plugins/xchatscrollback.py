@@ -64,6 +64,16 @@ class XChatScrollbackLogTextPluginTest(test_lib.TextPluginTestCase):
     result = plugin.CheckRequiredFormat(None, text_reader)
     self.assertFalse(result)
 
+    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
+        b'.TH MT 1 \" -*- nroff -*-\n'))
+    file_object.Open()
+
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(None, text_reader)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = xchatscrollback.XChatScrollbackLogTextPlugin()

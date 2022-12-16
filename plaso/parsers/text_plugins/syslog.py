@@ -209,8 +209,8 @@ class SyslogTextPlugin(
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  # The Chrome OS syslog messages are of a format beginning with an
-  # ISO 8601 combined date and time expression with timezone designator:
+  # The ChromeOS syslog messages are of a format beginning with an
+  # ISO 8601 combined date and time expression with a time zone offset:
   #   2016-10-25T12:37:23.297265-07:00
   #
   # This will then be followed by the SYSLOG Severity which will be one of:
@@ -626,8 +626,11 @@ class SyslogTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, _, _ = self._VerifyString(text_reader.lines)
+      structure, start, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
+      return False
+
+    if start != 0:
       return False
 
     self._SetEstimatedYear(parser_mediator)
