@@ -203,12 +203,15 @@ class SCCMTextPlugin(interface.TextPlugin):
     """
     # Format verification will be faster on average by checking the presence of
     # fixed-text fragments first.
-    if ']LOG]!><time="' not in text_reader.lines:
+    if '<![LOG[' not in text_reader.lines:
       return False
 
     try:
-      structure, _, _ = self._VerifyString(text_reader.lines)
+      structure, start, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
+      return False
+
+    if start != 0:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
