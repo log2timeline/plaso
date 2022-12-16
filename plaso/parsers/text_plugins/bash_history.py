@@ -93,11 +93,11 @@ class BashHistoryTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      self._VerifyString(text_reader.lines)
+      _, start, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
-    return True
+    return start == 0
 
 
 text_parser.TextLogParser.RegisterPlugin(BashHistoryTextPlugin)

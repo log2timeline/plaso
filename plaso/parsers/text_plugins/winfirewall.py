@@ -324,8 +324,11 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      self._VerifyString(text_reader.lines)
+      _, start, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
+      return False
+
+    if start != 0:
       return False
 
     self._ResetState()
