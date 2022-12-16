@@ -38,7 +38,10 @@ class SafariDownloadsPlistPluginTest(test_lib.PlistPluginTestCase):
         'full_path': (
             '~/Downloads/paint.net.4.3.12.install.anycpu.web.zip.download/'
             'paint.net.4.3.12.install.anycpu.web.zip'),
+        'received_bytes': 826337,
+        'remove_on_completion': False,
         'start_time': '2022-12-14T19:05:26.862793+00:00',
+        'total_bytes': 826337,
         'url': (
             'https://www.dotpdn.com/files/'
             'paint.net.4.3.12.install.anycpu.web.zip')}

@@ -14,6 +14,7 @@ class SafariDownloadEventData(events.EventData):
         finished.
     full_path (str): full path where the file was downloaded to.
     received_bytes (int): number of bytes received while downloading.
+    remove_on_completion (bool): remove the download when completed (done).
     start_time (dfdatetime.DateTimeValues): date and time the download was
         started.
     total_bytes (int): total number of bytes to download.
@@ -28,6 +29,7 @@ class SafariDownloadEventData(events.EventData):
     self.end_time = None
     self.full_path = None
     self.received_bytes = None
+    self.remove_on_completion = None
     self.start_time = None
     self.total_bytes = None
     self.url = None
@@ -60,6 +62,8 @@ class SafariDownloadsPlistPlugin(interface.PlistPlugin):
       event_data.full_path = plist_key.get('DownloadEntryPath', None)
       event_data.received_bytes = plist_key.get(
           'DownloadEntryProgressBytesSoFar', None)
+      event_data.remove_on_completion = plist_key.get(
+          'DownloadEntryRemoveWhenDoneKey', None)
       event_data.start_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'DownloadEntryDateAddedKey')
       event_data.total_bytes = plist_key.get(
