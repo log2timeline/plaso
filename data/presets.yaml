@@ -102,6 +102,7 @@ parsers:
 - text/popularity_contest
 - text/selinux
 - text/syslog
+- text/syslog_traditional
 - text/vsftpd
 - text/xchatlog
 - text/xchatscrollback
@@ -150,6 +151,7 @@ parsers:
 - text/mac_securityd
 - text/mac_wifi
 - text/syslog
+- text/syslog_traditional
 - text/zsh_extended_history
 - utmpx
 - webhist
@@ -203,6 +205,7 @@ name: syslog
 description: Preset for backwards compatibility of syslog text parser plugin.
 parsers:
 - text/syslog
+- text/syslog_traditional
 ---
 name: viminfo
 description: Preset for backwards compatibility of viminfo text parser plugin.
