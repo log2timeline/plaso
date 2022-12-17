@@ -671,9 +671,7 @@ class TraditionalSyslogTextPlugin(
     reporter = self._GetValueFromStructure(structure, 'reporter')
 
     event_data = None
-    if not reporter:
-      event_data = SyslogCommentEventData()
-    elif reporter == 'CRON':
+    if reporter == 'CRON':
       event_data = self._ParseCronMessageBody(body)
     elif reporter == 'sshd':
       event_data = self._ParseSshdMessageBody(body)
@@ -682,14 +680,12 @@ class TraditionalSyslogTextPlugin(
       event_data = SyslogLineEventData()
 
     event_data.body = body
+    event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
     event_data.last_written_time = self._ParseTimeElements(
         time_elements_structure)
-
-    if reporter:
-      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
-      event_data.reporter = reporter
-      event_data.severity = self._GetValueFromStructure(structure, 'severity')
+    event_data.pid = self._GetValueFromStructure(structure, 'pid')
+    event_data.reporter = reporter
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
 
     parser_mediator.ProduceEventData(event_data)
 
