@@ -458,12 +458,11 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
     event_data.body = body
     event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
+    event_data.last_written_time = self._ParseTimeElements(
+        time_elements_structure)
     event_data.pid = self._GetValueFromStructure(structure, 'pid')
     event_data.reporter = reporter
     event_data.severity = severity
-
-    event_data.last_written_time = self._ParseTimeElements(
-        time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -615,8 +614,7 @@ class TraditionalSyslogTextPlugin(
   # Where %TIMESTAMP% is in yearless ctime date time format e.g.
   # Jan 22 07:54:32
 
-  _RSYSLOG_TRADITIONAL_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+  _RSYSLOG_BODY = (
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
       _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(
@@ -627,28 +625,26 @@ class TraditionalSyslogTextPlugin(
           pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      _END_OF_LINE)
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'))
 
   _SYSLOG_COMMENT_END = pyparsing.Suppress('---') + _END_OF_LINE
 
-  _SYSLOG_COMMENT = (
-      _DATE_TIME.setResultsName('date_time') + pyparsing.Suppress(':') +
-      pyparsing.Suppress('---') +
+  _SYSLOG_COMMENT_BODY = (
+      pyparsing.Suppress(': ---') +
       pyparsing.SkipTo(_SYSLOG_COMMENT_END).setResultsName('body') +
-      _SYSLOG_COMMENT_END)
+      pyparsing.Suppress('---'))
 
-  _KERNEL_SYSLOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+  _KERNEL_SYSLOG_BODY = (
       pyparsing.Literal('kernel').setResultsName('reporter') +
       pyparsing.Suppress(':') +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'))
+
+  _LOG_LINE = (
+      _DATE_TIME.setResultsName('date_time') + (
+          _KERNEL_SYSLOG_BODY ^ _RSYSLOG_BODY ^ _SYSLOG_COMMENT_BODY) +
       _END_OF_LINE)
 
-  _LINE_STRUCTURES = [
-      ('kernel_syslog_line', _KERNEL_SYSLOG_LINE),
-      ('rsyslog_traditional_line', _RSYSLOG_TRADITIONAL_LINE),
-      ('syslog_comment', _SYSLOG_COMMENT)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   # Using a regular expression here is faster on non-match than the log line
   # grammar.
@@ -671,31 +667,27 @@ class TraditionalSyslogTextPlugin(
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    if key == 'syslog_comment':
+    body = self._GetValueFromStructure(structure, 'body')
+    reporter = self._GetValueFromStructure(structure, 'reporter')
+
+    event_data = None
+    if not reporter:
       event_data = SyslogCommentEventData()
-      event_data.body = self._GetValueFromStructure(structure, 'body')
+    elif reporter == 'CRON':
+      event_data = self._ParseCronMessageBody(body)
+    elif reporter == 'sshd':
+      event_data = self._ParseSshdMessageBody(body)
 
-    else:
-      body = self._GetValueFromStructure(structure, 'body')
-      reporter = self._GetValueFromStructure(structure, 'reporter')
+    if not event_data:
+      event_data = SyslogLineEventData()
 
-      event_data = None
-      if reporter == 'CRON':
-        event_data = self._ParseCronMessageBody(body)
-      elif reporter == 'sshd':
-        event_data = self._ParseSshdMessageBody(body)
-
-      if not event_data:
-        event_data = SyslogLineEventData()
-
-      event_data.body = body
-      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-      event_data.pid = self._GetValueFromStructure(structure, 'pid')
-      event_data.reporter = reporter
-      event_data.severity = self._GetValueFromStructure(structure, 'severity')
-
+    event_data.body = body
+    event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
     event_data.last_written_time = self._ParseTimeElements(
         time_elements_structure)
+    event_data.pid = self._GetValueFromStructure(structure, 'pid')
+    event_data.reporter = reporter
+    event_data.severity = self._GetValueFromStructure(structure, 'severity')
 
     parser_mediator.ProduceEventData(event_data)
 

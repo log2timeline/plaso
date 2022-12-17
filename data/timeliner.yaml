@@ -1169,6 +1169,12 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'syslog:comment'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'syslog:cron:task_run'
 attribute_mappings:
 - name: 'last_written_time'
