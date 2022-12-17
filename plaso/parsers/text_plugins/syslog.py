@@ -682,12 +682,14 @@ class TraditionalSyslogTextPlugin(
       event_data = SyslogLineEventData()
 
     event_data.body = body
-    event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
     event_data.last_written_time = self._ParseTimeElements(
         time_elements_structure)
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
-    event_data.reporter = reporter
-    event_data.severity = self._GetValueFromStructure(structure, 'severity')
+
+    if reporter:
+      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.reporter = reporter
+      event_data.severity = self._GetValueFromStructure(structure, 'severity')
 
     parser_mediator.ProduceEventData(event_data)
 
