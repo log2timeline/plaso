@@ -1,9 +1,9 @@
 datetime,timestamp_desc,source,source_long,message,parser,tag
-2020-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog,-
-2020-03-11T09:39:38+00:00,Content Modification Time,LOG,Log File,[dhclient] PRC: Renewing lease on enp0s3.,text/syslog,-
-2020-03-11T09:39:39+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog,-
-2020-03-11T12:17:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: cd / && run-parts --report /etc/cron.hourly for user: root pid: 11068,text/syslog,-
-2020-03-11T22:55:30+00:00,Content Modification Time,LOG,Log File,[AptDaemon] INFO: CommitPackages() was called: dbus.Array([dbus.String('')] signature=dbus.Signature('s'))  dbus.Array([dbus.String('')]  signature=dbus.Signature('s'))  dbus.Ar,text/syslog,-
-2020-03-11T22:58:58+00:00,Content Modification Time,LOG,Log File,[com.canonical.Unity.Scope.Music  pid: 1378] (unity-music-daemon:27902): unity-music-daemon-WARNING **: rhythmbox-collection.vala:574: Error while parsing rhythmbox DB: Error opening file: No such file or directory,text/syslog,-
-2020-03-11T23:07:04+00:00,Content Modification Time,LOG,Log File,[org.debian.apt  pid: 557] 23:07:04 AptDaemon [INFO]: Quitting was requested,text/syslog,-
-2020-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog,-
+2020-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog_traditional,-
+2020-03-11T09:39:38+00:00,Content Modification Time,LOG,Log File,[dhclient] PRC: Renewing lease on enp0s3.,text/syslog_traditional,-
+2020-03-11T09:39:39+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog_traditional,-
+2020-03-11T12:17:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: cd / && run-parts --report /etc/cron.hourly for user: root pid: 11068,text/syslog_traditional,-
+2020-03-11T22:55:30+00:00,Content Modification Time,LOG,Log File,[AptDaemon] INFO: CommitPackages() was called: dbus.Array([dbus.String('')] signature=dbus.Signature('s'))  dbus.Array([dbus.String('')]  signature=dbus.Signature('s'))  dbus.Ar,text/syslog_traditional,-
+2020-03-11T22:58:58+00:00,Content Modification Time,LOG,Log File,[com.canonical.Unity.Scope.Music  pid: 1378] (unity-music-daemon:27902): unity-music-daemon-WARNING **: rhythmbox-collection.vala:574: Error while parsing rhythmbox DB: Error opening file: No such file or directory,text/syslog_traditional,-
+2020-03-11T23:07:04+00:00,Content Modification Time,LOG,Log File,[org.debian.apt  pid: 557] 23:07:04 AptDaemon [INFO]: Quitting was requested,text/syslog_traditional,-
+2020-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog_traditional,-

@@ -1,16 +1,16 @@
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
-2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No change in [/etc/netgroup]. Done,text/syslog,GZIP:\syslog.gz,-
-2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No new content.,text/syslog,GZIP:\syslog.gz,-
-2012-01-22T07:53:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051,text/syslog,GZIP:\syslog.gz,-
-2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: /sbin/status.mycheck) for user: root pid: 31067,text/syslog,GZIP:\syslog.gz,-
-2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068,text/syslog,GZIP:\syslog.gz,-
-2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog,GZIP:\syslog.gz,-
+2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No change in [/etc/netgroup]. Done,text/syslog_traditional,GZIP:\syslog.gz,-
+2012-01-22T07:52:33+00:00,Content Modification Time,LOG,Log File,[client  pid: 30840] INFO No new content.,text/syslog_traditional,GZIP:\syslog.gz,-
+2012-01-22T07:53:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051,text/syslog_traditional,GZIP:\syslog.gz,-
+2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: /sbin/status.mycheck) for user: root pid: 31067,text/syslog_traditional,GZIP:\syslog.gz,-
+2012-01-22T07:54:01+00:00,Content Modification Time,LOG,Cron log,Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068,text/syslog_traditional,GZIP:\syslog.gz,-
+2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog_traditional,GZIP:\syslog.gz,-
 2012-07-28T16:44:07+00:00,Content Modification Time,FILE,File stat,GZIP:\syslog.gz Type: file,filestat,GZIP:\syslog.gz,-
-2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),text/syslog,GZIP:\syslog.gz,-
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,text/syslog,GZIP:\syslog.gz,-
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),text/syslog,GZIP:\syslog.gz,-
-2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog,GZIP:\syslog.gz,-
-2013-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog,GZIP:\syslog.gz,-
+2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),text/syslog_traditional,GZIP:\syslog.gz,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,text/syslog_traditional,GZIP:\syslog.gz,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),text/syslog_traditional,GZIP:\syslog.gz,-
+2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog_traditional,GZIP:\syslog.gz,-
+2013-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog_traditional,GZIP:\syslog.gz,-
 2013-12-03T06:30:41.8079077+00:00,Content Modification Time,FILE,File stat,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
 2013-12-03T06:30:41.8079077+00:00,Creation Time,FILE,File stat,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
 2013-12-03T06:30:41.8079077+00:00,Last Access Time,FILE,File stat,NTFS:\$AttrDef Type: file,filestat,NTFS:\$AttrDef,-
@@ -443,4 +443,4 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2013-12-03T06:39:02.0207867+00:00,Metadata Modification Time,FILE,NTFS file stat,NTFS:\$MFT File reference: 34-1 Attribute name: $STANDARD_INFORMATION Path hints: \$Extend\$RmMetadata\$TxfLog\$TxfLogContainer00000000000000000002,mft,NTFS:\$MFT,-
 2013-12-03T06:40:18.5334930+00:00,Last Access Time,FILE,File stat,NTFS:\another_file Type: file,filestat,NTFS:\another_file,-
 2013-12-03T06:40:18.5334930+00:00,Last Access Time,FILE,NTFS file stat,NTFS:\$MFT File reference: 39-1 Attribute name: $STANDARD_INFORMATION Path hints: \another_file,mft,NTFS:\$MFT,-
-2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),text/syslog,GZIP:\syslog.gz,-
+2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),text/syslog_traditional,GZIP:\syslog.gz,-
