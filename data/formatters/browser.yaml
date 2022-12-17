@@ -564,6 +564,19 @@ short_source: 'WEBHIST'
 source: 'Safari Cookies'
 ---
 type: 'conditional'
+data_type: 'safari:downloads:entry'
+message:
+- '{url}'
+- '({full_path}).'
+- 'Received {received_bytes} of'
+- '{total_bytes} bytes.'
+short_message:
+- '{full_path} downloaded'
+- '({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Safari Downloads'
+---
+type: 'conditional'
 data_type: 'safari:history:visit'
 message:
 - 'Visited: {url}'
