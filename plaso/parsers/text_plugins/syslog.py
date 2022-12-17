@@ -650,7 +650,11 @@ class TraditionalSyslogTextPlugin(
       ('rsyslog_traditional_line', _RSYSLOG_TRADITIONAL_LINE),
       ('syslog_comment', _SYSLOG_COMMENT)]
 
-  VERIFICATION_GRAMMAR =  _KERNEL_SYSLOG_LINE ^ _RSYSLOG_TRADITIONAL_LINE
+  # Using a regular expression here is faster on non-match than the log line
+  # grammar.
+  VERIFICATION_GRAMMAR = pyparsing.Regex(
+      r'(?P<date_time>(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) '
+      r'( [1-9]|[1-9][0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}) \S+ .*\n')
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -758,10 +762,11 @@ class TraditionalSyslogTextPlugin(
     if start != 0:
       return False
 
-    self._SetEstimatedYear(parser_mediator)
+    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+
+    self._SetEstimatedYear(parser_mediator)
 
     try:
       self._ParseTimeElements(time_elements_structure)

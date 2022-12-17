@@ -103,8 +103,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       ('log_line', _LOG_LINE),
       ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
-  # Using a regular expression look ahead here is faster on non-match than
-  # the log line grammar.
+  # Using a regular expression here is faster on non-match than the log line
+  # grammar.
   VERIFICATION_GRAMMAR = pyparsing.Regex(
       r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
       r'[0-9]{2}:[0-9]{2}:[0-9]{2}[,.][0-9]{3} [+-][0-9]{4}) '
