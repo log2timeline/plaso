@@ -4,6 +4,9 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
+
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import gdrive_synclog
 
 from tests.parsers.text_plugins import test_lib
@@ -11,6 +14,26 @@ from tests.parsers.text_plugins import test_lib
 
 class GoogleDriveSyncLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Google Drive Sync log text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat method."""
+    plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'2018-01-24 18:25:08,454 -0800 INFO pid=2376 7780:MainThread      '
+        b'logging_config.py:295 OS: Windows/6.1-SP1\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertTrue(result)
 
   def testProcess(self):
     """Tests the Process function."""

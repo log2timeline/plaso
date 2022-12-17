@@ -103,7 +103,12 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       ('log_line', _LOG_LINE),
       ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = _LOG_LINE
+  # Using a regular expression look ahead here is faster on non-match than
+  # the log line grammar.
+  VERIFICATION_GRAMMAR = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}[,.][0-9]{3} [+-][0-9]{4}) '
+      r'[A-Z]+ pid=[0-9]+ [0-9]+:\S+[ ]+\S+:[0-9]+ .*\n')
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -229,8 +234,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     if start != 0:
       return False
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
+
+    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
 
     try:
       self._ParseTimeElements(time_elements_structure)
