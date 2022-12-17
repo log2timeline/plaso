@@ -1304,6 +1304,16 @@ short_source: 'LOG'
 source: 'SCCM Log'
 ---
 type: 'conditional'
+data_type: 'syslog:comment'
+message:
+- '{body}'
+separator: ''
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'Log File'
+---
+type: 'conditional'
 data_type: 'tango:android:contact'
 message:
 - '{first_name}'

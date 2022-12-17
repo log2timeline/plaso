@@ -853,16 +853,6 @@ short_source: 'LOG'
 source: 'Snort3/Suricata fast-log alert log'
 ---
 type: 'conditional'
-data_type: 'syslog:comment'
-message:
-- '{body}'
-separator: ''
-short_message:
-- '{body}'
-short_source: 'LOG'
-source: 'Log File'
----
-type: 'conditional'
 data_type: 'syslog:cron:task_run'
 message:
 - 'Cron ran: {command}'
