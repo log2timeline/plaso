@@ -28,19 +28,19 @@ mcafee_protection | Parser for McAfee Anti-Virus access protection log files.
 mft | Parser for NTFS $MFT metadata files.
 msiecf | Parser for Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) files.
 networkminer_fileinfo | Parser for NetworkMiner .fileinfos files.
-olecf | 
+olecf | Parser for OLE Compound File (OLECF) format.
 opera_global | Parser for Opera global history (global_history.dat) files.
 opera_typed_history | Parser for Opera typed history (typed_history.xml) files.
 pe | Parser for Portable Executable (PE) files.
 plist | Parser for Property list (plist) files.
-pls_recall | 
+pls_recall | Parser for PL SQL cache file (PL-SQL developer recall file) format.
 prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
 rplog | Parser for Windows Restore Point log (rp.log) files.
 spotlight_storedb | Parser for Apple Spotlight store database (store.db) files.
 sqlite | Parser for SQLite database files.
-symantec_scanlog | Parser for AV Corporate Edition and Endpoint Protection log files.
+symantec_scanlog | Parser for Symantec AV Corporate Edition and Endpoint Protection log files.
 systemd_journal | Parser for Systemd journal files.
 text | Parser for text-based log files.
 trendmicro_url | Parser for Trend Micro Office Web Reputation log files.
@@ -113,6 +113,7 @@ macos_software_update | Parser for MacOS software update plist files.
 macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
+safari_downloads | Parser for Safari Downloads plist files.
 safari_history | Parser for Safari history plist files.
 spotlight | Parser for Spotlight searched terms plist files.
 spotlight_volume | Parser for Spotlight volume configuration plist files.
@@ -192,6 +193,7 @@ skydrive_log_v2 | Parser for OneDrive (or SkyDrive) version 2 log files.
 snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 syslog | Parser for System log (syslog) files.
+syslog_traditional | Parser for Traditional system log (syslog) files.
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
@@ -256,10 +258,10 @@ ios | jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlit
 ios_lockdownd | text/ios_lockdownd
 ios_logd | text/ios_logd
 ios_sysdiag_log | text/ios_sysdiag_log
-linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
+linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 mac_appfirewall_log | text/mac_appfirewall_log
 mac_securityd | text/mac_securityd
-macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/syslog, text/zsh_extended_history, utmpx, webhist
+macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
 macwifi | text/mac_wifi
 popularity_contest | text/popularity_contest
@@ -269,7 +271,7 @@ selinux | text/selinux
 setupapi | text/setupapi
 skydrive_log | text/skydrive_log_v2
 skydrive_log_old | text/skydrive_log_v1
-syslog | text/syslog
+syslog | text/syslog, text/syslog_traditional
 viminfo | text/viminfo
 vsftpd | text/vsftpd
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb

@@ -84,6 +84,14 @@ plaso.parsers.plist\_plugins.macos\_user module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.plist\_plugins.safari\_downloads module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.safari_downloads
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.plist\_plugins.safari\_history module
 ---------------------------------------------------
 
