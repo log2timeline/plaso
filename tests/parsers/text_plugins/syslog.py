@@ -15,8 +15,6 @@ from tests.parsers.text_plugins import test_lib
 class SyslogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the syslog text parser plugin."""
 
-  # pylint: disable=protected-access
-
   def testCheckRequiredFormat(self):
     """Tests for the CheckRequiredFormat method."""
     plugin = syslog.SyslogTextPlugin()
