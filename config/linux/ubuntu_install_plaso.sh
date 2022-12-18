@@ -82,9 +82,7 @@ PYTHON_DEPENDENCIES="libbde-python3
 TEST_DEPENDENCIES="python3-distutils
                    python3-fakeredis
                    python3-mock
-                   python3-pbr
-                   python3-setuptools
-                   python3-sortedcontainers";
+                   python3-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
