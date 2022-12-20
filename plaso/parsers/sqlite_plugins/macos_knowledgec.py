@@ -558,9 +558,10 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
           query_hash, row, 'zvaluestring')
 
     # TODO: Add support for additional action types.
-    elif action not in self._KNOWN_ACTION_TYPES:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported action type: {0:s}'.format(action))
+    else:
+      if action not in self._KNOWN_ACTION_TYPES:
+        parser_mediator.ProduceExtractionWarning(
+            'unsupported action type: {0:s}'.format(action))
       return
 
     event_data.creation_time = self._GetDateTimeRowValue(
