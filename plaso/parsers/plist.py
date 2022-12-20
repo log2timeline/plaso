@@ -131,8 +131,8 @@ class PlistParser(interface.FileObjectParser):
 
     if not top_level_object:
       # Do not produce an extraction warning for a binary plist without a top
-      # level object.
-      if not is_binary_plist:
+      # level object or an XML plist with an empty top level object.
+      if top_level_object is None and not is_binary_plist:
         parser_mediator.ProduceExtractionWarning((
             'unable to parse XML plist file with error: missing top level '
             'object'))
