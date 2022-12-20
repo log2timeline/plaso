@@ -306,6 +306,9 @@ class SpotlightStoreDatabaseParser(
         metadata_attribute, bytes_read = self._ReadMetadataAttribute(
             metadata_type, page_data[page_data_offset:])
 
+        if not metadata_attribute:
+          break
+
         page_data_offset += bytes_read
         record_data_offset += bytes_read
 
