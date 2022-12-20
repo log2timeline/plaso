@@ -512,6 +512,10 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [_SCHEMA_10_13, _SCHEMA_10_14]
 
+  _KNOWN_ACTION_TYPES = frozenset([
+      '/portrait/entity',
+      '/portrait/topic'])
+
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
 
@@ -553,8 +557,8 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
       event_data.bundle_identifier = self._GetRowValue(
           query_hash, row, 'zvaluestring')
 
-    else:
-      # TODO: Add support for additional action types.
+    # TODO: Add support for additional action types.
+    elif action not in self._KNOWN_ACTION_TYPES:
       parser_mediator.ProduceExtractionWarning(
           'unsupported action type: {0:s}'.format(action))
       return
