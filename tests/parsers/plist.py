@@ -165,6 +165,23 @@ class PlistParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+  def testParseWithXMLPlistFileEmptyTopLevel(self):
+    """Tests the Parse function on an XML plist file with an empty top level."""
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile(['org.cups.printers.plist'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
 
 if __name__ == '__main__':
   unittest.main()
