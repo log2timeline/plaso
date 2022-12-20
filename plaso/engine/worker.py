@@ -216,8 +216,8 @@ class EventExtractionWorker(object):
       event_data_stream (EventDataStream): event data stream attribute
            container.
     """
-    maximum_read_size = max([
-        analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers])
+    maximum_read_size = max(
+        analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers)
 
     hashers_only = True
     for analyzer_object in self._analyzers:
