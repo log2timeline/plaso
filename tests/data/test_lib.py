@@ -61,9 +61,9 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
       self._CheckLabels(storage_writer, expected_rule_names)
 
     else:
-      maximum_number_of_attribute_values = max([
+      maximum_number_of_attribute_values = max(
           len(attribute_values)
-          for attribute_values in attribute_values_per_name.values()])
+          for attribute_values in attribute_values_per_name.values())
 
       # Test if variations defined by the attribute_values_per_name match
       # the tagging rule.
