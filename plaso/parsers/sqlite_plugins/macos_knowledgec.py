@@ -513,6 +513,12 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
   SCHEMAS = [_SCHEMA_10_13, _SCHEMA_10_14]
 
   _KNOWN_ACTION_TYPES = frozenset([
+      'com.apple.spotlightviewer.events',
+      '/activity/level',
+      '/device/batteryPercentage',
+      '/device/isPluggedIn',
+      '/display/isBacklit',
+      '/event/tombstone',
       '/portrait/entity',
       '/portrait/topic'])
 
