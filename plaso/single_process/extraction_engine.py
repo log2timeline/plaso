@@ -6,8 +6,10 @@ import os
 import pdb
 import threading
 import time
+import zipfile
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver
 
 from plaso.containers import counts
@@ -64,8 +66,17 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     if (path_spec and not path_spec.IsSystemLevel() and
         path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=self._resolver_context)
+
+      try:
+        file_system = resolver.Resolver.OpenFileEntry(
+            path_spec, resolver_context=self._resolver_context)
+      # TODO: remove zipfile.BadZipFile once caught by dfVFS.
+      except (IOError, ValueError, dfvfs_errors.AccessError,
+              dfvfs_errors.BackEndError, dfvfs_errors.PathSpecError,
+              zipfile.BadZipFile) as exception:
+        logger.warning('Unable to open file system with error: {0!s}'.format(
+            exception))
+        file_system = None
 
       if file_system not in self._file_system_cache:
         if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
