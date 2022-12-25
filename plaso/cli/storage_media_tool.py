@@ -296,7 +296,9 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
 
       volume_identifiers = self._GetVolumeIdentifiers(volume_system, options)
 
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GPT:
+    elif scan_node.type_indicator in (
+        dfvfs_definitions.TYPE_INDICATOR_GPT,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
       volume_identifiers = self._GetPartitionIdentifiers(scan_node, options)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
