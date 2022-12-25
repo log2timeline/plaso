@@ -58,7 +58,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # Date and time values are formatted as: 2015/11/22 17:59:28.110
-  _DATE_TIME = pyparsing.Group(
+  _DATE_TIME = (
       _FOUR_DIGITS + pyparsing.Suppress('/') +
       _TWO_DIGITS + pyparsing.Suppress('/') + _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
@@ -68,80 +68,73 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   # pylint: disable=line-too-long
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-header
   # pylint: enable=line-too-long
-  _LOG_HEADER_START_LINE = (
+  _DEVICE_INSTALL_LOG_LINE = (
       pyparsing.Literal('[Device Install Log]') + _END_OF_LINE)
 
-  _LOG_HEADER_BODY_LINE = (
-     pyparsing.oneOf([
-         'Architecture', 'OS Version', 'ProductType', 'Service Pack',
-         'Suite']) +
-     pyparsing.Literal('=') + pyparsing.restOfLine() + _END_OF_LINE)
+  # Using a regular expression here is faster.
+  _HEADER_ENTRY_LINE = pyparsing.Regex(
+       r'     (Architecture|OS Version|ProductType|Service Pack|Suite) = '
+       r'.*\n').leaveWhitespace()
 
-  _LOG_HEADER_END_LINE = (
-      pyparsing.Literal('[BeginLog]') + _END_OF_LINE)
+  _BEGIN_LOG_LINE = pyparsing.Literal('[BeginLog]') + _END_OF_LINE
 
   # pylint: disable=line-too-long
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-header
   # pylint: enable=line-too-long
-  _SECTION_HEADER_LINE = (
-      pyparsing.Suppress('>>>  [') +
-      pyparsing.CharsNotIn(']').setResultsName('entry_type') +
-      pyparsing.Suppress(']') + _END_OF_LINE)
 
-  _SECTION_HEADER_START_LINE = (
-      pyparsing.Suppress('>>>  Section start') +
-      _DATE_TIME.setResultsName('start_time') +
-      _END_OF_LINE)
+  # Using a regular expression here is faster.
+  _SECTION_HEADER_LINE = pyparsing.Regex(r'>>>  \[(?P<entry_type>[^\]]+)\]\n')
+
+  # Using a regular expression here is faster.
+  _SECTION_START_LINE = pyparsing.Regex(
+      r'>>>  Section start (?P<start_time>[0-9]{4}/[0-9]{2}/[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})\n')
 
   # pylint: disable=line-too-long
   # See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-footer
   # pylint: enable=line-too-long
-  _SECTION_END_LINE = (
-      pyparsing.Suppress('<<<  Section end ') +
-      _DATE_TIME.setResultsName('end_time') +
-      _END_OF_LINE)
 
-  _SECTION_END_EXIT_STATUS_LINE = (
-      pyparsing.Suppress('<<<  [Exit status: ') +
-      pyparsing.CharsNotIn(']').setResultsName('exit_status') +
-      pyparsing.Literal(']') +
-      _END_OF_LINE)
+  # Using a regular expression here is faster.
+  _SECTION_END_LINE = pyparsing.Regex(
+      r'<<<  Section end (?P<end_time>[0-9]{4}/[0-9]{2}/[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})\n')
+
+  # Using a regular expression here is faster.
+  _EXIT_STATUS_LINE = pyparsing.Regex(
+      r'<<<  \[Exit status: (?P<exit_status>[^\]]+)\]\n')
 
   # pylint: disable=line-too-long
   # See https://learn.microsoft.com/en-us/windows-hardware/drivers/install/format-of-a-text-log-section-body
   # and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/format-of-log-entries-that-are-not-part-of-a-text-log-section
   # pylint: enable=line-too-long
-  _ENTRY_PREFIX = pyparsing.oneOf(['.', '!!!', '!'])
 
-  # Cannot rely on the documentation since undocumented event catagegories
-  # have been observed, like: "cmd:", "idb:" and "pol:".
-  _EVENT_CATEGORY = (
-      pyparsing.Word(pyparsing.alphas + '.', min=2, max=3) +
-      pyparsing.Literal(':'))
+  # Note that undocumented event catagegories have been observed, such as:
+  # "cmd:", "idb:" and "pol:".
 
-  _SECTION_BODY_OR_NON_SECTION_LINE = (
-      pyparsing.Optional(_ENTRY_PREFIX) + _EVENT_CATEGORY +
-      pyparsing.restOfLine() + _END_OF_LINE)
+  # Using a regular expression here is faster.
+  _LOG_ENTRY_LINE = pyparsing.Regex(
+      r'(     |   \. |!    |!!!  )[A-Za-z\.]{2,3}: '
+      r'.{0,336}\n').leaveWhitespace()
 
   # Undocumented observed lines.
-  _BOOT_SESSION_LINE = (
-      pyparsing.Literal('[Boot Session:') +
-      _DATE_TIME +
-      pyparsing.Literal(']') +
-      _END_OF_LINE)
+
+  # Using a regular expression here is faster.
+  _BOOT_SESSION_LINE = pyparsing.Regex(
+      r'[Boot Session: [0-9]{4}/[0-9]{2}/[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}]\n')
 
   _LINE_STRUCTURES = [
-      ('ignorable_line', _BOOT_SESSION_LINE),
-      ('ignorable_line', _LOG_HEADER_END_LINE),
-      ('ignorable_line', _LOG_HEADER_START_LINE),
-      ('ignorable_line', _LOG_HEADER_BODY_LINE),
-      ('ignorable_line', _SECTION_BODY_OR_NON_SECTION_LINE),
-      ('section_end', _SECTION_END_LINE),
-      ('section_end_exit_status', _SECTION_END_EXIT_STATUS_LINE),
-      ('section_header', _SECTION_HEADER_LINE),
-      ('section_start', _SECTION_HEADER_START_LINE)]
+      ('begin_log_line', _BEGIN_LOG_LINE),
+      ('boot_session_line', _BOOT_SESSION_LINE),
+      ('device_install_log_line', _DEVICE_INSTALL_LOG_LINE),
+      ('exit_status_line', _EXIT_STATUS_LINE),
+      ('header_entry_line', _HEADER_ENTRY_LINE),
+      ('log_entry_line', _LOG_ENTRY_LINE),
+      ('section_end_line', _SECTION_END_LINE),
+      ('section_header_line', _SECTION_HEADER_LINE),
+      ('section_start_line', _SECTION_START_LINE)]
 
-  VERIFICATION_GRAMMAR = _LOG_HEADER_START_LINE
+  VERIFICATION_GRAMMAR = _DEVICE_INSTALL_LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
@@ -160,29 +153,30 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'ignorable_line':
-      return
-
-    if key == 'section_header':
+    if key == 'section_header_line':
       self._event_data = SetupAPILogEventData()
       self._event_data.entry_type = self._GetValueFromStructure(
           structure, 'entry_type')
 
-    elif key == 'section_start':
-      time_elements_structure = self._GetValueFromStructure(
+    elif key == 'section_start_line':
+      start_time_structure = self._GetValueFromStructure(
           structure, 'start_time')
 
+      time_elements_structure = self._DATE_TIME.parseString(
+          start_time_structure)
       self._event_data.start_time = self._ParseTimeElements(
           time_elements_structure)
 
-    elif key == 'section_end':
-      time_elements_structure = self._GetValueFromStructure(
+    elif key == 'section_end_line':
+      end_time_structure = self._GetValueFromStructure(
           structure, 'end_time')
 
+      time_elements_structure = self._DATE_TIME.parseString(
+          end_time_structure)
       self._event_data.end_time = self._ParseTimeElements(
           time_elements_structure)
 
-    elif key == 'section_end_exit_status':
+    elif key == 'exit_status_line':
       self._event_data.exit_status = self._GetValueFromStructure(
           structure, 'exit_status')
 
