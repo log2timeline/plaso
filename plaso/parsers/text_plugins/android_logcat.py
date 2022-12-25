@@ -124,21 +124,19 @@ class AndroidLogcatTextPlugin(
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _THREADTIME_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Optional(_TIME_ZONE_OFFSET).setResultsName('time_zone_offset') +
+  _BEGINNING_LINE = (
+      pyparsing.Suppress('--------- beginning of ') +
+      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']) +
+      _END_OF_LINE)
+
+  _THREADTIME_LINE_BODY = (
       pyparsing.Or([
           _USER_PID_AND_THREAD_IDENTIFIER, _PID_AND_THREAD_IDENTIFIER]) +
       pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
       pyparsing.Optional(pyparsing.Word(
-          pyparsing.printables + ' ', excludeChars=':').setResultsName('tag')) +
-      pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('message') +
-      _END_OF_LINE)
+          pyparsing.printables + ' ', excludeChars=':').setResultsName('tag')))
 
-  _TIME_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Optional(_TIME_ZONE_OFFSET).setResultsName('time_zone_offset') +
+  _TIME_LINE_BODY = (
       pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
       pyparsing.Suppress('/') +
       pyparsing.Word(
@@ -148,22 +146,21 @@ class AndroidLogcatTextPlugin(
           _INTEGER.setResultsName('pid'),
           (_INTEGER.setResultsName('user_identifier') +
            pyparsing.Suppress(':') + _INTEGER.setResultsName('pid'))]) +
-      pyparsing.Suppress(')') +
+      pyparsing.Suppress(')'))
+
+  _LOG_LINE = (
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Optional(_TIME_ZONE_OFFSET).setResultsName('time_zone_offset') +
+      (_THREADTIME_LINE_BODY ^ _TIME_LINE_BODY) +
       pyparsing.Suppress(': ') +
       pyparsing.restOfLine().setResultsName('message') +
       _END_OF_LINE)
 
-  _BEGINNING_LINE = (
-      pyparsing.Suppress('--------- beginning of ') +
-      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']) +
-      _END_OF_LINE)
-
   _LINE_STRUCTURES = [
       ('beginning_line', _BEGINNING_LINE),
-      ('threadtime_line', _THREADTIME_LINE),
-      ('time_line', _TIME_LINE)]
+      ('log_line', _LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = _BEGINNING_LINE ^ _THREADTIME_LINE ^ _TIME_LINE
+  VERIFICATION_GRAMMAR = _BEGINNING_LINE ^ _LOG_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
