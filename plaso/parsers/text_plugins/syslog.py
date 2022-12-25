@@ -357,17 +357,13 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   #
   # 2016-10-25T12:37:23.297265-07:00 INFO
 
-  _CHROMEOS_SYSLOG_LINE = (
-      _DATE_TIME_RFC3339.setResultsName('date_time') +
+  _CHROMEOS_SYSLOG_LINE_BODY = (
       pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
       _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
           pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
-          pyparsing.Suppress(']')) +
-      pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
-      _END_OF_LINE)
+          pyparsing.Suppress(']')))
 
   # The rsyslog file format (RSYSLOG_FileFormat) consists of:
   # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
@@ -375,8 +371,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
   # 2020-05-31T00:00:45.698463+00:00
 
-  _RSYSLOG_LINE = (
-      _DATE_TIME_RFC3339.setResultsName('date_time') +
+  _RSYSLOG_LINE_BODY = (
       pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
       _REPORTER.setResultsName('reporter') +
       pyparsing.Optional(
@@ -385,7 +380,11 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       pyparsing.Optional(
           pyparsing.Suppress('<') +
           pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
-          pyparsing.Suppress('>')) +
+          pyparsing.Suppress('>')))
+
+  _LOG_LINE = (
+      _DATE_TIME_RFC3339.setResultsName('date_time') +
+      (_CHROMEOS_SYSLOG_LINE_BODY ^ _RSYSLOG_LINE_BODY) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
       _END_OF_LINE)
@@ -416,12 +415,10 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
-      ('chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE),
-      ('rsyslog_line', _RSYSLOG_LINE),
+      ('log_line', _LOG_LINE),
       ('rsyslog_protocol_23_line', _RSYSLOG_PROTOCOL_23_LINE)]
 
-  VERIFICATION_GRAMMAR = (
-      _CHROMEOS_SYSLOG_LINE ^ _RSYSLOG_LINE ^ _RSYSLOG_PROTOCOL_23_LINE)
+  VERIFICATION_GRAMMAR = _LOG_LINE ^ _RSYSLOG_PROTOCOL_23_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
