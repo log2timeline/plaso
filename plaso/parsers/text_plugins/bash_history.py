@@ -38,14 +38,9 @@ class BashHistoryTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TIMESTAMP = (
-      pyparsing.Suppress('#') +
-      pyparsing.Word(pyparsing.nums, min=9, max=10).setParseAction(
-          lambda tokens: int(tokens[0], 10)).setResultsName('timestamp'))
-
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _TIMESTAMP_LINE = _TIMESTAMP + _END_OF_LINE
+  _TIMESTAMP_LINE = pyparsing.Regex(r'#(?P<timestamp>[1-9][0-9]{8,9})\n')
 
   _COMMAND_LINE = (
       pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
@@ -72,7 +67,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    timestamp = self._GetValueFromStructure(structure, 'timestamp')
+    timestamp = self._GetDecimalValueFromStructure(structure, 'timestamp')
 
     event_data = BashHistoryEventData()
     event_data.command = self._GetValueFromStructure(structure, 'command')
@@ -92,6 +87,19 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+    # Format verification will be faster on average by checking the presence of
+    # a timestamp line first.
+    try:
+      structure_generator = self._TIMESTAMP_LINE.scanString(
+          text_reader.lines, maxMatches=1)
+      _, _, _ = next(structure_generator)
+
+    except StopIteration:
+      return False
+
+    except pyparsing.ParseException:
+      return False
+
     try:
       _, start, _ = self._VerifyString(text_reader.lines)
     except errors.ParseError:
