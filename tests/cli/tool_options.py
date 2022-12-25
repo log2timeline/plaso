@@ -258,16 +258,17 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
   _EXPECTED_OUTPUT = """\
 
 ********************************** Profilers ***********************************
-       Name : Description
+         Name : Description
 --------------------------------------------------------------------------------
-  analyzers : Profile CPU time of analyzers, like hashing
-     memory : Profile memory usage over time
-    parsers : Profile CPU time per parser
- processing : Profile CPU time of processing phases
-serializers : Profile CPU time of serialization
-    storage : Profile storage reads and writes
- task_queue : Profile task queue status (multi-processing only)
-      tasks : Profile the status of tasks (multi-processing only)
+    analyzers : Profile CPU time of analyzers, like hashing
+format_checks : Profile CPU time per format check
+       memory : Profile memory usage over time
+      parsers : Profile CPU time per parser
+   processing : Profile CPU time of processing phases
+  serializers : Profile CPU time of serialization
+      storage : Profile storage reads and writes
+   task_queue : Profile task queue status (multi-processing only)
+        tasks : Profile the status of tasks (multi-processing only)
 --------------------------------------------------------------------------------
 """
 

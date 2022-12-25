@@ -47,6 +47,11 @@ class ProfilingConfigurationTest(unittest.TestCase):
     configuration = configurations.ProfilingConfiguration()
     self.assertFalse(configuration.HaveProfileAnalyzers())
 
+  def testHaveProfileFormatChecks(self):
+    """Tests the HaveProfileFormatChecks function."""
+    configuration = configurations.ProfilingConfiguration()
+    self.assertFalse(configuration.HaveProfileFormatChecks())
+
   def testHaveProfileMemory(self):
     """Tests the HaveProfileMemory function."""
     configuration = configurations.ProfilingConfiguration()

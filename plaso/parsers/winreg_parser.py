@@ -176,10 +176,9 @@ class WinRegistryParser(interface.FileObjectParser):
       matching_plugin = self._plugins_per_key_path[normalized_key_path]
     else:
       for plugin in self._plugins_without_key_paths:
-        profiling_name = 'check: {0:s}'.format(
-            '/'.join([self.NAME, plugin.NAME]))
+        profiling_name = '/'.join([self.NAME, plugin.NAME])
 
-        parser_mediator.SampleStartTiming(profiling_name)
+        parser_mediator.SampleFormatCheckStartTiming(profiling_name)
 
         try:
           if self._CanProcessKeyWithPlugin(registry_key, plugin):
@@ -187,7 +186,7 @@ class WinRegistryParser(interface.FileObjectParser):
             break
 
         finally:
-          parser_mediator.SampleStopTiming(profiling_name)
+          parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
     if not matching_plugin:
       matching_plugin = self._default_plugin
