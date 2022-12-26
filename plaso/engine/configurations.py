@@ -86,6 +86,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     profilers (set(str)): names of the profilers to enable.
         Supported profilers are:
 
+        * 'format_checks', which profiles CPU time consumed per format check;
         * 'memory', which profiles memory usage;
         * 'parsers', which profiles CPU time consumed by individual parsers;
         * 'processing', which profiles CPU time consumed by different parts of
@@ -112,6 +113,14 @@ class ProfilingConfiguration(interface.AttributeContainer):
       bool: True if analyzers profiling is configured.
     """
     return 'analyzers' in self.profilers
+
+  def HaveProfileFormatChecks(self):
+    """Determines if format checks profiling is configured.
+
+    Returns:
+      bool: True if format checks profiling is configured.
+    """
+    return 'format_checks' in self.profilers
 
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.

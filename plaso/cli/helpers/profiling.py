@@ -19,6 +19,7 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
 
   PROFILERS_INFORMATION = {
       'analyzers': 'Profile CPU time of analyzers, like hashing',
+      'format_checks': 'Profile CPU time per format check',
       'memory': 'Profile memory usage over time',
       'parsers': 'Profile CPU time per parser',
       'processing': 'Profile CPU time of processing phases',

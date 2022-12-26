@@ -45,7 +45,6 @@ class EventDataExtractor(object):
     self._mft_parser = None
     self._non_sigscan_parser_names = None
     self._parsers = None
-    self._parsers_profiler = None
     self._usnjrnl_parser = None
 
     self._InitializeParserObjects(
