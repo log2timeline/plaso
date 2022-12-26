@@ -5,12 +5,14 @@ import yaml
 
 from plaso.containers import artifacts
 from plaso.lib import errors
+from plaso.parsers import logger
 
 
 class ParserPreset(object):
   """Parser and parser plugin preset.
 
   Attributes:
+    deprecated (bool): True if the preset is deprecated.
     name (str): name of the preset.
     operating_systems (list[OperatingSystemArtifact]): operating system
         artifact attribute containers, that specify to which operating
@@ -26,6 +28,7 @@ class ParserPreset(object):
       parsers (list[str]): names of parser and parser plugins.
     """
     super(ParserPreset, self).__init__()
+    self.deprecated = False
     self.name = name
     self.operating_systems = []
     self.parsers = parsers
@@ -95,6 +98,8 @@ class ParserPresetsManager(object):
 
     parser_preset = ParserPreset(name, parsers)
 
+    parser_preset.deprecated = preset_definition_values.get('deprecated', False)
+
     for operating_system_values in preset_definition_values.get(
         'operating_systems', []):
       operating_system = self._ReadOperatingSystemArtifactValues(
@@ -158,6 +163,11 @@ class ParserPresetsManager(object):
     preset_definition = self._definitions.get(lookup_name, None)
     if preset_definition is None:
       raise KeyError('Preset: {0:s} is not defined'.format(preset_name))
+
+    if preset_definition.deprecated:
+      logger.warning((
+          'Preset: {0:s} is deprecated and will be removed in a future '
+          'version').format(preset_name))
 
     return sorted(preset_definition.parsers)
 
