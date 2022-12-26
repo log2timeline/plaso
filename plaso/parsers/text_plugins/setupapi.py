@@ -71,10 +71,10 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   _DEVICE_INSTALL_LOG_LINE = (
       pyparsing.Literal('[Device Install Log]') + _END_OF_LINE)
 
-  # Using a regular expression here is faster.
+  # Using a regular expression here is faster. Note that pyparsing 2 does not
+  # properly handle leading whitespace.
   _HEADER_ENTRY_LINE = pyparsing.Regex(
-       r'     (Architecture|OS Version|ProductType|Service Pack|Suite) = '
-       r'.*\n').leaveWhitespace()
+       r'(Architecture|OS Version|ProductType|Service Pack|Suite) = .*\n')
 
   _BEGIN_LOG_LINE = pyparsing.Literal('[BeginLog]') + _END_OF_LINE
 
@@ -111,10 +111,10 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   # Note that undocumented event catagegories have been observed, such as:
   # "cmd:", "idb:" and "pol:".
 
-  # Using a regular expression here is faster.
+  # Using a regular expression here is faster. Note that pyparsing 2 does not
+  # properly handle leading whitespace.
   _LOG_ENTRY_LINE = pyparsing.Regex(
-      r'(     |   \. |!    |!!!  )[A-Za-z\.]{2,3}: '
-      r'.{0,336}\n').leaveWhitespace()
+      r'(|\. |!    |!!!  )[A-Za-z\.]{2,3}: .{0,336}\n')
 
   # Undocumented observed lines.
 
