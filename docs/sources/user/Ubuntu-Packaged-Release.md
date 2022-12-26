@@ -4,6 +4,12 @@
 
 **Note that other versions of Ubuntu are not supported at this time.**
 
+Make sure the universe apt repository is enabled.
+
+```
+sudo add-apt-repository universe
+```
+
 To install Plaso from the GIFT Personal Package Archive (PPA) add the [GIFT PPA](https://launchpad.net/~gift):
 
 ```
