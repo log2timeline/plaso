@@ -251,11 +251,8 @@ class SnortFastLogTextPlugin(
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, start, _ = self._VerifyString(text_reader.lines)
+      structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if start != 0:
       return False
 
     self._SetEstimatedYear(parser_mediator)

@@ -227,11 +227,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, start, _ = self._VerifyString(text_reader.lines)
+      structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if start != 0:
       return False
 
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')

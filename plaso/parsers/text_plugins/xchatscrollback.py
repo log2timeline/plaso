@@ -160,11 +160,11 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _, start, _ = self._VerifyString(text_reader.lines)
+      self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
 
-    return start == 0
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(XChatScrollbackLogTextPlugin)
