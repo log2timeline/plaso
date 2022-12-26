@@ -118,6 +118,8 @@ class GoogleLogTextPlugin(
 
   VERIFICATION_GRAMMAR = _HEADER_LINE
 
+  # TODO: change plugin to use _ParseHeader
+
   def _ParseHeaderLine(self, parser_mediator, structure):
     """Extract useful information from the header line.
 

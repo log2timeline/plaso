@@ -123,12 +123,14 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       r'[Boot Session: [0-9]{4}/[0-9]{2}/[0-9]{2} '
       r'[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}]\n')
 
+  _HEADER_GRAMMAR = (
+      _DEVICE_INSTALL_LOG_LINE +
+      pyparsing.OneOrMore(_HEADER_ENTRY_LINE) +
+      _BEGIN_LOG_LINE)
+
   _LINE_STRUCTURES = [
-      ('begin_log_line', _BEGIN_LOG_LINE),
       ('boot_session_line', _BOOT_SESSION_LINE),
-      ('device_install_log_line', _DEVICE_INSTALL_LOG_LINE),
       ('exit_status_line', _EXIT_STATUS_LINE),
-      ('header_entry_line', _HEADER_ENTRY_LINE),
       ('log_entry_line', _LOG_ENTRY_LINE),
       ('section_end_line', _SECTION_END_LINE),
       ('section_header_line', _SECTION_HEADER_LINE),
@@ -140,6 +142,31 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
     """Initializes a text parser plugin."""
     super(SetupAPILogTextPlugin, self).__init__()
     self._event_data = None
+
+  def _ParseHeader(self, text_reader):
+    """Parses a text-log file header.
+
+    Args:
+      text_reader (EncodedTextReader): text reader.
+
+    Raises:
+      ParseError: when the header cannot be parsed.
+    """
+    try:
+      structure_generator = self._HEADER_GRAMMAR.scanString(
+          text_reader.lines, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure or start != 0:
+      raise errors.ParseError('No match found.')
+
+    text_reader.SkipAhead(end)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.

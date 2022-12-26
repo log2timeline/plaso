@@ -121,7 +121,7 @@ class XChatLogTextPlugin(
   # different if XChat locale is different.
 
   # Header date and time values are formatted as: Mon Dec 31 21:11:55 2011
-  _HEADER_DATE_TIME = pyparsing.Group(
+  _SECTION_HEADER_DATE_TIME = pyparsing.Group(
       _WEEKDAY + _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
@@ -132,9 +132,9 @@ class XChatLogTextPlugin(
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables))
 
-  _HEADER_LINE = (
+  _SECTION_HEADER_LINE = (
       pyparsing.Suppress('****') + _LOG_ACTION.setResultsName('log_action') +
-      _HEADER_DATE_TIME.setResultsName('date_time') +
+      _SECTION_HEADER_DATE_TIME.setResultsName('date_time') +
       _END_OF_LINE)
 
   # Body (nickname, text and/or service messages) pyparsing structures.
@@ -157,41 +157,9 @@ class XChatLogTextPlugin(
 
   _LINE_STRUCTURES = [
       ('chat_history_line', _CHAT_HISTORY_LINE),
-      ('header_line', _HEADER_LINE)]
+      ('section_header_line', _SECTION_HEADER_LINE)]
 
-  VERIFICATION_GRAMMAR = _HEADER_LINE
-
-  def _ParseHeader(self, parser_mediator, structure):
-    """Parses a log header.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    log_action = self._GetValueFromStructure(
-        structure, 'log_action', default_value=[])
-
-    if log_action[0] not in ('BEGIN', 'END'):
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported log action: {0:s}.'.format(' '.join(log_action)))
-      self._year = None
-      return
-
-    event_data = XChatLogEventData()
-    event_data.added_time = self._ParseTimeElements(time_elements_structure)
-
-    if log_action[0] == 'BEGIN':
-      event_data.text = 'XChat start logging'
-    else:
-      event_data.text = 'XChat end logging'
-      self._year = None
-
-    parser_mediator.ProduceEventData(event_data)
+  VERIFICATION_GRAMMAR = _SECTION_HEADER_LINE
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
@@ -235,8 +203,40 @@ class XChatLogTextPlugin(
     if key == 'chat_history_line':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == 'header_line':
-      self._ParseHeader(parser_mediator, structure)
+    elif key == 'section_header_line':
+      self._ParseSectionHeaderLine(parser_mediator, structure)
+
+  def _ParseSectionHeaderLine(self, parser_mediator, structure):
+    """Parses a section header line.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+    """
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    log_action = self._GetValueFromStructure(
+        structure, 'log_action', default_value=[])
+
+    if log_action[0] not in ('BEGIN', 'END'):
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported log action: {0:s}.'.format(' '.join(log_action)))
+      self._year = None
+      return
+
+    event_data = XChatLogEventData()
+    event_data.added_time = self._ParseTimeElements(time_elements_structure)
+
+    if log_action[0] == 'BEGIN':
+      event_data.text = 'XChat start logging'
+    else:
+      event_data.text = 'XChat end logging'
+      self._year = None
+
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.

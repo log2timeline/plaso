@@ -28,6 +28,8 @@ class TextPlugin(plugins.BasePlugin):
   # the supported grammar.
   _LINE_STRUCTURES = []
 
+  # PyParsing grammer used to verify the text-log file format. Note that since
+  # this is called often it should optimize on failing fast.
   VERIFICATION_GRAMMAR = None
 
   # The maximum number of consecutive lines that do not match the grammar before
@@ -136,6 +138,17 @@ class TextPlugin(plugins.BasePlugin):
     """
     return
 
+  def _ParseHeader(self, text_reader):  # pylint: disable=unused-argument
+    """Parses a text-log file header.
+
+    Args:
+      text_reader (EncodedTextReader): text reader.
+
+    Raises:
+      ParseError: when the header cannot be parsed.
+    """
+    return
+
   def _ParseLines(self, parser_mediator, text_reader):
     """Parses lines of text using a pyparsing definition.
 
@@ -144,8 +157,7 @@ class TextPlugin(plugins.BasePlugin):
           and other components, such as storage and dfVFS.
       text_reader (EncodedTextReader): text reader.
     """
-    # Set the offset to the beginning of the file.
-    self._current_offset = 0
+    consecutive_line_failures = 0
 
     try:
       text_reader.ReadLines()
@@ -155,8 +167,6 @@ class TextPlugin(plugins.BasePlugin):
           'unable to read and decode log line at offset {0:d} with error: '
           '{1!s}').format(self._current_offset, exception))
       return
-
-    consecutive_line_failures = 0
 
     while text_reader.lines:
       if parser_mediator.abort:
@@ -353,12 +363,30 @@ class TextPlugin(plugins.BasePlugin):
     self._parser_mediator = parser_mediator
 
     try:
+      # Set the offset to the beginning of the file.
       file_object.seek(0, os.SEEK_SET)
+      self._current_offset = 0
 
       encoding = self.ENCODING or parser_mediator.codepage
       text_reader = text_parser.EncodedTextReader(
           file_object, buffer_size=self.MAXIMUM_LINE_LENGTH, encoding=encoding,
           encoding_errors='text_parser_handler')
+
+      try:
+        text_reader.ReadLines()
+        self._current_offset = text_reader.get_offset()
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to read and decode log line at offset {0:d} with error: '
+            '{1!s}').format(self._current_offset, exception))
+        return
+
+      try:
+        self._ParseHeader(text_reader)
+      except UnicodeDecodeError as exception:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parser header with error: {0!s}').format(exception))
+        return
 
       self._ParseLines(parser_mediator, text_reader)
 
