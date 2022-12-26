@@ -142,11 +142,8 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      _, start, _ = self._VerifyString(text_reader.lines)
+      self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if start != 0:
       return False
 
     self._event_data = None

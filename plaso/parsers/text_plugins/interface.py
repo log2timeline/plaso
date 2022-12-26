@@ -299,30 +299,20 @@ class TextPlugin(plugins.BasePlugin):
       string (str): string.
 
     Returns:
-      tuple[pyparsing.ParseResults, int, int]: parsed tokens, start and end
-          offset.
+      pyparsing.ParseResults: parsed tokens.
 
     Raises:
       ParseError: when the string cannot be parsed by the grammar.
     """
     try:
-      structure_generator = self.VERIFICATION_GRAMMAR.scanString(
-          string, maxMatches=1)
-      structure, start, end = next(structure_generator)
-
-    except StopIteration:
-      structure = None
-
+      structure = self.VERIFICATION_GRAMMAR.parseString(string)
     except pyparsing.ParseException as exception:
       raise errors.ParseError(exception)
 
     if not structure:
       raise errors.ParseError('No match found.')
 
-    if start > 0 and '\n' in string[:start + 1]:
-      raise errors.ParseError('Found a line preceeding match.')
-
-    return structure, start, end
+    return structure
 
   @abc.abstractmethod
   def CheckRequiredFormat(self, parser_mediator, text_reader):

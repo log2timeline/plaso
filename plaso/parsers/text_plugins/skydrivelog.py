@@ -218,11 +218,8 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, start, _ = self._VerifyString(text_reader.lines)
+      structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if start != 0:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
@@ -502,11 +499,8 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure, start, _ = self._VerifyString(text_reader.lines)
+      structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:
-      return False
-
-    if start != 0:
       return False
 
     time_elements_tuple = self._GetValueFromStructure(
