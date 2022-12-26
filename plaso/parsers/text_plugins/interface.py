@@ -70,6 +70,25 @@ class TextPlugin(plugins.BasePlugin):
     escaped = '\\x{0:2x}'.format(exception.object[exception.start])
     return escaped, exception.start + 1
 
+  def _GetDecimalValueFromStructure(self, structure, name):
+    """Retrieves a decimal integer value from a Pyparsing structure.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+
+    Returns:
+      int: decimal integer value or None if not available or invalid.
+    """
+    integer_value = self._GetValueFromStructure(structure, name)
+
+    try:
+      return int(integer_value, 10)
+    except (TypeError, ValueError):
+      pass
+
+    return None
+
   def _GetStringValueFromStructure(self, structure, name):
     """Retrieves a string value from a Pyparsing structure.
 
