@@ -18,16 +18,19 @@ parsers:
 ---
 name: apt_history
 description: Preset for backwards compatibility of apt_history text parser plugin.
+deprecated: True
 parsers:
 - text/apt_history
 ---
 name: bash_history
 description: Preset for backwards compatibility of bash_history text parser plugin.
+deprecated: True
 parsers:
 - text/bash_history
 ---
 name: dockerjson
 description: Preset for backwards compatibility of Docker JSON parser.
+deprecated: True
 parsers:
 - jsonl/docker_container_config
 - jsonl/docker_container_log
@@ -35,16 +38,19 @@ parsers:
 ---
 name: dpkg
 description: Preset for backwards compatibility of dpkg text parser plugin.
+deprecated: True
 parsers:
 - text/dpkg
 ---
 name: gdrive_synclog
 description: Preset for backwards compatibility of gdrive_synclog text parser plugin.
+deprecated: True
 parsers:
 - text/gdrive_synclog
 ---
 name: googlelog
 description: Preset for backwards compatibility of googlelog text parser plugin.
+deprecated: True
 parsers:
 - text/googlelog
 ---
@@ -64,16 +70,19 @@ parsers:
 ---
 name: ios_lockdownd
 description: Preset for backwards compatibility of ios_lockdownd text parser plugin.
+deprecated: True
 parsers:
 - text/ios_lockdownd
 ---
 name: ios_logd
 description: Preset for backwards compatibility of ios_logd text parser plugin.
+deprecated: True
 parsers:
 - text/ios_logd
 ---
 name: ios_sysdiag_log
 description: Preset for backwards compatibility of ios_sysdiag_log text parser plugin.
+deprecated: True
 parsers:
 - text/ios_sysdiag_log
 ---
@@ -112,11 +121,13 @@ parsers:
 ---
 name: mac_appfirewall_log
 description: Preset for backwards compatibility of mac_appfirewall_log text parser plugin.
+deprecated: True
 parsers:
 - text/mac_appfirewall_log
 ---
 name: mac_securityd
 description: Preset for backwards compatibility of mac_securityd text parser plugin.
+deprecated: True
 parsers:
 - text/mac_securityd
 ---
@@ -163,57 +174,68 @@ parsers:
 ---
 name: macwifi
 description: Preset for backwards compatibility of macwifi text parser plugin.
+deprecated: True
 parsers:
 - text/mac_wifi
 ---
 name: popularity_contest
 description: Preset for backwards compatibility of popularity_contest text parser plugin.
+deprecated: True
 parsers:
 - text/popularity_contest
 ---
 name: postgresql
 description: Preset for backwards compatibility of postgresql text parser plugin.
+deprecated: True
 parsers:
 - text/postgresql
 ---
 name: sccm
 description: Preset for backwards compatibility of sccm text parser plugin.
+deprecated: True
 parsers:
 - text/sccm
 ---
 name: selinux
 description: Preset for backwards compatibility of selinux text parser plugin.
+deprecated: True
 parsers:
 - text/selinux
 ---
 name: setupapi
 description: Preset for backwards compatibility of setupapi text parser plugin.
+deprecated: True
 parsers:
 - text/setupapi
 ---
 name: skydrive_log
 description: Preset for backwards compatibility of skydrive text parser plugin.
+deprecated: True
 parsers:
 - text/skydrive_log_v2
 ---
 name: skydrive_log_old
 description: Preset for backwards compatibility of skydrive_log_old text parser plugin.
+deprecated: True
 parsers:
 - text/skydrive_log_v1
 ---
 name: syslog
 description: Preset for backwards compatibility of syslog text parser plugin.
+deprecated: True
 parsers:
 - text/syslog
 - text/syslog_traditional
 ---
 name: viminfo
 description: Preset for backwards compatibility of viminfo text parser plugin.
+deprecated: True
 parsers:
 - text/viminfo
 ---
 name: vsftpd
 description: Preset for backwards compatibility of vsftpd text parser plugin.
+deprecated: True
 parsers:
 - text/vsftpd
 ---
@@ -288,6 +310,7 @@ parsers:
 ---
 name: winfirewall
 description: Preset for backwards compatibility of winfirewall text parser plugin.
+deprecated: True
 parsers:
 - text/winfirewall
 ---
@@ -312,15 +335,18 @@ parsers:
 ---
 name: xchatlog
 description: Preset for backwards compatibility of xchatlog text parser plugin.
+deprecated: True
 parsers:
 - text/xchatlog
 ---
 name: xchatscrollback
 description: Preset for backwards compatibility of xchatscrollback text parser plugin.
+deprecated: True
 parsers:
 - text/xchatscrollback
 ---
 name: zsh_extended_history
 description: Preset for backwards compatibility of zsh_extended_history text parser plugin.
+deprecated: True
 parsers:
 - text/zsh_extended_history
