@@ -56,14 +56,24 @@ class CompoundZIPParser(interface.FileObjectParser):
 
       file_entry = parser_mediator.GetFileEntry()
       display_name = parser_mediator.GetDisplayName(file_entry)
+      profiling_name = '/'.join([self.NAME, plugin.NAME])
 
-      if not plugin.CheckRequiredPaths(zip_file):
+      parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+
+      try:
+        result = plugin.CheckRequiredPaths(zip_file)
+      finally:
+        parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+
+      if not result:
         logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin_name))
         continue
 
       logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
           display_name, plugin_name))
+
+      parser_mediator.SampleStartTiming(profiling_name)
 
       try:
         plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
@@ -72,6 +82,9 @@ class CompoundZIPParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionWarning((
             'plugin: {0:s} unable to parse ZIP file: {1:s} with error: '
             '{2!s}').format(plugin_name, display_name, exception))
+
+      finally:
+        parser_mediator.SampleStopTiming(profiling_name)
 
     zip_file.close()
 

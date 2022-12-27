@@ -156,25 +156,36 @@ class PlistParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
-      if not plugin.PLIST_PATH_FILTERS:
-        path_filter_match = True
-      else:
-        path_filter_match = False
-        for path_filter in plugin.PLIST_PATH_FILTERS:
-          if path_filter.Match(filename_lower_case):
-            path_filter_match = True
-
       file_entry = parser_mediator.GetFileEntry()
       display_name = parser_mediator.GetDisplayName(file_entry)
+      profiling_name = '/'.join([self.NAME, plugin.NAME])
 
-      if (not path_filter_match or
-          not top_level_keys.issuperset(plugin.PLIST_KEYS)):
+      parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+
+      try:
+        if not plugin.PLIST_PATH_FILTERS:
+          path_filter_match = True
+        else:
+          path_filter_match = False
+          for path_filter in plugin.PLIST_PATH_FILTERS:
+            if path_filter.Match(filename_lower_case):
+              path_filter_match = True
+
+        result = (path_filter_match and
+                  top_level_keys.issuperset(plugin.PLIST_KEYS))
+
+      finally:
+        parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+
+      if not result:
         logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin_name))
         continue
 
       logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
           display_name, plugin_name))
+
+      parser_mediator.SampleStartTiming(profiling_name)
 
       try:
         plugin.UpdateChainAndProcess(
@@ -186,9 +197,19 @@ class PlistParser(interface.FileObjectParser):
             'plugin: {0:s} unable to parse plist file with error: '
             '{1!s}').format(plugin_name, exception))
 
+      finally:
+        parser_mediator.SampleStopTiming(profiling_name)
+
     if not found_matching_plugin and self._default_plugin:
-      self._default_plugin.UpdateChainAndProcess(
-          parser_mediator, top_level=top_level_object)
+      profiling_name = '/'.join([self.NAME, self._default_plugin.NAME])
+
+      parser_mediator.SampleStartTiming(profiling_name)
+
+      try:
+        self._default_plugin.UpdateChainAndProcess(
+            parser_mediator, top_level=top_level_object)
+      finally:
+        parser_mediator.SampleStopTiming(profiling_name)
 
 
 manager.ParsersManager.RegisterParser(PlistParser)

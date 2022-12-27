@@ -38,9 +38,9 @@ class EventDataExtractor(object):
           filters/parser_filter.py for details of the expression syntax.
     """
     super(EventDataExtractor, self).__init__()
-    self._file_scanner = None
     self._filestat_parser = None
     self._force_parser = force_parser
+    self._format_scanner = None
     self._formats_with_signatures = None
     self._mft_parser = None
     self._non_sigscan_parser_names = None
@@ -79,7 +79,7 @@ class EventDataExtractor(object):
     """
     parser_names = []
     scan_state = pysigscan.scan_state()
-    self._file_scanner.scan_file_object(scan_state, file_object)
+    self._format_scanner.scan_file_object(scan_state, file_object)
 
     for scan_result in iter(scan_state.scan_results):
       format_specification = (
@@ -111,8 +111,9 @@ class EventDataExtractor(object):
       if parser_name not in ('filestat', 'usnjrnl'):
         self._non_sigscan_parser_names.append(parser_name)
 
-    self._file_scanner = parsers_manager.ParsersManager.CreateSignatureScanner(
-        self._formats_with_signatures)
+    self._format_scanner = (
+        parsers_manager.ParsersManager.CreateSignatureScanner(
+            self._formats_with_signatures))
 
     self._parsers = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_expression=parser_filter_expression)
@@ -272,7 +273,11 @@ class EventDataExtractor(object):
       raise RuntimeError(
           'Unable to retrieve file-like object from file entry.')
 
-    parser_names = self._GetSignatureMatchParserNames(file_object)
+    parser_mediator.SampleFormatCheckStartTiming('format_scanner')
+    try:
+      parser_names = self._GetSignatureMatchParserNames(file_object)
+    finally:
+      parser_mediator.SampleFormatCheckStopTiming('format_scanner')
 
     parse_with_non_sigscan_parsers = True
     if parser_names:
