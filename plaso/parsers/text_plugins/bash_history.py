@@ -87,19 +87,6 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    # Format verification will be faster on average by checking the presence of
-    # a timestamp line first.
-    try:
-      structure_generator = self._TIMESTAMP_LINE.scanString(
-          text_reader.lines, maxMatches=1)
-      _, _, _ = next(structure_generator)
-
-    except StopIteration:
-      return False
-
-    except pyparsing.ParseException:
-      return False
-
     try:
       self._VerifyString(text_reader.lines)
     except errors.ParseError:
