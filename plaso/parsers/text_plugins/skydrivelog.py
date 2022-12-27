@@ -333,8 +333,6 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
-  # TODO: change plugin to use _ParseHeader
-
   def _ParseHeaderLine(self, parser_mediator, structure):
     """Parse a header line.
 
@@ -517,5 +515,5 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     return True
 
 
-text_parser.TextLogParser.RegisterPlugin(SkyDriveLog1TextPlugin)
-text_parser.TextLogParser.RegisterPlugin(SkyDriveLog2TextPlugin)
+text_parser.TextLogParser.RegisterPlugins([
+    SkyDriveLog1TextPlugin, SkyDriveLog2TextPlugin])

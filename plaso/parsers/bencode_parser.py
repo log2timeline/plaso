@@ -188,14 +188,24 @@ class BencodeParser(interface.FileObjectParser):
 
         file_entry = parser_mediator.GetFileEntry()
         display_name = parser_mediator.GetDisplayName(file_entry)
+        profiling_name = '/'.join([self.NAME, plugin.NAME])
 
-        if not plugin.CheckRequiredKeys(bencode_file):
+        parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+
+        try:
+          result = plugin.CheckRequiredKeys(bencode_file)
+        finally:
+          parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+
+        if not result:
           logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
               display_name, plugin_name))
           continue
 
         logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin_name))
+
+        parser_mediator.SampleStartTiming(profiling_name)
 
         try:
           plugin.UpdateChainAndProcess(
@@ -205,6 +215,9 @@ class BencodeParser(interface.FileObjectParser):
           parser_mediator.ProduceExtractionWarning((
               'plugin: {0:s} unable to parse Bencode file with error: '
               '{1!s}').format(plugin_name, exception))
+
+        finally:
+          parser_mediator.SampleStopTiming(profiling_name)
 
     finally:
       bencode_file.Close()

@@ -225,6 +225,8 @@ class TextLogParser(interface.FileObjectParser):
         if result:
           matching_plugin = True
 
+          parser_mediator.SampleStartTiming(profiling_name)
+
           try:
             plugin.UpdateChainAndProcess(
                 parser_mediator, file_object=file_object)
@@ -233,6 +235,9 @@ class TextLogParser(interface.FileObjectParser):
                 'plugin: {0:s} unable to parse text file with error: '
                 '{1!s}').format(plugin.NAME, exception))
             continue
+
+          finally:
+            parser_mediator.SampleStopTiming(profiling_name)
 
           if hasattr(plugin, 'GetYearLessLogHelper'):
             year_less_log_helper = plugin.GetYearLessLogHelper()

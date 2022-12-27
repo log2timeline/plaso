@@ -66,15 +66,31 @@ class JSONLParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
-      if plugin.CheckRequiredFormat(json_dict):
-        try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, file_object=file_object)
+      profiling_name = '/'.join([self.NAME, plugin.NAME])
 
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse JSON-L file with error: '
-              '{1!s}').format(plugin_name, exception))
+      parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+
+      try:
+        result = plugin.CheckRequiredFormat(json_dict)
+      finally:
+        parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+
+      if not result:
+        continue
+
+      parser_mediator.SampleStartTiming(profiling_name)
+
+      try:
+        plugin.UpdateChainAndProcess(
+            parser_mediator, file_object=file_object)
+
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            'plugin: {0:s} unable to parse JSON-L file with error: '
+            '{1!s}').format(plugin_name, exception))
+
+      finally:
+        parser_mediator.SampleStopTiming(profiling_name)
 
 
 manager.ParsersManager.RegisterParser(JSONLParser)
