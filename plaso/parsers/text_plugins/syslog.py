@@ -745,7 +745,11 @@ class TraditionalSyslogTextPlugin(
 
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
-    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+    try:
+      time_elements_structure = self._DATE_TIME.parseString(
+          date_time_structure)
+    except pyparsing.ParseException:
+      return False
 
     self._SetEstimatedYear(parser_mediator)
 

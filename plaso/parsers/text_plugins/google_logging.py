@@ -106,67 +106,70 @@ class GoogleLogTextPlugin(
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
-  _HEADER_LINE = (
-      pyparsing.Suppress('Log file created at:') +
-      _HEADER_DATE_TIME.setResultsName('date_time') +
-      pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL) +
-      _END_OF_LINE)
+  _HEADER_LINES = (
+      pyparsing.Regex(
+          r'Log file created at: (?P<date_time>[0-9]{4}/[0-9]{2}/[0-9]{2} '
+          r'[0-9]{2}:[0-9]{2}:[0-9]{2})\n') +
+      pyparsing.Regex(r'Running on machine: .*\n'))
 
-  _LINE_STRUCTURES = [
-      ('header_line', _HEADER_LINE),
-      ('log_line', _LOG_LINE)]
+  _HEADER_GRAMMAR = (
+      _HEADER_LINES +
+      pyparsing.Optional(
+          pyparsing.Regex(r'Application fingerprint: .*\n') ^
+          pyparsing.Regex(r'Binary: .*\n')) +
+      pyparsing.Optional(
+          pyparsing.Regex(r'Running duration (h:mm:ss): .*\n')) +
+      pyparsing.Regex(r'Log line format: (?P<log_line_format>.*)\n'))
 
-  VERIFICATION_GRAMMAR = _HEADER_LINE
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
-  # TODO: change plugin to use _ParseHeader
+  VERIFICATION_GRAMMAR = _HEADER_LINES
 
-  def _ParseHeaderLine(self, parser_mediator, structure):
-    """Extract useful information from the header line.
+  def _ParseHeader(self, text_reader):
+    """Parses a text-log file header.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): elements parsed from the file.
-    """
-    # TODO: create log file event data with creation time.
+      text_reader (EncodedTextReader): text reader.
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    Raises:
+      ParseError: when the header cannot be parsed.
+    """
+    try:
+      structure_generator = self._HEADER_GRAMMAR.scanString(
+          text_reader.lines, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure or start != 0:
+      raise errors.ParseError('No match found.')
+
+    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
+
+    try:
+      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+          date_time_structure)
+    except pyparsing.ParseException:
+      raise errors.ParseError('Unable to parser header date time.')
 
     year, month, _, _, _, _ = time_elements_structure
 
     try:
       self._SetMonthAndYear(month, year)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid header date time value.')
+      raise errors.ParseError('Invalid header date time value.')
 
-  def _ParseHeaderTimeElements(self, time_elements_structure):
-    """Parses date and time elements of a header line.
+    log_line_format = self._GetValueFromStructure(structure, 'log_line_format')
+    if log_line_format != '[IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg':
+      raise errors.ParseError('Unsupported log line format.')
 
-    Args:
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
+    # TODO: create log file event data with creation time.
 
-    Returns:
-      dfdatetime.TimeElements: date and time value.
-
-    Raises:
-      ParseError: if a valid date and time value cannot be derived from
-          the time elements.
-    """
-    try:
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
-
-      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
-
-      return dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
-
-    except (TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+    text_reader.SkipAhead(end)
 
   def _ParseLine(self, parser_mediator, structure):
     """Process a single log line into a GoogleLogEvent.
@@ -204,13 +207,7 @@ class GoogleLogTextPlugin(
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    # TODO: parse log line format from header line.
-
-    if key == 'header_line':
-      self._ParseHeaderLine(parser_mediator, structure)
-
-    elif key == 'log_line':
-      self._ParseLine(parser_mediator, structure)
+    self._ParseLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -265,12 +262,24 @@ class GoogleLogTextPlugin(
     except errors.ParseError:
       return False
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      self._ParseHeaderTimeElements(time_elements_structure)
-    except errors.ParseError:
+      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+          date_time_structure)
+    except pyparsing.ParseException:
+      return False
+
+    try:
+      year, month, day_of_month, hours, minutes, seconds = (
+          time_elements_structure)
+
+      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
+
+      dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+
+    except (TypeError, ValueError):
       return False
 
     self._SetEstimatedYear(parser_mediator)
