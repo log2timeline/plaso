@@ -333,8 +333,10 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
-  def _ParseHeader(self, parser_mediator, structure):
-    """Parse header lines and store appropriate attributes.
+  # TODO: change plugin to use _ParseHeader
+
+  def _ParseHeaderLine(self, parser_mediator, structure):
+    """Parse a header line.
 
     ['Logging started.', 'Version=', '17.0.2011.0627',
     [2013, 7, 25], 16, 3, 23, 291, 'StartLocalTime', '<detail>']
@@ -439,7 +441,7 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       self._event_data = None
 
     if key == 'header_line_v2':
-      self._ParseHeader(parser_mediator, structure)
+      self._ParseHeaderLine(parser_mediator, structure)
 
     elif key == 'log_line_v2':
       self._ParseLoglineVersion2(structure)
