@@ -189,8 +189,13 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       start_time_structure = self._GetValueFromStructure(
           structure, 'start_time')
 
-      time_elements_structure = self._DATE_TIME.parseString(
-          start_time_structure)
+      try:
+        time_elements_structure = self._DATE_TIME.parseString(
+            start_time_structure)
+      except pyparsing.ParseException as exception:
+        raise errors.ParseError(
+            'Unable to parse start time with error: {0!s}'.format(exception))
+
       self._event_data.start_time = self._ParseTimeElements(
           time_elements_structure)
 
@@ -198,8 +203,13 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       end_time_structure = self._GetValueFromStructure(
           structure, 'end_time')
 
-      time_elements_structure = self._DATE_TIME.parseString(
-          end_time_structure)
+      try:
+        time_elements_structure = self._DATE_TIME.parseString(
+            end_time_structure)
+      except pyparsing.ParseException as exception:
+        raise errors.ParseError(
+            'Unable to parse end time with error: {0!s}'.format(exception))
+
       self._event_data.end_time = self._ParseTimeElements(
           time_elements_structure)
 

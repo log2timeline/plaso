@@ -4,6 +4,9 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
+
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import google_logging
 
 from tests.parsers.text_plugins import test_lib
@@ -11,6 +14,26 @@ from tests.parsers.text_plugins import test_lib
 
 class GooglelogParserTest(test_lib.TextPluginTestCase):
   """Tests for the Google logging text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat method."""
+    plugin = google_logging.GoogleLogTextPlugin()
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Log file created at: 2019/07/18 06:07:40\n'
+        b'Running on machine: plasotest1\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertTrue(result)
 
   def testProcess(self):
     """Tests the Process function."""
