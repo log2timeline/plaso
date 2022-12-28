@@ -20,8 +20,7 @@ class EventData(interface.AttributeContainer):
   CONTAINER_TYPE = 'event_data'
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier',
-      '_event_data_stream_row_identifier']
+      '_event_data_stream_identifier']
 
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
@@ -31,8 +30,6 @@ class EventData(interface.AttributeContainer):
     """
     super(EventData, self).__init__()
     self._event_data_stream_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._event_data_stream_row_identifier = None
     self.data_type = data_type
     self.parser = None
 
@@ -148,28 +145,13 @@ class EventObject(interface.AttributeContainer):
       'timestamp': 'int',
       'timestamp_desc': 'str'}
 
-  SCHEMA_20220716 = {
-      '_event_data_row_identifier': 'AttributeContainerIdentifier',
-      'date_time': 'dfdatetime.DateTimeValues',
-      'timestamp': 'int',
-      'timestamp_desc': 'str'}
-
-  SCHEMA_20211121 = {
-      '_event_data_row_identifier': 'AttributeContainerIdentifier',
-      'date_time': 'dfdatetime.DateTimeValues',
-      'timestamp': 'int',
-      'timestamp_desc': 'str'}
-
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_identifier',
-      '_event_data_row_identifier']
+      '_event_data_identifier']
 
   def __init__(self):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._event_data_row_identifier = None
     self.date_time = None
     self.timestamp = None
     # TODO: rename timestamp_desc to timestamp_description
@@ -226,19 +208,10 @@ class EventTag(interface.AttributeContainer):
       '_event_identifier': 'AttributeContainerIdentifier',
       'labels': 'List[str]'}
 
-  SCHEMA_20220716 = {
-      '_event_row_identifier': 'AttributeContainerIdentifier',
-      'labels': 'List[str]'}
-
-  SCHEMA_20211121 = {
-      '_event_row_identifier': 'AttributeContainerIdentifier',
-      'labels': 'List[str]'}
-
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_identifier',
-      '_event_row_identifier']
+      '_event_identifier']
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
@@ -246,8 +219,6 @@ class EventTag(interface.AttributeContainer):
     """Initializes an event tag attribute container."""
     super(EventTag, self).__init__()
     self._event_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._event_row_identifier = None
     self.labels = []
 
   def AddLabel(self, label):

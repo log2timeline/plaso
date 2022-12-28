@@ -21,7 +21,6 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
-        '_event_data_stream_row_identifier',
         'creation_time',
         'data_type',
         'mac_address',
@@ -43,7 +42,6 @@ class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
-        '_event_data_stream_row_identifier',
         'access_time',
         'creation_time',
         'data_type',
@@ -70,7 +68,6 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
-        '_event_data_stream_row_identifier',
         'creation_time',
         'data_type',
         'device_path',

@@ -604,21 +604,8 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
       'message_identifier': 'int',
       'string': 'str'}
 
-  SCHEMA_20220716 = {
-      '_message_file_row_identifier': 'AttributeContainerIdentifier',
-      'language_identifier': 'int',
-      'message_identifier': 'int',
-      'string': 'str'}
-
-  SCHEMA_20211121 = {
-      '_message_file_row_identifier': 'AttributeContainerIdentifier',
-      'language_identifier': 'int',
-      'message_identifier': 'int',
-      'string': 'str'}
-
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_message_file_identifier',
-      '_message_file_row_identifier']
+      '_message_file_identifier']
 
   def __init__(
       self, language_identifier=None, message_identifier=None, string=None):
@@ -631,8 +618,6 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
     """
     super(WindowsEventLogMessageStringArtifact, self).__init__()
     self._message_file_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._message_file_row_identifier = None
     self.language_identifier = language_identifier
     self.message_identifier = message_identifier
     self.string = string
@@ -683,30 +668,8 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
       'log_types': 'List[str]',
       'parameter_message_files': 'List[str]'}
 
-  # Older schema kept for backwards compatibility.
-  SCHEMA_20220716 = {
-      '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
-      'additional_identifier': 'str',
-      'category_message_files': 'List[str]',
-      'event_message_files': 'List[str]',
-      'identifier': 'str',
-      'log_sources': 'List[str]',
-      'log_types': 'List[str]',
-      'parameter_message_files': 'List[str]'}
-
-  SCHEMA_20211121 = {
-      '_system_configuration_row_identifier': 'AttributeContainerIdentifier',
-      'category_message_files': 'List[str]',
-      'event_message_files': 'List[str]',
-      'identifier': 'str',
-      'log_source': 'str',
-      'log_source_alias': 'str',
-      'log_type': 'str',
-      'parameter_message_files': 'List[str]'}
-
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_system_configuration_identifier',
-      '_system_configuration_row_identifier']
+      '_system_configuration_identifier']
 
   def __init__(
       self, category_message_files=None, event_message_files=None,
@@ -727,8 +690,6 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
     """
     super(WindowsEventLogProviderArtifact, self).__init__()
     self._system_configuration_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._system_configuration_row_identifier = None
     self.additional_identifier = None
     self.category_message_files = category_message_files or []
     self.event_message_files = event_message_files or []
@@ -902,23 +863,8 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
       'provider_identifier': 'str',
       'version': 'int'}
 
-  SCHEMA_20220716 = {
-      '_message_file_row_identifier': 'AttributeContainerIdentifier',
-      'identifier': 'int',
-      'message_identifier': 'int',
-      'provider_identifier': 'str',
-      'version': 'int'}
-
-  SCHEMA_20211121 = {
-      '_message_file_row_identifier': 'AttributeContainerIdentifier',
-      'identifier': 'int',
-      'message_identifier': 'int',
-      'provider_identifier': 'str',
-      'version': 'int'}
-
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_message_file_identifier',
-      '_message_file_row_identifier']
+      '_message_file_identifier']
 
   def __init__(
       self, identifier=None, message_identifier=None, provider_identifier=None,
@@ -934,8 +880,6 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
     """
     super(WindowsWevtTemplateEvent, self).__init__()
     self._message_file_identifier = None
-    # TODO: remove after deprecating format version 20220716.
-    self._message_file_row_identifier = None
     self.identifier = identifier
     self.message_identifier = message_identifier
     self.provider_identifier = provider_identifier
