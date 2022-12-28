@@ -290,8 +290,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     mediator.SetTimeZone(processing_configuration.preferred_time_zone)
 
-    mediator.SetTextPrepend(processing_configuration.text_prepend)
-
     self._ReadMessageFormatters(
         mediator, processing_configuration.data_location)
 

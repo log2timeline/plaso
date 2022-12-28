@@ -106,7 +106,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     mediator.SetPreferredLanguage(processing_configuration.preferred_language)
     mediator.SetPreferredTimeZone(processing_configuration.preferred_time_zone)
     mediator.SetTemporaryDirectory(processing_configuration.temporary_directory)
-    mediator.SetTextPrepend(processing_configuration.text_prepend)
 
     return mediator
 

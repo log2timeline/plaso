@@ -57,7 +57,6 @@ RESERVED_VARIABLE_NAMES = frozenset([
     'source_long',
     'source_short',
     'tag',
-    'text_prepend',
     'timestamp',
     'timestamp_desc',
     'timezone',
