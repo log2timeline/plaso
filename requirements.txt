@@ -12,6 +12,7 @@ dfdatetime >= 20221112
 dfvfs >= 20221224
 dfwinreg >= 20211207
 dtfabric >= 20220219
+flor
 future >= 0.16.0
 libbde-python >= 20220121
 libcreg-python >= 20200725

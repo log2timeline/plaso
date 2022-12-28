@@ -2,6 +2,7 @@
 
 * [browser_search](Analysis-plugin-browser-search.md): Analyze browser search entries from events.
 * [chrome_extension](Analysis-plugin-chrome-extension.md): Analysis plugin to gather information about Chrome extensions.
+* [hashlookup_bloom](Analysis-plugin-hashlookup.md): Analysis plugin for looking up hashes in abloom file.
 * [nsrlsvr](Analysis-plugin-nsrlsvr.md): Analysis plugin for looking up hashes in nsrlsvr.
 * [sessionize](Analysis-plugin-sessionize.md): Analysis plugin that labels events by session.
 * [tagging](Analysis-plugin-tagging.md): Analysis plugin that labels events according to rules in a tagging file.

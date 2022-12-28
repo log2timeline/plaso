@@ -13,6 +13,7 @@ from plaso.cli.helpers import event_filters
 from plaso.cli.helpers import extraction
 from plaso.cli.helpers import filter_file
 from plaso.cli.helpers import hashers
+from plaso.cli.helpers import hashlookup_bloom_analysis
 from plaso.cli.helpers import language
 from plaso.cli.helpers import nsrlsvr_analysis
 from plaso.cli.helpers import opensearch_output
