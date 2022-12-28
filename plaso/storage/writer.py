@@ -181,15 +181,6 @@ class StorageWriter(reader.StorageReader):
     self._store.Close()
     self._store = None
 
-  # TODO: remove this helper method, currently only used by parser tests.
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
-
   @abc.abstractmethod
   def GetFirstWrittenEventData(self):
     """Retrieves the first event data that was written after open.
