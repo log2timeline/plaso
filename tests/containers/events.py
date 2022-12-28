@@ -18,7 +18,6 @@ class EventDataTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
-        '_event_data_stream_row_identifier',
         'data_type',
         'parser']
 
@@ -81,7 +80,6 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_data_identifier',
-        '_event_data_row_identifier',
         'date_time',
         'timestamp',
         'timestamp_desc']
@@ -113,7 +111,6 @@ class EventTagTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         '_event_identifier',
-        '_event_row_identifier',
         'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
