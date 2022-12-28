@@ -52,14 +52,10 @@ class JSONAttributeContainerSerializer(object):
     """
     json_dict = {
         '__type__': 'AttributeContainer',
-        '__container_type__': attribute_container.CONTAINER_TYPE,
-    }
+        '__container_type__': attribute_container.CONTAINER_TYPE}
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
-      # TODO: remove this work-around once row_identifier has been removed.
-      if not isinstance(
-          attribute_value, containers_interface.AttributeContainerIdentifier):
-        json_dict[attribute_name] = cls._ConvertValueToJSON(attribute_value)
+      json_dict[attribute_name] = cls._ConvertValueToJSON(attribute_value)
 
     return json_dict
 

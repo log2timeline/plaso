@@ -171,24 +171,18 @@ class RedisStore(interface.BaseStore):
       ValueError: if an attribute container identifier is missing.
     """
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      row_identifier = getattr(
-          container, '_event_data_row_identifier', None)
-      if row_identifier:
+      identifier = getattr(container, '_event_data_identifier', None)
+      if identifier:
         event_data_identifier = identifiers.RedisKeyIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA, row_identifier)
+            self._CONTAINER_TYPE_EVENT_DATA, identifier)
         container.SetEventDataIdentifier(event_data_identifier)
 
-        delattr(container, '_event_data_row_identifier')
-
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      row_identifier = getattr(
-          container, '_event_data_stream_row_identifier', None)
-      if row_identifier:
+      identifier = getattr(container, '_event_data_stream_identifier', None)
+      if identifier:
         event_data_stream_identifier = identifiers.RedisKeyIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA_STREAM, row_identifier)
+            self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
         container.SetEventDataStreamIdentifier(event_data_stream_identifier)
-
-        delattr(container, '_event_data_stream_row_identifier')
 
   def _UpdateAttributeContainerBeforeSerialize(self, container):
     """Updates an attribute container before serialization.
@@ -209,7 +203,7 @@ class RedisStore(interface.BaseStore):
               'Unsupported event data identifier type: {0!s}'.format(
                   type(event_data_identifier)))
 
-        setattr(container, '_event_data_row_identifier',
+        setattr(container, '_event_data_identifier',
                 event_data_identifier.sequence_number)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
@@ -221,7 +215,7 @@ class RedisStore(interface.BaseStore):
               'Unsupported event data stream identifier type: {0!s}'.format(
                   type(event_data_stream_identifier)))
 
-        setattr(container, '_event_data_stream_row_identifier',
+        setattr(container, '_event_data_stream_identifier',
                 event_data_stream_identifier.sequence_number)
 
   def _WriteExistingAttributeContainer(self, container):

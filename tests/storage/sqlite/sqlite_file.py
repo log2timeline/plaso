@@ -190,8 +190,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   # TODO: add tests for _RaiseIfNotWritable
   # TODO: add tests for _ReadAndCheckStorageMetadata
   # TODO: add tests for _SerializeAttributeContainer
-  # TODO: add tests for _UpdateAttributeContainerAfterDeserialize
-  # TODO: add tests for _UpdateAttributeContainerBeforeSerialize
   # TODO: add tests for _UpdateEventAfterDeserialize
   # TODO: add tests for _UpdateEventBeforeSerialize
   # TODO: add tests for _UpdateEventDataAfterDeserialize
