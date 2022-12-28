@@ -126,12 +126,12 @@ class WinIISTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
   _DATE_TIME_METADATA = (
-      pyparsing.Literal('Date:') +
+      pyparsing.Suppress('Date: ') +
       _DATE.setResultsName('date') +
       _TIME.setResultsName('time'))
 
   _FIELDS_METADATA = (
-      pyparsing.Literal('Fields:') +
+      pyparsing.Suppress('Fields: ') +
       pyparsing.restOfLine().setResultsName('fields'))
 
   _METADATA = (
@@ -139,7 +139,7 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _COMMENT_LOG_LINE = (pyparsing.Suppress('#') + _METADATA + _END_OF_LINE)
+  _COMMENT_LOG_LINE = pyparsing.Suppress('#') + _METADATA + _END_OF_LINE
 
   # IIS 6.x fields: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
@@ -204,9 +204,9 @@ class WinIISTextPlugin(interface.TextPlugin):
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.
 
-  _LINE_STRUCTURES = [
-      ('comment_line', _COMMENT_LOG_LINE),
-      ('log_line', _IIS_6_0_LOG_LINE)]
+  _HEADER_GRAMMAR = pyparsing.OneOrMore(_COMMENT_LOG_LINE)
+
+  _LINE_STRUCTURES = [('log_line', _IIS_6_0_LOG_LINE)]
 
   _COMMENT_SOFTWARE_LINE = (
       pyparsing.Regex(
@@ -225,38 +225,16 @@ class WinIISTextPlugin(interface.TextPlugin):
     self._month = None
     self._year = None
 
-  def _ParseCommentLine(self, parser_mediator, structure):
-    """Parses a comment line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure parsed from a comment in
-          the log file.
-    """
-    comment = structure[0]
-
-    if comment == 'Date:':
-      date_elements_tuple = self._GetValueFromStructure(structure, 'date')
-      self._year, self._month, self._day_of_month = date_elements_tuple
-
-    elif comment == 'Fields:':
-      self._ParseFieldsMetadata(parser_mediator, structure)
-
-  def _ParseFieldsMetadata(self, parser_mediator, structure):
+  def _ParseFieldsMetadata(self, parser_mediator, fields):
     """Parses the fields metadata and updates the log line definition to match.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      fields (str): field definitions.
     """
-    fields = self._GetValueFromStructure(structure, 'fields', default_value='')
-    fields = fields.strip()
-    fields = fields.split(' ')
-
     log_line_structure = pyparsing.Empty()
-    for member in fields:
+    for member in fields.split(' '):
       if not member:
         continue
 
@@ -271,10 +249,43 @@ class WinIISTextPlugin(interface.TextPlugin):
 
     log_line_structure += self._END_OF_LINE
 
-    line_structures = [
-        ('comment_line', self._COMMENT_LOG_LINE),
-        ('log_line', log_line_structure)]
-    self._SetLineStructures(line_structures)
+    self._SetLineStructures([('log_line', log_line_structure)])
+
+  def _ParseHeader(self, parser_mediator, text_reader):
+    """Parses a text-log file header.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Raises:
+      ParseError: when the header cannot be parsed.
+    """
+    try:
+      structure_generator = self._HEADER_GRAMMAR.scanString(
+          text_reader.lines, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure or start != 0:
+      raise errors.ParseError('No match found.')
+
+    date_elements_tuple = self._GetValueFromStructure(structure, 'date')
+    if date_elements_tuple:
+      self._year, self._month, self._day_of_month = date_elements_tuple
+
+    fields = self._GetValueFromStructure(structure, 'fields', default_value='')
+    fields = fields.strip()
+    if fields:
+      self._ParseFieldsMetadata(parser_mediator, fields)
+
+    text_reader.SkipAhead(end)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line.
@@ -332,11 +343,7 @@ class WinIISTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
-      self._ParseLogLine(parser_mediator, structure)
-
-    elif key == 'comment_line':
-      self._ParseCommentLine(parser_mediator, structure)
+    self._ParseLogLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):
     """Parses date and time elements of a log line.

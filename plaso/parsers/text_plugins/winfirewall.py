@@ -101,18 +101,17 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _FIELDS_METADATA = (
-      pyparsing.Literal('Fields:') +
+      pyparsing.Suppress('Fields: ') +
       pyparsing.restOfLine().setResultsName('fields'))
 
   _TIME_FORMAT_METADATA = (
-      pyparsing.Literal('Time Format:') +
+      pyparsing.Suppress('Time Format: ') +
       pyparsing.restOfLine().setResultsName('time_format'))
 
   _METADATA = (
       _FIELDS_METADATA | _TIME_FORMAT_METADATA | pyparsing.restOfLine())
 
-  _COMMENT_LINE = (
-      pyparsing.Suppress('#') + _METADATA + _END_OF_LINE)
+  _COMMENT_LOG_LINE = pyparsing.Suppress('#') + _METADATA + _END_OF_LINE
 
   # Version 1.5 fields:
   # date time action protocol src-ip dst-ip src-port dst-port size tcpflags
@@ -160,9 +159,9 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       'tcpwin': _INTEGER_OR_BLANK.setResultsName('tcp_window_size'),
       'time': _TIME.setResultsName('time')}
 
-  _LINE_STRUCTURES = [
-      ('comment_line', _COMMENT_LINE),
-      ('log_line', _LOG_LINE_1_5)]
+  _HEADER_GRAMMAR = pyparsing.OneOrMore(_COMMENT_LOG_LINE)
+
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE_1_5)]
 
   VERIFICATION_GRAMMAR = (
       pyparsing.ZeroOrMore(
@@ -174,34 +173,16 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     super(WinFirewallLogTextPlugin, self).__init__()
     self._use_local_time = False
 
-  def _ParseCommentLine(self, parser_mediator, structure):
-    """Parses a comment line.
-
-    Args:
-      structure (pyparsing.ParseResults): parsed log line.
-    """
-    comment = structure[0]
-
-    if comment == 'Fields:':
-      self._ParseFieldsMetadata(parser_mediator, structure)
-
-    elif comment == 'Time Format:':
-      self._use_local_time = 'local' in structure[1].lower()
-
-  def _ParseFieldsMetadata(self, parser_mediator, structure):
+  def _ParseFieldsMetadata(self, parser_mediator, fields):
     """Parses the fields metadata and updates the log line definition to match.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure parsed from the log file.
+      fields (str): field definitions.
     """
-    fields = self._GetValueFromStructure(structure, 'fields', default_value='')
-    fields = fields.strip()
-    fields = fields.split(' ')
-
     log_line_structure = pyparsing.Empty()
-    for member in fields:
+    for member in fields.split(' '):
       if not member:
         continue
 
@@ -216,10 +197,43 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
     log_line_structure += self._END_OF_LINE
 
-    line_structures = [
-        ('comment_line', self._COMMENT_LINE),
-        ('log_line', log_line_structure)]
-    self._SetLineStructures(line_structures)
+    self._SetLineStructures([('log_line', log_line_structure)])
+
+  def _ParseHeader(self, parser_mediator, text_reader):
+    """Parses a text-log file header.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Raises:
+      ParseError: when the header cannot be parsed.
+    """
+    try:
+      structure_generator = self._HEADER_GRAMMAR.scanString(
+          text_reader.lines, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure or start != 0:
+      raise errors.ParseError('No match found.')
+
+    fields = self._GetValueFromStructure(structure, 'fields', default_value='')
+    fields = fields.strip()
+    if fields:
+      self._ParseFieldsMetadata(parser_mediator, fields)
+
+    time_format = self._GetValueFromStructure(
+        structure, 'time_format', default_value='')
+    self._use_local_time = time_format.lower() == 'local'
+
+    text_reader.SkipAhead(end)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line.
@@ -268,11 +282,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
-      self._ParseLogLine(parser_mediator, structure)
-
-    elif key == 'comment_line':
-      self._ParseCommentLine(parser_mediator, structure)
+    self._ParseLogLine(parser_mediator, structure)
 
   def _ParseTimeElements(self, structure):
     """Parses date and time elements of a log line.

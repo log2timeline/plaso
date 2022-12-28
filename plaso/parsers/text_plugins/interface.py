@@ -138,10 +138,12 @@ class TextPlugin(plugins.BasePlugin):
     """
     return
 
-  def _ParseHeader(self, text_reader):  # pylint: disable=unused-argument
+  def _ParseHeader(self, parser_mediator, text_reader):  # pylint: disable=unused-argument
     """Parses a text-log file header.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       text_reader (EncodedTextReader): text reader.
 
     Raises:
@@ -372,7 +374,7 @@ class TextPlugin(plugins.BasePlugin):
         return
 
       try:
-        self._ParseHeader(text_reader)
+        self._ParseHeader(parser_mediator, text_reader)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
             'unable to parser header with error: {0!s}').format(exception))
