@@ -125,10 +125,12 @@ class GoogleLogTextPlugin(
 
   VERIFICATION_GRAMMAR = _HEADER_LINES
 
-  def _ParseHeader(self, text_reader):
+  def _ParseHeader(self, parser_mediator, text_reader):
     """Parses a text-log file header.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       text_reader (EncodedTextReader): text reader.
 
     Raises:
