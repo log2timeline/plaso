@@ -6,7 +6,7 @@ import collections
 import copy
 
 from plaso.containers import events
-from plaso.storage import identifiers
+from plaso.containers import interface as containers_interface
 from plaso.storage import interface
 from plaso.storage.fake import event_heap
 
@@ -57,11 +57,6 @@ class FakeStore(interface.BaseStore):
           container does not exist.
     """
     identifier = container.GetIdentifier()
-    if not isinstance(identifier, identifiers.FakeIdentifier):
-      raise IOError(
-          'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
-
     lookup_key = identifier.CopyToString()
 
     containers = self._attribute_containers.get(container.CONTAINER_TYPE, None)
@@ -93,8 +88,8 @@ class FakeStore(interface.BaseStore):
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
-    identifier = identifiers.FakeIdentifier(
-        container.CONTAINER_TYPE, next_sequence_number)
+    identifier = containers_interface.AttributeContainerIdentifier(
+        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
     container.SetIdentifier(identifier)
 
     lookup_key = identifier.CopyToString()

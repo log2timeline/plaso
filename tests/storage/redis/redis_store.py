@@ -111,9 +111,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
           event_data_stream.CONTAINER_TYPE)
       self.assertEqual(number_of_containers, 0)
 
-      with self.assertRaises(IOError):
-        test_store._WriteExistingAttributeContainer(event_data_stream)
-
       test_store._WriteNewAttributeContainer(event_data_stream)
 
       number_of_containers = test_store.GetNumberOfAttributeContainers(
@@ -436,9 +433,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
       number_of_containers = test_store.GetNumberOfAttributeContainers(
           event_data_stream.CONTAINER_TYPE)
       self.assertEqual(number_of_containers, 0)
-
-      with self.assertRaises(IOError):
-        test_store.UpdateAttributeContainer(event_data_stream)
 
       test_store.AddAttributeContainer(event_data_stream)
 

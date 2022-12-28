@@ -6,13 +6,33 @@ class AttributeContainerIdentifier(object):
   """The attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers.
-  The value should be unique at runtime and in storage.
+  The value should be unique relative to an attribute container store.
+
+  Attributes:
+    name (str): name of the table (attribute container).
+    sequence_number (int): sequence number of the attribute container.
   """
 
-  def __init__(self):
-    """Initializes an attribute container identifier."""
+  def __init__(self, name=None, sequence_number=None):
+    """Initializes an attribute container identifier.
+
+    Args:
+      name (Optional[str]): name of the table (attribute container).
+      sequence_number (Optional[int]): sequence number of the attribute
+          container.
+    """
     super(AttributeContainerIdentifier, self).__init__()
-    self._identifier = id(self)
+    self.name = name
+    self.sequence_number = sequence_number
+
+  def CopyFromString(self, identifier_string):
+    """Copies the identifier from a string representation.
+
+    Args:
+      identifier_string (str): string representation.
+    """
+    self.name, sequence_number = identifier_string.split('.')
+    self.sequence_number = int(sequence_number, 10)
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -20,7 +40,10 @@ class AttributeContainerIdentifier(object):
     Returns:
       str: unique identifier or None.
     """
-    return '{0:d}'.format(self._identifier)
+    if self.name is not None and self.sequence_number is not None:
+      return '{0:s}.{1:d}'.format(self.name, self.sequence_number)
+
+    return None
 
 
 class AttributeContainer(object):
@@ -47,7 +70,8 @@ class AttributeContainer(object):
   def __init__(self):
     """Initializes an attribute container."""
     super(AttributeContainer, self).__init__()
-    self._identifier = AttributeContainerIdentifier()
+    self._identifier = AttributeContainerIdentifier(
+        name=self.CONTAINER_TYPE, sequence_number=id(self))
 
   def CopyFromDict(self, attributes):
     """Copies the attribute container from a dictionary.
