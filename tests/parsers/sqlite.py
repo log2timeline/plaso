@@ -142,10 +142,6 @@ class SQLiteParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    for event in storage_writer.GetEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      self.assertEqual(1, event_data.parser.count('/'))
-
   def testParseFileEntryOnDatabaseWithDotInTableName(self):
     """Tests ParseFileEntry on a database with a dot in a table name."""
     parser = sqlite.SQLiteParser()
