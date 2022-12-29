@@ -119,11 +119,8 @@ class PsortTool(
 
     storage_file.Close()
 
-  def _CreateOutputAndFormattingProcessingConfiguration(self, text_prepend):
+  def _CreateOutputAndFormattingProcessingConfiguration(self):
     """Creates an output and formatting processing configuration.
-
-    Args:
-      text_prepend (str): text to prepend to every display name.
 
     Returns:
       ProcessingConfiguration: output and formatting processing configuration.
@@ -143,7 +140,6 @@ class PsortTool(
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.profilers = self._profilers
     configuration.profiling.sample_rate = self._profiling_sample_rate
-    configuration.text_prepend = text_prepend
 
     return configuration
 
@@ -484,7 +480,6 @@ class PsortTool(
     if not storage_reader:
       raise RuntimeError('Unable to create storage reader.')
 
-    text_prepend = None
     try:
       for session_index, session in enumerate(storage_reader.GetSessions()):
         self._knowledge_base.SetActiveSession(session.identifier)
@@ -500,8 +495,6 @@ class PsortTool(
           self._knowledge_base.ReadSystemConfigurationArtifact(
               system_configuration)
 
-        text_prepend = session.text_prepend
-
       self._number_of_stored_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(
               self._CONTAINER_TYPE_ANALYSIS_REPORT))
@@ -511,8 +504,7 @@ class PsortTool(
 
     session = engine.BaseEngine.CreateSession()
 
-    configuration = self._CreateOutputAndFormattingProcessingConfiguration(
-        text_prepend)
+    configuration = self._CreateOutputAndFormattingProcessingConfiguration()
 
     # TODO: implement _CreateAnalysisProcessingConfiguration
 

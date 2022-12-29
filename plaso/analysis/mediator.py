@@ -45,7 +45,6 @@ class AnalysisMediator(object):
     self._number_of_warnings = 0
     self._session = session
     self._storage_writer = None
-    self._text_prepend = None
 
     self.analysis_reports_counter = collections.Counter()
     self.event_labels_counter = collections.Counter()
@@ -72,8 +71,7 @@ class AnalysisMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, text_prepend=self._text_prepend)
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(path_spec)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
@@ -163,15 +161,6 @@ class AnalysisMediator(object):
       storage_writer (StorageWriter): storage writer.
     """
     self._storage_writer = storage_writer
-
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text to prepend to the display name.
-
-    Args:
-      text_prepend (str): text to prepend to the display name or None if no
-          text should be prepended.
-    """
-    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the analysis plugins to abort."""

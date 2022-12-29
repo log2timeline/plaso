@@ -209,7 +209,6 @@ class ProcessingConfiguration(interface.AttributeContainer):
     task_storage_path (str): path of the directory containing SQLite task
         storage files.
     temporary_directory (str): path of the directory for temporary files.
-    text_prepend (str): text to prepend to every display name.
   """
   CONTAINER_TYPE = 'processing_configuration'
 
@@ -235,4 +234,3 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.task_storage_format = None
     self.task_storage_path = None
     self.temporary_directory = None
-    self.text_prepend = None

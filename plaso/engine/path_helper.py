@@ -294,12 +294,11 @@ class PathHelper(object):
     return path_segments
 
   @classmethod
-  def GetDisplayNameForPathSpec(cls, path_spec, text_prepend=None):
+  def GetDisplayNameForPathSpec(cls, path_spec):
     """Retrieves the display name of a path specification.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
-      text_prepend (Optional[str]): text to prepend.
 
     Returns:
       str: human readable version of the path specification or None if no path
@@ -311,9 +310,6 @@ class PathHelper(object):
     relative_path = cls.GetRelativePathForPathSpec(path_spec)
     if not relative_path:
       return path_spec.type_indicator
-
-    if text_prepend:
-      relative_path = '{0:s}{1:s}'.format(text_prepend, relative_path)
 
     path_type_indicator = path_spec.type_indicator
 

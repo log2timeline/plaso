@@ -78,7 +78,6 @@ class ParserMediator(object):
     self._resolver_context = resolver_context
     self._storage_writer = None
     self._temporary_directory = None
-    self._text_prepend = None
     self._time_zone = None
     self._windows_event_log_providers_per_path = None
 
@@ -245,8 +244,7 @@ class ParserMediator(object):
     if not relative_path:
       return file_entry.name
 
-    return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, text_prepend=self._text_prepend)
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(path_spec)
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -257,8 +255,7 @@ class ParserMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    return path_helper.PathHelper.GetDisplayNameForPathSpec(
-        path_spec, text_prepend=self._text_prepend)
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(path_spec)
 
   def GetFileEntry(self):
     """Retrieves the active file entry.
@@ -643,15 +640,6 @@ class ParserMediator(object):
       temporary_directory (str): path of the directory to store temporary files.
     """
     self._temporary_directory = temporary_directory
-
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text to prepend to the display name.
-
-    Args:
-      text_prepend (str): text to prepend to the display name or None if no
-          text should be prepended.
-    """
-    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the parsers to abort."""

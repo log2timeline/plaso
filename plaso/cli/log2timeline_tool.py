@@ -74,8 +74,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    # TODO: text_prepend kept for backwards compatibility.
-    self._text_prepend = None
 
     self.dependencies_check = True
     self.list_archive_types = False
@@ -182,12 +180,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         info_group, names=['status_view'])
-
-    output_group = argument_parser.add_argument_group('output arguments')
-
-    # TODO: text_prepend kept for backwards compatibility.
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_group, names=['text_prepend'])
 
     processing_group = argument_parser.add_argument_group(
         'processing arguments')
@@ -299,18 +291,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._ParseInformationalOptions(options)
 
-    # TODO: text_prepend kept for backwards compatibility.
     argument_helper_names = [
         'artifact_definitions', 'artifact_filters', 'extraction',
-        'filter_file', 'status_view', 'storage_format', 'text_prepend',
-        'yara_rules']
+        'filter_file', 'status_view', 'storage_format', 'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
-
-    if self._text_prepend:
-      self._PrintUserWarning((
-          'the text_prepend option is deprecated use the psort/psteal '
-          '--custom-fields option instead.'))
 
     self._ParseLogFileOptions(options)
 

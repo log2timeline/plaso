@@ -108,16 +108,13 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     return status
 
-  def _CreateAnalysisMediator(
-      self, session, knowledge_base, processing_configuration, data_location):
+  def _CreateAnalysisMediator(self, session, knowledge_base, data_location):
     """Creates an analysis mediator.
 
     Args:
       session (Session): session in which the sources are processed.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
-      processing_configuration (ProcessingConfiguration): processing
-          configuration.
       data_location (str): path to the location that data files
           should be loaded from.
 
@@ -128,8 +125,6 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         session, knowledge_base, data_location=data_location)
 
     # TODO: move data_location to processing_configuration
-
-    mediator.SetTextPrepend(processing_configuration.text_prepend)
 
     return mediator
 
@@ -166,8 +161,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     task_storage_writer.Open(path=storage_file_path)
 
     self._analysis_mediator = self._CreateAnalysisMediator(
-        self._session, self._knowledge_base, self._processing_configuration,
-        self._data_location)
+        self._session, self._knowledge_base, self._data_location)
     self._analysis_mediator.SetStorageWriter(task_storage_writer)
 
     # TODO: set event_filter_expression in mediator.

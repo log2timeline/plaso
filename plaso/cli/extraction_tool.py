@@ -110,7 +110,6 @@ class ExtractionTool(
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
-    self._text_prepend = None
     self._worker_memory_limit = None
     self._worker_timeout = None
     self._yara_rules_string = None
@@ -182,7 +181,6 @@ class ExtractionTool(
     configuration.profiling.profilers = self._profilers
     configuration.task_storage_format = self._task_storage_format
     configuration.temporary_directory = self._temporary_directory
-    configuration.text_prepend = self._text_prepend
 
     return configuration
 
@@ -214,7 +212,6 @@ class ExtractionTool(
         self._preferred_language or 'en-US')
     session_configuration.preferred_time_zone = self._preferred_time_zone
     session_configuration.preferred_year = self._preferred_year
-    session_configuration.text_prepend = self._text_prepend
 
     return session_configuration
 

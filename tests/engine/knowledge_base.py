@@ -187,8 +187,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(system_configuration.hostname)
     self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
 
-  # TODO: add tests for GetTextPrepend.
-
   def testGetUsernameByIdentifier(self):
     """Tests the GetUsernameByIdentifier function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -316,8 +314,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
     knowledge_base_object.SetHostname(hostname_artifact)
-
-  # TODO: add tests for SetTextPrepend.
 
   def testSetTimeZone(self):
     """Tests the SetTimeZone function."""

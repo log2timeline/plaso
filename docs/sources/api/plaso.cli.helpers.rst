@@ -220,14 +220,6 @@ plaso.cli.helpers.temporary\_directory module
    :undoc-members:
    :show-inheritance:
 
-plaso.cli.helpers.text\_prepend module
---------------------------------------
-
-.. automodule:: plaso.cli.helpers.text_prepend
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.cli.helpers.vfs\_backend module
 -------------------------------------
 

@@ -346,11 +346,6 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         tsk_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
-    expected_display_name = 'VSS2:TSK:C:/syslog.gz'
-    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-        tsk_path_spec, text_prepend='C:')
-    self.assertEqual(display_name, expected_display_name)
-
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
@@ -366,11 +361,6 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     expected_display_name = 'VSS2:NTFS:\\syslog.gz'
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         ntfs_path_spec)
-    self.assertEqual(display_name, expected_display_name)
-
-    expected_display_name = 'VSS2:NTFS:C:\\syslog.gz'
-    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-        ntfs_path_spec, text_prepend='C:')
     self.assertEqual(display_name, expected_display_name)
 
     # Test a path specification with a location with Unicode surrogates.
