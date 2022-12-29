@@ -336,6 +336,11 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
           continue
 
+        if (isinstance(attribute_value, list) and attribute_value and
+            isinstance(attribute_value[0],
+                       dfdatetime_interface.DateTimeValues)):
+          continue
+
         event_values[attribute_name] = attribute_value
 
     if event_data_stream:

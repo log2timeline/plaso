@@ -45,6 +45,10 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
       if isinstance(value, dfdatetime_interface.DateTimeValues):
         continue
 
+      if (isinstance(value, list) and value and
+          isinstance(value[0], dfdatetime_interface.DateTimeValues)):
+        continue
+
       text_pieces.append('{0:s}: {1!s}'.format(name, value))
 
     return super(DefaultEventFormatter, self)._FormatMessage(

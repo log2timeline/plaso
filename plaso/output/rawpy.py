@@ -104,6 +104,11 @@ class NativePythonEventFormattingHelper(
       if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
         continue
 
+      if (isinstance(attribute_value, list) and attribute_value and
+          isinstance(attribute_value[0],
+                     dfdatetime_interface.DateTimeValues)):
+        continue
+
       # Some parsers have written bytes values to storage.
       if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
