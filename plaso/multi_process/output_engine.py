@@ -80,6 +80,11 @@ class PsortEventHeap(object):
         if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
           continue
 
+        if (isinstance(attribute_value, list) and attribute_value and
+            isinstance(attribute_value[0],
+                       dfdatetime_interface.DateTimeValues)):
+          continue
+
         if isinstance(attribute_value, dfvfs_path_spec.PathSpec):
           attribute_value = attribute_value.comparable
 
