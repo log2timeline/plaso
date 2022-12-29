@@ -9,8 +9,8 @@ import uuid
 import redis  # pylint: disable=import-error
 
 from plaso.containers import events
+from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
-from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage import logger
 
@@ -173,15 +173,19 @@ class RedisStore(interface.BaseStore):
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       identifier = getattr(container, '_event_data_identifier', None)
       if identifier:
-        event_data_identifier = identifiers.RedisKeyIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA, identifier)
+        event_data_identifier = (
+            containers_interface.AttributeContainerIdentifier(
+                name=self._CONTAINER_TYPE_EVENT_DATA,
+                sequence_number=identifier))
         container.SetEventDataIdentifier(event_data_identifier)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       identifier = getattr(container, '_event_data_stream_identifier', None)
       if identifier:
-        event_data_stream_identifier = identifiers.RedisKeyIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA_STREAM, identifier)
+        event_data_stream_identifier = (
+            containers_interface.AttributeContainerIdentifier(
+                name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+                sequence_number=identifier))
         container.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
   def _UpdateAttributeContainerBeforeSerialize(self, container):
@@ -197,24 +201,12 @@ class RedisStore(interface.BaseStore):
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       event_data_identifier = container.GetEventDataIdentifier()
       if event_data_identifier:
-        if not isinstance(
-            event_data_identifier, identifiers.RedisKeyIdentifier):
-          raise IOError(
-              'Unsupported event data identifier type: {0!s}'.format(
-                  type(event_data_identifier)))
-
         setattr(container, '_event_data_identifier',
                 event_data_identifier.sequence_number)
 
     elif container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
       if event_data_stream_identifier:
-        if not isinstance(
-            event_data_stream_identifier, identifiers.RedisKeyIdentifier):
-          raise IOError(
-              'Unsupported event data stream identifier type: {0!s}'.format(
-                  type(event_data_stream_identifier)))
-
         setattr(container, '_event_data_stream_identifier',
                 event_data_stream_identifier.sequence_number)
 
@@ -232,11 +224,6 @@ class RedisStore(interface.BaseStore):
           container does not exist.
     """
     identifier = container.GetIdentifier()
-    if not isinstance(identifier, identifiers.RedisKeyIdentifier):
-      raise IOError(
-          'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
-
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
     redis_key = identifier.CopyToString()
 
@@ -255,8 +242,8 @@ class RedisStore(interface.BaseStore):
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
-    identifier = identifiers.RedisKeyIdentifier(
-        container.CONTAINER_TYPE, next_sequence_number)
+    identifier = containers_interface.AttributeContainerIdentifier(
+        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
     container.SetIdentifier(identifier)
 
     redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
@@ -298,7 +285,7 @@ class RedisStore(interface.BaseStore):
 
     Args:
       container_type (str): container type.
-      identifier (RedisKeyIdentifier): attribute container identifier.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
 
     Returns:
       AttributeContainer: attribute container or None if not available.
@@ -309,11 +296,6 @@ class RedisStore(interface.BaseStore):
       OSError: when the store is closed or if an unsupported identifier is
           provided.
     """
-    if not isinstance(identifier, identifiers.RedisKeyIdentifier):
-      raise IOError(
-          'Unsupported attribute container identifier type: {0!s}'.format(
-              type(identifier)))
-
     redis_hash_name = self._GetRedisHashName(container_type)
     redis_key = identifier.CopyToString()
 
@@ -351,7 +333,8 @@ class RedisStore(interface.BaseStore):
     attribute_container = self._DeserializeAttributeContainer(
         container_type, serialized_data)
 
-    identifier = identifiers.RedisKeyIdentifier(container_type, sequence_number)
+    identifier = containers_interface.AttributeContainerIdentifier(
+        name=container_type, sequence_number=sequence_number)
     attribute_container.SetIdentifier(identifier)
 
     self._UpdateAttributeContainerAfterDeserialize(attribute_container)
@@ -380,8 +363,8 @@ class RedisStore(interface.BaseStore):
 
       _, sequence_number = redis_key.split('.')
       sequence_number = int(sequence_number, 10)
-      identifier = identifiers.RedisKeyIdentifier(
-          container_type, sequence_number)
+      identifier = containers_interface.AttributeContainerIdentifier(
+          name=container_type, sequence_number=sequence_number)
       attribute_container.SetIdentifier(identifier)
 
       self._UpdateAttributeContainerAfterDeserialize(attribute_container)
@@ -448,8 +431,8 @@ class RedisStore(interface.BaseStore):
 
       container_type, sequence_number = redis_key.split('.')
       sequence_number = int(sequence_number, 10)
-      identifier = identifiers.RedisKeyIdentifier(
-          container_type, sequence_number)
+      identifier = containers_interface.AttributeContainerIdentifier(
+          name=container_type, sequence_number=sequence_number)
       yield self.GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, identifier)
 
