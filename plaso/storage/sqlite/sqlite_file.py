@@ -15,7 +15,6 @@ from plaso.containers import events
 from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
-from plaso.storage import identifiers
 from plaso.storage import interface
 
 
@@ -302,7 +301,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
         data_type = schema[name]
         if data_type == 'AttributeContainerIdentifier':
-          identifier = identifiers.SQLTableIdentifier()
+          identifier = containers_interface.AttributeContainerIdentifier()
           identifier.CopyFromString(attribute_value)
           attribute_value = identifier
 
@@ -361,7 +360,8 @@ class SQLiteStorageFile(interface.BaseStore):
         serialized_identifier = getattr(
             container, '_event_data_stream_identifier', None)
         if serialized_identifier:
-          event_data_stream_identifier = identifiers.SQLTableIdentifier()
+          event_data_stream_identifier = (
+              containers_interface.AttributeContainerIdentifier())
           event_data_stream_identifier.CopyFromString(serialized_identifier)
           container.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
@@ -482,7 +482,7 @@ class SQLiteStorageFile(interface.BaseStore):
       container = self._CreatetAttributeContainerFromRow(
           container_type, column_names, row, 1)
 
-      identifier = identifiers.SQLTableIdentifier(
+      identifier = containers_interface.AttributeContainerIdentifier(
           name=container_type, sequence_number=row[0])
       container.SetIdentifier(identifier)
 
@@ -662,11 +662,6 @@ class SQLiteStorageFile(interface.BaseStore):
           an unsupported identifier is provided.
     """
     identifier = container.GetIdentifier()
-    if not isinstance(identifier, identifiers.SQLTableIdentifier):
-      identifier_type = type(identifier)
-      raise IOError(
-          'Unsupported attribute container identifier type: {0!s}'.format(
-              identifier_type))
 
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if not schema:
@@ -766,7 +761,7 @@ class SQLiteStorageFile(interface.BaseStore):
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
-    identifier = identifiers.SQLTableIdentifier(
+    identifier = containers_interface.AttributeContainerIdentifier(
         name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
     container.SetIdentifier(identifier)
 
@@ -893,7 +888,7 @@ class SQLiteStorageFile(interface.BaseStore):
 
     Args:
       container_type (str): container type.
-      identifier (SQLTableIdentifier): attribute container identifier.
+      identifier (AttributeContainerIdentifier): attribute container identifier.
 
     Returns:
       AttributeContainer: attribute container or None if not available.
@@ -904,12 +899,6 @@ class SQLiteStorageFile(interface.BaseStore):
       OSError: when the store is closed or if an unsupported identifier is
           provided.
     """
-    if not isinstance(identifier, identifiers.SQLTableIdentifier):
-      identifier_type = type(identifier)
-      raise IOError(
-          'Unsupported attribute container identifier type: {0!s}'.format(
-              identifier_type))
-
     return self.GetAttributeContainerByIndex(
         container_type, identifier.sequence_number - 1)
 
@@ -971,7 +960,7 @@ class SQLiteStorageFile(interface.BaseStore):
     container = self._CreatetAttributeContainerFromRow(
         container_type, column_names, row, 0)
 
-    identifier = identifiers.SQLTableIdentifier(
+    identifier = containers_interface.AttributeContainerIdentifier(
         name=container_type, sequence_number=row_number)
     container.SetIdentifier(identifier)
 
@@ -1179,7 +1168,7 @@ class SQLiteStorageFile(interface.BaseStore):
       self._connection.commit()
 
     # Initialize next_sequence_number based on the file contents so that
-    # SQLTableIdentifier points to the correct attribute container.
+    # AttributeContainerIdentifier points to the correct attribute container.
     for container_type in self._REFERENCED_CONTAINER_TYPES:
       next_sequence_number = self.GetNumberOfAttributeContainers(
           container_type)

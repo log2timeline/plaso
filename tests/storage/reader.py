@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.containers import event_sources
-from plaso.storage import identifiers
+from plaso.containers import interface as containers_interface
 from plaso.storage import reader
 from plaso.storage.fake import fake_store
 
@@ -40,8 +40,8 @@ class StorageReaderTest(test_lib.StorageTestCase):
           event_source.CONTAINER_TYPE, test_identifier)
       self.assertIsNotNone(test_container)
 
-      test_identifier = identifiers.FakeIdentifier(
-          event_source.CONTAINER_TYPE, 99)
+      test_identifier = containers_interface.AttributeContainerIdentifier(
+          name=event_source.CONTAINER_TYPE, sequence_number=99)
       test_container = test_reader.GetAttributeContainerByIdentifier(
           event_source.CONTAINER_TYPE, test_identifier)
       self.assertIsNone(test_container)
