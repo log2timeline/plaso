@@ -299,14 +299,39 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
-  def _GetSanitizedEventValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Sanitizes the event for use in OpenSearch.
+  def _SanitizeField(self, data_type, attribute_name, field):
+    """Sanitizes a field for output.
 
-    The event values need to be sanitized to prevent certain values from
-    causing problems when indexing with OpenSearch. For example the path
-    specification is a nested dictionary which will cause problems for
-    OpenSearch automatic indexing.
+    Args:
+      data_type (str): event data type.
+      attribute_name (str): name of the event attribute.
+      field (object): value of the field to sanitize.
+
+    Returns:
+      object: sanitized value of the field.
+    """
+    # Some parsers have written bytes values to storage.
+    if isinstance(field, bytes):
+      field = field.decode('utf-8', 'replace')
+      logger.warning(
+          'Found bytes value for attribute: {0:s} of data type: '
+          '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+              attribute_name, data_type, field))
+
+    return field
+
+  def Close(self):
+    """Closes connection to OpenSearch.
+
+    Inserts any remaining buffered event documents.
+    """
+    self._FlushEvents()
+
+    self._client = None
+
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -317,23 +342,16 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       event_tag (EventTag): event tag.
 
     Returns:
-      dict[str, object]: sanitized event values.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
+      dict[str, str]: output field values per name.
     """
     event_values = {}
 
     if event_data:
       for attribute_name, attribute_value in event_data.GetAttributes():
-        # Ignore attribute container identifier values.
-        if isinstance(attribute_value,
-                      containers_interface.AttributeContainerIdentifier):
-          continue
-
-        # Ignore date and time values.
-        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+        # Ignore attribute container identifier and date and time values.
+        if isinstance(attribute_value, (
+            containers_interface.AttributeContainerIdentifier,
+            dfdatetime_interface.DateTimeValues)):
           continue
 
         if (isinstance(attribute_value, list) and attribute_value and
@@ -376,63 +394,6 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
           event_data.data_type, attribute_name, field_value)
 
     return field_values
-
-  def _InsertEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Inserts an event.
-
-    Events are buffered in the form of documents and inserted to OpenSearch
-    when the flush interval (threshold) has been reached.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    event_document = {'index': {'_index': self._index_name}}
-
-    event_values = self._GetSanitizedEventValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-    self._event_documents.append(event_document)
-    self._event_documents.append(event_values)
-    self._number_of_buffered_events += 1
-
-    if self._number_of_buffered_events > self._flush_interval:
-      self._FlushEvents()
-
-  def _SanitizeField(self, data_type, attribute_name, field):
-    """Sanitizes a field for output.
-
-    Args:
-      data_type (str): event data type.
-      attribute_name (str): name of the event attribute.
-      field (object): value of the field to sanitize.
-
-    Returns:
-      object: sanitized value of the field.
-    """
-    # Some parsers have written bytes values to storage.
-    if isinstance(field, bytes):
-      field = field.decode('utf-8', 'replace')
-      logger.warning(
-          'Found bytes value for attribute: {0:s} of data type: '
-          '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-              attribute_name, data_type, field))
-
-    return field
-
-  def Close(self):
-    """Closes connection to OpenSearch.
-
-    Inserts any remaining buffered event documents.
-    """
-    self._FlushEvents()
-
-    self._client = None
 
   def SetAdditionalFields(self, field_names):
     """Sets the names of additional fields to output.
@@ -546,18 +507,3 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     """
     self._url_prefix = url_prefix
     logger.debug('OpenSearch URL prefix: {0!s}')
-
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    self._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, event_tag)

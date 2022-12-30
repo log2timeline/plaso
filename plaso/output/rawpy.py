@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output module for the native (or "raw") Python format."""
 
+import collections
+
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -95,13 +97,10 @@ class NativePythonEventFormattingHelper(
       event_attributes.append(('inode', attribute_value))
 
     for attribute_name, attribute_value in sorted(event_attributes):
-      # Ignore attribute container identifier values.
-      if isinstance(attribute_value,
-                    containers_interface.AttributeContainerIdentifier):
-        continue
-
-      # Ignore date and time values.
-      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+      # Ignore attribute container identifier and date and time values.
+      if isinstance(attribute_value, (
+          containers_interface.AttributeContainerIdentifier,
+          dfdatetime_interface.DateTimeValues)):
         continue
 
       if (isinstance(attribute_value, list) and attribute_value and
@@ -144,6 +143,25 @@ class NativePythonEventFormattingHelper(
     lines_of_text.append('')
 
     return '\n'.join(lines_of_text)
+
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    field_values = collections.OrderedDict()
+    # TODO: implement
+    return field_values
 
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):

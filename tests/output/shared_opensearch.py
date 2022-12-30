@@ -24,9 +24,21 @@ class TestOpenSearchOutputModule(
     """Connects to an OpenSearch server."""
     self._client = MagicMock()
 
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
 
-@unittest.skipIf(
-    shared_opensearch.opensearchpy is None, 'missing opensearch-py')
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    return
+
+
 class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests the shared functionality for OpenSearch output modules."""
 
@@ -48,7 +60,14 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testConnect(self):
-    """Tests the _Connect function."""
+    """Tests the _Connect function.
+
+    Raises:
+      SkipTest: if opensearch-py is missing.
+    """
+    if shared_opensearch.opensearchpy is None:
+      raise unittest.SkipTest('missing opensearch-py')
+
     output_module = TestOpenSearchOutputModule()
 
     self.assertIsNone(output_module._client)
@@ -58,40 +77,40 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertIsNotNone(output_module._client)
 
   def testCreateIndexIfNotExists(self):
-    """Tests the _CreateIndexIfNotExists function."""
-    output_module = TestOpenSearchOutputModule()
+    """Tests the _CreateIndexIfNotExists function.
 
-    output_module._Connect()
-    output_module._CreateIndexIfNotExists('test', {})
-
-  def testFlushEvents(self):
-    """Tests the _FlushEvents function."""
-    output_mediator = self._CreateOutputMediator()
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
+    Raises:
+      SkipTest: if opensearch-py is missing.
+    """
+    if shared_opensearch.opensearchpy is None:
+      raise unittest.SkipTest('missing opensearch-py')
 
     output_module = TestOpenSearchOutputModule()
 
     output_module._Connect()
     output_module._CreateIndexIfNotExists('test', {})
 
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, None)
+  def testClose(self):
+    """Tests the Close function.
 
-    self.assertEqual(len(output_module._event_documents), 2)
-    self.assertEqual(output_module._number_of_buffered_events, 1)
+    Raises:
+      SkipTest: if opensearch-py is missing.
+    """
+    if shared_opensearch.opensearchpy is None:
+      raise unittest.SkipTest('missing opensearch-py')
 
-    output_module._FlushEvents()
+    output_module = TestOpenSearchOutputModule()
 
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
+    output_module._Connect()
 
-  def testGetSanitizedEventValues(self):
-    """Tests the _GetSanitizedEventValues function."""
+    self.assertIsNotNone(output_module._client)
+
+    output_module.Close()
+
+    self.assertIsNone(output_module._client)
+
+  def testGetFieldValues(self):
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
@@ -106,10 +125,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
-    event_values = output_module._GetSanitizedEventValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-    expected_event_values = {
+    expected_field_values = {
         'a_binary_field': 'binary',
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01.000000+00:00',
@@ -128,59 +144,12 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'text': ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                  'session\n closed for user root)'),
         'timestamp': 1340821021000000,
-        'timestamp_desc': 'Content Modification Time',
-    }
+        'timestamp_desc': 'Content Modification Time'}
 
-    self.assertIsInstance(event_values, dict)
-    self.assertEqual(event_values, expected_event_values)
+    field_values = output_module.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
-  def testInsertEvent(self):
-    """Tests the _InsertEvent function."""
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-    output_mediator = self._CreateOutputMediator()
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    output_module = TestOpenSearchOutputModule()
-
-    output_module._Connect()
-    output_module._CreateIndexIfNotExists('test', {})
-
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
-
-    output_module._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, None)
-
-    self.assertEqual(len(output_module._event_documents), 2)
-    self.assertEqual(output_module._number_of_buffered_events, 1)
-
-    output_module._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, None)
-
-    self.assertEqual(len(output_module._event_documents), 4)
-    self.assertEqual(output_module._number_of_buffered_events, 2)
-
-    output_module._FlushEvents()
-
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
-
-  def testClose(self):
-    """Tests the Close function."""
-    output_module = TestOpenSearchOutputModule()
-
-    output_module._Connect()
-
-    self.assertIsNotNone(output_module._client)
-
-    output_module.Close()
-
-    self.assertIsNone(output_module._client)
+    self.assertEqual(field_values, expected_field_values)
 
   def testSetFlushInterval(self):
     """Tests the SetFlushInterval function."""
@@ -234,30 +203,6 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.SetUsername('test_username')
 
     self.assertEqual(output_module._username, 'test_username')
-
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function."""
-    output_mediator = self._CreateOutputMediator()
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    output_module = TestOpenSearchOutputModule()
-
-    output_module._Connect()
-    output_module._CreateIndexIfNotExists('test', {})
-
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(
-        output_mediator, event, event_data, event_data_stream, None)
-
-    self.assertEqual(len(output_module._event_documents), 2)
-    self.assertEqual(output_module._number_of_buffered_events, 1)
 
 
 if __name__ == '__main__':

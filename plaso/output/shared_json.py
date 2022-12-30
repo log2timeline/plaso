@@ -22,9 +22,9 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     super(JSONEventFormattingHelper, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
-  def _WriteSerializedDict(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes an event, event data and event tag to serialized form.
+    """Retrieves the output field values.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -35,17 +35,18 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       event_tag (EventTag): event tag.
 
     Returns:
-      dict[str, object]: JSON serialized objects.
+      dict[str, str]: output field values per name.
     """
-    event_values = {
+    field_values = {
         '__container_type__': 'event',
         '__type__': 'AttributeContainer'}
 
     if event_data:
       for attribute_name, attribute_value in event_data.GetAttributes():
-        # Ignore attribute container identifier values.
-        if isinstance(attribute_value,
-                      containers_interface.AttributeContainerIdentifier):
+        # Ignore attribute container identifier and date and time values.
+        if isinstance(attribute_value, (
+            containers_interface.AttributeContainerIdentifier,
+            dfdatetime_interface.DateTimeValues)):
           continue
 
         # Ignore date and time values.
@@ -57,7 +58,7 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
                        dfdatetime_interface.DateTimeValues)):
           continue
 
-        event_values[attribute_name] = attribute_value
+        field_values[attribute_name] = attribute_value
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
@@ -66,7 +67,7 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
           attribute_value = self._JSON_SERIALIZER.WriteSerializedDict(
               attribute_value)
 
-        event_values[attribute_name] = attribute_value
+        field_values[attribute_name] = attribute_value
 
     if event:
       for attribute_name, attribute_value in event.GetAttributes():
@@ -79,35 +80,35 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
           attribute_value = self._JSON_SERIALIZER.WriteSerializedDict(
               attribute_value)
 
-        event_values[attribute_name] = attribute_value
+        field_values[attribute_name] = attribute_value
 
-    display_name = event_values.get('display_name', None)
+    display_name = field_values.get('display_name', None)
     if display_name is None:
       display_name = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'display_name', event, event_data, event_data_stream,
           event_tag)
-      event_values['display_name'] = display_name
+      field_values['display_name'] = display_name
 
-    filename = event_values.get('filename', None)
+    filename = field_values.get('filename', None)
     if filename is None:
       filename = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'filename', event, event_data, event_data_stream,
           event_tag)
-      event_values['filename'] = filename
+      field_values['filename'] = filename
 
-    inode = event_values.get('inode', None)
+    inode = field_values.get('inode', None)
     if inode is None:
       inode = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'inode', event, event_data, event_data_stream,
           event_tag)
-      event_values['inode'] = inode
+      field_values['inode'] = inode
 
     try:
       message = self._field_formatting_helper.GetFormattedField(
           output_mediator, 'message', event, event_data, event_data_stream,
           event_tag)
-      event_values['message'] = message
-    except (errors.NoFormatterFound, errors.WrongFormatter):
+      field_values['message'] = message
+    except errors.NoFormatterFound:
       pass
 
     if event_tag:
@@ -123,9 +124,9 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
 
         event_tag_values[attribute_name] = attribute_value
 
-      event_values['tag'] = event_tag_values
+      field_values['tag'] = event_tag_values
 
-    return event_values
+    return field_values
 
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
@@ -142,7 +143,7 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Returns:
       str: string representation of the event.
     """
-    json_dict = self._WriteSerializedDict(
+    field_values = self.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
-    return json.dumps(json_dict, sort_keys=True)
+    return json.dumps(field_values, sort_keys=True)

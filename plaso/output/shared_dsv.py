@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for delimiter separated values output modules."""
 
+import collections
+
 from plaso.output import formatting_helper
 from plaso.output import interface
 
@@ -37,6 +39,38 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       return field.replace(self._field_delimiter, ' ')
     return field
 
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    field_values = collections.OrderedDict()
+    for field_name in self._field_names:
+      field_value = self._field_formatting_helper.GetFormattedField(
+          output_mediator, field_name, event, event_data, event_data_stream,
+          event_tag)
+
+      if field_value is None and field_name in self._custom_fields:
+        field_value = self._custom_fields.get(field_name, None)
+
+      if field_value is None:
+        field_value = '-'
+
+      field_value = self._SanitizeField(field_value)
+      field_values[field_name] = field_value
+
+    return field_values
+
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
@@ -52,22 +86,9 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     Returns:
       str: string representation of the event.
     """
-    field_values = []
-    for field_name in self._field_names:
-      field_value = self._field_formatting_helper.GetFormattedField(
-          output_mediator, field_name, event, event_data, event_data_stream,
-          event_tag)
-
-      if field_value is None and field_name in self._custom_fields:
-        field_value = self._custom_fields.get(field_name, None)
-
-      if field_value is None:
-        field_value = '-'
-
-      field_value = self._SanitizeField(field_value)
-      field_values.append(field_value)
-
-    return self._field_delimiter.join(field_values)
+    field_values = self.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+    return self._field_delimiter.join(field_values.values())
 
   def GetFormattedFieldNames(self):
     """Retrieves a string representation of the field names.

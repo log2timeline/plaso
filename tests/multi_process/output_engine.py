@@ -39,6 +39,24 @@ class TestOutputModule(output_interface.OutputModule):
     self.events = []
     self.macb_groups = []
 
+  def GetFieldValues(
+      self, output_mediator_object, event, event_data, event_data_stream,
+      event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    return {}
+
   def WriteEventBody(
       self, output_mediator_object, event, event_data, event_data_stream,
        event_tag):

@@ -177,13 +177,10 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       if attribute_name in formatted_attribute_names:
         continue
 
-      # Ignore attribute container identifier values.
-      if isinstance(attribute_value,
-                    containers_interface.AttributeContainerIdentifier):
-        continue
-
-      # Ignore date and time values.
-      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+      # Ignore attribute container identifier and date and time values.
+      if isinstance(attribute_value, (
+          containers_interface.AttributeContainerIdentifier,
+          dfdatetime_interface.DateTimeValues)):
         continue
 
       if (isinstance(attribute_value, list) and attribute_value and
