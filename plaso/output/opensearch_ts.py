@@ -23,14 +23,12 @@ class OpenSearchTimesketchOutputModule(
     super(OpenSearchTimesketchOutputModule, self).__init__()
     self._timeline_identifier = None
 
-  def _GetSanitizedEventValues(
+  def _InsertEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Sanitizes the event for use in OpenSearch.
+    """Inserts an event.
 
-    The event values need to be sanitized to prevent certain values from
-    causing problems when indexing with OpenSearch. For example the path
-    specification is a nested dictionary which will cause problems for
-    OpenSearch automatic indexing.
+    Events are buffered in the form of documents and inserted to OpenSearch
+    when the flush interval (threshold) has been reached.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -39,21 +37,20 @@ class OpenSearchTimesketchOutputModule(
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, object]: sanitized event values.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
     """
-    event_values = super(
-        OpenSearchTimesketchOutputModule, self)._GetSanitizedEventValues(
-            output_mediator, event, event_data, event_data_stream, event_tag)
+    event_document = {
+        '__ts_timeline_id': self._timeline_identifier,
+        'index': {'_index': self._index_name}}
 
-    event_values['__ts_timeline_id'] = self._timeline_identifier
+    event_values = self.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
-    return event_values
+    self._event_documents.append(event_document)
+    self._event_documents.append(event_values)
+    self._number_of_buffered_events += 1
+
+    if self._number_of_buffered_events > self._flush_interval:
+      self._FlushEvents()
 
   def GetMissingArguments(self):
     """Retrieves a list of arguments that are missing from the input.
@@ -85,6 +82,21 @@ class OpenSearchTimesketchOutputModule(
     self._Connect()
 
     self._CreateIndexIfNotExists(self._index_name, self._mappings)
+
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    self._InsertEvent(
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
 
 manager.OutputManager.RegisterOutput(

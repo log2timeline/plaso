@@ -22,6 +22,23 @@ class TestXMLEventFormattingHelper(formatting_helper.EventFormattingHelper):
     super(TestXMLEventFormattingHelper, self).__init__()
     self._field_formatting_helper = formatting_helper.FieldFormattingHelper()
 
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      list[str]: output field values.
+    """
+    return []
+
   def GetFormattedEvent(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves a string representation of the event.
