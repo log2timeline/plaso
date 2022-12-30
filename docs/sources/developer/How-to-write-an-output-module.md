@@ -27,7 +27,6 @@ plugin gives you a quick way to see if your code is doing what you expect.
   * Close()
   * GetMissingArguments()
   * WriteHeader()
-  * WriteEventMACBGroup()
   * WriteFooter()
 
 ## Expand tests

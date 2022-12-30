@@ -67,6 +67,18 @@ class TestOutputModule(output_interface.OutputModule):
     """
     self.events.append(field_values)
 
+  def WriteFieldValuesOfMACBGroup(self, output_mediator_object, macb_group):
+    """Writes field values of a MACB group to the output.
+
+    Args:
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfVFS.
+      macb_group (list[dict[str, str]]): group of output field values per name
+          with identical timestamps, attributes and values.
+    """
+    self.events.extend(macb_group)
+    self.macb_groups.append(macb_group)
+
   def WriteHeader(self, output_mediator_object):
     """Writes the header to the output.
 
@@ -75,26 +87,6 @@ class TestOutputModule(output_interface.OutputModule):
           output modules and other components, such as storage and dfVFS.
     """
     return
-
-  def WriteEventMACBGroup(self, output_mediator_object, event_macb_group):
-    """Writes an event MACB group to the output.
-
-    An event MACB group is a group of events that have the same timestamp and
-    event data (attributes and values), where the timestamp description (or
-    usage) is one or more of MACB (modification, access, change, birth).
-
-    This function is called if the psort engine detected an event MACB group
-    so that the output module, if supported, can represent the group as
-    such. If not overridden this function will output every event individually.
-
-    Args:
-      output_mediator_object (OutputMediator): mediates interactions between
-          output modules and other components, such as storage and dfVFS.
-      event_macb_group (list[EventObject]): group of events with identical
-          timestamps, attributes and values.
-    """
-    self.events.extend(event_macb_group)
-    self.macb_groups.append(event_macb_group)
 
 
 class PsortEventHeapTest(test_lib.MultiProcessingTestCase):

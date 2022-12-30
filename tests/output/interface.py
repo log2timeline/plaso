@@ -117,8 +117,12 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
     for event_values in self._TEST_EVENTS:
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(event_values))
-      output_module.WriteEvent(
+
+      # TODO: add test for event_tag.
+      field_values = output_module.GetFieldValues(
           output_mediator, event, event_data, event_data_stream, None)
+
+      output_module.WriteFieldValues(output_mediator, field_values)
 
     output_module.WriteFooter()
 

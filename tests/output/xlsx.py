@@ -131,7 +131,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self.assertEqual(field_values, expected_field_values)
 
-  def testWriteEvent(self):
+  def testWriteFieldValues(self):
     """Tests the WriteEvent function."""
     output_mediator = self._CreateOutputMediator()
 
@@ -153,8 +153,10 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       event_tag = events.EventTag()
       event_tag.AddLabels(['Malware', 'Printed'])
 
-      output_module.WriteEvent(
+      field_values = output_module.GetFieldValues(
           output_mediator, event, event_data, event_data_stream, event_tag)
+
+      output_module.WriteFieldValues(output_mediator, field_values)
 
       output_module.WriteFooter()
       output_module.Close()

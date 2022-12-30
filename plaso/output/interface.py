@@ -4,7 +4,6 @@
 import abc
 import os
 
-from plaso.lib import errors
 from plaso.output import logger
 
 
@@ -76,51 +75,6 @@ class OutputModule(object):
     """Opens the output."""
     return
 
-  def WriteEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes the event to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    try:
-      field_values = self.GetFieldValues(
-          output_mediator, event, event_data, event_data_stream, event_tag)
-
-      self.WriteFieldValues(output_mediator, field_values)
-
-    except errors.NoFormatterFound as exception:
-      error_message = 'unable to retrieve formatter with error: {0!s}'.format(
-          exception)
-      self._ReportEventError(event, event_data, error_message)
-
-  def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
-    """Writes an event MACB group to the output.
-
-    An event MACB group is a group of events that have the same timestamp and
-    event data (attributes and values), where the timestamp description (or
-    usage) is one or more of MACB (modification, access, change, birth).
-
-    This function is called if the psort engine detected an event MACB group
-    so that the output module, if supported, can represent the group as
-    such. If not overridden this function will output every event individually.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
-          EventTag]]): group of events with identical timestamps, attributes
-          and values.
-    """
-    for event, event_data, event_data_stream, event_tag in event_macb_group:
-      self.WriteEvent(
-          output_mediator, event, event_data, event_data_stream, event_tag)
-
   @abc.abstractmethod
   def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
@@ -130,6 +84,18 @@ class OutputModule(object):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
+
+  def WriteFieldValuesOfMACBGroup(self, output_mediator, macb_group):
+    """Writes field values of a MACB group to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      macb_group (list[dict[str, str]]): group of output field values per name
+          with identical timestamps, attributes and values.
+    """
+    for field_values in macb_group:
+      self.WriteFieldValues(output_mediator, field_values)
 
   def WriteFooter(self):
     """Writes the footer to the output.
