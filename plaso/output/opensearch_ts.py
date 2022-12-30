@@ -23,9 +23,8 @@ class OpenSearchTimesketchOutputModule(
     super(OpenSearchTimesketchOutputModule, self).__init__()
     self._timeline_identifier = None
 
-  def _InsertEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Inserts an event.
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
 
     Events are buffered in the form of documents and inserted to OpenSearch
     when the flush interval (threshold) has been reached.
@@ -33,17 +32,11 @@ class OpenSearchTimesketchOutputModule(
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
     event_document = {
         '__ts_timeline_id': self._timeline_identifier,
         'index': {'_index': self._index_name}}
-
-    field_values = self.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
 
     self._event_documents.append(event_document)
     self._event_documents.append(field_values)
@@ -82,21 +75,6 @@ class OpenSearchTimesketchOutputModule(
     self._Connect()
 
     self._CreateIndexIfNotExists(self._index_name, self._mappings)
-
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    self._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, event_tag)
 
 
 manager.OutputManager.RegisterOutput(

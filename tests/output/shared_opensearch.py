@@ -24,17 +24,15 @@ class TestOpenSearchOutputModule(
     """Connects to an OpenSearch server."""
     self._client = MagicMock()
 
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  # pylint: disable=unused-argument
+
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
     return
 

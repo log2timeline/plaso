@@ -280,26 +280,6 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
         field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    field_values = self.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-    output_text = self._event_formatting_helper.field_delimiter.join(
-        field_values.values())
-
-    self.WriteLine(output_text)
-
   def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
     """Writes an event MACB group to the output.
 
@@ -312,6 +292,19 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     """
     output_text = self._event_formatting_helper.GetFormattedEventMACBGroup(
         output_mediator, event_macb_group)
+
+    self.WriteLine(output_text)
+
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
+    output_text = self._event_formatting_helper.field_delimiter.join(
+        field_values.values())
 
     self.WriteLine(output_text)
 

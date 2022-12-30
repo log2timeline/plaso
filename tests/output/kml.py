@@ -81,8 +81,8 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     footer = test_file_object.getvalue()
     self.assertEqual(footer, '</Document></kml>')
 
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function."""
+  def testWriteFieldValues(self):
+    """Tests the WriteFieldValues function."""
     # Test event without geo-location.
     test_file_object = io.StringIO()
 
@@ -92,8 +92,12 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(
+
+    # TODO: add test for event_tag.
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     event_body = test_file_object.getvalue()
     self.assertEqual(event_body, '')
@@ -107,8 +111,12 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1]))
-    output_module.WriteEventBody(
+
+    # TODO: add test for event_tag.
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     event_body = test_file_object.getvalue()
 

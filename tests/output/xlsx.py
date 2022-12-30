@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module."""
 
+import datetime
 import os
 import unittest
 import zipfile
@@ -114,6 +115,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabels(['Malware', 'Printed'])
 
     expected_field_values = {
+        'datetime': datetime.datetime(2012, 6, 27, 18, 17, 1),
         'display_name': '-',
         'message': (
             'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '

@@ -57,20 +57,15 @@ class TestOutputModule(output_interface.OutputModule):
     """
     return {}
 
-  def WriteEventBody(
-      self, output_mediator_object, event, event_data, event_data_stream,
-       event_tag):
-    """Writes the body of an event object to the output.
+  def WriteFieldValues(self, output_mediator_object, field_values):
+    """Writes field values to the output.
 
     Args:
       output_mediator_object (OutputMediator): mediates interactions between
           output modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
-    self.events.append((event, event_data, event_data_stream, event_tag))
+    self.events.append(field_values)
 
   def WriteHeader(self, output_mediator_object):
     """Writes the header to the output.

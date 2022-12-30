@@ -89,27 +89,15 @@ class OutputModule(object):
       event_tag (EventTag): event tag.
     """
     try:
-      self.WriteEventBody(
+      field_values = self.GetFieldValues(
           output_mediator, event, event_data, event_data_stream, event_tag)
+
+      self.WriteFieldValues(output_mediator, field_values)
 
     except errors.NoFormatterFound as exception:
       error_message = 'unable to retrieve formatter with error: {0!s}'.format(
           exception)
       self._ReportEventError(event, event_data, error_message)
-
-  @abc.abstractmethod
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
 
   def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
     """Writes an event MACB group to the output.
@@ -132,6 +120,16 @@ class OutputModule(object):
     for event, event_data, event_data_stream, event_tag in event_macb_group:
       self.WriteEvent(
           output_mediator, event, event_data, event_data_stream, event_tag)
+
+  @abc.abstractmethod
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
 
   def WriteFooter(self):
     """Writes the footer to the output.
@@ -217,17 +215,13 @@ class TextFileOutputModule(OutputModule):
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
   @abc.abstractmethod
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
 
   def WriteLine(self, text):

@@ -53,7 +53,12 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
+    event_identifier = event.GetIdentifier()
+    event_identifier_string = event_identifier.CopyToString()
+
     expected_field_values = {
+        '_event_identifier': event_identifier_string,
+        '_timestamp': '2012-06-27T18:17:01.000000+00:00',
         'data_type': 'test:output',
         'display_name': 'TSK:/var/log/syslog.1',
         'filename': '/var/log/syslog.1',
@@ -62,7 +67,6 @@ class NativePythonEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         'path_spec': event_data_stream.path_spec,
         'text': ('Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
                  'session\n closed for user root)'),
-        'timestamp': '2012-06-27T18:17:01.000000+00:00',
         'username': 'root'}
 
     field_values = formatting_helper.GetFieldValues(
@@ -93,8 +97,8 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
        'username': 'root'}]
 
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function."""
+  def testWriteFieldValues(self):
+    """Tests the WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -103,8 +107,12 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(
+
+    # TODO: add test for event_tag.
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
