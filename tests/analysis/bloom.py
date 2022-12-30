@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the hashlookup_bloom analysis plugin."""
+"""Tests for the bloom analysis plugin."""
 
 import collections
 import unittest
 
 from dfvfs.path import fake_path_spec
 
-from plaso.analysis import hashlookup_bloom
+from plaso.analysis import bloom
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
@@ -15,7 +15,7 @@ from plaso.lib import definitions
 from tests.analysis import test_lib
 
 
-class HashlookupBloomTest(test_lib.AnalysisPluginTestCase):
+class BloomTest(test_lib.AnalysisPluginTestCase):
   """Tests for the Hashlookup analysis plugin."""
 
   _EVENT_1_HASH = (
@@ -43,10 +43,10 @@ class HashlookupBloomTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    plugin = hashlookup_bloom.HashlookupBloomAnalysisPlugin()
+    plugin = bloom.BloomAnalysisPlugin()
     # this file contains only one hash : _EVENT_1_HASH
     plugin.SetBloomDatabasePath('test_data/plaso.bloom')
-    plugin.SetLabel('hashlookup_present')
+    plugin.SetLabel('bloom_present')
 
     storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
@@ -58,10 +58,10 @@ class HashlookupBloomTest(test_lib.AnalysisPluginTestCase):
         reports.AnalysisReport.CONTAINER_TYPE, 0)
     self.assertIsNotNone(analysis_report)
 
-    self.assertEqual(analysis_report.plugin_name, 'hashlookup_bloom')
+    self.assertEqual(analysis_report.plugin_name, 'bloom')
 
     expected_analysis_counter = collections.Counter({
-        'hashlookup_present': 1})
+        'bloom_present': 1})
     self.assertEqual(
         analysis_report.analysis_counter, expected_analysis_counter)
 
@@ -75,7 +75,7 @@ class HashlookupBloomTest(test_lib.AnalysisPluginTestCase):
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 
-    expected_labels = ['hashlookup_present']
+    expected_labels = ['bloom_present']
     self.assertEqual(labels, expected_labels)
 
 

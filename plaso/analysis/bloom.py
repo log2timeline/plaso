@@ -1,37 +1,37 @@
 # -*- coding: utf-8 -*-
-"""Analysis plugin to look up file hashes in hashlookup bloom database
+"""Analysis plugin to look up file hashes in bloom database
 
-Also see:
-  https://circl.lu/services/hashlookup/#how-to-quickly-check-a-set-of-files-in-a-local-directory
 """
-
-from flor import BloomFilter
+try:
+  import flor
+except ImportError:
+  flor = None
 
 from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
 
 
-class HashlookupBloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
-  """Analysis plugin for looking up hashes in hashlookup bloom file."""
+class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
+  """Analysis plugin for looking up hashes in bloom file."""
 
   # hashlookup bloom files can handle a high load
   # so look up all files.
   DATA_TYPES = frozenset(['fs:stat', 'fs:stat:ntfs'])
 
-  NAME = 'hashlookup_bloom'
+  NAME = 'bloom'
 
   SUPPORTED_HASHES = frozenset(['sha1', 'md5', 'sha256'])
 
-  DEFAULT_LABEL = 'hashlookup_present'
+  DEFAULT_LABEL = 'bloom_present'
 
 
   def __init__(self):
     """Initializes an hashlookup bloom  analysis plugin."""
-    super(HashlookupBloomAnalysisPlugin, self).__init__()
+    super(BloomAnalysisPlugin, self).__init__()
     self._label = self.DEFAULT_LABEL
     self._bloom_database_path = None
-    self.blomm_filter_obj = None
+    self.bloom_filter_object = None
 
   def _Analyze(self, hashes):
     """Looks up file hashes in hashlookup bloom file.
@@ -46,16 +46,16 @@ class HashlookupBloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       RuntimeError: when the analyzer fail to get a bloom filter object
     """
 
-    bf = self._GetBloomFilterObject()
-    if not bf:
-      logger.error(f"Faile to open bloom file {bf}")
+    bloom_filter = self._GetBloomFilterObject(cached=True)
+    if not bloom_filter:
       raise RuntimeError('Failed to open bloom file')
 
     hash_analyses = []
     for digest in hashes:
-      response = self._QueryHash(bf, digest)
+      response = self._QueryHash(digest=digest, bloom_filter=bloom_filter)
       if response is not None:
-        hash_analysis = hash_tagging.HashAnalysis(digest, response)
+        hash_analysis = hash_tagging.HashAnalysis(
+          subject_hash=digest, hash_information=response)
         hash_analyses.append(hash_analysis)
 
     return hash_analyses
@@ -80,40 +80,45 @@ class HashlookupBloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       cached (bool): should the BloomFilter be cached
 
     Returns:
-      flor.BloomFilter: object containig a BloomFilter.
+      Optional(flor.BloomFilter): object containig a BloomFilter.
     """
-    if self.blomm_filter_obj:
-      return self.blomm_filter_obj
+    if self.bloom_filter_object:
+      return self.bloom_filter_object
 
     logger.info('Open bloom database file {0:s}.'
               .format(self._bloom_database_path))
-    try:
-      bf = BloomFilter()
-      with open(self._bloom_database_path, 'rb') as f:
-        bf.read(f)
 
+    if flor.BloomFilter is None:
+      logger.error('Missing optional dependency : flor')
+      return None
+
+    try:
+      bloom_filter = flor.BloomFilter()
+      with open(self._bloom_database_path, 'rb') as f:
+        bloom_filter.read(f)
     except IOError as exception:
-      bf = None
+      bloom_filter = None
       logger.error('Unable to open bloom database file {0:s} with error: {1:s}.'
-                   .format(self._bloom_database_path,exception))
+                   .format(self._bloom_database_path, exception))
+
     if cached:
-      self.blomm_filter_obj = bf
-      return self.blomm_filter_obj
-    return bf
+      self.bloom_filter_object = bloom_filter
+      return self.bloom_filter_object
+    return bloom_filter
 
   @staticmethod
-  def _QueryHash(bf, digest):
-    """Queries BloomFilter for a specific hash (upercase).
+  def _QueryHash(digest, bloom_filter):
+    """Queries BloomFilter for a specific hash (upercased).
 
     Args:
-      bf (flor.BloomFilter): instanced BloomFilter.
       digest (str): hash to look up.
+      bloom_filter (flor.BloomFilter): instanced BloomFilter.
 
     Returns:
       bool: True if the hash was found, False if not or None on error.
     """
     value_to_test = digest.upper().encode()
-    return value_to_test in bf
+    return value_to_test in bloom_filter
 
 
   def SetLabel(self, label):
@@ -130,7 +135,7 @@ class HashlookupBloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """Set the path to the bloom file containing hash
 
     Args:
-      bloom_database_path (str): Path to thefile
+      bloom_database_path (str): Path to the bloom file
     """
     self._bloom_database_path = bloom_database_path
 
@@ -144,4 +149,4 @@ class HashlookupBloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       return True
     return False
 
-manager.AnalysisPluginManager.RegisterPlugin(HashlookupBloomAnalysisPlugin)
+manager.AnalysisPluginManager.RegisterPlugin(BloomAnalysisPlugin)

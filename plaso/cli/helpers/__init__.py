@@ -5,6 +5,7 @@ from plaso.cli.helpers import analysis_plugins
 from plaso.cli.helpers import archives
 from plaso.cli.helpers import artifact_definitions
 from plaso.cli.helpers import artifact_filters
+from plaso.cli.helpers import bloom_analysis
 from plaso.cli.helpers import codepage
 from plaso.cli.helpers import data_location
 from plaso.cli.helpers import date_filters
@@ -13,7 +14,6 @@ from plaso.cli.helpers import event_filters
 from plaso.cli.helpers import extraction
 from plaso.cli.helpers import filter_file
 from plaso.cli.helpers import hashers
-from plaso.cli.helpers import hashlookup_bloom_analysis
 from plaso.cli.helpers import language
 from plaso.cli.helpers import nsrlsvr_analysis
 from plaso.cli.helpers import opensearch_output
