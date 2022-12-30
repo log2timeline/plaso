@@ -30,11 +30,11 @@ class OpenSearchOutputModule(shared_opensearch.SharedOpenSearchOutputModule):
     """
     event_document = {'index': {'_index': self._index_name}}
 
-    event_values = self.GetFieldValues(
+    field_values = self.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self._event_documents.append(event_document)
-    self._event_documents.append(event_values)
+    self._event_documents.append(field_values)
     self._number_of_buffered_events += 1
 
     if self._number_of_buffered_events > self._flush_interval:

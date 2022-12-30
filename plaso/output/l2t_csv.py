@@ -61,7 +61,7 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
       field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
 
-    return self._field_delimiter.join(field_values)
+    return self.field_delimiter.join(field_values)
 
 
 class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
@@ -279,6 +279,26 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     event_formatting_helper = L2TCSVEventFormattingHelper(
         field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
+
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    field_values = self.GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
+
+    output_text = self._event_formatting_helper.field_delimiter.join(
+        field_values.values())
+
+    self.WriteLine(output_text)
 
   def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
     """Writes an event MACB group to the output.

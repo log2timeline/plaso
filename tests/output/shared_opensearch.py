@@ -78,7 +78,6 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testCreateIndexIfNotExists(self):
     """Tests the _CreateIndexIfNotExists function.
-
     Raises:
       SkipTest: if opensearch-py is missing.
     """

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module for the native (or "raw") Python format."""
 
-import collections
-
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -24,9 +22,9 @@ class NativePythonEventFormattingHelper(
     super(NativePythonEventFormattingHelper, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
-  def _GetFormattedEventNativePython(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a native Python string representation of the event.
+    """Retrieves the output field values.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -37,64 +35,17 @@ class NativePythonEventFormattingHelper(
       event_tag (EventTag): event tag.
 
     Returns:
-      str: string representation of the event.
+      dict[str, str]: output field values per name.
     """
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=event.timestamp)
     date_time_string = date_time.CopyToDateTimeStringISO8601()
 
-    lines_of_text = [
-        '+-' * 40,
-        '[Timestamp]:',
-        '  {0:s}'.format(date_time_string)]
-
-    path_specification = getattr(event_data_stream, 'path_spec', None)
-    if not path_specification:
-      # Note that support for event_data.pathspec is kept for backwards
-      # compatibility.
-      path_specification = getattr(event_data, 'pathspec', None)
-
-    if path_specification:
-      lines_of_text.extend([
-          '',
-          '[Pathspec]:'])
-      lines_of_text.extend([
-          '  {0:s}'.format(line)
-          for line in path_specification.comparable.split('\n')])
-
-      # Remove additional empty line.
-      lines_of_text.pop()
-
-    reserved_attributes = [
-        '',
-        '[Reserved attributes]:']
-    additional_attributes = [
-        '',
-        '[Additional attributes]:']
+    field_values = {'timestamp': date_time_string}
 
     event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
       event_attributes.extend(event_data_stream.GetAttributes())
-
-    event_attribute_names = [name for name, _ in event_attributes]
-
-    if 'display_name' not in event_attribute_names:
-      attribute_value = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'display_name', event, event_data, event_data_stream,
-          event_tag)
-      event_attributes.append(('display_name', attribute_value))
-
-    if 'filename' not in event_attribute_names:
-      attribute_value = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'filename', event, event_data, event_data_stream,
-          event_tag)
-      event_attributes.append(('filename', attribute_value))
-
-    if 'inode' not in event_attribute_names:
-      attribute_value = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'inode', event, event_data, event_data_stream,
-          event_tag)
-      event_attributes.append(('inode', attribute_value))
 
     for attribute_name, attribute_value in sorted(event_attributes):
       # Ignore attribute container identifier and date and time values.
@@ -116,70 +67,26 @@ class NativePythonEventFormattingHelper(
             '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
                 attribute_name, event_data.data_type, attribute_value))
 
-      # Note that support for event_data.pathspec is kept for backwards
-      # compatibility. The current value is event_data_stream.path_spec.
-      if attribute_name in ('path_spec', 'pathspec'):
-        continue
+      field_values[attribute_name] = attribute_value
 
-      attribute_string = '  {{{0!s}}} {1!s}'.format(
-          attribute_name, attribute_value)
+    if 'display_name' not in field_values:
+      field_values['display_name'] = (
+          self._field_formatting_helper.GetFormattedField(
+              output_mediator, 'display_name', event, event_data,
+              event_data_stream, event_tag))
 
-      if attribute_name in definitions.RESERVED_VARIABLE_NAMES:
-        reserved_attributes.append(attribute_string)
-      else:
-        additional_attributes.append(attribute_string)
+    if 'filename' not in field_values:
+      field_values['filename'] = (
+          self._field_formatting_helper.GetFormattedField(
+              output_mediator, 'filename', event, event_data, event_data_stream,
+              event_tag))
 
-    lines_of_text.extend(reserved_attributes)
-    lines_of_text.extend(additional_attributes)
+    if 'inode' not in field_values:
+      field_values['inode'] = self._field_formatting_helper.GetFormattedField(
+          output_mediator, 'inode', event, event_data, event_data_stream,
+          event_tag)
 
-    if event_tag:
-      labels = [
-          '\'{0:s}\''.format(label) for label in event_tag.labels]
-      lines_of_text.extend([
-          '',
-          '[Tag]:',
-          '  {{labels}} [{0:s}]'.format(', '.join(labels))])
-
-    lines_of_text.append('')
-
-    return '\n'.join(lines_of_text)
-
-  def GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, str]: output field values per name.
-    """
-    field_values = collections.OrderedDict()
-    # TODO: implement
     return field_values
-
-  def GetFormattedEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: string representation of the event.
-    """
-    return self._GetFormattedEventNativePython(
-        output_mediator, event, event_data, event_data_stream, event_tag)
 
 
 class NativePythonOutputModule(interface.TextFileOutputModule):
@@ -192,6 +99,75 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
     """Initializes an output module."""
     event_formatting_helper = NativePythonEventFormattingHelper()
     super(NativePythonOutputModule, self).__init__(event_formatting_helper)
+
+  def WriteEventBody(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Writes event values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+    """
+    field_values = self._event_formatting_helper.GetFieldValues(
+      output_mediator, event, event_data, event_data_stream, event_tag)
+
+    reserved_attributes = []
+    additional_attributes = []
+
+    for field_name, field_value in sorted(field_values.items()):
+      if field_name in ('path_spec', 'timestamp'):
+        continue
+
+      field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
+
+      if field_name in definitions.RESERVED_VARIABLE_NAMES:
+        reserved_attributes.append(field_string)
+      else:
+        additional_attributes.append(field_string)
+
+    lines_of_text = [
+        '+-' * 40,
+        '[Timestamp]:',
+        '  {0:s}'.format(field_values['timestamp'])]
+
+    if field_values['path_spec']:
+      lines_of_text.extend([
+          '',
+          '[Pathspec]:'])
+      lines_of_text.extend([
+          '  {0:s}'.format(line)
+          for line in field_values['path_spec'].comparable.split('\n')])
+
+      # Remove additional empty line.
+      lines_of_text.pop()
+
+    lines_of_text.extend([
+        '',
+        '[Reserved attributes]:'])
+    lines_of_text.extend(reserved_attributes)
+
+    lines_of_text.extend([
+        '',
+        '[Additional attributes]:'])
+    lines_of_text.extend(additional_attributes)
+
+    if event_tag:
+      labels = [
+          '\'{0:s}\''.format(label) for label in event_tag.labels]
+      lines_of_text.extend([
+          '',
+          '[Tag]:',
+          '  {{labels}} [{0:s}]'.format(', '.join(labels))])
+
+    lines_of_text.append('')
+
+    output_text = '\n'.join(lines_of_text)
+
+    self.WriteLine(output_text)
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)

@@ -34,23 +34,6 @@ class EventFormattingHelper(object):
       list[str]: output field values.
     """
 
-  @abc.abstractmethod
-  def GetFormattedEvent(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves a string representation of the event.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      str: string representation of the event.
-    """
-
 
 class FieldFormattingHelper(object):
   """Output module field formatting helper."""
@@ -196,9 +179,6 @@ class FieldFormattingHelper(object):
     display_name = getattr(event_data, 'display_name', None)
     if not display_name:
       path_spec = getattr(event_data_stream, 'path_spec', None)
-      if not path_spec:
-        path_spec = getattr(event_data, 'pathspec', None)
-
       if path_spec:
         display_name = output_mediator.GetDisplayNameForPathSpec(path_spec)
       else:
@@ -226,9 +206,6 @@ class FieldFormattingHelper(object):
     filename = getattr(event_data, 'filename', None)
     if not filename:
       path_spec = getattr(event_data_stream, 'path_spec', None)
-      if not path_spec:
-        path_spec = getattr(event_data, 'pathspec', None)
-
       if path_spec:
         filename = output_mediator.GetRelativePathForPathSpec(path_spec)
       else:
@@ -270,11 +247,6 @@ class FieldFormattingHelper(object):
     # Note that inode can contain 0.
     if inode is None:
       path_specification = getattr(event_data_stream, 'path_spec', None)
-      if not path_specification:
-        # Note that support for event_data.pathspec is kept for backwards
-        # compatibility.
-        path_specification = getattr(event_data, 'pathspec', None)
-
       if path_specification:
         if path_specification.type_indicator in (
             dfvfs_definitions.TYPE_INDICATOR_APFS,
