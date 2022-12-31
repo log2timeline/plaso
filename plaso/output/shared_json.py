@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for JSON based output modules."""
 
+import abc
+
 from dfdatetime import interface as dfdatetime_interface
 
 from plaso.containers import interface as containers_interface
 from plaso.lib import errors
 from plaso.output import dynamic
-from plaso.output import formatting_helper
+from plaso.output import text_file
 from plaso.serializer import json_serializer
 
 
-class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
-  """JSON output module event formatting helper."""
+class SharedJSONOutputModule(text_file.TextFileOutputModule):
+  """Shared functionality for JSON based output modules."""
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
   def __init__(self):
-    """Initializes a JSON output module event formatting helper."""
-    super(JSONEventFormattingHelper, self).__init__()
+    """Initializes an output module."""
+    super(SharedJSONOutputModule, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
-  def GetFieldValues(
+  def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -125,3 +127,13 @@ class JSONEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_values['tag'] = event_tag_values
 
     return field_values
+
+  @abc.abstractmethod
+  def _WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """

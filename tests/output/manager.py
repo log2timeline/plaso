@@ -16,7 +16,7 @@ class TestOutput(interface.OutputModule):
 
   # pylint: disable=unused-argument
 
-  def GetFieldValues(
+  def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -33,7 +33,7 @@ class TestOutput(interface.OutputModule):
     """
     return {}
 
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:

@@ -7,23 +7,17 @@ of grouping all the output into a single JSON entity.
 
 import json
 
-from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json
 
 
-class JSONLineOutputModule(interface.TextFileOutputModule):
+class JSONLineOutputModule(shared_json.SharedJSONOutputModule):
   """Output module for the JSON line format."""
 
   NAME = 'json_line'
   DESCRIPTION = 'Saves the events into a JSON line format.'
 
-  def __init__(self):
-    """Initializes an output module."""
-    event_formatting_helper = shared_json.JSONEventFormattingHelper()
-    super(JSONLineOutputModule, self).__init__(event_formatting_helper)
-
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -31,9 +25,8 @@ class JSONLineOutputModule(interface.TextFileOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    output_text = json.dumps(field_values, sort_keys=True)
-
-    self.WriteLine(output_text)
+    json_string = json.dumps(field_values, sort_keys=True)
+    self.WriteLine(json_string)
 
 
 manager.OutputManager.RegisterOutput(JSONLineOutputModule)

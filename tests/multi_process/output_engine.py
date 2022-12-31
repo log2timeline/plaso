@@ -39,7 +39,7 @@ class TestOutputModule(output_interface.OutputModule):
     self.events = []
     self.macb_groups = []
 
-  def GetFieldValues(
+  def _GetFieldValues(
       self, output_mediator_object, event, event_data, event_data_stream,
       event_tag):
     """Retrieves the output field values.
@@ -57,7 +57,7 @@ class TestOutputModule(output_interface.OutputModule):
     """
     return {}
 
-  def WriteFieldValues(self, output_mediator_object, field_values):
+  def _WriteFieldValues(self, output_mediator_object, field_values):
     """Writes field values to the output.
 
     Args:

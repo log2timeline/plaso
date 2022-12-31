@@ -3,12 +3,11 @@
 
 import json
 
-from plaso.output import interface
 from plaso.output import manager
 from plaso.output import shared_json
 
 
-class JSONOutputModule(interface.TextFileOutputModule):
+class JSONOutputModule(shared_json.SharedJSONOutputModule):
   """Output module for the JSON format."""
 
   NAME = 'json'
@@ -16,11 +15,10 @@ class JSONOutputModule(interface.TextFileOutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    event_formatting_helper = shared_json.JSONEventFormattingHelper()
-    super(JSONOutputModule, self).__init__(event_formatting_helper)
+    super(JSONOutputModule, self).__init__()
     self._event_counter = 0
 
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -28,13 +26,12 @@ class JSONOutputModule(interface.TextFileOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    output_text = json.dumps(field_values, sort_keys=True)
-
     if self._event_counter != 0:
       self.WriteText(', ')
 
+    json_string = json.dumps(field_values, sort_keys=True)
     output_text = '"event_{0:d}": {1:s}\n'.format(
-        self._event_counter, output_text)
+        self._event_counter, json_string)
     self.WriteText(output_text)
 
     self._event_counter += 1

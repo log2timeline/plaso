@@ -7,22 +7,23 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.output import dynamic
-from plaso.output import formatting_helper
-from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
+from plaso.output import text_file
 
 
-class NativePythonEventFormattingHelper(
-    formatting_helper.EventFormattingHelper):
-  """Native (or "raw") Python output module event formatting helper."""
+class NativePythonOutputModule(text_file.TextFileOutputModule):
+  """Output module for native (or "raw") Python output format."""
+
+  NAME = 'rawpy'
+  DESCRIPTION = 'native (or "raw") Python output.'
 
   def __init__(self):
-    """Initializes a Native Python output module event formatting helper."""
-    super(NativePythonEventFormattingHelper, self).__init__()
+    """Initializes an output module."""
+    super(NativePythonOutputModule, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
-  def GetFieldValues(
+  def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -96,25 +97,14 @@ class NativePythonEventFormattingHelper(
 
     return field_values
 
-
-class NativePythonOutputModule(interface.TextFileOutputModule):
-  """Output module for native (or "raw") Python output format."""
-
-  NAME = 'rawpy'
-  DESCRIPTION = 'native (or "raw") Python output.'
-
-  def __init__(self):
-    """Initializes an output module."""
-    event_formatting_helper = NativePythonEventFormattingHelper()
-    super(NativePythonOutputModule, self).__init__(event_formatting_helper)
-
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+  def _GetString(self, field_values):
+    """Retrieves an output string.
 
     Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
+
+    Returns:
+      str: output string.
     """
     reserved_attributes = []
     additional_attributes = []
@@ -169,7 +159,17 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
 
     lines_of_text.append('')
 
-    output_text = '\n'.join(lines_of_text)
+    return '\n'.join(lines_of_text)
+
+  def _WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
+    output_text = self._GetString(field_values)
 
     self.WriteLine(output_text)
 

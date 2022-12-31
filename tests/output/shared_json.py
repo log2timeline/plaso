@@ -17,8 +17,8 @@ from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
 
 
-class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
-  """Tests the JSON output module event formatting helper."""
+class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
+  """Tests the shared functionality for JSON based output modules."""
 
   # pylint: disable=protected-access
 
@@ -40,14 +40,14 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
     output_mediator.ReadMessageFormattersFromDirectory(
         formatters_directory_path)
 
-    formatting_helper = shared_json.JSONEventFormattingHelper()
+    output_module = shared_json.SharedJSONOutputModule()
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -98,7 +98,7 @@ class JSONEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
         'username': 'root'}
 
-    field_values = formatting_helper.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(field_values, expected_field_values)

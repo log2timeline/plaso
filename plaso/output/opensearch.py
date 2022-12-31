@@ -13,7 +13,7 @@ class OpenSearchOutputModule(shared_opensearch.SharedOpenSearchOutputModule):
 
   MAPPINGS_FILENAME = 'opensearch.mappings'
 
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Events are buffered in the form of documents and inserted to OpenSearch

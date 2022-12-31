@@ -10,24 +10,17 @@ import codecs
 
 from xml.etree import ElementTree
 
-from plaso.lib import definitions
-from plaso.output import interface
 from plaso.output import manager
 from plaso.output import rawpy
 
 
-class KMLOutputModule(interface.TextFileOutputModule):
+class KMLOutputModule(rawpy.NativePythonOutputModule):
   """Output module for a Keyhole Markup Language (KML) XML file."""
 
   NAME = 'kml'
   DESCRIPTION = 'Saves events with geography data into a KML format.'
 
-  def __init__(self):
-    """Initializes an output module."""
-    event_formatting_helper = rawpy.NativePythonEventFormattingHelper()
-    super(KMLOutputModule, self).__init__(event_formatting_helper)
-
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -41,60 +34,7 @@ class KMLOutputModule(interface.TextFileOutputModule):
       return
 
     # TODO: make description_text KML values.
-    reserved_attributes = []
-    additional_attributes = []
-
-    for field_name, field_value in sorted(field_values.items()):
-      if field_name in (
-          '_event_identifier', '_event_tag_labels', '_timestamp', 'path_spec'):
-        continue
-
-      field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
-
-      if field_name in definitions.RESERVED_VARIABLE_NAMES:
-        reserved_attributes.append(field_string)
-      else:
-        additional_attributes.append(field_string)
-
-    lines_of_text = [
-        '+-' * 40,
-        '[Timestamp]:',
-        '  {0:s}'.format(field_values['_timestamp'])]
-
-    path_specification = field_values.get('path_spec', None)
-    if path_specification:
-      lines_of_text.extend([
-          '',
-          '[Pathspec]:'])
-      lines_of_text.extend([
-          '  {0:s}'.format(line)
-          for line in path_specification.comparable.split('\n')])
-
-      # Remove additional empty line.
-      lines_of_text.pop()
-
-    lines_of_text.extend([
-        '',
-        '[Reserved attributes]:'])
-    lines_of_text.extend(reserved_attributes)
-
-    lines_of_text.extend([
-        '',
-        '[Additional attributes]:'])
-    lines_of_text.extend(additional_attributes)
-
-    event_tag_labels = field_values.get('_event_tag_labels', None)
-    if event_tag_labels:
-      labels = ', '.join([
-          '\'{0:s}\''.format(label) for label in event_tag_labels])
-      lines_of_text.extend([
-          '',
-          '[Tag]:',
-          '  {{labels}} [{0:s}]'.format(labels)])
-
-    lines_of_text.append('')
-
-    description_text = '\n'.join(lines_of_text)
+    description_text = self._GetString(field_values)
 
     placemark_xml_element = ElementTree.Element('Placemark')
 
@@ -115,6 +55,7 @@ class KMLOutputModule(interface.TextFileOutputModule):
     output_text = ElementTree.tostring(placemark_xml_element)
 
     output_text = codecs.decode(output_text, output_mediator.encoding)
+
     self.WriteText(output_text)
 
   def WriteFooter(self):

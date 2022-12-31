@@ -4,7 +4,7 @@
 import collections
 
 from plaso.output import formatting_helper
-from plaso.output import interface
+from plaso.output import text_file
 
 
 class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
@@ -119,7 +119,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     self._field_names = field_names
 
 
-class DSVOutputModule(interface.TextFileOutputModule):
+class DSVOutputModule(text_file.SortedTextFileOutputModule):
   """Shared functionality for delimiter separated values output modules."""
 
   def __init__(
@@ -137,6 +137,21 @@ class DSVOutputModule(interface.TextFileOutputModule):
         field_formatting_helper, names, field_delimiter=delimiter)
     super(DSVOutputModule, self).__init__(event_formatting_helper)
     self._header = header
+
+  def _GetString(self, output_mediator, field_values):
+    """Retrieves an output string.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+
+    Returns:
+      str: output string.
+    """
+    output_text = self._event_formatting_helper.field_delimiter.join(
+        field_values.values())
+    return ''.join([output_text, '\n'])
 
   def SetAdditionalFields(self, field_names):
     """Sets the names of additional fields to output.
@@ -170,19 +185,6 @@ class DSVOutputModule(interface.TextFileOutputModule):
       field_names (list[str]): names of the fields to output.
     """
     self._event_formatting_helper.SetFields(field_names)
-
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-    output_text = self._event_formatting_helper.field_delimiter.join(
-        field_values.values())
-
-    self.WriteLine(output_text)
 
   def WriteHeader(self, output_mediator):
     """Writes the header to the output.

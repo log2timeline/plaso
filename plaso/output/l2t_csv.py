@@ -2,7 +2,7 @@
 """Output module for the log2timeline (L2T) CSV format.
 
 For documentation on the L2T CSV format see:
-https://forensics.wiki/l2t_csv
+  https://forensics.wiki/l2t_csv
 """
 
 import datetime
@@ -15,10 +15,10 @@ from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.output import formatting_helper
-from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
 from plaso.output import shared_dsv
+from plaso.output import text_file
 
 
 class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
@@ -30,27 +30,34 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      macb_group (list[dict[str, str]]): group of output field values per name
+      macb_group (list[tuple[event, event_data, event_data_stream, event_tag]]):
+          group of event, event_data, event_data_stream and event_tag objects
           with identical timestamps, attributes and values.
 
     Returns:
       str: string representation of the MACB group.
     """
     timestamp_descriptions = [
-        field_values.get('type', None) for field_values in macb_group]
+        event.timestamp_desc for event, _, _, _ in macb_group]
 
     field_values = []
     for field_name in self._field_names:
       if field_name == 'MACB':
         field_value = output_mediator.GetMACBRepresentationFromDescriptions(
             timestamp_descriptions)
-
       elif field_name == 'type':
+        # TODO: fix timestamp description in source.
         field_value = '; '.join(timestamp_descriptions)
-
       else:
-        field_value = macb_group[0].get(field_name, None)
+        event, event_data, event_data_stream, event_tag = macb_group[0]
+        field_value = self._field_formatting_helper.GetFormattedField(
+            output_mediator, field_name, event, event_data, event_data_stream,
+            event_tag)
 
+      if field_value is None:
+        field_value = '-'
+
+      field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
 
     return self.field_delimiter.join(field_values)
@@ -254,7 +261,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
   # pylint: enable=unused-argument
 
 
-class L2TCSVOutputModule(interface.TextFileOutputModule):
+class L2TCSVOutputModule(text_file.SortedTextFileOutputModule):
   """CSV format used by log2timeline, with 17 fixed fields."""
 
   NAME = 'l2tcsv'
@@ -265,6 +272,8 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
       'user', 'host', 'short', 'desc', 'version', 'filename', 'inode', 'notes',
       'format', 'extra']
 
+  _SORT_KEY_FIELD_NAMES = ['time', 'filename', 'inode']
+
   def __init__(self):
     """Initializes an output module."""
     field_formatting_helper = L2TCSVFieldFormattingHelper()
@@ -272,18 +281,20 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
         field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+  def _GetString(self, output_mediator, field_values):
+    """Retrieves an output string.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
+
+    Returns:
+      str: output string.
     """
     output_text = self._event_formatting_helper.field_delimiter.join(
         field_values.values())
-
-    self.WriteLine(output_text)
+    return ''.join([output_text, '\n'])
 
   def WriteFieldValuesOfMACBGroup(self, output_mediator, macb_group):
     """Writes field values of a MACB group to the output.
@@ -291,7 +302,8 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      macb_group (list[dict[str, str]]): group of output field values per name
+      macb_group (list[tuple[event, event_data, event_data_stream, event_tag]]):
+          group of event, event_data, event_data_stream and event_tag objects
           with identical timestamps, attributes and values.
     """
     output_text = self._event_formatting_helper.GetFormattedMACBGroup(

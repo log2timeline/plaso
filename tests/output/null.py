@@ -19,6 +19,8 @@ from tests.output import test_lib
 class NullOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the null output module."""
 
+  # pylint: disable=protected-access
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
       dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
           os.path.sep, os.path.join('cases', 'image.dd')))
@@ -39,7 +41,7 @@ class NullOutputModuleTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     output_module = null.NullOutputModule()
@@ -50,13 +52,13 @@ class NullOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, {})
 
   def testWriteFieldValues(self):
-    """Tests the WriteFieldValues function."""
+    """Tests the _WriteFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     output_module = null.NullOutputModule()
@@ -67,24 +69,10 @@ class NullOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
-    output_module.WriteFieldValues(output_mediator, field_values)
-
-  def testWriteFooter(self):
-    """Tests the WriteFooter function."""
-    output_module = null.NullOutputModule()
-
-    output_module.WriteFooter()
-
-  def testWriteHeader(self):
-    """Tests the WriteHeader function."""
-    output_mediator = self._CreateOutputMediator()
-
-    output_module = null.NullOutputModule()
-
-    output_module.WriteHeader(output_mediator)
+    output_module._WriteFieldValues(output_mediator, field_values)
 
 
 if __name__ == '__main__':
