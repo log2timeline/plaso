@@ -26,7 +26,7 @@ class TestOpenSearchOutputModule(
 
   # pylint: disable=unused-argument
 
-  def WriteFieldValues(self, output_mediator, field_values):
+  def _WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -107,7 +107,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertIsNone(output_module._client)
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
@@ -143,7 +143,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'timestamp': 1340821021000000,
         'timestamp_desc': 'Content Modification Time'}
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)

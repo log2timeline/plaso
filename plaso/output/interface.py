@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains the output module interface classes."""
+"""This file contains the output module interface class."""
 
 import abc
-import os
 
+from plaso.lib import errors
 from plaso.output import logger
 
 
@@ -21,6 +21,33 @@ class OutputModule(object):
 
   # Value to indicate the output module writes to an output file.
   WRITES_OUTPUT_FILE = False
+
+  @abc.abstractmethod
+  def _GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+
+  @abc.abstractmethod
+  def _WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
 
   def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.
@@ -54,10 +81,13 @@ class OutputModule(object):
     """
     return []
 
-  @abc.abstractmethod
-  def GetFieldValues(
+  def Open(self, **kwargs):  # pylint: disable=unused-argument
+    """Opens the output."""
+    return
+
+  def WriteFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
+    """Writes field values to the output.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -66,24 +96,17 @@ class OutputModule(object):
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, str]: output field values per name.
     """
+    try:
+      field_values = self._GetFieldValues(
+          output_mediator, event, event_data, event_data_stream, event_tag)
 
-  def Open(self, **kwargs):  # pylint: disable=unused-argument
-    """Opens the output."""
-    return
+    except errors.NoFormatterFound as exception:
+      error_message = 'unable to retrieve formatter with error: {0!s}'.format(
+          exception)
+      self._ReportEventError(event, event_data, error_message)
 
-  @abc.abstractmethod
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
+    self._WriteFieldValues(output_mediator, field_values)
 
   def WriteFieldValuesOfMACBGroup(self, output_mediator, macb_group):
     """Writes field values of a MACB group to the output.
@@ -91,11 +114,13 @@ class OutputModule(object):
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      macb_group (list[dict[str, str]]): group of output field values per name
+      macb_group (list[tuple[event, event_data, event_data_stream, event_tag]]):
+          group of event, event_data, event_data_stream and event_tag objects
           with identical timestamps, attributes and values.
     """
-    for field_values in macb_group:
-      self.WriteFieldValues(output_mediator, field_values)
+    for event, event_data, event_data_stream, event_tag in macb_group:
+      self.WriteFieldValues(
+          output_mediator, event, event_data, event_data_stream, event_tag)
 
   def WriteFooter(self):
     """Writes the footer to the output.
@@ -116,92 +141,3 @@ class OutputModule(object):
           modules and other components, such as storage and dfVFS.
     """
     return
-
-
-class TextFileOutputModule(OutputModule):
-  """Shared functionality of an output module that writes to a text file."""
-
-  WRITES_OUTPUT_FILE = True
-
-  _ENCODING = 'utf-8'
-
-  def __init__(self, event_formatting_helper):
-    """Initializes an output module that writes to a text file.
-
-    Args:
-      event_formatting_helper (EevntFormattingHelper): event formatting helper.
-    """
-    super(TextFileOutputModule, self).__init__()
-    self._event_formatting_helper = event_formatting_helper
-    self._file_object = None
-
-  def Close(self):
-    """Closes the output file."""
-    if self._file_object:
-      self._file_object.close()
-      self._file_object = None
-
-  def GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, str]: output field values per name.
-    """
-    return self._event_formatting_helper.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
-  def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
-    """Opens the output file.
-
-    Args:
-      path (Optional[str]): path of the output file.
-
-    Raises:
-      IOError: if the specified output file already exists.
-      OSError: if the specified output file already exists.
-      ValueError: if path is not set.
-    """
-    if not path:
-      raise ValueError('Missing path.')
-
-    if os.path.isfile(path):
-      raise IOError((
-          'Unable to use an already existing file for output '
-          '[{0:s}]').format(path))
-
-    self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
-
-  @abc.abstractmethod
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-
-  def WriteLine(self, text):
-    """Writes a line of text to the output file.
-
-    Args:
-      text (str): text to output.
-    """
-    self._file_object.write('{0:s}\n'.format(text))
-
-  def WriteText(self, text):
-    """Writes text to the output file.
-
-    Args:
-      text (str): text to output.
-    """
-    self._file_object.write(text)

@@ -2,7 +2,7 @@
 """Output module for the TLN format.
 
 For documentation on the TLN format see:
-https://forensics.wiki/tln
+  https://forensics.wiki/tln
 """
 
 from plaso.output import formatting_helper
@@ -119,6 +119,7 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
   * User - The user associated with the data.
   * Description - Message string describing the data.
   """
+
   NAME = 'tln'
   DESCRIPTION = 'TLN 5 field | delimited output.'
 
@@ -148,6 +149,7 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
   * TZ - L2T 0.65 field. Timezone of the event.
   * Notes - L2T 0.65 field. Optional notes field or filename and inode.
   """
+
   NAME = 'l2ttln'
   DESCRIPTION = 'Extended TLN 7 field | delimited output.'
 

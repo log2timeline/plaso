@@ -68,10 +68,10 @@ class OpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module.WriteFieldValues(output_mediator, field_values)
+    output_module._WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -82,7 +82,7 @@ class OpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
   def testWriteFieldValues(self):
-    """Tests the WriteFieldValues function.
+    """Tests the _WriteFieldValues function.
 
     Raises:
       SkipTest: if opensearch-py is missing.
@@ -108,10 +108,10 @@ class OpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module.WriteFieldValues(output_mediator, field_values)
+    output_module._WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

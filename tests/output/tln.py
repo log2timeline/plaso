@@ -115,7 +115,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -140,7 +140,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'time': '1340821021',
         'user': 'root'}
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
@@ -159,7 +159,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(header, 'Time|Source|Host|User|Description\n')
 
   def testWriteFieldValues(self):
-    """Tests the WriteFieldValues function."""
+    """Tests the _WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -177,10 +177,12 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
-    output_module.WriteFieldValues(output_mediator, field_values)
+    output_module._WriteFieldValues(output_mediator, field_values)
+
+    output_module._FlushSortedStringsHeap()
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '
@@ -218,7 +220,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -245,7 +247,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'tz': 'UTC',
         'user': 'root'}
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
@@ -264,7 +266,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(header, 'Time|Source|Host|User|Description|TZ|Notes\n')
 
   def testWriteFieldValues(self):
-    """Tests the WriteFieldValues function."""
+    """Tests the _WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -281,10 +283,12 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
-    output_module.WriteFieldValues(output_mediator, field_values)
+    output_module._WriteFieldValues(output_mediator, field_values)
+
+    output_module._FlushSortedStringsHeap()
 
     expected_event_body = (
         '1340821021|FILE|ubuntu|root|2012-06-27T18:17:01.000000+00:00; '

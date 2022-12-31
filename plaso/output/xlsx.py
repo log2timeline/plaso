@@ -81,29 +81,7 @@ class XLSXOutputModule(interface.OutputModule):
               event.timestamp, exception))
       return 'ERROR'
 
-  def _SanitizeField(self, field):
-    """Sanitizes a field for output.
-
-    This method replaces any illegal XML string characters with the Unicode
-    replacement character (\ufffd).
-
-    Args:
-      field (str): value of the field to sanitize.
-
-    Returns:
-      str: sanitized value of the field.
-    """
-    return self._ILLEGAL_XML_RE.sub('\ufffd', field)
-
-  def Close(self):
-    """Closes the workbook."""
-    for column_index, column_width in enumerate(self._column_widths):
-      self._sheet.set_column(column_index, column_index, column_width)
-
-    self._workbook.close()
-    self._workbook = None
-
-  def GetFieldValues(
+  def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -140,6 +118,56 @@ class XLSXOutputModule(interface.OutputModule):
       field_values[field_name] = field_value
 
     return field_values
+
+  def _SanitizeField(self, field):
+    """Sanitizes a field for output.
+
+    This method replaces any illegal XML string characters with the Unicode
+    replacement character (\ufffd).
+
+    Args:
+      field (str): value of the field to sanitize.
+
+    Returns:
+      str: sanitized value of the field.
+    """
+    return self._ILLEGAL_XML_RE.sub('\ufffd', field)
+
+  def _WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
+    for column_index, field_name in enumerate(self._field_names):
+      field_value = field_values.get(field_name, None)
+      if field_name == 'datetime' and field_value:
+        self._sheet.write_datetime(self._current_row, column_index, field_value)
+        column_width = len(self._timestamp_format) + 2
+      else:
+        field_value = field_value or ''
+
+        self._sheet.write(self._current_row, column_index, field_value)
+        column_width = len(field_value) + 2
+
+      # Auto adjust the column width based on the length of the output value.
+      column_width = min(column_width, self._MAXIMUM_COLUMN_WIDTH)
+      column_width = max(column_width, self._MINIMUM_COLUMN_WIDTH,
+                         self._column_widths[column_index])
+
+      self._column_widths[column_index] = column_width
+
+    self._current_row += 1
+
+  def Close(self):
+    """Closes the workbook."""
+    for column_index, column_width in enumerate(self._column_widths):
+      self._sheet.set_column(column_index, column_index, column_width)
+
+    self._workbook.close()
+    self._workbook = None
 
   def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Creates a new workbook.
@@ -202,34 +230,6 @@ class XLSXOutputModule(interface.OutputModule):
       timestamp_format (str): format string of date and time values.
     """
     self._timestamp_format = timestamp_format
-
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-    for column_index, field_name in enumerate(self._field_names):
-      field_value = field_values.get(field_name, None)
-      if field_name == 'datetime' and field_value:
-        self._sheet.write_datetime(self._current_row, column_index, field_value)
-        column_width = len(self._timestamp_format) + 2
-      else:
-        field_value = field_value or ''
-
-        self._sheet.write(self._current_row, column_index, field_value)
-        column_width = len(field_value) + 2
-
-      # Auto adjust the column width based on the length of the output value.
-      column_width = min(column_width, self._MAXIMUM_COLUMN_WIDTH)
-      column_width = max(column_width, self._MINIMUM_COLUMN_WIDTH,
-                         self._column_widths[column_index])
-
-      self._column_widths[column_index] = column_width
-
-    self._current_row += 1
 
   def WriteHeader(self, output_mediator):
     """Writes the header to the spreadsheet.

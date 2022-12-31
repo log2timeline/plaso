@@ -99,7 +99,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     return rows
 
   def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
+    """Tests the _GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -126,13 +126,13 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         'tag': 'Malware Printed',
         'timestamp_desc': 'Metadata Modification Time'}
 
-    field_values = output_module.GetFieldValues(
+    field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
 
   def testWriteFieldValues(self):
-    """Tests the WriteEvent function."""
+    """Tests the _WriteFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -144,22 +144,24 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       xslx_file = os.path.join(temp_directory, 'xlsx.out')
 
-      output_module.Open(path=xslx_file)
-      output_module.WriteHeader(output_mediator)
-
       event, event_data, event_data_stream = (
           containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
       event_tag = events.EventTag()
       event_tag.AddLabels(['Malware', 'Printed'])
 
-      field_values = output_module.GetFieldValues(
-          output_mediator, event, event_data, event_data_stream, event_tag)
+      output_module.Open(path=xslx_file)
 
-      output_module.WriteFieldValues(output_mediator, field_values)
+      try:
+        output_module.WriteHeader(output_mediator)
 
-      output_module.WriteFooter()
-      output_module.Close()
+        field_values = output_module._GetFieldValues(
+            output_mediator, event, event_data, event_data_stream, event_tag)
+
+        output_module._WriteFieldValues(output_mediator, field_values)
+
+      finally:
+        output_module.Close()
 
       try:
         rows = self._GetSheetRows(xslx_file)
@@ -193,9 +195,11 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       xlsx_file = os.path.join(temp_directory, 'xlsx.out')
 
       output_module.Open(path=xlsx_file)
-      output_module.WriteHeader(output_mediator)
-      output_module.WriteFooter()
-      output_module.Close()
+
+      try:
+        output_module.WriteHeader(output_mediator)
+      finally:
+        output_module.Close()
 
       try:
         rows = self._GetSheetRows(xlsx_file)

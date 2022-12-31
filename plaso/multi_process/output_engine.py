@@ -453,35 +453,25 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       event_identifier = event.GetIdentifier()
       event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
-      try:
-        field_values = output_module.GetFieldValues(
-            self._output_mediator, event, event_data, event_data_stream,
-            event_tag)
-
-      except errors.NoFormatterFound as exception:
-        error_message = 'unable to retrieve formatter with error: {0!s}'.format(
-            exception)
-        # TODO: fix
-        # pylint: disable=protected-access
-        output_module._ReportEventError(event, event_data, error_message)
-
       if macb_group_identifier is None:
         if macb_group:
           output_module.WriteFieldValuesOfMACBGroup(
               self._output_mediator, macb_group)
           macb_group = []
 
-        output_module.WriteFieldValues(self._output_mediator, field_values)
+        output_module.WriteFieldValues(
+            self._output_mediator, event, event_data, event_data_stream,
+            event_tag)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
             not macb_group):
-          macb_group.append(field_values)
+          macb_group.append((event, event_data, event_data_stream, event_tag))
 
         else:
           output_module.WriteFieldValuesOfMACBGroup(
               self._output_mediator, macb_group)
-          macb_group = [field_values]
+          macb_group = [(event, event_data, event_data_stream, event_tag)]
 
         self._events_status.number_of_macb_grouped_events += 1
 

@@ -7,8 +7,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,text/syslog_traditional,TAR:/syslog,-
 2012-07-24T21:45:24+00:00,Content Modification Time,FILE,File stat,TAR:/syslog Type: file Owner identifier: 151107 Group identifier: 5000 Mode: 0o400,filestat,TAR:/syslog,-
 2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),text/syslog_traditional,TAR:/syslog,-
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,text/syslog_traditional,TAR:/syslog,-
 2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),text/syslog_traditional,TAR:/syslog,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.Mar 23 Wrong line that should not be able to get through,text/syslog_traditional,TAR:/syslog,-
 2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess] [101001]: This is a multi-line message that screws up	many syslog parsers.,text/syslog_traditional,TAR:/syslog,-
 2013-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,text/syslog_traditional,TAR:/syslog,-
 2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),text/syslog_traditional,TAR:/syslog,-
