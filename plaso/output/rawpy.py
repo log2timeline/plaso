@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Output module for the native (or "raw") Python format."""
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.output import dynamic
 from plaso.output import logger

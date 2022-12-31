@@ -4,8 +4,9 @@
 
 import unittest
 
+from acstore.containers import interface as containers_interface
+
 from plaso.containers import event_sources
-from plaso.containers import interface as containers_interface
 from plaso.storage import reader
 from plaso.storage.fake import fake_store
 

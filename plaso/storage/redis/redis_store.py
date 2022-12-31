@@ -8,14 +8,16 @@ import uuid
 
 import redis  # pylint: disable=import-error
 
+from acstore import interface
+from acstore.containers import interface as containers_interface
+
 from plaso.containers import events
-from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
-from plaso.storage import interface
+from plaso.serializer import json_serializer
 from plaso.storage import logger
 
 
-class RedisStore(interface.BaseStore):
+class RedisStore(interface.AttributeContainerStore):
   """Redis store.
 
   Attribute containers are stored as Redis Hashes.
@@ -37,6 +39,9 @@ class RedisStore(interface.BaseStore):
     super(RedisStore, self).__init__()
     self._redis_client = None
     self._session_identifier = None
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+    self._storage_profiler = None
     self._task_identifier = None
 
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
@@ -491,3 +496,19 @@ class RedisStore(interface.BaseStore):
     metadata_key = self._GetRedisHashName('metadata')
     if not self._redis_client.exists(metadata_key):
       self._WriteStorageMetadata()
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+    self._serializers_profiler = serializers_profiler
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
+    """
+    self._storage_profiler = storage_profiler

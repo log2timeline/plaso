@@ -3,9 +3,10 @@
 
 import abc
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import interface as dfdatetime_interface
 
-from plaso.containers import interface as containers_interface
 from plaso.lib import errors
 from plaso.output import dynamic
 from plaso.output import text_file

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """The default event formatter."""
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import interface as dfdatetime_interface
 
-from plaso.containers import interface as containers_interface
 from plaso.formatters import interface
 from plaso.lib import definitions
 

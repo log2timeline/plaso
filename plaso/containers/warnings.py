@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Warning attribute containers."""
 
-from plaso.containers import interface
-from plaso.containers import manager
+from acstore.containers import interface
+from acstore.containers import manager
 
 
 class AnalysisWarning(interface.AttributeContainer):

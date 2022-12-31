@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
-from plaso.containers import interface
+from acstore.containers import interface
 
 
 class CredentialConfiguration(interface.AttributeContainer):

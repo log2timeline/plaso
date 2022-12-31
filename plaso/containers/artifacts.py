@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Artifact attribute containers."""
 
-from plaso.containers import interface
-from plaso.containers import manager
+from acstore.containers import interface
+from acstore.containers import manager
+
 from plaso.lib import definitions
 
 
