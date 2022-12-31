@@ -105,27 +105,23 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
        'text': 'text',
        'timestamp': 2345871286,
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
-       'var': {'Issue': False, 'Closed': True}}]
+       'var': 'Issue: False, Closed: True'}]
 
   def testNumberOfEvents(self):
     """Tests the number_of_events property."""
     event_heap = output_engine.PsortEventHeap()
     self.assertEqual(event_heap.number_of_events, 0)
 
-  def testGetEventIdentifiers(self):
-    """Tests the _GetEventIdentifiers function."""
+  def testGetContentIdentifier(self):
+    """Tests the _GetContentIdentifier function."""
     event_heap = output_engine.PsortEventHeap()
 
-    event, event_data, event_data_stream = (
+    _, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    macb_group_identifier, content_identifier = event_heap._GetEventIdentifiers(
-        event, event_data, event_data_stream)
+    content_identifier = event_heap._GetContentIdentifier(
+        event_data, event_data_stream)
 
-    expected_identifier = 'data_type: test:event'
-    self.assertEqual(macb_group_identifier, expected_identifier)
-
-    expected_identifier = 'Metadata Modification Time, data_type: test:event'
-    self.assertEqual(content_identifier, expected_identifier)
+    self.assertEqual(content_identifier, '86972b9d9b591636f8bd3be6b2c0f9e0')
 
   def testPopEvent(self):
     """Tests the PopEvent function."""
