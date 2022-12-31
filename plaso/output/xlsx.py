@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
-import collections
 import datetime
 import os
 import re
@@ -119,9 +118,11 @@ class XLSXOutputModule(interface.OutputModule):
     Returns:
       dict[str, str]: output field values per name.
     """
-    field_values = collections.OrderedDict()
+    field_values = {}
     for field_name in self._field_names:
       if field_name == 'datetime':
+        field_values['datetime'] = self._FormatDateTime(
+            output_mediator, event, event_data)
         continue
 
       field_value = self._field_formatting_helper.GetFormattedField(
@@ -202,29 +203,21 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
-    field_values = self.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
-
     for column_index, field_name in enumerate(self._field_names):
-      if field_name == 'datetime':
-        field_value = self._FormatDateTime(output_mediator, event, event_data)
-
+      field_value = field_values.get(field_name, None)
+      if field_name == 'datetime' and field_value:
         self._sheet.write_datetime(self._current_row, column_index, field_value)
         column_width = len(self._timestamp_format) + 2
       else:
-        field_value = field_values.get(field_name, '')
+        field_value = field_value or ''
 
         self._sheet.write(self._current_row, column_index, field_value)
         column_width = len(field_value) + 2

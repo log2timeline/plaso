@@ -37,11 +37,16 @@ class NativePythonEventFormattingHelper(
     Returns:
       dict[str, str]: output field values per name.
     """
+    event_identifier = event.GetIdentifier()
+    event_identifier_string = event_identifier.CopyToString()
+
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=event.timestamp)
     date_time_string = date_time.CopyToDateTimeStringISO8601()
 
-    field_values = {'timestamp': date_time_string}
+    field_values = {
+        '_event_identifier': event_identifier_string,
+        '_timestamp': date_time_string}
 
     event_attributes = list(event_data.GetAttributes())
     if event_data_stream:
@@ -86,6 +91,9 @@ class NativePythonEventFormattingHelper(
           output_mediator, 'inode', event, event_data, event_data_stream,
           event_tag)
 
+    if event_tag:
+      field_values['_event_tag_labels'] = event_tag.labels
+
     return field_values
 
 
@@ -100,26 +108,20 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
     event_formatting_helper = NativePythonEventFormattingHelper()
     super(NativePythonOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventBody(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes event values to the output.
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+      field_values (dict[str, str]): output field values per name.
     """
-    field_values = self._event_formatting_helper.GetFieldValues(
-      output_mediator, event, event_data, event_data_stream, event_tag)
-
     reserved_attributes = []
     additional_attributes = []
 
     for field_name, field_value in sorted(field_values.items()):
-      if field_name in ('path_spec', 'timestamp'):
+      if field_name in (
+          '_event_identifier', '_event_tag_labels', '_timestamp', 'path_spec'):
         continue
 
       field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
@@ -132,15 +134,16 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
     lines_of_text = [
         '+-' * 40,
         '[Timestamp]:',
-        '  {0:s}'.format(field_values['timestamp'])]
+        '  {0:s}'.format(field_values['_timestamp'])]
 
-    if field_values['path_spec']:
+    path_specification = field_values.get('path_spec', None)
+    if path_specification:
       lines_of_text.extend([
           '',
           '[Pathspec]:'])
       lines_of_text.extend([
           '  {0:s}'.format(line)
-          for line in field_values['path_spec'].comparable.split('\n')])
+          for line in path_specification.comparable.split('\n')])
 
       # Remove additional empty line.
       lines_of_text.pop()
@@ -155,13 +158,14 @@ class NativePythonOutputModule(interface.TextFileOutputModule):
         '[Additional attributes]:'])
     lines_of_text.extend(additional_attributes)
 
-    if event_tag:
-      labels = [
-          '\'{0:s}\''.format(label) for label in event_tag.labels]
+    event_tag_labels = field_values.get('_event_tag_labels', None)
+    if event_tag_labels:
+      labels = ', '.join([
+          '\'{0:s}\''.format(label) for label in event_tag_labels])
       lines_of_text.extend([
           '',
           '[Tag]:',
-          '  {{labels}} [{0:s}]'.format(', '.join(labels))])
+          '  {{labels}} [{0:s}]'.format(labels)])
 
     lines_of_text.append('')
 

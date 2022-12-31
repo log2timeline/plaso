@@ -55,8 +55,8 @@ class NullOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self.assertEqual(field_values, {})
 
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function."""
+  def testWriteFieldValues(self):
+    """Tests the WriteFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     output_module = null.NullOutputModule()
@@ -67,8 +67,10 @@ class NullOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
-    output_module.WriteEventBody(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""

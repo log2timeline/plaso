@@ -223,8 +223,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     self.assertEqual(field_values, expected_field_values)
 
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function."""
+  def testWriteFieldValues(self):
+    """Tests the WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -242,8 +242,10 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    output_module.WriteEventBody(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     expected_event_body = (
         '06/27/2012,18:17:01,UTC,M...,FILE,Test log file,Content Modification '

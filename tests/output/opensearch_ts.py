@@ -67,8 +67,12 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module._InsertEvent(
+
+    # TODO: add test for event_tag.
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -78,51 +82,8 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-  def testInsertEvent(self):
-    """Tests the _InsertEvent function.
-
-    Raises:
-      SkipTest: if opensearch-py is missing.
-    """
-    if shared_opensearch.opensearchpy is None:
-      raise unittest.SkipTest('missing opensearch-py')
-
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-    output_mediator = self._CreateOutputMediator()
-
-    formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    output_module = TestOpenSearchTimesketchOutputModule()
-
-    output_module._Connect()
-    output_module._CreateIndexIfNotExists('test', {})
-
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
-
-    output_module._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, None)
-
-    self.assertEqual(len(output_module._event_documents), 2)
-    self.assertEqual(output_module._number_of_buffered_events, 1)
-
-    output_module._InsertEvent(
-        output_mediator, event, event_data, event_data_stream, None)
-
-    self.assertEqual(len(output_module._event_documents), 4)
-    self.assertEqual(output_module._number_of_buffered_events, 2)
-
-    output_module._FlushEvents()
-
-    self.assertEqual(len(output_module._event_documents), 0)
-    self.assertEqual(output_module._number_of_buffered_events, 0)
-
-  def testWriteEventBody(self):
-    """Tests the WriteEventBody function.
+  def testWriteFieldValues(self):
+    """Tests the WriteFieldValues function.
 
     Raises:
       SkipTest: if opensearch-py is missing.
@@ -146,8 +107,12 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    output_module.WriteEventBody(
+
+    # TODO: add test for event_tag.
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
+
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
