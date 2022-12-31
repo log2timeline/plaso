@@ -24,41 +24,33 @@ from plaso.output import shared_dsv
 class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
   """L2T CSV output module event formatting helper."""
 
-  # pylint: disable=missing-type-doc
-  def GetFormattedEventMACBGroup(self, output_mediator, event_macb_group):
-    """Retrieves a string representation of the event.
+  def GetFormattedMACBGroup(self, output_mediator, macb_group):
+    """Retrieves a string representation of a MACB group.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
-      event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
-          EventTag]]): group of events with identical timestamps, attributes
-          and values.
+      macb_group (list[dict[str, str]]): group of output field values per name
+          with identical timestamps, attributes and values.
 
     Returns:
-      str: string representation of the event MACB group.
+      str: string representation of the MACB group.
     """
     timestamp_descriptions = [
-        event.timestamp_desc for event, _, _, _ in event_macb_group]
+        field_values.get('type', None) for field_values in macb_group]
 
     field_values = []
     for field_name in self._field_names:
       if field_name == 'MACB':
         field_value = output_mediator.GetMACBRepresentationFromDescriptions(
             timestamp_descriptions)
+
       elif field_name == 'type':
-        # TODO: fix timestamp description in source.
         field_value = '; '.join(timestamp_descriptions)
+
       else:
-        event, event_data, event_data_stream, event_tag = event_macb_group[0]
-        field_value = self._field_formatting_helper.GetFormattedField(
-            output_mediator, field_name, event, event_data, event_data_stream,
-            event_tag)
+        field_value = macb_group[0].get(field_name, None)
 
-      if field_value is None:
-        field_value = '-'
-
-      field_value = self._SanitizeField(field_value)
       field_values.append(field_value)
 
     return self.field_delimiter.join(field_values)
@@ -280,21 +272,6 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
         field_formatting_helper, self._FIELD_NAMES)
     super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
 
-  def WriteEventMACBGroup(self, output_mediator, event_macb_group):  # pylint: disable=missing-type-doc
-    """Writes an event MACB group to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event_macb_group (list[tuple[EventObject, EventData, EventDataStream,
-          EventTag]]): group of events with identical timestamps, attributes
-          and values.
-    """
-    output_text = self._event_formatting_helper.GetFormattedEventMACBGroup(
-        output_mediator, event_macb_group)
-
-    self.WriteLine(output_text)
-
   def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
@@ -305,6 +282,20 @@ class L2TCSVOutputModule(interface.TextFileOutputModule):
     """
     output_text = self._event_formatting_helper.field_delimiter.join(
         field_values.values())
+
+    self.WriteLine(output_text)
+
+  def WriteFieldValuesOfMACBGroup(self, output_mediator, macb_group):
+    """Writes field values of a MACB group to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      macb_group (list[dict[str, str]]): group of output field values per name
+          with identical timestamps, attributes and values.
+    """
+    output_text = self._event_formatting_helper.GetFormattedMACBGroup(
+        output_mediator, macb_group)
 
     self.WriteLine(output_text)
 
