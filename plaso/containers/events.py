@@ -17,9 +17,11 @@ class EventData(interface.AttributeContainer):
     data_type (str): event data type indicator.
     parser (str): string identifying the parser that produced the event data.
   """
+
   CONTAINER_TYPE = 'event_data'
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_content_identifier',
       '_event_data_stream_identifier']
 
   def __init__(self, data_type=None):
@@ -29,6 +31,7 @@ class EventData(interface.AttributeContainer):
       data_type (Optional[str]): event data type indicator.
     """
     super(EventData, self).__init__()
+    self._content_identifier = None
     self._event_data_stream_identifier = None
     self.data_type = data_type
     self.parser = None
@@ -102,6 +105,7 @@ class EventDataStream(interface.AttributeContainer):
     yara_match (list[str]): names of the Yara rules that matched the data
         stream.
   """
+
   CONTAINER_TYPE = 'event_data_stream'
 
   SCHEMA = {
@@ -137,6 +141,7 @@ class EventObject(interface.AttributeContainer):
         since January 1, 1970, 00:00:00 UTC.
     timestamp_desc (str): description of the meaning of the timestamp.
   """
+
   CONTAINER_TYPE = 'event'
 
   SCHEMA = {
@@ -202,6 +207,7 @@ class EventTag(interface.AttributeContainer):
   Attributes:
     labels (list[str]): labels, such as "malware", "application_execution".
   """
+
   CONTAINER_TYPE = 'event_tag'
 
   SCHEMA = {
@@ -312,6 +318,7 @@ class YearLessLogHelper(interface.AttributeContainer):
         log helper.
     latest_year (int): latest possible year the event data stream was created.
   """
+
   CONTAINER_TYPE = 'year_less_log_helper'
 
   SCHEMA = {

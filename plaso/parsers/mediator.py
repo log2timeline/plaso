@@ -3,9 +3,13 @@
 
 import collections
 import datetime
+import hashlib
 import time
 
 import pytz
+
+from dfdatetime import interface as dfdatetime_interface
+from dfvfs.path import path_spec as dfvfs_path_spec
 
 from plaso.containers import artifacts
 from plaso.containers import warnings
@@ -57,6 +61,7 @@ class ParserMediator(object):
     super(ParserMediator, self).__init__()
     self._abort = False
     self._cached_parser_chain = None
+    self._event_data_stream = None
     self._event_data_stream_identifier = None
     self._extract_winevt_resources = True
     self._file_entry = None
@@ -144,6 +149,77 @@ class ParserMediator(object):
       self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
 
     return self._time_zone
+
+  def _GetContentIdentifier(self, event_data, event_data_stream):
+    """Retrieves the content identifier.
+
+    Args:
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): an event data stream or None if not
+          available.
+
+    Returns:
+      str: identifier of the event data content.
+
+    Raises:
+      RuntimeError: if the content identifier cannot be determined.
+    """
+    attributes = ['data_type: {0:s}'.format(event_data.data_type)]
+
+    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+      if attribute_value is None or attribute_name in (
+          '_content_identifier', '_event_data_stream_identifier', 'data_type',
+          'parser'):
+        continue
+
+      # Ignore date and time values.
+      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+        continue
+
+      if (isinstance(attribute_value, list) and attribute_value and
+          isinstance(attribute_value[0],
+                     dfdatetime_interface.DateTimeValues)):
+        continue
+
+      if not isinstance(attribute_value, (bool, float, int, list, str)):
+        raise RuntimeError(
+            'Unsupported attribute: {0:s} value type: {1!s}'.format(
+                attribute_name, type(attribute_value)))
+
+      try:
+        attribute_string = '{0:s}: {1!s}'.format(
+            attribute_name, attribute_value)
+        attributes.append(attribute_string)
+      except UnicodeDecodeError:
+        raise RuntimeError(
+            'Failed to decode attribute {0:s}'.format(attribute_name))
+
+    if event_data_stream:
+      for attribute_name, attribute_value in sorted(
+          event_data_stream.GetAttributes()):
+
+        if isinstance(attribute_value, dfvfs_path_spec.PathSpec):
+          attribute_value = attribute_value.comparable
+
+        elif not isinstance(attribute_value, (bool, float, int, list, str)):
+          raise RuntimeError(
+              'Unsupported attribute: {0:s} value type: {1!s}'.format(
+                  attribute_name, type(attribute_value)))
+
+        try:
+          attribute_string = '{0:s}: {1!s}'.format(
+              attribute_name, attribute_value)
+          attributes.append(attribute_string)
+        except UnicodeDecodeError:
+          raise RuntimeError(
+              'Failed to decode attribute {0:s}'.format(attribute_name))
+
+    content = ', '.join(attributes)
+    content_data = content.encode('utf-8')
+
+    md5_context = hashlib.md5(content_data)
+
+    return md5_context.hexdigest()
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -398,6 +474,10 @@ class ParserMediator(object):
       event_data.SetEventDataStreamIdentifier(
           self._event_data_stream_identifier)
 
+    content_identifier = self._GetContentIdentifier(
+        event_data, self._event_data_stream)
+    setattr(event_data, '_content_identifier', content_identifier)
+
     self._storage_writer.AddAttributeContainer(event_data)
     self._number_of_event_data += 1
 
@@ -417,6 +497,7 @@ class ParserMediator(object):
       raise RuntimeError('Storage writer not set.')
 
     if not event_data_stream:
+      self._event_data_stream = None
       self._event_data_stream_identifier = None
     else:
       if not event_data_stream.path_spec:
@@ -425,6 +506,7 @@ class ParserMediator(object):
 
       self._storage_writer.AddAttributeContainer(event_data_stream)
 
+      self._event_data_stream = event_data_stream
       self._event_data_stream_identifier = event_data_stream.GetIdentifier()
 
     self.last_activity_timestamp = time.time()
@@ -564,6 +646,7 @@ class ParserMediator(object):
       file_entry (dfvfs.FileEntry): file entry.
     """
     self._file_entry = file_entry
+    self._event_data_stream = None
     self._event_data_stream_identifier = None
 
   def SetPreferredCodepage(self, codepage):
