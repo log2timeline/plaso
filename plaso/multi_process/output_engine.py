@@ -2,12 +2,8 @@
 """The output and formatting multi-processing engine."""
 
 import collections
-import hashlib
 import heapq
 import os
-
-from dfdatetime import interface as dfdatetime_interface
-from dfvfs.path import path_spec as dfvfs_path_spec
 
 from plaso.containers import events
 from plaso.engine import processing_status
@@ -23,96 +19,18 @@ from plaso.storage import time_range as storage_time_range
 class PsortEventHeap(object):
   """Psort event heap."""
 
-  _IDENTIFIER_EXCLUDED_ATTRIBUTES = frozenset([
-      'data_type',
-      'parser',
-      'tag',
-      'timestamp',
-      'timestamp_desc'])
-
-  _MAXIMUM_CACHED_IDENTIFIERS = 500000
+  _MAXIMUM_CACHED_HASHES = 500000
 
   def __init__(self):
     """Initializes a psort events heap."""
     super(PsortEventHeap, self).__init__()
-    self._content_identifier_cache = collections.OrderedDict()
+    self._event_values_hash_cache = collections.OrderedDict()
     self._heap = []
 
   @property
   def number_of_events(self):
     """int: number of events on the heap."""
     return len(self._heap)
-
-  def _GetContentIdentifier(self, event_data, event_data_stream):
-    """Retrieves the content identifier.
-
-    Args:
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): an event data stream or None if not
-          available.
-
-    Returns:
-      str: identifier of the event data content.
-
-    Raises:
-      RuntimeError: if the content identifier cannot be determined.
-    """
-    attributes = ['data_type: {0:s}'.format(event_data.data_type)]
-
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-      if attribute_value is None or attribute_name in (
-          '_content_identifier', '_event_data_stream_identifier', 'data_type',
-          'parser'):
-        continue
-
-      # Ignore date and time values.
-      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-        continue
-
-      if (isinstance(attribute_value, list) and attribute_value and
-          isinstance(attribute_value[0],
-                     dfdatetime_interface.DateTimeValues)):
-        continue
-
-      if not isinstance(attribute_value, (bool, float, int, list, str)):
-        raise RuntimeError(
-            'Unsupported attribute: {0:s} value type: {1!s}'.format(
-                attribute_name, type(attribute_value)))
-
-      try:
-        attribute_string = '{0:s}: {1!s}'.format(
-            attribute_name, attribute_value)
-        attributes.append(attribute_string)
-      except UnicodeDecodeError:
-        raise RuntimeError(
-            'Failed to decode attribute {0:s}'.format(attribute_name))
-
-    if event_data_stream:
-      for attribute_name, attribute_value in sorted(
-          event_data_stream.GetAttributes()):
-
-        if isinstance(attribute_value, dfvfs_path_spec.PathSpec):
-          attribute_value = attribute_value.comparable
-
-        elif not isinstance(attribute_value, (bool, float, int, list, str)):
-          raise RuntimeError(
-              'Unsupported attribute: {0:s} value type: {1!s}'.format(
-                  attribute_name, type(attribute_value)))
-
-        try:
-          attribute_string = '{0:s}: {1!s}'.format(
-              attribute_name, attribute_value)
-          attributes.append(attribute_string)
-        except UnicodeDecodeError:
-          raise RuntimeError(
-              'Failed to decode attribute {0:s}'.format(attribute_name))
-
-    content = ', '.join(attributes)
-    content_data = content.encode('utf-8')
-
-    md5_context = hashlib.md5(content_data)
-
-    return md5_context.hexdigest()
 
   def PopEvent(self):
     """Pops an event from the heap.
@@ -128,9 +46,9 @@ class PsortEventHeap(object):
         EventDataStream: event data stream.
     """
     try:
-      (content_identifier, _, event, event_data,
+      (event_values_hash, _, event, event_data,
        event_data_stream) = heapq.heappop(self._heap)
-      return content_identifier, event, event_data, event_data_stream
+      return event_values_hash, event, event_data, event_data_stream
 
     except IndexError:
       return None
@@ -161,32 +79,34 @@ class PsortEventHeap(object):
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
     """
-    event_data_identifier = event_data.GetIdentifier()
-    lookup_key = event_data_identifier.CopyToString()
+    event_values_hash = getattr(event_data, '_event_values_hash', None)
 
-    content_identifier = self._content_identifier_cache.get(lookup_key, None)
-    if not content_identifier:
-      content_identifier = self._GetContentIdentifier(
-          event_data, event_data_stream)
-      if len(self._content_identifier_cache) >= (
-          self._MAXIMUM_CACHED_IDENTIFIERS):
-        self._content_identifier_cache.popitem(last=True)
+    if not event_values_hash:
+      event_data_identifier = event_data.GetIdentifier()
+      lookup_key = event_data_identifier.CopyToString()
 
-      self._content_identifier_cache[lookup_key] = content_identifier
+      event_values_hash = self._event_values_hash_cache.get(lookup_key, None)
+      if not event_values_hash:
+        event_values_hash = events.CalculateEventValuesHash(
+            event_data, event_data_stream)
+        if len(self._event_values_hash_cache) >= self._MAXIMUM_CACHED_HASHES:
+          self._event_values_hash_cache.popitem(last=True)
 
-    self._content_identifier_cache.move_to_end(lookup_key, last=False)
+        self._event_values_hash_cache[lookup_key] = event_values_hash
+
+      self._event_values_hash_cache.move_to_end(lookup_key, last=False)
 
     timestamp_desc = event.timestamp_desc
     if timestamp_desc is None:
       logger.warning('Missing timestamp_desc attribute')
       timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
-    # We can ignore the timestamp here because the psort engine only stores
-    # events with the same timestamp in the event heap.
-    heap_values = (
-        content_identifier, timestamp_desc, event, event_data,
-        event_data_stream)
-    heapq.heappush(self._heap, heap_values)
+    # Note that only events with the same timestamp are stored in the event
+    # heap. The event values hash is stored first to cluster events with
+    # similar event values.
+    heapq.heappush(self._heap, (
+        event_values_hash, timestamp_desc, event, event_data,
+        event_data_stream))
 
 
 class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
@@ -398,17 +318,17 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
     """
-    last_content_identifier = None
+    last_event_values_hash = None
     last_macb_group_identifier = None
     last_timestamp_desc = None
     macb_group = []
 
-    for (content_identifier, event, event_data,
+    for (event_values_hash, event, event_data,
          event_data_stream) in self._export_event_heap.PopEvents():
       timestamp_desc = event.timestamp_desc
 
       if (deduplicate_events and timestamp_desc == last_timestamp_desc and
-          content_identifier == last_content_identifier):
+          event_values_hash == last_event_values_hash):
         self._events_status.number_of_duplicate_events += 1
         continue
 
@@ -420,7 +340,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           definitions.TIME_DESCRIPTION_CREATION,
           definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
           definitions.TIME_DESCRIPTION_MODIFICATION):
-        macb_group_identifier = content_identifier
+        macb_group_identifier = event_values_hash
       else:
         macb_group_identifier = None
 
@@ -446,7 +366,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
         self._events_status.number_of_macb_grouped_events += 1
 
-      last_content_identifier = content_identifier
+      last_event_values_hash = event_values_hash
       last_macb_group_identifier = macb_group_identifier
       last_timestamp_desc = timestamp_desc
 

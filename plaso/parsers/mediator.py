@@ -3,15 +3,12 @@
 
 import collections
 import datetime
-import hashlib
 import time
 
 import pytz
 
-from dfdatetime import interface as dfdatetime_interface
-from dfvfs.path import path_spec as dfvfs_path_spec
-
 from plaso.containers import artifacts
+from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
@@ -149,77 +146,6 @@ class ParserMediator(object):
       self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
 
     return self._time_zone
-
-  def _GetContentIdentifier(self, event_data, event_data_stream):
-    """Retrieves the content identifier.
-
-    Args:
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): an event data stream or None if not
-          available.
-
-    Returns:
-      str: identifier of the event data content.
-
-    Raises:
-      RuntimeError: if the content identifier cannot be determined.
-    """
-    attributes = ['data_type: {0:s}'.format(event_data.data_type)]
-
-    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-      if attribute_value is None or attribute_name in (
-          '_content_identifier', '_event_data_stream_identifier', 'data_type',
-          'parser'):
-        continue
-
-      # Ignore date and time values.
-      if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-        continue
-
-      if (isinstance(attribute_value, list) and attribute_value and
-          isinstance(attribute_value[0],
-                     dfdatetime_interface.DateTimeValues)):
-        continue
-
-      if not isinstance(attribute_value, (bool, float, int, list, str)):
-        raise RuntimeError(
-            'Unsupported attribute: {0:s} value type: {1!s}'.format(
-                attribute_name, type(attribute_value)))
-
-      try:
-        attribute_string = '{0:s}: {1!s}'.format(
-            attribute_name, attribute_value)
-        attributes.append(attribute_string)
-      except UnicodeDecodeError:
-        raise RuntimeError(
-            'Failed to decode attribute {0:s}'.format(attribute_name))
-
-    if event_data_stream:
-      for attribute_name, attribute_value in sorted(
-          event_data_stream.GetAttributes()):
-
-        if isinstance(attribute_value, dfvfs_path_spec.PathSpec):
-          attribute_value = attribute_value.comparable
-
-        elif not isinstance(attribute_value, (bool, float, int, list, str)):
-          raise RuntimeError(
-              'Unsupported attribute: {0:s} value type: {1!s}'.format(
-                  attribute_name, type(attribute_value)))
-
-        try:
-          attribute_string = '{0:s}: {1!s}'.format(
-              attribute_name, attribute_value)
-          attributes.append(attribute_string)
-        except UnicodeDecodeError:
-          raise RuntimeError(
-              'Failed to decode attribute {0:s}'.format(attribute_name))
-
-    content = ', '.join(attributes)
-    content_data = content.encode('utf-8')
-
-    md5_context = hashlib.md5(content_data)
-
-    return md5_context.hexdigest()
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -466,7 +392,7 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError('Storage writer not set.')
 
-    # TODO: rename this to event_data.parser_chain or equivalent.
+    # TODO: rename this to event_data._parser_chain or equivalent.
     if not event_data.parser:
       event_data.parser = self.GetParserChain()
 
@@ -474,9 +400,9 @@ class ParserMediator(object):
       event_data.SetEventDataStreamIdentifier(
           self._event_data_stream_identifier)
 
-    content_identifier = self._GetContentIdentifier(
+    event_values_hash = events.CalculateEventValuesHash(
         event_data, self._event_data_stream)
-    setattr(event_data, '_content_identifier', content_identifier)
+    setattr(event_data, '_event_values_hash', event_values_hash)
 
     self._storage_writer.AddAttributeContainer(event_data)
     self._number_of_event_data += 1

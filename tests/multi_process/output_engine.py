@@ -112,17 +112,6 @@ class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     event_heap = output_engine.PsortEventHeap()
     self.assertEqual(event_heap.number_of_events, 0)
 
-  def testGetContentIdentifier(self):
-    """Tests the _GetContentIdentifier function."""
-    event_heap = output_engine.PsortEventHeap()
-
-    _, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-    content_identifier = event_heap._GetContentIdentifier(
-        event_data, event_data_stream)
-
-    self.assertEqual(content_identifier, '86972b9d9b591636f8bd3be6b2c0f9e0')
-
   def testPopEvent(self):
     """Tests the PopEvent function."""
     event_heap = output_engine.PsortEventHeap()
