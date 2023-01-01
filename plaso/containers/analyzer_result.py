@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analyzer result attribute container."""
 
-from plaso.containers import interface
-from plaso.containers import manager
+from acstore.containers import interface
+from acstore.containers import manager
 
 
 class AnalyzerResult(interface.AttributeContainer):

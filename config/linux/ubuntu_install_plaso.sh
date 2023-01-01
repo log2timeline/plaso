@@ -47,6 +47,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libvsgpt-python3
                      libvshadow-python3
                      libvslvm-python3
+                     python3-acstore
                      python3-artifacts
                      python3-bencode
                      python3-certifi

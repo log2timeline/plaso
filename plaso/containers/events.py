@@ -3,8 +3,8 @@
 
 import re
 
-from plaso.containers import interface
-from plaso.containers import manager
+from acstore.containers import interface
+from acstore.containers import manager
 
 
 class EventData(interface.AttributeContainer):

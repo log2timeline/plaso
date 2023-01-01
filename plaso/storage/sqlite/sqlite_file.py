@@ -8,12 +8,13 @@ import pathlib
 import sqlite3
 import zlib
 
+from acstore import sqlite_store
+from acstore.containers import interface as containers_interface
+
 from plaso.containers import event_sources
 from plaso.containers import events
-from plaso.containers import interface as containers_interface
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
-from plaso.storage.sqlite import sqlite_store
 
 
 class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
@@ -50,6 +51,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """Initializes a SQLite-based storage file."""
     super(SQLiteStorageFile, self).__init__()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+    self._storage_profiler = None
 
     self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
@@ -660,3 +663,19 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           container_type)
       self._SetAttributeContainerNextSequenceNumber(
           container_type, next_sequence_number)
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+    self._serializers_profiler = serializers_profiler
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
+    """
+    self._storage_profiler = storage_profiler

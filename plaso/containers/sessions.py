@@ -4,9 +4,10 @@
 import time
 import uuid
 
+from acstore.containers import interface
+from acstore.containers import manager
+
 import plaso
-from plaso.containers import interface
-from plaso.containers import manager
 
 
 class Session(interface.AttributeContainer):

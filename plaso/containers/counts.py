@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Count related attribute container definitions."""
 
-from plaso.containers import interface
-from plaso.containers import manager
+from acstore.containers import interface
+from acstore.containers import manager
 
 
 class EventLabelCount(interface.AttributeContainer):

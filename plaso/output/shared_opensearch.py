@@ -4,6 +4,8 @@
 import logging
 import os
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -14,7 +16,6 @@ try:
 except ImportError:
   opensearchpy = None
 
-from plaso.containers import interface as containers_interface
 from plaso.lib import errors
 from plaso.output import formatting_helper
 from plaso.output import interface

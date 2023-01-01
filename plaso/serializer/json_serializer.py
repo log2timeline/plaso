@@ -6,6 +6,9 @@ import codecs
 import collections
 import json
 
+from acstore.containers import interface as containers_interface
+from acstore.containers import manager as containers_manager
+
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import serializer as dfdatetime_serializer
 
@@ -17,8 +20,6 @@ from dfvfs.path import factory as dfvfs_path_spec_factory
 # the dfDateTime factory.
 from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
 
-from plaso.containers import interface as containers_interface
-from plaso.containers import manager as containers_manager
 from plaso.serializer import logger
 
 
