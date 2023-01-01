@@ -20,6 +20,7 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
         windows_events.WindowsDistributedLinkTrackingEventData(test_uuid, None))
 
     expected_attribute_names = [
+        '_content_identifier',
         '_event_data_stream_identifier',
         'creation_time',
         'data_type',
@@ -41,6 +42,7 @@ class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsShellItemFileEntryEventData()
 
     expected_attribute_names = [
+        '_content_identifier',
         '_event_data_stream_identifier',
         'access_time',
         'creation_time',
@@ -67,6 +69,7 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsVolumeEventData()
 
     expected_attribute_names = [
+        '_content_identifier',
         '_event_data_stream_identifier',
         'creation_time',
         'data_type',

@@ -17,6 +17,7 @@ class PlistTimeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = plist_event.PlistTimeEventData()
 
     expected_attribute_names = [
+        '_content_identifier',
         '_event_data_stream_identifier',
         'data_type',
         'key',
