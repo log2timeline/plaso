@@ -100,6 +100,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store.Open(path=test_path, read_only=False)
 
       try:
+        test_store._CreateAttributeContainerTable(
+            event_data_stream.CONTAINER_TYPE)
+
         with self.assertRaises(IOError):
           test_store._CreateAttributeContainerTable(
               event_data_stream.CONTAINER_TYPE)
@@ -108,6 +111,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         test_store.Close()
 
   # TODO: add tests for _CreatetAttributeContainerFromRow
+  # TODO: add tests for _DeserializeAttributeContainer
 
   def testGetAttributeContainersWithFilter(self):
     """Tests the _GetAttributeContainersWithFilter function."""
@@ -144,9 +148,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             filter_expression=filter_expression))
         self.assertEqual(len(containers), 0)
 
-        with self.assertRaises(IOError):
-          list(test_store._GetAttributeContainersWithFilter(
-              'bogus', column_names=column_names))
+        containers = list(test_store._GetAttributeContainersWithFilter(
+            'bogus', column_names=column_names))
+        self.assertEqual(len(containers), 0)
 
       finally:
         test_store.Close()
@@ -176,8 +180,11 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store.Open(path=test_path, read_only=False)
 
       try:
+        test_store._CreateAttributeContainerTable(
+            events.EventDataStream.CONTAINER_TYPE)
+
         result = test_store._HasTable(
-            test_store._CONTAINER_TYPE_EVENT_DATA_STREAM)
+            events.EventDataStream.CONTAINER_TYPE)
         self.assertTrue(result)
 
         result = test_store._HasTable('bogus')
@@ -314,8 +321,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             filter_expression=filter_expression))
         self.assertEqual(len(containers), 0)
 
-        with self.assertRaises(IOError):
-          list(test_store.GetAttributeContainers('bogus'))
+        containers = list(test_store.GetAttributeContainers('bogus'))
+        self.assertEqual(len(containers), 0)
 
       finally:
         test_store.Close()
@@ -367,8 +374,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             event_data_stream.CONTAINER_TYPE, 0)
         self.assertIsNotNone(container)
 
-        with self.assertRaises(IOError):
-          test_store.GetAttributeContainerByIndex('bogus', 0)
+        container = test_store.GetAttributeContainerByIndex('bogus', 0)
+        self.assertIsNone(container)
 
       finally:
         test_store.Close()

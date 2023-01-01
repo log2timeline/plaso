@@ -3,15 +3,12 @@
 
 import ast
 import json
-import os
-import pathlib
 import sqlite3
 import zlib
 
 from acstore import sqlite_store
 from acstore.containers import interface as containers_interface
 
-from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
@@ -27,32 +24,13 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-
-  # Container types that are referenced from other container types.
-  _REFERENCED_CONTAINER_TYPES = (
-      _CONTAINER_TYPE_EVENT,
-      _CONTAINER_TYPE_EVENT_DATA,
-      _CONTAINER_TYPE_EVENT_DATA_STREAM,
-      _CONTAINER_TYPE_EVENT_SOURCE)
-
-  # Container types to not create a table for.
-  _NO_CREATE_TABLE_CONTAINER_TYPES = (
-      'analyzer_result',
-      'hostname',
-      'mount_point',
-      'operating_system',
-      'path',
-      'source_configuration')
 
   def __init__(self):
     """Initializes a SQLite-based storage file."""
     super(SQLiteStorageFile, self).__init__()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
-    self._storage_profiler = None
 
     self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
@@ -296,6 +274,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
   def _WriteExistingAttributeContainer(self, container):
     """Writes an existing attribute container to the store.
 
+    The table for the container type is created if needed.
+
     Args:
       container (AttributeContainer): attribute container.
 
@@ -313,10 +293,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           'Unsupported attribute container type: {0:s}'.format(
               container.CONTAINER_TYPE))
 
-    write_cache = self._write_cache.get(container.CONTAINER_TYPE, [])
-    if len(write_cache) > 1:
-      self._FlushWriteCache(container.CONTAINER_TYPE, write_cache)
-      del self._write_cache[container.CONTAINER_TYPE]
+    self._CommitWriteCache(container.CONTAINER_TYPE)
 
     column_names = []
     values = []
@@ -389,6 +366,10 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
         container.CONTAINER_TYPE)
 
+    if (next_sequence_number == 1 and
+        not self._HasTable(container.CONTAINER_TYPE)):
+      self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
+
     identifier = containers_interface.AttributeContainerIdentifier(
         name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
     container.SetIdentifier(identifier)
@@ -433,15 +414,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       column_names = ['_data']
       values = [serialized_data]
 
-    write_cache = self._write_cache.get(
-        container.CONTAINER_TYPE, [column_names])
-    write_cache.append(values)
-
-    if len(write_cache) >= self._MAXIMUM_WRITE_CACHE_SIZE:
-      self._FlushWriteCache(container.CONTAINER_TYPE, write_cache)
-      write_cache = [column_names]
-
-    self._write_cache[container.CONTAINER_TYPE] = write_cache
+    self._CacheAttributeContainerForWrite(
+        container.CONTAINER_TYPE, column_names, values)
 
     self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
@@ -465,13 +439,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     if container:
       return container
 
-    write_cache = self._write_cache.get(container_type, [])
-    if len(write_cache) > 1:
-      self._FlushWriteCache(container_type, write_cache)
-      del self._write_cache[container_type]
+    self._CommitWriteCache(container_type)
+
+    if not self._attribute_container_sequence_numbers[container_type]:
+      return None
 
     schema = self._GetAttributeContainerSchema(container_type)
-
     if schema:
       column_names = sorted(schema.keys())
     else:
@@ -572,98 +545,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         self._CONTAINER_TYPE_EVENT, column_names=column_names,
         filter_expression=filter_expression, order_by='timestamp')
 
-  def Open(self, path=None, read_only=True, **unused_kwargs):
-    """Opens the store.
-
-    Args:
-      path (Optional[str]): path to the storage file.
-      read_only (Optional[bool]): True if the file should be opened in
-          read-only mode.
-
-    Raises:
-      IOError: if the storage file is already opened or if the database
-          cannot be connected.
-      OSError: if the storage file is already opened or if the database
-          cannot be connected.
-      ValueError: if path is missing.
-    """
-    if self._is_open:
-      raise IOError('Storage file already opened.')
-
-    if not path:
-      raise ValueError('Missing path.')
-
-    path = os.path.abspath(path)
-
-    try:
-      path_uri = pathlib.Path(path).as_uri()
-      if read_only:
-        path_uri = '{0:s}?mode=ro'.format(path_uri)
-
-    except ValueError:
-      path_uri = None
-
-    detect_types = sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES
-
-    if path_uri:
-      connection = sqlite3.connect(
-          path_uri, detect_types=detect_types, isolation_level='DEFERRED',
-          uri=True)
-    else:
-      connection = sqlite3.connect(
-          path, detect_types=detect_types, isolation_level='DEFERRED')
-
-    try:
-      # Use in-memory journaling mode to reduce IO.
-      connection.execute('PRAGMA journal_mode=MEMORY')
-
-      # Turn off insert transaction integrity since we want to do bulk insert.
-      connection.execute('PRAGMA synchronous=OFF')
-
-    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError(
-          'Unable to query attribute container store with error: {0!s}'.format(
-              exception))
-
-    cursor = connection.cursor()
-    if not cursor:
-      return
-
-    self._connection = connection
-    self._cursor = cursor
-    self._is_open = True
-    self._read_only = read_only
-
-    if read_only:
-      self._ReadAndCheckStorageMetadata(check_readable_only=True)
-    else:
-      if not self._HasTable('metadata'):
-        self._WriteMetadata()
-      else:
-        self._ReadAndCheckStorageMetadata()
-
-        # Update the storage metadata format version in case we are adding
-        # new format features that are not backwards compatible.
-        self._UpdateStorageMetadataFormatVersion()
-
-      # TODO: create table on demand.
-      for container_type in self._containers_manager.GetContainerTypes():
-        if container_type in self._NO_CREATE_TABLE_CONTAINER_TYPES:
-          continue
-
-        if not self._HasTable(container_type):
-          self._CreateAttributeContainerTable(container_type)
-
-      self._connection.commit()
-
-    # Initialize next_sequence_number based on the file contents so that
-    # AttributeContainerIdentifier points to the correct attribute container.
-    for container_type in self._REFERENCED_CONTAINER_TYPES:
-      next_sequence_number = self.GetNumberOfAttributeContainers(
-          container_type)
-      self._SetAttributeContainerNextSequenceNumber(
-          container_type, next_sequence_number)
-
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 
@@ -671,11 +552,3 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
     self._serializers_profiler = serializers_profiler
-
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profiler.
-    """
-    self._storage_profiler = storage_profiler
