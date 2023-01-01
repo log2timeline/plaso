@@ -8,7 +8,11 @@ from plaso.storage.fake import event_heap
 
 
 class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
-  """Fake (in-memory only) store for testing."""
+  """Fake (in-memory only) store for testing.
+
+  Attributes:
+    serialization_format (str): serialization format.
+  """
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
@@ -17,7 +21,7 @@ class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
     """Initializes a fake (in-memory only) store."""
     super(FakeStore, self).__init__()
     self._serializers_profiler = None
-    self._storage_profiler = None
+    self.serialization_format = None
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
@@ -58,11 +62,3 @@ class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
     self._serializers_profiler = serializers_profiler
-
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profiler.
-    """
-    self._storage_profiler = storage_profiler

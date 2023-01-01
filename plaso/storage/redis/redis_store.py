@@ -41,7 +41,6 @@ class RedisStore(interface.AttributeContainerStore):
     self._session_identifier = None
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
-    self._storage_profiler = None
     self._task_identifier = None
 
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
@@ -504,11 +503,3 @@ class RedisStore(interface.AttributeContainerStore):
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
     self._serializers_profiler = serializers_profiler
-
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profiler.
-    """
-    self._storage_profiler = storage_profiler
