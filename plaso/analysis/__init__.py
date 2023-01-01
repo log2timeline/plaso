@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """This file imports Python modules that register analysis plugins."""
 
-from plaso.analysis import bloom
+try:
+  from plaso.analysis import bloom
+except ImportError:
+  pass
+
 from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension
 from plaso.analysis import nsrlsvr
