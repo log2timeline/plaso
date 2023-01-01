@@ -82,6 +82,8 @@ class PsortEventHeap(object):
     event_values_hash = getattr(event_data, '_event_values_hash', None)
 
     if not event_values_hash:
+      # Note that this is kept for backwards compatibility for event_data
+      # containers that do not have a _event_values_hash attribute value.
       event_data_identifier = event_data.GetIdentifier()
       lookup_key = event_data_identifier.CopyToString()
 
