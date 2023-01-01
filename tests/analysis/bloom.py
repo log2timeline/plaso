@@ -5,6 +5,11 @@
 import collections
 import unittest
 
+try:
+  import flor
+except ModuleNotFoundError:
+  flor = None
+
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import bloom
@@ -15,8 +20,9 @@ from plaso.lib import definitions
 from tests.analysis import test_lib
 
 
+@unittest.skipIf(flor is None, 'missing flor support')
 class BloomTest(test_lib.AnalysisPluginTestCase):
-  """Tests for the Hashlookup analysis plugin."""
+  """Tests for the bloom database analysis plugin."""
 
   _EVENT_1_HASH = (
       '1e5f96de17b84a94f69e52a24b2942c4eca11bc9')
@@ -39,7 +45,6 @@ class BloomTest(test_lib.AnalysisPluginTestCase):
        'sha256_hash': _EVENT_2_HASH,
        'timestamp': '2016-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}]
-
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
