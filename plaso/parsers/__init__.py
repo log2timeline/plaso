@@ -30,7 +30,6 @@ from plaso.parsers import opera
 from plaso.parsers import pe
 from plaso.parsers import plist
 from plaso.parsers import pls_recall
-from plaso.parsers import powershell_transcript
 from plaso.parsers import recycler
 from plaso.parsers import safari_cookies
 from plaso.parsers import spotlight_storedb

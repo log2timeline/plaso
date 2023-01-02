@@ -985,6 +985,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'powershell:transcript_log:entry'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'safari:cookie:entry'
 attribute_mappings:
 - name: 'creation_time'
