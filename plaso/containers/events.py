@@ -1,10 +1,85 @@
 # -*- coding: utf-8 -*-
 """Event attribute containers."""
 
+import hashlib
 import re
 
 from acstore.containers import interface
 from acstore.containers import manager
+
+from dfdatetime import interface as dfdatetime_interface
+
+
+def CalculateEventValuesHash(event_data, event_data_stream):
+  """Calculates a digest hash of the event values.
+
+  Args:
+    event_data (EventData): event data.
+    event_data_stream (EventDataStream): an event data stream or None if not
+        available.
+
+  Returns:
+    str: digest hash of the event values content.
+
+  Raises:
+    RuntimeError: if the event values hash cannot be determined.
+  """
+  attributes = ['data_type: {0:s}'.format(event_data.data_type)]
+
+  for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+    if attribute_value is None or attribute_name in (
+        '_event_data_stream_identifier', '_event_values_hash', 'data_type',
+        'parser'):
+      continue
+
+    # Ignore date and time values.
+    if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+      continue
+
+    if (isinstance(attribute_value, list) and attribute_value and
+        isinstance(attribute_value[0],
+                     dfdatetime_interface.DateTimeValues)):
+      continue
+
+    if not isinstance(attribute_value, (bool, float, int, list, str)):
+      raise RuntimeError(
+          'Unsupported attribute: {0:s} value type: {1!s}'.format(
+              attribute_name, type(attribute_value)))
+
+    try:
+      attribute_string = '{0:s}: {1!s}'.format(
+          attribute_name, attribute_value)
+      attributes.append(attribute_string)
+    except UnicodeDecodeError:
+      raise RuntimeError(
+          'Failed to decode attribute {0:s}'.format(attribute_name))
+
+  if event_data_stream:
+    for attribute_name, attribute_value in sorted(
+        event_data_stream.GetAttributes()):
+
+      if attribute_name == 'path_spec':
+        attribute_value = attribute_value.comparable
+
+      elif not isinstance(attribute_value, (bool, float, int, list, str)):
+        raise RuntimeError(
+            'Unsupported attribute: {0:s} value type: {1!s}'.format(
+                attribute_name, type(attribute_value)))
+
+      try:
+        attribute_string = '{0:s}: {1!s}'.format(
+            attribute_name, attribute_value)
+        attributes.append(attribute_string)
+      except UnicodeDecodeError:
+        raise RuntimeError(
+            'Failed to decode attribute {0:s}'.format(attribute_name))
+
+  content = ', '.join(attributes)
+  content_data = content.encode('utf-8')
+
+  md5_context = hashlib.md5(content_data)
+
+  return md5_context.hexdigest()
 
 
 class EventData(interface.AttributeContainer):
@@ -21,8 +96,8 @@ class EventData(interface.AttributeContainer):
   CONTAINER_TYPE = 'event_data'
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_content_identifier',
-      '_event_data_stream_identifier']
+      '_event_data_stream_identifier',
+      '_event_values_hash']
 
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
@@ -31,8 +106,8 @@ class EventData(interface.AttributeContainer):
       data_type (Optional[str]): event data type indicator.
     """
     super(EventData, self).__init__()
-    self._content_identifier = None
     self._event_data_stream_identifier = None
+    self._event_values_hash = None
     self.data_type = data_type
     self.parser = None
 
