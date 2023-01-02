@@ -129,6 +129,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE
 
+  # TODO: handle footer with end time.
+
   def __init__(self):
     """Initializes instance attributes needed for processing."""
     super(PowerShellTranscriptLogTextPlugin, self).__init__()
