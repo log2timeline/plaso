@@ -24,7 +24,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     super(BloomAnalysisPlugin, self).__init__()
     self._label = self.DEFAULT_LABEL
     self._bloom_database_path = None
-    self.bloom_filter_object = None
+    self._bloom_filter_object = None
 
   def _Analyze(self, hashes):
     """Looks up file hashes in a bloom database.
@@ -74,8 +74,8 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     Returns:
       Optional(flor.BloomFilter): object containig a BloomFilter.
     """
-    if self.bloom_filter_object:
-      return self.bloom_filter_object
+    if self._bloom_filter_object:
+      return self._bloom_filter_object
 
     logger.info('Open bloom database file {0:s}.'.format(
         self._bloom_database_path))
@@ -95,8 +95,8 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
                     '{1!s}.').format(self._bloom_database_path, exception))
 
     if cached:
-      self.bloom_filter_object = bloom_filter
-      return self.bloom_filter_object
+      self._bloom_filter_object = bloom_filter
+      return self._bloom_filter_object
     return bloom_filter
 
   def _QueryHash(self, digest, bloom_filter):
