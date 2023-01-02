@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for PowerShell transcript log files."""
 
-import copy
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
