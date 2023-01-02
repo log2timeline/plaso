@@ -99,8 +99,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       return self.bloom_filter_object
     return bloom_filter
 
-  @staticmethod
-  def _QueryHash(digest, bloom_filter):
+  def _QueryHash(self, digest, bloom_filter):
     """Queries BloomFilter for a specific hash (upercased).
 
     Args:
