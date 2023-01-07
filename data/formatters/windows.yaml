@@ -369,17 +369,13 @@ short_message: '[{key_path}] {entries}'
 short_source: 'REG'
 source: 'BagMRU Registry Key'
 ---
-# Note that binary_path and user_sid are kept for backwards compatibility.
 type: 'conditional'
 data_type: 'windows:registry:bam'
 message:
 - '{path}'
-- '{binary_path}'
 - '[{user_identifier}]'
-- '[{user_sid}]'
 short_message:
 - '{path}'
-- '{binary_path}'
 short_source: 'REG'
 source: 'Background Activity Moderator Registry Key'
 ---

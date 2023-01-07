@@ -28,23 +28,18 @@ short_message:
 short_source: 'iMessage'
 source: 'Apple iMessage application'
 ---
-# TODO: device_id and family_id are kept for backwards compatibility
 type: 'conditional'
 data_type: 'ipod:device:entry'
 message:
-- 'Device identifier: {device_id}'
 - 'Device identifier: {device_identifier}'
 - 'Type: {device_class}'
-- '[{family_id}]'
 - '[{family_identifier}]'
 - 'Connected {use_count} times'
 - 'Serial nr: {serial_number}'
 - 'IMEI [{imei}]'
 short_message:
-- 'Device identifier: {device_id}'
 - 'Device identifier: {device_identifier}'
 - 'Type: {device_class}'
-- '[{family_id}]'
 - '[{family_identifier}]'
 - 'Connected {use_count} times'
 - 'Serial nr: {serial_number}'
