@@ -216,6 +216,9 @@ class WinIISTextPlugin(interface.TextPlugin):
           pyparsing.Regex('#(Date|Fields|Version): .*') + _END_OF_LINE) +
       _COMMENT_SOFTWARE_LINE)
 
+  VERIFICATION_LITERALS = [
+      '#Software: Microsoft Internet Information Services ']
+
   def __init__(self):
     """Initializes a parser."""
     super(WinIISTextPlugin, self).__init__()

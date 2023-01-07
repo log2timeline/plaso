@@ -107,6 +107,8 @@ class SCCMTextPlugin(interface.TextPlugin):
       pyparsing.Regex(r'.*<!\[LOG\[.*]LOG]!><', re.DOTALL) + _DATE_TIME +
       _COMPONENT)
 
+  VERIFICATION_LITERALS = ['<![LOG[', ']LOG]!><time="']
+
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
@@ -199,11 +201,6 @@ class SCCMTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    # Format verification will be faster on average by checking the presence of
-    # fixed-text fragments first.
-    if '<![LOG[' not in text_reader.lines:
-      return False
-
     try:
       structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:

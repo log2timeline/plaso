@@ -28,6 +28,7 @@ class TextPlugin(plugins.BasePlugin):
   # PyParsing grammer used to verify the text-log file format. Note that since
   # this is called often it should optimize on failing fast.
   VERIFICATION_GRAMMAR = None
+  VERIFICATION_LITERALS = None
 
   # The maximum number of consecutive lines that do not match the grammar before
   # aborting parsing.

@@ -94,6 +94,10 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
   # APT History logs can start with empty lines.
   VERIFICATION_GRAMMAR = pyparsing.ZeroOrMore(_END_OF_LINE) + _RECORD_START_LINE
 
+  VERIFICATION_LITERALS = [
+      'Commandline:', 'Downgrade:', 'Error:', 'Install:', 'Purge:', 'Remove:',
+      'Requested-By:', 'Start-Date:', 'Upgrade:']
+
   def __init__(self):
     """Initializes a text parser plugin."""
     super(APTHistoryLogTextPlugin, self).__init__()

@@ -123,6 +123,8 @@ class GoogleLogTextPlugin(
 
   VERIFICATION_GRAMMAR = _HEADER_LINES
 
+  VERIFICATION_LITERALS = ['Log file created at: ', 'Running on machine: ']
+
   def _ParseHeader(self, parser_mediator, text_reader):
     """Parses a text-log file header.
 

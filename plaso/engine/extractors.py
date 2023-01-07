@@ -106,10 +106,10 @@ class EventDataExtractor(object):
         parsers_manager.ParsersManager.GetFormatsWithSignatures(
             parser_filter_expression=parser_filter_expression))
 
-    self._non_sigscan_parser_names = []
+    self._non_sigscan_parser_names = set()
     for parser_name in non_sigscan_parser_names:
       if parser_name not in ('filestat', 'usnjrnl'):
-        self._non_sigscan_parser_names.append(parser_name)
+        self._non_sigscan_parser_names.add(parser_name)
 
     self._format_scanner = (
         parsers_manager.ParsersManager.CreateSignatureScanner(
@@ -213,7 +213,7 @@ class EventDataExtractor(object):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      parser_names (list[str]): names of parsers.
+      parser_names (set[str]): names of parsers.
       file_entry (dfvfs.FileEntry): file entry.
       file_object (Optional[file]): file-like object to parse.
           If not set the parser will use the parser mediator to open

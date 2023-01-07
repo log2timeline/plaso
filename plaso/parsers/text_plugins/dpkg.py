@@ -126,6 +126,10 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _LOG_LINE
 
+  VERIFICATION_LITERALS = [
+      ' conffile ', ' configure ', ' disappear ', ' install ', ' purge ',
+      ' remove ', ' startup ', ' status ', ' trigproc ', ' upgrade ']
+
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 
