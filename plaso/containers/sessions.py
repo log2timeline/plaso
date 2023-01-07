@@ -15,8 +15,6 @@ class Session(interface.AttributeContainer):
 
   Attributes:
     aborted (bool): True if the session was aborted.
-    analysis_reports_counter (collections.Counter): number of analysis reports
-        per analysis plugin.
     artifact_filters (list[str]): Names of artifact definitions that are
         used for filtering file system and Windows Registry key paths.
     command_line_arguments (str): command line arguments.
@@ -25,14 +23,9 @@ class Session(interface.AttributeContainer):
     debug_mode (bool): True if debug mode was enabled.
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
-    event_labels_counter (collections.Counter): number of event tags per label.
-    extract_winevt_resources (bool): True if Windows EventLog resources should
-        be extracted.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
-    parsers_counter (collections.Counter): number of events per parser or
-        parser plugin.
     preferred_codepage (str): preferred codepage.
     preferred_encoding (str): preferred encoding.
     preferred_language (str): preferred language.
@@ -41,33 +34,44 @@ class Session(interface.AttributeContainer):
     product_name (str): name of the product that created the session for
         example "log2timeline".
     product_version (str): version of the product that created the session.
-    source_configurations (list[SourceConfiguration]): configuration of sources
-        that are (or going to be) processed.
     start_time (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
+
   CONTAINER_TYPE = 'session'
+
+  SCHEMA = {
+      'file_entropy': 'str',
+      'aborted': 'bool',
+      'artifact_filters': 'str',
+      'command_line_arguments': 'str',
+      'completion_time': 'int',
+      'debug_mode': 'bool',
+      'enabled_parser_names': 'List[str]',
+      'filter_file': 'str',
+      'identifier': 'str',
+      'parser_filter_expression': 'str',
+      'preferred_codepage': 'str',
+      'preferred_encoding': 'str',
+      'preferred_language': 'str',
+      'preferred_time_zone': 'str',
+      'preferred_year': 'int',
+      'product_name': 'str',
+      'product_version': 'str',
+      'start_time': 'int'}
 
   def __init__(self):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
     self.aborted = False
-    # TODO: kept for backwards compatibility.
-    self.analysis_reports_counter = None
     self.artifact_filters = None
     self.command_line_arguments = None
     self.completion_time = None
     self.debug_mode = False
     self.enabled_parser_names = None
-    # TODO: kept for backwards compatibility.
-    self.extract_winevt_resources = True
-    # TODO: kept for backwards compatibility.
-    self.event_labels_counter = None
     self.filter_file = None
     self.identifier = '{0:s}'.format(uuid.uuid4().hex)
     self.parser_filter_expression = None
-    # TODO: kept for backwards compatibility.
-    self.parsers_counter = None
     self.preferred_codepage = None
     self.preferred_encoding = 'utf-8'
     self.preferred_language = None
@@ -75,10 +79,9 @@ class Session(interface.AttributeContainer):
     self.preferred_year = None
     self.product_name = 'plaso'
     self.product_version = plaso.__version__
-    # TODO: kept for backwards compatibility.
-    self.source_configurations = None
     self.start_time = int(time.time() * 1000000)
 
+  # This method is kept for backwards compatibility.
   def CopyAttributesFromSessionCompletion(self, session_completion):
     """Copies attributes from a session completion.
 
@@ -94,12 +97,9 @@ class Session(interface.AttributeContainer):
       raise ValueError('Session identifier mismatch.')
 
     self.aborted = session_completion.aborted
-    self.analysis_reports_counter = (
-        session_completion.analysis_reports_counter or None)
     self.completion_time = session_completion.timestamp
-    self.event_labels_counter = session_completion.event_labels_counter or None
-    self.parsers_counter = session_completion.parsers_counter or None
 
+  # This method is kept for backwards compatibility.
   def CopyAttributesFromSessionConfiguration(self, session_configuration):
     """Copies attributes from a session configuration.
 
@@ -118,8 +118,6 @@ class Session(interface.AttributeContainer):
     self.command_line_arguments = session_configuration.command_line_arguments
     self.debug_mode = session_configuration.debug_mode
     self.enabled_parser_names = session_configuration.enabled_parser_names
-    self.extract_winevt_resources = (
-        session_configuration.extract_winevt_resources)
     self.filter_file = session_configuration.filter_file
     self.parser_filter_expression = (
         session_configuration.parser_filter_expression)
@@ -127,8 +125,8 @@ class Session(interface.AttributeContainer):
     self.preferred_encoding = session_configuration.preferred_encoding
     self.preferred_language = session_configuration.preferred_language
     self.preferred_time_zone = session_configuration.preferred_time_zone
-    self.source_configurations = session_configuration.source_configurations
 
+  # This method is kept for backwards compatibility.
   def CopyAttributesFromSessionStart(self, session_start):
     """Copies attributes from a session start.
 
@@ -164,6 +162,7 @@ class Session(interface.AttributeContainer):
     self.preferred_time_zone = getattr(
         session_start, 'preferred_time_zone', self.preferred_time_zone)
 
+  # This method is kept for backwards compatibility.
   def CreateSessionCompletion(self):
     """Creates a session completion.
 
@@ -174,13 +173,33 @@ class Session(interface.AttributeContainer):
 
     session_completion = SessionCompletion()
     session_completion.aborted = self.aborted
-    session_completion.analysis_reports_counter = self.analysis_reports_counter
-    session_completion.event_labels_counter = self.event_labels_counter
     session_completion.identifier = self.identifier
-    session_completion.parsers_counter = self.parsers_counter
     session_completion.timestamp = self.completion_time
     return session_completion
 
+  # This method is kept for backwards compatibility.
+  def CreateSessionConfiguration(self):
+    """Creates a session configuraion.
+
+    Returns:
+      SessionConfiguration: session configuration attribute container.
+    """
+    session_completion = SessionConfiguration()
+    session_completion.artifact_filters = self.artifact_filters
+    session_completion.command_line_arguments = self.command_line_arguments
+    session_completion.debug_mode = self.debug_mode
+    session_completion.enabled_parser_names = self.enabled_parser_names
+    session_completion.filter_file = self.filter_file
+    session_completion.identifier = self.identifier
+    session_completion.parser_filter_expression = self.parser_filter_expression
+    session_completion.preferred_codepage = self.preferred_codepage
+    session_completion.preferred_encoding = self.preferred_encoding
+    session_completion.preferred_language = self.preferred_language
+    session_completion.preferred_time_zone = self.preferred_time_zone
+    session_completion.preferred_year = self.preferred_year
+    return session_completion
+
+  # This method is kept for backwards compatibility.
   def CreateSessionStart(self):
     """Creates a session start.
 
@@ -195,20 +214,17 @@ class Session(interface.AttributeContainer):
     return session_start
 
 
+# This class is kept for backwards compatibility.
 class SessionCompletion(interface.AttributeContainer):
   """Session completion attribute container.
 
   Attributes:
     aborted (bool): True if the session was aborted.
-    analysis_reports_counter (collections.Counter): number of analysis reports
-        per analysis plugin.
-    event_labels_counter (collections.Counter): number of event tags per label.
     identifier (str): unique identifier of the session.
-    parsers_counter (collections.Counter): number of events per parser or
-        parser plugin.
     timestamp (int): time that the session was completed. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
+
   CONTAINER_TYPE = 'session_completion'
 
   def __init__(self, identifier=None):
@@ -221,15 +237,11 @@ class SessionCompletion(interface.AttributeContainer):
     """
     super(SessionCompletion, self).__init__()
     self.aborted = False
-    # TODO: kept for backwards compatibility.
-    self.analysis_reports_counter = None
-    self.event_labels_counter = None
     self.identifier = identifier
-    # TODO: kept for backwards compatibility.
-    self.parsers_counter = None
     self.timestamp = None
 
 
+# This class is kept for backwards compatibility.
 class SessionConfiguration(interface.AttributeContainer):
   """Session configuration attribute container.
 
@@ -245,8 +257,6 @@ class SessionConfiguration(interface.AttributeContainer):
     debug_mode (bool): True if debug mode was enabled.
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
-    extract_winevt_resources (bool): True if Windows EventLog resources should
-        be extracted.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -255,9 +265,8 @@ class SessionConfiguration(interface.AttributeContainer):
     preferred_language (str): preferred language.
     preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
-    source_configurations (list[SourceConfiguration]): configuration of sources
-        that are (or going to be) processed.
   """
+
   CONTAINER_TYPE = 'session_configuration'
 
   def __init__(self, identifier=None):
@@ -273,7 +282,6 @@ class SessionConfiguration(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
-    self.extract_winevt_resources = True
     self.filter_file = None
     self.identifier = identifier
     self.parser_filter_expression = None
@@ -282,10 +290,9 @@ class SessionConfiguration(interface.AttributeContainer):
     self.preferred_language = None
     self.preferred_time_zone = None
     self.preferred_year = None
-    # TODO: kept for backwards compatibility.
-    self.source_configurations = None
 
 
+# This class is kept for backwards compatibility.
 class SessionStart(interface.AttributeContainer):
   """Session start attribute container.
 
@@ -297,6 +304,7 @@ class SessionStart(interface.AttributeContainer):
     timestamp (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
+
   CONTAINER_TYPE = 'session_start'
 
   def __init__(self, identifier=None):

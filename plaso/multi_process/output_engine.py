@@ -462,6 +462,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
+    total_number_of_events = 0
     if storage_reader.HasAttributeContainers('parser_count'):
       parsers_counter = {
           parser_count.name: parser_count.number_of_events
@@ -469,16 +470,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               'parser_count')}
 
       total_number_of_events = parsers_counter['total']
-
-    else:
-      # Fallback for older formats.
-      total_number_of_events = 0
-      for stored_session in storage_reader.GetSessions():
-        # There is an edge case where no parser_count attribute containers
-        # are stored since no events were extracted.
-        if stored_session.parsers_counter:
-          total_number_of_events += stored_session.parsers_counter.get(
-              'total', 0)
 
     self._events_status.total_number_of_events = total_number_of_events
 

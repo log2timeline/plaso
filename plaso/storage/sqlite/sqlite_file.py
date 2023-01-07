@@ -22,6 +22,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     serialization_format (str): serialization format.
   """
 
+  _FORMAT_VERSION = 20230107
+
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE

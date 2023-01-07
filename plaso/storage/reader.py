@@ -9,6 +9,7 @@ from plaso.storage import logger
 class StorageReader(object):
   """Storage reader interface."""
 
+  _CONTAINER_TYPE_SESSION = sessions.Session.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_CONFIGURATION = (
       sessions.SessionConfiguration.CONTAINER_TYPE)
@@ -30,6 +31,79 @@ class StorageReader(object):
   def __exit__(self, exception_type, value, traceback):
     """Make usable with "with" statement."""
     self.Close()
+
+  # Kept for backwards compatibility.
+  def _GetSessionsOld(self):
+    """Retrieves the sessions.
+
+    Yields:
+      Session: session attribute container.
+
+    Raises:
+      IOError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+      OSError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+    """
+    last_session_start = self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
+    last_session_completion = self._store.GetNumberOfAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    # TODO: handle open sessions.
+    if last_session_start != last_session_completion:
+      logger.warning('Detected unclosed session.')
+
+    session_start_generator = self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
+    session_completion_generator = self._store.GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
+      session_configuration_generator = self._store.GetAttributeContainers(
+          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    else:
+      session_configuration_generator = None
+
+    for session_index in range(1, last_session_completion + 1):
+      try:
+        session_start = next(session_start_generator)
+      except StopIteration:
+        raise IOError('Missing session start: {0:d}'.format(session_index))
+
+      try:
+        session_completion = next(session_completion_generator)
+      except StopIteration:
+        pass
+
+      session_configuration = None
+      if session_configuration_generator:
+        try:
+          session_configuration = next(session_configuration_generator)
+        except StopIteration:
+          raise IOError('Missing session configuration: {0:d}'.format(
+              session_index))
+
+      session = sessions.Session()
+      session.CopyAttributesFromSessionStart(session_start)
+
+      if session_configuration:
+        try:
+          session.CopyAttributesFromSessionConfiguration(session_configuration)
+        except ValueError:
+          raise IOError((
+              'Session identifier mismatch for session configuration: '
+              '{0:d}').format(session_index))
+
+      if session_completion:
+        try:
+          session.CopyAttributesFromSessionCompletion(session_completion)
+        except ValueError:
+          raise IOError((
+              'Session identifier mismatch for session completion: '
+              '{0:d}').format(session_index))
+
+      yield session
 
   def Close(self):
     """Closes the storage reader."""
@@ -126,8 +200,6 @@ class StorageReader(object):
     """
     return self._store.serialization_format
 
-  # TODO: remove the need for separate SessionStart and SessionCompletion
-  # attribute containers.
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -140,65 +212,13 @@ class StorageReader(object):
       OSError: if there is a mismatch in session identifiers between the
           session start and completion attribute containers.
     """
-    last_session_start = self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-    last_session_completion = self._store.GetNumberOfAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
-    # TODO: handle open sessions.
-    if last_session_start != last_session_completion:
-      logger.warning('Detected unclosed session.')
-
-    session_start_generator = self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_START)
-    session_completion_generator = self._store.GetAttributeContainers(
-        self._CONTAINER_TYPE_SESSION_COMPLETION)
-
-    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION_CONFIGURATION):
-      session_configuration_generator = self._store.GetAttributeContainers(
-          self._CONTAINER_TYPE_SESSION_CONFIGURATION)
+    if self.HasAttributeContainers(self._CONTAINER_TYPE_SESSION):
+      containers = self.GetAttributeContainers(self._CONTAINER_TYPE_SESSION)
     else:
-      session_configuration_generator = None
+      # Kept for backwards compatibility.
+      containers = self._GetSessionsOld()
 
-    for session_index in range(1, last_session_completion + 1):
-      try:
-        session_start = next(session_start_generator)
-      except StopIteration:
-        raise IOError('Missing session start: {0:d}'.format(session_index))
-
-      try:
-        session_completion = next(session_completion_generator)
-      except StopIteration:
-        pass
-
-      session_configuration = None
-      if session_configuration_generator:
-        try:
-          session_configuration = next(session_configuration_generator)
-        except StopIteration:
-          raise IOError('Missing session configuration: {0:d}'.format(
-              session_index))
-
-      session = sessions.Session()
-      session.CopyAttributesFromSessionStart(session_start)
-
-      if session_configuration:
-        try:
-          session.CopyAttributesFromSessionConfiguration(session_configuration)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session configuration: '
-              '{0:d}').format(session_index))
-
-      if session_completion:
-        try:
-          session.CopyAttributesFromSessionCompletion(session_completion)
-        except ValueError:
-          raise IOError((
-              'Session identifier mismatch for session completion: '
-              '{0:d}').format(session_index))
-
-      yield session
+    yield from containers
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.

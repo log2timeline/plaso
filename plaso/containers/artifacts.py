@@ -426,8 +426,6 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
     super(SourceConfigurationArtifact, self).__init__()
     self.mount_path = None
     self.path_spec = path_spec
-    # TODO: kept for backwards compatibility.
-    self.system_configuration = None
 
 
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
@@ -702,68 +700,6 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
     if log_source:
       self.log_sources.append(log_source)
     if log_type:
-      self.log_types.append(log_type)
-
-  # Setters and getter for backwards compatibility of older schema.
-
-  @property
-  def log_source(self):
-    """str: name of the Windows EventLog source."""
-    try:
-      return self.log_sources[0]
-    except IndexError:
-      return None
-
-  @log_source.setter
-  def log_source(self, log_source):
-    """Sets the the Windows EventLog source.
-
-    Args:
-      log_source (str): name of the Windows EventLog source.
-    """
-    try:
-      self.log_sources[0] = log_source
-    except IndexError:
-      self.log_sources.append(log_source)
-
-  @property
-  def log_source_alias(self):
-    """str: alternate name of the Windows EventLog source."""
-    try:
-      return self.log_sources[1]
-    except IndexError:
-      return None
-
-  @log_source_alias.setter
-  def log_source_alias(self, log_source_alias):
-    """Sets the the Windows EventLog source.
-
-    Args:
-      log_source_alias (str): alternate name of the Windows EventLog source.
-    """
-    try:
-      self.log_sources[1] = log_source_alias
-    except IndexError:
-      self.log_sources.append(log_source_alias)
-
-  @property
-  def log_type(self):
-    """str: Windows EventLog type."""
-    try:
-      return self.log_types[0]
-    except IndexError:
-      return None
-
-  @log_type.setter
-  def log_type(self, log_type):
-    """Sets the the Windows EventLog type.
-
-    Args:
-      log_type (str): Windows EventLog type.
-    """
-    try:
-      self.log_types[0] = log_type
-    except IndexError:
       self.log_types.append(log_type)
 
 

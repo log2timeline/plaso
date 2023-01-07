@@ -24,12 +24,11 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
   # pylint: disable=protected-access
 
-  def _ReadSessionConfiguration(self, path, knowledge_base_object):
-    """Reads session configuration information.
+  def _ReadSystemConfiguration(self, path, knowledge_base_object):
+    """Reads system configuration.
 
-    The session configuration contains the system configuration, which contains
-    information about various system specific configuration data, for example
-    the user accounts.
+    The system configuration, contains information about various system
+    specific configuration data, for example the user accounts.
 
     Args:
       path (str): path.
@@ -39,11 +38,13 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         path)
 
-    for session in storage_reader.GetSessions():
+    for session_index, session in enumerate(storage_reader.GetSessions()):
       knowledge_base_object.SetActiveSession(session.identifier)
-      for source_configuration in session.source_configurations or []:
-        knowledge_base_object.ReadSystemConfigurationArtifact(
-            source_configuration.system_configuration)
+
+      system_configuration = storage_reader.GetAttributeContainerByIndex(
+          'system_configuration', session_index)
+      knowledge_base_object.ReadSystemConfigurationArtifact(
+          system_configuration)
 
   def testInternalAnalyzeEvents(self):
     """Tests the _AnalyzeEvents function."""
@@ -69,7 +70,7 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(test_file_path, temp_file)
 
-      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
+      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT)
