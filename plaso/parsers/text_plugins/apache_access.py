@@ -57,8 +57,6 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   NAME = 'apache_access'
   DATA_FORMAT = 'Apache access log (access.log) file'
 
-  MAXIMUM_LINE_LENGTH = 2048
-
   _MONTH_DICT = {
       'jan': 1,
       'feb': 2,

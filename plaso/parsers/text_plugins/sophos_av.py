@@ -41,8 +41,6 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-16-le'
 
-  MAXIMUM_LINE_LENGTH = 4096
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

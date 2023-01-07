@@ -21,9 +21,6 @@ class TextPlugin(plugins.BasePlugin):
 
   ENCODING = None
 
-  # The maximum line length of a single read.
-  MAXIMUM_LINE_LENGTH = 400
-
   # List of tuples of pyparsing expression per unique identifier that define
   # the supported grammar.
   _LINE_STRUCTURES = []
@@ -361,8 +358,7 @@ class TextPlugin(plugins.BasePlugin):
 
       encoding = self.ENCODING or parser_mediator.codepage
       text_reader = text_parser.EncodedTextReader(
-          file_object, buffer_size=self.MAXIMUM_LINE_LENGTH, encoding=encoding,
-          encoding_errors='text_parser_handler')
+          file_object, encoding=encoding, encoding_errors='text_parser_handler')
 
       try:
         text_reader.ReadLines()

@@ -43,8 +43,6 @@ class VimInfoTextPlugin(interface.TextPlugin,):
 
   ENCODING = 'utf-8'
 
-  MAXIMUM_LINE_LENGTH = 16384
-
   _FILENAME = '.viminfo'
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
