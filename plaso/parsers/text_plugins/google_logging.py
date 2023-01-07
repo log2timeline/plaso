@@ -62,8 +62,6 @@ class GoogleLogTextPlugin(
   NAME = 'googlelog'
   DATA_FORMAT = 'Google-formatted log file'
 
-  MAXIMUM_LINE_LENGTH = 5120
-
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

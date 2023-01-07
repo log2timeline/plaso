@@ -125,11 +125,14 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
+
     Args:
       time_elements_structure (pyparsing.ParseResults): date and time elements
           of a log line.
+
     Returns:
       dfdatetime.PosixTimeInMilliseconds: date and time value.
+
     Raises:
       ParseError: if a valid date and time value cannot be derived from
           the time elements.

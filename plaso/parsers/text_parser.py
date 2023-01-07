@@ -18,21 +18,20 @@ class EncodedTextReader(object):
     lines (str): lines of text.
   """
 
+  BUFFER_SIZE = 65536
+
   def __init__(
-      self, file_object, buffer_size=2048, encoding='utf-8',
-      encoding_errors='strict'):
-    """Initializes a encoded text reader.
+      self, file_object, encoding='utf-8', encoding_errors='strict'):
+    """Initializes the encoded text reader object.
 
     Args:
       file_object (FileIO): a file-like object to read from.
-      buffer_size (Optional[int]): buffer size.
       encoding (Optional[str]): text encoding.
       encoding_errors (Optional[str]): text encoding errors handler.
     """
     stream_reader_class = codecs.getreader(encoding)
 
     super(EncodedTextReader, self).__init__()
-    self._buffer_size = buffer_size
     self._file_object = file_object
     self._stream_reader = stream_reader_class(
         file_object, errors=encoding_errors)
@@ -58,7 +57,7 @@ class EncodedTextReader(object):
     """Reads lines into the lines buffer."""
     current_offset = self._file_object.tell()
 
-    decoded_data = self._stream_reader.read(size=self._buffer_size)
+    decoded_data = self._stream_reader.read(size=self.BUFFER_SIZE)
     if decoded_data:
       # Remove a byte-order mark at the start of the file.
       if current_offset == 0 and decoded_data[0] == '\ufeff':
@@ -177,7 +176,7 @@ class TextLogParser(interface.FileObjectParser):
 
     # Cache the first 64k of encoded data so it does not need to be read for
     # each encoding.
-    encoded_data_buffer = file_object.read(64 * 1024)
+    encoded_data_buffer = file_object.read(EncodedTextReader.BUFFER_SIZE)
 
     matching_plugin = False
     for encoding, plugins in self._plugins_per_encoding.items():
@@ -186,6 +185,22 @@ class TextLogParser(interface.FileObjectParser):
 
       if encoding == 'default':
         encoding = parser_mediator.codepage
+
+      encoded_data_file_object = io.BytesIO(encoded_data_buffer)
+      text_reader = EncodedTextReader(
+          encoded_data_file_object, encoding=encoding)
+
+      try:
+        text_reader.ReadLines()
+      except UnicodeDecodeError:
+        logger.debug(
+            'Unable to read text-based log file with encoding: {0:s}'.format(
+                encoding))
+        continue
+
+      if self._ContainsBinary(text_reader.lines):
+        logger.debug('Detected binary format')
+        continue
 
       for plugin in plugins:
         if parser_mediator.abort:
@@ -196,29 +211,7 @@ class TextLogParser(interface.FileObjectParser):
         parser_mediator.SampleFormatCheckStartTiming(profiling_name)
 
         try:
-          logger.debug(
-              'Checking required format of: {0:s} in encoding: {1:s}'.format(
-                  plugin.NAME, encoding))
-
-          encoded_data_file_object = io.BytesIO(encoded_data_buffer)
-          text_reader = EncodedTextReader(
-              encoded_data_file_object, buffer_size=plugin.MAXIMUM_LINE_LENGTH,
-              encoding=encoding)
-
-          try:
-            text_reader.ReadLines()
-          except UnicodeDecodeError:
-            logger.debug((
-                'Unable to read text-based log file with encoding: '
-                '{0:s}').format(encoding))
-            continue
-
-          if self._ContainsBinary(text_reader.lines):
-            logger.debug('Detected binary format')
-            continue
-
           result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
-
         finally:
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 

@@ -49,9 +49,6 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  # APT History log lines can be very long.
-  MAXIMUM_LINE_LENGTH = 65536
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

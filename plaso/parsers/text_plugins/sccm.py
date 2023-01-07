@@ -41,8 +41,6 @@ class SCCMTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  MAXIMUM_LINE_LENGTH = 16384
-
   _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

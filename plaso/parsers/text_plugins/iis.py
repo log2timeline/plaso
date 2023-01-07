@@ -80,8 +80,6 @@ class WinIISTextPlugin(interface.TextPlugin):
   # TODO: fix
   ENCODING = 'utf-8'
 
-  MAXIMUM_LINE_LENGTH = 800
-
   _BLANK = pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.alphanums + '-') | _BLANK

@@ -177,8 +177,6 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  MAXIMUM_LINE_LENGTH = 3000
-
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

@@ -62,8 +62,6 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   NAME = 'confluence_access'
   DATA_FORMAT = 'Confluence access log (access.log) file'
 
-  MAXIMUM_LINE_LENGTH = 2048
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
 

@@ -47,8 +47,6 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  MAXIMUM_LINE_LENGTH = 16384
-
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
