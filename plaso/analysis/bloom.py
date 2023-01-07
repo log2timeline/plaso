@@ -132,7 +132,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
   def TestLoading(self):
     """Checks if the bloom database exist and is valid.
 
-    Retruns:
+    Returns:
       bool: True is the bloom database exist and is valid.
     """
     return bool(self._GetBloomFilterObject(cached=False))
