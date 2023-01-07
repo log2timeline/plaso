@@ -5,14 +5,14 @@
 import collections
 import unittest
 
+from dfvfs.path import fake_path_spec
+
 try:
   import flor
+  from plaso.analysis import bloom
 except ModuleNotFoundError:
   flor = None
 
-from dfvfs.path import fake_path_spec
-
-from plaso.analysis import bloom
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
