@@ -36,7 +36,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       list[HashAnalysis]: analysis results, or an empty list on error.
 
     Raises:
-      RuntimeError: when the analyzer fail to get a bloom filter object
+      RuntimeError: when the analyzer fail to get a bloom filter object.
     """
     bloom_filter = self._GetBloomFilterObject(cached=True)
     if not bloom_filter:
@@ -67,17 +67,18 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     return []
 
   def _GetBloomFilterObject(self, cached=True):
-    """Load bloom filter file in memory
+    """Loads a bloom filter file in memory.
+
     Args:
-      cached (bool): should the BloomFilter be cached
+      cached (bool): True if the bloom filter should be cached.
 
     Returns:
-      Optional(flor.BloomFilter): object containig a BloomFilter.
+      flor.BloomFilter: bloom filter object or None if not available.
     """
     if self._bloom_filter_object:
       return self._bloom_filter_object
 
-    logger.info('Open bloom database file {0:s}.'.format(
+    logger.debug('Open bloom database file: {0:s}.'.format(
         self._bloom_database_path))
 
     if flor.BloomFilter is None:
@@ -91,7 +92,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
     except IOError as exception:
       bloom_filter = None
-      logger.error(('Unable to open bloom database file {0:s} with error: '
+      logger.error(('Unable to open bloom database file: {0:s} with error: '
                     '{1!s}.').format(self._bloom_database_path, exception))
 
     if cached:
@@ -100,17 +101,25 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     return bloom_filter
 
   def _QueryHash(self, digest, bloom_filter):
-    """Queries BloomFilter for a specific hash (upercased).
+    """Queries BloomFilter for a specific hash in upper case.
 
     Args:
       digest (str): hash to look up.
-      bloom_filter (flor.BloomFilter): instanced BloomFilter.
+      bloom_filter (flor.BloomFilter): instanced bloom filter.
 
     Returns:
-      bool: True if the hash was found, False if not or None on error.
+      bool: True if the hash was found, False if not.
     """
     value_to_test = digest.upper().encode()
     return value_to_test in bloom_filter
+
+  def SetBloomDatabasePath(self, bloom_database_path):
+    """Set the path to the bloom file containing hash
+
+    Args:
+      bloom_database_path (str): Path to the bloom file
+    """
+    self._bloom_database_path = bloom_database_path
 
   def SetLabel(self, label):
     """Sets the tagging label.
@@ -120,14 +129,6 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
           present in the bloom database.
     """
     self._label = label
-
-  def SetBloomDatabasePath(self, bloom_database_path):
-    """Set the path to the bloom file containing hash
-
-    Args:
-      bloom_database_path (str): Path to the bloom file
-    """
-    self._bloom_database_path = bloom_database_path
 
   def TestLoading(self):
     """Checks if the bloom database exist and is valid.
