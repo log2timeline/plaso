@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for PowerShell transcript log files."""
 
+import copy
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -225,9 +226,11 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
           self._command_history.append(body)
 
       elif key == 'separator_line':
-        self._event_data.commands = '; '.join(self._command_history)
+        event_data = copy.deepcopy(self._event_data)
 
-        parser_mediator.ProduceEventData(self._event_data)
+        event_data.commands = '; '.join(self._command_history)
+
+        parser_mediator.ProduceEventData(event_data)
 
         self._command_history = []
         self._in_command_history = False
@@ -287,6 +290,12 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._command_history = []
+    self._event_data = None
+    self._in_command_history = False
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -302,6 +311,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
       self._VerifyString(text_reader.lines)
     except errors.ParseError:
       return False
+
+    self._ResetState()
 
     return True
 
