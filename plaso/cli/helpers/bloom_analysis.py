@@ -32,26 +32,23 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
           to append arguments to.
     """
     argument_group.add_argument(
-        '--bloom-hash', '--bloom_hash',
-        dest='bloom_hash', type=str, action='store',
-        choices=cls._SUPPORTED_HASHES, default=cls._DEFAULT_HASH,
-        metavar='HASH', help=(
+        '--bloom-hash', '--bloom_hash', dest='bloom_hash', type=str,
+        action='store', choices=cls._SUPPORTED_HASHES,
+        default=cls._DEFAULT_HASH, metavar='HASH', help=(
             'Type of hash to use to query bloom file'
             '(hash are capitalized), the default is: '
             '{0:s}. Supported options: {1:s}'.format(
                 cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
 
     argument_group.add_argument(
-        '--bloom-file', '--bloom_file',
-        dest='bloom_file', type=str, action='store',
-        default=cls._DEFAULT_BLOOM_DATABASE_PATH, metavar='PATH',
-        help=(
-            'Path to the bloom file, the '
-            'default is: {0:s}').format(cls._DEFAULT_BLOOM_DATABASE_PATH))
+        '--bloom-file', '--bloom_file', dest='bloom_file', type=str,
+        action='store', default=cls._DEFAULT_BLOOM_DATABASE_PATH,
+        metavar='PATH', help=(
+            'Path to the bloom file, the default is: {0:s}').format(
+                cls._DEFAULT_BLOOM_DATABASE_PATH))
 
     argument_group.add_argument(
-        '--bloom-label', '--bloom_label',
-        dest='bloom_label', type=str,
+        '--bloom-label', '--bloom_label', dest='bloom_label', type=str,
         action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
             'Label to apply to events, the default is: {0:s}.').format(
                 cls._DEFAULT_LABEL))
@@ -90,5 +87,4 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
           'Unable to load bloom file {0:s}'.format(bloom_file))
 
 
-manager.ArgumentHelperManager.RegisterHelper(
-  BloomAnalysisArgumentsHelper)
+manager.ArgumentHelperManager.RegisterHelper(BloomAnalysisArgumentsHelper)
