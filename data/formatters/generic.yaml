@@ -534,17 +534,9 @@ short_message: 'Name: {name}'
 short_source: 'OLECF'
 source: 'OLECF Item'
 ---
-# TODO: security and total_edit_time are kept for backwards compatibility
 type: 'conditional'
 data_type: 'olecf:summary_info'
 flags_helpers:
-- input_attribute: 'security'
-  output_attribute: 'security_flags_description'
-  values:
-    0x00000001: 'Password protected'
-    0x00000002: 'Read-only recommended'
-    0x00000004: 'Read-only enforced'
-    0x00000008: 'Locked for annotations'
 - input_attribute: 'security_flags'
   output_attribute: 'security_flags_description'
   values:
@@ -562,13 +554,11 @@ message:
 - 'Revision number: {revision_number}'
 - 'Last saved by: {last_saved_by}'
 - 'Total edit time (secs): {edit_duration}'
-- 'Total edit time (secs): {total_edit_time}'
 - 'Number of pages: {number_of_pages}'
 - 'Number of words: {number_of_words}'
 - 'Number of characters: {number_of_characters}'
 - 'Application: {application}'
 - 'Security flags: 0x{security_flags:08x}'
-- 'Security flags: 0x{security:08x}'
 - '[{security_flags_description}]'
 short_message:
 - 'Title: {title}'
@@ -629,19 +619,16 @@ short_message:
 short_source: 'TORRENT'
 source: 'Transmission Active Torrents'
 ---
-# TODO: path is kept for backwards compatibility
 type: 'conditional'
 data_type: 'p2p:bittorrent:utorrent'
 message:
 - 'Torrent {caption}'
 - 'Saved to {destination}'
-- 'Saved to {path}'
 - 'Minutes seeded: {seedtime}'
 separator: '; '
 short_message:
 - 'Torrent {caption}'
 - 'Saved to {destination}'
-- 'Saved to {path}'
 - 'Minutes seeded: {seedtime}'
 short_source: 'TORRENT'
 source: 'uTorrent Active Torrents'
@@ -694,17 +681,14 @@ short_message:
 short_source: 'PLSRecall'
 source: 'PL/SQL Developer Recall file'
 ---
-# TODO: log_level is kept for backwards compatibility
 type: 'conditional'
 data_type: 'postgresql:application_log:entry'
 message:
 - 'PID {pid}'
 - '{user}'
-- '{log_level}'
 - '{severity}'
 - '{log_line}'
 short_message:
-- '{log_level}'
 - '{severity}'
 - '{log_line}'
 short_source: 'LOG'
@@ -881,12 +865,10 @@ short_message:
 short_source: 'LOG'
 source: 'Log File'
 ---
-# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
 message:
 - 'Unsuccessful connection of user: {username} '
-- 'from {address}:'
 - 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '
@@ -897,12 +879,10 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
-# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:login'
 message:
 - 'Successful login of user: {username} '
-- 'from {address}:'
 - 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '
@@ -913,11 +893,9 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
-# TODO: address is kept for backwards compatibility
 type: 'conditional'
 data_type: 'syslog:ssh:opened_connection'
 message:
-- 'Connection opened {address}:'
 - 'Connection opened {ip_address}:'
 - '{port} '
 - 'ssh pid: {pid}'

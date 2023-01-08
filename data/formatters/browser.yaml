@@ -221,16 +221,13 @@ short_message:
 short_source: 'LOG'
 source: 'Chrome Preferences'
 ---
-# TODO: extension_id is kept for backwards compatibility
 type: 'conditional'
 data_type: 'chrome:preferences:extension_installation'
 message:
-- 'CRX identifier: {extension_id}'
 - 'CRX identifier: {extension_identifier}'
 - 'CRX name: {extension_name}'
 - 'Path: {path}'
 short_message:
-- '{extension_id}'
 - '{extension_identifier}'
 - '{path}'
 short_source: 'LOG'
@@ -245,7 +242,6 @@ short_message:
 short_source: 'LOG'
 source: 'Chrome Preferences'
 ---
-# TODO: visitor_id is kept for backwards compatibility
 type: 'conditional'
 data_type: 'cookie:google:analytics:utma'
 message:
@@ -253,7 +249,6 @@ message:
 - '({cookie_name})'
 - 'Sessions: {sessions}'
 - 'Domain Hash: {domain_hash}'
-- 'Visitor identifier: {visitor_id}'
 - 'Visitor identifier: {visitor_identifier}'
 short_message:
 - '{url}'
@@ -462,7 +457,6 @@ short_message:
 short_source: 'WEBHIST'
 source: 'MSIE Cache File URL record'
 ---
-# TODO: sync_count is kept for backwards compatibility
 type: 'conditional'
 data_type: 'msie:webcache:container'
 message:
@@ -470,7 +464,6 @@ message:
 - 'Redirect URL: {redirect_url}'
 - 'Access count: {access_count}'
 - 'Synchronization count: {synchronization_count}'
-- 'Synchronization count: {sync_count}'
 - 'Filename: {cached_filename}'
 - 'File extension: {file_extension}'
 - 'Cached file size: {cached_file_size}'
