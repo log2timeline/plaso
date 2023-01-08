@@ -113,8 +113,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     try:
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
+      storage_writer.AddAttributeContainer(session)
 
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
       event_source = storage_writer.GetFirstWrittenEventSource()
@@ -123,8 +122,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
             parser_mediator, event_source.path_spec)
         event_source = storage_writer.GetNextWrittenEventSource()
 
-      session_completion = session.CreateSessionCompletion()
-      storage_writer.AddAttributeContainer(session_completion)
+      storage_writer.UpdateAttributeContainer(session)
 
       if expected_event_data_counts:
         self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
@@ -179,8 +177,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
+    storage_writer.AddAttributeContainer(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -191,8 +188,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeDataStream(
         file_entry, '', display_name, event_data_stream)
 
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
+    storage_writer.UpdateAttributeContainer(session)
 
     storage_writer.Close()
 
@@ -223,8 +219,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
+    storage_writer.AddAttributeContainer(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -236,8 +231,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._AnalyzeFileObject(
         file_object, display_name, event_data_stream)
 
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
+    storage_writer.UpdateAttributeContainer(session)
 
     storage_writer.Close()
 
@@ -286,8 +280,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
+    storage_writer.AddAttributeContainer(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -295,8 +288,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractContentFromDataStream(
         parser_mediator, file_entry, '')
 
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
+    storage_writer.UpdateAttributeContainer(session)
 
     storage_writer.Close()
 
@@ -324,8 +316,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
+    storage_writer.AddAttributeContainer(session)
 
     file_entry = self._GetTestFileEntry(['syslog.tgz'])
     parser_mediator.SetFileEntry(file_entry)
@@ -333,8 +324,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker._ExtractMetadataFromFileEntry(
         parser_mediator, file_entry, '')
 
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
+    storage_writer.UpdateAttributeContainer(session)
 
     storage_writer.Close()
 
@@ -362,8 +352,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    session_start = session.CreateSessionStart()
-    storage_writer.AddAttributeContainer(session_start)
+    storage_writer.AddAttributeContainer(session)
 
     extraction_worker = worker.EventExtractionWorker()
 
@@ -373,8 +362,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         parser_mediator, path_spec)
     self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-    session_completion = session.CreateSessionCompletion()
-    storage_writer.AddAttributeContainer(session_completion)
+    storage_writer.UpdateAttributeContainer(session)
 
     storage_writer.Close()
 

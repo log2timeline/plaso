@@ -18,18 +18,14 @@ class SessionTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         'aborted',
-        'analysis_reports_counter',
         'artifact_filters',
         'command_line_arguments',
         'completion_time',
         'debug_mode',
         'enabled_parser_names',
-        'event_labels_counter',
-        'extract_winevt_resources',
         'filter_file',
         'identifier',
         'parser_filter_expression',
-        'parsers_counter',
         'preferred_codepage',
         'preferred_encoding',
         'preferred_language',
@@ -37,7 +33,6 @@ class SessionTest(shared_test_lib.BaseTestCase):
         'preferred_year',
         'product_name',
         'product_version',
-        'source_configurations',
         'start_time']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -106,10 +101,7 @@ class SessionCompletionTest(shared_test_lib.BaseTestCase):
 
     expected_attribute_names = [
         'aborted',
-        'analysis_reports_counter',
-        'event_labels_counter',
         'identifier',
-        'parsers_counter',
         'timestamp']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -129,7 +121,6 @@ class SessionConfiguration(shared_test_lib.BaseTestCase):
         'command_line_arguments',
         'debug_mode',
         'enabled_parser_names',
-        'extract_winevt_resources',
         'filter_file',
         'identifier',
         'parser_filter_expression',
@@ -137,8 +128,7 @@ class SessionConfiguration(shared_test_lib.BaseTestCase):
         'preferred_encoding',
         'preferred_language',
         'preferred_time_zone',
-        'preferred_year',
-        'source_configurations']
+        'preferred_year']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

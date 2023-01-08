@@ -124,7 +124,7 @@ class KnowledgeBase(object):
     Raises:
       KeyError: if the Windows Event Log provider already exists.
     """
-    log_source = windows_eventlog_provider.log_source
+    log_source = windows_eventlog_provider.log_sources[0]
     if log_source in self._windows_eventlog_providers:
       raise KeyError('Windows Event Log provider: {0:s} already exists.'.format(
           log_source))

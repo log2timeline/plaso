@@ -54,22 +54,6 @@ class AnalysisTool(
 
     self.list_analysis_plugins = False
 
-  def _CreateAnalysisSessionConfiguration(self, session):
-    """Creates an analysis session configuration.
-
-    Args:
-      session (Session): session in which the events are analyzed.
-
-    Returns:
-      SessionConfiguration: extraction session configuration.
-    """
-    session_configuration = sessions.SessionConfiguration()
-    session_configuration.command_line_arguments = self._command_line_arguments
-    session_configuration.debug_mode = self._debug_mode
-    session_configuration.identifier = session.identifier
-
-    return session_configuration
-
   def _AnalyzeEvents(self, session, configuration, status_update_callback=None):
     """Analyzes events in a Plaso storage.
 
@@ -101,14 +85,25 @@ class AnalysisTool(
 
     processing_status = None
 
+    session.command_line_arguments = self._command_line_arguments
+    session.debug_mode = self._debug_mode
+
     try:
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
+      # Writing a separate session start is kept for backwards compatibility.
+      if storage_writer.HasAttributeContainers(
+          sessions.SessionStart.CONTAINER_TYPE):
+        session_start = session.CreateSessionStart()
+        storage_writer.AddAttributeContainer(session_start)
+      else:
+        storage_writer.AddAttributeContainer(session)
 
       try:
-        session_configuration = self._CreateAnalysisSessionConfiguration(
-            session)
-        storage_writer.AddAttributeContainer(session_configuration)
+        # Writing a separate session configuration is kept for backwards
+        # compatibility.
+        if storage_writer.HasAttributeContainers(
+            sessions.SessionStart.CONTAINER_TYPE):
+          session_configuration = session.CreateSessionConfiguration()
+          storage_writer.AddAttributeContainer(session_configuration)
 
         processing_status = analysis_engine.AnalyzeEvents(
             session, self._knowledge_base, storage_writer, self._data_location,
@@ -121,8 +116,14 @@ class AnalysisTool(
       finally:
         session.aborted = getattr(processing_status, 'aborted', True)
 
-        session_completion = session.CreateSessionCompletion()
-        storage_writer.AddAttributeContainer(session_completion)
+        # Writing a separate session completion is kept for backwards
+        # compatibility.
+        if storage_writer.HasAttributeContainers(
+            sessions.SessionStart.CONTAINER_TYPE):
+          session_completion = session.CreateSessionCompletion()
+          storage_writer.AddAttributeContainer(session_completion)
+        else:
+          storage_writer.UpdateAttributeContainer(session)
 
     finally:
       storage_writer.Close()

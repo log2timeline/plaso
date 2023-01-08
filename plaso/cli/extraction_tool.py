@@ -184,37 +184,6 @@ class ExtractionTool(
 
     return configuration
 
-  def _CreateExtractionSessionConfiguration(
-      self, session, enabled_parser_names):
-    """Creates an extraction session configuration.
-
-    Args:
-      session (Session): session in which the sources are processed.
-      enabled_parser_names (list[str]): enabled parser names.
-
-    Returns:
-      SessionConfiguration: extraction session configuration.
-    """
-    session_configuration = sessions.SessionConfiguration()
-    session_configuration.artifact_filters = self._artifact_filters
-    session_configuration.command_line_arguments = self._command_line_arguments
-    session_configuration.debug_mode = self._debug_mode
-    session_configuration.enabled_parser_names = enabled_parser_names
-    session_configuration.extract_winevt_resources = (
-        self._extract_winevt_resources)
-    session_configuration.filter_file_path = self._filter_file
-    session_configuration.identifier = session.identifier
-    session_configuration.parser_filter_expression = (
-        self._parser_filter_expression)
-    session_configuration.preferred_codepage = self._preferred_codepage
-    session_configuration.preferred_encoding = self.preferred_encoding
-    session_configuration.preferred_language = (
-        self._preferred_language or 'en-US')
-    session_configuration.preferred_time_zone = self._preferred_time_zone
-    session_configuration.preferred_year = self._preferred_year
-
-    return session_configuration
-
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
 
@@ -516,45 +485,83 @@ class ExtractionTool(
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
-    session_configuration = self._CreateExtractionSessionConfiguration(
-        session, enabled_parser_names)
+    session.artifact_filters = self._artifact_filters
+    session.command_line_arguments = self._command_line_arguments
+    session.debug_mode = self._debug_mode
+    session.enabled_parser_names = enabled_parser_names
+    session.extract_winevt_resources = self._extract_winevt_resources
+    session.filter_file_path = self._filter_file
+    session.parser_filter_expression = self._parser_filter_expression
+    session.preferred_codepage = self._preferred_codepage
+    session.preferred_encoding = self.preferred_encoding
+    session.preferred_language = self._preferred_language or 'en-US'
+    session.preferred_time_zone = self._preferred_time_zone
+    session.preferred_year = self._preferred_year
 
-    storage_writer.AddAttributeContainer(session_configuration)
-
-    source_configurations = []
-    for path_spec in self._source_path_specs:
-      source_configuration = artifacts.SourceConfigurationArtifact(
-          path_spec=path_spec)
-      source_configurations.append(source_configuration)
-
-    # TODO: improve to detect more than 1 system configurations.
-    # TODO: improve to add volumes to system configuration.
-    system_configuration = (
-        extraction_engine.knowledge_base.GetSystemConfigurationArtifact())
-    storage_writer.AddAttributeContainer(system_configuration)
-
-    status_update_callback = (
-        self._status_view.GetExtractionStatusUpdateCallback())
-
-    if single_process_mode:
-      logger.debug('Starting extraction in single process mode.')
-
-      processing_status = extraction_engine.ProcessSources(
-          source_configurations, storage_writer, self._resolver_context,
-          configuration, force_parser=force_parser,
-          status_update_callback=status_update_callback)
-
+    # Writing a separate session start is kept for backwards compatibility.
+    if storage_writer.HasAttributeContainers(
+        sessions.SessionStart.CONTAINER_TYPE):
+      session_start = session.CreateSessionStart()
+      storage_writer.AddAttributeContainer(session_start)
     else:
-      logger.debug('Starting extraction in multi process mode.')
+      storage_writer.AddAttributeContainer(session)
 
-      # The following overrides are needed because pylint 2.6.0 gets confused
-      # about which ProcessSources to check against.
-      # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-      processing_status = extraction_engine.ProcessSources(
-          source_configurations, storage_writer, session.identifier,
-          configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-          status_update_callback=status_update_callback,
-          storage_file_path=self._storage_file_path)
+    processing_status = None
+
+    try:
+      # Writing a separate session configuration is kept for backwards
+      # compatibility.
+      if storage_writer.HasAttributeContainers(
+          sessions.SessionStart.CONTAINER_TYPE):
+        session_configuration = session.CreateSessionConfiguration()
+        storage_writer.AddAttributeContainer(session_configuration)
+
+      source_configurations = []
+      for path_spec in self._source_path_specs:
+        source_configuration = artifacts.SourceConfigurationArtifact(
+            path_spec=path_spec)
+        source_configurations.append(source_configuration)
+
+      # TODO: improve to detect more than 1 system configurations.
+      # TODO: improve to add volumes to system configuration.
+      system_configuration = (
+          extraction_engine.knowledge_base.GetSystemConfigurationArtifact())
+      storage_writer.AddAttributeContainer(system_configuration)
+
+      status_update_callback = (
+          self._status_view.GetExtractionStatusUpdateCallback())
+
+      if single_process_mode:
+        logger.debug('Starting extraction in single process mode.')
+
+        processing_status = extraction_engine.ProcessSources(
+            source_configurations, storage_writer, self._resolver_context,
+            configuration, force_parser=force_parser,
+            status_update_callback=status_update_callback)
+
+      else:
+        logger.debug('Starting extraction in multi process mode.')
+
+        # The following overrides are needed because pylint 2.6.0 gets confused
+        # about which ProcessSources to check against.
+        # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+        processing_status = extraction_engine.ProcessSources(
+            source_configurations, storage_writer, session.identifier,
+            configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
+            status_update_callback=status_update_callback,
+            storage_file_path=self._storage_file_path)
+
+    finally:
+      session.aborted = getattr(processing_status, 'aborted', True)
+
+      # Writing a separate session completion is kept for backwards
+      # compatibility.
+      if storage_writer.HasAttributeContainers(
+          sessions.SessionStart.CONTAINER_TYPE):
+        session_completion = session.CreateSessionCompletion()
+        storage_writer.AddAttributeContainer(session_completion)
+      else:
+        storage_writer.UpdateAttributeContainer(session)
 
     return processing_status
 
@@ -754,18 +761,10 @@ class ExtractionTool(
       stored_number_of_extraction_warnings = (
           storage_writer.GetNumberOfAttributeContainers('extraction_warning'))
 
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
-
       try:
         processing_status = self._ProcessSources(session, storage_writer)
 
       finally:
-        session.aborted = getattr(processing_status, 'aborted', True)
-
-        session_completion = session.CreateSessionCompletion()
-        storage_writer.AddAttributeContainer(session_completion)
-
         number_of_extraction_warnings = (
             storage_writer.GetNumberOfAttributeContainers(
                 'extraction_warning') - stored_number_of_extraction_warnings)

@@ -41,26 +41,6 @@ class StorageWriter(reader.StorageReader):
     self._event_tag_per_event_identifier = collections.OrderedDict()
     self._storage_type = storage_type
 
-  # TODO: kept for backwards compatibility.
-  @property
-  def number_of_events(self):
-    """int: number of events written."""
-    return self._attribute_containers_counter[self._CONTAINER_TYPE_EVENT]
-
-  # TODO: kept for backwards compatibility.
-  @property
-  def number_of_extraction_warnings(self):
-    """int: number of extraction warnings written."""
-    return self._attribute_containers_counter[
-        self._CONTAINER_TYPE_EXTRACTION_WARNING]
-
-  # TODO: kept for backwards compatibility.
-  @property
-  def number_of_recovery_warnings(self):
-    """int: number of recovery warnings written."""
-    return self._attribute_containers_counter[
-        self._CONTAINER_TYPE_RECOVERY_WARNING]
-
   def _CacheEventTagByEventIdentifier(self, event_tag, event_identifier):
     """Caches a specific event tag.
 

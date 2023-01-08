@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the serializer object implementation using JSON."""
 
-import collections
 import json
 import time
 import unittest
@@ -288,14 +287,9 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedSession(self):
     """Test ReadSerialized and WriteSerialized of Session."""
-    parsers_counter = collections.Counter()
-    parsers_counter['filestat'] = 3
-    parsers_counter['total'] = 3
-
     expected_session = sessions.Session()
     expected_session.product_name = 'plaso'
     expected_session.product_version = plaso.__version__
-    expected_session.parsers_counter = parsers_counter
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -313,9 +307,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_session_dict = {
         'aborted': False,
         'debug_mode': False,
-        'extract_winevt_resources': True,
         'identifier': session.identifier,
-        'parsers_counter': parsers_counter,
         'preferred_encoding': 'utf-8',
         'preferred_time_zone': 'UTC',
         'product_name': 'plaso',
@@ -332,14 +324,9 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     timestamp = int(time.time() * 1000000)
     session_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
-    parsers_counter = collections.Counter()
-    parsers_counter['filestat'] = 3
-    parsers_counter['total'] = 3
-
     expected_session_completion = sessions.SessionCompletion(
         identifier=session_identifier)
     expected_session_completion.timestamp = timestamp
-    expected_session_completion.parsers_counter = parsers_counter
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -357,9 +344,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_session_completion_dict = {
         'aborted': False,
         'identifier': session_identifier,
-        'parsers_counter': parsers_counter,
-        'timestamp': timestamp
-    }
+        'timestamp': timestamp}
 
     session_completion_dict = session_completion.CopyToDict()
     self.assertEqual(

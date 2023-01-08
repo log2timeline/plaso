@@ -484,16 +484,10 @@ class PsortTool(
       for session_index, session in enumerate(storage_reader.GetSessions()):
         self._knowledge_base.SetActiveSession(session.identifier)
 
-        if session.source_configurations:
-          # TODO: kept for backwards compatibility.
-          for source_configuration in session.source_configurations:
-            self._knowledge_base.ReadSystemConfigurationArtifact(
-                source_configuration.system_configuration)
-        else:
-          system_configuration = storage_reader.GetAttributeContainerByIndex(
-              'system_configuration', session_index)
-          self._knowledge_base.ReadSystemConfigurationArtifact(
-              system_configuration)
+        system_configuration = storage_reader.GetAttributeContainerByIndex(
+            'system_configuration', session_index)
+        self._knowledge_base.ReadSystemConfigurationArtifact(
+            system_configuration)
 
       self._number_of_stored_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(

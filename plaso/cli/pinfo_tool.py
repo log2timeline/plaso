@@ -954,10 +954,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._PrintSessionDetailsAsTable(session, session_identifier)
 
       if self._verbose:
-        if session.source_configurations:
-          self._PrintSourceConfigurations(
-              session.source_configurations,
-              session_identifier=session_identifier)
+        system_configuration = storage_reader.GetAttributeContainerByIndex(
+            'system_configuration', session_index)
+        if system_configuration:
+          self._PrintSystemConfigurations(
+              [system_configuration], session_identifier=session_identifier)
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
@@ -995,16 +996,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         'sessions' in self._sections):
       self._PrintSessionsDetails(storage_reader)
 
-  def _PrintSourceConfiguration(
-      self, source_configuration, session_identifier=None):
-    """Prints the details of a source configuration.
+  def _PrintSystemConfiguration(
+      self, system_configuration, session_identifier=None):
+    """Prints the details of a system configuration.
 
     Args:
-      source_configuration (SourceConfiguration): source configuration.
+      system_configuration (SystemConfiguration): system configuration.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
-    system_configuration = source_configuration.system_configuration
     if not system_configuration:
       return
 
@@ -1075,19 +1075,19 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     table_view.Write(self._output_writer)
 
-  def _PrintSourceConfigurations(
-      self, source_configurations, session_identifier=None):
-    """Prints the details of source configurations.
+  def _PrintSystemConfigurations(
+      self, system_configurations, session_identifier=None):
+    """Prints the details of system configurations.
 
     Args:
-      source_configurations (list[SourceConfiguration]): source configurations.
+      system_configurations (list[SystemConfiguration]): system configurations.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
     """
     if self._output_format == 'json':
       self._output_writer.Write(', "system_configurations": {')
 
-    for configuration_index, configuration in enumerate(source_configurations):
+    for configuration_index, configuration in enumerate(system_configurations):
       if self._output_format == 'json':
         if configuration_index != 0:
           self._output_writer.Write(', ')
@@ -1099,7 +1099,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             '"system_configuration": {0:s}'.format(json_string))
 
       elif self._output_format in ('markdown', 'text'):
-        self._PrintSourceConfiguration(
+        self._PrintSystemConfiguration(
             configuration, session_identifier=session_identifier)
 
     if self._output_format == 'json':

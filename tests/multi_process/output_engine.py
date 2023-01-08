@@ -251,12 +251,11 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     storage_file.Close()
 
-  def _ReadSessionConfiguration(self, path, knowledge_base_object):
-    """Reads session configuration information.
+  def _ReadSystemConfiguration(self, path, knowledge_base_object):
+    """Reads system configuration.
 
-    The session configuration contains the system configuration, which contains
-    information about various system specific configuration data, for example
-    the user accounts.
+    The system configuration, contains information about various system
+    specific configuration data, for example the user accounts.
 
     Args:
       path (str): path.
@@ -266,11 +265,13 @@ class OutputAndFormattingMultiProcessEngineTest(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         path)
 
-    for session in storage_reader.GetSessions():
+    for session_index, session in enumerate(storage_reader.GetSessions()):
       knowledge_base_object.SetActiveSession(session.identifier)
-      for source_configuration in session.source_configurations or []:
-        knowledge_base_object.ReadSystemConfigurationArtifact(
-            source_configuration.system_configuration)
+
+      system_configuration = storage_reader.GetAttributeContainerByIndex(
+          'system_configuration', session_index)
+      knowledge_base_object.ReadSystemConfigurationArtifact(
+          system_configuration)
 
   # TODO: add test for _ExportEvent.
 
@@ -292,15 +293,17 @@ class OutputAndFormattingMultiProcessEngineTest(
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
-      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
+      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      for session in storage_reader.GetSessions():
+      for session_index, session in enumerate(storage_reader.GetSessions()):
         knowledge_base_object.SetActiveSession(session.identifier)
-        for source_configuration in session.source_configurations or []:
-          knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration)
+
+        system_configuration = storage_reader.GetAttributeContainerByIndex(
+            'system_configuration', session_index)
+        knowledge_base_object.ReadSystemConfigurationArtifact(
+            system_configuration)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -326,15 +329,17 @@ class OutputAndFormattingMultiProcessEngineTest(
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
-      self._ReadSessionConfiguration(temp_file, knowledge_base_object)
+      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      for session in storage_reader.GetSessions():
+      for session_index, session in enumerate(storage_reader.GetSessions()):
         knowledge_base_object.SetActiveSession(session.identifier)
-        for source_configuration in session.source_configurations or []:
-          knowledge_base_object.ReadSystemConfigurationArtifact(
-              source_configuration.system_configuration)
+
+        system_configuration = storage_reader.GetAttributeContainerByIndex(
+            'system_configuration', session_index)
+        knowledge_base_object.ReadSystemConfigurationArtifact(
+            system_configuration)
 
       test_engine._ExportEvents(storage_reader, output_module)
 
