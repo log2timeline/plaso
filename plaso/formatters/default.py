@@ -6,7 +6,6 @@ from acstore.containers import interface as containers_interface
 from dfdatetime import interface as dfdatetime_interface
 
 from plaso.formatters import interface
-from plaso.lib import definitions
 
 
 class DefaultEventFormatter(interface.BasicEventFormatter):
@@ -15,6 +14,31 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
   DATA_TYPE = 'event'
   FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_values}'
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_values}'
+
+  # TODO: remove attributes that are no longer considered reserved.
+  _RESERVED_VARIABLE_NAMES = frozenset([
+      '_event_values_hash',
+      '_parser_chain',
+      'body',
+      'data_type',
+      'display_name',
+      'filename',
+      'hostname',
+      'http_headers',
+      'inode',
+      'mapped_files',
+      'metadata',
+      'offset',
+      'parser',
+      'pathspec',
+      'query',
+      'source_long',
+      'source_short',
+      'tag',
+      'timestamp',
+      'timestamp_desc',
+      'timezone',
+      'username'])
 
   def __init__(self):
     """Initializes a default event formatter."""
@@ -35,7 +59,7 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
     text_pieces = []
     for name, value in event_values.items():
       # Ignore reserved variable names.
-      if name in definitions.RESERVED_VARIABLE_NAMES:
+      if name in self._RESERVED_VARIABLE_NAMES:
         continue
 
       # Ignore attribute container identifier values.

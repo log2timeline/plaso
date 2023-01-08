@@ -392,9 +392,10 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError('Storage writer not set.')
 
-    # TODO: rename this to event_data._parser_chain or equivalent.
-    if not event_data.parser:
-      event_data.parser = self.GetParserChain()
+    parser_chain = getattr(event_data, '_parser_chain', None)
+    if not parser_chain:
+      parser_chain = self.GetParserChain()
+      setattr(event_data, '_parser_chain', parser_chain)
 
     if self._event_data_stream_identifier:
       event_data.SetEventDataStreamIdentifier(

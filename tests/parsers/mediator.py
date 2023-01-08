@@ -136,8 +136,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     parser_mediator.ProduceEventDataStream(event_data_stream)
 
     event_data = events.EventData()
+    event_data._parser_chain = 'test_parser'
     event_data.data_type = 'test'
-    event_data.parser = 'test_parser'
 
     parser_mediator.ProduceEventData(event_data)
 

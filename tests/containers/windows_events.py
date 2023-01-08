@@ -22,11 +22,11 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
+        '_parser_chain',
         'creation_time',
         'data_type',
         'mac_address',
         'origin',
-        'parser',
         'uuid']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -44,6 +44,7 @@ class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
+        '_parser_chain',
         'access_time',
         'creation_time',
         'data_type',
@@ -53,7 +54,6 @@ class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
         'modification_time',
         'name',
         'origin',
-        'parser',
         'shell_item_path']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
@@ -71,11 +71,11 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
+        '_parser_chain',
         'creation_time',
         'data_type',
         'device_path',
         'origin',
-        'parser',
         'serial_number']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())

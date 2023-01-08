@@ -526,7 +526,12 @@ class FieldFormattingHelper(object):
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
     display_name = getattr(event_data, 'display_name', None) or 'N/A'
-    parser_chain = getattr(event_data, 'parser', None) or 'N/A'
+
+    parser_chain = getattr(event_data, '_parser_chain', None)
+    if not parser_chain:
+      # Note that parser is kept for backwards compatibility.
+      parser_chain = getattr(event_data, 'parser', None) or 'N/A'
+
     error_message = (
         'Event: {0!s} description: {1:s} data type: {2:s} display name: {3:s} '
         'parser chain: {4:s} with error: {5:s}').format(

@@ -40,8 +40,8 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
-        'data_type',
-        'parser']
+        '_parser_chain',
+        'data_type']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

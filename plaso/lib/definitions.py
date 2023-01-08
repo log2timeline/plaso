@@ -40,28 +40,6 @@ OPERATING_SYSTEM_FAMILIES = frozenset([
     OPERATING_SYSTEM_FAMILY_WINDOWS_9x,
     OPERATING_SYSTEM_FAMILY_WINDOWS_NT])
 
-RESERVED_VARIABLE_NAMES = frozenset([
-    'body',
-    'data_type',
-    'display_name',
-    'filename',
-    'hostname',
-    'http_headers',
-    'inode',
-    'mapped_files',
-    'metadata',
-    'offset',
-    'parser',
-    'pathspec',
-    'query',
-    'source_long',
-    'source_short',
-    'tag',
-    'timestamp',
-    'timestamp_desc',
-    'timezone',
-    'username'])
-
 SERIALIZER_FORMAT_JSON = 'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])

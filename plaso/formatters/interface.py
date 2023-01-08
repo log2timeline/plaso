@@ -243,7 +243,11 @@ class EventFormatter(object):
       data_type = event_values.get('data_type', 'N/A')
       display_name = event_values.get('display_name', 'N/A')
       event_identifier = event_values.get('uuid', 'N/A')
-      parser_chain = event_values.get('parser', 'N/A')
+
+      parser_chain = event_values.get('_parser_chain', None)
+      if not parser_chain:
+        # Note that parser is kept for backwards compatibility.
+        parser_chain = event_values.get('parser', None) or 'N/A'
 
       error_message = (
           'unable to format string: "{0:s}" missing required event '
@@ -265,7 +269,11 @@ class EventFormatter(object):
       data_type = event_values.get('data_type', 'N/A')
       display_name = event_values.get('display_name', 'N/A')
       event_identifier = event_values.get('uuid', 'N/A')
-      parser_chain = event_values.get('parser', 'N/A')
+
+      parser_chain = event_values.get('_parser_chain', None)
+      if not parser_chain:
+        # Note that parser is kept for backwards compatibility.
+        parser_chain = event_values.get('parser', None) or 'N/A'
 
       error_message = 'Unicode decode error: {0!s}'.format(exception)
       error_message = (

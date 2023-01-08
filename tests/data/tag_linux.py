@@ -301,7 +301,6 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data.type = 0
     event_data.terminal = 'tty1'
     event_data.pid = 1
-    event_data.parser = 'utmp'
 
     storage_writer = self._TagEvent(event, event_data, None)
 

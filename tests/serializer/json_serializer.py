@@ -112,8 +112,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_event_data = events.EventData()
     expected_event_data._event_data_stream_identifier = 'event_data_stream.1'
     expected_event_data._ignored = 'Not serialized'
+    expected_event_data._parser_chain = 'test_parser'
     expected_event_data.data_type = 'test:event2'
-    expected_event_data.parser = 'test_parser'
 
     expected_event_data.empty_string = ''
     expected_event_data.zero_integer = 0
@@ -140,13 +140,13 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_data_dict = {
         '_event_data_stream_identifier': 'event_data_stream.1',
+        '_parser_chain': 'test_parser',
         'a_tuple': ('some item', [234, 52, 15]),
         'data_type': 'test:event2',
         'empty_string': '',
         'integer': 34,
         'float': -122.082203542683,
         'my_list': ['asf', 4234, 2, 54, 'asf'],
-        'parser': 'test_parser',
         'string': 'Normal string',
         'unicode_string': 'And I am a unicorn.',
         'zero_integer': 0}

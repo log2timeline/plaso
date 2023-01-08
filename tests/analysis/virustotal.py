@@ -41,8 +41,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
   _FAKE_API_KEY = '4'
 
   _TEST_EVENTS = [{
+      '_parser_chain': 'pe',
       'data_type': 'pe:compilation:compilation_time',
-      'parser': 'pe',
       'path_spec': fake_path_spec.FakePathSpec(
           location='C:\\WINDOWS\\system32\\evil.exe'),
       'pe_type': 'Executable (EXE)',

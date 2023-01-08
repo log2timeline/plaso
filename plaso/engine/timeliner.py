@@ -216,7 +216,7 @@ class EventDataTimeliner(object):
       event_data (EventData): event data.
       message (str): message of the warning.
     """
-    parser_chain = event_data.parser
+    parser_chain = getattr(event_data, '_parser_chain', None)
     path_spec = None
 
     event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
@@ -268,10 +268,10 @@ class EventDataTimeliner(object):
         event_data.data_type not in self._place_holder_event):
       return
 
-    if event_data.parser:
-      parser_name = event_data.parser.rsplit('/', maxsplit=1)[-1]
-    else:
-      parser_name = None
+    parser_name = None
+    parser_chain = getattr(event_data, '_parser_chain', None)
+    if parser_chain:
+      parser_name = parser_chain.rsplit('/', maxsplit=1)[-1]
 
     number_of_events = 0
     for attribute_name, time_description in attribute_mappings.items():

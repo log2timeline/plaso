@@ -21,28 +21,28 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'a_binary_field': b'binary',
+      {'_parser_chain': 'test_parser',
+       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
        'path_spec': fake_path_spec.FakePathSpec(
            location='log/syslog.1'),
-       'parser': 'test_parser',
        'some_additional_foo': True,
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
            'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
-      {'a_binary_field': b'binary',
+      {'_parser_chain': 'test_parser',
+       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
        'path_spec': fake_path_spec.FakePathSpec(
            location='log/syslog.1'),
-       'parser': 'test_parser',
        'some_additional_foo': True,
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
@@ -165,12 +165,12 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'a_binary_field': b'binary',
+      {'_parser_chain': 'test_parser',
+       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
-       'parser': 'test_parser',
        'path_spec': fake_path_spec.FakePathSpec(
            location='log/syslog.1'),
        'some_additional_foo': True,
