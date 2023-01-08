@@ -10,6 +10,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import events
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -327,7 +328,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       index_table (list[CacheAddress]): the cache addresses which are stored in
           the index file.
       data_block_files (dict[str: file]): look up table for the data block
@@ -375,7 +376,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_system (dfvfs.FileSystem): file system.
       file_entry (dfvfs.FileEntry): file entry.
       index_table (list[CacheAddress]): the cache addresses which are stored in
@@ -435,12 +436,23 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     self._ParseCacheEntries(parser_mediator, index_table, data_block_files)
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'\xc3\xca\x03\xc1', offset=0)
+    return format_specification
+
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses Chrome Cache files.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
 
     Raises:
