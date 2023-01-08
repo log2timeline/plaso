@@ -5,6 +5,12 @@ from plaso.cli.helpers import analysis_plugins
 from plaso.cli.helpers import archives
 from plaso.cli.helpers import artifact_definitions
 from plaso.cli.helpers import artifact_filters
+
+try:
+  from plaso.cli.helpers import bloom_analysis
+except ImportError:
+  pass
+
 from plaso.cli.helpers import codepage
 from plaso.cli.helpers import data_location
 from plaso.cli.helpers import date_filters
