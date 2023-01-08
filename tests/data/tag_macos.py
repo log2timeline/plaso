@@ -65,7 +65,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = filestat.FileStatEventData()
     event_data.filename = '/LaunchDaemons/test.plist'
-    event_data.parser = 'filestat'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
@@ -73,7 +72,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = filestat.FileStatEventData()
     event_data.filename = '/LaunchAgents/test.plist'
-    event_data.parser = 'filestat'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
@@ -99,7 +97,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
     event_data = filestat.FileStatEventData()
-    event_data.parser = 'filestat'
 
     storage_writer = self._TagEvent(event, event_data, None)
 
@@ -136,7 +133,6 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
     event_data = summary.OLECFSummaryInformationEventData()
-    event_data.parser = 'olecf/olecf_summary'
 
     storage_writer = self._TagEvent(event, event_data, None)
 

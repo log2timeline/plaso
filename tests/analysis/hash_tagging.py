@@ -70,15 +70,15 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
   _TEST_EVENTS = [
-      {'data_type': 'fs:stat',
-       'parser': 'filestat',
+      {'_parser_chain': 'filestat',
+       'data_type': 'fs:stat',
        'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\good.exe'),
        'sha256_hash': _EVENT_1_HASH,
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
-      {'data_type': 'fs:stat:ntfs',
-       'parser': 'filestat',
+      {'_parser_chain': 'filestat',
+       'data_type': 'fs:stat:ntfs',
        'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\evil.exe'),
        'sha256_hash': _EVENT_2_HASH,

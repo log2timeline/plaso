@@ -6,7 +6,6 @@ from acstore.containers import interface as containers_interface
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import definitions
 from plaso.output import dynamic
 from plaso.output import logger
 from plaso.output import manager
@@ -18,6 +17,29 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
   NAME = 'rawpy'
   DESCRIPTION = 'native (or "raw") Python output.'
+
+  # TODO: remove attributes that are no longer considered reserved.
+  _RESERVED_ATTRIBUTES = frozenset([
+      'body',
+      'data_type',
+      'display_name',
+      'filename',
+      'hostname',
+      'http_headers',
+      'inode',
+      'mapped_files',
+      'metadata',
+      'offset',
+      'parser',
+      'pathspec',
+      'query',
+      'source_long',
+      'source_short',
+      'tag',
+      'timestamp',
+      'timestamp_desc',
+      'timezone',
+      'username'])
 
   def __init__(self):
     """Initializes an output module."""
@@ -74,6 +96,10 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
             '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
                 attribute_name, event_data.data_type, attribute_value))
 
+      # Output _parser_chain as parser for backwards compatibility.
+      if attribute_name == '_parser_chain':
+        attribute_name = 'parser'
+
       field_values[attribute_name] = attribute_value
 
     if 'display_name' not in field_values:
@@ -117,7 +143,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
       field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
 
-      if field_name in definitions.RESERVED_VARIABLE_NAMES:
+      if field_name in self._RESERVED_ATTRIBUTES:
         reserved_attributes.append(field_string)
       else:
         additional_attributes.append(field_string)

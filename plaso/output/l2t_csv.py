@@ -13,7 +13,6 @@ from acstore.containers import interface as containers_interface
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.output import formatting_helper
 from plaso.output import logger
@@ -87,6 +86,31 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'type': '_FormatType',
       'user': '_FormatUsername',
       'version': '_FormatVersion'}
+
+  # Note that list is kept as-is for backwards compatibility.
+  _RESERVED_VARIABLE_NAMES = frozenset([
+      '_event_values_hash',
+      '_parser_chain',
+      'body',
+      'data_type',
+      'display_name',
+      'filename',
+      'hostname',
+      'http_headers',
+      'inode',
+      'mapped_files',
+      'metadata',
+      'offset',
+      'parser',
+      'pathspec',
+      'query',
+      'source_long',
+      'source_short',
+      'tag',
+      'timestamp',
+      'timestamp_desc',
+      'timezone',
+      'username'])
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.
@@ -170,7 +194,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     formatted_attribute_names = (
         message_formatter.GetFormatStringAttributeNames())
-    formatted_attribute_names.update(definitions.RESERVED_VARIABLE_NAMES)
+    formatted_attribute_names.update(self._RESERVED_VARIABLE_NAMES)
 
     extra_attributes = []
     for attribute_name, attribute_value in event_data.GetAttributes():
@@ -226,7 +250,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       str: parser field.
     """
-    return getattr(event_data, 'parser', '-')
+    parser_chain = getattr(event_data, '_parser_chain', None)
+    if not parser_chain:
+      # Note that parser is kept for backwards compatibility.
+      parser_chain = getattr(event_data, 'parser', None) or '-'
+
+    return parser_chain
 
   def _FormatType(self, output_mediator, event, event_data, event_data_stream):
     """Formats a type field.

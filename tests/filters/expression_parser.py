@@ -59,13 +59,13 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'Weirdo:Made up Source:Last Written',
+      {'_parser_chain': 'test_parser',
+       'data_type': 'test_log:entry',
        'display_name': (
            'unknown:/My Documents/goodfella/Documents/Hideout/myfile.txt'),
        'filename': '/My Documents/goodfella/Documents/Hideout/myfile.txt',
        'hostname': 'Agrabah',
        'inode': 1245,
-       'parser': 'Weirdo',
        'text': 'User did a very bad thing, bad, bad thing that awoke Dr. Evil.',
        'text_short': 'This description is different than the long one.',
        'timestamp': '2015-11-18 01:15:43',
@@ -428,7 +428,8 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         'parser is not \'Made\'', event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Weirdo\'', event, event_data, None, event_tag, False)
+        'parser is not \'test_parser\'', event, event_data, None, event_tag,
+        False)
 
     self._CheckIfExpressionMatches(
         'tag contains \'browser_search\'', event, event_data, None, event_tag,

@@ -13,28 +13,28 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'data_type': 'windows:registry:key_value',
+      {'_parser_chain': 'test_parser',
+       'data_type': 'windows:registry:key_value',
        'key_path': 'MY AutoRun key',
-       'parser': 'UNKNOWN',
        'timestamp': '2012-04-20 22:38:46.929596',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'values': 'Value: c:/Temp/evil.exe'},
-      {'data_type': 'windows:registry:key_value',
+      {'_parser_chain': 'test_parser',
+       'data_type': 'windows:registry:key_value',
        'key_path': 'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key',
-       'parser': 'UNKNOWN',
        'timestamp': '2012-04-20 23:56:46.929596',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'values': 'Value: send all the exes to the other world'},
-      {'data_type': 'windows:registry:key_value',
+      {'_parser_chain': 'test_parser',
+       'data_type': 'windows:registry:key_value',
        'key_path': 'HKEY_CURRENT_USER\\Windows\\Normal',
-       'parser': 'UNKNOWN',
        'timestamp': '2012-04-20 16:44:46',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN,
        'values': 'Value: run all the benign stuff'},
-      {'data_type': 'text:entry',
+      {'_parser_chain': 'test_parser',
+       'data_type': 'text:entry',
        'hostname': 'nomachine',
        'offset': 12,
-       'parser': 'UNKNOWN',
        'text': (
            'This is a line by someone not reading the log line properly. And '
            'since this log line exceeds the accepted 80 chars it will be '

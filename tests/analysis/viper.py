@@ -40,8 +40,8 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
 
   _TEST_EVENTS = [{
+      '_parser_chain': 'pe',
       'data_type': 'pe:compilation:compilation_time',
-      'parser': 'pe',
       'path_spec': fake_path_spec.FakePathSpec(
           location='C:\\WINDOWS\\system32\\evil.exe'),
       'pe_type': 'Executable (EXE)',

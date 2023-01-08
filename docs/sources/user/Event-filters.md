@@ -60,8 +60,11 @@ is also supported. That is to say if each of these operators is preceded with
 the keyword "not" a negative matching is performed.
 
 **Note that as of 20190512 special event attributes like 'message', 'source',
-'source_short', 'source_long' and 'sourcetype' are considered part of the output
+'source_short', 'source_long' and 'sourcetype' are considered output fields
 and are no longer expanded in the event filter.**
+
+**Note that as of 20230108 the 'parser' event attribute is considered an output
+field and is discouraged to be used in the event filter.**
 
 ## Example event filter expressions
 

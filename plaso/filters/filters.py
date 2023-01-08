@@ -204,11 +204,11 @@ class BinaryOperator(Operator):
 class GenericBinaryOperator(BinaryOperator):
   """Shared functionality for common binary operators."""
 
-  _DEPRECATED_ATTRIBUTE_NAMES = frozenset([
-      'message', 'source', 'source_long', 'source_short', 'sourcetype'])
-
   # Attributes that are stored in the event attribute container.
   _EVENT_ATTRIBUTE_NAMES = frozenset(['timestamp', 'timestamp_desc'])
+
+  _UNSUPPORTED_ATTRIBUTE_NAMES = frozenset([
+      'message', 'source', 'source_long', 'source_short', 'sourcetype'])
 
   def __init__(self, arguments=None, **kwargs):
     """Initializes a generic binary operator.
@@ -245,7 +245,7 @@ class GenericBinaryOperator(BinaryOperator):
     Returns:
       object: attribute value or None if not available.
     """
-    if attribute_name in self._DEPRECATED_ATTRIBUTE_NAMES:
+    if attribute_name in self._UNSUPPORTED_ATTRIBUTE_NAMES:
       logger.warning(
           'Expansion of {0:s} in event filter no longer supported'.format(
               attribute_name))
@@ -268,6 +268,14 @@ class GenericBinaryOperator(BinaryOperator):
       attribute_value = getattr(event_tag, 'labels', None)
 
     else:
+      # Note that parser is kept for backwards compatibility and should be
+      # added to _UNSUPPORTED_ATTRIBUTE_NAMES once obsolete.
+      if attribute_name == 'parser':
+        logger.warning(
+            'Expansion of {0:s} in event filter is deprecated'.format(
+                attribute_name))
+        attribute_name = '_parser_chain'
+
       attribute_value = getattr(event_data, attribute_name, None)
 
     return attribute_value

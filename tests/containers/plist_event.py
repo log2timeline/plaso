@@ -19,9 +19,9 @@ class PlistTimeEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
+        '_parser_chain',
         'data_type',
         'key',
-        'parser',
         'root',
         'written_time']
 

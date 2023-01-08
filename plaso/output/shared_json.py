@@ -59,10 +59,15 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
                        dfdatetime_interface.DateTimeValues)):
           continue
 
+        # Output _parser_chain as parser for backwards compatibility.
+        if attribute_name == '_parser_chain':
+          attribute_name = 'parser'
+
         field_values[attribute_name] = attribute_value
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
+        # Output path_spec as pathspec for backwards compatibility.
         if attribute_name == 'path_spec':
           attribute_name = 'pathspec'
           attribute_value = self._JSON_SERIALIZER.WriteSerializedDict(
