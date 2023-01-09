@@ -3,6 +3,8 @@
 
 import datetime
 import os
+import time
+
 import pytz
 
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
@@ -561,6 +563,7 @@ class ExtractionTool(
         session_completion = session.CreateSessionCompletion()
         storage_writer.AddAttributeContainer(session_completion)
       else:
+        session.completion_time = int(time.time() * 1000000)
         storage_writer.UpdateAttributeContainer(session)
 
     return processing_status

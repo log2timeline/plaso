@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Shared functionality for an analysis CLI tool."""
 
+import time
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.analysis import manager as analysis_manager
@@ -123,6 +125,7 @@ class AnalysisTool(
           session_completion = session.CreateSessionCompletion()
           storage_writer.AddAttributeContainer(session_completion)
         else:
+          session.completion_time = int(time.time() * 1000000)
           storage_writer.UpdateAttributeContainer(session)
 
     finally:
