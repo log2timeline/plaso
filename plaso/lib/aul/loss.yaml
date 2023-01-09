@@ -1,0 +1,26 @@
+# dtFabric format specification.
+---
+name: aul_loss
+type: format
+description: Apple Unified Logging and Activity Tracing formats
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: tracev3_firehose_loss
+type: structure
+description: TraceV3 firehose loss activity.
+attributes:
+  byte_order: little-endian
+members:
+- name: start_time
+  data_type: uint64
+- name: end_time
+  data_type: uint64
+- name: count
+  data_type: uint64

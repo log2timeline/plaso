@@ -1,0 +1,145 @@
+# dtFabric format specification.
+---
+name: aul_location
+type: format
+description: Apple Unified Logging and Activity Tracing formats
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: bool8
+type: boolean
+attributes:
+  size: 1
+  units: bytes
+  false_value: false
+  true_value: true
+---
+name: bool32
+type: boolean
+attributes:
+  size: 4
+  units: bytes
+  false_value: false
+  true_value: true
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: int64
+type: integer
+attributes:
+  format: signed
+  size: 8
+  units: bytes
+---
+name: float64
+type: floating-point
+attributes:
+  size: 8
+  units: bytes
+---
+name: location_manager_state_data
+type: structure
+description: Custom Statedump CLLocationManagerStateTracker data
+attributes:
+  byte_order: little-endian
+members:
+- name: distance_filter
+  data_type: float64
+- name: desired_accuracy
+  data_type: float64
+- name: updating_location
+  data_type: bool8
+- name: requesting_location
+  data_type: bool8
+- name: requesting_ranging
+  data_type: bool8
+- name: updating_ranging
+  data_type: bool8
+- name: updating_heading
+  data_type: bool8
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 3
+- name: heading_filter
+  data_type: float64
+- name: allows_location_prompts
+  data_type: bool8
+- name: allows_altered_accessory_location
+  data_type: bool8
+- name: dynamic_accuracy_reduction_enabled
+  data_type: bool8
+- name: previous_authorization_status_valid
+  data_type: bool8
+- name: previous_authorization_status
+  data_type: uint32
+- name: limits_precision
+  data_type: bool8
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  number_of_elements: 7
+- name: activity_type
+  data_type: int64
+- name: pause_location_updates_auto
+  data_type: int32
+- name: paused
+  data_type: bool8
+- name: allows_background_location
+  data_type: bool8
+- name: shows_background_location
+  data_type: bool8
+- name: allows_map_correction
+  data_type: bool8
+---
+name: location_manager_state_data_extra
+type: structure
+description: Additional Custom Statedump CLLocationManagerStateTracker data for non-Catalina machines
+attributes:
+  byte_order: little-endian
+members:
+- name: batching_location
+  data_type: bool8
+- name: updating_vehicle_speed
+  data_type: bool8
+- name: updating_vehicle_heading
+  data_type: bool8
+- name: match_info
+  data_type: bool8
+- name: ground_altitude
+  data_type: bool8
+- name: fusion_info
+  data_type: bool8
+- name: courtesy_prompt
+  data_type: bool8
+- name: is_authorized_widget
+  data_type: bool8
+---
+name: location_tracker_client_data
+type: structure
+description: Custom Statedump CLClientManagerStateTracker data
+attributes:
+  byte_order: little-endian
+members:
+- name: location_enabled
+  data_type: bool32
+- name: location_restricted
+  data_type: bool32

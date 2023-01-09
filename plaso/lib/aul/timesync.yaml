@@ -1,0 +1,101 @@
+# dtFabric format specification.
+---
+name: aul_timesync
+type: format
+description: Apple Unified Logging and Activity Tracing formats
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: int64
+type: integer
+attributes:
+  format: signed
+  size: 8
+  units: bytes
+---
+name: uuid_be
+type: uuid
+attributes:
+  byte_order: big-endian
+---
+name: timesync_boot_record
+type: structure
+description: Timesync boot record
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  data_type: uint16
+  value: 0xbbb0
+- name: header_size
+  data_type: uint16
+- name: unknown
+  data_type: uint32
+- name: boot_uuid
+  data_type: uuid_be
+- name: timebase_numerator
+  data_type: uint32
+- name: timebase_denominator
+  data_type: uint32
+- name: boot_time
+  data_type: uint64
+- name: time_zone_offset
+  data_type: int32
+- name: dst_flag
+  data_type: uint32
+---
+name: timesync_sync_record
+type: structure
+description: Timesync sync record
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "\x54\x73\x20\x00"
+- name: unknown1
+  data_type: uint32
+- name: kernel_continuous_timestamp
+  data_type: uint64
+- name: wall_time
+  data_type: int64
+- name: time_zone_offset
+  data_type: int32
+- name: dst_flag
+  data_type: uint32

@@ -1,0 +1,82 @@
+# dtFabric format specification.
+---
+name: aul_simpledump
+type: format
+description: Apple Unified Logging and Activity Tracing formats
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: uuid_be
+type: uuid
+attributes:
+  byte_order: big-endian
+---
+name: tracev3_simpledump
+type: structure
+description: TraceV3 simpledump chunk.
+attributes:
+  byte_order: little-endian
+members:
+- name: first_number_proc_id
+  data_type: uint64
+- name: second_number_proc_id
+  data_type: uint64
+- name: continuous_time
+  data_type: uint64
+- name: thread_id
+  data_type: uint64
+- name: unknown_offset
+  data_type: uint32
+- name: unknown_ttl
+  data_type: uint16
+- name: unknown_type
+  data_type: uint16
+- name: sender_uuid
+  data_type: uuid_be
+- name: dsc_uuid
+  data_type: uuid_be
+- name: unknown_num_message_strings
+  data_type: uint32
+- name: subsystem_string_size
+  data_type: uint32
+- name: message_string_size
+  data_type: uint32
+- name: subsystem_string
+  elements_data_size: tracev3_simpledump.subsystem_string_size
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+- name: message_string
+  elements_data_size: tracev3_simpledump.message_string_size
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"

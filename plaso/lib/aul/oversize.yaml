@@ -1,0 +1,90 @@
+# dtFabric format specification.
+---
+name: aul_oversize
+type: format
+description: Apple Unified Logging and Activity Tracing formats
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint8
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: cstring
+type: string
+encoding: utf8
+element_data_type: char
+elements_terminator: "\x00"
+---
+name: tracev3_oversize
+type: structure
+description: TraceV3 oversize chunk.
+attributes:
+  byte_order: little-endian
+members:
+- name: first_number_proc_id
+  data_type: uint64
+- name: second_number_proc_id
+  data_type: uint32
+- name: ttl
+  data_type: uint32
+- name: continuous_time
+  data_type: uint64
+- name: data_ref_index
+  data_type: uint32
+- name: public_data_size
+  data_type: uint16
+- name: private_data_size
+  data_type: uint16
+- name: data
+  type: stream
+  element_data_type: byte
+  elements_data_size: tracev3_oversize.public_data_size + tracev3_oversize.private_data_size
+---
+name: tracev3_firehose_tracepoint_data
+type: structure
+description: TraceV3 firehose tracepoint data type.
+attributes:
+  byte_order: little-endian
+members:
+- name: unknown1
+  data_type: uint8
+- name: num_items
+  data_type: uint8

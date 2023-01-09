@@ -144,6 +144,29 @@ short_source: 'LOG'
 source: 'MacOS ASL Log'
 ---
 type: 'conditional'
+data_type: 'mac:aul:event'
+message:
+- 'Level: {level}'
+- 'Subsystem: {subsystem}'
+- 'Thread ID: {thread_id}'
+- 'PID: {pid}'
+- 'EUID: {euid}'
+- 'Boot UUID: {boot_uuid}'
+- 'TTL: {ttl}'
+- 'Process: {process}'
+- 'Process UUID: {process_uuid}'
+- 'Library: {library}'
+- 'Library UUID: {library_uuid}'
+- 'Activity ID: {activity_id}'
+- 'Category: {category}'
+- 'Message: {message}',
+short_message:
+- 'Subsystem: {subsystem}'
+- 'Message: {message}'
+short_source: 'LOG'
+source: 'MacOS AUL Log'
+---
+type: 'conditional'
 data_type: 'macos:asl:file'
 boolean_helpers:
 - input_attribute: 'is_dirty'
