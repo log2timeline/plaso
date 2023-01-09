@@ -185,6 +185,10 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       _COMBINED_LOG_FORMAT_LINE ^ _COMMON_LOG_FORMAT_LINE ^
       _VHOST_COMBINED_LOG_FORMAT_LINE)
 
+  VERIFICATION_LITERALS = [
+      '"CONNECT ', '"DELETE ', '"GET ', '"HEAD ', ' HTTP/', '"OPTIONS ',
+      '"PATCH ', '"POST ', '"PUT ', '"TRACE ']
+
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
 

@@ -108,6 +108,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       r'[0-9]{2}:[0-9]{2}:[0-9]{2}[,.][0-9]{3} [+-][0-9]{4}) '
       r'[A-Z]+ pid=[0-9]+ [0-9]+:\S+[ ]+\S+:[0-9]+ .*\n')
 
+  VERIFICATION_LITERALS = [' ERROR ', ' FATAL ', ' INFO ', ' pid=', ' WARNING ']
+
   def __init__(self):
     """Initializes a text parser plugin."""
     super(GoogleDriveSyncLogTextPlugin, self).__init__()

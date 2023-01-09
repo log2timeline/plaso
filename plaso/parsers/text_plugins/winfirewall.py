@@ -168,6 +168,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
           pyparsing.Regex('#(Fields|Time Format|Version): .*') + _END_OF_LINE) +
       pyparsing.Regex('#Software: Microsoft Windows Firewall') + _END_OF_LINE)
 
+  VERIFICATION_LITERALS = ['#Software: Microsoft Windows Firewall ']
+
   def __init__(self):
     """Initializes a text parser plugin."""
     super(WinFirewallLogTextPlugin, self).__init__()

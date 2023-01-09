@@ -5,6 +5,8 @@ import codecs
 import io
 import os
 
+import pysigscan
+
 from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -118,6 +120,9 @@ class TextLogParser(interface.FileObjectParser):
     """Initializes a text-based log parser."""
     super(TextLogParser, self).__init__()
     self._plugins_per_encoding = {}
+    self._format_scanner = None
+    self._non_sigscan_plugin_names = None
+    self._plugin_name_per_format_identifier = {}
 
   def _ContainsBinary(self, text):
     """Determines if the text contains binary (non-text) characters.
@@ -129,6 +134,37 @@ class TextLogParser(interface.FileObjectParser):
       bool: True if the text contains binary (non-text) characters.
     """
     return bool(self._NON_TEXT_CHARACTERS.intersection(set(text)))
+
+  def _CreateFormatScanner(self, parser_mediator):
+    """Creates a signature scanner for required format check.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    self._non_sigscan_plugin_names = set()
+    self._plugin_name_per_format_identifier = {}
+
+    scanner_object = pysigscan.scanner()
+    scanner_object.set_scan_buffer_size(65536)
+
+    for plugin_name, plugin in self._plugins_per_name.items():
+      if not plugin.VERIFICATION_LITERALS:
+        self._non_sigscan_plugin_names.add(plugin_name)
+      else:
+        encoding = plugin.ENCODING or parser_mediator.codepage
+
+        for index, literal in enumerate(plugin.VERIFICATION_LITERALS):
+          identifier = '{0:s}{1:d}'.format(plugin_name, index)
+          encoded_literal = literal.encode(encoding)
+          scanner_object.add_signature(
+              identifier, 0, encoded_literal,
+              pysigscan.signature_flags.NO_OFFSET)
+
+          self._plugin_name_per_format_identifier[identifier] = plugin_name
+
+    if self._plugin_name_per_format_identifier:
+      self._format_scanner = scanner_object
 
   def EnablePlugins(self, plugin_includes):
     """Enables parser plugins.
@@ -172,11 +208,33 @@ class TextLogParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+    if not self._format_scanner and not self._non_sigscan_plugin_names:
+      self._CreateFormatScanner(parser_mediator)
+
     file_object.seek(0, os.SEEK_SET)
 
     # Cache the first 64k of encoded data so it does not need to be read for
     # each encoding.
     encoded_data_buffer = file_object.read(EncodedTextReader.BUFFER_SIZE)
+    encoded_data_file_object = io.BytesIO(encoded_data_buffer)
+
+    plugins_with_matching_literals = set()
+    if self._format_scanner:
+      parser_mediator.SampleFormatCheckStartTiming('text_format_scanner')
+
+      try:
+        scan_state = pysigscan.scan_state()
+        self._format_scanner.scan_file_object(
+            scan_state, encoded_data_file_object)
+
+        for scan_result in iter(scan_state.scan_results):
+          plugin_name = self._plugin_name_per_format_identifier.get(
+              scan_result.identifier, None)
+
+          plugins_with_matching_literals.add(plugin_name)
+
+      finally:
+        parser_mediator.SampleFormatCheckStopTiming('text_format_scanner')
 
     matching_plugin = False
     for encoding, plugins in self._plugins_per_encoding.items():
@@ -186,21 +244,7 @@ class TextLogParser(interface.FileObjectParser):
       if encoding == 'default':
         encoding = parser_mediator.codepage
 
-      encoded_data_file_object = io.BytesIO(encoded_data_buffer)
-      text_reader = EncodedTextReader(
-          encoded_data_file_object, encoding=encoding)
-
-      try:
-        text_reader.ReadLines()
-      except UnicodeDecodeError:
-        logger.debug(
-            'Unable to read text-based log file with encoding: {0:s}'.format(
-                encoding))
-        continue
-
-      if self._ContainsBinary(text_reader.lines):
-        logger.debug('Detected binary format')
-        continue
+      text_reader = None
 
       for plugin in plugins:
         if parser_mediator.abort:
@@ -211,7 +255,33 @@ class TextLogParser(interface.FileObjectParser):
         parser_mediator.SampleFormatCheckStartTiming(profiling_name)
 
         try:
-          result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+          logger.debug(
+              'Checking required format of: {0:s} in encoding: {1:s}'.format(
+                  plugin.NAME, encoding))
+
+          result = False
+          if (plugin.NAME in plugins_with_matching_literals or
+              plugin.NAME in self._non_sigscan_plugin_names):
+            if not text_reader:
+              encoded_data_file_object.seek(0, os.SEEK_SET)
+              text_reader = EncodedTextReader(
+                  encoded_data_file_object, encoding=encoding)
+
+              text_reader.ReadLines()
+
+              # TODO: check if this works with xchatscrollback log.
+              if self._ContainsBinary(text_reader.lines):
+                logger.debug('Detected binary format')
+                continue
+
+            result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+
+        except UnicodeDecodeError:
+          logger.debug(
+              'Unable to read text-based log file with encoding: {0:s}'.format(
+                  encoding))
+          result = False
+
         finally:
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 

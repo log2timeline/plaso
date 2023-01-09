@@ -119,10 +119,9 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).setResultsName('user_name')
 
-  _HTTP_METHOD = (
-      pyparsing.oneOf(
-          ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST',
-              'PUT', 'TRACE'])).setResultsName('http_method')
+  _HTTP_METHOD = pyparsing.oneOf([
+      'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
+      'TRACE'])
 
   _REMOTE_NAME = (
       _IP_ADDRESS |
@@ -144,7 +143,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
-      _HTTP_METHOD +
+      _HTTP_METHOD.setResultsName('http_method') +
       _REQUEST_URI.setResultsName('request_url') +
       _HTTP_VERSION +
       _INTEGER.setResultsName('response_code') +
@@ -165,7 +164,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
-      _HTTP_METHOD +
+      _HTTP_METHOD.setResultsName('http_method') +
       _REQUEST_URI.setResultsName('request_url') +
       _HTTP_VERSION +
       _INTEGER.setResultsName('response_code') +
@@ -181,6 +180,10 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       ('post_711_format', _POST_711_FORMAT_LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _PRE_711_FORMAT_LOG_LINE ^ _POST_711_FORMAT_LOG_LINE
+
+  VERIFICATION_LITERALS = [
+      ' CONNECT ', ' DELETE ', ' GET ', ' HEAD ', ' HTTP/', ' OPTIONS ',
+      ' PATCH ', ' POST ', ' PUT ', ' TRACE ']
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
