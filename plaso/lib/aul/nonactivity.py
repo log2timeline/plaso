@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Non-activity chunk parser."""
+
 import base64
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
@@ -54,14 +55,14 @@ class NonactivityParser(object):
 
     try:
       dsc_file = tracev3.catalog.files[proc_info.catalog_dsc_index]
-    except (IndexError, AttributeError):
+    except (AttributeError, IndexError):
       dsc_file = None
 
     try:
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
-    except (IndexError, AttributeError):
+    except (AttributeError, IndexError):
       uuid_file = None
 
     uint8_data_type_map = tracev3.GetDataTypeMap('uint8')
@@ -109,14 +110,14 @@ class NonactivityParser(object):
       logger.debug('Non-activity has subsystem: {0:d}'.format(subsystem_value))
 
     if flags & constants.HAS_TTL:
-      ttl_value = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                    uint8_data_type_map)
+      ttl_value = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint8_data_type_map)
       offset += 1
       logger.debug("Non-activity has TTL: {0:d}".format(ttl_value))
 
     if flags & constants.HAS_DATA_REF:
-      data_ref_id = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                      uint16_data_type_map)
+      data_ref_id = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint16_data_type_map)
       offset += 1
       logger.debug("Non-activity with data reference: {0:d}".format(
           data_ref_id))
@@ -127,8 +128,8 @@ class NonactivityParser(object):
 
     if flags & constants.HAS_MESSAGE_IN_UUIDTEXT:
       logger.debug("Non-activity has message in UUID Text file")
-      if flags & constants.HAS_ALTERNATE_UUID and \
-        flags & constants.HAS_SIGNPOST_NAME:
+      if (flags & constants.HAS_ALTERNATE_UUID and
+          flags & constants.HAS_SIGNPOST_NAME):
         logger.error(
             "Non-activity with Alternate UUID and Signpost not supported")
         return
@@ -152,10 +153,8 @@ class NonactivityParser(object):
         logger.error("Private strings wanted but not supplied")
         return
 
-    if (
-      tracepoint.log_activity_type
-      == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
-    ):
+    if tracepoint.log_activity_type == (
+        constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS):
       logger.error("Loss Type not supported")
       return
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Statedump chunk parser."""
+
 import os
 import plistlib
 

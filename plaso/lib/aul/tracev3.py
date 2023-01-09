@@ -56,9 +56,6 @@ class TraceV3FileParser(interface.FileObjectParser,
   _CHUNK_TAG_CATALOG = 0x600B
   _CHUNK_TAG_CHUNKSET = 0x600D
 
-  # pylint: disable=line-too-long
-  # Taken from https://github.com/ydkhatri/UnifiedLogReader/blob/master/UnifiedLog/tracev3_file.py#L56
-  # pylint: enable=line-too-long
   format_strings_re = re.compile(
       r'%(\{[^\}]{1,64}\})?([0-9.'
       r" *\-+#']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])"
@@ -94,7 +91,7 @@ class TraceV3FileParser(interface.FileObjectParser,
       data (list[tuple[int, int, bytes]]): List of data items
 
     Returns:
-      string
+      str: format string.
 
     Raises:
       ParseError: if the format string or data could not be parsed.

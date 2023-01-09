@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Signpost chunk parser."""
+
 import base64
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time

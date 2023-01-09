@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Trace chunk parser."""
+
 import os
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time

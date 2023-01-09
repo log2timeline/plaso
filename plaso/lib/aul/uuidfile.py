@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) UUIDText file parser."""
+
 import os
 
 from dfvfs.path import factory as path_spec_factory
