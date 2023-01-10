@@ -125,6 +125,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE
 
+  VERIFICATION_LITERALS = ['Windows PowerShell']
+
   # TODO: handle footer with end time.
 
   def __init__(self):
