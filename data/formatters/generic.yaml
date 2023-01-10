@@ -341,13 +341,13 @@ data_type: 'gcp:log:entry'
 message:
 - '{text_payload}'
 - 'User {user}'
-- 'performed {action}'
-- 'on {resource}'
+- 'performed {event_subtype}'
+- 'on {resource_name}'
 short_message:
 - '{text_payload}'
 - 'User {user}'
-- 'performed {action}'
-- 'on {resource}'
+- 'performed {event_subtype}'
+- 'on {resource_name}'
 short_source: 'LOG'
 source: 'Google Cloud Log'
 ---
