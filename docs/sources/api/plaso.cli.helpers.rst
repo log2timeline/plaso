@@ -36,6 +36,14 @@ plaso.cli.helpers.artifact\_filters module
    :undoc-members:
    :show-inheritance:
 
+plaso.cli.helpers.bloom\_analysis module
+----------------------------------------
+
+.. automodule:: plaso.cli.helpers.bloom_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.cli.helpers.codepage module
 ---------------------------------
 

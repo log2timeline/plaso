@@ -22,22 +22,6 @@ plaso.storage.factory module
    :undoc-members:
    :show-inheritance:
 
-plaso.storage.identifiers module
---------------------------------
-
-.. automodule:: plaso.storage.identifiers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.storage.interface module
-------------------------------
-
-.. automodule:: plaso.storage.interface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.storage.logger module
 ---------------------------
 

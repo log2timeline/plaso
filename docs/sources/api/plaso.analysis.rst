@@ -4,6 +4,14 @@ plaso.analysis package
 Submodules
 ----------
 
+plaso.analysis.bloom module
+---------------------------
+
+.. automodule:: plaso.analysis.bloom
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.analysis.browser\_search module
 -------------------------------------
 

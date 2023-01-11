@@ -140,6 +140,14 @@ plaso.output.shared\_opensearch module
    :undoc-members:
    :show-inheritance:
 
+plaso.output.text\_file module
+------------------------------
+
+.. automodule:: plaso.output.text_file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.output.tln module
 -----------------------
 
