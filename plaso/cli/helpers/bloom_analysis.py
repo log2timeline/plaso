@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The bloom analysis plugin CLI arguments helper."""
+"""The bloom database analysis plugin CLI arguments helper."""
 
 from plaso.analysis import bloom
 from plaso.cli.helpers import interface
@@ -8,11 +8,11 @@ from plaso.lib import errors
 
 
 class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
-  """Bloom analysis plugin CLI arguments helper."""
+  """Bloom database analysis plugin CLI arguments helper."""
 
   NAME = 'bloom'
   CATEGORY = 'analysis'
-  DESCRIPTION = 'Argument helper for the hashlookup_bloom analysis plugin.'
+  DESCRIPTION = 'Argument helper for the bloom database analysis plugin.'
 
   _DEFAULT_BLOOM_DATABASE_PATH = "hashlookup-full.bloom"
   _DEFAULT_HASH = 'sha1'
@@ -32,20 +32,20 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
           to append arguments to.
     """
     argument_group.add_argument(
-        '--bloom-hash', '--bloom_hash', dest='bloom_hash', type=str,
-        action='store', choices=cls._SUPPORTED_HASHES,
-        default=cls._DEFAULT_HASH, metavar='HASH', help=(
-            'Type of hash to use to query bloom file'
-            '(hash are capitalized), the default is: '
-            '{0:s}. Supported options: {1:s}'.format(
-                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
-
-    argument_group.add_argument(
         '--bloom-file', '--bloom_file', dest='bloom_file', type=str,
         action='store', default=cls._DEFAULT_BLOOM_DATABASE_PATH,
         metavar='PATH', help=(
-            'Path to the bloom file, the default is: {0:s}').format(
+            'Path to the bloom database file, the default is: {0:s}').format(
                 cls._DEFAULT_BLOOM_DATABASE_PATH))
+
+    argument_group.add_argument(
+        '--bloom-hash', '--bloom_hash', dest='bloom_hash', type=str,
+        action='store', choices=cls._SUPPORTED_HASHES,
+        default=cls._DEFAULT_HASH, metavar='HASH', help=(
+            'Type of hash to use to query the bloom database file (note that '
+            'hash values must be stored in upper case), the default is: {0:s}. '
+            'Supported options: {1:s}.'.format(
+                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
 
     argument_group.add_argument(
         '--bloom-label', '--bloom_label', dest='bloom_label', type=str,
@@ -64,7 +64,7 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the analysis plugin is the wrong type.
-      BadConfigOption: when unable to load the bloom file.
+      BadConfigOption: when unable to load the bloom database file.
     """
     if not isinstance(analysis_plugin, bloom.BloomAnalysisPlugin):
       raise errors.BadConfigObject(
@@ -84,7 +84,7 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
     analysis_plugin.SetBloomDatabasePath(bloom_file)
     if not analysis_plugin.TestLoading():
       raise errors.BadConfigOption(
-          'Unable to load bloom file {0:s}'.format(bloom_file))
+          'Unable to load bloom database: {0:s}'.format(bloom_file))
 
 
 manager.ArgumentHelperManager.RegisterHelper(BloomAnalysisArgumentsHelper)
