@@ -30,7 +30,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'action': None,
         'container': None,
         'event_subtype': 'beta.compute.networks.insert',
         'event_type': None,
@@ -51,7 +50,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             'callerIp: 1.1.1.1', 'callerSuppliedUserAgent: UserAgent'],
         'request_name': None,
         'request_target_tags': None,
-        'resource': None,
         'resource_labels': [
             'network_id: 4881930676783516364', 'project_id: fake-project'],
         'resource_name': 'projects/fake-project/global/networks/test',

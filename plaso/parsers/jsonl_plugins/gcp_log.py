@@ -12,9 +12,8 @@ class GCPLogEventData(events.EventData):
   """Google Cloud (GCP) log event data.
 
   Attributes:
-    action (str): GCP action.
     container (str): TODO
-    event_subtype (str): TODO
+    event_subtype (str): JSON event sub type or protocol buffer method.
     event_type (str): TODO
     filename (str): TODO
     firewall_rules (list[str]): firewall rules.
@@ -32,7 +31,6 @@ class GCPLogEventData(events.EventData):
     request_metadata (list[str]): request metadata values.
     request_name (str): name of the request.
     request_target_tags (str): TODO
-    resource (str): resource the action is being performed on.
     resource_labels (list[str]): resource labels.
     resource_name (str): name of the resource.
     service_account_display_name (str): display name of the service account.
@@ -47,7 +45,6 @@ class GCPLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(GCPLogEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.action = None
     self.container = None
     self.event_subtype = None
     self.event_type = None
@@ -66,7 +63,6 @@ class GCPLogEventData(events.EventData):
     self.request_metadata = None
     self.request_name = None
     self.request_target_tags = None
-    self.resource = None
     self.resource_labels = None
     self.resource_name = None
     self.service_account_display_name = None
@@ -81,9 +77,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
   NAME = 'gcp_log'
   DATA_FORMAT = 'Google Cloud (GCP) log'
-
-  # Ordered from least to most preferred value.
-  _RESROUCE_ATTRIBUTES = ['resource_label_instance_id', 'resourceName']
 
   def _ParseJSONPayload(self, json_dict, event_data):
     """Extracts information from a jsonPayload value.
@@ -232,7 +225,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     labels = self._GetJSONValue(resource, 'labels', default_value={})
 
     resource_labels = [
-      '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
+        '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
 
     event_data = GCPLogEventData()
     event_data.log_name = self._GetJSONValue(json_dict, 'logName')
