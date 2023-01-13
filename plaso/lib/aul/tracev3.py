@@ -1077,9 +1077,16 @@ class TraceV3FileParser(interface.FileObjectParser,
       ct = firehose_header.base_continuous_time + (
           firehose_tracepoint.continuous_time_lower |
           (firehose_tracepoint.continuous_time_upper << 32))
+      wt = 0
+      kct = 0
+      if firehose_header.base_continuous_time == 0:
+        wt = self.boot_uuid_ts.boot_time
       ts = aul_time.FindClosestTimesyncItemInList(
-          self.boot_uuid_ts.sync_records, ct)
-      time = ts.wall_time + (ct * self.boot_uuid_ts.adjustment) - ts.kernel_continuous_timestamp
+          self.boot_uuid_ts.sync_records, ct, wt == 0)
+      if ts:
+        wt = ts.wall_time
+        kct = ts.kernel_continuous_timestamp
+      time = wt + (ct * self.boot_uuid_ts.adjustment) - (kct * self.boot_uuid_ts.adjustment)
       self._ParseTracepointData(parser_mediator, firehose_tracepoint, proc_info,
                                 time, private_strings)
 

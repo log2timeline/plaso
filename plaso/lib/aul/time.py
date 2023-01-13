@@ -24,12 +24,13 @@ def GetBootUuidTimeSync(records, uuid):
   logger.error("Could not find boot uuid {} in Timesync!".format(uuid))
   return None
 
-def FindClosestTimesyncItemInList(sync_records, continuous_time):
-  """Returns the closest timesync item from the provided list
+def FindClosestTimesyncItemInList(sync_records, continuous_time, return_first=False):
+  """Returns the closest timesync item from the provided list without going over.
 
   Args:
     sync_records (List[timesync_sync_record]): List of timesync boot records.
     continuous_time (int): The timestamp we're looking for.
+    return_first (bool): Whether to return the first largest record.
 
   Returns:
     timesync_boot_record or None if not available.
@@ -37,12 +38,16 @@ def FindClosestTimesyncItemInList(sync_records, continuous_time):
   if not sync_records:
     return None
 
-  closest_tsi = sync_records[0]
+  closest_tsi = None
   for item in sync_records:
     if item.kernel_continuous_timestamp > continuous_time:
+      if return_first:
+        closest_tsi = item
       break
     closest_tsi = item
+
   return closest_tsi
+
 
 def TimestampFromContTime(boot_uuid_ts_list, ct):
   """Converts a continuous time into a Date Time string.
@@ -60,5 +65,5 @@ def TimestampFromContTime(boot_uuid_ts_list, ct):
   if ts is not None:
     time = ts.wall_time + ct - ts.kernel_continuous_timestamp
     time_string = dfdatetime_apfs_time.APFSTime(
-      timestamp=time).CopyToDateTimeString()
+      timestamp=int(time)).CopyToDateTimeString()
   return time_string

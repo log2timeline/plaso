@@ -77,9 +77,9 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
 
     with open('/tmp/fryoutput.csv', 'a') as f:
       csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(timestamp=time).CopyToDateTimeString(),
+          dfdatetime_apfs_time.APFSTime(timestamp=int(time)).CopyToDateTimeString(),
           event_data.level, event_data.message
       ])
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=time)
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

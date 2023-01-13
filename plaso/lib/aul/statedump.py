@@ -91,7 +91,12 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     ct = statedump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
       tracev3.boot_uuid_ts.sync_records, ct)
-    time = ts.wall_time + (ct * tracev3.boot_uuid_ts.adjustment)  - ts.kernel_continuous_timestamp
+    wt = 0
+    kct = 0
+    if ts:
+      wt = ts.wall_time
+      kct = ts.kernel_continuous_timestamp
+    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - kct
 
     if statedump_structure.data_type == self._STATETYPE_PLIST:
       try:
@@ -148,9 +153,9 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     with open('/tmp/fryoutput.csv', 'a') as f:
       csv.writer(f).writerow([
           dfdatetime_apfs_time.APFSTime(
-            timestamp=time).CopyToDateTimeString(), event_data.level,
+            timestamp=int(time)).CopyToDateTimeString(), event_data.level,
           event_data.message
       ])
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=time)
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
