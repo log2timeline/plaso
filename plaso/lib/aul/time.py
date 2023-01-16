@@ -18,6 +18,7 @@ def GetBootUuidTimeSync(records, uuid):
   for ts in records:
     if ts.boot_uuid == uuid:
       ts.adjustment = 1
+      # ARM processors.
       if ts.timebase_numerator == 125 and ts.timebase_denominator == 3:
         ts.adjustment = 125 / 3
       return ts
@@ -38,12 +39,14 @@ def FindClosestTimesyncItemInList(sync_records, continuous_time, return_first=Fa
   if not sync_records:
     return None
 
+  i = 1
   closest_tsi = None
   for item in sync_records:
     if item.kernel_continuous_timestamp > continuous_time:
-      if return_first:
+      if return_first and i == 1:
         closest_tsi = item
       break
+    i += 1
     closest_tsi = item
 
   return closest_tsi
