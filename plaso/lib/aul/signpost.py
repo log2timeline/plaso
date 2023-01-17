@@ -225,12 +225,12 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
     event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
     event_data.thread_id = hex(tracepoint.thread_identifier)
+    event_data.subsystem = (proc_info.items.get(subsystem_value, ("", "")))[0]
+    event_data.category = (proc_info.items.get(subsystem_value, ("", "")))[1]
+
     if ttl_value:
       event_data.ttl = ttl_value
 
-    event_data.message = tracev3.FormatString(fmt, log_data)
-    if not event_data.message:
-      return
-
+    event_data.message = 'Signpost ID: {} - Signpost Name: {} - {}'.format(hex(signpost_id).upper()[2:], hex(signpost_name).upper()[2:], tracev3.FormatString(fmt, log_data))
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
