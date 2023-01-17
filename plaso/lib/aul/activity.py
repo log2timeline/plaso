@@ -205,8 +205,6 @@ class ActivityParser(object):
       else:
         fmt = tracev3.ExtractFormatStrings(tracepoint.format_string_location,
                                            uuid_file)
-    #if not fmt and not log_data:
-    #  return
 
     event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
 
