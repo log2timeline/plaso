@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) file parser."""
 
@@ -16,10 +15,30 @@ from plaso.parsers import manager
 
 
 class AULEventData(events.EventData):
+  """Apple Unified Logging (AUL) event data.
+
+  Attributes:
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
+    activity_id (str): path from the root to this plist key.
+    boot_uuid (str): unique boot identifier.
+    category (str): event category.
+    euid (int): effective user identifier (UID)
+    level (str): level of criticality of the event.
+    library (str): originating library path.
+    library_uuid (str): Unique library identifier.
+    message (str): the log message.
+    pid (int): process identifier (PID).
+    process (str): originating process path.
+    process_uuid (str): unique process identifier.
+    subsystem (str): subsystem that produced the logging event.
+    thread_id (str): hex representation of the thread ID.
+    ttl (int): log time to live (TTL).
+  """
   DATA_TYPE = 'mac:aul:event'
 
   def __init__(self):
-    """Apple Unified Logging (AUL) event data."""
+    """Initialise event data."""
     super(AULEventData, self).__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.activity_id = None
@@ -89,7 +108,8 @@ class AULParser(interface.FileEntryParser):
     self.uuid_parser = uuidfile.UUIDFileParser(file_entry, file_system)
     self.dsc_parser = dsc.DSCFileParser(file_entry, file_system)
 
-    self.tracev3_parser = tracev3.TraceV3FileParser(self.timesync_parser, self.uuid_parser, self.dsc_parser)
+    self.tracev3_parser = tracev3.TraceV3FileParser(
+        self.timesync_parser, self.uuid_parser, self.dsc_parser)
 
     try:
       self.tracev3_parser.ParseFileObject(parser_mediator, file_object)

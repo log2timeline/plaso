@@ -2,7 +2,7 @@
 """The Apple Unified Logging (AUL) Oversize formatter helper."""
 
 from plaso.lib import errors
-from plaso.parsers import logger
+
 
 class FormatterFlags(object):
   """Helper class for message formatter flags."""

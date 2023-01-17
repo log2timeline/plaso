@@ -5,6 +5,7 @@ from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.parsers import logger
 
+
 def GetBootUuidTimeSync(records, uuid):
   """Retrieves the timesync for a specific boot identifier.
 
@@ -25,8 +26,11 @@ def GetBootUuidTimeSync(records, uuid):
   logger.error("Could not find boot uuid {} in Timesync!".format(uuid))
   return None
 
-def FindClosestTimesyncItemInList(sync_records, continuous_time, return_first=False):
-  """Returns the closest timesync item from the provided list without going over.
+
+def FindClosestTimesyncItemInList(sync_records,
+                                  continuous_time,
+                                  return_first=False):
+  """Returns the closest timesync item from the provided list without going over
 
   Args:
     sync_records (List[timesync_sync_record]): List of timesync boot records.
@@ -68,5 +72,5 @@ def TimestampFromContTime(boot_uuid_ts_list, ct):
   if ts is not None:
     time = ts.wall_time + ct - ts.kernel_continuous_timestamp
     time_string = dfdatetime_apfs_time.APFSTime(
-      timestamp=int(time)).CopyToDateTimeString()
+        timestamp=int(time)).CopyToDateTimeString()
   return time_string

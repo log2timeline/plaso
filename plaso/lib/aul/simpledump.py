@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Simpledump chunk parser."""
-import csv
 import os
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
@@ -50,7 +49,9 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
     ))
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = "Simpledump"
 
     event_data.thread_id = hex(simpledump_structure.thread_id)
@@ -69,14 +70,12 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
     if ts:
       wt = ts.wall_time
       kct = ts.kernel_continuous_timestamp
-    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - (kct * tracev3.boot_uuid_ts.adjustment)
+    time = (
+        wt
+        + (ct * tracev3.boot_uuid_ts.adjustment)
+        - (kct * tracev3.boot_uuid_ts.adjustment)
+    )
 
-    with open('/tmp/fryoutput.csv', 'a') as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(
-            timestamp=int(time)).CopyToDateTimeString(), event_data.level,
-          event_data.message
-      ])
-
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

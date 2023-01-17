@@ -47,7 +47,9 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     ttl_value = None
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
 
@@ -179,7 +181,11 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
 
     if data_ref_id != 0:
       for oversize_data in tracev3.oversize_data:
-        if oversize_data.first_proc_id == proc_info.first_number_proc_id and oversize_data.second_proc_id == proc_info.second_number_proc_id and oversize_data.data_ref_index == data_ref_id:
+        if (
+            oversize_data.first_proc_id == proc_info.first_number_proc_id
+            and oversize_data.second_proc_id == proc_info.second_number_proc_id
+            and oversize_data.data_ref_index == data_ref_id
+        ):
           log_data = oversize_data.strings
           found = True
           break
@@ -222,8 +228,12 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
       dsc_range.path = dsc_uuid.path
       dsc_range.uuid = dsc_uuid.sender_identifier
 
-    event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
-    event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
+    event_data.library = (
+        dsc_range.path if dsc_range.path else uuid_file.library_path
+    )
+    event_data.library_uuid = (
+        dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
+    )
     event_data.thread_id = hex(tracepoint.thread_identifier)
     event_data.subsystem = (proc_info.items.get(subsystem_value, ("", "")))[0]
     event_data.category = (proc_info.items.get(subsystem_value, ("", "")))[1]
@@ -231,6 +241,11 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     if ttl_value:
       event_data.ttl = ttl_value
 
-    event_data.message = 'Signpost ID: {} - Signpost Name: {} - {}'.format(hex(signpost_id).upper()[2:], hex(signpost_name).upper()[2:], tracev3.FormatString(fmt, log_data))
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.message = "Signpost ID: {} - Signpost Name: {} - {}".format(
+        hex(signpost_id).upper()[2:],
+        hex(signpost_name).upper()[2:],
+        tracev3.FormatString(fmt, log_data),
+    )
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

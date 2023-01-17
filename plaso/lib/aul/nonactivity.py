@@ -48,7 +48,9 @@ class NonactivityParser():
     ttl_value = None
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       dsc_file = tracev3.catalog.files[proc_info.catalog_dsc_index]
@@ -115,7 +117,8 @@ class NonactivityParser():
       data_ref_id = tracev3.ReadStructureFromByteStream(data[offset:], offset,
                                                       uint16_data_type_map)
       offset += 1
-      logger.debug("Non-activity with data reference: {0:d}".format(data_ref_id))
+      logger.debug("Non-activity with data reference: {0:d}".format(
+          data_ref_id))
 
     if flags & constants.HAS_SIGNPOST_NAME:
       raise errors.ParseError("Non-activity signpost not supported")
@@ -143,7 +146,10 @@ class NonactivityParser():
       else:
         raise errors.ParseError("Private strings wanted but not supplied")
 
-    if tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
+    if (
+      tracepoint.log_activity_type
+      == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
+    ):
       raise errors.ParseError("Loss Type not supported")
 
     data_meta = tracev3.ReadStructureFromByteStream(
@@ -214,16 +220,24 @@ class NonactivityParser():
           logger.debug("End result: {0:s}".format(result))
       log_data.insert(item[3], (item[0], item[2], result))
 
-    if tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
+    if (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
+    ):
       raise errors.ParseError("Loss Type not supported")
 
     dsc_range = dsc.DSCRange()
     extra_offset_value_result = tracepoint.format_string_location
     if formatter_flags.shared_cache or formatter_flags.large_shared_cache != 0:
       if formatter_flags.large_offset_data != 0:
-        if formatter_flags.large_offset_data != formatter_flags.large_shared_cache / 2 and \
-          not formatter_flags.shared_cache:
-          formatter_flags.large_offset_data = formatter_flags.large_shared_cache / 2
+        if (
+            formatter_flags.large_offset_data
+            != formatter_flags.large_shared_cache / 2
+            and not formatter_flags.shared_cache
+        ):
+          formatter_flags.large_offset_data = (
+              formatter_flags.large_shared_cache / 2
+          )
           extra_offset_value = "{0:X}{1:08x}".format(
               formatter_flags.large_offset_data,
               tracepoint.format_string_location)
@@ -307,9 +321,16 @@ class NonactivityParser():
       dsc_range.uuid = dsc_uuid.sender_identifier
 
     if dsc_range.path or uuid_file:
-      event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
+      event_data.library = (
+          dsc_range.path if dsc_range.path else uuid_file.library_path
+      )
     if dsc_range.uuid or uuid_file:
-      event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
+      event_data.library_uuid = (
+          dsc_range.uuid.hex.upper()
+          if dsc_range.uuid
+          else uuid_file.uuid.upper()
+      )
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

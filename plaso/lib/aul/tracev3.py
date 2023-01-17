@@ -56,9 +56,12 @@ class TraceV3FileParser(interface.FileObjectParser,
   _CHUNK_TAG_CATALOG = 0x600B
   _CHUNK_TAG_CHUNKSET = 0x600D
 
+  # pylint: disable=line-too-long
   # Taken from https://github.com/ydkhatri/UnifiedLogReader/blob/master/UnifiedLog/tracev3_file.py#L56
+  # pylint: enable=line-too-long
   format_strings_re = re.compile(
-      r"%(\{[^\}]{1,64}\})?([0-9. *\-+#']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])"
+      r'%(\{[^\}]{1,64}\})?([0-9.'
+      r" *\-+#']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])"
   )
 
   def __init__(self, timesync_parser, uuid_parser, dsc_parser):
@@ -134,28 +137,18 @@ class TraceV3FileParser(interface.FileObjectParser,
         continue
 
       data_item = data[i]
-      if data_item[
-          0] == constants.FIREHOSE_ITEM_DYNAMIC_PRECISION_TYPE and '%*' in match.group(
-          ):
+      if (
+          data_item[0] == constants.FIREHOSE_ITEM_DYNAMIC_PRECISION_TYPE
+          and '%*' in match.group()
+      ):
         i += 1
         data_item = data[i]
 
       custom_specifier = match.group(1) or ''
-      # == Custom specifier types implemented ==
-      #  Value type      Custom specifier         Example output
-      #  uuid_t          %{uuid_t}.16P            10742E39-0657-41F8-AB99-878C5EC2DCAA
-      #  BOOL            %{BOOL}d                 YES
-      #  bool            %{bool}d                 true
-      #  sockaddr        %{network:sockaddr}.*P   fe80::f:86ff:fee9:5c16
-      #  time_t          %{time_t}d               2016-01-12 19:41:37
-      #  darwin.errno    %{darwin.errno}d         [32: Broken pipe]
-      #  in_addr         %{network:in_addr}d      127.0.0.1
-      #  in6_addr        %{network:in6_addr}.16P  fe80::f:86ff:fee9:5c16
-      #  darwin.mode     %{darwin.mode}d          drwxr-xr-x
       # == Custom specifier types not yet seen (unimplemented) ==
       #  darwin.signal   %{darwin.signal}d        [sigsegv: Segmentation Fault]
       #  timeval         %{timeval}.*P            2016-01-12 19:41:37.774236
-      #  timespec        %{timespec}.*P           2016-01-12 19:41:37.2382382823
+      #  timespec        %{timespec}.*P           2016-01-12 19:41:37.238238282
       #  bytes           %{bytes}d                4.72 kB
       #  iec-bytes       %{iec-bytes}d            4.61 KiB
       #  bitrate         %{bitrate}d              123 kbps
@@ -178,12 +171,25 @@ class TraceV3FileParser(interface.FileObjectParser,
         i += 1
         continue
 
-      if ((data_type in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES + constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES + [constants.FIREHOSE_ITEM_STRING_PRIVATE]
-         ) and len(raw_data) == 0 and (
-             data_size == 0 or
-             (data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and
-              data_size == 0x8000))) or (
-            data_type == constants.FIREHOSE_ITEM_SENSITIVE and custom_specifier == '{sensitive}'):
+      if (
+          (
+              data_type
+              in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+              + constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
+              + [constants.FIREHOSE_ITEM_STRING_PRIVATE]
+          )
+          and len(raw_data) == 0
+          and (
+              data_size == 0
+              or (
+                  data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE
+                  and data_size == 0x8000
+              )
+          )
+      ) or (
+          data_type == constants.FIREHOSE_ITEM_SENSITIVE
+          and custom_specifier == '{sensitive}'
+      ):
         output += '<private>'
         i += 1
         continue
@@ -192,16 +198,24 @@ class TraceV3FileParser(interface.FileObjectParser,
           not in ('p', 'P', 's', 'S')) and '*' in flags_width_precision:
         raise errors.ParseError('* not supported')
 
-      if data_type in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES and specifier != 'P':
+      if (
+          data_type in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
+          and specifier != 'P'
+      ):
         raise errors.ParseError('Non-pointer Arbitrary type')
 
       if specifier in ('d', 'D', 'i', 'u', 'U', 'x', 'X', 'o', 'O', 'm'):
         number = 0
-        if data_size == 0 and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE:
+        if (
+            data_size == 0
+            and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
+        ):
           raise errors.ParseError(
               'Size 0 in int fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
-        elif data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data:
+        elif (
+            data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
+        ):
           output += '0'  # A private number
         else:
           if specifier in ('d', 'D', 'i'):
@@ -293,8 +307,12 @@ class TraceV3FileParser(interface.FileObjectParser,
           elif 'mdns:protocol' in custom_specifier:
             output += dns.DNS.GetProtocolType(number)
           elif 'mdns:dns.idflags' in custom_specifier:
-            flags = self._ReadStructureFromByteStream(raw_data, 0, uint16_data_type_map)
-            dns_id = self._ReadStructureFromByteStream(raw_data[2:], 2, uint16_data_type_map)
+            flags = self._ReadStructureFromByteStream(
+                raw_data, 0, uint16_data_type_map
+            )
+            dns_id = self._ReadStructureFromByteStream(
+                raw_data[2:], 2, uint16_data_type_map
+            )
             flag_string = dns.DNS.ParseFlags(flags)
             output += 'id: {0:s} ({1:d}), flags: 0x{2:04x} ({3:s})'.format(
               hex(dns_id).upper(), dns_id, flags, flag_string)
@@ -337,11 +355,16 @@ class TraceV3FileParser(interface.FileObjectParser,
               pass
       elif specifier in ('f', 'e', 'E', 'g', 'G', 'a', 'A', 'F'):
         number = 0
-        if data_size == 0 and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE:
+        if (
+            data_size == 0
+            and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
+        ):
           raise errors.ParseError(
               'Size 0 in float fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
-        elif data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data:
+        elif (
+            data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
+        ):
           output += '0'  # A private number
         else:
           if data_size == 4:
@@ -406,7 +429,10 @@ class TraceV3FileParser(interface.FileObjectParser,
         if data_size == 0:
           continue
         if 'uuid_t' in custom_specifier:
-          if data_type in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES and not raw_data:
+          if (
+              data_type in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+              and not raw_data
+          ):
             chars = '<private>'
           else:
             uuid = self._ReadStructureFromByteStream(raw_data, 0,
@@ -419,15 +445,22 @@ class TraceV3FileParser(interface.FileObjectParser,
             mbr_type = 'group'
             if raw_data[0] in constants.USER_TYPES:
               mbr_type = 'user'
-            chars = '{0:s}: {1:s}@{2:s}'.format(mbr_type, user_group_type.name,
-                                                (user_group_type.domain or '<not found>'))
+            chars = '{0:s}: {1:s}@{2:s}'.format(
+                mbr_type,
+                user_group_type.name,
+                (user_group_type.domain or '<not found>'),
+            )
           elif raw_data[0] in constants.UID_TYPES + constants.GID_TYPES:
             uid_gid_type = self._ReadStructureFromByteStream(
                 raw_data[1:], 1, self._GetDataTypeMap('mbr_uid_gid_type'))
             mbr_type = 'group'
             if raw_data[0] in constants.UID_TYPES:
               mbr_type = 'user'
-            chars = '{0:s}: {1:d}@{2:s}'.format(mbr_type, uid_gid_type.uid, (uid_gid_type.domain or '<not found>'))
+            chars = '{0:s}: {1:d}@{2:s}'.format(
+                mbr_type,
+                uid_gid_type.uid,
+                (uid_gid_type.domain or '<not found>'),
+            )
           else:
             raise errors.ParseError(
                 'Unknown MBR Details Header Byte: 0x{0:X}'.format(raw_data[0]))
@@ -472,13 +505,20 @@ class TraceV3FileParser(interface.FileObjectParser,
           else:
             raise errors.ParseError('Unknown SQLite Code')
         elif 'location:_CLLocationManagerStateTrackerState' in custom_specifier:
-          state_tracker_structure, extra_state_tracker_structure = location.LocationManagerStateTrackerParser().Parse(data_size, raw_data)
+          (
+              state_tracker_structure,
+              extra_state_tracker_structure,
+          ) = location.LocationManagerStateTrackerParser().Parse(
+              data_size, raw_data
+          )
           chars = str({
               **state_tracker_structure,
               **extra_state_tracker_structure
           })
         elif 'location:_CLClientManagerStateTrackerState' in custom_specifier:
-          chars = str(location.LocationClientStateTrackerParser().Parse(raw_data))
+          chars = str(
+              location.LocationClientStateTrackerParser().Parse(raw_data)
+          )
         elif 'mdns:dnshdr' in custom_specifier:
           dns_parser = dns.DNS()
           chars = dns_parser.ParseDNSHeader(raw_data)
@@ -603,10 +643,13 @@ class TraceV3FileParser(interface.FileObjectParser,
         file_object, file_offset, data_type_map)
 
     logger.debug(
-        'Catalog data: NumProcs {0:d} // NumSubChunks {1:d} // EarliestFirehoseTS {2:d}'
-        .format(catalog.number_of_process_information_entries,
-                catalog.number_of_sub_chunks,
-                catalog.earliest_firehose_timestamp))
+        'Catalog data: NumProcs {0:d} // NumSubChunks {1:d} //'
+        ' EarliestFirehoseTS {2:d}'.format(
+            catalog.number_of_process_information_entries,
+            catalog.number_of_sub_chunks,
+            catalog.earliest_firehose_timestamp,
+        )
+    )
     logger.debug('Num UUIDS: {0:d} // Num SubSystemStrings {1:d}'.format(
         len(catalog.uuids), len(catalog.sub_system_strings)))
 
@@ -912,6 +955,7 @@ class TraceV3FileParser(interface.FileObjectParser,
     return (format_string, dsc_range)
 
   def ReadItems(self, data_meta, data, offset):
+    """Use the metadata and raw data to retrieve the data items."""
     log_data = []
     deferred_data_items = []
     index = 0
@@ -920,13 +964,22 @@ class TraceV3FileParser(interface.FileObjectParser,
           data[offset:], offset,
           self._GetDataTypeMap('tracev3_firehose_tracepoint_data_item'))
       offset += 2 + data_item.item_size
-      logger.debug('Item data: Type {0:d} // Size {1:d}'.format(data_item.item_type, data_item.item_size))
+      logger.debug(
+          'Item data: Type {0:d} // Size {1:d}'.format(
+              data_item.item_type, data_item.item_size
+          )
+      )
       if data_item.item_type in constants.FIREHOSE_ITEM_NUMBER_TYPES:
         logger.debug('Number: {0!s}'.format(data_item.item))
         log_data.append(
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
-      elif data_item.item_type in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES + constants.FIREHOSE_ITEM_STRING_TYPES + [constants.FIREHOSE_ITEM_STRING_PRIVATE]:
+      elif (
+          data_item.item_type
+          in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+          + constants.FIREHOSE_ITEM_STRING_TYPES
+          + [constants.FIREHOSE_ITEM_STRING_PRIVATE]
+      ):
         offset -= data_item.item_size
         string_message = self._ReadStructureFromByteStream(
             data[offset:], offset,
@@ -952,24 +1005,39 @@ class TraceV3FileParser(interface.FileObjectParser,
 
     logger.debug('Parsing log line')
     log_type = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
-    if tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY:
+    if (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY
+    ):
       if log_type == 0x80:
         raise errors.ParseError('Non Activity Signpost ??')
       nap = nonactivity.NonactivityParser()
       nap.ParseNonActivity(self, parser_mediator, tracepoint, proc_info, time,
         private_strings)
-    elif tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST:
+    elif (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST
+    ):
       spp = signpost.SignpostParser()
       spp.ParseSignpost(self, parser_mediator, tracepoint, proc_info, time,
                           private_strings)
-    elif tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_ACTIVITY:
+    elif (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_ACTIVITY
+    ):
       ap = activity.ActivityParser()
       ap.ParseActivity(self, parser_mediator, tracepoint, proc_info, time)
-    elif tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
+    elif (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
+    ):
       # This is Loss
       lp = loss.LossParser()
       lp.ParseLoss(self, parser_mediator, tracepoint, proc_info, time)
-    elif tracepoint.log_activity_type == constants.FIREHOSE_LOG_ACTIVITY_TYPE_TRACE:
+    elif (
+        tracepoint.log_activity_type
+        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_TRACE
+    ):
       tp = trace.TraceParser()
       tp.ParceTrace(self, parser_mediator, tracepoint, proc_info, time)
     elif tracepoint.log_activity_type == 0x0:
@@ -997,10 +1065,14 @@ class TraceV3FileParser(interface.FileObjectParser,
                                                         data_type_map)
 
     logger.debug(
-        'Firehose Header data: ProcID 1 {0:d} // ProcID 2 {1:d} // TTL {2:d} // CT {3:d}'
-        .format(firehose_header.first_number_proc_id,
-                firehose_header.second_number_proc_id, firehose_header.ttl,
-                firehose_header.base_continuous_time))
+        'Firehose Header data: ProcID 1 {0:d} // ProcID 2 {1:d} // TTL {2:d} //'
+        ' CT {3:d}'.format(
+            firehose_header.first_number_proc_id,
+            firehose_header.second_number_proc_id,
+            firehose_header.ttl,
+            firehose_header.base_continuous_time,
+        )
+    )
 
     proc_id = firehose_header.second_number_proc_id | (
         firehose_header.first_number_proc_id << 32)
@@ -1034,11 +1106,14 @@ class TraceV3FileParser(interface.FileObjectParser,
           chunk_data[chunk_data_offset:], data_offset + chunk_data_offset,
           tracepoint_map)
       logger.debug(
-          'Firehose Tracepoint data: ActivityType {0:d} // Flags {1:d} // ThreadID {2:d} // Datasize {3:d}'
-          .format(firehose_tracepoint.log_activity_type,
-                  firehose_tracepoint.flags,
-                  firehose_tracepoint.thread_identifier,
-                  firehose_tracepoint.data_size))
+          'Firehose Tracepoint data: ActivityType {0:d} // Flags {1:d} //'
+          ' ThreadID {2:d} // Datasize {3:d}'.format(
+              firehose_tracepoint.log_activity_type,
+              firehose_tracepoint.flags,
+              firehose_tracepoint.thread_identifier,
+              firehose_tracepoint.data_size,
+          )
+      )
 
       ct = firehose_header.base_continuous_time + (
           firehose_tracepoint.continuous_time_lower |
@@ -1052,7 +1127,11 @@ class TraceV3FileParser(interface.FileObjectParser,
       if ts:
         wt = ts.wall_time
         kct = ts.kernel_continuous_timestamp
-      time = wt + (ct * self.boot_uuid_ts.adjustment) - (kct * self.boot_uuid_ts.adjustment)
+      time = (
+          wt
+          + (ct * self.boot_uuid_ts.adjustment)
+          - (kct * self.boot_uuid_ts.adjustment)
+      )
       self._ParseTracepointData(parser_mediator, firehose_tracepoint, proc_info,
                                 time, private_strings)
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Trace chunk parser."""
-import csv
 import os
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
@@ -34,7 +33,9 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     data = tracepoint.data
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
@@ -75,11 +76,6 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     if uuid_file:
       event_data.library_uuid = uuid_file.uuid.upper()
 
-    with open('/tmp/fryoutput.csv', 'a') as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(timestamp=int(time)).CopyToDateTimeString(),
-          event_data.level, event_data.message
-      ])
-
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

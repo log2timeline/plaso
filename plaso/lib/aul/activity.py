@@ -6,8 +6,8 @@ import base64
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.lib.aul import constants
-from plaso.lib.aul import formatter
 from plaso.lib.aul import dsc
+from plaso.lib.aul import formatter
 
 from plaso.lib import errors
 
@@ -21,7 +21,7 @@ class ActivityParser():
   _USER_ACTION_ACTIVITY_TYPE = 0x3
 
   def ParseActivity(self, tracev3, parser_mediator, tracepoint, proc_info,
-                     time):
+                    time):
     """Processes an Activity chunk.
 
     Args:
@@ -47,7 +47,9 @@ class ActivityParser():
     dsc_range = dsc.DSCRange()
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       dsc_file = tracev3.catalog.files[proc_info.catalog_dsc_index]
@@ -156,15 +158,30 @@ class ActivityParser():
     if formatter_flags.shared_cache or formatter_flags.large_shared_cache != 0:
       extra_offset_value_result = tracepoint.format_string_location
       if formatter_flags.large_offset_data != 0:
-        if formatter_flags.large_offset_data != formatter_flags.large_shared_cache / 2 and not formatter_flags.shared_cache:
+        if (
+            formatter_flags.large_offset_data
+            != formatter_flags.large_shared_cache / 2
+            and not formatter_flags.shared_cache
+        ):
           # Recovery ?
-          formatter_flags.large_offset_data = int(formatter_flags.large_shared_cache / 2)
-          extra_offset_value = '{0:X}{1:08x}'.format(formatter_flags.large_offset_data, tracepoint.format_string_location)
+          formatter_flags.large_offset_data = int(
+              formatter_flags.large_shared_cache / 2
+          )
+          extra_offset_value = '{0:X}{1:08x}'.format(
+              formatter_flags.large_offset_data,
+              tracepoint.format_string_location,
+          )
         elif formatter_flags.shared_cache:
           formatter_flags.large_offset_data = 8
-          extra_offset_value = '{0:X}{1:07x}'.format(formatter_flags.large_offset_data, tracepoint.format_string_location)
+          extra_offset_value = '{0:X}{1:07x}'.format(
+              formatter_flags.large_offset_data,
+              tracepoint.format_string_location,
+          )
         else:
-          extra_offset_value = '{0:X}{1:08x}'.format(formatter_flags.large_offset_data, tracepoint.format_string_location)
+          extra_offset_value = '{0:X}{1:08x}'.format(
+              formatter_flags.large_offset_data,
+              tracepoint.format_string_location,
+          )
         extra_offset_value_result = int(extra_offset_value, 16)
       (fmt, dsc_range) = tracev3.ExtractSharedStrings(
           tracepoint.format_string_location, extra_offset_value_result,
@@ -198,10 +215,17 @@ class ActivityParser():
       dsc_range.uuid = dsc_uuid.sender_identifier
 
     if dsc_range.path or uuid_file:
-      event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
+      event_data.library = (
+          dsc_range.path if dsc_range.path else uuid_file.library_path
+      )
     if dsc_range.uuid or uuid_file:
-      event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
+      event_data.library_uuid = (
+          dsc_range.uuid.hex.upper()
+          if dsc_range.uuid
+          else uuid_file.uuid.upper()
+      )
     event_data.message = tracev3.FormatString(fmt, log_data)
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

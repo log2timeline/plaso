@@ -2,21 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple Unified Logging parser."""
 
-import csv
-import glob
-import logging
-import tempfile
-import os
-import re
-import subprocess
 import unittest
-
-from pathlib import Path
-
 from plaso.parsers import aul
-
-from plaso.helpers.mac import dns
-
 from tests.parsers import test_lib
 
 
@@ -27,11 +14,12 @@ class AULParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a Special tracev3."""
     parser = aul.AULParser()
     storage_writer = self._ParseFile([
-      'AUL', 'private', 'var', 'db', 'Diagnostics', 'Special',
-      '0000000000000001.tracev3'
+        'AUL', 'private', 'var', 'db', 'Diagnostics', 'Special',
+        '0000000000000001.tracev3'
     ], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event_data')
+    number_of_events = storage_writer.GetNumberOfAttributeContainers(
+      'event_data')
     self.assertEqual(number_of_events, 12154)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
@@ -50,12 +38,14 @@ class AULParserTest(test_lib.ParserTestCase):
         'thread_id': '0x7d1',
         'pid': 24,
         'euid': 0,
-        'library': '/System/Library/PrivateFrameworks/SkyLight.framework/Versions/A/SkyLight',
+        'library': ('/System/Library/PrivateFrameworks/'
+            'SkyLight.framework/Versions/A/SkyLight'),
         'library_uuid': 'C0FDF86CF96037A3A380DB8700D43801',
         'boot_uuid': 'DCA6F38213F54A21BF2B4F1BE8B136BD',
         'process': '/usr/libexec/UserEventAgent',
         'process_uuid': '36B63A883FE730FCB7BA46C45DD6B7D8',
-        'message': 'Failed to look up the port for "com.apple.windowserver.active" (1102)'
+        'message': ('Failed to look up the port for '
+            '"com.apple.windowserver.active" (1102)')
         }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
@@ -65,11 +55,12 @@ class AULParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a Persist tracev3."""
     parser = aul.AULParser()
     storage_writer = self._ParseFile([
-      'AUL', 'private', 'var', 'db', 'Diagnostics', 'Persist',
-      '0000000000000001.tracev3'
+        'AUL', 'private', 'var', 'db', 'Diagnostics', 'Persist',
+        '0000000000000001.tracev3'
     ], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event_data')
+    number_of_events = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
     self.assertEqual(number_of_events, 82995)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
@@ -92,7 +83,8 @@ class AULParserTest(test_lib.ParserTestCase):
         'boot_uuid': 'DCA6F38213F54A21BF2B4F1BE8B136BD',
         'process': '/kernel',
         'process_uuid': 'D1CD0AAF523E312F92996116B1D511FE',
-        'message': 'initialize_screen: b=BE3A18000, w=00000280, h=00000470, r=00000A00, d=00000000\n'
+        'message': ('initialize_screen: b=BE3A18000, w=00000280, h=00000470,'
+            'r=00000A00, d=00000000\n')
         }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 22)
@@ -102,11 +94,12 @@ class AULParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a Signpost tracev3."""
     parser = aul.AULParser()
     storage_writer = self._ParseFile([
-      'AUL', 'private', 'var', 'db', 'Diagnostics', 'Signpost',
-      '0000000000000001.tracev3'
+        'AUL', 'private', 'var', 'db', 'Diagnostics', 'Signpost',
+        '0000000000000001.tracev3'
     ], parser)
 
-    number_of_events = storage_writer.GetNumberOfAttributeContainers('event_data')
+    number_of_events = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
     self.assertEqual(number_of_events, 2461)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
@@ -130,7 +123,11 @@ class AULParserTest(test_lib.ParserTestCase):
         'process': '/usr/libexec/kernelmanagerd',
         'process_uuid': '5FCEBDDD01743777BB92E98174383008',
         'category': 'Speed',
-        'message': 'Signpost ID: EEEEB0B5B2B2EEEE - Signpost Name: 1D4930 - Kext com.apple.driver.KextExcludeList v17.0.0 in codeless kext bundle com.apple.driver.KextExcludeList at /Library/Apple/System/Library/Extensions/AppleKextExcludeList.kext: FS contents are valid'
+        'message': ('Signpost ID: EEEEB0B5B2B2EEEE - Signpost Name: 1D4930 '
+            '- Kext com.apple.driver.KextExcludeList v17.0.0 in '
+            'codeless kext bundle com.apple.driver.KextExcludeList at '
+            '/Library/Apple/System/Library/Extensions/'
+            'AppleKextExcludeList.kext: FS contents are valid')
         }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)

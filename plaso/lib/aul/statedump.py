@@ -84,7 +84,9 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
       event_data.process = uuid_file.library_path
     except (IndexError, AttributeError):
       pass
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = "StateDump"
 
     ct = statedump_structure.continuous_time
@@ -95,7 +97,11 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     if ts:
       wt = ts.wall_time
       kct = ts.kernel_continuous_timestamp
-    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - (kct * tracev3.boot_uuid_ts.adjustment)
+    time = (
+        wt
+        + (ct * tracev3.boot_uuid_ts.adjustment)
+        - (kct * tracev3.boot_uuid_ts.adjustment)
+    )
 
     if statedump_structure.data_type == self._STATETYPE_PLIST:
       try:
@@ -126,9 +132,18 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
           else:
             state_tracker_structure['charger_type'] = "Unknown"
         elif statedump_structure.string_name == "CLClientManagerStateTracker":
-          state_tracker_structure = location.LocationClientStateTrackerParser().Parse(statedump_structure.data)
+          state_tracker_structure = (
+              location.LocationClientStateTrackerParser().Parse(
+                  statedump_structure.data
+              )
+          )
         elif statedump_structure.string_name == "CLLocationManagerStateTracker":
-          state_tracker_structure, extra_state_tracker_structure = location.LocationManagerStateTrackerParser().Parse(statedump_structure.data_size, statedump_structure.data)
+          (
+              state_tracker_structure,
+              extra_state_tracker_structure,
+          ) = location.LocationManagerStateTrackerParser().Parse(
+              statedump_structure.data_size, statedump_structure.data
+          )
         else:
           raise errors.ParseError(
             "Unknown location Statedump Custom object not supported")
@@ -148,5 +163,6 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     event_data.activity_id = hex(statedump_structure.activity_id)
     event_data.pid = statedump_structure.first_number_proc_id
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

@@ -40,12 +40,15 @@ class LossParser(dtfabric_helper.DtFabricHelper):
     ))
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
+    generation_subchunk = tracev3.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
     event_data.level = "Loss"
     event_data.thread_id = hex(tracepoint.thread_identifier)
     event_data.message = "Lost {0:d} log messages".format(loss_structure.count)
 
-    event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
+    event_data.creation_time = dfdatetime_apfs_time.APFSTime(
+        timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
