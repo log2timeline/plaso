@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Signpost chunk parser."""
 import base64
-import csv
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
@@ -48,7 +47,7 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     ttl_value = None
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
 
@@ -217,8 +216,14 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
                                            uuid_file)
 
     event_data.level = "Signpost"
+
+    if dsc_range.uuid_index:
+      dsc_uuid = dsc_file.uuids[dsc_range.uuid_index]
+      dsc_range.path = dsc_uuid.path
+      dsc_range.uuid = dsc_uuid.sender_identifier
+
     event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
-    event_data.library_uuid = dsc_range.uuid.hex if dsc_range.uuid else uuid_file.uuid
+    event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
     event_data.thread_id = hex(tracepoint.thread_identifier)
     if ttl_value:
       event_data.ttl = ttl_value
@@ -226,12 +231,6 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     event_data.message = tracev3.FormatString(fmt, log_data)
     if not event_data.message:
       return
-
-    with open("/tmp/fryoutput.csv", "a") as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(timestamp=int(time)).CopyToDateTimeString(),
-          event_data.level, event_data.message
-      ])
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

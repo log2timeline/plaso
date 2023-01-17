@@ -2,7 +2,6 @@
 """The Apple Unified Logging (AUL) Activity chunk parser."""
 
 import base64
-import csv
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
@@ -48,7 +47,7 @@ class ActivityParser():
     dsc_range = dsc.DSCRange()
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       dsc_file = tracev3.catalog.files[proc_info.catalog_dsc_index]
@@ -181,7 +180,9 @@ class ActivityParser():
       else:
         fmt = tracev3.ExtractFormatStrings(tracepoint.format_string_location,
                                            uuid_file)
-    # TODO(fryy): if not fmt and not log_data: continue
+    if not fmt and not log_data:
+      return
+
     event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
 
     # Info is 'Create' when it's an Activity
@@ -193,17 +194,17 @@ class ActivityParser():
     event_data.thread_id = hex(tracepoint.thread_identifier)
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
+
+    if dsc_range.uuid_index:
+      dsc_uuid = dsc_file.uuids[dsc_range.uuid_index]
+      dsc_range.path = dsc_uuid.path
+      dsc_range.uuid = dsc_uuid.sender_identifier
+
     if dsc_range.path or uuid_file:
       event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
     if dsc_range.uuid or uuid_file:
-      event_data.library_uuid = dsc_range.uuid.hex if dsc_range.uuid else uuid_file.uuid
+      event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
     event_data.message = tracev3.FormatString(fmt, log_data)
-
-    with open('/tmp/fryoutput.csv', 'a') as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(timestamp=int(time)).CopyToDateTimeString(),
-          event_data.level, event_data.message
-      ])
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Non-activity chunk parser."""
 import base64
-import csv
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
@@ -49,18 +48,18 @@ class NonactivityParser():
     ttl_value = None
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       dsc_file = tracev3.catalog.files[proc_info.catalog_dsc_index]
-    except IndexError:
+    except (IndexError, AttributeError):
       dsc_file = None
 
     try:
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
-    except IndexError:
+    except (IndexError, AttributeError):
       uuid_file = None
 
     uint8_data_type_map = tracev3.GetDataTypeMap('uint8')
@@ -94,14 +93,6 @@ class NonactivityParser():
         data[offset:], offset, uint32_data_type_map)
     offset += 4
     logger.debug('Unknown PCID: {0:d}'.format(message_string_reference))
-
-    #TODO(fryy): Remove
-    if flags & constants.HAS_ALTERNATE_UUID:
-      if flags & constants.HAS_MESSAGE_IN_UUIDTEXT:
-        logger.debug('Non-activity: Has Alternate UUID & Message in UUIDText')
-      else:
-        logger.debug(
-            'Non-activity: Has Alternate UUID & _NO_ Message in UUIDText')
 
     ffh = formatter.FormatterFlagsHelper()
     formatter_flags = ffh.FormatFlags(tracev3, flags, data, offset)
@@ -309,17 +300,16 @@ class NonactivityParser():
     event_data.euid = proc_info.euid
     event_data.subsystem = (proc_info.items.get(subsystem_value, ("", "")))[0]
     event_data.category = (proc_info.items.get(subsystem_value, ("", "")))[1]
+
+    if dsc_range.uuid_index:
+      dsc_uuid = dsc_file.uuids[dsc_range.uuid_index]
+      dsc_range.path = dsc_uuid.path
+      dsc_range.uuid = dsc_uuid.sender_identifier
+
     if dsc_range.path or uuid_file:
       event_data.library = dsc_range.path if dsc_range.path else uuid_file.library_path
     if dsc_range.uuid or uuid_file:
-      event_data.library_uuid = dsc_range.uuid.hex if dsc_range.uuid else uuid_file.uuid
-
-    logger.debug("Log line: {0!s}".format(event_data.message))
-    with open("/tmp/fryoutput.csv", "a") as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(timestamp=int(time)).CopyToDateTimeString(),
-          event_data.level, event_data.message
-      ])
+      event_data.library_uuid = dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

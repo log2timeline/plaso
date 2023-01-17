@@ -34,7 +34,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     data = tracepoint.data
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
@@ -73,7 +73,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     if uuid_file:
       event_data.library = uuid_file.library_path
     if uuid_file:
-      event_data.library_uuid = uuid_file.uuid
+      event_data.library_uuid = uuid_file.uuid.upper()
 
     with open('/tmp/fryoutput.csv', 'a') as f:
       csv.writer(f).writerow([

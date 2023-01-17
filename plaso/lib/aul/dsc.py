@@ -293,16 +293,6 @@ class DSCFileParser(
         file_object, file_offset, file_header.major_format_version,
         file_header.number_of_uuids))
 
-    #TODO(fryy): can we do this on demand?
-    for dsc_range in ret.ranges:
-      dsc_uuid = ret.uuids[dsc_range.uuid_index]
-
-      dsc_range.path = dsc_uuid.path
-      dsc_range.uuid = dsc_uuid.sender_identifier
-
-    #TODO(fryy) : Can we do this?
-    del ret.uuids
-
     file_offset = file_object.tell()
 
     # Fill in strings

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Statedump chunk parser."""
-import csv
 import os
 import plistlib
 
@@ -83,20 +82,20 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
-    except IndexError:
+    except (IndexError, AttributeError):
       pass
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = "StateDump"
 
     ct = statedump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
-      tracev3.boot_uuid_ts.sync_records, ct)
+      tracev3.boot_uuid_ts.sync_records, ct, True)
     wt = 0
     kct = 0
     if ts:
       wt = ts.wall_time
       kct = ts.kernel_continuous_timestamp
-    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - kct
+    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - (kct * tracev3.boot_uuid_ts.adjustment)
 
     if statedump_structure.data_type == self._STATETYPE_PLIST:
       try:
@@ -148,14 +147,6 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
 
     event_data.activity_id = hex(statedump_structure.activity_id)
     event_data.pid = statedump_structure.first_number_proc_id
-    logger.debug("Log line: {0!s}".format(event_data.message))
-
-    with open('/tmp/fryoutput.csv', 'a') as f:
-      csv.writer(f).writerow([
-          dfdatetime_apfs_time.APFSTime(
-            timestamp=int(time)).CopyToDateTimeString(), event_data.level,
-          event_data.message
-      ])
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)

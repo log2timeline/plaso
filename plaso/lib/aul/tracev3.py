@@ -267,18 +267,13 @@ class TraceV3FileParser(interface.FileObjectParser,
             flags_width_precision = '<' + flags_width_precision[1:]
           if flags_width_precision == '.':
             flags_width_precision = '.0'
+
           # Strip width for hex
           if specifier in ['x', 'X'] and '#' in flags_width_precision:
             flags_width_precision = '#'
           format_code = '{:' + flags_width_precision + specifier + '}'
           number = self._ReadStructureFromByteStream(raw_data, 0, data_map)
-          #TODO(fryy): Delete
-          try:
-            if ('%' + flags_width_precision +
-                specifier) % number != format_code.format(number):
-              raise errors.ParseError('FRY FIX')
-          except ValueError:
-            pass
+
           if 'BOOL' in custom_specifier:
             if bool(number):
               output += 'YES'
@@ -570,8 +565,6 @@ class TraceV3FileParser(interface.FileObjectParser,
             pass
           if flags_width_precision:
             raise errors.ParseError('Fry look at this, how to fix')
-          #TODO(fryy): Revert
-          output += (hex(number))[2:].upper()
       else:
         raise errors.ParseError('UNKNOWN SPECIFIER')
 

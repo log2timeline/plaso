@@ -50,26 +50,26 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
     ))
 
     event_data = aul.AULEventData()
-    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex
+    event_data.boot_uuid = tracev3.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = "Simpledump"
 
     event_data.thread_id = hex(simpledump_structure.thread_id)
     event_data.pid = simpledump_structure.first_number_proc_id
     event_data.subsystem = simpledump_structure.subsystem_string
-    event_data.library_uuid = simpledump_structure.sender_uuid.hex
+    event_data.library_uuid = simpledump_structure.sender_uuid.hex.upper()
     event_data.process_uuid = simpledump_structure.dsc_uuid.hex
     event_data.message = simpledump_structure.message_string
     logger.debug("Log line: {0!s}".format(event_data.message))
 
     ct = simpledump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
-      tracev3.boot_uuid_ts.sync_records, ct)
+      tracev3.boot_uuid_ts.sync_records, ct, True)
     wt = 0
     kct = 0
     if ts:
       wt = ts.wall_time
       kct = ts.kernel_continuous_timestamp
-    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - kct
+    time = wt + (ct * tracev3.boot_uuid_ts.adjustment) - (kct * tracev3.boot_uuid_ts.adjustment)
 
     with open('/tmp/fryoutput.csv', 'a') as f:
       csv.writer(f).writerow([
