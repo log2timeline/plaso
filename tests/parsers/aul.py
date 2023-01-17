@@ -8,6 +8,7 @@ import unittest
 import zipfile
 
 from plaso.parsers import aul
+
 from tests import test_lib as tests_test_lib
 from tests.parsers import test_lib
 
