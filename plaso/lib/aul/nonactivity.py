@@ -173,7 +173,7 @@ class NonactivityParser():
     elif len(data[offset:]) > 3:
       if data[offset:offset + 3] == r"\x01\x00\x18":
         raise errors.ParseError(
-            "Backtrace signature without context -- firehose_logs.rs:330")
+            "Backtrace signature without context not yet implemented")
 
     #TODO(fryy): Turn item tuple into an object with names
     for item in deferred_data_items:

@@ -193,7 +193,7 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     if formatter_flags.shared_cache or formatter_flags.large_shared_cache != 0:
       if formatter_flags.large_offset_data != 0:
         raise errors.ParseError(
-            "Large offset Signpost not supported - signpost.rs:166")
+            "Large offset Signpost not yet implemented")
       extra_offset_value_result = tracepoint.format_string_location
       (fmt, dsc_range) = tracev3.ExtractSharedStrings(
           tracepoint.format_string_location, extra_offset_value_result,

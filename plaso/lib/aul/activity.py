@@ -129,7 +129,6 @@ class ActivityParser():
       if flags & constants.HAS_DATA_REF:
         raise errors.ParseError('Activity log chunk with Data Ref')
 
-      #TODO(fryy): Functionise this
       for item in deferred_data_items:
         if item[2] == 0:
           result = ''
@@ -173,15 +172,13 @@ class ActivityParser():
     else:
       if formatter_flags.absolute:
         raise errors.ParseError(
-            'Absolute Activity not supported - signpost.rs:224')
+            'Absolute Activity not yet implemented')
       elif formatter_flags.uuid_relative:
         uuid_file = tracev3.ExtractAltUUID(formatter_flags.uuid_relative)
         fmt = uuid_file.ReadFormatString(tracepoint.format_string_location)
       else:
         fmt = tracev3.ExtractFormatStrings(tracepoint.format_string_location,
                                            uuid_file)
-    #if not fmt and not log_data:
-    #  return
 
     event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
 

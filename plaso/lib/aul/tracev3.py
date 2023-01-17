@@ -141,7 +141,8 @@ class TraceV3FileParser(interface.FileObjectParser,
         data_item = data[i]
 
       custom_specifier = match.group(1) or ''
-      # Done
+      # == Custom specifier types implemented ==
+      #  Value type      Custom specifier         Example output
       #  uuid_t          %{uuid_t}.16P            10742E39-0657-41F8-AB99-878C5EC2DCAA
       #  BOOL            %{BOOL}d                 YES
       #  bool            %{bool}d                 true
@@ -151,8 +152,7 @@ class TraceV3FileParser(interface.FileObjectParser,
       #  in_addr         %{network:in_addr}d      127.0.0.1
       #  in6_addr        %{network:in6_addr}.16P  fe80::f:86ff:fee9:5c16
       #  darwin.mode     %{darwin.mode}d          drwxr-xr-x
-      #TODO(fryy): Implement
-      #  Value type      Custom specifier         Example output
+      # == Custom specifier types not yet seen (unimplemented) ==
       #  darwin.signal   %{darwin.signal}d        [sigsegv: Segmentation Fault]
       #  timeval         %{timeval}.*P            2016-01-12 19:41:37.774236
       #  timespec        %{timespec}.*P           2016-01-12 19:41:37.2382382823
@@ -161,32 +161,7 @@ class TraceV3FileParser(interface.FileObjectParser,
       #  bitrate         %{bitrate}d              123 kbps
       #  iec-bitrate     %{iec-bitrate}d          118 Kib6s
 
-      #TODO(fryy): Remove
-      if custom_specifier and 'signpost' not in custom_specifier and 'name' not in custom_specifier and custom_specifier not in [
-          '{private, mask.hash, network:in_addr}', '{public,mdns:dnshdr}', '{private,network:tcp_packets}',
-          '{mdns:dns.counts}', '{mdns:gaiopts}', '{private,bluetooth:BD_ADDR}',
-          '{private, mask.hash}', 'mdns:dns.counts', '{mdns:nreason}', '{sensitive, mask.hash}',
-          '{private,mask.hash}', '{sensitive}', '{public, network:in_addr}',
-          '{public, location:CLClientAuthorizationStatus}', '{odtypes:ODError}',
-          '{mdns:acceptable}', '{public, location:IOMessage}', '{errno}', '{private, location:CLSubHarvesterIdentifier}',
-          '{odtypes:mbridtype}', '{PUBLIC}', '{public, name=transaction_seed}',
-          '{mdns:yesno}', '{private, mask.hash, mdnsresponder:mac_addr}', '{sensitive,network:sockaddr}',
-          '{public, location:SqliteResult}', '{public,network:sockaddr}', '{public, location:CLSubHarvesterIdentifier}',
-          '{mdns:rrtype}', '{darwin.errno}', '{bluetooth:OI_STATUS}', '{coreacc:ACCEndpoint_Protocol_t}',
-          '{coreacc:ACCEndpoint_TransportType_t}', '{darwin.mode}', '{public, location:CLDaemonStatus_Type::Reachability}',
-          '{public,odtypes:nt_sid_t}', '{public,odtypes:mbr_details}', '{public, location:_CLClientManagerStateTrackerState}',
-          '{mdns:dns.idflags}', '{public, location:_CLLocationManagerStateTrackerState}',
-          '{uuid_t}', '{public,uuid_t}', '{public, location:escape_only}', '{network:tcp_state}',
-          '{mdns:protocol}', '{private, location:CLClientLocation}', '{coreacc:ACCConnection_Type_t}',
-          '{private, location:escape_only}', '{time_t}', '{bool}', '{BOOL}',
-          '{mdns:addrmv}', '{private, mask.hash, mdnsresponder:ip_addr}', '{network:tcp_flags}',
-          '{bool,public}', '{public,BOOL}', '{public}', '{private}', '{audio:4CC}', '{private, mask.hash, network:in6_addr}',
-          '{public, network:in6_addr}', '{type:OSLaunchdJobState}', '{private, mask.hash, mdns:rd.svcb}'
-      ]:
-        logger.warning(
-            'Custom specifier not supported: {}'.format(custom_specifier))
       flags_width_precision = match.group(2).replace('\'', '')
-      length_modifier = match.group(3)
       specifier = match.group(4)
       data_type = data_item[0]
       data_size = data_item[1]
@@ -967,8 +942,6 @@ class TraceV3FileParser(interface.FileObjectParser,
         log_data.append(
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
-        #raise errors.ParseError(
-        #    'Sensitive types not supported -- firehose_log.rs:764')
       else:
         raise errors.ParseError('Unsupported data type ??')
     return (log_data, deferred_data_items, offset)
@@ -1039,7 +1012,7 @@ class TraceV3FileParser(interface.FileObjectParser,
       errors.ParseError('Could not find Process Info block for ID: %d', proc_id)
     else:
       proc_info = proc_info[0]
-    #TODO(fryy): Check offsets and lengths (firehose_logs.rs:181)
+
     private_strings = None
     private_data_len = 0
     if firehose_header.private_data_virtual_offset != 4096:
