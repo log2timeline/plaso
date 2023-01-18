@@ -230,7 +230,10 @@ class DNS(dtfabric_helper.DtFabricHelper):
       alpns = []
       while offset < dns_svcb.alpn_total_size:
         alpn_data = self._ReadStructureFromByteStream(
-          dns_svcb.apln_data[offset:], offset, self._GetDataTypeMap('dns_svcb_alpn'))
+            dns_svcb.apln_data[offset:],
+            offset,
+            self._GetDataTypeMap('dns_svcb_alpn'),
+        )
         offset += 1 + alpn_data.entry_size
         alpns.append(alpn_data.data)
 
