@@ -134,4 +134,4 @@ class DarwinErrorHelper(object):
     Returns:
       str: name of the type error.
     """
-    return cls._DARWIN_ERRORS.get(code, str(code))
+    return cls._DARWIN_ERRORS.get(code, 'UNKNOWN: {0:d}'.format(code))

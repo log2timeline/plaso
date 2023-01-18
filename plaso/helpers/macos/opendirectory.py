@@ -32,7 +32,7 @@ class ODMBRIdHelper(object):
     Returns:
       str: name of the type code.
     """
-    return cls._OD_MBRID_TYPES.get(code, str(code))
+    return cls._OD_MBRID_TYPES.get(code, 'UNKNOWN: {0:d}'.format(code))
 
 
 class ODErrorsHelper(object):
@@ -119,4 +119,4 @@ class ODErrorsHelper(object):
     Returns:
       str: name of the error code.
     """
-    return cls._OD_ERRORS.get(code, str(code))
+    return cls._OD_ERRORS.get(code, 'UNKNOWN: {0:d}'.format(code))

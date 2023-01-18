@@ -24,7 +24,7 @@ class ClientAuthStatusHelper(object):
     Returns:
       str: name of the status code.
     """
-    return cls._AUTH_STATUS_CODES.get(code, str(code))
+    return cls._AUTH_STATUS_CODES.get(code, 'UNKNOWN: {0:d}'.format(code))
 
 class DaemonStatusHelper(object):
   """Core Location Daemon Status helper"""
@@ -44,7 +44,7 @@ class DaemonStatusHelper(object):
     Returns:
       str: name of the status code.
     """
-    return cls._DAEMON_STATUS_CODES.get(code, str(code))
+    return cls._DAEMON_STATUS_CODES.get(code, 'UNKNOWN: {0:d}'.format(code))
 
 class SubharvesterIDHelper(object):
   """Core Location Subharvester ID helper"""
@@ -73,7 +73,8 @@ class SubharvesterIDHelper(object):
     Returns:
       str: name of the ID.
     """
-    return cls._SUBHARVESTER_ID.get(subharvester_id, str(subharvester_id))
+    return cls._SUBHARVESTER_ID.get(
+        subharvester_id, 'UNKNOWN: {0:d}'.format(subharvester_id))
 
 
 class LocationClientStateTrackerParser(dtfabric_helper.DtFabricHelper):
@@ -173,4 +174,4 @@ class LocationTrackerIOHelper(object):
     Returns:
       str: name of the ID.
     """
-    return cls._IO_MESSAGE.get(message_id, str(message_id))
+    return cls._IO_MESSAGE.get(message_id, 'UNKNOWN: {0:d}'.format(message_id))
