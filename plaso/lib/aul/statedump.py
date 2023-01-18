@@ -74,8 +74,7 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     if len(proc_info) == 0:
       raise errors.ParseError(
           "Could not find Process Info block for ID: {0:d}".format(proc_id))
-    else:
-      proc_info = proc_info[0]
+    proc_info = proc_info[0]
 
     event_data = aul.AULEventData()
     try:

@@ -129,12 +129,11 @@ class NonactivityParser():
         flags & constants.HAS_SIGNPOST_NAME:
         raise errors.ParseError(
             "Non-activity with Alternate UUID and Signpost not supported")
-      else:
-        if not uuid_file:
-          raise errors.ParseError(
-              "Unable to continue without matching UUID file")
-        if flags & constants.HAS_SIGNPOST_NAME:
-          raise errors.ParseError("Non-activity signpost not supported (2)")
+      if not uuid_file:
+        raise errors.ParseError(
+            "Unable to continue without matching UUID file")
+      if flags & constants.HAS_SIGNPOST_NAME:
+        raise errors.ParseError("Non-activity signpost not supported (2)")
 
     if flags & constants.PRIVATE_STRING_RANGE:
       if private_strings:

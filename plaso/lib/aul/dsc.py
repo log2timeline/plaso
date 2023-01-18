@@ -74,6 +74,7 @@ class DSCFile(object):
     for r in self.ranges:
       if r.range_offset <= offset < (r.range_offset + r.range_size):
         return r
+    return None
 
 class DSCFileParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):

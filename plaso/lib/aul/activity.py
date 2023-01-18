@@ -190,7 +190,7 @@ class ActivityParser():
       if formatter_flags.absolute:
         raise errors.ParseError(
             'Absolute Activity not yet implemented')
-      elif formatter_flags.uuid_relative:
+      if formatter_flags.uuid_relative:
         uuid_file = tracev3.ExtractAltUUID(formatter_flags.uuid_relative)
         fmt = uuid_file.ReadFormatString(tracepoint.format_string_location)
       else:

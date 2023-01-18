@@ -213,7 +213,7 @@ class TraceV3FileParser(interface.FileObjectParser,
           raise errors.ParseError(
               'Size 0 in int fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
-        elif (
+        if (
             data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
           output += '0'  # A private number
@@ -362,7 +362,7 @@ class TraceV3FileParser(interface.FileObjectParser,
           raise errors.ParseError(
               'Size 0 in float fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
-        elif (
+        if (
             data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
           output += '0'  # A private number
@@ -546,7 +546,7 @@ class TraceV3FileParser(interface.FileObjectParser,
         elif 'mdnsresponder:mac_addr' in custom_specifier:
           chars = ':'.join('%02x' % b for b in raw_data)
         # Nothing else to go on, so print it in hex
-        elif custom_specifier == '{public}' or custom_specifier == '{private}':
+        elif custom_specifier in ('{public}', '{private}'):
           chars = raw_data
           if flags_width_precision.startswith('.'):
             chars = raw_data[:int(flags_width_precision[1:])]
@@ -679,10 +679,9 @@ class TraceV3FileParser(interface.FileObjectParser,
                   uuid.hex))
           catalog.files.append(None)
           continue
-        else:
-          if not found_in_cache:
-            self.catalog_files.append(found)
-          catalog.files.append(found)
+        if not found_in_cache:
+          self.catalog_files.append(found)
+        catalog.files.append(found)
       else:
         if not found_in_cache:
           self.catalog_files.append(found)
@@ -1045,7 +1044,6 @@ class TraceV3FileParser(interface.FileObjectParser,
     else:
       raise errors.ParseError('Unsupported log activity type: {}'.format(
           tracepoint.log_activity_type))
-    return
 
   def _ReadFirehoseChunkData(self, parser_mediator, chunk_data, data_offset):
     """Reads firehose chunk data.
