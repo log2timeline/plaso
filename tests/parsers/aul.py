@@ -83,7 +83,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'boot_uuid': 'DCA6F38213F54A21BF2B4F1BE8B136BD',
         'process': '/kernel',
         'process_uuid': 'D1CD0AAF523E312F92996116B1D511FE',
-        'message': ('initialize_screen: b=BE3A18000, w=00000280, h=00000470,'
+        'message': ('initialize_screen: b=BE3A18000, w=00000280, h=00000470, '
             'r=00000A00, d=00000000\n')
         }
 

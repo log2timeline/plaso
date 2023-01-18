@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mac Core Location services helper."""
+"""MacOS Core Location services helper."""
 import os
 
 from plaso.lib import dtfabric_helper

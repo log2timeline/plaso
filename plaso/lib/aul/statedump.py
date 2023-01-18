@@ -5,7 +5,7 @@ import plistlib
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
-from plaso.helpers.mac import location
+from plaso.helpers.macos import location
 
 from plaso.lib.aul import time as aul_time
 

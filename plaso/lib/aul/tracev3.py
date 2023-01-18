@@ -12,11 +12,11 @@ import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.helpers.mac import darwin
-from plaso.helpers.mac import dns
-from plaso.helpers.mac import location
-from plaso.helpers.mac import opendirectory
-from plaso.helpers.mac import tcp
+from plaso.helpers.macos import darwin
+from plaso.helpers.macos import dns
+from plaso.helpers.macos import location
+from plaso.helpers.macos import opendirectory
+from plaso.helpers.macos import tcp
 from plaso.helpers import sqlite
 
 from plaso.lib.aul import activity

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mac OpenDirectory helper."""
+"""MacOS OpenDirectory helper."""
 
 
 class ODMBRIdHelper(object):

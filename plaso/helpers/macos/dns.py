@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mac DNS data helper."""
+"""MacOS DNS data helper."""
 
 import ipaddress
 import os
@@ -183,7 +183,9 @@ class DNS(dtfabric_helper.DtFabricHelper):
     Returns:
       str: DNS reason type
     """
-    return cls._DNS_REASONS.get(reason_type, str(reason_type))
+    return cls._DNS_REASONS.get(
+        reason_type, 'UNKNOWN: {0:d}'.format(reason_type)
+    )
 
   def ParseDNSHeader(self, data):
     """Parses given data as a DNS Header chunk

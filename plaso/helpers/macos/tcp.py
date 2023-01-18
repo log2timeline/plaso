@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mac TCP helper."""
+"""MacOS TCP helper."""
 
 class TCP():
   """TCP Helper.
