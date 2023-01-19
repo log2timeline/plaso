@@ -2,13 +2,30 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple Unified Logging parser."""
 
+import os
+import shutil
 import unittest
+import zipfile
+
 from plaso.parsers import aul
+from tests import test_lib as tests_test_lib
 from tests.parsers import test_lib
 
 
 class AULParserTest(test_lib.ParserTestCase):
   """Tests for the AUL parser."""
+
+  def setUp(self) -> None:
+    aul_test_dir = os.path.join(tests_test_lib.TEST_DATA_PATH, 'AUL')
+    with zipfile.ZipFile(
+        os.path.join(aul_test_dir, 'aul_test_data.zip'), 'r'
+    ) as test_data_zip_file:
+      test_data_zip_file.extractall(aul_test_dir)
+    return super().setUp()
+
+  def tearDown(self) -> None:
+    shutil.rmtree(os.path.join(tests_test_lib.TEST_DATA_PATH, 'AUL', 'private'))
+    return super().tearDown()
 
   def testSpecialParsing(self):
     """Tests the Parse function on a Special tracev3."""
