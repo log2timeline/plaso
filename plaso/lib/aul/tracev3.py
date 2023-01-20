@@ -424,7 +424,6 @@ class TraceV3FileParser(interface.FileObjectParser,
             flags_width_precision = ''
           if flags_width_precision == '.':
             flags_width_precision = ''
-          old = ('%' + flags_width_precision + specifier) % chars
           if flags_width_precision.isdigit():
             flags_width_precision = '>' + flags_width_precision
           if flags_width_precision.startswith('-'):
@@ -1046,10 +1045,10 @@ class TraceV3FileParser(interface.FileObjectParser,
     ):
       if log_type == 0x80:
         logger.error('Non Activity Signpost not supported')
-      return
+        return
       nap = nonactivity.NonactivityParser()
       nap.ParseNonActivity(self, parser_mediator, tracepoint, proc_info, time,
-        private_strings)
+          private_strings)
     elif (
         tracepoint.log_activity_type
         == constants.FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST
