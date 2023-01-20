@@ -73,7 +73,8 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
 
     # Check for backtrace
     if oversize.data[offset:offset+3] == [0x01, 0x00, 0x18]:
-      raise errors.ParseError("Backtrace found in Oversize chunk")
+      logger.error("Backtrace found in Oversize chunk")
+      return
 
     private_items = []
     rolling_offset = offset

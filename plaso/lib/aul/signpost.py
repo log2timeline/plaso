@@ -130,11 +130,13 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
       if private_strings:
         string_start = private_strings_offset - private_strings[0]
         if string_start > len(private_strings[1] or string_start < 0):
-          raise errors.ParseError("Error with private string offset")
+          logger.error("Error with private string offset")
+          return
         private_string = private_strings[1][string_start:string_start +
                                             private_strings_size]
       else:
-        raise errors.ParseError("Private strings wanted but not supplied")
+        logger.error("Private strings wanted but not supplied")
+        return
 
     data_meta = tracev3.ReadStructureFromByteStream(
         data[offset:], offset,
@@ -152,14 +154,16 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
       return
 
     if flags & constants.HAS_CONTEXT_DATA != 0:
-      raise errors.ParseError("Backtrace data in Signpost log chunk")
+      logger.error("Backtrace data in Signpost log chunk")
+      return
 
     for item in deferred_data_items:
       if item[2] == 0:
         result = ""
       elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         if not private_string:
-          raise errors.ParseError("Trying to read from empty Private String")
+          logger.error("Trying to read from empty Private String")
+          return
         try:
           result = tracev3.ReadStructureFromByteStream(
               private_string[item[1]:], 0, tracev3.GetDataTypeMap("cstring"))
@@ -200,8 +204,9 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
 
     if formatter_flags.shared_cache or formatter_flags.large_shared_cache != 0:
       if formatter_flags.large_offset_data != 0:
-        raise errors.ParseError(
+        logger.error(
             "Large offset Signpost not yet implemented")
+        return
       extra_offset_value_result = tracepoint.format_string_location
       (fmt, dsc_range) = tracev3.ExtractSharedStrings(
           tracepoint.format_string_location, extra_offset_value_result,

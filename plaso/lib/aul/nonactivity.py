@@ -122,35 +122,42 @@ class NonactivityParser(object):
           data_ref_id))
 
     if flags & constants.HAS_SIGNPOST_NAME:
-      raise errors.ParseError("Non-activity signpost not supported")
+      logger.error("Non-activity signpost not supported")
+      return
 
     if flags & constants.HAS_MESSAGE_IN_UUIDTEXT:
       logger.debug("Non-activity has message in UUID Text file")
       if flags & constants.HAS_ALTERNATE_UUID and \
         flags & constants.HAS_SIGNPOST_NAME:
-        raise errors.ParseError(
+        logger.error(
             "Non-activity with Alternate UUID and Signpost not supported")
+        return
       if not uuid_file:
-        raise errors.ParseError(
+        logger.error(
             "Unable to continue without matching UUID file")
+        return
       if flags & constants.HAS_SIGNPOST_NAME:
-        raise errors.ParseError("Non-activity signpost not supported (2)")
+        logger.error("Non-activity signpost not supported (2)")
+        return
 
     if flags & constants.PRIVATE_STRING_RANGE:
       if private_strings:
         string_start = private_strings_offset - private_strings[0]
         if string_start > len(private_strings[1] or string_start < 0):
-          raise errors.ParseError("Error with private string offset")
+          logger.error("Error with private string offset")
+          return
         private_string = private_strings[1][string_start:string_start +
                                             private_strings_size]
       else:
-        raise errors.ParseError("Private strings wanted but not supplied")
+        logger.error("Private strings wanted but not supplied")
+        return
 
     if (
       tracepoint.log_activity_type
       == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
     ):
-      raise errors.ParseError("Loss Type not supported")
+      logger.error("Loss Type not supported")
+      return
 
     data_meta = tracev3.ReadStructureFromByteStream(
         data[offset:], offset,
@@ -182,8 +189,9 @@ class NonactivityParser(object):
           pass
     elif len(data[offset:]) > 3:
       if data[offset:offset + 3] == r"\x01\x00\x18":
-        raise errors.ParseError(
+        logger.error(
             "Backtrace signature without context not yet implemented")
+        return
 
     #TODO(fryy): Turn item tuple into an object with names
     for item in deferred_data_items:
@@ -193,7 +201,8 @@ class NonactivityParser(object):
         result = ""
       elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         if not private_string:
-          raise errors.ParseError("Trying to read from empty Private String")
+          logger.error("Trying to read from empty Private String")
+          return
         if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
           result = private_string[item[1]:item[1] + item[2]]
         else:
@@ -206,7 +215,8 @@ class NonactivityParser(object):
           if item[2] == 0x8000:
             result = ""
           else:
-            raise errors.ParseError("Trying to read from empty Private String")
+            logger.error("Trying to read from empty Private String")
+            return
         else:
           result = private_string[item[1]:item[1] + item[2]]
       else:
@@ -228,7 +238,8 @@ class NonactivityParser(object):
         tracepoint.log_activity_type
         == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
     ):
-      raise errors.ParseError("Loss Type not supported")
+      logger.error("Loss Type not supported")
+      return
 
     dsc_range = dsc.DSCRange()
     extra_offset_value_result = tracepoint.format_string_location

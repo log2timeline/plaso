@@ -70,8 +70,9 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
         if c.second_number_proc_id | (c.first_number_proc_id << 32) == proc_id
     ]
     if len(proc_info) == 0:
-      raise errors.ParseError(
+      logger.error(
           "Could not find Process Info block for ID: {0:d}".format(proc_id))
+      return
     proc_info = proc_info[0]
 
     event_data = aul.AULEventData()
@@ -151,8 +152,9 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
         event_data.message = "Unsupported Statedump object: {}".format(
             statedump_structure.string_name)
     else:
-      raise errors.ParseError("Unknown Statedump data type {0:d}".format(
+      logger.error("Unknown Statedump data type {0:d}".format(
           statedump_structure.data_type))
+      return
 
     event_data.activity_id = hex(statedump_structure.activity_id)
     event_data.pid = statedump_structure.first_number_proc_id

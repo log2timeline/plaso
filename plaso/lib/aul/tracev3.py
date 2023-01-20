@@ -1115,7 +1115,8 @@ class TraceV3FileParser(interface.FileObjectParser,
         if c.second_number_proc_id | (c.first_number_proc_id << 32) == proc_id
     ]
     if len(proc_info) == 0:
-      errors.ParseError('Could not find Process Info block for ID: %d', proc_id)
+      logger.error('Could not find Process Info block for ID: %d', proc_id)
+      return
     else:
       proc_info = proc_info[0]
 
@@ -1210,7 +1211,7 @@ class TraceV3FileParser(interface.FileObjectParser,
                            chunk_header, chunkset_index)
         chunkset_index += 1
       else:
-        raise errors.ParseError(
+        logger.error(
           'UNKNOWN CHUNK TAG: {0:d}'.format(chunk_header.chunk_tag))
 
       file_offset += chunk_header.chunk_data_size
