@@ -64,3 +64,6 @@ USER_TYPES = [0x24, 0xA0, 0xA4]
 UID_TYPES = [0x23, 0xA3]
 GROUP_TYPES = [0x44]
 GID_TYPES = [0xC3]
+
+# Legal LocationManagerStateTracker Size values
+LEGAL_LOCATION_SIZES = [64, 72]
