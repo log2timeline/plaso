@@ -196,13 +196,19 @@ class TraceV3FileParser(interface.FileObjectParser,
 
       if (specifier
           not in ('p', 'P', 's', 'S')) and '*' in flags_width_precision:
-        raise errors.ParseError('* not supported')
+        logger.error("* not supported for p/P/s/S")
+        output += 'Unsupported specifier'
+        i += 1
+        continue
 
       if (
           data_type in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
           and specifier != 'P'
       ):
-        raise errors.ParseError('Non-pointer Arbitrary type')
+        logger.error('Non-P specifier not supported for arbitrary data types')
+        output += 'Unsupported specifier'
+        i += 1
+        continue
 
       if specifier in ('d', 'D', 'i', 'u', 'U', 'x', 'X', 'o', 'O', 'm'):
         number = 0
@@ -210,9 +216,13 @@ class TraceV3FileParser(interface.FileObjectParser,
             data_size == 0
             and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
         ):
-          raise errors.ParseError(
+          output += 'Invalid specifier'
+          logger.error(
               'Size 0 in int fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
+          i += 1
+          continue
+
         if (
             data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
@@ -229,9 +239,12 @@ class TraceV3FileParser(interface.FileObjectParser,
             elif data_size == 8:
               data_map = int64_data_type_map
             else:
-              raise errors.ParseError(
+              output += 'Invalid specifier'
+              logger.error(
                   'Unknown data_size for signed int: {0:d} // fmt {1:s}'.format(
                       data_size, format_string))
+              i += 1
+              continue
           else:
             if data_size == 1:
               data_map = uint8_data_type_map
@@ -242,9 +255,12 @@ class TraceV3FileParser(interface.FileObjectParser,
             elif data_size == 8:
               data_map = uint64_data_type_map
             else:
-              raise errors.ParseError(
+              output += 'Invalid specifier'
+              logger.error(
                   'Unknown data_size for unsigned int: {0:d} // fmt {1:s}'
                   .format(data_size, format_string))
+              i += 1
+              continue
             if specifier in ('u', 'U'):
               specifier = 'd'
             elif specifier == 'O':
@@ -359,9 +375,12 @@ class TraceV3FileParser(interface.FileObjectParser,
             data_size == 0
             and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
         ):
-          raise errors.ParseError(
+          logger.error(
               'Size 0 in float fmt {0:s} // data {1!s}'.format(
                   format_string, data_item))
+          output += 'Invalid specifier'
+          i += 1
+          continue
         if (
             data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
@@ -372,9 +391,12 @@ class TraceV3FileParser(interface.FileObjectParser,
           elif data_size == 8:
             data_map = float64_data_type_map
           else:
-            raise errors.ParseError(
+            logger.error(
                 'Unknown data_size for float int: {0:d} // fmt {1:s}'.format(
                     data_size, format_string))
+            output += 'Invalid specifier'
+            i += 1
+            continue
           try:
             number = self._ReadStructureFromByteStream(raw_data, 0, data_map)
           except ValueError:
@@ -383,10 +405,7 @@ class TraceV3FileParser(interface.FileObjectParser,
             if flags_width_precision == '.':
               flags_width_precision = '.0'
             format_code = '{:' + flags_width_precision + specifier + '}'
-            try:
-              output += format_code.format(number)
-            except ValueError:
-              pass
+            output += format_code.format(number)
           else:
             output += format(ctx.create_decimal(repr(number)), 'f')
       elif specifier in ('c', 'C', 's', 'S', '@'):
@@ -411,21 +430,14 @@ class TraceV3FileParser(interface.FileObjectParser,
           if flags_width_precision.startswith('-'):
             flags_width_precision = '<' + flags_width_precision[1:]
           format_code = '{:' + flags_width_precision + specifier + '}'
-          try:
-            if old != format_code.format(chars):
-              raise errors.ParseError('FRY FIX')
-          except ValueError:
-            pass
-          except TypeError:
-            pass
-          try:
-            chars = format_code.format(chars)
-          except ValueError:
-            pass
+          chars = format_code.format(chars)
         output += chars
       elif specifier == 'P':
         if not custom_specifier:
-          raise errors.ParseError('Pointer with no custom specifier')
+          logger.error('Pointer with no custom specifier')
+          output += 'Invalid specifier'
+          i += 1
+          continue
         if data_size == 0:
           continue
         if 'uuid_t' in custom_specifier:
@@ -462,8 +474,11 @@ class TraceV3FileParser(interface.FileObjectParser,
                 (uid_gid_type.domain or '<not found>'),
             )
           else:
-            raise errors.ParseError(
+            logger.error(
                 'Unknown MBR Details Header Byte: 0x{0:X}'.format(raw_data[0]))
+            output += 'Invalid specifier'
+            i += 1
+            continue
         elif 'odtypes:nt_sid_t' in custom_specifier:
           sid = self._ReadStructureFromByteStream(
               raw_data, 1, self._GetDataTypeMap('nt_sid'))
@@ -489,7 +504,10 @@ class TraceV3FileParser(interface.FileObjectParser,
             if sockaddr.ipv4_port:
               chars += ':{0:d}'.format(sockaddr.ipv4_port)
           else:
-            raise errors.ParseError('Unknown Sockaddr Family')
+            logger.error('Unknown Sockaddr Family: {}'.format(sockaddr.family))
+            output += 'Invalid specifier'
+            i += 1
+            continue
         elif 'network:in_addr' in custom_specifier:
           ip_addr = self._ReadStructureFromByteStream(
               raw_data, 0, self._GetDataTypeMap('ipv4_address'))
@@ -503,7 +521,10 @@ class TraceV3FileParser(interface.FileObjectParser,
           if code:
             chars += '"{0:s}"'.format(code)
           else:
-            raise errors.ParseError('Unknown SQLite Code')
+            logger.error('Unknown SQLite Code: {0:X}'.format(raw_data[0]))
+            output += 'Invalid specifier'
+            i += 1
+            continue
         elif 'location:_CLLocationManagerStateTrackerState' in custom_specifier:
           (
               state_tracker_structure,
@@ -541,8 +562,11 @@ class TraceV3FileParser(interface.FileObjectParser,
           elif ip_type == 6:
             chars = ipaddress.ip_address(raw_data[4:]).compressed
           else:
-            raise errors.ParseError(
+            logger.error(
               'Unknown IP Type: {}'.format(ip_type))
+            output += 'Invalid specifier'
+            i += 1
+            continue
         elif 'mdnsresponder:mac_addr' in custom_specifier:
           chars = ':'.join('%02x' % b for b in raw_data)
         # Nothing else to go on, so print it in hex
@@ -552,17 +576,23 @@ class TraceV3FileParser(interface.FileObjectParser,
             chars = raw_data[:int(flags_width_precision[1:])]
           chars = binascii.hexlify(chars, ' ').decode('utf-8').upper()
         else:
-          raise errors.ParseError(
-              'Unknown data specifier: {}'.format(custom_specifier))
+          logger.error(
+            'Unknown data specifier: {}'.format(custom_specifier))
+          output += 'Invalid specifier'
+          i += 1
+          continue
         output += chars
       elif specifier == 'p':
         if data_size == 0:
           if data_type & constants.FIREHOSE_ITEM_STRING_PRIVATE:
             output += '<private>'
           else:
-            raise errors.ParseError(
+            logger.error(
                 'Size 0 in pointer fmt {0:s} // data {1!s}'.format(
                     format_string, data_item))
+            output += 'Invalid specifier'
+            i += 1
+            continue
         else:
           if data_size == 2:
             data_map = uint16_data_type_map
@@ -571,17 +601,20 @@ class TraceV3FileParser(interface.FileObjectParser,
           elif data_size == 8:
             data_map = uint64_data_type_map
           else:
-            raise errors.ParseError(
+            logger.error(
                 'Unknown data_size for pointer: {0:d} // fmt {1:s}'.format(
                     data_size, format_string))
+            output += 'Invalid specifier'
+            i += 1
+            continue
           try:
             number = self._ReadStructureFromByteStream(raw_data, 0, data_map)
           except ValueError:
             pass
           if flags_width_precision:
-            raise errors.ParseError('Fry look at this, how to fix')
+            logger.error('Width/Precision not supported for *p specifiers')
       else:
-        raise errors.ParseError('UNKNOWN SPECIFIER')
+        output += 'Unknown Specifier'
 
       i += 1
 
@@ -776,8 +809,9 @@ class TraceV3FileParser(interface.FileObjectParser,
     """
     if self.catalog.subchunks[
         chunkset_index].compression_algorithm != self._CATALOG_LZ4_COMPRESSION:
-      raise errors.ParseError('Unknown compression algorithm : {0:s}'.format(
+      logger.error('Unknown compression algorithm : {0:s}'.format(
           self.catalog.compression_algorithm))
+      return
 
     chunk_data = file_object.read(chunk_header.chunk_data_size)
 
@@ -802,13 +836,15 @@ class TraceV3FileParser(interface.FileObjectParser,
       uncompressed_data = chunk_data[12:end_of_compressed_data_offset]
 
     else:
-      raise errors.ParseError('Unsupported start of compressed data marker')
+      logger.error('Unsupported start of compressed data marker')
+      return
 
     end_of_compressed_data_identifier = chunk_data[
         end_of_compressed_data_offset:end_of_compressed_data_offset + 4]
 
     if end_of_compressed_data_identifier != b'bv4$':
-      raise errors.ParseError('Unsupported end of compressed data marker')
+      logger.error('Unsupported end of compressed data marker')
+      return
 
     data_type_map = self._GetDataTypeMap('tracev3_chunk_header')
 
@@ -845,8 +881,9 @@ class TraceV3FileParser(interface.FileObjectParser,
         simpledump_parser.ReadSimpledumpChunkData(self, parser_mediator,
           chunkset_chunk_data, data_offset)
       else:
-        raise errors.ParseError('Unsupported Chunk Type: {0:d}'.format(
+        logger.error('Unsupported Chunk Type: {0:d}'.format(
             chunkset_chunk_header.chunk_tag))
+        return
 
       data_offset = data_end_offset
 
@@ -907,8 +944,7 @@ class TraceV3FileParser(interface.FileObjectParser,
         message_string_reference - x.absolute_offset < x.size
     ]
     if len(absolute_uuids) != 1:
-      raise errors.ParseError('No UUID found for absolute string')
-      # return '<compose failure [missing precomposed log]>'
+      return '<compose failure [missing precomposed log]>'
     uuid_file = self.catalog.files[absolute_uuids[0].catalog_uuid_index]
     return uuid_file
 
@@ -969,7 +1005,6 @@ class TraceV3FileParser(interface.FileObjectParser,
           )
       )
       if data_item.item_type in constants.FIREHOSE_ITEM_NUMBER_TYPES:
-        logger.debug('Number: {0!s}'.format(data_item.item))
         log_data.append(
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
@@ -995,7 +1030,8 @@ class TraceV3FileParser(interface.FileObjectParser,
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
       else:
-        raise errors.ParseError('Unsupported data type ??')
+        raise errors.ParseError(
+          'Unsupported data type: {}'.format(data_item.data_type))
     return (log_data, deferred_data_items, offset)
 
   def _ParseTracepointData(self, parser_mediator, tracepoint, proc_info, time,
@@ -1009,7 +1045,8 @@ class TraceV3FileParser(interface.FileObjectParser,
         == constants.FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY
     ):
       if log_type == 0x80:
-        raise errors.ParseError('Non Activity Signpost ??')
+        logger.error('Non Activity Signpost not supported')
+      return
       nap = nonactivity.NonactivityParser()
       nap.ParseNonActivity(self, parser_mediator, tracepoint, proc_info, time,
         private_strings)
@@ -1042,7 +1079,7 @@ class TraceV3FileParser(interface.FileObjectParser,
     elif tracepoint.log_activity_type == 0x0:
       logger.warning("Remnant/Garbage data")
     else:
-      raise errors.ParseError('Unsupported log activity type: {}'.format(
+      logger.error('Unsupported log activity type: {}'.format(
           tracepoint.log_activity_type))
 
   def _ReadFirehoseChunkData(self, parser_mediator, chunk_data, data_offset):

@@ -6,11 +6,9 @@ from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-
 from plaso.lib.aul import constants
 from plaso.lib.aul import dsc
 from plaso.lib.aul import formatter
-
 from plaso.parsers import aul
 from plaso.parsers import logger
 
@@ -146,8 +144,12 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     logger.debug(
         "After activity data: Unknown {0:d} // Number of Items {1:d}".format(
             data_meta.unknown1, data_meta.num_items))
-    (log_data, deferred_data_items,
-     offset) = tracev3.ReadItems(data_meta, data, offset)
+    try:
+      (log_data, deferred_data_items,
+      offset) = tracev3.ReadItems(data_meta, data, offset)
+    except errors.ParseError as exception:
+      logger.error('Unable to parse data items: {0!s}'.format(exception))
+      return
 
     if flags & constants.HAS_CONTEXT_DATA != 0:
       raise errors.ParseError("Backtrace data in Signpost log chunk")

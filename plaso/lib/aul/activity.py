@@ -15,7 +15,7 @@ from plaso.parsers import aul
 from plaso.parsers import logger
 
 
-class ActivityParser():
+class ActivityParser(object):
   """Activity data chunk parser"""
 
   _USER_ACTION_ACTIVITY_TYPE = 0x3
@@ -110,7 +110,8 @@ class ActivityParser():
     offset = formatter_flags.offset
 
     if flags & constants.PRIVATE_STRING_RANGE:
-      raise errors.ParseError('Activity with Private String Range')
+      logger.error('Activity with Private String Range unsupported')
+      return
 
     # If there's data...
     if tracepoint.data_size - offset >= 6:
@@ -122,21 +123,28 @@ class ActivityParser():
       logger.debug(
           'After activity data: Unknown {0:d} // Number of Items {1:d}'.format(
               data_meta.unknown1, data_meta.num_items))
-      (log_data, deferred_data_items,
-       offset) = tracev3.ReadItems(data_meta, data, offset)
+      try:
+        (log_data, deferred_data_items,
+          offset) = tracev3.ReadItems(data_meta, data, offset)
+      except errors.ParseError as exception:
+        logger.error('Unable to parse data items: {0!s}'.format(exception))
+        return
 
       if flags & constants.HAS_CONTEXT_DATA != 0:
-        raise errors.ParseError('Backtrace data in Activity log chunk')
+        logger.error('Backtrace data in Activity log chunk unsupported')
+        return
 
       if flags & constants.HAS_DATA_REF:
-        raise errors.ParseError('Activity log chunk with Data Ref')
+        logger.error('Activity log chunk with Data Ref unsupported')
+        return
 
       for item in deferred_data_items:
         if item[2] == 0:
           result = ''
         elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
           if not private_string:
-            raise errors.ParseError('Trying to read from empty Private String')
+            logger.error('Trying to read from empty Private String')
+            return
           try:
             result = tracev3.ReadStructureFromByteStream(
                 private_string[item[1]:], 0, tracev3.GetDataTypeMap('cstring'))
@@ -188,8 +196,9 @@ class ActivityParser():
           dsc_file)
     else:
       if formatter_flags.absolute:
-        raise errors.ParseError(
+        logger.error(
             'Absolute Activity not yet implemented')
+        return
       if formatter_flags.uuid_relative:
         uuid_file = tracev3.ExtractAltUUID(formatter_flags.uuid_relative)
         fmt = uuid_file.ReadFormatString(tracepoint.format_string_location)

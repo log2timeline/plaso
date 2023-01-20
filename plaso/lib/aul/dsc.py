@@ -6,6 +6,7 @@ import os
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.lib.aul import constants
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
@@ -16,11 +17,13 @@ class DSCRange(object):
   """Shared-Cache Strings (dsc) range.
 
   Attributes:
+    data_offset (int): the offset of the data.
     path (str): path.
     range_offset (int): the offset of the range.
-    range_sizes (int): the size of the range.
-    data_offset (int): the offset of the data.
+    range_size (int): the size of the range.
+    string (str): The raw string in the DSC file at that range.
     uuid (uuid.UUID): the UUID.
+    uuid_index (int): UUID descriptor index.
   """
 
   def __init__(self):
@@ -58,7 +61,7 @@ class DSCFile(object):
   """Shared-Cache Strings (dsc) File.
 
   Attributes:
-    ranges (List[DSCRange]): the ranges.
+    ranges (list[DSCRange]): the ranges.
     uuids (list[DSCUUID]): the UUIDs.
     uuid: The particular UUID of the DSC file.
   """
@@ -76,6 +79,7 @@ class DSCFile(object):
         return r
     return None
 
+
 class DSCFileParser(
     interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """Shared-Cache Strings (dsc) file parser.
@@ -90,16 +94,24 @@ class DSCFileParser(
 
   def __init__(self, file_entry, file_system):
     """Initializes a dsc file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry.
+      file_system (dfvfs.FileSystem): file system.
+      dsc_location (str): File path to the location of DSC files.
+
+    Raises:
+      errors.ParseError if the location is invalid.
     """
     super(DSCFileParser, self).__init__()
     self.file_entry = file_entry
     self.file_system = file_system
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
     self.dsc_location = file_system.JoinPath(
-      path_segments[:-3] + ['uuidtext', 'dsc'])
+        path_segments[:-3] + ['uuidtext', 'dsc'])
     if not os.path.exists(self.dsc_location):
       raise errors.ParseError(
-        "Invalid UUIDText location: {0:s}".format(self.dsc_location))
+          "Invalid DSC location: {0:s}".format(self.dsc_location))
 
   def FindFile(self, parser_mediator, uuid):
     """Finds the DSC file on the file system
@@ -118,7 +130,7 @@ class DSCFileParser(
         self.file_entry.path_spec.TYPE_INDICATOR, **kwargs)
 
     dsc_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-      dsc_file_path_spec)
+        dsc_file_path_spec)
 
     if not dsc_file_entry:
       return None
@@ -155,7 +167,7 @@ class DSCFileParser(
 
     format_version = (
         file_header.major_format_version, file_header.minor_format_version)
-    if format_version not in [(1, 0), (2, 0)]:
+    if format_version not in constants.SUPPORTED_DSC_VERSIONS:
       raise errors.ParseError(
           'Unsupported format version: {0:d}.{1:d}.'.format(
               file_header.major_format_version,
@@ -164,14 +176,14 @@ class DSCFileParser(
     return file_header
 
   def _ReadRangeDescriptors(
-      self, file_object, file_offset, version, number_of_ranges):
+      self, file_object, file_offset, major_version, number_of_ranges):
     """Reads the range descriptors.
 
     Args:
       file_object (file): file-like object.
       file_offset (int): offset of the start of range descriptors data relative
           to the start of the file.
-      version (int): major version of the file.
+      major_version (int): major version of the file.
       number_of_ranges (int): the number of range descriptions to retrieve.
 
     Yields:
@@ -180,11 +192,12 @@ class DSCFileParser(
     Raises:
       ParseError: if the file cannot be read.
     """
-    if version not in (1, 2):
+    if major_version not in [
+      version[0] for version in constants.SUPPORTED_DSC_VERSIONS]:
       raise errors.ParseError('Unsupported format version: {0:d}.'.format(
-          version))
+          major_version))
 
-    if version == 1:
+    if major_version == 1:
       data_type_map_name = 'dsc_range_descriptor_v1'
     else:
       data_type_map_name = 'dsc_range_descriptor_v2'

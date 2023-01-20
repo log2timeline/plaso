@@ -50,8 +50,8 @@ class TimesyncParser(
         file_entry_types=[definitions.FILE_ENTRY_TYPE_FILE])
 
     path_spec_generator = file_system_searcher.FileSystemSearcher(
-      file_system, timesync_file_path_spec).Find(
-        find_specs=[find_spec])
+        file_system, timesync_file_path_spec).Find(
+          find_specs=[find_spec])
 
     for path_spec in path_spec_generator:
       try:
@@ -69,8 +69,8 @@ class TimesyncParser(
         self.ParseFileObject(parser_mediator, timesync_file_object)
       except (IOError, errors.ParseError) as exception:
         message = (
-          'Unable to parse data block file: {0:s} with error: '
-          '{1!s}').format(path_spec, exception)
+            'Unable to parse data block file: {0:s} with error: '
+            '{1!s}').format(path_spec, exception)
         parser_mediator.ProduceExtractionWarning(message)
         continue
 

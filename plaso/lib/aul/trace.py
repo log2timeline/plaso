@@ -5,9 +5,9 @@ import os
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.lib import dtfabric_helper
-
 from plaso.parsers import aul
 from plaso.parsers import logger
+
 
 class TraceParser(dtfabric_helper.DtFabricHelper):
   """TraceParser data chunk parser"""
@@ -66,7 +66,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
 
     if fmt:
       event_data.message = tracev3.FormatString(
-        fmt, [(0, len(item_data), item_data)])
+          fmt, [(0, len(item_data), item_data)])
 
     event_data.thread_id = hex(tracepoint.thread_identifier)
     event_data.pid = proc_info.pid

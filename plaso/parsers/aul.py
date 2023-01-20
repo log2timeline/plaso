@@ -18,11 +18,11 @@ class AULEventData(events.EventData):
   """Apple Unified Logging (AUL) event data.
 
   Attributes:
-    creation_time (dfdatetime.DateTimeValues): file entry creation date
-        and time.
     activity_id (str): path from the root to this plist key.
     boot_uuid (str): unique boot identifier.
     category (str): event category.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
     euid (int): effective user identifier (UID)
     level (str): level of criticality of the event.
     library (str): originating library path.
@@ -40,10 +40,10 @@ class AULEventData(events.EventData):
   def __init__(self):
     """Initialise event data."""
     super(AULEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.creation_time = None
     self.activity_id = None
     self.boot_uuid = None
     self.category = None
+    self.creation_time = None
     self.euid = None
     self.level = None
     self.library = None
@@ -58,7 +58,14 @@ class AULEventData(events.EventData):
 
 
 class AULParser(interface.FileEntryParser):
-  """Parser for Apple Unified Logging (AUL) files."""
+  """Parser for Apple Unified Logging (AUL) files.
+
+  Attributes:
+    dsc_parser (DSCFileParser): Instance of a DSC file parser.
+    timesync_parser (TimesyncParser): Instance of a TimeSync parser.
+    tracev3_parser (TraceV3FileParser): Instance of a Tracev3 parser.
+    uuid_parser (UUIDFileParser): Instance of a UUID file parser.
+  """
 
   NAME = 'aul_log'
   DATA_FORMAT = 'Apple Unified Log (AUL) file'
@@ -66,10 +73,10 @@ class AULParser(interface.FileEntryParser):
   def __init__(self):
     """Initializes an Apple Unified Logging parser."""
     super(AULParser, self).__init__()
+    self.dsc_parser = None
     self.timesync_parser = timesync.TimesyncParser()
     self.tracev3_parser = None
     self.uuid_parser = None
-    self.dsc_parser = None
 
   @classmethod
   def GetFormatSpecification(cls):

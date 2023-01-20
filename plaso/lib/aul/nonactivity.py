@@ -13,7 +13,7 @@ from plaso.parsers import aul
 from plaso.parsers import logger
 
 
-class NonactivityParser():
+class NonactivityParser(object):
   """Non-activity data chunk parser"""
 
   _NON_ACTIVITY_SENINTEL = 0x80000000
@@ -78,7 +78,8 @@ class NonactivityParser():
                                                    uint32_data_type_map)
       offset += 4
       if sentinel != self._NON_ACTIVITY_SENINTEL:
-        raise errors.ParseError('Incorrect sentinel value for Non-Activity')
+        logger.error('Incorrect sentinel value for Non-Activity')
+        return
 
     if flags & constants.PRIVATE_STRING_RANGE:
       logger.debug(
@@ -159,8 +160,12 @@ class NonactivityParser():
     logger.debug(
         "After activity data: Unknown {0:d} // Number of Items {1:d}".format(
             data_meta.unknown1, data_meta.num_items))
-    (log_data, deferred_data_items,
-     offset) = tracev3.ReadItems(data_meta, data, offset)
+    try:
+      (log_data, deferred_data_items,
+      offset) = tracev3.ReadItems(data_meta, data, offset)
+    except errors.ParseError as exception:
+      logger.error('Unable to parse data items: {0!s}'.format(exception))
+      return
 
     backtrace_strings = []
     if flags & constants.HAS_CONTEXT_DATA != 0 and len(data[offset:]) >= 6:

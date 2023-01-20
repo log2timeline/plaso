@@ -62,8 +62,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'process': '/usr/libexec/UserEventAgent',
         'process_uuid': '36B63A883FE730FCB7BA46C45DD6B7D8',
         'message': ('Failed to look up the port for '
-            '"com.apple.windowserver.active" (1102)')
-        }
+            '"com.apple.windowserver.active" (1102)')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
     self.CheckEventData(event_data, expected_event_values)
@@ -101,8 +100,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'process': '/kernel',
         'process_uuid': 'D1CD0AAF523E312F92996116B1D511FE',
         'message': ('initialize_screen: b=BE3A18000, w=00000280, h=00000470, '
-            'r=00000A00, d=00000000\n')
-        }
+            'r=00000A00, d=00000000\n')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 22)
     self.CheckEventData(event_data, expected_event_values)
@@ -144,8 +142,7 @@ class AULParserTest(test_lib.ParserTestCase):
             '- Kext com.apple.driver.KextExcludeList v17.0.0 in '
             'codeless kext bundle com.apple.driver.KextExcludeList at '
             '/Library/Apple/System/Library/Extensions/'
-            'AppleKextExcludeList.kext: FS contents are valid')
-        }
+            'AppleKextExcludeList.kext: FS contents are valid')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)

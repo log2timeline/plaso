@@ -5,6 +5,7 @@ import os
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
+
 class ClientAuthStatusHelper(object):
   """Core Location Client Authorisation Status helper"""
   _AUTH_STATUS_CODES = {
@@ -26,6 +27,7 @@ class ClientAuthStatusHelper(object):
     """
     return cls._AUTH_STATUS_CODES.get(code, 'UNKNOWN: {0:d}'.format(code))
 
+
 class DaemonStatusHelper(object):
   """Core Location Daemon Status helper"""
   _DAEMON_STATUS_CODES = {
@@ -45,6 +47,7 @@ class DaemonStatusHelper(object):
       str: name of the status code.
     """
     return cls._DAEMON_STATUS_CODES.get(code, 'UNKNOWN: {0:d}'.format(code))
+
 
 class SubharvesterIDHelper(object):
   """Core Location Subharvester ID helper"""

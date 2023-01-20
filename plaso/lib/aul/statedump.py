@@ -6,14 +6,12 @@ import plistlib
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.helpers.macos import location
-
 from plaso.lib.aul import time as aul_time
-
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-
 from plaso.parsers import aul
 from plaso.parsers import logger
+
 
 class StatedumpParser(dtfabric_helper.DtFabricHelper):
   """StateDump data chunk parser"""
@@ -91,11 +89,8 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     ct = statedump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
       tracev3.boot_uuid_ts.sync_records, ct, True)
-    wt = 0
-    kct = 0
-    if ts:
-      wt = ts.wall_time
-      kct = ts.kernel_continuous_timestamp
+    wt = ts.wall_time if ts else 0
+    kct = ts.kernel_continuous_timestamp if ts else 0
     time = (
         wt
         + (ct * tracev3.boot_uuid_ts.adjustment)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) Oversize formatter helper."""
 
-from plaso.lib import errors
+from plaso.parsers import logger
 
 
 class FormatterFlags(object):
@@ -18,7 +18,8 @@ class FormatterFlags(object):
     self.uuid_file_index = -1
     self.uuid_relative = False
 
-class FormatterFlagsHelper():
+
+class FormatterFlagsHelper(object):
   """Helper class to process common formatting flags."""
 
   # Flag constants
@@ -90,7 +91,7 @@ class FormatterFlagsHelper():
           data[offset:], offset, tracev3.GetDataTypeMap('uuid_be'))
       offset += 16
     else:
-      raise errors.ParseError('Unknown formatter flag')
+      logger.error('Unknown formatter flag')
 
     ret.offset = offset
     return ret

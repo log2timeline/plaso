@@ -17,23 +17,23 @@ class DNS(dtfabric_helper.DtFabricHelper):
       os.path.dirname(__file__), 'dns.yaml')
 
   # Query Response
-  QR = 0x8000
+  QR_MASK = 0x8000
   # Op Code
-  OPCODE = 0x7800
-  _DNS_FLAGS = [
+  OPCODE_MASK = 0x7800
+  _DNS_FLAGS = {
     # Authoritative Answer
-    ('AA', 0x0400),
+    'AA': 0x0400,
     # Truncated Response
-    ('TC', 0x0200),
+    'TC': 0x0200,
     # Recursion Desired
-    ('RD', 0x0100),
+    'RD': 0x0100,
     # Recursion Available
-    ('RA', 0x0080),
+    'RA': 0x0080,
     # Authentic Data
-    ('AD', 0x0020),
+    'AD': 0x0020,
     # Checking Disabled
-    ('CD', 0x0010)
-  ]
+    'CD': 0x0010
+  }
   # Response Code
   R = 0x000F
 
@@ -139,15 +139,14 @@ class DNS(dtfabric_helper.DtFabricHelper):
       str: formatted string.
     """
     enabled_flags = []
-    for (flag, value) in cls._DNS_FLAGS:
-      if (flags & value) != 0:
+    for flag, value in cls._DNS_FLAGS.items():
+      if flags & value != 0:
         enabled_flags.append(flag)
     return "{0:s}/{1:s}, {2:s}, {3:s}".format(
-      'R' if flags & cls.QR else 'Q',
-      cls._DNS_OPCODES.get((flags & cls.OPCODE) >> 11, '??'),
-      ', '.join(enabled_flags),
-      cls._DNS_RESPONSE_CODES.get(flags & cls.R, '???')
-      )
+        'R' if flags & cls.QR_MASK else 'Q',
+        cls._DNS_OPCODES.get((flags & cls.OPCODE_MASK) >> 11, '?'),
+        ', '.join(enabled_flags),
+        cls._DNS_RESPONSE_CODES.get(flags & cls.R, '?'))
 
   @classmethod
   def GetRecordType(cls, record_type):
@@ -184,8 +183,7 @@ class DNS(dtfabric_helper.DtFabricHelper):
       str: DNS reason type
     """
     return cls._DNS_REASONS.get(
-        reason_type, 'UNKNOWN: {0:d}'.format(reason_type)
-    )
+        reason_type, 'UNKNOWN: {0:d}'.format(reason_type))
 
   def ParseDNSHeader(self, data):
     """Parses given data as a DNS Header chunk

@@ -59,6 +59,7 @@ class UUIDText(dtfabric_helper.DtFabricHelper):
           0, self._GetDataTypeMap('cstring'))
     return ''
 
+
 class UUIDFileParser(
   interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   """UUID file parser
@@ -74,7 +75,17 @@ class UUIDFileParser(
       os.path.dirname(__file__), 'uuidfile.yaml')
 
   def __init__(self, file_entry, file_system):
-    """Initialises the parser."""
+    """Initializes a UUID file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry.
+      file_system (dfvfs.FileSystem): file system.
+      uuid (UUID): the UUID.
+      uuidtext_location (str): File path to the location of DSC files.
+
+    Raises:
+      errors.ParseError if the location is invalid.
+    """
     super(UUIDFileParser, self).__init__()
     self.file_entry = file_entry
     self.file_system = file_system
@@ -136,14 +147,14 @@ class UUIDFileParser(
 
     uuid_header_data_map = self._GetDataTypeMap('uuidtext_file_header')
     uuid_header, size = self._ReadStructureFromFileObject(
-      file_object, offset, uuid_header_data_map)
+        file_object, offset, uuid_header_data_map)
     format_version = (
         uuid_header.major_format_version, uuid_header.minor_format_version)
     if format_version != (2, 1):
       raise errors.ParseError(
-        'Unsupported format version: {0:d}.{1:d}.'.format(
-            uuid_header.major_format_version,
-            uuid_header.minor_format_version))
+          'Unsupported format version: {0:d}.{1:d}.'.format(
+              uuid_header.major_format_version,
+              uuid_header.minor_format_version))
     data_size = 0
     for entry in uuid_header.entry_descriptors:
       entry_tuple = (entry.offset, data_size, entry.data_size)
@@ -152,11 +163,11 @@ class UUIDFileParser(
     data = file_object.read(data_size)
     offset = size + data_size
     uuid_footer, _ = self._ReadStructureFromFileObject(
-      file_object, offset, self._GetDataTypeMap('uuidtext_file_footer')
-    )
+        file_object, offset, self._GetDataTypeMap('uuidtext_file_footer'))
+
     return UUIDText(
-      library_path=uuid_footer.library_path,
-      library_name=os.path.basename(uuid_footer.library_path),
-      uuid=self.uuid,
-      data=data,
-      entries=entries)
+        library_path=uuid_footer.library_path,
+        library_name=os.path.basename(uuid_footer.library_path),
+        uuid=self.uuid,
+        data=data,
+        entries=entries)

@@ -5,11 +5,10 @@ import os
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.lib.aul import time as aul_time
-
 from plaso.lib import dtfabric_helper
-
 from plaso.parsers import aul
 from plaso.parsers import logger
+
 
 class SimpledumpParser(dtfabric_helper.DtFabricHelper):
   """SimpledumpParser data chunk parser"""
@@ -64,12 +63,9 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
 
     ct = simpledump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
-      tracev3.boot_uuid_ts.sync_records, ct, True)
-    wt = 0
-    kct = 0
-    if ts:
-      wt = ts.wall_time
-      kct = ts.kernel_continuous_timestamp
+        tracev3.boot_uuid_ts.sync_records, ct, True)
+    wt = ts.wall_time if ts else 0
+    kct = ts.kernel_continuous_timestamp if ts else 0
     time = (
         wt
         + (ct * tracev3.boot_uuid_ts.adjustment)
