@@ -2,6 +2,7 @@
 """MacOS Core Location services helper."""
 import os
 
+from plaso.lib.aul import constants
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
@@ -125,7 +126,7 @@ class LocationManagerStateTrackerParser(dtfabric_helper.DtFabricHelper):
     state_tracker_structure = {}
     extra_state_tracker_structure = {}
 
-    if size not in [64, 72]:
+    if size not in constants.LEGAL_LOCATION_SIZES:
       raise errors.ParseError(
         "Possibly corrupted CLLocationManagerStateTracker block")
     state_tracker_structure = self._ReadStructureFromByteStream(
