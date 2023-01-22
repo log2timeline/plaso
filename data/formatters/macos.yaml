@@ -159,7 +159,7 @@ message:
 - 'Library UUID: {library_uuid}'
 - 'Activity ID: {activity_id}'
 - 'Category: {category}'
-- 'Message: {message}',
+- 'Message: {message}'
 short_message:
 - 'Subsystem: {subsystem}'
 - 'Message: {message}'
