@@ -13,6 +13,7 @@ from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import logger
 
+
 class DSCRange(object):
   """Shared-Cache Strings (dsc) range.
 
@@ -65,6 +66,7 @@ class DSCFile(object):
     uuids (list[DSCUUID]): the UUIDs.
     uuid: The particular UUID of the DSC file.
   """
+
   def __init__(self):
     """Initializes a Shared-Cache Strings (dsc) File."""
     super(DSCFile, self).__init__()
@@ -111,7 +113,7 @@ class DSCFileParser(
         path_segments[:-3] + ['uuidtext', 'dsc'])
     if not os.path.exists(self.dsc_location):
       raise errors.ParseError(
-          "Invalid DSC location: {0:s}".format(self.dsc_location))
+          'Invalid DSC location: {0:s}'.format(self.dsc_location))
 
   def FindFile(self, parser_mediator, uuid):
     """Finds the DSC file on the file system

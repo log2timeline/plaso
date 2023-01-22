@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-"""MacOS OpenDirectory helper."""
+"""MacOS OpenDirectory helpers."""
 
 
 class ODMBRIdHelper(object):
-  """OpenDirectory MBR ID helper.
+  """OpenDirectory MBR identifier helper.
 
-  See:
-/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/membership.h
-
+  Also see:
+    /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/
+    membership.h
   """
+
   _OD_MBRID_TYPES = {
       0: 'UID',
       1: 'GID',
@@ -27,7 +28,7 @@ class ODMBRIdHelper(object):
     """Retrieves the description for a specific type.
 
     Args:
-      code (int): type code
+      code (int): type code.
 
     Returns:
       str: name of the type code.
@@ -38,9 +39,8 @@ class ODMBRIdHelper(object):
 class ODErrorsHelper(object):
   """OpenDirectory errors helper.
 
-  See:
+  Also see:
     https://developer.apple.com/documentation/opendirectory/odframeworkerrors?changes=__2&language=objc
-
   """
 
   _OD_ERRORS = {
@@ -114,7 +114,7 @@ class ODErrorsHelper(object):
     """Retrieves the description for a specific error code.
 
     Args:
-      code (int): error code
+      code (int): error code.
 
     Returns:
       str: name of the error code.

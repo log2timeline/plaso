@@ -199,9 +199,9 @@ class DNS(dtfabric_helper.DtFabricHelper):
     dnsheader = self._ReadStructureFromByteStream(
         data, 0, self._GetDataTypeMap('dns_header'))
     flag_string = self.ParseFlags(dnsheader.flags)
-    return ('id: {0:s} ({1:d}), flags: 0x{2:04x} ({3:s}), counts: '
+    return ('id: 0x{0:x} ({1:d}), flags: 0x{2:04x} ({3:s}), counts: '
             '{4:d}/{5:d}/{6:d}/{7:d}').format(
-        hex(dnsheader.id), dnsheader.id, dnsheader.flags, flag_string,
+        dnsheader.id, dnsheader.id, dnsheader.flags, flag_string,
         dnsheader.questions, dnsheader.answers,
         dnsheader.authority_records, dnsheader.additional_records)
 
@@ -237,7 +237,7 @@ class DNS(dtfabric_helper.DtFabricHelper):
         alpns.append(alpn_data.data)
 
     if alpns:
-      rets.append('alpn="{0:s}"'.format(",".join(alpns)))
+      rets.append('alpn="{0:s}"'.format(','.join(alpns)))
 
     offset += 7
     ipv4s = []
@@ -260,4 +260,4 @@ class DNS(dtfabric_helper.DtFabricHelper):
       rets.append('ipv4hint="{0:s}"'.format(','.join(ipv4s)))
     if ipv6s:
       rets.append('ipv6hint="{0:s}"'.format(','.join(ipv6s)))
-    return " ".join(rets)
+    return ' '.join(rets)

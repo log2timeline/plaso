@@ -3,6 +3,7 @@
 
 from plaso.parsers import android_app_usage
 from plaso.parsers import asl
+from plaso.parsers import aul
 from plaso.parsers import bencode_parser
 from plaso.parsers import bodyfile
 from plaso.parsers import bsm

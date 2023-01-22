@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite Result Codes helper.
 
-For a list of result codes see:
+Also see:
   https://www.sqlite.org/rescode.html
 """
 
@@ -48,7 +48,7 @@ class SQLiteResultCodeHelper(object):
     """Retrieves the description for a specific error code.
 
     Args:
-      code (int): error code
+      code (int): error code.
 
     Returns:
       str: name of the error code or None if not available.

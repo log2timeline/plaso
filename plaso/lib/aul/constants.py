@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) constants."""
 
+
 # Supported Versions
 SUPPORTED_DSC_VERSIONS = [(1, 0), (2, 0)]
 
@@ -43,21 +44,20 @@ FIREHOSE_ITEM_SENSITIVE = 0x45
 
 # Log Types
 LOG_TYPES = {
-  0x01: 'Info',
-  0x02: 'Debug',
-  0x03: 'Useraction',
-  0x10: 'Error',
-  0x11: 'Fault',
-  0x80: 'Process Signpost Event',
-  0x81: 'Process Signpost Start',
-  0x82: 'Process Signpost End',
-  0xc0: 'System Signpost Event',
-  0xc1: 'System Signpost Start',
-  0xc2: 'System Signpost End',
-  0x40: 'Thread Signpost Event',
-  0x41: 'Thread Signpost Start',
-  0x42: 'Thread Signpost End',
-}
+    0x01: 'Info',
+    0x02: 'Debug',
+    0x03: 'Useraction',
+    0x10: 'Error',
+    0x11: 'Fault',
+    0x40: 'Thread Signpost Event',
+    0x41: 'Thread Signpost Start',
+    0x42: 'Thread Signpost End',
+    0x80: 'Process Signpost Event',
+    0x81: 'Process Signpost Start',
+    0x82: 'Process Signpost End',
+    0xc0: 'System Signpost Event',
+    0xc1: 'System Signpost Start',
+    0xc2: 'System Signpost End'}
 
 # MBR Details Types
 USER_TYPES = [0x24, 0xA0, 0xA4]
