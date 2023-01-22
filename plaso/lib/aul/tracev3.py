@@ -1114,8 +1114,8 @@ class TraceV3FileParser(interface.FileObjectParser,
     if len(proc_info) == 0:
       logger.error('Could not find Process Info block for ID: %d', proc_id)
       return
-    else:
-      proc_info = proc_info[0]
+
+    proc_info = proc_info[0]
 
     private_strings = None
     private_data_len = 0

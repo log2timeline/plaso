@@ -24,10 +24,12 @@ class UUIDText(dtfabric_helper.DtFabricHelper):
     library_path (str): the library path associated with the UUID file.
     uuid (uuid.UUID): the UUID.
   """
+
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'uuidfile.yaml')
 
   def __init__(self, library_path, library_name, uuid, data, entries):
+    """Initializes an Apple Unified Logging (AUL) UUIDText file."""
     super(UUIDText, self).__init__()
     self.data = data
     self.entries = entries
@@ -63,7 +65,7 @@ class UUIDText(dtfabric_helper.DtFabricHelper):
 
 class UUIDFileParser(
   interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """UUID file parser
+  """UUID file parser.
 
   Attributes:
     file_entry (dfvfs.FileEntry): file entry.
@@ -76,7 +78,7 @@ class UUIDFileParser(
       os.path.dirname(__file__), 'uuidfile.yaml')
 
   def __init__(self, file_entry, file_system):
-    """Initializes a UUID file.
+    """Initializes a UUID file parser.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry.
@@ -85,7 +87,7 @@ class UUIDFileParser(
       uuidtext_location (str): File path to the location of DSC files.
 
     Raises:
-      errors.ParseError if the location is invalid.
+      ParseError: if the location of the UUID file is invalid.
     """
     super(UUIDFileParser, self).__init__()
     self.file_entry = file_entry

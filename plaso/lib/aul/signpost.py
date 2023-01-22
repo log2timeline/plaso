@@ -78,6 +78,10 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
                                                    uint32_data_type_map)
       offset += 4
 
+    # Note that activity_id and sentinel are currently unused.
+    _ = activity_id
+    _ = sentinel
+
     if flags & constants.PRIVATE_STRING_RANGE:
       logger.debug("Signpost has private_string_range (has_private_data flag)")
 

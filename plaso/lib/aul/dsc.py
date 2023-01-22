@@ -93,7 +93,7 @@ class DSCFileParser(
       os.path.dirname(__file__), 'dsc.yaml')
 
   def __init__(self, file_entry, file_system):
-    """Initializes a dsc file.
+    """Initializes a DSC file.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry.
@@ -101,7 +101,7 @@ class DSCFileParser(
       dsc_location (str): File path to the location of DSC files.
 
     Raises:
-      errors.ParseError if the location is invalid.
+      ParseError: if the location of the DSC file is invalid.
     """
     super(DSCFileParser, self).__init__()
     self.file_entry = file_entry

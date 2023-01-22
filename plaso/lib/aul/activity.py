@@ -16,12 +16,12 @@ from plaso.parsers import logger
 
 
 class ActivityParser(object):
-  """Activity data chunk parser"""
+  """Activity data chunk parser."""
 
   _USER_ACTION_ACTIVITY_TYPE = 0x3
 
-  def ParseActivity(self, tracev3, parser_mediator, tracepoint, proc_info,
-                    time):
+  def ParseActivity(
+      self, tracev3, parser_mediator, tracepoint, proc_info, time):
     """Processes an Activity chunk.
 
     Args:
@@ -69,36 +69,39 @@ class ActivityParser(object):
     uint64_data_type_map = tracev3.GetDataTypeMap('uint64')
 
     if tracepoint.log_type != self._USER_ACTION_ACTIVITY_TYPE:
-      activity_id = tracev3.ReadStructureFromByteStream(data, offset,
-                                                      uint32_data_type_map)
+      activity_id = tracev3.ReadStructureFromByteStream(
+          data, offset, uint32_data_type_map)
       offset += 4
-      sentinel = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                   uint32_data_type_map)
+      sentinel = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint32_data_type_map)
       offset += 4
 
     if flags & constants.UNIQUE_PID:
-      unique_pid = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                     uint64_data_type_map)
+      unique_pid = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint64_data_type_map)
       offset += 8
       logger.debug('Signpost has unique_pid: {0:d}'.format(unique_pid))
 
     if flags & constants.CURRENT_AID:
       logger.debug('Activity has current_aid')
-      activity_id = tracev3.ReadStructureFromByteStream(data, offset,
-                                                      uint32_data_type_map)
+      activity_id = tracev3.ReadStructureFromByteStream(
+          data, offset, uint32_data_type_map)
       offset += 4
-      sentinel = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                   uint32_data_type_map)
+      sentinel = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint32_data_type_map)
       offset += 4
 
     if flags & constants.HAS_SUBSYSTEM:
       logger.debug('Activity has has_other_current_aid')
-      activity_id = tracev3.ReadStructureFromByteStream(data, offset,
-                                                      uint32_data_type_map)
+      activity_id = tracev3.ReadStructureFromByteStream(
+          data, offset, uint32_data_type_map)
       offset += 4
-      sentinel = tracev3.ReadStructureFromByteStream(data[offset:], offset,
-                                                   uint32_data_type_map)
+      sentinel = tracev3.ReadStructureFromByteStream(
+          data[offset:], offset, uint32_data_type_map)
       offset += 4
+
+    # Note that sentinel currently is not used.
+    _ = sentinel
 
     message_string_reference = tracev3.ReadStructureFromByteStream(
         data[offset:], offset, uint32_data_type_map)

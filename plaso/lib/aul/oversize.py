@@ -39,6 +39,9 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
       data_offset (int): offset of the oversize chunk relative to the start
         of the chunk set.
 
+    Returns:
+      int: size of the chunk data or None if chunk cannot be parsed.
+
     Raises:
       ParseError: if the oversize chunk cannot be parsed.
     """
@@ -69,12 +72,14 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
             data_meta, oversize.data, offset)
     except errors.ParseError as exception:
       logger.error('Unable to parse data items: {0!s}'.format(exception))
-      return
+      return None
 
     # Check for backtrace
     if oversize.data[offset:offset+3] == [0x01, 0x00, 0x18]:
       logger.error("Backtrace found in Oversize chunk")
-      return
+      return None
+
+    data_type_map = self._GetDataTypeMap('cstring')
 
     private_items = []
     rolling_offset = offset
@@ -82,24 +87,25 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
       if item[2] == 0:
         oversize_strings.append((item[0], item[2], ""))
         continue
+
       if item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         logger.debug("Private Oversize")
         private_items.append((item, index))
         oversize_strings.insert(index, (item[0], item[2], '<private>'))
         continue
-      oversize_strings.append(
-          (item[0], item[2],
-           self._ReadStructureFromByteStream(
-              oversize.data[offset + item[1]:],
-              0,
-              self._GetDataTypeMap('cstring'))))
+
+      string = self._ReadStructureFromByteStream(
+          oversize.data[offset + item[1]:], 0, data_type_map)
+
+      oversize_strings.append((item[0], item[2], string))
       rolling_offset += item[2]
+
     offset = rolling_offset
     for item, index in private_items:
-      oversize_strings[index] = (item[0], item[2],
-                                 self._ReadStructureFromByteStream(
-                                     oversize.data[offset + item[1]:], 0,
-                                     self._GetDataTypeMap('cstring')))
+      string = self._ReadStructureFromByteStream(
+          oversize.data[offset + item[1]:], 0, data_type_map)
+
+      oversize_strings[index] = (item[0], item[2], string)
 
     oversize = OversizeData(
         oversize.first_number_proc_id,
