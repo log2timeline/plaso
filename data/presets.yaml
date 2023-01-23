@@ -143,6 +143,7 @@ parsers:
 - sqlite/google_drive
 - sqlite/skype
 - symantec_scanlog
+- text/anydesk_adtrace
 - text/gdrive_synclog
 - text/sccm
 - text/setupapi

@@ -17,6 +17,22 @@ short_source: 'LOG'
 source: 'Apache Access Log'
 ---
 type: 'conditional'
+data_type: 'anydesk:adtrace_log:entry'
+message:
+- 'loglevel: {loglevel}'
+- 'recorded_time: {recorded_time}'
+- 'appname: {appname}'
+- 'Process Id: {pid}'
+- 'Thread Id: {threadid}'
+- 'Function: {function}'
+- 'Message: {message}'
+short_message:
+- '{function}'
+- 'Message: {message}'
+short_source: 'LOG'
+source: 'AnyDesk Ad Trace Log'
+
+type: 'conditional'
 data_type: 'aws:cloudtrail:entry'
 message:
 - 'User {user_name}'
