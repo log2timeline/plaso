@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Text parser plugin for Anydesk Ad Trace log (ad.trace) files.
 
-Parser based on the xxxxx
+Parser based on the analysis of the ad.trace log file format.
 """
 
 import pyparsing
@@ -18,18 +18,14 @@ class AnyDeskAdTraceLogEventData(events.EventData):
   """AnyDesk Ad Trace log event data.
 
   Attributes:
-    http_request_referer (str): http request referer header information.
-    http_request (str): first line of http request.
-    http_request_user_agent (str): http request user agent header information.
-    http_response_bytes (int): http response bytes size without headers.
-    http_response_code (int): http response code from server.
-    ip_address (str): IPv4 or IPv6 addresses.
-    port_number (int): canonical port of the server serving the request.
+    loglevel (str): type of log record ("info", "warning", "error", etc.)
     recorded_time (dfdatetime.DateTimeValues): date and time the log entry
         was recorded.
-    remote_name (str): remote logname (from identd, if supplied).
-    server_name (str): canonical hostname of the server serving the request.
-    user_name (str): logged user name.
+    appname (str): application source ("back", "ctrl", "front", etc.)
+    pid (int): Process Identifier from where the event is generated
+    threadid (int): Thread Identifier from where the event is generated
+    function (str): Source/Activity that generates the event
+    message (str): Detailed message 
   """
 
   DATA_TYPE = 'anydesk:adtrace_log:entry'
