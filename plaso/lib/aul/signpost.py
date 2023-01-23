@@ -254,7 +254,7 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     if ttl_value:
       event_data.ttl = ttl_value
 
-    event_data.message = 'Signpost ID: {} - Signpost Name: {} - {}'.format(
+    event_data.body = 'Signpost ID: {} - Signpost Name: {} - {}'.format(
         hex(signpost_id).upper()[2:],
         hex(signpost_name).upper()[2:],
         tracev3.FormatString(fmt, log_data))

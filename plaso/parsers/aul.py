@@ -19,6 +19,7 @@ class AULEventData(events.EventData):
 
   Attributes:
     activity_id (str): path from the root to this plist key.
+    body (str): the log message.
     boot_uuid (str): unique boot identifier.
     category (str): event category.
     creation_time (dfdatetime.DateTimeValues): file entry creation date
@@ -27,7 +28,6 @@ class AULEventData(events.EventData):
     level (str): level of criticality of the event.
     library (str): originating library path.
     library_uuid (str): Unique library identifier.
-    message (str): the log message.
     pid (int): process identifier (PID).
     process (str): originating process path.
     process_uuid (str): unique process identifier.
@@ -41,6 +41,7 @@ class AULEventData(events.EventData):
     """Initialise event data."""
     super(AULEventData, self).__init__(data_type=self.DATA_TYPE)
     self.activity_id = None
+    self.body = None
     self.boot_uuid = None
     self.category = None
     self.creation_time = None
@@ -48,7 +49,6 @@ class AULEventData(events.EventData):
     self.level = None
     self.library = None
     self.library_uuid = None
-    self.message = None
     self.pid = None
     self.process = None
     self.process_uuid = None

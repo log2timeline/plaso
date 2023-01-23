@@ -48,7 +48,7 @@ class LossParser(dtfabric_helper.DtFabricHelper):
     event_data.euid = proc_info.euid
     event_data.level = "Loss"
     event_data.thread_id = hex(tracepoint.thread_identifier)
-    event_data.message = "Lost {0:d} log messages".format(loss_structure.count)
+    event_data.body = "Lost {0:d} log messages".format(loss_structure.count)
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(
         timestamp=int(time))

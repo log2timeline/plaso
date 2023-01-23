@@ -306,7 +306,7 @@ class NonactivityParser(object):
                     proc_info.second_number_proc_id))
 
     if fmt:
-      event_data.message = "".join(backtrace_strings) + tracev3.FormatString(
+      event_data.body = "".join(backtrace_strings) + tracev3.FormatString(
           fmt, log_data)
     elif not fmt and not log_data:
       return  # Nothing to do ??
@@ -315,7 +315,7 @@ class NonactivityParser(object):
         uuid = uuid_file.uuid
       else:
         uuid = 'UNKNOWN'
-      event_data.message = "Error: Invalid offset {0:d} for UUID {1:s}".format(
+      event_data.body = "Error: Invalid offset {0:d} for UUID {1:s}".format(
         tracepoint.format_string_location, uuid)
 
     event_data.thread_id = hex(tracepoint.thread_identifier)

@@ -159,10 +159,10 @@ message:
 - 'Library UUID: {library_uuid}'
 - 'Activity ID: {activity_id}'
 - 'Category: {category}'
-- 'Message: {message}'
+- 'Body: {body}'
 short_message:
 - 'Subsystem: {subsystem}'
-- 'Message: {message}'
+- 'Body: {body}'
 short_source: 'LOG'
 source: 'MacOS AUL Log'
 ---

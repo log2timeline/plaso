@@ -59,8 +59,8 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
     event_data.subsystem = simpledump_structure.subsystem_string
     event_data.library_uuid = simpledump_structure.sender_uuid.hex.upper()
     event_data.process_uuid = simpledump_structure.dsc_uuid.hex
-    event_data.message = simpledump_structure.message_string
-    logger.debug("Log line: {0!s}".format(event_data.message))
+    event_data.body = simpledump_structure.message_string
+    logger.debug("Log line: {0!s}".format(event_data.body))
 
     ct = simpledump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(

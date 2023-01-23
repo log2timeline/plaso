@@ -66,7 +66,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     logger.debug("Format string: {0:s}".format(fmt))
 
     if fmt:
-      event_data.message = tracev3.FormatString(
+      event_data.body = tracev3.FormatString(
           fmt, [(0, len(item_data), item_data)])
 
     event_data.thread_id = hex(tracepoint.thread_identifier)

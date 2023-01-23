@@ -101,12 +101,12 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
 
     if statedump_structure.data_type == self._STATETYPE_PLIST:
       try:
-        event_data.message = str(plistlib.loads(statedump_structure.data))
+        event_data.body = str(plistlib.loads(statedump_structure.data))
       except plistlib.InvalidFileException:
         logger.warning("Statedump PList not valid")
         return
     elif statedump_structure.data_type == self._STATETYPE_PROTOBUF:
-      event_data.message  = "Statedump Protocol Buffer"
+      event_data.body  = "Statedump Protocol Buffer"
       logger.error("Statedump Protobuf not supported")
     elif statedump_structure.data_type == self._STATETYPE_CUSTOM:
       if statedump_structure.string1 == "location":
@@ -144,13 +144,13 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
           raise errors.ParseError(
             "Unknown location Statedump Custom object not supported")
 
-        event_data.message = str({
+        event_data.body = str({
             **state_tracker_structure,
             **extra_state_tracker_structure
         })
       else:
         logger.error("Non-location Statedump Custom object not supported")
-        event_data.message = "Unsupported Statedump object: {}".format(
+        event_data.body = "Unsupported Statedump object: {}".format(
             statedump_structure.string_name)
     else:
       logger.error("Unknown Statedump data type {0:d}".format(

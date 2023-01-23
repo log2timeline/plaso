@@ -236,7 +236,7 @@ class ActivityParser(object):
           if dsc_range.uuid
           else uuid_file.uuid.upper()
       )
-    event_data.message = tracev3.FormatString(fmt, log_data)
+    event_data.body = tracev3.FormatString(fmt, log_data)
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(
         timestamp=int(time))
