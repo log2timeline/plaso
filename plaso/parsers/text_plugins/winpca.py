@@ -16,13 +16,13 @@ class WinPCAEventData(events.EventData):
 
   Attributes:
     body (str): message body.
-    description
+    description (str): Description of the executable.
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
-    program_id (str):
-    run_status (str):
-    vendor (str):
-    version (str):
+    program_id (str): Program ID.
+    run_status (str): Execution status.
+    vendor (str): Software vendor.
+    version (str): Software version.
   """
 
   DATA_TYPE = 'windows:pca_log:entry'
