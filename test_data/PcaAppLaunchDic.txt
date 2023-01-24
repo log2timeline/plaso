@@ -1,0 +1,55 @@
+C:\ProgramData\Sophos\AutoUpdate\Cache\sophos_autoupdate1.dir\su-setup32.exe|2022-12-17 13:27:53.096
+C:\Program Files\PowerToys\modules\launcher\PowerToys.PowerLauncher.exe|2022-12-18 04:27:42.360
+C:\Program Files\Everything\Everything.exe|2022-12-28 16:06:24.212
+C:\Program Files\TechSmith\Snagit 2022\SnagPriv.exe|2022-10-21 12:50:49.645
+C:\Program Files\Microsoft OneDrive\22.093.0501.0001\Microsoft.SharePoint.exe|2022-05-17 11:49:09.031
+C:\Program Files\FreeFileSync\RealTimeSync.exe|2022-12-21 02:57:19.203
+C:\Program Files (x86)\KC Softwares\SUMo\SUMo.exe|2022-07-29 02:49:39.540
+C:\Program Files (x86)\MediaMonkey 5\MediaMonkey.exe|2022-12-18 03:56:19.423
+K:\MusicBee\MusicBee.exe|2022-12-28 16:07:48.304
+C:\Program Files\TechSmith\Snagit 2022\SnagitCapture.exe|2022-10-20 02:58:46.851
+C:\Program Files\Just Great Software\EditPad Pro 8\EditPadPro8.exe|2022-12-29 03:21:42.344
+C:\Program Files\NVIDIA Corporation\NVIDIA GeForce Experience\NVIDIA GeForce Experience.exe|2022-12-15 00:42:47.999
+C:\ProgramData\NVIDIA Corporation\Downloader\8d10d578aa8b008854e5e17b227d8d5a_extracted\setup.exe|2022-05-13 02:52:52.600
+C:\Program Files\WinRAR\WinRAR.exe|2022-09-29 17:43:29.992
+M:\Downloads\MarkdownMonsterSetup (1).exe|2022-06-04 03:30:12.947
+C:\Program Files\WindowsApps\KaliLinux.54290C8133FEE_1.11.0.0_x64__ey8k8hqnwqnmg\kali.exe|2022-05-14 03:44:31.697
+C:\Program Files (x86)\Samsung\Samsung Magician\SamsungMagician.exe|2022-05-16 14:52:56.547
+V:\DFIR Tools\KAPE\gkape.exe|2022-06-20 19:53:41.640
+C:\Program Files\Microsoft Office\root\Integration\Integrator.exe|2022-12-28 19:08:33.829
+C:\Program Files\TechSmith\Snagit 2021\SnagitEditor.exe|2022-05-20 15:31:58.949
+C:\Program Files\FreeFileSync\FreeFileSync.exe|2022-12-28 12:54:41.046
+C:\Program Files\Microsoft OneDrive\22.099.0508.0001\Microsoft.SharePoint.exe|2022-05-19 17:54:29.740
+C:\Program Files\GPSoftware\Directory Opus\dopus.exe|2022-12-18 04:15:51.992
+C:\Program Files\Mozilla Firefox\updater.exe|2022-11-04 19:41:04.103
+C:\ProgramData\Package Cache\{e20653a4-3735-4133-82cf-03f491e3f891}\Bootstrapper.exe|2022-05-21 04:02:04.037
+C:\ProgramData\Package Cache\{4d991aa8-477f-46e2-8e14-d1f02f731e9e}\Bootstrapper.exe|2022-05-20 15:32:43.775
+C:\ProgramData\Package Cache\{33b454a4-89d5-430e-8239-62f72c287664}\CamtasiaInstaller.exe|2022-05-21 03:59:42.832
+C:\Windows\System32\msiexec.exe|2022-12-01 03:22:13.842
+C:\Program Files\GIMP 2\uninst\unins000.exe|2022-05-21 03:54:41.586
+C:\Program Files\WindowsApps\MicrosoftCorporationII.WindowsSubsystemForAndroid_2203.40000.3.0_x64__8wekyb3d8bbwe\WsaClient\WsaClient.exe|2022-05-21 13:44:42.957
+C:\Program Files\PremiumSoft\Navicat Premium 16\unins000.exe|2022-05-21 04:16:00.458
+C:\Program Files\PremiumSoft\Navicat 15 for SQLite\unins000.exe|2022-05-21 04:17:58.158
+C:\ProgramData\Package Cache\{e1166660-2744-4355-b0f2-4104d6a8b839}\Setup.Microsoft.PowerAutomateDesktop.exe|2022-05-21 13:00:09.844
+C:\ProgramData\Package Cache\{a1152843-5a52-4c99-b29c-622e86318d40}\CamtasiaInstaller.exe|2022-05-21 13:43:34.089
+M:\Downloads\MediaMonkey_5.0.3.2626.exe|2022-05-21 19:34:20.775
+C:\Program Files\GPSoftware\Directory Opus\dopusrt.exe|2022-11-21 15:29:38.333
+M:\Downloads\Everything-1.4.1.1015.x64-Setup.exe|2022-05-23 20:29:04.147
+C:\ProgramData\NVIDIA Corporation\Downloader\7adc8ae5be1b11cc29f45f22a7275e0d_extracted\setup.exe|2022-05-25 12:09:01.103
+C:\Program Files\WindowsApps\MicrosoftTeams_22133.500.1346.3200_x64__8wekyb3d8bbwe\msteams.exe|2022-06-04 03:10:28.268
+C:\Program Files\TechSmith\Snagit 2022\SnagitEditor.exe|2022-09-21 17:08:39.039
+C:\Program Files\Easeware\DriverEasy\DriverEasy.exe|2022-12-01 15:41:37.140
+C:\Program Files\Microsoft OneDrive\22.105.0515.0002\Microsoft.SharePoint.exe|2022-05-28 13:15:45.988
+C:\Program Files\IDM Computer Solutions\UltraEdit\uedit64.exe|2022-12-17 19:11:45.866
+C:\Program Files\IDM Computer Solutions\UEStudio\UEStudio.exe|2022-05-28 20:11:15.691
+C:\Program Files\IDM Computer Solutions\UltraCompare\uc.exe|2022-05-28 20:11:54.368
+Z:\Battle.net\Battle.net Launcher.exe|2022-12-09 03:30:04.685
+M:\Downloads\MediaMonkey_5.0.3.2627.exe|2022-05-30 18:36:46.198
+C:\Program Files\WindowsApps\Microsoft.YourPhone_1.22051.114.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe|2022-06-02 12:39:10.961
+C:\Program Files\Microsoft OneDrive\22.111.0522.0002\Microsoft.SharePoint.exe|2022-06-06 14:04:48.279
+M:\Downloads\SumatraPDF-3.4.4-64-install.exe|2022-06-03 04:00:03.467
+C:\Program Files\WindowsApps\Microsoft.YourPhone_1.22051.115.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe|2022-06-06 16:22:49.295
+C:\ProgramData\ProtonVPN\Updates\ProtonVPN_win_v2.0.0.exe|2022-06-06 14:07:17.296
+C:\Windows\SysWOW64\msiexec.exe|2022-08-25 11:51:44.111
+C:\Program Files (x86)\Proton Technologies\ProtonVPN\ProtonVPN.exe|2022-12-15 00:38:34.052
+C:\Program Files\Microsoft OneDrive\22.116.0529.0002\Microsoft.SharePoint.exe|2022-06-09 13:15:50.638
