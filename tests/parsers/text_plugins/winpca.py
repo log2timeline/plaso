@@ -17,7 +17,7 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 55)
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -28,9 +28,9 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'body': ('C:\\ProgramData\\Sophos\\AutoUpdate\\Cache\\'
-            'sophos_autoupdate1.dir\\su-setup32.exe'),
-        'last_written_time': '2022-12-17T13:27:53.096+00:00'}
+        'body': ('C:\\Program Files\\WindowsApps\\MicrosoftTeams_'
+            '22287.702.1670.9453_x64__8wekyb3d8bbwe\\msteams.exe'),
+        'last_written_time': '2022-11-15T00:02:08.476+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -43,7 +43,7 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 51)
+    self.assertEqual(number_of_event_data, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -55,13 +55,14 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'run_status': '2',
-        'body': ('%programfiles%\\freefilesync\\freefilesync.exe'),
-        'description': 'freefilesync',
-        'vendor': 'freefilesync.org',
-        'version': '11.20',
-        'program_id': '000617915288ba535b4198ae58be4d9e2a4200000904',
-        'exit_code': 'Abnormal process exit with code 0x2',
-        'last_written_time': '2022-05-12T19:48:09.548+00:00'}
+        'body': ('%programfiles%\\windowsapps\\microsoftteams_22287'
+            '.702.1670.9453_x64__8wekyb3d8bbwe\\msteamsupdate.exe'),
+        'description': 'microsoft teams updater',
+        'vendor': 'microsoft corporation',
+        'version': '22287.702.1670.9453',
+        'program_id': '0006132687b1e64961e910ee21d4352afe0800000904',
+        'exit_code': 'Abnormal process exit with code 0x4c7',
+        'last_written_time': '2022-11-14T23:37:11.789+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
