@@ -7,7 +7,7 @@ from tests.parsers.text_plugins import test_lib
 
 
 class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
-  """Tests for Apache access log text parser plugin."""
+  """Tests for Windows PCA log text parser plugin."""
 
   def testLaunchDicParser(self):
     """Tests the LaunchDic file parser."""

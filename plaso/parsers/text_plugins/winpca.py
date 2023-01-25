@@ -75,36 +75,36 @@ class WinPCALogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LAUNCH_DIC_LOG_LINE = (
-    pyparsing.SkipTo('|').setResultsName('exec') +
-    _SEPARATOR +
-    _DATE.setResultsName('date') +
-    _TIME.setResultsName('time') +
-    _END_OF_LINE
+      pyparsing.SkipTo('|').setResultsName('exec') +
+      _SEPARATOR +
+      _DATE.setResultsName('date') +
+      _TIME.setResultsName('time') +
+      _END_OF_LINE
   )
 
   _DB0_LOG_LINE = (
-    _DATE.setResultsName('date') +
-    _TIME.setResultsName('time') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('run_status') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('exec') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('description') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('vendor') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('version') +
-    _SEPARATOR +
-    _SKIP_TO_SEPARATOR.setResultsName('program_id') +
-    _SEPARATOR +
-    pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('exit_code') +
-    _END_OF_LINE
+      _DATE.setResultsName('date') +
+      _TIME.setResultsName('time') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('run_status') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('exec') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('description') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('vendor') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('version') +
+      _SEPARATOR +
+      _SKIP_TO_SEPARATOR.setResultsName('program_id') +
+      _SEPARATOR +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('exit_code') +
+      _END_OF_LINE
   )
 
   _LINE_STRUCTURES = [
-    ('launch_dic_log_line', _LAUNCH_DIC_LOG_LINE),
-    ('db0_log_line', _DB0_LOG_LINE)]
+      ('launch_dic_log_line', _LAUNCH_DIC_LOG_LINE),
+      ('db0_log_line', _DB0_LOG_LINE)]
 
   VERIFICATION_GRAMMAR = (_LAUNCH_DIC_LOG_LINE ^ _DB0_LOG_LINE)
 
