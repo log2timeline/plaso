@@ -17,6 +17,7 @@ class WinPCAEventData(events.EventData):
   Attributes:
     body (str): message body.
     description (str): Description of the executable.
+    exit_code (str): Final result of the execution.
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
     program_id (str): Program ID.
@@ -32,6 +33,7 @@ class WinPCAEventData(events.EventData):
     super(WinPCAEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.description = None
+    self.exit_code = None
     self.last_written_time = None
     self.program_id = None
     self.run_status = None
