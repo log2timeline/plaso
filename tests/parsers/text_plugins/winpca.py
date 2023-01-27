@@ -30,7 +30,7 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': ('C:\\Program Files\\WindowsApps\\MicrosoftTeams_'
             '22287.702.1670.9453_x64__8wekyb3d8bbwe\\msteams.exe'),
-        'last_written_time': '2022-11-15T00:02:08.476+00:00'}
+        'last_execution_time': '2022-11-15T00:02:08.476+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -62,7 +62,7 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
         'version': '22287.702.1670.9453',
         'program_id': '0006132687b1e64961e910ee21d4352afe0800000904',
         'exit_code': 'Abnormal process exit with code 0x4c7',
-        'last_written_time': '2022-11-14T23:37:11.789+00:00'}
+        'last_execution_time': '2022-11-14T23:37:11.789+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

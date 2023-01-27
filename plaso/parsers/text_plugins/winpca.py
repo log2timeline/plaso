@@ -18,7 +18,7 @@ class WinPCAEventData(events.EventData):
     body (str): message body.
     description (str): Description of the executable.
     exit_code (str): Final result of the execution.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
+    last_execution_time (dfdatetime.DateTimeValues): entry last written date and
         time.
     program_id (str): Program ID.
     run_status (str): Execution status.
@@ -34,7 +34,7 @@ class WinPCAEventData(events.EventData):
     self.body = None
     self.description = None
     self.exit_code = None
-    self.last_written_time = None
+    self.last_execution_time = None
     self.program_id = None
     self.run_status = None
     self.vendor = None
@@ -109,7 +109,11 @@ class WinPCALogTextPlugin(interface.TextPlugin):
   VERIFICATION_GRAMMAR = (_LAUNCH_DIC_LOG_LINE ^ _DB0_LOG_LINE)
 
   def __init__(self):
-    """Initializes a text parser plugin."""
+    """Initializes a text parser plugin.
+
+    Attributes:
+      _use_local_time (bool):
+    """
     super(WinPCALogTextPlugin, self).__init__()
     self._use_local_time = False
 
@@ -123,7 +127,7 @@ class WinPCALogTextPlugin(interface.TextPlugin):
     """
     event_data = WinPCAEventData()
     event_data.body = self._GetValueFromStructure(structure, 'exec')
-    event_data.last_written_time = self._ParseTimeElements(structure)
+    event_data.last_execution_time = self._ParseTimeElements(structure)
 
     event_data.run_status = self._GetValueFromStructure(
         structure, 'run_status')
