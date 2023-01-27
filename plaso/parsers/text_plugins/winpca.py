@@ -112,7 +112,8 @@ class WinPCALogTextPlugin(interface.TextPlugin):
     """Initializes a text parser plugin.
 
     Attributes:
-      _use_local_time (bool):
+      _use_local_time (bool): Passed to dfdatetime_time_elements
+          to indicate whether or not the times are in UTC.
     """
     super(WinPCALogTextPlugin, self).__init__()
     self._use_local_time = False
