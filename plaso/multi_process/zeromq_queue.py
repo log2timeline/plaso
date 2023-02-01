@@ -181,7 +181,7 @@ class ZeroMQQueue(plaso_queue.Queue):
     logger.debug('Creating socket for {0:s}'.format(self.name))
 
     if not self._zmq_context:
-      self._zmq_context = zmq.Context()
+      self._zmq_context = zmq.Context()  # pylint: disable=abstract-class-instantiated
 
     # The terminate and close threading events need to be created when the
     # socket is opened. Threading events are unpickleable objects and cannot

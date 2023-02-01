@@ -27,7 +27,7 @@ In addition, support for the format modifiers:
 * time zone offset
 
 Also see:
-  https://developer.android.com/studio/debug/am-logcat#format
+  https://developer.android.com/studio/debug/logcat
 """
 
 import pyparsing
