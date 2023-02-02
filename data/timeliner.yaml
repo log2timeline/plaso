@@ -1288,6 +1288,12 @@ attribute_mappings:
   description: 'Content Deletion Time'
 place_holder_event: true
 ---
+data_type: 'windows:pca_log:entry'
+attribute_mappings:
+- name: 'last_execution_time'
+  description: 'Last Time Executed'
+place_holder_event: true
+---
 data_type: 'windows:prefetch:execution'
 attribute_mappings:
 - name: 'last_run_time'

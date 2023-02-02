@@ -957,3 +957,16 @@ message: '[{key_path}] {entries}'
 short_message: '[{key_path}] {entries}'
 short_source: 'REG'
 source: 'WinRAR History Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:pca_log:entry'
+message:
+- '{body} was executed - '
+- 'Description: {description}'
+- 'Version: {version}'
+- 'Vendor: {vendor}'
+- 'Exit code: {exit_code}'
+short_message:
+- '{body} was run'
+short_source: 'PCA'
+source: 'Program Compatibility Assistant'

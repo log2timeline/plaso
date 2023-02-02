@@ -165,6 +165,7 @@ parsers:
 - olecf/olecf_automatic_destinations
 - recycle_bin
 - winevtx
+- text/winpca
 - win_gen
 ---
 name: win7_slow

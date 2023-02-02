@@ -74,6 +74,7 @@ paths:
 - '%SystemRoot%\\inf\\setupapi[.].+[.]log'
 - '%SystemRoot%\\setupapi.log'
 - '%SystemRoot%\\System32\\LogFiles\\.+\\.+[.]txt'
+- '%SystemRoot%\\appcompat\\pca\\.+[.]txt'
 ---
 description: Windows User Access Logging (UAL) database files.
 type: include
