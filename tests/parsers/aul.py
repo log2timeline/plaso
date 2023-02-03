@@ -49,7 +49,7 @@ class AULParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'mac:aul:event',
+        'data_type': 'macos:aul:event',
         'creation_time': '2023-01-12T01:36:27.111432704+00:00',
         'level': 'Default',
         'subsystem': 'com.apple.SkyLight',
@@ -89,7 +89,7 @@ class AULParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'mac:aul:event',
+        'data_type': 'macos:aul:event',
         'creation_time': '2023-01-12T01:35:35.240424704+00:00',
         'level': 'Default',
         'thread_id': '0x0',
@@ -127,7 +127,7 @@ class AULParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'mac:aul:event',
+        'data_type': 'macos:aul:event',
         'creation_time': '2023-01-12T01:36:31.338352128+00:00',
         'level': 'Signpost',
         'thread_id': '0x7cb',

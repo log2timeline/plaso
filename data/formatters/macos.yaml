@@ -144,7 +144,7 @@ short_source: 'LOG'
 source: 'MacOS ASL Log'
 ---
 type: 'conditional'
-data_type: 'mac:aul:event'
+data_type: 'macos:aul:event'
 message:
 - 'Level: {level}'
 - 'Subsystem: {subsystem}'

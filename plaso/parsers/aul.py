@@ -35,7 +35,7 @@ class AULEventData(events.EventData):
     thread_id (str): hex representation of the thread ID.
     ttl (int): log time to live (TTL).
   """
-  DATA_TYPE = 'mac:aul:event'
+  DATA_TYPE = 'macos:aul:event'
 
   def __init__(self):
     """Initialise event data."""
