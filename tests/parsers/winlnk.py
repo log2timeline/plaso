@@ -97,7 +97,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'file_attribute_flags': 0x00000020,
         'file_size': 4635160,
         'icon_location': (
-            '%ProgramFiles%\\Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
+            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
+            'InfoTool.exe'),
         'local_path': (
             'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
             'InfoTool.exe'),
