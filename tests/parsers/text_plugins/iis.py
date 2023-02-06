@@ -170,6 +170,22 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['iis10_edge_cases.log'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 12)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
 
 if __name__ == '__main__':
   unittest.main()
