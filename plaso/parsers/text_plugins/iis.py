@@ -82,7 +82,7 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   _BLANK = pyparsing.Literal('-')
 
-  _WORD = pyparsing.Word(pyparsing.alphanums + '-') | _BLANK
+  _HTTP_METHOD = pyparsing.Word(pyparsing.alphanums + '-_') | _BLANK
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10)) | _BLANK
@@ -100,19 +100,22 @@ class WinIISTextPlugin(interface.TextPlugin):
   PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
       lambda tokens: int(tokens[0], 10)) | _BLANK
 
-  # Username can consist of: domain.username
-  _USERNAME = pyparsing.Word(pyparsing.alphanums + '.-') | _BLANK
+  # Username can consist of: "domain.username", "domain\username",
+  # "domain\user$" or "-" for an anonymous user.
+  _USERNAME = pyparsing.Word(pyparsing.alphanums + '-.\\$') | _BLANK
 
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
-  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`\'"<>'
 
   _URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
+
+  _URI_STEM = (pyparsing.Word(
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '$') | _BLANK)
 
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
   # IIS does not require that a query comply with RFC1738 restrictions on valid
   # URI characters
-  QUERY = (pyparsing.Word(
-      pyparsing.alphanums + _URI_SAFE_CHARACTERS + _URI_UNSAFE_CHARACTERS) |
+  _QUERY = (pyparsing.Word(
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '{}|\\^~[]`\'"<>@$') |
            _BLANK)
 
   _DATE = (
@@ -148,11 +151,11 @@ class WinIISTextPlugin(interface.TextPlugin):
       _TIME.setResultsName('time') +
       _URI.setResultsName('s_sitename') +
       _IP_ADDRESS.setResultsName('dest_ip') +
-      _WORD.setResultsName('http_method') +
+      _HTTP_METHOD.setResultsName('http_method') +
       _URI.setResultsName('cs_uri_stem') +
       _URI.setResultsName('cs_uri_query') +
       PORT.setResultsName('dest_port') +
-      _WORD.setResultsName('cs_username') +
+      _USERNAME.setResultsName('cs_username') +
       _IP_ADDRESS.setResultsName('source_ip') +
       _URI.setResultsName('user_agent') +
       _INTEGER.setResultsName('sc_status') +
@@ -173,10 +176,10 @@ class WinIISTextPlugin(interface.TextPlugin):
   _LOG_LINE_STRUCTURES['time'] = _TIME.setResultsName('time')
   _LOG_LINE_STRUCTURES['s-sitename'] = _URI.setResultsName('s_sitename')
   _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.setResultsName('dest_ip')
-  _LOG_LINE_STRUCTURES['cs-method'] = _WORD.setResultsName('http_method')
-  _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI.setResultsName(
+  _LOG_LINE_STRUCTURES['cs-method'] = _HTTP_METHOD.setResultsName('http_method')
+  _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI_STEM.setResultsName(
       'requested_uri_stem')
-  _LOG_LINE_STRUCTURES['cs-uri-query'] = QUERY.setResultsName('cs_uri_query')
+  _LOG_LINE_STRUCTURES['cs-uri-query'] = _QUERY.setResultsName('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
   _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.setResultsName('cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.setResultsName('source_ip')
