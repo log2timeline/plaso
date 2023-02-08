@@ -5,8 +5,8 @@ import os
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
+from plaso.lib.aul import event
 from plaso.lib import dtfabric_helper
-from plaso.parsers import aul
 from plaso.parsers import logger
 
 
@@ -33,7 +33,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     logger.debug("Reading Trace")
     data = tracepoint.data
 
-    event_data = aul.AULEventData()
+    event_data = event.AULEventData()
     generation_subchunk = tracev3.header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()

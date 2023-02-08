@@ -7,10 +7,10 @@ import plistlib
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
 from plaso.helpers.macos import location
+from plaso.lib.aul import event
 from plaso.lib.aul import time as aul_time
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import aul
 from plaso.parsers import logger
 
 
@@ -76,7 +76,7 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
       return
     proc_info = proc_info[0]
 
-    event_data = aul.AULEventData()
+    event_data = event.AULEventData()
     try:
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
