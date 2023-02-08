@@ -372,11 +372,11 @@ members:
   type: sequence
   element_data_type: cstring
   elements_data_size: tracev3_catalog.process_information_entries_offset - tracev3_catalog.sub_system_strings_offset
-#- name: process_entries
+# - name: process_entries
 #  type: sequence
 #  element_data_type: tracev3_catalog_process_information_entry
 #  number_of_elements: tracev3_catalog.number_of_process_information_entries
-#- name: catalog_subchunks
+# - name: catalog_subchunks
 #  type: sequence
 #  element_data_type: tracev3_catalog_subchunk
 #  number_of_elements: tracev3_catalog.number_of_sub_chunks
