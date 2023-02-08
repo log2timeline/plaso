@@ -46,8 +46,13 @@ class TimesyncParser(
     timesync_file_path_spec = path_spec_factory.Factory.NewPathSpec(
         file_entry.path_spec.TYPE_INDICATOR, **kwargs)
 
+    location_glob = None
+    if file_entry.TYPE_INDICATOR == 'ZIP':
+      location_glob = os.path.join(timesync_location, '*.timesync')
+
     find_spec = file_system_searcher.FindSpec(
-        file_entry_types=[definitions.FILE_ENTRY_TYPE_FILE])
+          file_entry_types=[definitions.FILE_ENTRY_TYPE_FILE],
+          location_glob=location_glob)
 
     path_spec_generator = file_system_searcher.FileSystemSearcher(
         file_system, timesync_file_path_spec).Find(

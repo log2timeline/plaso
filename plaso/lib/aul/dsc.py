@@ -111,9 +111,6 @@ class DSCFileParser(
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
     self.dsc_location = file_system.JoinPath(
         path_segments[:-3] + ['uuidtext', 'dsc'])
-    if not os.path.exists(self.dsc_location):
-      raise errors.ParseError(
-          'Invalid DSC location: {0:s}'.format(self.dsc_location))
 
   def FindFile(self, parser_mediator, uuid):
     """Finds the DSC file on the file system
@@ -127,6 +124,8 @@ class DSCFileParser(
       DSCFile if found, else None.
     """
     kwargs = {}
+    if self.file_entry.path_spec.parent:
+      kwargs['parent'] = self.file_entry.path_spec.parent
     kwargs['location'] = self.file_system.JoinPath([self.dsc_location] + [uuid])
     dsc_file_path_spec = path_spec_factory.Factory.NewPathSpec(
         self.file_entry.path_spec.TYPE_INDICATOR, **kwargs)

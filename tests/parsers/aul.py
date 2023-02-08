@@ -3,9 +3,10 @@
 """Tests for the Apple Unified Logging parser."""
 
 import os
-import shutil
 import unittest
-import zipfile
+
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.parsers import aul
 
@@ -15,26 +16,23 @@ from tests.parsers import test_lib
 
 class AULParserTest(test_lib.ParserTestCase):
   """Tests for the AUL parser."""
+  test_path_spec = None
 
   def setUp(self) -> None:
-    aul_test_dir = os.path.join(tests_test_lib.TEST_DATA_PATH, 'AUL')
-    with zipfile.ZipFile(
-        os.path.join(aul_test_dir, 'aul_test_data.zip'), 'r'
-    ) as test_data_zip_file:
-      test_data_zip_file.extractall(aul_test_dir)
+    aul_test_data = os.path.join(
+        tests_test_lib.TEST_DATA_PATH, 'AUL', 'aul_test_data.zip')
+    self.test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=aul_test_data)
     return super().setUp()
-
-  def tearDown(self) -> None:
-    shutil.rmtree(os.path.join(tests_test_lib.TEST_DATA_PATH, 'AUL', 'private'))
-    return super().tearDown()
 
   def testSpecialParsing(self):
     """Tests the Parse function on a Special tracev3."""
     parser = aul.AULParser()
-    storage_writer = self._ParseFile([
-        'AUL', 'private', 'var', 'db', 'Diagnostics', 'Special',
-        '0000000000000001.tracev3'
-    ], parser)
+    zip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_ZIP, location=os.path.join('/', 'private',
+          'var', 'db', 'Diagnostics', 'Special', '0000000000000001.tracev3'),
+        parent=self.test_path_spec)
+    storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers(
       'event_data')

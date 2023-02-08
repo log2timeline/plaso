@@ -97,9 +97,6 @@ class UUIDFileParser(
     path_segments = file_system.SplitPath(file_entry.path_spec.location)
     self.uuidtext_location = file_system.JoinPath(
         path_segments[:-3] + ['uuidtext'])
-    if not os.path.exists(self.uuidtext_location):
-      raise errors.ParseError(
-        "Invalid UUIDText location: {0:s}".format(self.uuidtext_location))
 
   def FindFile(self, parser_mediator, uuid):
     """Finds the UUID File for the given UUID on the file system.
@@ -113,6 +110,8 @@ class UUIDFileParser(
     """
     self.uuid = uuid
     kwargs = {}
+    if self.file_entry.path_spec.parent:
+      kwargs['parent'] = self.file_entry.path_spec.parent
     kwargs['location'] = self.file_system.JoinPath(
         [self.uuidtext_location] + [uuid[0:2]] + [uuid[2:]])
     uuid_file_path_spec = path_spec_factory.Factory.NewPathSpec(
