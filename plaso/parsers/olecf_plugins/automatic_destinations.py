@@ -118,8 +118,8 @@ class AutomaticDestinationsOLECFPlugin(
 
     if header.format_version == 1:
       entry_map = self._GetDataTypeMap('dest_list_entry_v1')
-    elif header.format_version in (3, 4):
-      entry_map = self._GetDataTypeMap('dest_list_entry_v3')
+    elif header.format_version in (2, 3, 4):
+      entry_map = self._GetDataTypeMap('dest_list_entry_v2')
     else:
       parser_mediator.ProduceExtractionWarning(
           'unsupported format version: {0:d}.'.format(header.format_version))
