@@ -77,7 +77,7 @@ class AutomaticDestinationsOLECFPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       uuid_object (uuid.UUID): UUID of the Distributed Tracking identifier.
       origin (str): origin of the event (event source).
 
@@ -96,14 +96,14 @@ class AutomaticDestinationsOLECFPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       olecf_item (pyolecf.item): OLECF item.
 
     Raises:
       WrongParser: if the DestList cannot be parsed.
     """
+    # The DestList stream can be of size 0 if the Jump List is empty.
     if olecf_item.size == 0:
-      parser_mediator.ProduceExtractionWarning('empty DestList stream')
       return
 
     header_map = self._GetDataTypeMap('dest_list_header')
@@ -204,7 +204,7 @@ class AutomaticDestinationsOLECFPlugin(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       root_item (Optional[pyolecf.item]): root item of the OLECF file.
 
     Raises:
