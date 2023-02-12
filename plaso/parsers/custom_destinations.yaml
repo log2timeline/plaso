@@ -56,7 +56,7 @@ members:
   type: string
   encoding: utf-16-le
   element_data_type: wchar16
-  number_of_elements: file_header_value_type0.number_of_characters
+  number_of_elements: custom_file_header_value_type_0.number_of_characters
 - name: number_of_entries
   data_type: uint32
 ---
