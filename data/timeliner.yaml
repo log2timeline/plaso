@@ -666,7 +666,7 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
-data_type: 'macos:aul:event'
+data_type: 'macos:unified_logging:event'
 attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'

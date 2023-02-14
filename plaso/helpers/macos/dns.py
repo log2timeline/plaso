@@ -222,7 +222,7 @@ class DNS(dtfabric_helper.DtFabricHelper):
     if dns_svcb.url:
       return dns_svcb.url
 
-    rets = []
+    results = []
     offset = 0
 
     if dns_svcb.apln_data:
@@ -237,7 +237,7 @@ class DNS(dtfabric_helper.DtFabricHelper):
         alpns.append(alpn_data.data)
 
     if alpns:
-      rets.append('alpn="{0:s}"'.format(','.join(alpns)))
+      results.append('alpn="{0:s}"'.format(','.join(alpns)))
 
     offset += 7
     ipv4s = []
@@ -257,7 +257,7 @@ class DNS(dtfabric_helper.DtFabricHelper):
           offset += 16
 
     if ipv4s:
-      rets.append('ipv4hint="{0:s}"'.format(','.join(ipv4s)))
+      results.append('ipv4hint="{0:s}"'.format(','.join(ipv4s)))
     if ipv6s:
-      rets.append('ipv6hint="{0:s}"'.format(','.join(ipv6s)))
-    return ' '.join(rets)
+      results.append('ipv6hint="{0:s}"'.format(','.join(ipv6s)))
+    return ' '.join(results)

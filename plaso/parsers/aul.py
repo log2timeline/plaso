@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) file parser."""
 
-from plaso.lib.aul import dsc
-from plaso.lib.aul import timesync
-from plaso.lib.aul import tracev3
-from plaso.lib.aul import uuidfile
+from plaso.parsers.shared.unified_logging import dsc
+from plaso.parsers.shared.unified_logging import timesync
+from plaso.parsers.shared.unified_logging import tracev3
+from plaso.parsers.shared.unified_logging import uuidfile
 
 from plaso.lib import errors
 from plaso.lib import specification

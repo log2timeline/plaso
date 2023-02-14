@@ -2,7 +2,7 @@
 """MacOS OpenDirectory helpers."""
 
 
-class ODMBRIdHelper(object):
+class OpenDirectoryMBRIdHelper(object):
   """OpenDirectory MBR identifier helper.
 
   Also see:
@@ -36,7 +36,7 @@ class ODMBRIdHelper(object):
     return cls._OD_MBRID_TYPES.get(code, 'UNKNOWN: {0:d}'.format(code))
 
 
-class ODErrorsHelper(object):
+class OpenDirectoryErrorsHelper(object):
   """OpenDirectory errors helper.
 
   Also see:

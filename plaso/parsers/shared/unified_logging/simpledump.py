@@ -5,7 +5,7 @@ import os
 
 from dfdatetime import apfs_time as dfdatetime_apfs_time
 
-from plaso.lib.aul import event
+from plaso.containers import unified_logging_event
 from plaso.lib.aul import time as aul_time
 from plaso.lib import dtfabric_helper
 from plaso.parsers import logger
@@ -48,7 +48,7 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
         simpledump_structure.message_string
     ))
 
-    event_data = event.AULEventData()
+    event_data = unified_logging_event.AULEventData()
     generation_subchunk = tracev3.header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()

@@ -17,4 +17,5 @@ from plaso.containers import warnings
 # not imported here
 # from plaso.containers import plist_event
 # from plaso.containers import time_events
+# from plaso.containers import unified_logging_event
 # from plaso.containers import windows_events

@@ -19,20 +19,21 @@ from plaso.helpers.macos import opendirectory
 from plaso.helpers.macos import tcp
 from plaso.helpers import sqlite
 
-from plaso.lib.aul import activity
 from plaso.lib.aul import constants
-from plaso.lib.aul import dsc
-from plaso.lib.aul import loss
-from plaso.lib.aul import nonactivity
-from plaso.lib.aul import oversize
-from plaso.lib.aul import signpost
-from plaso.lib.aul import simpledump
-from plaso.lib.aul import statedump
-from plaso.lib.aul import trace
 from plaso.lib.aul import time as aul_time
 
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
+
+from plaso.parsers.shared.unified_logging import activity
+from plaso.parsers.shared.unified_logging import dsc
+from plaso.parsers.shared.unified_logging import loss
+from plaso.parsers.shared.unified_logging import nonactivity
+from plaso.parsers.shared.unified_logging import oversize
+from plaso.parsers.shared.unified_logging import signpost
+from plaso.parsers.shared.unified_logging import simpledump
+from plaso.parsers.shared.unified_logging import statedump
+from plaso.parsers.shared.unified_logging import trace
 
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -294,9 +295,9 @@ class TraceV3FileParser(interface.FileObjectParser,
             output += "{0:s} ({1:s})".format(
               oct(number).replace('o', ''), stat.filemode(number))
           elif 'odtypes:ODError' in custom_specifier:
-            output += opendirectory.ODErrorsHelper.GetError(number)
+            output += opendirectory.OpenDirectoryErrorsHelper.GetError(number)
           elif 'odtypes:mbridtype' in custom_specifier:
-            output += opendirectory.ODMBRIdHelper.GetType(number)
+            output += opendirectory.OpenDirectoryMBRIdHelper.GetType(number)
           elif 'location:CLClientAuthorizationStatus' in custom_specifier:
             output += location.ClientAuthStatusHelper.GetCode(number)
           elif 'location:IOMessage' in custom_specifier:
