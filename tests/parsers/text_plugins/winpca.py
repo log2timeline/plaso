@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for Win PCA log text parser plugin."""
 
+import unittest
+
 from plaso.parsers.text_plugins import winpca
 from tests.parsers.text_plugins import test_lib
 
@@ -11,8 +13,8 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
 
   def testLaunchDicParser(self):
     """Tests the LaunchDic file parser."""
-    plugin = winpca.WinPCALogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
+    plugin = winpca.WinPCADicParser()
+    storage_writer = self._ParseFile(
         ['PcaAppLaunchDic.txt'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -37,8 +39,8 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
 
   def testDb0Parser(self):
     """Tests the db0 file parser."""
-    plugin = winpca.WinPCALogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
+    plugin = winpca.WinPCADB0Parser()
+    storage_writer = self._ParseFile(
         ['PcaGeneralDb0.txt'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -60,9 +62,13 @@ class WinPCALogTextPluginTest(test_lib.TextPluginTestCase):
         'description': 'microsoft teams updater',
         'vendor': 'microsoft corporation',
         'version': '22287.702.1670.9453',
-        'program_id': '0006132687b1e64961e910ee21d4352afe0800000904',
+        'program_identifier': '0006132687b1e64961e910ee21d4352afe0800000904',
         'exit_code': 'Abnormal process exit with code 0x4c7',
         'last_execution_time': '2022-11-14T23:37:11.789+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
+
+
+if __name__ == '__main__':
+  unittest.main()

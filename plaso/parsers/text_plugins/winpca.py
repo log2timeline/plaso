@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for Windows PCA Log files."""
-
-import pyparsing
+"""Text parser plugin for Windows
+Program Compatibility Assistant (PCA) Log files.
+"""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import text_parser
-from plaso.parsers.text_plugins import interface
+from plaso.parsers import dsv_parser
+from plaso.parsers import manager
 
 
 class WinPCAEventData(events.EventData):
@@ -18,12 +18,12 @@ class WinPCAEventData(events.EventData):
     body (str): message body.
     description (str): Description of the executable.
     exit_code (str): Final result of the execution.
-    last_execution_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-    program_id (str): Program ID.
+    last_execution_time (dfdatetime.DateTimeValues): entry last execution
+        date and time.
+    program_identifier (str): Program ID.
     run_status (str): Execution status.
-    vendor (str): Software vendor.
-    version (str): Software version.
+    vendor (str): Vendor of executed software.
+    version (str): Version of execeuted software.
   """
 
   DATA_TYPE = 'windows:pca_log:entry'
@@ -35,131 +35,24 @@ class WinPCAEventData(events.EventData):
     self.description = None
     self.exit_code = None
     self.last_execution_time = None
-    self.program_id = None
+    self.program_identifier = None
     self.run_status = None
     self.vendor = None
     self.version = None
 
-class WinPCALogTextPlugin(interface.TextPlugin):
-  """Text parser plugin for Windows PCA Log files."""
 
-  NAME = 'winpca'
-  DATA_FORMAT = 'Windows PCA log file'
+# Check for conflicts with Bodyfile
 
-  _SEPARATOR = pyparsing.Suppress('|')
+class WinPCABaseParser(dsv_parser.DSVParser):
+  """Common code for parsing Windows PCA Log files."""
+  # pylint: disable=abstract-method
 
-  _SKIP_TO_SEPARATOR = pyparsing.SkipTo('|')
+  DELIMITER = '|'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
-      lambda tokens: int(tokens[0], 10))
+  COLUMNS = ()
+  _MINIMUM_NUMBER_OF_COLUMNS = None
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _DATE = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS)
-
-  _TIME = pyparsing.Group(
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress('.') +
-      _THREE_DIGITS)
-
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
-
-  _LAUNCH_DIC_LOG_LINE = (
-      pyparsing.SkipTo('|').setResultsName('exec') +
-      _SEPARATOR +
-      _DATE.setResultsName('date') +
-      _TIME.setResultsName('time') +
-      _END_OF_LINE
-  )
-
-  _DB0_LOG_LINE = (
-      _DATE.setResultsName('date') +
-      _TIME.setResultsName('time') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('run_status') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('exec') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('description') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('vendor') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('version') +
-      _SEPARATOR +
-      _SKIP_TO_SEPARATOR.setResultsName('program_id') +
-      _SEPARATOR +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('exit_code') +
-      _END_OF_LINE
-  )
-
-  _LINE_STRUCTURES = [
-      ('launch_dic_log_line', _LAUNCH_DIC_LOG_LINE),
-      ('db0_log_line', _DB0_LOG_LINE)]
-
-  VERIFICATION_GRAMMAR = (_LAUNCH_DIC_LOG_LINE ^ _DB0_LOG_LINE)
-
-  def __init__(self):
-    """Initializes a text parser plugin.
-
-    Attributes:
-      _use_local_time (bool): Passed to dfdatetime_time_elements
-          to indicate whether or not the times are in UTC.
-    """
-    super(WinPCALogTextPlugin, self).__init__()
-    self._use_local_time = False
-
-  def _ParseLogLine(self, parser_mediator, structure):
-    """Parse a single log line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-    """
-    event_data = WinPCAEventData()
-    event_data.body = self._GetValueFromStructure(structure, 'exec')
-    event_data.last_execution_time = self._ParseTimeElements(structure)
-
-    event_data.run_status = self._GetValueFromStructure(
-        structure, 'run_status')
-    event_data.description = self._GetValueFromStructure(
-        structure, 'description')
-    event_data.vendor = self._GetValueFromStructure(
-        structure, 'vendor')
-    event_data.version = self._GetValueFromStructure(
-        structure, 'version')
-    event_data.program_id = self._GetValueFromStructure(
-        structure, 'program_id')
-    event_data.exit_code = self._GetValueFromStructure(
-        structure, 'exit_code')
-
-    parser_mediator.ProduceEventData(event_data)
-
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    self._ParseLogLine(parser_mediator, structure)
-
-  def _ParseTimeElements(self, structure):
+  def _ParseDateTime(self, date_time_string):
     """Parses date and time elements of a log line.
 
     Args:
@@ -172,49 +65,128 @@ class WinPCALogTextPlugin(interface.TextPlugin):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
+    date_string, time_string = date_time_string.split(' ')
     try:
-      date_elements_structure = self._GetValueFromStructure(structure, 'date')
-      time_elements_structure = self._GetValueFromStructure(structure, 'time')
+      year_string, month_string, day_of_month_string = date_string.split('-')
+      year = int(year_string, 10)
+      month = int(month_string, 10)
+      day_of_month = int(day_of_month_string, 10)
+    except (AttributeError, ValueError):
+      raise errors.ParseError('Unsupported date string: {0:s}'.format(
+          date_string))
 
-      year, month, day_of_month = date_elements_structure
-      hours, minutes, seconds, milliseconds = time_elements_structure
+    try:
+      time_value, ms_value = time_string.split('.')
+      hours_string, minutes_string, seconds_string = time_value.split(':')
+      hours = int(hours_string, 10)
+      minutes = int(minutes_string, 10)
+      seconds = int(seconds_string, 10)
+      milliseconds = int(ms_value, 10)
+    except (AttributeError, ValueError):
+      raise errors.ParseError('Unsupported time string: {0:s}'.format(
+          time_string))
 
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, milliseconds)
+    time_elements_tuple = (
+        year, month, day_of_month, hours, minutes, seconds, milliseconds)
 
-      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple)
-      date_time.is_local_time = self._use_local_time
+    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+        time_elements_tuple=time_elements_tuple)
+    date_time.is_local_time = False
 
-      return date_time
+    return date_time
 
-    except (TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
-
-  def _ResetState(self):
-    """Resets stored values."""
-    self._use_local_time = False
-
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the plugin.
+  def VerifyRow(self, parser_mediator, row):
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
+          and other components, such as storage and dfvfs.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    try:
-      self._VerifyString(text_reader.lines)
-    except errors.ParseError:
+    if len(row) < self._MINIMUM_NUMBER_OF_COLUMNS:
       return False
 
-    self._ResetState()
+    try:
+      _ = self._ParseDateTime(row['datetime'])
+    except (AttributeError, ValueError):
+      return False
 
-    return True
+    return '\\' in row['program']
 
 
-text_parser.TextLogParser.RegisterPlugin(WinPCALogTextPlugin)
+class WinPCADicParser(WinPCABaseParser):
+  """Parses the Windows Program Compatibility Assistant DIC files"""
+
+  NAME = 'winpca_dic'
+  DATA_FORMAT = 'Windows PCA log file'
+
+  COLUMNS = [
+    'program', 'datetime'
+  ]
+
+  _MINIMUM_NUMBER_OF_COLUMNS = 2
+
+  def ParseRow(self, parser_mediator, row_offset, row):
+    """Parses a line of the log file and produces events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row_offset (int): offset of the line from which the row was extracted.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+    """
+    date_time = self._ParseDateTime(row['datetime'])
+    if date_time is None:
+      return
+
+    event_data = WinPCAEventData()
+    event_data.body = row['program']
+    event_data.last_execution_time = date_time
+
+    parser_mediator.ProduceEventData(event_data)
+
+
+class WinPCADB0Parser(WinPCABaseParser):
+  """Parses the Windows Program Compatibility Assistant DB0 files"""
+
+  NAME = 'winpca_db0'
+  DATA_FORMAT = 'Windows PCA log file'
+
+  COLUMNS = [
+    'datetime', 'run_status', 'program', 'description', 'vendor',
+    'version', 'program_id', 'exit_code'
+  ]
+
+  _MINIMUM_NUMBER_OF_COLUMNS = 8
+
+  def ParseRow(self, parser_mediator, row_offset, row):
+    """Parses a line of the log file and produces events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row_offset (int): offset of the line from which the row was extracted.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+    """
+    date_time = self._ParseDateTime(row['datetime'])
+    if date_time is None:
+      return
+
+    event_data = WinPCAEventData()
+    event_data.body = row['program']
+    event_data.last_execution_time = date_time
+
+    event_data.run_status = row['run_status']
+    event_data.description = row['description']
+    event_data.vendor = row['vendor']
+    event_data.version = row['version']
+    event_data.program_identifier = row['program_id']
+    event_data.exit_code = row['exit_code']
+
+    parser_mediator.ProduceEventData(event_data)
+
+manager.ParsersManager.RegisterParsers([
+    WinPCADicParser, WinPCADB0Parser])

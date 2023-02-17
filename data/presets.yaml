@@ -164,9 +164,9 @@ parsers:
 - esedb/user_access_logging
 - olecf/olecf_automatic_destinations
 - recycle_bin
-- winevtx
 - text/winpca
 - win_gen
+- winevtx
 ---
 name: win7_slow
 description: Preset for Windows 7 and later including parsers that require more processing time.
