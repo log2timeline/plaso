@@ -20,7 +20,7 @@ class WinCCSyslogTest(test_lib.ParserTestCase):
          'WinCC_Sys_01.log'], parser)
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 25)
+     self.assertEqual(number_of_event_data, 25)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -31,9 +31,16 @@ class WinCCSyslogTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'creation_time': '2019-05-27T10:10:04.712Z',
         'data_type': 'wincc:sys_log:entry',
-
+        'log_id': 2303,
+        'creation_time': '2019-05-27T10:10:04.712Z',
+        'event_number': 1012301,
+        'unknown_int': 4,
+        'unknown_str': '',
+        'hostname': 'B1IZNCOANMSG3',
+        'source': 'CCWriteArchiveServer',
+        'message': ('[(null) 224]failed to insert into MSARCLONG with '
+                    '0x80004005(#0 \'2019-05-27 08:10:03.602\')')
     }
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)

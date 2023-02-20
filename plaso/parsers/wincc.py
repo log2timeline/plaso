@@ -22,9 +22,9 @@ class WinCCSysLogEventData(events.EventData):
 
     self.log_id = None
     self.creation_time = None
-    self.unknown_int1 = None
-    self.unknown_int2 = None
-    self.unknown_field = None
+    self.event_number = None
+    self.unknown_int = None
+    self.unknown_str = None
     self.hostname = None
     self.source = None
     self.message = None
@@ -75,12 +75,14 @@ class WinCCSysLogParser(interface.FileObjectParser):
       error_string = (
           'Type of first value ({0!s}) should be an int in line: {1:d}').format(
               values[0], line_number)
-      self._ParserValueFail(parser_mediator, first_line, exc, error_string)
+      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
 
     try:
-      day_of_month, month, year = [int(elem) for elem in values[1].split('.')]
+      date_string = values[1]
+      time_string = values[2]
+      day_of_month, month, year = [int(elem) for elem in date_string.split('.')]
       hours, minutes, seconds, milliseconds = [
-          int(elem) for elem in values[2].split(':')]
+          int(elem) for elem in time_string.split(':')]
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, milliseconds)
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
@@ -95,14 +97,70 @@ class WinCCSysLogParser(interface.FileObjectParser):
       error_string = (
           'Unable to parse time elements with error: '
           '{0!s} on line {1:d} {2!s}').format(exception, line_number, values)
-      self._ParserValueFail(
+      self._ParseValuesFail(
           parser_mediator, first_line, exception, error_string)
 
-    extra_message = values[-1]
+    try:
+      event_data.event_number = int(values[3])
+    except ValueError as exc:
+      error_string = (
+          'Type of event_number value ({0!s}) should be an int in line:'
+          '{1:d}').format(values[3], line_number)
+      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+
+    try:
+      event_data.unknown_int = int(values[4])
+    except ValueError as exc:
+      error_string = (
+          'Type of 5th value ({0!s}) should be an int in line:'
+          '{1:d}').format(values[4], line_number)
+      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+
+    # This seems to always be empty, however, we don't want to stop parsing if
+    # is not in future data.
+    event_data.unknown_str = values[5]
+
+
+    # We are checking this only once, on the first line, as we expect all
+    # following lines to contain the same hostname, as the logs are
+    # collected from the system generating it.
+    # Using this documentation to validate a Windows host name.
+    # https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou
+    hostname = values[6]
+    if first_line:
+      if not hostname:
+        error_string = (
+            'Hostname ({0!s}) needs to be at least 1 character on line:'
+            '{1:d}').format(hostname, line_number)
+        self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+      if len(hostname) > 16:
+        error_string = (
+            'Hostname ({0!s}) can\'t be longer than 15 characters on line:'
+            '{1:d}').format(hostname, line_number)
+        self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+      disallowed_characters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+      for character in disallowed_characters:
+        if character in hostname:
+          error_string = (
+              'Hostname ({0!s}) can\'t contain the character {1:s} on line'
+              '{2:d}').format(hostname, character, line_number)
+          self._ParseValuesFail(
+              parser_mediator, first_line, exc, error_string)
+
+    event_data.hostname = hostname
+
+    event_data.source = values[7]
+
+    # The second to last field is the one that might contain unquoted separator.
+    # The last field can contain a string such as MSG_STATE_COME, MSG_STATE_GO,
+    # but also sometimes contains a message string.
+
+    text_message = ' '.join(values[8:-1])
+    event_data.message = text_message
 
     parser_mediator.ProduceEventData(event_data)
 
-  def _ParserValueFail(
+  def _ParseValuesFail(
       self, parser_mediator, first_line, parent_exception, error_string):
     if first_line:
       raise errors.WrongParser(error_string) from parent_exception
@@ -136,6 +194,12 @@ class WinCCSysLogParser(interface.FileObjectParser):
               line_number, exception))
 
     while line:
+      if line.startswith('======>'):
+        # It seems that sometimes WinCC logs will end with a line starting like
+        # this, with the name of the next log file.
+        # But this is not always the case though.
+        line = line_reader.readline()
+        continue
       values = line.split(self.DELIMITER)
       self._ParseValues(parser_mediator, line_number, values, first_line)
 
