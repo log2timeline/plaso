@@ -164,8 +164,8 @@ parsers:
 - esedb/user_access_logging
 - olecf/olecf_automatic_destinations
 - recycle_bin
-- text/winpca_dic
-- text/winpca_db0
+- winpca_dic
+- winpca_db0
 - win_gen
 - winevtx
 ---
