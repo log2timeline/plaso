@@ -72,8 +72,33 @@ class PlsRecallParser(
     super(PlsRecallParser, self).__init__()
     self._record_map = self._GetDataTypeMap('pls_recall_record')
 
-  def _VerifyRecord(self, parser_mediator, pls_record):
-    """Verifies a PLS Recall record.
+  def _ParseTDateTimeValue(self, tdatetime_value):
+    """Parses a TDateTime value.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      tdatetime_value (float): a TDateTime value.
+
+    Returns:
+      dfdatetime.DelphiDateTime: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the TDateTime value.
+    """
+    # The maximum date supported by TDateTime values is limited to:
+    # 9999-12-31 23:59:59.999 (approximate 2958465 days since epoch).
+    # The minimum date is unknown hence assuming it is limited to:
+    # 0001-01-01 00:00:00.000 (approximate -693593 days since epoch).
+
+    if tdatetime_value < -693593.0 or tdatetime_value > 2958465.0:
+      raise errors.ParseError('Invalid TDateTime value out bounds')
+
+    return dfdatetime_delphi_date_time.DelphiDateTime(timestamp=tdatetime_value)
+
+  def _VerifyFirstRecord(self, parser_mediator, pls_record):
+    """Verifies the first PLS Recall record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -83,19 +108,19 @@ class PlsRecallParser(
     Returns:
       bool: True if this is a valid PLS Recall record, False otherwise.
     """
-    # The maximal correct date supported by TDateTime values is limited to:
-    # 9999-12-31 23:59:59.999 (approximate 2958465 days since epoch).
-    # The minimal correct date is unknown hence assuming it is limited to:
-    # 0001-01-01 00:00:00.000 (approximate -693593 days since epoch).
-
-    if (pls_record.last_written_time < -693593.0 or
-        pls_record.last_written_time > 2958465.0):
+    try:
+      date_time = self._ParseTDateTimeValue(pls_record.last_written_time)
+    except errors.ParseError:
       return False
 
-    pls_date_time = dfdatetime_delphi_date_time.DelphiDateTime(
-        timestamp=pls_record.last_written_time)
+    # TDateTime uses milliseconds precision so a timestamp less than
+    # 1 millisecond is likely to be invalid.
+    if (pls_record.last_written_time > -0.0001 and
+        pls_record.last_written_time < 0.0001 and
+        pls_record.last_written_time != 0.0):
+      return False
 
-    pls_year, _, _ = pls_date_time.GetDate()
+    year, _, _ = date_time.GetDate()
 
     # Verify that the PLS timestamp is no more than six years into the future.
     # Six years is an arbitrary time length just to evaluate the timestamp
@@ -106,7 +131,7 @@ class PlsRecallParser(
     # range instead?
     current_year = parser_mediator.GetCurrentYear()
 
-    if pls_year > current_year + 6:
+    if year > current_year + 6:
       return False
 
     # Take the first word from the query field and attempt to match that against
@@ -145,7 +170,7 @@ class PlsRecallParser(
             '{1!s}').format(file_offset, exception))
         break
 
-      if file_offset == 0 and not self._VerifyRecord(
+      if file_offset == 0 and not self._VerifyFirstRecord(
           parser_mediator, pls_record):
         raise errors.WrongParser('Verification of first record failed.')
 
@@ -155,8 +180,14 @@ class PlsRecallParser(
       event_data.offset = file_offset
       event_data.query = pls_record.query
       event_data.username = pls_record.username
-      event_data.written_time = dfdatetime_delphi_date_time.DelphiDateTime(
-          timestamp=pls_record.last_written_time)
+
+      try:
+        event_data.written_time = self._ParseTDateTimeValue(
+            pls_record.last_written_time)
+      except errors.ParseError:
+        parser_mediator.ProduceExtractionWarning((
+            'unable to parse TDateTime value of record at offset: 0x{0:08x} '
+            'with error: {1!s}').format(file_offset, exception))
 
       parser_mediator.ProduceEventData(event_data)
 
