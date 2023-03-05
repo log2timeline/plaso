@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for Windows
-Program Compatibility Assistant (PCA) Log files.
-"""
+"""Parser for Windows Program Compatibility Assistant (PCA) Log files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -16,14 +14,14 @@ class WinPCAEventData(events.EventData):
 
   Attributes:
     body (str): message body.
-    description (str): Description of the executable.
-    exit_code (str): Final result of the execution.
+    description (str): description of the executable.
+    exit_code (str): final result of the execution.
     last_execution_time (dfdatetime.DateTimeValues): entry last execution
         date and time.
-    program_identifier (str): Program ID.
-    run_status (str): Execution status.
-    vendor (str): Vendor of executed software.
-    version (str): Version of execeuted software.
+    program_identifier (str): program identifier.
+    run_status (str): execution status.
+    vendor (str): vendor of executed software.
+    version (str): version of executed software.
   """
 
   DATA_TYPE = 'windows:pca_log:entry'
@@ -43,6 +41,7 @@ class WinPCAEventData(events.EventData):
 
 class WinPCABaseParser(dsv_parser.DSVParser):
   """Common code for parsing Windows PCA Log files."""
+
   # pylint: disable=abstract-method
 
   DELIMITER = '|'
@@ -121,9 +120,7 @@ class WinPCADicParser(WinPCABaseParser):
   NAME = 'winpca_dic'
   DATA_FORMAT = 'Windows PCA log file'
 
-  COLUMNS = [
-    'program', 'datetime'
-  ]
+  COLUMNS = ['program', 'datetime']
 
   _MINIMUM_NUMBER_OF_COLUMNS = 2
 
@@ -151,8 +148,7 @@ class WinPCADB0Parser(WinPCABaseParser):
 
   COLUMNS = [
       'datetime', 'run_status', 'program', 'description', 'vendor',
-      'version', 'program_id', 'exit_code'
-  ]
+      'version', 'program_id', 'exit_code']
 
   _MINIMUM_NUMBER_OF_COLUMNS = 8
 
@@ -178,5 +174,5 @@ class WinPCADB0Parser(WinPCABaseParser):
 
     parser_mediator.ProduceEventData(event_data)
 
-manager.ParsersManager.RegisterParsers([
-    WinPCADicParser, WinPCADB0Parser])
+
+manager.ParsersManager.RegisterParsers([WinPCADicParser, WinPCADB0Parser])
