@@ -33,11 +33,13 @@ class OpenSearchTimesketchOutputModule(
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
-    """
-    event_document = {
-        '__ts_timeline_id': self._timeline_identifier,
-        'index': {'_index': self._index_name}}
+    """    
+    event_document = {'index': {'_index': self._index_name}}
 
+    # Add timeline_id on the event level. It is used in Timesketch to
+    # support shared indices.
+    field_values['__ts_timeline_id'] = self._timeline_identifier
+    
     self._event_documents.append(event_document)
     self._event_documents.append(field_values)
     self._number_of_buffered_events += 1
