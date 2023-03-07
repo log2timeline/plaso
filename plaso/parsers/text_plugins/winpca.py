@@ -41,8 +41,6 @@ class WinPCAEventData(events.EventData):
     self.version = None
 
 
-# Check for conflicts with Bodyfile
-
 class WinPCABaseParser(dsv_parser.DSVParser):
   """Common code for parsing Windows PCA Log files."""
   # pylint: disable=abstract-method
@@ -56,7 +54,7 @@ class WinPCABaseParser(dsv_parser.DSVParser):
     """Parses date and time elements of a log line.
 
     Args:
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      date_time_string (string): Date time values extracted from the logfile.
 
     Returns:
       dfdatetime.TimeElements: date and time value.
@@ -100,7 +98,7 @@ class WinPCABaseParser(dsv_parser.DSVParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
@@ -110,7 +108,7 @@ class WinPCABaseParser(dsv_parser.DSVParser):
       return False
 
     try:
-      _ = self._ParseDateTime(row['datetime'])
+      self._ParseDateTime(row['datetime'])
     except (AttributeError, ValueError):
       return False
 
@@ -118,7 +116,7 @@ class WinPCABaseParser(dsv_parser.DSVParser):
 
 
 class WinPCADicParser(WinPCABaseParser):
-  """Parses the Windows Program Compatibility Assistant DIC files"""
+  """Parses the Windows Program Compatibility Assistant DIC files."""
 
   NAME = 'winpca_dic'
   DATA_FORMAT = 'Windows PCA log file'
@@ -134,30 +132,26 @@ class WinPCADicParser(WinPCABaseParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    date_time = self._ParseDateTime(row['datetime'])
-    if date_time is None:
-      return
-
     event_data = WinPCAEventData()
     event_data.body = row['program']
-    event_data.last_execution_time = date_time
+    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
 
     parser_mediator.ProduceEventData(event_data)
 
 
 class WinPCADB0Parser(WinPCABaseParser):
-  """Parses the Windows Program Compatibility Assistant DB0 files"""
+  """Parses the Windows Program Compatibility Assistant DB0 files."""
 
   NAME = 'winpca_db0'
   DATA_FORMAT = 'Windows PCA log file'
 
   COLUMNS = [
-    'datetime', 'run_status', 'program', 'description', 'vendor',
-    'version', 'program_id', 'exit_code'
+      'datetime', 'run_status', 'program', 'description', 'vendor',
+      'version', 'program_id', 'exit_code'
   ]
 
   _MINIMUM_NUMBER_OF_COLUMNS = 8
@@ -167,17 +161,13 @@ class WinPCADB0Parser(WinPCABaseParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    date_time = self._ParseDateTime(row['datetime'])
-    if date_time is None:
-      return
-
     event_data = WinPCAEventData()
     event_data.body = row['program']
-    event_data.last_execution_time = date_time
+    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
 
     event_data.run_status = row['run_status']
     event_data.description = row['description']
