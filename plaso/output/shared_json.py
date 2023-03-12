@@ -16,9 +16,6 @@ from plaso.serializer import json_serializer
 class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
   """JSON output module field formatting helper."""
 
-  # TODO: determine why _FormatTimestampDescription is mapped to both
-  # timestamp_desc and type.
-
   # Maps the name of a fields to a a callback function that formats
   # the field value.
   _FIELD_FORMAT_CALLBACKS = {
