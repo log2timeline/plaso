@@ -23,7 +23,7 @@ class WindowsRegistryServiceEventData(events.EventData):
     start_type (int): Device or service start type.
     values (str): names and data of additional values in the key.
     values (list[tuple[str, str, str]]): name, data type and data of the
-        additionla values in the key.
+        additional values in the key.
   """
 
   DATA_TYPE = 'windows:registry:service'
