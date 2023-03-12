@@ -22,6 +22,8 @@ class WindowsRegistryServiceEventData(events.EventData):
     service_type (int): Windows driver or service type.
     start_type (int): Device or service start type.
     values (str): names and data of additional values in the key.
+    values (list[tuple[str, str, str]]): name, data type and data of the
+        additionla values in the key.
   """
 
   DATA_TYPE = 'windows:registry:service'
@@ -103,13 +105,9 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     event_data.service_type = service_type
     event_data.service_dll = self._GetServiceDll(registry_key)
     event_data.start_type = start_type
-
-    values_dict = self._GetValuesFromKey(
+    event_data.values = self._GetValuesFromKey(
          parser_mediator, registry_key, names_to_skip=[
             'ErrorControl', 'ImagePath', 'ObjectName', 'Start', 'Type'])
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
 
     parser_mediator.ProduceEventData(event_data)
 

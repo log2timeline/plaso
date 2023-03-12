@@ -590,6 +590,9 @@ source: 'User Account Information Registry Key'
 ---
 type: 'conditional'
 data_type: 'windows:registry:service'
+custom_helpers:
+- identifier: 'windows_registry_values'
+  output_attribute: 'values'
 enumeration_helpers:
 - input_attribute: 'error_control'
   output_attribute: 'error_control'

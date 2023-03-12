@@ -129,21 +129,19 @@ class BootExecutePluginTest(test_lib.RegistryPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-    expected_values = (
-        'CriticalSectionTimeout: [REG_SZ] 2592000 '
-        'ExcludeFromKnownDlls: [REG_MULTI_SZ] [] '
-        'GlobalFlag: [REG_SZ] 0 '
-        'HeapDeCommitFreeBlockThreshold: [REG_SZ] 0 '
-        'HeapDeCommitTotalFreeThreshold: [REG_SZ] 0 '
-        'HeapSegmentCommit: [REG_SZ] 0 '
-        'HeapSegmentReserve: [REG_SZ] 0 '
-        'NumberOfInitialSessions: [REG_SZ] 2')
-
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         'last_written_time': '2012-08-31T20:45:29.0000000+00:00',
-        'values': expected_values}
+        'values': [
+            ('CriticalSectionTimeout', 'REG_SZ', '2592000'),
+            ('ExcludeFromKnownDlls', 'REG_MULTI_SZ', '[]'),
+            ('GlobalFlag', 'REG_SZ', '0'),
+            ('HeapDeCommitFreeBlockThreshold', 'REG_SZ', '0'),
+            ('HeapDeCommitTotalFreeThreshold', 'REG_SZ', '0'),
+            ('HeapSegmentCommit', 'REG_SZ', '0'),
+            ('HeapSegmentReserve', 'REG_SZ', '0'),
+            ('NumberOfInitialSessions', 'REG_SZ', '2')]}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)

@@ -216,13 +216,12 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     plugin = interface.WindowsRegistryPlugin()
 
-    expected_value_dict = {
-        'a': '[REG_SZ] one',
-        'MRUList': '[REG_BINARY] (2 bytes)'}
+    expected_value_tuples = [
+        ('MRUList', 'REG_BINARY', '(2 bytes)'),
+        ('a', 'REG_SZ', 'one')]
 
-    values_dict = plugin._GetValuesFromKey(parser_mediator, registry_key)
-    self.assertEqual(
-        sorted(values_dict.items()), sorted(expected_value_dict.items()))
+    value_tuples = plugin._GetValuesFromKey(parser_mediator, registry_key)
+    self.assertEqual(sorted(value_tuples), expected_value_tuples)
 
 
 if __name__ == '__main__':
