@@ -23,7 +23,8 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'source': '_FormatSourceShort',
       'time': '_FormatTimestamp',
       'tz': '_FormatTimeZone',
-      'user': '_FormatUsername'}
+      'user': '_FormatUsername',
+      'values': '_FormatValues'}
 
   # The field format callback methods require specific arguments hence
   # the check for unused arguments is disabled here.

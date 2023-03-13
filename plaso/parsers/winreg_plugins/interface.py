@@ -249,10 +249,10 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """Retrieves the values from a Windows Registry key.
 
     Where:
-    * the default value is represented as "(default)";
+    * the name of the default value is represented as an empty string;
     * binary data values are represented as "(# bytes)", where # contains
           the number of bytes of the data;
-    * empty values are represented as "(empty)".
+    * empty values are represented as None;
     * empty multi value string values are represented as "[]".
 
     Args:
@@ -263,20 +263,21 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
           be skipped.
 
     Returns:
-      dict[str, object]: names and data of the values in the key.
+      list[tuple[str, str, str]]: name, data type and data pais of the values
+          in the key.
     """
     names_to_skip = [name.lower() for name in names_to_skip or []]
 
-    values_dict = {}
+    value_tuples = []
     for registry_value in registry_key.GetValues():
-      value_name = registry_value.name or '(default)'
+      value_name = registry_value.name or ''
       if value_name.lower() in names_to_skip:
         continue
 
       data_type_string = registry_value.data_type_string
 
       if registry_value.data is None:
-        value_string = '(empty)'
+        value_string = None
       else:
         try:
           value_object = registry_value.GetDataAsObject()
@@ -300,10 +301,9 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
                   data_type_string, value_name, registry_key.path, exception))
           value_string = '({0:d} bytes)'.format(len(registry_value.data))
 
-      value_string = '[{0:s}] {1:s}'.format(data_type_string, value_string)
-      values_dict[value_name] = value_string
+      value_tuples.append((value_name, data_type_string, value_string))
 
-    return values_dict
+    return value_tuples or None
 
   def _ProduceDefaultWindowsRegistryEvent(
       self, parser_mediator, registry_key, names_to_skip=None):
@@ -316,15 +316,11 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       names_to_skip (Optional[list[str]]): names of values that should
           be skipped.
     """
-    values_dict = self._GetValuesFromKey(
-        parser_mediator, registry_key, names_to_skip=names_to_skip)
-
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
     event_data.last_written_time = registry_key.last_written_time
-    event_data.values = ' '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(values_dict.items())]) or None
+    event_data.values = self._GetValuesFromKey(
+        parser_mediator, registry_key, names_to_skip=names_to_skip)
 
     parser_mediator.ProduceEventData(event_data)
 

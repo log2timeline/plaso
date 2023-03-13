@@ -85,6 +85,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'timezone': '_FormatTimeZone',
       'type': '_FormatType',
       'user': '_FormatUsername',
+      'values': '_FormatValues',
       'version': '_FormatVersion'}
 
   # Note that list is kept as-is for backwards compatibility.

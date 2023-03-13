@@ -56,7 +56,8 @@ class WindowsRegistryEventData(events.EventData):
     key_path (str): Windows Registry key path.
     last_written_time (dfdatetime.DateTimeValues): key last written date and
         time.
-    values (str): names and data of the values in the key.
+    values (list[tuple[str, str, str]]): name, data type and data of the values
+        in the key.
   """
 
   DATA_TYPE = 'windows:registry:key_value'

@@ -8,9 +8,82 @@ from acstore.containers import interface as containers_interface
 from dfdatetime import interface as dfdatetime_interface
 
 from plaso.lib import errors
-from plaso.output import dynamic
+from plaso.output import formatting_helper
 from plaso.output import text_file
 from plaso.serializer import json_serializer
+
+
+class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
+  """JSON output module field formatting helper."""
+
+  # Maps the name of a fields to a a callback function that formats
+  # the field value.
+  _FIELD_FORMAT_CALLBACKS = {
+      'display_name': '_FormatDisplayName',
+      'filename': '_FormatFilename',
+      'inode': '_FormatInode',
+      'message': '_FormatMessage',
+      'values': '_FormatValues'}
+
+  # The field format callback methods require specific arguments hence
+  # the check for unused arguments is disabled here.
+  # pylint: disable=unused-argument
+
+  def _FormatValues(
+      self, output_mediator, event, event_data, event_data_stream):
+    """Formats a values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      list[dict[str, str]]: values field.
+    """
+    values = event_data.values
+    if isinstance(values, list) and event_data.data_type in (
+        'windows:registry:key_value', 'windows:registry:service'):
+      values = [
+          {'data': data, 'data_type': data_type, 'name': name}
+          for name, data_type, data in sorted(values)]
+
+    return values
+
+  # pylint: enable=unused-argument
+
+  def GetFormattedField(
+      self, output_mediator, field_name, event, event_data, event_data_stream,
+      event_tag):
+    """Formats the specified field.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_name (str): name of the field.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      object: value of the field or None if not available.
+    """
+    if field_name in self._event_tag_field_names:
+      return self._FormatTag(output_mediator, event_tag)
+
+    callback_function = self._callback_functions.get(field_name, None)
+    if callback_function:
+      output_value = callback_function(
+          output_mediator, event, event_data, event_data_stream)
+    elif field_name in self._event_data_stream_field_names:
+      output_value = getattr(event_data_stream, field_name, None)
+    else:
+      output_value = getattr(event_data, field_name, None)
+
+    return output_value
 
 
 class SharedJSONOutputModule(text_file.TextFileOutputModule):
@@ -18,10 +91,12 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
+  _GENERATED_FIELD_VALUES = ['display_name', 'filename', 'inode']
+
   def __init__(self):
     """Initializes an output module."""
     super(SharedJSONOutputModule, self).__init__()
-    self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
+    self._field_formatting_helper = JSONFieldFormattingHelper()
 
   def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
@@ -50,10 +125,6 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
             dfdatetime_interface.DateTimeValues)):
           continue
 
-        # Ignore date and time values.
-        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-          continue
-
         if (isinstance(attribute_value, list) and attribute_value and
             isinstance(attribute_value[0],
                        dfdatetime_interface.DateTimeValues)):
@@ -63,7 +134,10 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         if attribute_name == '_parser_chain':
           attribute_name = 'parser'
 
-        field_values[attribute_name] = attribute_value
+        field_value = self._field_formatting_helper.GetFormattedField(
+            output_mediator, attribute_name, event, event_data,
+            event_data_stream, event_tag)
+        field_values[attribute_name] = field_value
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
@@ -88,26 +162,13 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
         field_values[attribute_name] = attribute_value
 
-    display_name = field_values.get('display_name', None)
-    if display_name is None:
-      display_name = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'display_name', event, event_data, event_data_stream,
-          event_tag)
-      field_values['display_name'] = display_name
-
-    filename = field_values.get('filename', None)
-    if filename is None:
-      filename = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'filename', event, event_data, event_data_stream,
-          event_tag)
-      field_values['filename'] = filename
-
-    inode = field_values.get('inode', None)
-    if inode is None:
-      inode = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'inode', event, event_data, event_data_stream,
-          event_tag)
-      field_values['inode'] = inode
+    for field_name in self._GENERATED_FIELD_VALUES:
+      field_value = field_values.get(field_name, None)
+      if field_value is None:
+        field_value = self._field_formatting_helper.GetFormattedField(
+            output_mediator, field_name, event, event_data, event_data_stream,
+            event_tag)
+        field_values[field_name] = field_value
 
     try:
       message = self._field_formatting_helper.GetFormattedField(

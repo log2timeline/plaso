@@ -137,11 +137,11 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:key_value',
         'key_path': key_path,
         'last_written_time': '2012-08-31T20:09:55.1235210+00:00',
-        'values': (
-            'CSDVersion: [REG_SZ] Service Pack 1 '
-            'CurrentVersion: [REG_SZ] 5.1 '
-            'ProductName: [REG_SZ] MyTestOS '
-            'RegisteredOwner: [REG_SZ] A Concerned Citizen')}
+        'values': [
+            ('CSDVersion', 'REG_SZ', 'Service Pack 1'),
+            ('CurrentVersion', 'REG_SZ', '5.1'),
+            ('ProductName', 'REG_SZ', 'MyTestOS'),
+            ('RegisteredOwner', 'REG_SZ', 'A Concerned Citizen')]}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)

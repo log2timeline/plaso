@@ -513,6 +513,30 @@ class FieldFormattingHelper(object):
     """
     return output_mediator.GetUsername(event_data)
 
+  def _FormatValues(
+      self, output_mediator, event, event_data, event_data_stream):
+    """Formats a values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: values field.
+    """
+    values = event_data.values
+    if isinstance(values, list) and event_data.data_type in (
+        'windows:registry:key_value', 'windows:registry:service'):
+      values = ' '.join([
+          '{0:s}: [{1:s}] {2:s}'.format(
+              name or '(default)', data_type, data or '(empty)')
+          for name, data_type, data in sorted(values)])
+
+    return values
+
   # pylint: enable=unused-argument
 
   def _ReportEventError(self, event, event_data, error_message):

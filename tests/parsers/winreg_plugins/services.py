@@ -108,11 +108,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    expected_values = (
-        'DisplayName: [REG_SZ] Test Driver '
-        'DriverPackageId: [REG_SZ] testdriver.inf_x86_neutral_dd39b6b0a45226c4 '
-        'Group: [REG_SZ] Pnp Filter')
-
     expected_event_values = {
         'data_type': 'windows:registry:service',
         'error_control': 1,
@@ -121,7 +116,11 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         'service_type': 2,
         'start_type': 2,
-        'values': expected_values}
+        'values': [
+            ('Group', 'REG_SZ', 'Pnp Filter'),
+            ('DisplayName', 'REG_SZ', 'Test Driver'),
+            ('DriverPackageId', 'REG_SZ',
+             'testdriver.inf_x86_neutral_dd39b6b0a45226c4')]}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

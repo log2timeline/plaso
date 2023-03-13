@@ -42,6 +42,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'type': '_FormatTimestampDescription',
       'user': '_FormatUsername',
       'username': '_FormatUsername',
+      'values': '_FormatValues',
       'yara_match': '_FormatYaraMatch',
       'zone': '_FormatTimeZone'}
 

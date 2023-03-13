@@ -20,7 +20,14 @@ class WindowsRegistryValuesFormatterHelper(
     """
     values = event_values.get('values', None)
     if not values:
-      event_values['values'] = '(empty)'
+      values = '(empty)'
+    elif isinstance(values, list):
+      values = ' '.join([
+          '{0:s}: [{1:s}] {2:s}'.format(
+              name or '(default)', data_type, data or '(empty)')
+          for name, data_type, data in sorted(values)])
+
+    event_values['values'] = values
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(
