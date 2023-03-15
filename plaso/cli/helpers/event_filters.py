@@ -110,7 +110,7 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
       if ' ' in time_slice_event_time_string:
         raise errors.BadConfigOption(
             'Time slice date and time must be defined in ISO 8601 format, '
-            'for example: 20200619T20:09:23+02:00.')
+            'for example: 2020-06-19T20:09:23+02:00.')
 
       date_time = dfdatetime_time_elements.TimeElements()
 
@@ -120,7 +120,7 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
         raise errors.BadConfigOption((
             'Unsupported time slice date and time: {0:s}. The date and time '
             'must be defined in ISO 8601 format, for example: '
-            '20200619T20:09:23+02:00').format(time_slice_event_time_string))
+            '2020-06-19T20:09:23+02:00').format(time_slice_event_time_string))
 
       # TODO: directly use dfDateTime objects in time slice.
       time_slice_event_timestamp = date_time.GetPlasoTimestamp()
