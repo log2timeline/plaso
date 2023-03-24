@@ -1,0 +1,284 @@
+2019-05-27 10:05:43,405 INFO     Log starting ...
+2019-05-27 10:05:43,405 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
+2019-05-27 10:05:43,419 INFO     | LogFileSize   : 1400000
+2019-05-27 10:05:43,419 INFO     | TraceFlags    : c4000000
+2019-05-27 10:05:43,419 INFO     | Process-ID    : 00002a68
+2019-05-27 10:05:43,419 INFO     S7 channel DLL started!
+2019-05-27 10:05:43,419 INFO     S7 channel with own cycle creation!
+2019-05-27 10:05:56,545 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-05-27 10:05:56,545 INFO     S7DOS version: V9.2 / 0
+2019-05-27 10:05:56,545 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-05-27 10:05:56,545 INFO     S7 channel unit "TCP/IP" activated!
+2019-05-27 10:06:11,136 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 4110!
+2019-05-27 13:30:02,218 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-05-27 13:30:12,141 INFO     S7 channel DLL terminated!
+2019-05-27 14:24:24,115 INFO     Log starting ...
+2019-05-27 14:24:24,116 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-05-27 14:24:24,116 INFO     | LogFileCount  : 3
+2019-05-27 14:24:24,116 INFO     | LogFileSize   : 1400000
+2019-05-27 14:24:24,116 INFO     | TraceFlags    : c4000000
+2019-05-27 14:24:24,116 INFO     | Process-ID    : 00002620
+2019-05-27 14:24:24,116 INFO     S7 channel DLL started!
+2019-05-27 14:24:24,116 INFO     S7 channel with own cycle creation!
+2019-05-27 14:24:36,441 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-05-27 14:24:36,441 INFO     S7DOS version: V9.2 / 0
+2019-05-27 14:24:36,441 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-05-27 14:24:36,441 INFO     S7 channel unit "TCP/IP" activated!
+2019-05-27 14:24:50,350 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 4110!
+2019-05-27 14:25:02,836 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 4110!
+2019-05-27 14:34:28,011 ERROR    Connectionerror 1 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:36:07,044 ERROR    Connectionerror 2 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:40:49,260 ERROR    Connectionerror 3 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 14:42:41,407 ERROR    Connectionerror 4 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:46:30,232 ERROR    Connectionerror 5 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 14:48:27,311 ERROR    Connectionerror 6 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 14:50:53,593 ERROR    Connectionerror 7 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:52:32,031 ERROR    Connectionerror 8 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:54:10,467 ERROR    Connectionerror 9 "PLC-002": Errorcode 0x0000 7002!
+2019-05-27 14:57:00,762 ERROR    Connectionerror 10 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 15:48:50,803 ERROR    Connectionerror 11 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 15:59:07,181 ERROR    Connectionerror 12 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 16:13:11,084 ERROR    Connectionerror 13 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 16:15:34,627 ERROR    Connectionerror 14 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 16:17:32,019 ERROR    Connectionerror 15 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 16:20:18,186 ERROR    Connectionerror 16 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 16:28:14,031 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-05-27 16:28:14,981 INFO     S7 channel DLL terminated!
+2019-05-27 16:28:50,160 INFO     Log starting ...
+2019-05-27 16:28:50,160 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-05-27 16:28:50,160 INFO     | LogFileCount  : 3
+2019-05-27 16:28:50,160 INFO     | LogFileSize   : 1400000
+2019-05-27 16:28:50,160 INFO     | TraceFlags    : c4000000
+2019-05-27 16:28:50,160 INFO     | Process-ID    : 000015c8
+2019-05-27 16:28:50,160 INFO     S7 channel DLL started!
+2019-05-27 16:28:50,160 INFO     S7 channel with own cycle creation!
+2019-05-27 16:29:01,776 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-05-27 16:29:01,776 INFO     S7DOS version: V9.2 / 0
+2019-05-27 16:29:01,776 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-05-27 16:29:01,776 INFO     S7 channel unit "TCP/IP" activated!
+2019-05-27 16:29:11,372 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 4110!
+2019-05-27 16:30:24,302 ERROR    Connectionerror 1 "PLC-002": Errorcode 0xFFDF 410E!
+2019-05-27 17:24:55,612 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-05-27 17:25:05,190 INFO     S7 channel DLL terminated!
+2019-07-03 17:23:00,941 INFO     Log starting ...
+2019-07-03 17:23:00,943 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-07-03 17:23:00,943 INFO     | LogFileCount  : 3
+2019-07-03 17:23:00,943 INFO     | LogFileSize   : 1400000
+2019-07-03 17:23:00,943 INFO     | TraceFlags    : c4000000
+2019-07-03 17:23:00,944 INFO     | Process-ID    : 00000b58
+2019-07-03 17:23:00,944 INFO     S7 channel DLL started!
+2019-07-03 17:23:00,944 INFO     S7 channel with own cycle creation!
+2019-07-03 17:23:12,635 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-07-03 17:23:13,055 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-07-03 17:23:13,056 INFO     S7DOS version: V9.2 / 0
+2019-07-03 17:23:13,056 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-07-03 17:23:13,056 INFO     S7 channel unit "TCP/IP" activated!
+2019-07-03 17:23:35,328 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 4110!
+2019-07-03 17:25:05,018 ERROR    Connectionerror 1 "PLC-002": Errorcode 0xFFDF 410E!
+2019-07-03 17:43:57,393 ERROR    Connectionerror 2 "PLC-002": Errorcode 0xFFDF 410E!
+2019-07-03 17:44:11,977 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-07-03 17:45:05,186 INFO     S7 channel DLL terminated!
+2019-08-01 09:01:57,414 INFO     Log starting ...
+2019-08-01 09:01:57,457 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 09:01:57,457 INFO     | LogFileCount  : 3
+2019-08-01 09:01:57,457 INFO     | LogFileSize   : 1400000
+2019-08-01 09:01:57,457 INFO     | TraceFlags    : c4000000
+2019-08-01 09:01:57,457 INFO     | Process-ID    : 00002c4c
+2019-08-01 09:01:57,457 INFO     S7 channel DLL started!
+2019-08-01 09:01:57,457 INFO     S7 channel with own cycle creation!
+2019-08-01 09:02:09,473 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 09:02:10,139 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 09:02:10,139 INFO     S7DOS version: V9.2 / 0
+2019-08-01 09:02:10,139 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 09:02:10,139 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 09:02:25,600 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 4110!
+2019-08-01 09:02:34,970 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 4110!
+2019-08-01 09:43:36,406 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-01 09:47:23,717 INFO     Log starting ...
+2019-08-01 09:47:23,717 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 09:47:23,717 INFO     | LogFileCount  : 3
+2019-08-01 09:47:23,717 INFO     | LogFileSize   : 1400000
+2019-08-01 09:47:23,717 INFO     | TraceFlags    : c4000000
+2019-08-01 09:47:23,717 INFO     | Process-ID    : 000005a8
+2019-08-01 09:47:23,717 INFO     S7 channel DLL started!
+2019-08-01 09:47:23,717 INFO     S7 channel with own cycle creation!
+2019-08-01 09:47:30,516 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 09:47:30,752 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 09:47:30,752 INFO     S7DOS version: V9.2 / 0
+2019-08-01 09:47:30,752 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 09:47:30,752 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 09:47:30,866 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-01 09:47:30,867 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-01 09:56:18,739 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-01 09:56:19,431 INFO     S7 channel DLL terminated!
+2019-08-01 09:58:47,589 INFO     Log starting ...
+2019-08-01 09:58:47,589 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 09:58:47,589 INFO     | LogFileCount  : 3
+2019-08-01 09:58:47,589 INFO     | LogFileSize   : 1400000
+2019-08-01 09:58:47,589 INFO     | TraceFlags    : c4000000
+2019-08-01 09:58:47,589 INFO     | Process-ID    : 00004b6c
+2019-08-01 09:58:47,589 INFO     S7 channel DLL started!
+2019-08-01 09:58:47,589 INFO     S7 channel with own cycle creation!
+2019-08-01 09:58:54,087 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 09:58:54,317 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 09:58:54,317 INFO     S7DOS version: V9.2 / 0
+2019-08-01 09:58:54,318 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 09:58:54,318 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 09:58:54,424 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-01 09:58:54,424 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-01 10:00:52,107 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-01 10:00:52,759 INFO     S7 channel DLL terminated!
+2019-08-01 10:02:38,130 INFO     Log starting ...
+2019-08-01 10:02:38,130 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 10:02:38,130 INFO     | LogFileCount  : 3
+2019-08-01 10:02:38,130 INFO     | LogFileSize   : 1400000
+2019-08-01 10:02:38,130 INFO     | TraceFlags    : c4000000
+2019-08-01 10:02:38,130 INFO     | Process-ID    : 00003020
+2019-08-01 10:02:38,130 INFO     S7 channel DLL started!
+2019-08-01 10:02:38,130 INFO     S7 channel with own cycle creation!
+2019-08-01 10:02:44,434 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 10:02:44,664 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 10:02:44,664 INFO     S7DOS version: V9.2 / 0
+2019-08-01 10:02:44,664 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 10:02:44,664 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 10:02:44,770 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-01 10:02:44,771 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-01 10:13:47,272 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-01 10:13:47,949 INFO     S7 channel DLL terminated!
+2019-08-01 10:19:52,428 INFO     Log starting ...
+2019-08-01 10:19:52,428 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 10:19:52,428 INFO     | LogFileCount  : 3
+2019-08-01 10:19:52,428 INFO     | LogFileSize   : 1400000
+2019-08-01 10:19:52,428 INFO     | TraceFlags    : c4000000
+2019-08-01 10:19:52,428 INFO     | Process-ID    : 000018c8
+2019-08-01 10:19:52,428 INFO     S7 channel DLL started!
+2019-08-01 10:19:52,428 INFO     S7 channel with own cycle creation!
+2019-08-01 10:19:58,801 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 10:19:59,034 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 10:19:59,034 INFO     S7DOS version: V9.2 / 0
+2019-08-01 10:19:59,034 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 10:19:59,034 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 10:19:59,147 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-01 10:19:59,147 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-01 10:21:15,595 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-01 10:21:16,267 INFO     S7 channel DLL terminated!
+2019-08-01 10:22:34,406 INFO     Log starting ...
+2019-08-01 10:22:34,406 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-01 10:22:34,406 INFO     | LogFileCount  : 3
+2019-08-01 10:22:34,406 INFO     | LogFileSize   : 1400000
+2019-08-01 10:22:34,406 INFO     | TraceFlags    : c4000000
+2019-08-01 10:22:34,406 INFO     | Process-ID    : 000014f8
+2019-08-01 10:22:34,406 INFO     S7 channel DLL started!
+2019-08-01 10:22:34,406 INFO     S7 channel with own cycle creation!
+2019-08-01 10:22:40,949 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-01 10:22:41,198 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-01 10:22:41,198 INFO     S7DOS version: V9.2 / 0
+2019-08-01 10:22:41,198 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-01 10:22:41,198 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-01 10:22:41,318 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-01 10:22:41,319 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-19 09:31:27,652 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-19 09:31:28,282 INFO     S7 channel DLL terminated!
+2019-08-19 09:33:23,267 INFO     Log starting ...
+2019-08-19 09:33:23,267 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-08-19 09:33:23,267 INFO     | LogFileCount  : 3
+2019-08-19 09:33:23,267 INFO     | LogFileSize   : 1400000
+2019-08-19 09:33:23,267 INFO     | TraceFlags    : c4000000
+2019-08-19 09:33:23,267 INFO     | Process-ID    : 00002058
+2019-08-19 09:33:23,267 INFO     S7 channel DLL started!
+2019-08-19 09:33:23,267 INFO     S7 channel with own cycle creation!
+2019-08-19 09:33:34,612 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-08-19 09:33:35,308 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-08-19 09:33:35,308 INFO     S7DOS version: V9.2 / 0
+2019-08-19 09:33:35,308 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-08-19 09:33:35,308 INFO     S7 channel unit "TCP/IP" activated!
+2019-08-19 09:33:35,428 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 400F!
+2019-08-19 09:33:35,428 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 400F!
+2019-08-19 09:46:33,745 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-08-19 09:46:34,527 INFO     S7 channel DLL terminated!
+2019-09-18 09:03:02,595 INFO     Log starting ...
+2019-09-18 09:03:02,611 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-09-18 09:03:02,611 INFO     | LogFileCount  : 3
+2019-09-18 09:03:02,611 INFO     | LogFileSize   : 1400000
+2019-09-18 09:03:02,611 INFO     | TraceFlags    : c4000000
+2019-09-18 09:03:02,611 INFO     | Process-ID    : 0000309c
+2019-09-18 09:03:02,611 INFO     S7 channel DLL started!
+2019-09-18 09:03:02,611 INFO     S7 channel with own cycle creation!
+2019-09-18 09:03:09,687 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-09-18 09:03:09,837 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-09-18 09:03:09,837 INFO     S7DOS version: V9.2 / 0
+2019-09-18 09:03:09,837 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-09-18 09:03:09,837 INFO     S7 channel unit "Named Connections" activated!
+2019-09-18 09:03:10,046 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 42C2!
+2019-09-18 09:03:10,046 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 42C2!
+2019-09-18 09:22:04,951 INFO     S7 channel unit "Named Connections" deactivated!
+2019-09-18 09:22:05,959 INFO     S7 channel DLL terminated!
+2019-09-18 09:41:56,032 INFO     Log starting ...
+2019-09-18 09:41:56,058 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-09-18 09:41:56,058 INFO     | LogFileCount  : 3
+2019-09-18 09:41:56,058 INFO     | LogFileSize   : 1400000
+2019-09-18 09:41:56,058 INFO     | TraceFlags    : c4000000
+2019-09-18 09:41:56,058 INFO     | Process-ID    : 00003428
+2019-09-18 09:41:56,058 INFO     S7 channel DLL started!
+2019-09-18 09:41:56,058 INFO     S7 channel with own cycle creation!
+2019-09-18 09:42:03,786 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-09-18 09:42:04,215 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-09-18 09:42:04,215 INFO     S7DOS version: V9.2 / 0
+2019-09-18 09:42:04,215 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-09-18 09:42:04,215 INFO     S7 channel unit "TCP/IP" activated!
+2019-09-18 09:42:04,351 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 42C2!
+2019-09-18 09:42:04,351 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 42C2!
+2019-09-18 09:59:11,615 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-09-18 09:59:12,164 INFO     S7 channel DLL terminated!
+2019-09-18 09:59:18,311 INFO     Log starting ...
+2019-09-18 09:59:18,311 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-09-18 09:59:18,311 INFO     | LogFileCount  : 3
+2019-09-18 09:59:18,311 INFO     | LogFileSize   : 1400000
+2019-09-18 09:59:18,311 INFO     | TraceFlags    : c4000000
+2019-09-18 09:59:18,311 INFO     | Process-ID    : 00003f24
+2019-09-18 09:59:18,311 INFO     S7 channel DLL started!
+2019-09-18 09:59:18,311 INFO     S7 channel with own cycle creation!
+2019-09-18 09:59:25,518 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-09-18 09:59:25,776 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-09-18 09:59:25,776 INFO     S7DOS version: V9.2 / 0
+2019-09-18 09:59:25,776 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-09-18 09:59:25,776 INFO     S7 channel unit "TCP/IP" activated!
+2019-09-18 09:59:25,898 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 42C2!
+2019-09-18 09:59:25,898 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 42C2!
+2019-09-18 10:01:59,403 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-09-18 10:01:59,910 INFO     S7 channel DLL terminated!
+2019-09-18 10:02:05,328 INFO     Log starting ...
+2019-09-18 10:02:05,328 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-09-18 10:02:05,328 INFO     | LogFileCount  : 3
+2019-09-18 10:02:05,328 INFO     | LogFileSize   : 1400000
+2019-09-18 10:02:05,328 INFO     | TraceFlags    : c4000000
+2019-09-18 10:02:05,328 INFO     | Process-ID    : 00004724
+2019-09-18 10:02:05,328 INFO     S7 channel DLL started!
+2019-09-18 10:02:05,328 INFO     S7 channel with own cycle creation!
+2019-09-18 10:02:12,144 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-09-18 10:02:12,406 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-09-18 10:02:12,406 INFO     S7DOS version: V9.2 / 0
+2019-09-18 10:02:12,406 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-09-18 10:02:12,406 INFO     S7 channel unit "TCP/IP" activated!
+2019-09-18 10:02:12,521 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 42C2!
+2019-09-18 10:02:12,521 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 42C2!
+2019-09-18 10:06:23,497 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-09-18 10:06:24,008 INFO     S7 channel DLL terminated!
+2019-09-18 10:07:12,441 INFO     Log starting ...
+2019-09-18 10:07:12,441 INFO     | LogFileName   : C:\Program Files (x86)\Siemens\WinCC\Diagnose\SIMATIC_S7_Protocol_Suite_01.LOG
+2019-09-18 10:07:12,441 INFO     | LogFileCount  : 3
+2019-09-18 10:07:12,441 INFO     | LogFileSize   : 1400000
+2019-09-18 10:07:12,441 INFO     | TraceFlags    : c4000000
+2019-09-18 10:07:12,441 INFO     | Process-ID    : 00000c28
+2019-09-18 10:07:12,442 INFO     S7 channel DLL started!
+2019-09-18 10:07:12,442 INFO     S7 channel with own cycle creation!
+2019-09-18 10:07:19,249 ERROR    Error in EventVariable "PLC-002/SUPPLY_PRESSURE_PID.EventState"!
+2019-09-18 10:07:19,505 INFO     S7DOS release: @(#)TIS-Block Library DLL Version R9.2.0.0-REL-BASIS
+2019-09-18 10:07:19,505 INFO     S7DOS version: V9.2 / 0
+2019-09-18 10:07:19,505 INFO     S7CHN version: V6.0 / Sep  8 2018 / 13:04:55
+2019-09-18 10:07:19,505 INFO     S7 channel unit "TCP/IP" activated!
+2019-09-18 10:07:19,613 ERROR    Cannot connect to "PLC-001": Errorcode 0xFFDF 42C2!
+2019-09-18 10:07:19,613 ERROR    Cannot connect to "PLC-002": Errorcode 0xFFDF 42C2!
+2019-09-18 10:12:05,399 INFO     S7 channel unit "TCP/IP" deactivated!
+2019-09-18 10:12:05,906 INFO     S7 channel DLL terminated!
