@@ -655,7 +655,7 @@ class EventExtractionWorker(object):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
-      type_indicators(list[str]): dfVFS archive type indicators found in
+      type_indicators (list[str]): dfVFS archive type indicators found in
           the data stream.
     """
     number_of_type_indicators = len(type_indicators)
@@ -669,7 +669,7 @@ class EventExtractionWorker(object):
       logger.debug((
           'Found multiple format type indicators: {0:s} for '
           'compressed stream file: {1:s}').format(
-              type_indicators, display_name))
+              ', '.join(type_indicators), display_name))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
@@ -692,7 +692,7 @@ class EventExtractionWorker(object):
         compressed_stream_path_spec = None
 
         warning_message = (
-            'unsupported compressed stream format type indicators: '
+            'unsupported compressed stream format type indicator: '
             '{0:s}').format(type_indicator)
         parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=path_spec)

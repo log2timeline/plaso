@@ -54,7 +54,7 @@ class YAMLFormattersFile(object):
     Args:
       formatter (EventFormatter): an event formatter.
       boolean_helpers_definition_values (list[dict[str, object]]):
-           boolean helpers definition values.
+          boolean helpers definition values.
 
     Raises:
       ParseError: if the format of the boolean helper definitions are incorrect.
@@ -85,7 +85,7 @@ class YAMLFormattersFile(object):
     Args:
       formatter (EventFormatter): an event formatter.
       custom_helpers_definition_values (list[dict[str, object]]):
-           custom helpers definition values.
+          custom helpers definition values.
 
     Raises:
       ParseError: if the format of the custom helper definitions are incorrect.
@@ -110,7 +110,7 @@ class YAMLFormattersFile(object):
     Args:
       formatter (EventFormatter): an event formatter.
       enumeration_helpers_definition_values (list[dict[str, object]]):
-           enumeration helpers definition values.
+          enumeration helpers definition values.
 
     Raises:
       ParseError: if the format of the enumeration helper definitions are
@@ -176,7 +176,7 @@ class YAMLFormattersFile(object):
 
     Args:
       formatter_definition_values (dict[str, object]): formatter definition
-           values.
+          values.
 
     Returns:
       EventFormatter: an event formatter.
