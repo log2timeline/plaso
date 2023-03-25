@@ -1,7 +1,7 @@
 pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-acstore >= 20230101
+acstore >= 20230325
 artifacts >= 20220219
 bencode.py
 certifi >= 2016.9.26
