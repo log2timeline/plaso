@@ -31,7 +31,6 @@ class KnowledgeBase(object):
     self._language = 'en-US'
     self._mount_path = None
     self._time_zone = pytz.UTC
-    self._user_accounts = {}
     self._values = {}
     self._windows_eventlog_providers = {}
 
@@ -54,11 +53,6 @@ class KnowledgeBase(object):
   def timezone(self):
     """datetime.tzinfo: time zone of the current session."""
     return self._time_zone
-
-  @property
-  def user_accounts(self):
-    """list[UserAccountArtifact]: user accounts of the current session."""
-    return self._user_accounts.get(self._active_session, {}).values()
 
   def AddAvailableTimeZone(self, time_zone):
     """Adds an available time zone.
@@ -94,25 +88,6 @@ class KnowledgeBase(object):
           environment_variable.name))
 
     self._environment_variables[name] = environment_variable
-
-  def AddUserAccount(self, user_account):
-    """Adds an user account.
-
-    Args:
-      user_account (UserAccountArtifact): user account artifact.
-
-    Raises:
-      KeyError: if the user account already exists.
-    """
-    if self._active_session not in self._user_accounts:
-      self._user_accounts[self._active_session] = {}
-
-    user_accounts = self._user_accounts[self._active_session]
-    if user_account.identifier in user_accounts:
-      raise KeyError('User account: {0:s} already exists.'.format(
-          user_account.identifier))
-
-    user_accounts[user_account.identifier] = user_account
 
   def AddWindowsEventLogProvider(self, windows_eventlog_provider):
     """Adds a Windows Event Log provider.
@@ -205,54 +180,7 @@ class KnowledgeBase(object):
     system_configuration.available_time_zones = list(
         available_time_zones.values())
 
-    user_accounts = self._user_accounts.get(self._active_session, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.user_accounts = list(user_accounts.values())
-
     return system_configuration
-
-  def GetUsernameByIdentifier(self, user_identifier):
-    """Retrieves the username based on an user identifier.
-
-    Args:
-      user_identifier (str): user identifier, either a UID or SID.
-
-    Returns:
-      str: username.
-    """
-    user_accounts = self._user_accounts.get(self._active_session, {})
-    user_account = user_accounts.get(user_identifier, None)
-    if not user_account:
-      return ''
-
-    return user_account.username or ''
-
-  def GetUsernameForPath(self, path):
-    """Retrieves a username for a specific path.
-
-    This is determining if a specific path is within a user's directory and
-    returning the username of the user if so.
-
-    Args:
-      path (str): path.
-
-    Returns:
-      str: username or None if the path does not appear to be within a user's
-          directory.
-    """
-    path = path.lower()
-
-    user_accounts = self._user_accounts.get(self._active_session, {})
-    for user_account in user_accounts.values():
-      if not user_account.user_directory:
-        continue
-
-      user_directory = user_account.user_directory.lower()
-      if path.startswith(user_directory):
-        return user_account.username
-
-    return None
 
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.
@@ -293,14 +221,6 @@ class KnowledgeBase(object):
           artifacts.
     """
     return self._windows_eventlog_providers.values()
-
-  def HasUserAccounts(self):
-    """Determines if the knowledge base contains user accounts.
-
-    Returns:
-      bool: True if the knowledge base contains user accounts.
-    """
-    return self._user_accounts.get(self._active_session, {}) != {}
 
   def ReadSystemConfigurationArtifact(self, system_configuration):
     """Reads the knowledge base values from a system configuration artifact.
@@ -350,10 +270,6 @@ class KnowledgeBase(object):
         logger.warning(
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.time_zone, self._time_zone.zone))
-
-    self._user_accounts[self._active_session] = {
-        user_account.identifier: user_account
-        for user_account in system_configuration.user_accounts}
 
   def SetActiveSession(self, session_identifier):
     """Sets the active session.

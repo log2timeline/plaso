@@ -363,7 +363,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           column_names=['Parser (plugin) name', 'Number of warnings'],
           title='Timelining warnings generated per parser')
 
-    # Compare timelining warnings by path specification
+    # Compare timelining warnings by path specification.
     warnings_counter = storage_counters.get(
         'timelining_warnings_by_path_spec', collections.Counter())
     compare_warnings_counter = compare_storage_counters.get(
@@ -958,7 +958,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             'system_configuration', session_index)
         if system_configuration:
           self._PrintSystemConfigurations(
-              [system_configuration], session_identifier=session_identifier)
+              storage_reader, [system_configuration],
+              session_identifier=session_identifier)
 
     if self._output_format == 'json':
       self._output_writer.Write('}')
@@ -997,10 +998,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       self._PrintSessionsDetails(storage_reader)
 
   def _PrintSystemConfiguration(
-      self, system_configuration, session_identifier=None):
+      self, storage_reader, system_configuration, session_identifier=None):
     """Prints the details of a system configuration.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       system_configuration (SystemConfiguration): system configuration.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
@@ -1069,17 +1071,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._views_format_type,
         column_names=['Username', 'User directory'], title=title)
 
-    for user_account in system_configuration.user_accounts:
-      table_view.AddRow([
-          user_account.username, user_account.user_directory])
+    for user_account in storage_reader.GetAttributeContainers('user_account'):
+      table_view.AddRow([user_account.username, user_account.user_directory])
 
     table_view.Write(self._output_writer)
 
   def _PrintSystemConfigurations(
-      self, system_configurations, session_identifier=None):
+      self, storage_reader, system_configurations, session_identifier=None):
     """Prints the details of system configurations.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       system_configurations (list[SystemConfiguration]): system configurations.
       session_identifier (Optional[str]): session identifier, formatted as
           a UUID.
@@ -1100,7 +1102,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
       elif self._output_format in ('markdown', 'text'):
         self._PrintSystemConfiguration(
-            configuration, session_identifier=session_identifier)
+            storage_reader, configuration,
+            session_identifier=session_identifier)
 
     if self._output_format == 'json':
       self._output_writer.Write('}')

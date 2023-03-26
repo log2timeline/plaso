@@ -51,13 +51,15 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     self.file_system_artifact_names = set()
     self.registry_artifact_names = set()
 
-  def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
+  def _BuildFindSpecsFromArtifact(
+      self, definition, environment_variables, user_accounts):
     """Builds find specifications from an artifact definition.
 
     Args:
       definition (artifacts.ArtifactDefinition): artifact definition.
       environment_variables (list[EnvironmentVariableArtifact]):
           environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
       list[dfvfs.FindSpec|dfwinreg.FindSpec]: dfVFS or dfWinReg find
@@ -69,7 +71,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
         for path_entry in set(source.paths):
           specifications = self._BuildFindSpecsFromFileSourcePath(
               path_entry, source.separator, environment_variables,
-              self._knowledge_base.user_accounts)
+              user_accounts)
           find_specs.extend(specifications)
           self.file_system_artifact_names.add(definition.name)
 
@@ -104,7 +106,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
         for name in source.names:
           specifications = self._BuildFindSpecsFromGroupName(
-              name, environment_variables)
+              name, environment_variables, user_accounts)
           find_specs.extend(specifications)
 
       else:
@@ -114,14 +116,15 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
 
     return find_specs
 
-  def _BuildFindSpecsFromGroupName(self, group_name, environment_variables):
+  def _BuildFindSpecsFromGroupName(
+      self, group_name, environment_variables, user_accounts):
     """Builds find specifications from a artifact group name.
 
     Args:
       group_name (str): artifact group name.
-      environment_variables (list[str]): environment variable attributes used to
-          dynamically populate environment variables in file and registry
-          artifacts.
+      environment_variables (list[EnvironmentVariableArtifact]):
+          environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
       list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications or None if no
@@ -133,7 +136,8 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     if not definition:
       return None
 
-    return self._BuildFindSpecsFromArtifact(definition, environment_variables)
+    return self._BuildFindSpecsFromArtifact(
+        definition, environment_variables, user_accounts)
 
   def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
     """Build find specifications from a Windows Registry source type.
@@ -172,10 +176,9 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     Args:
       source_path (str): file system path defined by the source.
       path_separator (str): file system path segment separator.
-      environment_variables (list[str]): environment variable attributes used to
-          dynamically populate environment variables in key.
-      user_accounts (list[str]): identified user accounts stored in the
-          knowledge base.
+      environment_variables (list[EnvironmentVariableArtifact]):
+          environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -216,7 +219,9 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
 
     return find_specs
 
-  def BuildFindSpecs(self, artifact_filter_names, environment_variables=None):
+  def BuildFindSpecs(
+      self, artifact_filter_names, environment_variables=None,
+      user_accounts=None):
     """Builds find specifications from artifact definitions.
 
     Args:
@@ -224,6 +229,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
           used for filtering file system and Windows Registry key paths.
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
+      user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
     """
     find_specs = []
     for name in artifact_filter_names:
@@ -237,7 +243,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
       logger.debug('building find spec from artifact definition: {0:s}'.format(
           name))
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
-          definition, environment_variables)
+          definition, environment_variables, user_accounts)
       find_specs.extend(artifact_find_specs)
 
     for find_spec in find_specs:

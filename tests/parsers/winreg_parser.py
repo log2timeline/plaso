@@ -156,8 +156,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         artifact_filters.ArtifactDefinitionsFiltersHelper(
             registry, knowledge_base))
 
-    artifacts_filters_helper.BuildFindSpecs(
-        artifact_filter_names, environment_variables=None)
+    artifacts_filters_helper.BuildFindSpecs(artifact_filter_names)
 
     storage_writer = self._ParseFile(
         ['SYSTEM'], parser, collection_filters_helper=artifacts_filters_helper)

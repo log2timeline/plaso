@@ -257,19 +257,19 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    users = sorted(
-        test_mediator.knowledge_base.user_accounts,
-        key=lambda user_account: user_account.identifier)
-    self.assertEqual(len(users), 13)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'user_account')
+    self.assertEqual(number_of_artifacts, 13)
 
-    user_account = users[4]
+    user_account = storage_writer.GetAttributeContainerByIndex(
+       'user_account', 11)
 
     self.assertEqual(user_account.identifier, '14')
     self.assertEqual(user_account.group_identifier, '50')
@@ -286,8 +286,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -302,8 +302,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -318,8 +318,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -334,8 +334,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -350,8 +350,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -366,8 +366,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -382,8 +382,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -398,8 +398,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -414,8 +414,8 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = linux.LinuxUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, storage_writer, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+       file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')

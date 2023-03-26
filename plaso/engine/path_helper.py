@@ -62,7 +62,7 @@ class PathHelper(object):
       user_path = path_separator.join(path_segments)
       user_paths.append(user_path)
 
-    else:
+    elif user_accounts:
       for user_account in user_accounts:
         user_path_segments = user_account.GetUserDirectoryPathSegments()
 

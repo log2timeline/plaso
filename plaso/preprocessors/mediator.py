@@ -91,7 +91,8 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the user account already exists.
     """
-    self._knowledge_base.AddUserAccount(user_account)
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(user_account)
 
   def AddWindowsEventLogProvider(self, windows_eventlog_provider):
     """Adds a Windows EventLog provider.

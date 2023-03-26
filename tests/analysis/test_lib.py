@@ -2,7 +2,6 @@
 """Analysis plugin related functions and classes for testing."""
 
 from plaso.analysis import mediator as analysis_mediator
-from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
@@ -19,13 +18,15 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
   def _AnalyzeEvents(
-      self, event_values_list, plugin, knowledge_base_values=None):
+      self, event_values_list, plugin, knowledge_base_values=None,
+      user_accounts=None):
     """Analyzes events using the analysis plugin.
 
     Args:
       event_values_list (list[dict[str, object]]): list of event values.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
+      user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -36,6 +37,9 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
+
+    for user_account in user_accounts or []:
+      storage_writer.AddAttributeContainer(user_account)
 
     test_events = []
     for event, event_data, event_data_stream in (
@@ -183,29 +187,6 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in knowledge_base_values.items():
-        if identifier == 'users':
-          self._SetUserAccounts(knowledge_base_object, value)
-        else:
-          knowledge_base_object.SetValue(identifier, value)
+        knowledge_base_object.SetValue(identifier, value)
 
     return knowledge_base_object
-
-  def _SetUserAccounts(self, knowledge_base_object, users):
-    """Sets the user accounts in the knowledge base.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): used to store information about
-          users.
-      users (list[dict[str, str])): users, for example [{'name': 'me',
-        'sid': 'S-1', 'uid': '1'}]
-    """
-    for user in users:
-      identifier = user.get('sid', user.get('uid', None))
-      if not identifier:
-        continue
-
-      user_account_artifact = artifacts.UserAccountArtifact(
-          identifier=identifier, user_directory=user.get('path', None),
-          username=user.get('name', None))
-
-      knowledge_base_object.AddUserAccount(user_account_artifact)
