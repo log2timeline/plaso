@@ -324,11 +324,13 @@ class ParserMediator(object):
           if no current file entry or no Windows EventLog message file was
           found.
     """
-    if self._windows_event_log_providers_per_path is None:
+    if (self._windows_event_log_providers_per_path is None and
+        self._storage_writer):
       self._windows_event_log_providers_per_path = {}
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
 
-      for provider in self._knowledge_base.GetWindowsEventLogProviders():
+      for provider in self._storage_writer.GetAttributeContainers(
+          'windows_eventlog_provider'):
         for windows_path in provider.event_message_files or []:
           path, filename = path_helper.PathHelper.GetWindowsSystemPath(
               windows_path, environment_variables)

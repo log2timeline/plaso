@@ -30,7 +30,6 @@ class KnowledgeBase(object):
     self._mount_path = None
     self._time_zone = pytz.UTC
     self._values = {}
-    self._windows_eventlog_providers = {}
 
   @property
   def codepage(self):
@@ -63,24 +62,6 @@ class KnowledgeBase(object):
           environment_variable.name))
 
     self._environment_variables[name] = environment_variable
-
-  def AddWindowsEventLogProvider(self, windows_eventlog_provider):
-    """Adds a Windows Event Log provider.
-
-    Args:
-      windows_eventlog_provider (WindowsEventLogProviderArtifact): Windows
-          Event Log provider.
-
-    Raises:
-      KeyError: if the Windows Event Log provider already exists.
-    """
-    log_source = windows_eventlog_provider.log_sources[0]
-    if log_source in self._windows_eventlog_providers:
-      raise KeyError('Windows Event Log provider: {0:s} already exists.'.format(
-          log_source))
-
-    # TODO: store on a per-volume basis?
-    self._windows_eventlog_providers[log_source] = windows_eventlog_provider
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.
@@ -168,27 +149,6 @@ class KnowledgeBase(object):
 
     identifier = identifier.lower()
     return self._values.get(identifier, default_value)
-
-  def GetWindowsEventLogProvider(self, log_source):
-    """Retrieves a Windows EventLog provider by log source.
-
-    Args:
-      log_source (str): EventLog source, such as "Application Error".
-
-    Returns:
-      WindowsEventLogProviderArtifact: Windows EventLog provider artifact or
-          None if not available.
-    """
-    return self._windows_eventlog_providers.get(log_source, None)
-
-  def GetWindowsEventLogProviders(self):
-    """Retrieves the Windows EventLog providers.
-
-    Returns:
-      list[WindowsEventLogProviderArtifact]: Windows EventLog provider
-          artifacts.
-    """
-    return self._windows_eventlog_providers.values()
 
   def ReadSystemConfigurationArtifact(self, system_configuration):
     """Reads the knowledge base values from a system configuration artifact.

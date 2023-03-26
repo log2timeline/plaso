@@ -28,6 +28,7 @@ class PreprocessMediator(object):
     self._storage_writer = storage_writer
     self._windows_eventlog_providers_helper = (
         eventlog_providers.WindowsEventLogProvidersHelper())
+    self._windows_eventlog_providers = {}
     self._windows_eventlog_providers_by_identifier = {}
 
   @property
@@ -115,14 +116,14 @@ class PreprocessMediator(object):
     """
     existing_provider = None
     provider_identifier = windows_eventlog_provider.identifier
+    log_source = windows_eventlog_provider.log_sources[0]
 
     if provider_identifier:
       existing_provider = self._windows_eventlog_providers_by_identifier.get(
           provider_identifier, None)
 
     if not existing_provider:
-      existing_provider = self._knowledge_base.GetWindowsEventLogProvider(
-          windows_eventlog_provider.log_sources[0])
+      existing_provider = self._windows_eventlog_providers.get(log_source, None)
 
     if existing_provider:
       self._windows_eventlog_providers_helper.Merge(
@@ -135,11 +136,10 @@ class PreprocessMediator(object):
       self._windows_eventlog_providers_helper.NormalizeMessageFiles(
           windows_eventlog_provider)
 
+      self._windows_eventlog_providers[log_source] = windows_eventlog_provider
+
       if self._storage_writer:
         self._storage_writer.AddAttributeContainer(windows_eventlog_provider)
-
-      self._knowledge_base.AddWindowsEventLogProvider(
-          windows_eventlog_provider)
 
       if provider_identifier:
         self._windows_eventlog_providers_by_identifier[provider_identifier] = (
