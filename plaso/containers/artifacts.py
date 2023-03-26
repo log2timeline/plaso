@@ -61,6 +61,10 @@ class HostnameArtifact(ArtifactAttributeContainer):
 
   CONTAINER_TYPE = 'hostname'
 
+  SCHEMA = {
+      'name': 'str',
+      'schema': 'str'}
+
   def __init__(self, name=None, schema='DNS'):
     """Initializes a hostname artifact.
 
@@ -91,6 +95,12 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
   """
 
   CONTAINER_TYPE = 'operating_system'
+
+  SCHEMA = {
+      'family': 'str',
+      'name': 'str',
+      'product': 'str',
+      'version': 'str'}
 
   _DEFAULT_FAMILY_AND_VERSION = (
       definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN, (0, 0))
@@ -237,6 +247,11 @@ class PathArtifact(ArtifactAttributeContainer):
   """
 
   CONTAINER_TYPE = 'path'
+
+  SCHEMA = {
+      'data_stream': 'str',
+      'path_segment_separator': 'str',
+      'path_segments': 'List[str]'}
 
   def __init__(self, data_stream=None, path=None, path_segment_separator='/'):
     """Initializes a path artifact.
@@ -409,12 +424,13 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
     mount_path (str): path of a "mounted" directory input source.
     path_spec (dfvfs.PathSpec): path specification of the source that is
         processed.
-    system_configuration (SystemConfigurationArtifact): system configuration of
-        a specific system installation, such as Windows or Linux, detected by
-        the pre-processing on the source.
   """
 
   CONTAINER_TYPE = 'source_configuration'
+
+  SCHEMA = {
+      'mount_path': 'str',
+      'path_spec': 'dfvfs.PathSpec'}
 
   def __init__(self, path_spec=None):
     """Initializes a source configuration artifact.
@@ -450,6 +466,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """
 
   CONTAINER_TYPE = 'system_configuration'
+
+  # TODO: add SCHEMA
 
   def __init__(self, code_page=None, language=None, time_zone=None):
     """Initializes a system configuration artifact.
@@ -487,6 +505,12 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
 
   CONTAINER_TYPE = 'time_zone'
 
+  SCHEMA = {
+      'localized_name': 'str',
+      'mui_form': 'str',
+      'name': 'str',
+      'offset': 'int'}
+
   def __init__(
       self, localized_name=None, mui_form=None, name=None, offset=None):
     """Initializes a time zone artifact.
@@ -522,6 +546,13 @@ class UserAccountArtifact(ArtifactAttributeContainer):
   """
 
   CONTAINER_TYPE = 'user_account'
+
+  SCHEMA = {
+      'full_name': 'str',
+      'group_identifier': 'str',
+      'identifier': 'str',
+      'user_directory': 'str',
+      'username': 'str'}
 
   def __init__(
       self, full_name=None, group_identifier=None, identifier=None,
