@@ -71,6 +71,7 @@ description: Various log files.
 type: include
 path_separator: '\'
 paths:
+- '%SystemRoot%\\appcompat\\pca\\.+[.]txt'
 - '%SystemRoot%\\inf\\setupapi[.].+[.]log'
 - '%SystemRoot%\\setupapi.log'
 - '%SystemRoot%\\System32\\LogFiles\\.+\\.+[.]txt'

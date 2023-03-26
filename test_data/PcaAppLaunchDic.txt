@@ -1,0 +1,4 @@
+C:\Program Files\WindowsApps\MicrosoftTeams_22287.702.1670.9453_x64__8wekyb3d8bbwe\msteams.exe|2022-11-15 00:02:08.476
+C:\Program Files\Microsoft VS Code\Code.exe|2023-01-21 04:14:27.856
+C:\Program Files (x86)\Foxit Software\Foxit PDF Reader\FoxitPDFReader.exe|2023-01-03 05:20:36.261
+C:\Program Files\WindowsApps\Microsoft.WindowsNotepad_11.2209.6.0_x64__8wekyb3d8bbwe\Notepad\Notepad.exe|2022-11-30 01:01:29.898

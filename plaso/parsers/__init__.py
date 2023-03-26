@@ -44,6 +44,7 @@ from plaso.parsers import winevt
 from plaso.parsers import winevtx
 from plaso.parsers import winjob
 from plaso.parsers import winlnk
+from plaso.parsers import winpca
 from plaso.parsers import winprefetch
 from plaso.parsers import winreg_parser
 from plaso.parsers import winrestore

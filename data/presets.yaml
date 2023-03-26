@@ -166,6 +166,8 @@ parsers:
 - recycle_bin
 - winevtx
 - win_gen
+- winpca_db0
+- winpca_dic
 ---
 name: win7_slow
 description: Preset for Windows 7 and later including parsers that require more processing time.

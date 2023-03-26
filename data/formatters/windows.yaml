@@ -294,6 +294,19 @@ short_source: 'RECBIN'
 source: 'Recycle Bin'
 ---
 type: 'conditional'
+data_type: 'windows:pca_log:entry'
+message:
+- '[{executable}] was executed - '
+- 'Description: {description}'
+- 'Version: {version}'
+- 'Vendor: {vendor}'
+- 'Exit code: {exit_code}'
+short_message:
+- '{executable} was run'
+short_source: 'LOG'
+source: 'Program Compatibility Assistant (PCA) Log'
+---
+type: 'conditional'
 data_type: 'windows:prefetch:execution'
 custom_helpers:
 - identifier: 'windows_prefetch_path_hints'

@@ -1,0 +1,3 @@
+2022-11-14 23:37:11.789|2|%programfiles%\windowsapps\microsoftteams_22287.702.1670.9453_x64__8wekyb3d8bbwe\msteamsupdate.exe|microsoft teams updater|microsoft corporation|22287.702.1670.9453|0006132687b1e64961e910ee21d4352afe0800000904|Abnormal process exit with code 0x4c7
+2022-11-15 00:00:11.751|2|%programfiles%\microsoft vs code\resources\app\node_modules.asar.unpacked\@vscode\ripgrep\bin\rg.exe||||0000e6b26ba7b04397534ea87b0142a0deae0000ffff|Abnormal process exit with code 0x1
+2022-11-15 00:00:17.499|2|\program files\git\mingw64\bin\git.exe|git|the git development community|2.33.0.windows.2|0000cf6bcbd173601d5a06d08c5c197a52c40000ffff|Abnormal process exit with code 0x1
