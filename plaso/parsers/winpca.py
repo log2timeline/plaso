@@ -14,10 +14,10 @@ class WindowsPCAEventData(events.EventData):
 
   Attributes:
     description (str): description of the executable.
+    executable (str): executable filename.
     exit_code (str): final result of the execution.
     last_execution_time (dfdatetime.DateTimeValues): entry last execution
         date and time.
-    program (str): name of the program.
     program_identifier (str): program identifier.
     run_status (str): execution status.
     vendor (str): vendor of executed software.
@@ -30,9 +30,9 @@ class WindowsPCAEventData(events.EventData):
     """Initializes event data."""
     super(WindowsPCAEventData, self).__init__(data_type=self.DATA_TYPE)
     self.description = None
+    self.executable = None
     self.exit_code = None
     self.last_execution_time = None
-    self.program = None
     self.program_identifier = None
     self.run_status = None
     self.vendor = None
@@ -47,6 +47,7 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
   DELIMITER = '|'
 
   COLUMNS = ()
+
   _MINIMUM_NUMBER_OF_COLUMNS = None
 
   def _ParseDateTime(self, date_time_string):
@@ -62,26 +63,23 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
-    date_string, time_string = date_time_string.split(' ')
-    try:
-      year_string, month_string, day_of_month_string = date_string.split('-')
-      year = int(year_string, 10)
-      month = int(month_string, 10)
-      day_of_month = int(day_of_month_string, 10)
-    except (AttributeError, ValueError):
-      raise errors.ParseError('Unsupported date string: {0:s}'.format(
-          date_string))
+    if (date_time_string[4] != '-' or date_time_string[7] != '-' or
+        date_time_string[10] != ' ' or date_time_string[13] != ':' or
+        date_time_string[16] != ':' or date_time_string[19] != '.'):
+      raise errors.ParseError('Unsupported date and time string: {0!s}'.format(
+          date_time_string))
 
     try:
-      time_value, ms_value = time_string.split('.')
-      hours_string, minutes_string, seconds_string = time_value.split(':')
-      hours = int(hours_string, 10)
-      minutes = int(minutes_string, 10)
-      seconds = int(seconds_string, 10)
-      milliseconds = int(ms_value, 10)
-    except (AttributeError, ValueError):
-      raise errors.ParseError('Unsupported time string: {0:s}'.format(
-          time_string))
+      year = int(date_time_string[0:4], 10)
+      month = int(date_time_string[5:7], 10)
+      day_of_month = int(date_time_string[8:10], 10)
+      hours = int(date_time_string[11:13], 10)
+      minutes = int(date_time_string[14:16], 10)
+      seconds = int(date_time_string[17:19], 10)
+      milliseconds = int(date_time_string[20:23], 10)
+    except (TypeError, ValueError):
+      raise errors.ParseError('Unsupported date and time string: {0!s}'.format(
+          date_time_string))
 
     time_elements_tuple = (
         year, month, day_of_month, hours, minutes, seconds, milliseconds)
@@ -136,15 +134,14 @@ class WindowsPCADB0Parser(WindowsPCABaseParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     event_data = WindowsPCAEventData()
-    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
-    event_data.program = row['program']
-
-    event_data.run_status = row['run_status']
     event_data.description = row['description']
+    event_data.executable = row['program']
+    event_data.exit_code = row['exit_code']
+    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
+    event_data.program_identifier = row['program_id']
+    event_data.run_status = row['run_status']
     event_data.vendor = row['vendor']
     event_data.version = row['version']
-    event_data.program_identifier = row['program_id']
-    event_data.exit_code = row['exit_code']
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -169,8 +166,8 @@ class WindowsPCADicParser(WindowsPCABaseParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     event_data = WindowsPCAEventData()
+    event_data.executable = row['program']
     event_data.last_execution_time = self._ParseDateTime(row['datetime'])
-    event_data.program = row['program']
 
     parser_mediator.ProduceEventData(event_data)
 
