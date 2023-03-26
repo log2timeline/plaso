@@ -54,7 +54,7 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
     """Parses date and time elements of a log line.
 
     Args:
-      date_time_string (string): Date time values extracted from the logfile.
+      date_time_string (string): date and time string.
 
     Returns:
       dfdatetime.TimeElements: date and time value.
@@ -63,30 +63,13 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
-    if (date_time_string[4] != '-' or date_time_string[7] != '-' or
-        date_time_string[10] != ' ' or date_time_string[13] != ':' or
-        date_time_string[16] != ':' or date_time_string[19] != '.'):
-      raise errors.ParseError('Unsupported date and time string: {0!s}'.format(
-          date_time_string))
+    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
 
     try:
-      year = int(date_time_string[0:4], 10)
-      month = int(date_time_string[5:7], 10)
-      day_of_month = int(date_time_string[8:10], 10)
-      hours = int(date_time_string[11:13], 10)
-      minutes = int(date_time_string[14:16], 10)
-      seconds = int(date_time_string[17:19], 10)
-      milliseconds = int(date_time_string[20:23], 10)
-    except (TypeError, ValueError):
+      date_time.CopyFromDateTimeString(date_time_string)
+    except ValueError:
       raise errors.ParseError('Unsupported date and time string: {0!s}'.format(
           date_time_string))
-
-    time_elements_tuple = (
-        year, month, day_of_month, hours, minutes, seconds, milliseconds)
-
-    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-        time_elements_tuple=time_elements_tuple)
-    date_time.is_local_time = False
 
     return date_time
 
@@ -106,7 +89,7 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
 
     try:
       self._ParseDateTime(row['datetime'])
-    except (AttributeError, ValueError):
+    except errors.ParseError:
       return False
 
     return '\\' in row['program']
@@ -133,11 +116,17 @@ class WindowsPCADB0Parser(WindowsPCABaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
+    try:
+      last_execution_time = self._ParseDateTime(row['datetime'])
+    except errors.ParseError:
+      parser_mediator.ProduceExtractionWarning(
+          'Unsupported date and time string: {0!s}'.format(row['datetime']))
+
     event_data = WindowsPCAEventData()
     event_data.description = row['description']
     event_data.executable = row['program']
     event_data.exit_code = row['exit_code']
-    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
+    event_data.last_execution_time = last_execution_time
     event_data.program_identifier = row['program_id']
     event_data.run_status = row['run_status']
     event_data.vendor = row['vendor']
@@ -165,9 +154,15 @@ class WindowsPCADicParser(WindowsPCABaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
+    try:
+      last_execution_time = self._ParseDateTime(row['datetime'])
+    except errors.ParseError:
+      parser_mediator.ProduceExtractionWarning(
+          'Unsupported date and time string: {0!s}'.format(row['datetime']))
+
     event_data = WindowsPCAEventData()
     event_data.executable = row['program']
-    event_data.last_execution_time = self._ParseDateTime(row['datetime'])
+    event_data.last_execution_time = last_execution_time
 
     parser_mediator.ProduceEventData(event_data)
 
