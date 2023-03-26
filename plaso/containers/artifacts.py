@@ -468,6 +468,15 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   CONTAINER_TYPE = 'system_configuration'
 
   # TODO: add SCHEMA
+  # SCHEMA = {
+  #     'code_page': 'str',
+  #     'keyboard_layout': 'str',
+  #     'hostname': 'HostnameArtifact',
+  #     'language': 'str',
+  #     'operating_system': 'str',
+  #     'operating_system_product': 'str',
+  #     'operating_system_version': 'str',
+  #     'time_zone': 'str'}
 
   def __init__(self, code_page=None, language=None, time_zone=None):
     """Initializes a system configuration artifact.
@@ -478,6 +487,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
       time_zone (Optional[str]): system time zone.
     """
     super(SystemConfigurationArtifact, self).__init__()
+    # TODO: kept for backwards compatibility.
     self.available_time_zones = []
     self.code_page = code_page
     self.hostname = None

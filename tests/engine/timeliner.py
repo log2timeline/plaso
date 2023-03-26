@@ -277,7 +277,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     event_data_timeliner.SetPreferredTimeZone(None)
 
-    self.assertEqual(event_data_timeliner._time_zone.zone, 'Etc/UTC')
+    self.assertEqual(event_data_timeliner._time_zone.zone, 'UTC')
 
 
 if __name__ == '__main__':

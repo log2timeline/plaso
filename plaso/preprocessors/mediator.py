@@ -3,6 +3,7 @@
 
 from plaso.containers import warnings
 from plaso.helpers.windows import eventlog_providers
+from plaso.helpers.windows import time_zones
 from plaso.preprocessors import logger
 
 
@@ -20,6 +21,7 @@ class PreprocessMediator(object):
           preprocessing information.
     """
     super(PreprocessMediator, self).__init__()
+    self._available_time_zones = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._session = session
@@ -80,7 +82,14 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the time zone already exists.
     """
-    self._knowledge_base.AddAvailableTimeZone(time_zone_artifact)
+    if time_zone_artifact.name in self._available_time_zones:
+      raise KeyError('Time zone: {0:s} already exists.'.format(
+          time_zone_artifact.name))
+
+    self._available_time_zones[time_zone_artifact.name] = time_zone_artifact
+
+    if self._storage_writer:
+      self._storage_writer.AddAttributeContainer(time_zone_artifact)
 
   def AddUserAccount(self, user_account):
     """Adds an user account.
@@ -206,6 +215,23 @@ class PreprocessMediator(object):
     Raises:
       ValueError: if the time zone is not supported.
     """
+    # Get the "normalized" name of a Windows time zone name.
+    if time_zone.startswith('@tzres.dll,'):
+      mui_form_time_zones = {
+          time_zone_artifact.mui_form: time_zone_artifact.name
+          for time_zone_artifact in self._available_time_zones.values()}
+
+      time_zone = mui_form_time_zones.get(time_zone, time_zone)
+    else:
+      localized_time_zones = {
+          time_zone_artifact.localized_name: time_zone_artifact.name
+          for time_zone_artifact in self._available_time_zones.values()}
+
+      time_zone = localized_time_zones.get(time_zone, time_zone)
+
+    # Map a Windows time zone name to a Python time zone name.
+    time_zone = time_zones.WINDOWS_TIME_ZONES.get(time_zone, time_zone)
+
     # TODO: check if time zone is set in knowledge base.
     self._knowledge_base.SetTimeZone(time_zone)
 

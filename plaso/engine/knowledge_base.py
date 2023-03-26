@@ -12,7 +12,6 @@ import pytz
 
 from plaso.containers import artifacts
 from plaso.engine import logger
-from plaso.helpers.windows import time_zones
 
 
 class KnowledgeBase(object):
@@ -24,7 +23,6 @@ class KnowledgeBase(object):
     """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
     self._active_session = self._DEFAULT_ACTIVE_SESSION
-    self._available_time_zones = {}
     self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
@@ -33,11 +31,6 @@ class KnowledgeBase(object):
     self._time_zone = pytz.UTC
     self._values = {}
     self._windows_eventlog_providers = {}
-
-  @property
-  def available_time_zones(self):
-    """list[TimeZone]: available time zones of the current session."""
-    return self._available_time_zones.get(self._active_session, {}).values()
 
   @property
   def codepage(self):
@@ -53,24 +46,6 @@ class KnowledgeBase(object):
   def timezone(self):
     """datetime.tzinfo: time zone of the current session."""
     return self._time_zone
-
-  def AddAvailableTimeZone(self, time_zone):
-    """Adds an available time zone.
-
-    Args:
-      time_zone (TimeZoneArtifact): time zone artifact.
-
-    Raises:
-      KeyError: if the time zone already exists.
-    """
-    if self._active_session not in self._available_time_zones:
-      self._available_time_zones[self._active_session] = {}
-
-    available_time_zones = self._available_time_zones[self._active_session]
-    if time_zone.name in available_time_zones:
-      raise KeyError('Time zone: {0:s} already exists.'.format(time_zone.name))
-
-    available_time_zones[time_zone.name] = time_zone
 
   def AddEnvironmentVariable(self, environment_variable):
     """Adds an environment variable.
@@ -173,13 +148,6 @@ class KnowledgeBase(object):
 
     system_configuration.time_zone = time_zone
 
-    available_time_zones = self._available_time_zones.get(
-        self._active_session, {})
-    # In Python 3 dict.values() returns a type dict_values, which will cause
-    # the JSON serializer to raise a TypeError.
-    system_configuration.available_time_zones = list(
-        available_time_zones.values())
-
     return system_configuration
 
   def GetValue(self, identifier, default_value=None):
@@ -257,12 +225,6 @@ class KnowledgeBase(object):
         'operating_system_version',
         system_configuration.operating_system_version)
 
-    # Set the available time zones before the system time zone so that localized
-    # time zone names can be mapped to their corresponding Python time zone.
-    self._available_time_zones[self._active_session] = {
-        time_zone.name: time_zone
-        for time_zone in system_configuration.available_time_zones}
-
     if system_configuration.time_zone:
       try:
         self.SetTimeZone(system_configuration.time_zone)
@@ -330,23 +292,6 @@ class KnowledgeBase(object):
     Raises:
       ValueError: if the time zone is not supported.
     """
-    # Get the "normalized" name of a Windows time zone name.
-    if time_zone.startswith('@tzres.dll,'):
-      mui_form_time_zones = {
-          time_zone_artifact.mui_form: time_zone_artifact.name
-          for time_zone_artifact in self.available_time_zones}
-
-      time_zone = mui_form_time_zones.get(time_zone, time_zone)
-    else:
-      localized_time_zones = {
-          time_zone_artifact.localized_name: time_zone_artifact.name
-          for time_zone_artifact in self.available_time_zones}
-
-      time_zone = localized_time_zones.get(time_zone, time_zone)
-
-    # Map a Windows time zone name to a Python time zone name.
-    time_zone = time_zones.WINDOWS_TIME_ZONES.get(time_zone, time_zone)
-
     try:
       self._time_zone = pytz.timezone(time_zone)
     except pytz.UnknownTimeZoneError:

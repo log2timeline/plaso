@@ -214,20 +214,21 @@ class WindowsAvailableTimeZonesPluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsAvailableTimeZonesPlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    available_time_zones = sorted(
-        test_mediator.knowledge_base.available_time_zones,
-        key=lambda time_zone: time_zone.name)
-    self.assertIsNotNone(available_time_zones)
-    self.assertEqual(len(available_time_zones), 101)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'time_zone')
+    self.assertEqual(number_of_artifacts, 101)
 
-    self.assertEqual(available_time_zones[0].name, 'AUS Central Standard Time')
+    available_time_zone = storage_writer.GetAttributeContainerByIndex(
+       'time_zone', 7)
+
+    self.assertEqual(available_time_zone.name, 'AUS Central Standard Time')
 
 
 class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
