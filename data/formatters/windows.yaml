@@ -291,6 +291,7 @@ message:
 short_message:
 - 'Deleted file: {original_filename}'
 short_source: 'RECBIN'
+source: 'Recycle Bin'
 ---
 type: 'conditional'
 data_type: 'windows:pca_log:entry'
@@ -304,7 +305,6 @@ short_message:
 - '{executable} was run'
 short_source: 'LOG'
 source: 'Program Compatibility Assistant (PCA) Log'
-source: 'Recycle Bin'
 ---
 type: 'conditional'
 data_type: 'windows:prefetch:execution'
