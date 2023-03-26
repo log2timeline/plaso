@@ -15,57 +15,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  _MACOS_PATHS = [
-      '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
-       'apdfllckaahabafndbhieahigkjlhalf'),
-      '/private/var/log/system.log',
-      '/Users/frank/Library/Application Data/Google/Chrome/Default',
-      '/Users/hans/Library/Application Data/Google/Chrome/Default',
-      ('/Users/frank/Library/Application Data/Google/Chrome/Default/'
-       'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
-      '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
-
-  _MACOS_USERS = [
-      {'name': 'root', 'path': '/var/root', 'sid': '0'},
-      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
-      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
-      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
-
-  _WINDOWS_PATHS = [
-      'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
-      ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
-       'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
-      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
-      'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
-      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
-      'C:\\Windows\\System32',
-      'C:\\Stuff/with path separator\\Folder']
-
-  _WINDOWS_USERS = [
-      {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
-      {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
-
-  def _SetUserAccounts(self, knowledge_base_object, users):
-    """Sets the user accounts in the knowledge base.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): knowledge base.
-      users (list[dict[str,str])): users.
-    """
-    for user in users:
-      identifier = user.get('sid', user.get('uid', None))
-      if not identifier:
-        continue
-
-      user_account = artifacts.UserAccountArtifact(
-          identifier=identifier, user_directory=user.get('path', None),
-          username=user.get('name', None))
-
-      knowledge_base_object.AddUserAccount(user_account)
-
   def testCodepageProperty(self):
     """Tests the codepage property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -89,31 +38,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     self.assertEqual(knowledge_base_object.timezone.zone, 'UTC')
-
-  def testUserAccountsProperty(self):
-    """Tests the user accounts property."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    self.assertEqual(len(knowledge_base_object.user_accounts), 0)
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
-    self.assertEqual(len(knowledge_base_object.user_accounts), 1)
-
-  def testAddUserAccount(self):
-    """Tests the AddUserAccount function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
-    with self.assertRaises(KeyError):
-      knowledge_base_object.AddUserAccount(user_account)
 
   def testAddEnvironmentVariable(self):
     """Tests the AddEnvironmentVariable function."""
@@ -176,66 +100,11 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
     knowledge_base_object.SetHostname(hostname_artifact)
 
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
     system_configuration = (
         knowledge_base_object.GetSystemConfigurationArtifact())
     self.assertIsNotNone(system_configuration)
     self.assertIsNotNone(system_configuration.hostname)
     self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
-
-  def testGetUsernameByIdentifier(self):
-    """Tests the GetUsernameByIdentifier function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
-    usename = knowledge_base_object.GetUsernameByIdentifier('1000')
-    self.assertEqual(usename, 'testuser')
-
-    usename = knowledge_base_object.GetUsernameByIdentifier(1000)
-    self.assertEqual(usename, '')
-
-    usename = knowledge_base_object.GetUsernameByIdentifier('1001')
-    self.assertEqual(usename, '')
-
-  def testGetUsernameForPath(self):
-    """Tests the GetUsernameForPath function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._SetUserAccounts(knowledge_base_object, self._MACOS_USERS)
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._MACOS_PATHS[0])
-    self.assertEqual(username, 'dude')
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._MACOS_PATHS[4])
-    self.assertEqual(username, 'hans')
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._WINDOWS_PATHS[0])
-    self.assertIsNone(username)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._SetUserAccounts(knowledge_base_object, self._WINDOWS_USERS)
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._WINDOWS_PATHS[0])
-    self.assertEqual(username, 'dude')
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._WINDOWS_PATHS[2])
-    self.assertEqual(username, 'frank')
-
-    username = knowledge_base_object.GetUsernameForPath(
-        self._MACOS_PATHS[2])
-    self.assertIsNone(username)
 
   def testGetSetValue(self):
     """Tests the Get and SetValue functions."""
@@ -253,19 +122,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     value = knowledge_base_object.GetValue('Bogus')
     self.assertIsNone(value)
 
-  def testHasUserAccounts(self):
-    """Tests the HasUserAccounts function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    self.assertFalse(knowledge_base_object.HasUserAccounts())
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    knowledge_base_object.AddUserAccount(user_account)
-
-    self.assertTrue(knowledge_base_object.HasUserAccounts())
-
   def testReadSystemConfigurationArtifact(self):
     """Tests the ReadSystemConfigurationArtifact function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -273,11 +129,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     system_configuration = artifacts.SystemConfigurationArtifact()
     system_configuration.hostname = artifacts.HostnameArtifact(
         name='myhost.mydomain')
-
-    user_account = artifacts.UserAccountArtifact(
-        identifier='1000', user_directory='/home/testuser',
-        username='testuser')
-    system_configuration.user_accounts.append(user_account)
 
     knowledge_base_object.ReadSystemConfigurationArtifact(system_configuration)
 

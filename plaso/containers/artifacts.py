@@ -469,6 +469,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.operating_system_product = None
     self.operating_system_version = None
     self.time_zone = time_zone
+    # TODO: kept for backwards compatibility.
     self.user_accounts = []
 
 

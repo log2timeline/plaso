@@ -55,6 +55,7 @@ class OutputMediator(object):
     self._source_mappings = {}
     self._storage_reader = None
     self._time_zone = None
+    self._username_by_identifier = {}
 
     self.data_location = data_location
 
@@ -305,8 +306,20 @@ class OutputMediator(object):
     if username and username != '-':
       return username
 
-    user_sid = getattr(event_data, 'user_sid', None)
-    username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
+    username = default_username
+
+    if self._storage_reader:
+      user_identifier = getattr(event_data, 'user_sid', None)
+      if (user_identifier and
+          user_identifier not in self._username_by_identifier):
+        if self._storage_reader.HasAttributeContainers('user_account'):
+          filter_expression = 'identifier == "{0:s}"'.format(user_identifier)
+          user_accounts = list(self._storage_reader.GetAttributeContainers(
+              'user_account', filter_expression=filter_expression))
+          if user_accounts:
+            username = user_accounts[0].username
+            self._username_by_identifier[user_identifier] = username
+
     return username or default_username
 
   def GetWinevtResourcesHelper(self):

@@ -187,19 +187,19 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = macos.MacOSUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
+    self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    users = sorted(
-        test_mediator.knowledge_base.user_accounts,
-        key=lambda user_account: user_account.identifier)
-    self.assertEqual(len(users), 1)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'user_account')
+    self.assertEqual(number_of_artifacts, 1)
 
-    user_account = users[0]
+    user_account = storage_writer.GetAttributeContainerByIndex(
+       'user_account', 0)
 
     self.assertEqual(user_account.identifier, '-2')
     self.assertEqual(user_account.full_name, 'Unprivileged User')

@@ -53,29 +53,23 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     return artifact_filters.ArtifactDefinitionsFiltersHelper(
         registry, knowledge_base)
 
-  def _CreateTestKnowledgeBaseWindows(self):
-    """Creates a knowledge base for testing Windows paths.
-
-    Creates a knowledge base with 2 user accounts.
+  def _CreateTestUserAccounts(self):
+    """Creates user accounts for testing Windows paths.
 
     Returns:
-      KnowledgeBase: knowledge base.
+      list[UserAccountArtifact]: user accounts.
     """
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
     test_user1 = artifacts.UserAccountArtifact(
         identifier='1000', path_separator='\\',
         user_directory='C:\\Users\\testuser1',
         username='testuser1')
-    knowledge_base.AddUserAccount(test_user1)
 
     test_user2 = artifacts.UserAccountArtifact(
         identifier='1001', path_separator='\\',
         user_directory='%SystemDrive%\\Users\\testuser2',
         username='testuser2')
-    knowledge_base.AddUserAccount(test_user2)
 
-    return knowledge_base
+    return [test_user1, test_user2]
 
   def testBuildFindSpecsWithFileSystem(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
@@ -88,7 +82,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
     self._SkipIfPathNotExists(test_file_path)
 
-    knowledge_base = self._CreateTestKnowledgeBaseWindows()
+    knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     artifact_filter_names = ['TestFiles', 'TestFiles2']
     test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
@@ -96,9 +90,11 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
+    test_user_accounts = self._CreateTestUserAccounts()
 
     test_filters_helper.BuildFindSpecs(
-        artifact_filter_names, environment_variables=[environment_variable])
+        artifact_filter_names, environment_variables=[environment_variable],
+        user_accounts=test_user_accounts)
 
     self.assertEqual(
         len(test_filters_helper.included_file_system_find_specs), 16)
@@ -139,7 +135,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
     self._SkipIfPathNotExists(test_file_path)
 
-    knowledge_base = self._CreateTestKnowledgeBaseWindows()
+    knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     artifact_filter_names = ['TestGroupExtract']
     test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
@@ -147,9 +143,11 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
+    test_user_accounts = self._CreateTestUserAccounts()
 
     test_filters_helper.BuildFindSpecs(
-        artifact_filter_names, environment_variables=[environment_variable])
+        artifact_filter_names, environment_variables=[environment_variable],
+        user_accounts=test_user_accounts)
 
     self.assertEqual(
         len(test_filters_helper.included_file_system_find_specs), 16)

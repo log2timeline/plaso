@@ -7,6 +7,7 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
+from plaso.containers import artifacts
 from plaso.containers import reports
 from plaso.lib import definitions
 
@@ -63,12 +64,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _MACOS_PATHS]
 
-  _MACOS_USERS = [
-      {'name': 'root', 'path': '/var/root', 'sid': '0'},
-      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
-      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
-      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
-
   _WINDOWS_PATHS = [
       'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
       ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
@@ -88,10 +83,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
       for path in _WINDOWS_PATHS]
-
-  _WINDOWS_USERS = [
-      {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
-      {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
 
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
@@ -113,10 +104,19 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_file_path = self._GetTestFilePath(['chrome_extensions'])
     self._SkipIfPathNotExists(test_file_path)
 
+    user_accounts = [
+        artifacts.UserAccountArtifact(
+            identifier='0', user_directory='/var/root', username='root'),
+        artifacts.UserAccountArtifact(
+            identifier='1123', user_directory='/Users/dude', username='dude'),
+        artifacts.UserAccountArtifact(
+            identifier='4052', user_directory='/Users/frank', username='frank'),
+        artifacts.UserAccountArtifact(
+            identifier='4352', user_directory='/Users/hans', username='hans')]
+
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        self._MACOS_TEST_EVENTS, plugin, knowledge_base_values={
-            'users': self._MACOS_USERS})
+        self._MACOS_TEST_EVENTS, plugin, user_accounts=user_accounts)
 
     analysis_results = list(storage_writer.GetAttributeContainers(
         'chrome_extension_analysis_result'))
@@ -150,10 +150,17 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     test_file_path = self._GetTestFilePath(['chrome_extensions'])
     self._SkipIfPathNotExists(test_file_path)
 
+    user_accounts = [
+        artifacts.UserAccountArtifact(
+            identifier='S-1', path_separator='\\',
+            user_directory='C:\\Users\\dude', username='dude'),
+        artifacts.UserAccountArtifact(
+            identifier='S-2', path_separator='\\',
+            user_directory='C:\\Users\\frank', username='frank')]
+
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        self._WINDOWS_TEST_EVENTS, plugin, knowledge_base_values={
-            'users': self._WINDOWS_USERS})
+        self._WINDOWS_TEST_EVENTS, plugin, user_accounts=user_accounts)
 
     analysis_results = list(storage_writer.GetAttributeContainers(
         'chrome_extension_analysis_result'))

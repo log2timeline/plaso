@@ -7,6 +7,7 @@ import unittest
 from plaso.containers import artifacts
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
+from plaso.storage.fake import writer as fake_writer
 from plaso.output import mediator
 
 from tests.containers import test_lib as containers_test_lib
@@ -78,12 +79,40 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetUsername(self):
     """Tests the GetUsername function."""
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    test_user1 = artifacts.UserAccountArtifact(
+        identifier='1000', path_separator='\\',
+        user_directory='C:\\Users\\testuser1',
+        username='testuser1')
 
-    _, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    username = output_mediator.GetUsername(event_data)
-    self.assertEqual(username, 'root')
+    storage_writer = fake_writer.FakeStorageWriter()
+
+    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    output_mediator.SetStorageReader(storage_writer)
+
+    storage_writer.Open()
+
+    try:
+      storage_writer.AddAttributeContainer(test_user1)
+
+      _, event_data, _ = containers_test_lib.CreateEventFromValues(
+          self._TEST_EVENTS[0])
+
+      username = output_mediator.GetUsername(event_data)
+      self.assertEqual(username, 'root')
+
+      event_data.username = None
+      setattr(event_data, 'user_sid', '1000')
+
+      username = output_mediator.GetUsername(event_data)
+      self.assertEqual(username, 'testuser1')
+
+      setattr(event_data, 'user_sid', '1001')
+
+      username = output_mediator.GetUsername(event_data)
+      self.assertEqual(username, '-')
+
+    finally:
+      storage_writer.Close()
 
   # TODO: add tests for GetWindowsEventMessage
 

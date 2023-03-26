@@ -673,20 +673,19 @@ class WindowsUserAccountsPluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsUserAccountsPlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    user_accounts = sorted(
-        test_mediator.knowledge_base.user_accounts,
-        key=lambda user_account: user_account.identifier)
-    self.assertIsNotNone(user_accounts)
-    self.assertEqual(len(user_accounts), 11)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'user_account')
+    self.assertEqual(number_of_artifacts, 11)
 
-    user_account = user_accounts[9]
+    user_account = storage_writer.GetAttributeContainerByIndex(
+       'user_account', 9)
 
     expected_sid = 'S-1-5-21-2036804247-3058324640-2116585241-1114'
     self.assertEqual(user_account.identifier, expected_sid)

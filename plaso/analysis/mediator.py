@@ -45,6 +45,7 @@ class AnalysisMediator(object):
     self._number_of_warnings = 0
     self._session = session
     self._storage_writer = None
+    self._username_by_user_directory = {}
 
     self.analysis_reports_counter = collections.Counter()
     self.event_labels_counter = collections.Counter()
@@ -86,7 +87,20 @@ class AnalysisMediator(object):
       str: username or None if the path does not appear to be within a user's
           directory.
     """
-    return self._knowledge_base.GetUsernameForPath(path)
+    path = path.lower()
+
+    username = self._username_by_user_directory.get(path, None)
+    if not username and self._storage_writer:
+      for user_account in self._storage_writer.GetAttributeContainers(
+          'user_account'):
+        if user_account.user_directory:
+          user_directory = user_account.user_directory.lower()
+          if path.startswith(user_directory):
+            username = user_account.username
+            self._username_by_user_directory[path] = username
+            break
+
+    return username
 
   def ProduceAnalysisResult(self, analysis_result):
     """Produces an analysis result attribute.
