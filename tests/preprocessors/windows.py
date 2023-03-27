@@ -264,16 +264,16 @@ class WindowsEventLogPublishersPluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsEventLogPublishersPlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    windows_eventlog_providers = (
-        test_mediator.knowledge_base.GetWindowsEventLogProviders())
-    self.assertEqual(len(windows_eventlog_providers), 438)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'windows_eventlog_provider')
+    self.assertEqual(number_of_artifacts, 438)
 
 
 class WindowsEventLogSourcesPluginTest(
@@ -288,16 +288,16 @@ class WindowsEventLogSourcesPluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsEventLogSourcesPlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    windows_eventlog_providers = (
-        test_mediator.knowledge_base.GetWindowsEventLogProviders())
-    self.assertEqual(len(windows_eventlog_providers), 374)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'windows_eventlog_provider')
+    self.assertEqual(number_of_artifacts, 374)
 
 
 class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
