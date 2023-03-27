@@ -1050,13 +1050,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._views_format_type,
         column_names=['Name', 'Offset from UTC'], title=title)
 
-    for time_zone in system_configuration.available_time_zones:
+    # TODO: filter time zones on specific system configuration.
+    for time_zone in storage_reader.GetAttributeContainers('time_zone'):
       hours_from_utc, minutes_from_utc = divmod(time_zone.offset, 60)
       if hours_from_utc < 0:
         sign = '+'
         hours_from_utc *= -1
       else:
         sign = '-'
+
       time_zone_offset = '{0:s}{1:02d}:{2:02d}'.format(
           sign, hours_from_utc, minutes_from_utc)
       table_view.AddRow([time_zone.name, time_zone_offset])
@@ -1071,6 +1073,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._views_format_type,
         column_names=['Username', 'User directory'], title=title)
 
+    # TODO: filter user accounts on specific system configuration.
     for user_account in storage_reader.GetAttributeContainers('user_account'):
       table_view.AddRow([user_account.username, user_account.user_directory])
 

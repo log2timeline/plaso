@@ -170,27 +170,8 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     """Tests the SetTimeZone function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    time_zone_artifact = artifacts.TimeZoneArtifact(
-        localized_name='Eastern (standaardtijd)', mui_form='@tzres.dll,-112',
-        name='Eastern Standard Time')
-
-    knowledge_base_object.AddAvailableTimeZone(time_zone_artifact)
-
-    # Set an IANA time zone name.
     knowledge_base_object.SetTimeZone('Europe/Zurich')
     self.assertEqual(knowledge_base_object._time_zone.zone, 'Europe/Zurich')
-
-    # Set a Windows time zone name.
-    knowledge_base_object.SetTimeZone('Eastern Standard Time')
-    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
-
-    # Set a localized Windows time zone name.
-    knowledge_base_object.SetTimeZone('Eastern (standaardtijd)')
-    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
-
-    # Set a MUI form Windows time zone name.
-    knowledge_base_object.SetTimeZone('@tzres.dll,-112')
-    self.assertEqual(knowledge_base_object._time_zone.zone, 'America/New_York')
 
     with self.assertRaises(ValueError):
       knowledge_base_object.SetTimeZone('Bogus')
