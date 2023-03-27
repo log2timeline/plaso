@@ -19,10 +19,15 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
   Attributes:
     compression_format (str): compression format.
-    serialization_format (str): serialization format.
   """
 
-  _FORMAT_VERSION = 20230107
+  _FORMAT_VERSION = 20230327
+
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20230327
+
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20230327
+
+  _READ_COMPATIBLE_FORMAT_VERSION = 20230327
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
@@ -35,7 +40,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     self._serializers_profiler = None
 
     self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-    self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
   def _CheckStorageMetadata(self, metadata_values, check_readable_only=False):
     """Checks the storage metadata.
@@ -58,11 +62,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       raise IOError('Unsupported compression format: {0!s}'.format(
           compression_format))
 
-    serialization_format = metadata_values.get('serialization_format', None)
-    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError('Unsupported serialization format: {0!s}'.format(
-          serialization_format))
-
   def _CreatetAttributeContainerFromRow(
       self, container_type, column_names, row, first_column_index):
     """Creates an attribute container of a row in the database.
@@ -78,46 +77,22 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      container = self._containers_manager.CreateAttributeContainer(
-          container_type)
+      return super(SQLiteStorageFile, self)._CreatetAttributeContainerFromRow(
+          container_type, column_names, row, first_column_index)
 
-      for column_index, name in enumerate(column_names):
-        attribute_value = row[first_column_index + column_index]
-        if attribute_value is None:
-          continue
-
-        data_type = schema[name]
-        if data_type == 'AttributeContainerIdentifier':
-          identifier = containers_interface.AttributeContainerIdentifier()
-          identifier.CopyFromString(attribute_value)
-          attribute_value = identifier
-
-        elif data_type == 'bool':
-          attribute_value = bool(attribute_value)
-
-        elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
-          # TODO: add compression support
-          attribute_value = self._serializer.ReadSerialized(attribute_value)
-
-        setattr(container, name, attribute_value)
-
+    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+      compressed_data = row[first_column_index]
+      serialized_data = zlib.decompress(compressed_data)
     else:
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        compressed_data = row[first_column_index]
-        serialized_data = zlib.decompress(compressed_data)
-      else:
-        compressed_data = b''
-        serialized_data = row[first_column_index]
+      compressed_data = b''
+      serialized_data = row[first_column_index]
 
-      if self._storage_profiler:
-        self._storage_profiler.Sample(
-            'read_create', 'read', container_type, len(serialized_data),
-            len(compressed_data))
+    if self._storage_profiler:
+      self._storage_profiler.Sample(
+          'read_create', 'read', container_type, len(serialized_data),
+          len(compressed_data))
 
-      container = self._DeserializeAttributeContainer(
-          container_type, serialized_data)
-
-    return container
+    return self._DeserializeAttributeContainer(container_type, serialized_data)
 
   def _CreateAttributeContainerTable(self, container_type):
     """Creates a table for a specific attribute container type.
@@ -131,37 +106,29 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file or if
           an unsupported attribute container is provided.
     """
-    column_definitions = ['_identifier INTEGER PRIMARY KEY AUTOINCREMENT']
-
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      schema_to_sqlite_type_mappings = (
-            self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS)
-      for name, data_type in sorted(schema.items()):
-        data_type = schema_to_sqlite_type_mappings.get(data_type, 'TEXT')
-        column_definitions.append('{0:s} {1:s}'.format(name, data_type))
-
+      super(SQLiteStorageFile, self)._CreateAttributeContainerTable(
+          container_type)
     else:
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
         data_column_type = 'BLOB'
       else:
         data_column_type = 'TEXT'
 
-      column_definitions.append('_data {0:s}'.format(data_column_type))
+      query = (
+          'CREATE TABLE {0:s} (_identifier INTEGER PRIMARY KEY AUTOINCREMENT, '
+          '_data {1:s});').format(container_type, data_column_type)
 
-    column_definitions = ', '.join(column_definitions)
-    query = 'CREATE TABLE {0:s} ({1:s});'.format(
-        container_type, column_definitions)
-
-    try:
-      self._cursor.execute(query)
-    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
+      try:
+        self._cursor.execute(query)
+      except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+        raise IOError('Unable to query storage file with error: {0!s}'.format(
+            exception))
 
     if container_type == self._CONTAINER_TYPE_EVENT_TAG:
       query = ('CREATE INDEX event_tag_per_event '
-               'ON event_tag (_event_identifier)')
+             'ON event_tag (_event_identifier)')
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
@@ -365,41 +332,21 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-        container.CONTAINER_TYPE)
-
-    if (next_sequence_number == 1 and
-        not self._HasTable(container.CONTAINER_TYPE)):
-      self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
-
-    identifier = containers_interface.AttributeContainerIdentifier(
-        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
-    container.SetIdentifier(identifier)
-
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-
     if schema:
-      column_names = []
-      values = []
-      for name, data_type in sorted(schema.items()):
-        attribute_value = getattr(container, name, None)
-        if attribute_value is not None:
-          if data_type == 'AttributeContainerIdentifier' and isinstance(
-              attribute_value,
-              containers_interface.AttributeContainerIdentifier):
-            attribute_value = attribute_value.CopyToString()
-
-          elif data_type == 'bool':
-            attribute_value = int(attribute_value)
-
-          elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
-            # TODO: add compression support
-            attribute_value = self._serializer.WriteSerialized(attribute_value)
-
-        column_names.append(name)
-        values.append(attribute_value)
-
+      super(SQLiteStorageFile, self)._WriteNewAttributeContainer(container)
     else:
+      next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+          container.CONTAINER_TYPE)
+
+      if (next_sequence_number == 1 and
+          not self._HasTable(container.CONTAINER_TYPE)):
+        self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
+
+      identifier = containers_interface.AttributeContainerIdentifier(
+          name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
+      container.SetIdentifier(identifier)
+
       serialized_data = self._SerializeAttributeContainer(container)
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -416,10 +363,10 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       column_names = ['_data']
       values = [serialized_data]
 
-    self._CacheAttributeContainerForWrite(
-        container.CONTAINER_TYPE, column_names, values)
+      self._CacheAttributeContainerForWrite(
+          container.CONTAINER_TYPE, column_names, values)
 
-    self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+      self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -437,6 +384,11 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when the store is closed or when there is an error querying
           the storage file.
     """
+    schema = self._GetAttributeContainerSchema(container_type)
+    if schema:
+      return super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
+          container_type, index)
+
     container = self._GetCachedAttributeContainer(container_type, index)
     if container:
       return container
@@ -446,11 +398,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     if not self._attribute_container_sequence_numbers[container_type]:
       return None
 
-    schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
-      column_names = sorted(schema.keys())
-    else:
-      column_names = ['_data']
+    column_names = ['_data']
 
     row_number = index + 1
     query = 'SELECT {0:s} FROM {1:s} WHERE rowid = {2:d}'.format(
@@ -501,11 +449,9 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file.
     """
     schema = self._GetAttributeContainerSchema(container_type)
-
     if schema:
-      column_names = sorted(schema.keys())
-    else:
-      column_names = ['_data']
+      return super(SQLiteStorageFile, self).GetAttributeContainers(
+          container_type, filter_expression=filter_expression)
 
     sql_filter_expression = None
     if filter_expression:
@@ -513,7 +459,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       sql_filter_expression = sqlite_store.PythonAST2SQL(expression_ast.body)
 
     return self._GetAttributeContainersWithFilter(
-        container_type, column_names=column_names,
+        container_type, column_names=['_data'],
         filter_expression=sql_filter_expression)
 
   def GetSortedEvents(self, time_range=None):

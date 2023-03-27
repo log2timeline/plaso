@@ -27,20 +27,6 @@ Parser (plugin) name : Number of events
                total : 3 (38)
 --------------------------------------------------------------------------------
 
-
-******************* Timelining warnings generated per parser *******************
-Parser (plugin) name : Number of warnings
---------------------------------------------------------------------------------
-            filestat : 1 (0)
---------------------------------------------------------------------------------
-
-
-******************* Pathspecs with most timelining warnings ********************
-Number of warnings : Pathspec
---------------------------------------------------------------------------------
-             1 (0) : N/A
---------------------------------------------------------------------------------
-
 Storage files are different.
 """
 
@@ -564,8 +550,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = '77a17b1a-ee8c-4745-9852-8bd0e1afee80'
-    session_start_time = '2022-11-13 06:02:24.968825'
+    session_identifier = '0db86b5f-9176-4863-bf1e-9ac7ca632377'
+    session_start_time = '2023-03-27 03:47:24.091665'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -607,11 +593,11 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20221023'
-    plaso_version = '20221113'
-    session_identifier = '77a17b1a-ee8c-4745-9852-8bd0e1afee80'
-    session_start_time = '2022-11-13T06:02:24.968825+00:00'
-    session_completion_time = '2022-11-13T06:02:33.777517+00:00'
+    format_version = '20230327'
+    plaso_version = '20230311'
+    session_identifier = '0db86b5f-9176-4863-bf1e-9ac7ca632377'
+    session_start_time = '2023-03-27T03:47:24.091665+00:00'
+    session_completion_time = '2023-03-27T03:47:32.596408+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
@@ -620,7 +606,6 @@ Storage files are different.
     enabled_parser_names = ', '.join([
         'android_app_usage',
         'asl_log',
-        'bash_history',
         'bencode',
         'bencode/bencode_transmission',
         'bencode/bencode_utorrent',
@@ -643,10 +628,6 @@ Storage files are different.
         'firefox_cache2',
         'fish_history',
         'fseventsd',
-        'gdrive_synclog',
-        'googlelog',
-        'ios_lockdownd',
-        'ios_sysdiag_log',
         'java_idx',
         'jsonl',
         'jsonl/aws_cloudtrail_log',
@@ -679,23 +660,21 @@ Storage files are different.
         'plist/ios_carplay',
         'plist/ipod_device',
         'plist/launchd_plist',
+        'plist/macos_bluetooth',
         'plist/macos_software_update',
-        'plist/macosx_bluetooth',
         'plist/macosx_install_history',
         'plist/macuser',
         'plist/plist_default',
+        'plist/safari_downloads',
         'plist/safari_history',
         'plist/spotlight',
         'plist/spotlight_volume',
         'plist/time_machine',
         'pls_recall',
-        'postgresql',
         'prefetch',
         'recycle_bin',
         'recycle_bin_info2',
         'rplog',
-        'sccm',
-        'skydrive_log',
         'spotlight_storedb',
         'sqlite',
         'sqlite/android_calls',
@@ -738,43 +717,53 @@ Storage files are different.
         'sqlite/windows_timeline',
         'sqlite/zeitgeist',
         'symantec_scanlog',
-        'syslog',
-        'syslog/cron',
-        'syslog/ssh',
         'systemd_journal',
         'text',
         'text/android_logcat',
         'text/apache_access',
         'text/apt_history',
         'text/aws_elb_access',
+        'text/bash_history',
         'text/confluence_access',
         'text/dpkg',
+        'text/gdrive_synclog',
+        'text/googlelog',
+        'text/ios_lockdownd',
         'text/ios_logd',
+        'text/ios_sysdiag_log',
         'text/mac_appfirewall_log',
         'text/mac_securityd',
         'text/mac_wifi',
         'text/popularity_contest',
+        'text/postgresql',
         'text/santa',
+        'text/sccm',
         'text/selinux',
         'text/setupapi',
         'text/skydrive_log_v1',
+        'text/skydrive_log_v2',
         'text/snort_fastlog',
         'text/sophos_av',
+        'text/syslog',
+        'text/syslog_traditional',
+        'text/viminfo',
         'text/vsftpd',
         'text/winfirewall',
         'text/winiis',
         'text/xchatlog',
         'text/xchatscrollback',
+        'text/zsh_extended_history',
         'trendmicro_url',
         'trendmicro_vd',
         'usnjrnl',
         'utmp',
         'utmpx',
-        'viminfo',
         'windefender_history',
         'winevt',
         'winevtx',
         'winjob',
+        'winpca_db0',
+        'winpca_dic',
         'winreg',
         'winreg/amcache',
         'winreg/appcompatcache',
@@ -811,8 +800,7 @@ Storage files are different.
         'winreg/windows_version',
         'winreg/winlogon',
         'winreg/winrar_mru',
-        'winreg/winreg_default',
-        'zsh_extended_history'])
+        'winreg/winreg_default'])
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
 

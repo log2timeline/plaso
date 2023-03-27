@@ -12,9 +12,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 491bd4f69d406f9b84bec20d593f5672
   {pid} 30840
   {reporter} client
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -33,9 +34,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 7b005844e65fc147c47ecbed1bfaf234
   {pid} 30840
   {reporter} client
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -54,10 +56,11 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
   {username} root
 
 [Additional attributes]:
+  {_event_values_hash} 6854016e045af36a0ca6fec7dce2ace3
   {command} touch /var/run/crond.somecheck
   {pid} 31051
   {reporter} CRON
@@ -77,10 +80,11 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
   {username} root
 
 [Additional attributes]:
+  {_event_values_hash} 35dfd4461e54606a91a190071da5f9dd
   {command} touch /var/run/crond.somecheck
   {pid} 31068
   {reporter} CRON
@@ -100,10 +104,11 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
   {username} root
 
 [Additional attributes]:
+  {_event_values_hash} 567827aa892478cfe3e9ce8e57d09628
   {command} /sbin/status.mycheck)
   {pid} 31067
   {reporter} CRON
@@ -123,9 +128,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 26f01a12c6fe95af9412db47b5ce6193
   {reporter} Job
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 
@@ -143,9 +149,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} :
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 150103d350617f8f194e94010d21158b
   {reporter} ---
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 
@@ -163,9 +170,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 56819a79f659a7caa72c49da0d49e1cb
   {pid} 1234
   {reporter} anacron
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -187,9 +195,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 33e172e05be4fd57c99d3581808891c2
   {pid} 19
   {reporter} somrandomexe
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -208,9 +217,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} f4b4955ff040c640210afd3c7a86cdb9
   {pid} 1915
   {reporter} somrandomexe
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -230,9 +240,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 409f6ed59aedb88e05bfeaa8563c9bc4
   {pid} 10100
   {reporter} aprocess
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -251,9 +262,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 1793e07eb1ec6206b3745c1b0262d171
   {pid} 1234
   {reporter} /sbin/anacron
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -272,9 +284,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 234f612fd691ed051ea7ea76dc4340f5
   {pid} 2085
   {reporter} process
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
@@ -293,9 +306,10 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} :
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 659f55f18c17cf58177f62faf26d3fb0
   {reporter} ---
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 
@@ -315,9 +329,10 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} bd63bc3ddebe7eaecbba42d50b3e6d83
   {reporter} kernel
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 
@@ -335,15 +350,16 @@
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
   {inode} -
-  {parser} syslog
+  {parser} text/syslog_traditional
 
 [Additional attributes]:
+  {_event_values_hash} 15bcffe3f1e963d11abc48a2d35f67a2
   {reporter} kernel
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-11-13T06:02:03.235228+00:00
+  2023-03-27T03:47:03.767381+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -352,10 +368,11 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 374793
+  {inode} 762256
   {parser} filestat
 
 [Additional attributes]:
+  {_event_values_hash} f68bc0028f753dd4c25f3958244e0f96
   {attribute_names} ['security.selinux']
   {file_entry_type} file
   {file_size} 1509
@@ -369,7 +386,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-11-13T06:02:03.235228+00:00
+  2023-03-27T03:47:03.767381+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -378,10 +395,11 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 374793
+  {inode} 762256
   {parser} filestat
 
 [Additional attributes]:
+  {_event_values_hash} f68bc0028f753dd4c25f3958244e0f96
   {attribute_names} ['security.selinux']
   {file_entry_type} file
   {file_size} 1509
@@ -395,7 +413,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-11-13T06:02:05.654231+00:00
+  2023-03-27T03:47:05.830383+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -404,10 +422,11 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 374793
+  {inode} 762256
   {parser} filestat
 
 [Additional attributes]:
+  {_event_values_hash} f68bc0028f753dd4c25f3958244e0f96
   {attribute_names} ['security.selinux']
   {file_entry_type} file
   {file_size} 1509
@@ -421,7 +440,7 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2022-11-13T06:02:09.000234+00:00
+  2023-03-27T03:47:08.884386+00:00
 
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
@@ -430,10 +449,11 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 374793
+  {inode} 762256
   {parser} filestat
 
 [Additional attributes]:
+  {_event_values_hash} f68bc0028f753dd4c25f3958244e0f96
   {attribute_names} ['security.selinux']
   {file_entry_type} file
   {file_size} 1509
