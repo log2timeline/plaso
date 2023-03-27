@@ -12,7 +12,13 @@ from plaso.parsers import manager
 
 
 class SIMATICS7EventData(events.EventData):
-  """SIMATIC S7 event data."""
+  """SIMATIC S7 event data.
+
+  Attributes:
+    creation_time (dfdatetime.DateTimeValues): date and time the log entry
+      was created.
+    message (str): the message of the event.
+  """
 
   DATA_TYPE = 'wincc:simatic_s7:entry'
 
@@ -25,7 +31,19 @@ class SIMATICS7EventData(events.EventData):
 
 
 class WinCCSysLogEventData(events.EventData):
-  """WinCC Sys Log event data."""
+  """WinCC Sys Log event data.
+
+  Attributes:
+    log_identifier (int): identifier for this log file.
+    creation_time (dfdatetime.DateTimeValues): date and time the log entry
+      was created.
+    event_number (int): a number specifying the type of event.
+    unknown_int (int): an integer with unknown meaning.
+    unknown_str (str): a string with unknown meaning (mostly empty).
+    hostname (str): the hostname of the machine logging the event.
+    source (str): which device generated the event.
+    message (str): the content of the log's message.
+  """
 
   DATA_TYPE = 'wincc:sys_log:entry'
 
@@ -33,7 +51,7 @@ class WinCCSysLogEventData(events.EventData):
     """Initializes event data."""
     super(WinCCSysLogEventData, self).__init__(data_type=self.DATA_TYPE)
 
-    self.log_id = None
+    self.log_identifier = None
     self.creation_time = None
     self.event_number = None
     self.unknown_int = None
@@ -65,9 +83,8 @@ class SIMATICLogParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the values cannot be parsed.
     """
-
-    nb_of_values = len(values)
-    if nb_of_values < 2:
+    number_of_values = len(values)
+    if number_of_values < 2:
       error_string = 'Expected at least two values on line {0:d}'.format(
           line_number)
       raise errors.WrongParser(error_string)
@@ -175,10 +192,10 @@ class WinCCSysLogParser(interface.FileObjectParser):
       WrongParser: when the values cannot be parsed.
     """
 
-    nb_of_values = len(values)
+    number_of_values = len(values)
     if len(values) < 10:
       error_string = 'invalid number of values : {0:d} in line: {1:d}'.format(
-          nb_of_values, line_number)
+          number_of_values, line_number)
 
       # On other lines, we might encounter times where the split() operation
       # produces more values.
@@ -190,20 +207,22 @@ class WinCCSysLogParser(interface.FileObjectParser):
     event_data = WinCCSysLogEventData()
 
     try:
-      log_id = int(values[0])
-      event_data.log_id = log_id
-    except ValueError as exc:
+      log_identifier = int(values[0])
+      event_data.log_identifier = log_identifier
+    except ValueError as exception:
       error_string = (
           'Type of first value ({0!s}) should be an int in line: {1:d}').format(
               values[0], line_number)
-      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+      self._ParseValuesFail(
+          parser_mediator, first_line, exception, error_string)
 
     try:
       date_string = values[1]
       time_string = values[2]
-      day_of_month, month, year = [int(elem) for elem in date_string.split('.')]
+      day_of_month, month, year = [
+          int(element) for element in date_string.split('.')]
       hours, minutes, seconds, milliseconds = [
-          int(elem) for elem in time_string.split(':')]
+          int(element) for element in time_string.split(':')]
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, milliseconds)
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
@@ -223,19 +242,21 @@ class WinCCSysLogParser(interface.FileObjectParser):
 
     try:
       event_data.event_number = int(values[3])
-    except ValueError as exc:
+    except ValueError as exception:
       error_string = (
           'Type of event_number value ({0!s}) should be an int in line:'
           '{1:d}').format(values[3], line_number)
-      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+      self._ParseValuesFail(
+          parser_mediator, first_line, exception, error_string)
 
     try:
       event_data.unknown_int = int(values[4])
-    except ValueError as exc:
+    except ValueError as exception:
       error_string = (
           'Type of 5th value ({0!s}) should be an int in line:'
           '{1:d}').format(values[4], line_number)
-      self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+      self._ParseValuesFail(
+          parser_mediator, first_line, exception, error_string)
 
     # This seems to always be empty, however, we don't want to stop parsing if
     # is not in future data.
@@ -252,12 +273,14 @@ class WinCCSysLogParser(interface.FileObjectParser):
         error_string = (
             'Hostname ({0!s}) needs to be at least 1 character on line:'
             '{1:d}').format(hostname, line_number)
-        self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+        self._ParseValuesFail(
+            parser_mediator, first_line, exception, error_string)
       if len(hostname) > 16:
         error_string = (
             'Hostname ({0!s}) can\'t be longer than 15 characters on line:'
             '{1:d}').format(hostname, line_number)
-        self._ParseValuesFail(parser_mediator, first_line, exc, error_string)
+        self._ParseValuesFail(
+            parser_mediator, first_line, exception, error_string)
       disallowed_characters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
       for character in disallowed_characters:
         if character in hostname:
@@ -265,7 +288,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
               'Hostname ({0!s}) can\'t contain the character {1:s} on line'
               '{2:d}').format(hostname, character, line_number)
           self._ParseValuesFail(
-              parser_mediator, first_line, exc, error_string)
+              parser_mediator, first_line, exception, error_string)
 
     event_data.hostname = hostname
 
@@ -337,5 +360,4 @@ class WinCCSysLogParser(interface.FileObjectParser):
         break
 
 
-manager.ParsersManager.RegisterParser(WinCCSysLogParser)
-manager.ParsersManager.RegisterParser(SIMATICLogParser)
+manager.ParsersManager.RegisterParsers([WinCCSysLogParser, SIMATICLogParser])
