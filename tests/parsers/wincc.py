@@ -60,7 +60,7 @@ class WinCCSyslogTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'data_type': 'wincc:sys_log:entry',
-        'log_id': 2303,
+        'log_identifier': 2303,
         'creation_time': '2019-05-27T10:10:04.712',
         'event_number': 1012301,
         'unknown_int': 4,
