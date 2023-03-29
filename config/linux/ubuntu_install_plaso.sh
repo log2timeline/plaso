@@ -16,6 +16,7 @@ export DEBIAN_FRONTEND=noninteractive
 # Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
 PYTHON_DEPENDENCIES="libbde-python3
+                     libcaes-python3
                      libcreg-python3
                      libesedb-python3
                      libevt-python3
@@ -93,6 +94,8 @@ DEVELOPMENT_DEPENDENCIES="pylint
 # Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-dbg
                     libbde-python3-dbg
+                    libcaes-dbg
+                    libcaes-python3-dbg
                     libcreg-dbg
                     libcreg-python3-dbg
                     libesedb-dbg

@@ -307,6 +307,19 @@ short_source: 'LOG'
 source: 'Program Compatibility Assistant (PCA) Log'
 ---
 type: 'conditional'
+data_type: 'windows:onedrive:log'
+message:
+- 'Code filename: {code_filename}'
+- 'Code function name: {code_function_name}'
+- 'Decoded parameters: {decoded_parameters}'
+- 'Raw Parameters: {raw_parameters}'
+short_message:
+- 'Code function name: {code_function_name}'
+- 'Decoded parameters: {decoded_parameters}'
+short_source: 'LOG'
+source: 'OneDrive Log file'
+---
+type: 'conditional'
 data_type: 'windows:prefetch:execution'
 custom_helpers:
 - identifier: 'windows_prefetch_path_hints'
