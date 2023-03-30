@@ -37,9 +37,9 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersappdata')
-    self.assertIsNone(environment_variable)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
@@ -55,7 +55,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
         case_sensitive=False, name='allusersprofile',
         value='C:\\Documents and Settings\\All Users')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -63,9 +63,16 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersappdata')
+    # The %AllUsersAppData% environment variable is derived from
+    # the %AllUsersProfile% environment variable.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'allusersappdata')
     self.assertEqual(
         environment_variable.value,
         'C:\\Documents and Settings\\All Users\\Application Data')
@@ -84,7 +91,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
         case_sensitive=False, name='programdata',
         value='%SystemDrive%\\ProgramData')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -92,9 +99,16 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersappdata')
+    # The %AllUsersAppData% environment variable is derived from
+    # the %ProgramData% environment variable.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'allusersappdata')
     self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
 
 
@@ -110,16 +124,16 @@ class WindowsAllUsersProfileEnvironmentVariablePluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsAllUsersProfileEnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'AllUsersProfile')
-    self.assertIsNone(environment_variable)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
 
 class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
@@ -142,9 +156,9 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersprofile')
-    self.assertIsNone(environment_variable)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
@@ -160,7 +174,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
         case_sensitive=False, name='allusersprofile',
         value='C:\\Documents and Settings\\All Users')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -168,11 +182,11 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersprofile')
-    self.assertIsNotNone(environment_variable)
-    self.assertEqual(
-        environment_variable.value, 'C:\\Documents and Settings\\All Users')
+    # The %AllUsersProfile% environment variable is already set in
+    # the knowledge base and should not be created.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
   def testCollectWithProgramData(self):
     """Tests the Collect function with the %ProgramData% variable."""
@@ -188,7 +202,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
         case_sensitive=False, name='programdata',
         value='%SystemDrive%\\ProgramData')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -196,9 +210,16 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'allusersprofile')
+    # The %AllUsersProfile% environment variable is derived from
+    # the %ProgramData% environment variable.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'allusersprofile')
     self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
 
 
@@ -395,16 +416,21 @@ class WindowsProgramDataEnvironmentVariablePluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsProgramDataEnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'ProgramData')
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'programdata')
     self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
 
 
@@ -428,9 +454,9 @@ class WindowsProgramDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'programdata')
-    self.assertIsNone(environment_variable)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
   def testCollectWithAllUsersProfile(self):
     """Tests the Collect function with the %AllUsersProfile% variable."""
@@ -446,7 +472,7 @@ class WindowsProgramDataKnowledgeBasePluginTest(
         case_sensitive=False, name='allusersprofile',
         value='C:\\Documents and Settings\\All Users')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -454,9 +480,16 @@ class WindowsProgramDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'programdata')
+    # The %ProgramData% environment variable is derived from
+    # the %AllUsersProfile% environment variable.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'programdata')
     self.assertEqual(
         environment_variable.value, 'C:\\Documents and Settings\\All Users')
 
@@ -474,7 +507,7 @@ class WindowsProgramDataKnowledgeBasePluginTest(
         case_sensitive=False, name='programdata',
         value='%SystemDrive%\\ProgramData')
 
-    test_mediator.knowledge_base.AddEnvironmentVariable(environment_variable)
+    test_knowledge_base.AddEnvironmentVariable(environment_variable)
 
     plugin.Collect(test_mediator)
 
@@ -482,10 +515,11 @@ class WindowsProgramDataKnowledgeBasePluginTest(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'programdata')
-    self.assertIsNotNone(environment_variable)
-    self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
+    # The %ProgramData% environment variable is already set in
+    # the knowledge base and should not be created.
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
 
 class WindowsProgramFilesEnvironmentVariablePluginTest(
@@ -500,16 +534,21 @@ class WindowsProgramFilesEnvironmentVariablePluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsProgramFilesEnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'ProgramFiles')
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'programfiles')
     self.assertEqual(environment_variable.value, 'C:\\Program Files')
 
 
@@ -525,18 +564,18 @@ class WindowsProgramFilesX86EnvironmentVariablePluginTest(
     storage_writer = self._CreateTestStorageWriter()
 
     plugin = windows.WindowsProgramFilesX86EnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
         storage_writer, plugin)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'ProgramFilesX86')
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
-    self.assertIsNone(environment_variable)
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 0)
 
 
 class WindowsSystemRootEnvironmentVariablePluginTest(
@@ -554,13 +593,23 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
     plugin = windows.WindowsSystemRootEnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'SystemRoot')
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'systemroot')
     self.assertEqual(environment_variable.value, '\\Windows')
 
 
@@ -709,13 +758,23 @@ class WindowsWinDirEnvironmentVariablePluginTest(
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
+    storage_writer = self._CreateTestStorageWriter()
     plugin = windows.WindowsWinDirEnvironmentVariablePlugin()
-    test_mediator = self._RunPreprocessorPluginOnFileSystem(
-        file_system_builder.file_system, mount_point, None, plugin)
+    self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
 
-    environment_variable = test_mediator.knowledge_base.GetEnvironmentVariable(
-        'WinDir')
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'environment_variable')
+    self.assertEqual(number_of_artifacts, 1)
+
+    environment_variable = storage_writer.GetAttributeContainerByIndex(
+        'environment_variable', 0)
     self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.name, 'windir')
     self.assertEqual(environment_variable.value, '\\Windows')
 
 
