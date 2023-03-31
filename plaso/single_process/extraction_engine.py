@@ -304,6 +304,15 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       ParserMediator: parser mediator.
     """
+    if knowledge_base:
+      preferred_codepage = knowledge_base.codepage
+      preferred_language = knowledge_base.language
+      preferred_time_zone = knowledge_base.timezone.zone
+    else:
+      preferred_codepage = processing_configuration.preferred_codepage
+      preferred_language = processing_configuration.preferred_language
+      preferred_time_zone = processing_configuration.preferred_time_zone
+
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base,
         collection_filters_helper=self.collection_filters_helper,
@@ -311,12 +320,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
     parser_mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
-    parser_mediator.SetPreferredCodepage(
-        processing_configuration.preferred_codepage)
-    parser_mediator.SetPreferredLanguage(
-        processing_configuration.preferred_language)
-    parser_mediator.SetPreferredTimeZone(
-        processing_configuration.preferred_time_zone)
+    parser_mediator.SetPreferredCodepage(preferred_codepage)
+    parser_mediator.SetPreferredLanguage(preferred_language)
+    parser_mediator.SetPreferredTimeZone(preferred_time_zone)
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
 

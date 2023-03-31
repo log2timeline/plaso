@@ -101,7 +101,6 @@ class PECOFFTest(test_lib.ParserTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     knowledge_base_object = self._CreateKnowledgeBase()
-
     parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
 
     test_event_provider = artifacts.WindowsEventLogMessageFileArtifact()

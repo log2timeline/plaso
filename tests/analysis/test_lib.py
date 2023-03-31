@@ -134,6 +134,11 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """
     parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
 
+    if knowledge_base_object:
+      parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
+      parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
+      parser_mediator.SetPreferredTimeZone(knowledge_base_object.timezone.zone)
+
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
     parser_mediator.SetStorageWriter(storage_writer)

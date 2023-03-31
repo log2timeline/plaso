@@ -39,12 +39,15 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
       ParserMediator: parser mediator.
     """
     knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values,
-        time_zone_string=time_zone_string)
+        knowledge_base_values=knowledge_base_values)
 
     parser_mediator = parsers_mediator.ParserMediator(
         knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
+
+    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
+    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
+    parser_mediator.SetPreferredTimeZone(time_zone_string)
     parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:

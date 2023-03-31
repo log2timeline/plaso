@@ -45,6 +45,12 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
       ParserMediator: parser mediator.
     """
     parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
+
+    if knowledge_base_object:
+      parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
+      parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
+      parser_mediator.SetPreferredTimeZone(knowledge_base_object.timezone.zone)
+
     parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:
