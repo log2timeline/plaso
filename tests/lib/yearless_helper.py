@@ -64,8 +64,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
   def testSetEstimatedYear(self):
     """Tests the _SetEstimatedYear function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object)
+    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
 
     test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(

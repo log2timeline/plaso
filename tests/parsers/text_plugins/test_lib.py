@@ -34,12 +34,13 @@ class TextPluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    # TODO: move knowledge base time_zone_string into knowledge_base_values.
     knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values,
-        time_zone_string=time_zone_string)
+        knowledge_base_values=knowledge_base_values)
 
     parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
+    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
+    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
+    parser_mediator.SetPreferredTimeZone(time_zone_string)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

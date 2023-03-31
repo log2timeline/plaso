@@ -33,6 +33,8 @@ class ParserMediator(object):
         parser plugin.
   """
 
+  _DEFAULT_CODE_PAGE = 'cp1252'
+
   _DEFAULT_LANGUAGE_TAG = 'en-US'
 
   # LCID 0x0409 is en-US.
@@ -64,10 +66,10 @@ class ParserMediator(object):
     self._file_entry = None
     self._format_checks_cpu_time_profiler = None
     self._knowledge_base = knowledge_base
-    self._language_tag = self._DEFAULT_LANGUAGE_TAG
+    self._language_tag = None
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
-    self._lcid = self._DEFAULT_LCID
+    self._lcid = None
     self._number_of_event_data = 0
     self._number_of_event_sources = 0
     self._number_of_extraction_warnings = 0
@@ -95,9 +97,7 @@ class ParserMediator(object):
   @property
   def codepage(self):
     """str: preferred codepage in lower case."""
-    if not self._preferred_codepage:
-      self._preferred_codepage = self._knowledge_base.codepage.lower()
-    return self._preferred_codepage
+    return self._preferred_codepage or self._DEFAULT_CODE_PAGE
 
   @property
   def extract_winevt_resources(self):
@@ -107,12 +107,7 @@ class ParserMediator(object):
   @property
   def language(self):
     """str: language tag in lower case."""
-    if not self._language_tag:
-      language_tag = (
-          self._knowledge_base.language.lower() or self._DEFAULT_LANGUAGE_TAG)
-      self._language_tag = language_tag.lower()
-
-    return self._language_tag
+    return self._language_tag or self._DEFAULT_LANGUAGE_TAG
 
   @property
   def number_of_produced_event_data(self):
@@ -142,10 +137,7 @@ class ParserMediator(object):
   @property
   def timezone(self):
     """datetime.tzinfo: timezone."""
-    if not self._time_zone:
-      self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
-
-    return self._time_zone
+    return self._time_zone or self._DEFAULT_TIME_ZONE
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -584,6 +576,8 @@ class ParserMediator(object):
     Args:
       codepage (str): codepage.
     """
+    if codepage:
+      codepage = codepage.lower()
     self._preferred_codepage = codepage
 
   def SetPreferredLanguage(self, language_tag):
@@ -599,15 +593,13 @@ class ParserMediator(object):
           be determined that corresponds with the language tag.
     """
     lcid = None
-    if language_tag is not None:
-      if not isinstance(language_tag, str):
-        raise ValueError('Language tag: {0!s} is not a string.'.format(
-            language_tag))
-
+    if language_tag:
       lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(language_tag)
       if not lcid:
         raise ValueError('No LCID found for language tag: {0:s}.'.format(
             language_tag))
+
+      language_tag = language_tag.lower()
 
     self._language_tag = language_tag
     self._lcid = lcid
