@@ -25,7 +25,6 @@ class SIMATICS7EventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SIMATICS7EventData, self).__init__(data_type=self.DATA_TYPE)
-
     self.creation_time = None
     self.message = None
 
