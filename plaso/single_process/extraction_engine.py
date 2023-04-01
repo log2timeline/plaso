@@ -290,13 +290,10 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  def _CreateParserMediator(
-      self, knowledge_base, resolver_context, processing_configuration):
+  def _CreateParserMediator(self, resolver_context, processing_configuration):
     """Creates a parser mediator.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base which contains
-          information from the source data needed for parsing.
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
@@ -305,26 +302,20 @@ class SingleProcessEngine(engine.BaseEngine):
       ParserMediator: parser mediator.
     """
     environment_variables = None
-    if knowledge_base:
-      environment_variables = knowledge_base.GetEnvironmentVariables()
+    if self.knowledge_base:
+      environment_variables = self.knowledge_base.GetEnvironmentVariables()
 
-    preferred_codepage = None
-    if knowledge_base:
-      preferred_codepage = knowledge_base.codepage
-    if not preferred_codepage:
-      preferred_codepage = processing_configuration.preferred_codepage
+    preferred_codepage = processing_configuration.preferred_codepage
+    if not preferred_codepage and self.knowledge_base:
+      preferred_codepage = self.knowledge_base.codepage
 
-    preferred_language = None
-    if knowledge_base:
-      preferred_language = knowledge_base.language
-    if not preferred_language:
-      preferred_language = processing_configuration.preferred_language
+    preferred_language = processing_configuration.preferred_language
+    if not preferred_language and self.knowledge_base:
+      preferred_language = self.knowledge_base.language
 
-    preferred_time_zone = None
-    if knowledge_base:
-      preferred_time_zone = knowledge_base.timezone.zone
-    if not preferred_time_zone:
-      preferred_time_zone = processing_configuration.preferred_time_zone
+    preferred_time_zone = processing_configuration.preferred_time_zone
+    if not preferred_time_zone and self.knowledge_base:
+      preferred_time_zone = self.knowledge_base.timezone.zone
 
     parser_mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self.collection_filters_helper,
@@ -366,7 +357,7 @@ class SingleProcessEngine(engine.BaseEngine):
       BadConfigOption: if the preferred time zone is invalid.
     """
     parser_mediator = self._CreateParserMediator(
-        self.knowledge_base, resolver_context, processing_configuration)
+        resolver_context, processing_configuration)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(
@@ -377,13 +368,15 @@ class SingleProcessEngine(engine.BaseEngine):
         processing_configuration.extraction)
 
     self._event_data_timeliner = timeliner.EventDataTimeliner(
-        self.knowledge_base,
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year)
 
+    preferred_time_zone = processing_configuration.preferred_time_zone
+    if not preferred_time_zone and self.knowledge_base:
+      preferred_time_zone = self.knowledge_base.timezone.zone
+
     try:
-      self._event_data_timeliner.SetPreferredTimeZone(
-          processing_configuration.preferred_time_zone)
+      self._event_data_timeliner.SetPreferredTimeZone(preferred_time_zone)
     except ValueError as exception:
       raise errors.BadConfigOption(exception)
 
