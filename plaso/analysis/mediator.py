@@ -27,13 +27,10 @@ class AnalysisMediator(object):
     number_of_produced_event_tags (int): number of produced event tags.
   """
 
-  def __init__(self, session, knowledge_base, data_location=None):
+  def __init__(self, data_location=None):
     """Initializes an analysis plugin mediator.
 
     Args:
-      session (Session): session the analysis is part of.
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for analysis.
       data_location (Optional[str]): location of data files used during
           analysis.
     """
@@ -41,9 +38,7 @@ class AnalysisMediator(object):
     self._abort = False
     self._data_location = data_location
     self._event_filter_expression = None
-    self._knowledge_base = knowledge_base
     self._number_of_warnings = 0
-    self._session = session
     self._storage_writer = None
     self._username_by_user_directory = {}
 

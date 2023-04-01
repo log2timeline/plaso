@@ -3,7 +3,6 @@
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import events
-from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.engine import timeliner
 from plaso.parsers import interface as parsers_interface
@@ -29,7 +28,6 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
@@ -49,9 +47,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
       test_events.append((event, event_data, event_data_stream))
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    mediator = analysis_mediator.AnalysisMediator(
-        session, knowledge_base_object)
+    mediator = analysis_mediator.AnalysisMediator()
     mediator.SetStorageWriter(storage_writer)
 
     for event, event_data, event_data_stream in test_events:
@@ -77,15 +73,11 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    session = sessions.Session()
+    mediator = analysis_mediator.AnalysisMediator()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-
     storage_writer = self._ParseFile(
         path_segments, parser, knowledge_base_object)
-
-    mediator = analysis_mediator.AnalysisMediator(
-        session, knowledge_base_object)
     mediator.SetStorageWriter(storage_writer)
 
     for event in storage_writer.GetSortedEvents():
