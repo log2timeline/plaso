@@ -34,6 +34,7 @@ PYTHON_DEPENDENCIES = {
     'pefile': ('__version__', '2021.5.24', None, True),
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20220121', None, True),
+    'pycaes': ('get_version()', '20221127', None, True),
     'pycreg': ('get_version()', '20200725', None, True),
     'pyesedb': ('get_version()', '20220806', None, True),
     'pyevt': ('get_version()', '20191104', None, True),

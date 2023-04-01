@@ -9,6 +9,7 @@ set -e
 # Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
 PYTHON3_DEPENDENCIES="libbde-python3
+                      libcaes-python3
                       libcreg-python3
                       libesedb-python3
                       libevt-python3
@@ -84,6 +85,8 @@ DEVELOPMENT_DEPENDENCIES="pylint
 # Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
                     libbde-python3-debuginfo
+                    libcaes-debuginfo
+                    libcaes-python3-debuginfo
                     libcreg-debuginfo
                     libcreg-python3-debuginfo
                     libesedb-debuginfo

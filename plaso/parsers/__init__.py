@@ -25,6 +25,7 @@ from plaso.parsers import msiecf
 from plaso.parsers import networkminer
 from plaso.parsers import ntfs
 from plaso.parsers import olecf
+from plaso.parsers import onedrive
 from plaso.parsers import opera
 from plaso.parsers import pe
 from plaso.parsers import plist

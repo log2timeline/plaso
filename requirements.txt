@@ -15,6 +15,7 @@ dtfabric >= 20220219
 flor >= 1.1.3
 future >= 0.16.0
 libbde-python >= 20220121
+libcaes-python >= 20221127
 libcreg-python >= 20200725
 libesedb-python >= 20220806
 libevt-python >= 20191104

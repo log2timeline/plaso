@@ -1294,6 +1294,12 @@ attribute_mappings:
   description: 'Last Time Executed'
 place_holder_event: false
 ---
+data_type: 'windows:onedrive:log'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: false
+---
 data_type: 'windows:prefetch:execution'
 attribute_mappings:
 - name: 'last_run_time'
