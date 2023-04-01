@@ -35,18 +35,15 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
       'HKEY_LOCAL_MACHINE\\SECURITY',
       'HKEY_USERS'])
 
-  def __init__(self, artifacts_registry, knowledge_base):
+  def __init__(self, artifacts_registry):
     """Initializes an artifact definitions filters helper.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifact
           definitions registry.
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for filtering.
     """
     super(ArtifactDefinitionsFiltersHelper, self).__init__()
     self._artifacts_registry = artifacts_registry
-    self._knowledge_base = knowledge_base
 
     self.file_system_artifact_names = set()
     self.registry_artifact_names = set()

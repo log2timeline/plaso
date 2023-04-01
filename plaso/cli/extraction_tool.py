@@ -476,12 +476,14 @@ class ExtractionTool(
       self._extract_winevt_resources = False
 
     configuration = self._CreateExtractionProcessingConfiguration()
+    environment_variables = (
+        extraction_engine.knowledge_base.GetEnvironmentVariables())
 
     try:
       extraction_engine.BuildCollectionFilters(
           self._artifact_definitions_path, self._custom_artifacts_path,
-          extraction_engine.knowledge_base, self._artifact_filters,
-          self._filter_file)
+          environment_variables, artifact_filter_names=self._artifact_filters,
+          filter_file_path=self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
           'Unable to build collection filters with error: {0!s}'.format(
