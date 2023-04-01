@@ -12,6 +12,8 @@ from tests.parsers import test_lib
 class OneDriveTest(test_lib.ParserTestCase):
   """Tests the OneDrive log file parser."""
 
+  # pylint: disable=protected-access
+
   _AES_KEY = (
         b'\xe5\x06\x02\x00\xa3\x07\xbc\xa8'
         b'\x04\x77\xf7\xf1\x33\x10\x73\xb7'
@@ -72,7 +74,6 @@ class OneDriveTest(test_lib.ParserTestCase):
     """Tests the _ProcessRawParameters method with encrypted parameter data."""
     parser = onedrive.OneDriveLogFileParser()
 
-    # pylint: disable=protected-access
     extracted_strings = parser._ProcessRawParameters(
         self._RAW_PARAMETER_DATA_BYTES,
         aes_key=self._AES_KEY, obfuscated_string_map=None)
