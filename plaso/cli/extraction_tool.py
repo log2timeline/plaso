@@ -392,13 +392,12 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_GPT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_GPT)
 
-  def _PreprocessSources(self, extraction_engine, session, storage_writer):
+  def _PreprocessSources(self, extraction_engine, storage_writer):
     """Preprocesses the sources.
 
     Args:
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
-      session (Session): session in which the sources are processed.
       storage_writer (StorageWriter): storage writer.
     """
     logger.debug('Starting preprocessing.')
@@ -406,7 +405,7 @@ class ExtractionTool(
     try:
       extraction_engine.PreprocessSources(
           self._artifact_definitions_path, self._custom_artifacts_path,
-          self._source_path_specs, session, storage_writer,
+          self._source_path_specs, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -444,7 +443,7 @@ class ExtractionTool(
     # If the source is a directory or a storage media image
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine, session, storage_writer)
+      self._PreprocessSources(extraction_engine, storage_writer)
 
     self._expanded_parser_filter_expression = (
         self._GetExpandedParserFilterExpression(

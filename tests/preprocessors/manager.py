@@ -7,7 +7,6 @@ import unittest
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
-from plaso.engine import knowledge_base as knowledge_base_library
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
@@ -21,11 +20,10 @@ class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
 
 
   # pylint: disable=unused-argument
-  def ParseValueData(self, knowledge_base, value_data):
+  def ParseValueData(self, value_data):
     """Parses artifact value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): artifact value data.
     """
     return
@@ -45,13 +43,9 @@ class PreprocessPluginsManagerTest(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     registry.ReadFromDirectory(reader, artifacts_path)
 
-    knowledge_base_object = knowledge_base_library.KnowledgeBase()
-
-    _ = knowledge_base_object
-
     # TODO: implement.
     # manager.PreprocessPluginsManager.CollectFromFileSystem(
-    #     registry, knowledge_base_object, None, None)
+    #     registry, None, None)
 
   # TODO: add tests for CollectFromWindowsRegistry
   # TODO: add tests for GetNames

@@ -300,6 +300,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     """
 
 
+# TODO: rename class.
 class KnowledgeBasePreprocessorPlugin(object):
   """The knowledge base preprocessor plugin interface.
 

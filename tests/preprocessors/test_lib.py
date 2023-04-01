@@ -11,8 +11,6 @@ from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher
 
 from plaso.containers import artifacts
-from plaso.containers import sessions
-from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 from plaso.preprocessors import mediator
 from plaso.storage.fake import writer as fake_writer
@@ -60,10 +58,7 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
         plugin.ARTIFACT_DEFINITION_NAME)
     self.assertIsNotNone(artifact_definition)
 
-    session = sessions.Session()
-    test_knowledge_base = knowledge_base.KnowledgeBase()
-    test_mediator = mediator.PreprocessMediator(
-        session, storage_writer, test_knowledge_base)
+    test_mediator = mediator.PreprocessMediator(storage_writer)
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
@@ -97,10 +92,7 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
-    session = sessions.Session()
-    test_knowledge_base = knowledge_base.KnowledgeBase()
-    test_mediator = mediator.PreprocessMediator(
-        session, storage_writer, test_knowledge_base)
+    test_mediator = mediator.PreprocessMediator(storage_writer)
 
     searcher = registry_searcher.WinRegistrySearcher(win_registry)
 

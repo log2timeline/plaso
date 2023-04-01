@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The preprocess mediator."""
 
+import pytz
+
 from plaso.containers import warnings
 from plaso.helpers.windows import eventlog_providers
 from plaso.helpers.windows import time_zones
@@ -8,33 +10,37 @@ from plaso.preprocessors import logger
 
 
 class PreprocessMediator(object):
-  """Preprocess mediator."""
+  """Preprocess mediator.
 
-  def __init__(self, session, storage_writer, knowledge_base):
+  Attributes:
+    codepage (str): code page.
+    hostname (HostnameArtifact): hostname.
+    language (str): language.
+    time_zone (datetime.tzinfo): time zone.
+  """
+
+  def __init__(self, storage_writer):
     """Initializes a preprocess mediator.
 
     Args:
-      session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer, to store preprocessing
           information in.
-      knowledge_base (KnowledgeBase): knowledge base, to fill with
-          preprocessing information.
     """
     super(PreprocessMediator, self).__init__()
     self._available_time_zones = {}
+    self._environment_variables = {}
     self._file_entry = None
-    self._knowledge_base = knowledge_base
-    self._session = session
     self._storage_writer = storage_writer
     self._windows_eventlog_providers_helper = (
         eventlog_providers.WindowsEventLogProvidersHelper())
     self._windows_eventlog_providers = {}
     self._windows_eventlog_providers_by_identifier = {}
+    self._values = {}
 
-  @property
-  def knowledge_base(self):
-    """KnowledgeBase: knowledge base."""
-    return self._knowledge_base
+    self.codepage = None
+    self.hostname = None
+    self.language = None
+    self.time_zone = None
 
   def AddArtifact(self, artifact_attribute_container):
     """Adds a pre-processing artifact attribute container.
@@ -59,7 +65,13 @@ class PreprocessMediator(object):
     logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
         environment_variable_artifact.name,
         environment_variable_artifact.value))
-    self._knowledge_base.AddEnvironmentVariable(environment_variable_artifact)
+
+    name = environment_variable_artifact.name.upper()
+    if name in self._environment_variables:
+      raise KeyError('Environment variable: {0:s} already exists.'.format(
+          environment_variable_artifact.name))
+
+    self._environment_variables[name] = environment_variable_artifact
 
     if self._storage_writer:
       self._storage_writer.AddAttributeContainer(environment_variable_artifact)
@@ -70,9 +82,8 @@ class PreprocessMediator(object):
     Args:
       hostname_artifact (HostnameArtifact): hostname artifact.
     """
-    # TODO: change storage and knowledge base to handle more than 1 hostname.
-    if not self._knowledge_base.GetHostname():
-      self._knowledge_base.SetHostname(hostname_artifact)
+    # TODO: change storage and pre-processor to handle more than 1 hostname.
+    self.hostname = hostname_artifact
 
   def AddTimeZoneInformation(self, time_zone_artifact):
     """Adds a time zone defined by the operating system.
@@ -155,7 +166,36 @@ class PreprocessMediator(object):
       EnvironmentVariableArtifact: environment variable artifact or None
           if there was no value set for the given name.
     """
-    return self._knowledge_base.GetEnvironmentVariable(name)
+    name = name.upper()
+    return self._environment_variables.get(name, None)
+
+  def GetEnvironmentVariables(self):
+    """Retrieves the environment variables.
+
+    Returns:
+      list[EnvironmentVariableArtifact]: environment variable artifacts.
+    """
+    return self._environment_variables.values()
+
+  def GetValue(self, identifier):
+    """Retrieves a value by identifier.
+
+    Args:
+      identifier (str): case insensitive unique identifier for the value.
+
+    Returns:
+      object: value or None if not available.
+    """
+    identifier = identifier.lower()
+    return self._values.get(identifier, None)
+
+  def GetValues(self):
+    """Retrieves the values.
+
+    Returns:
+      list[tuple[str, object]]: values.
+    """
+    return self._values.items()
 
   def ProducePreprocessingWarning(self, plugin_name, message):
     """Produces a preprocessing warning.
@@ -185,7 +225,7 @@ class PreprocessMediator(object):
       ValueError: if the codepage is not supported.
     """
     logger.debug('setting codepage to: "{0:s}"'.format(codepage))
-    self._knowledge_base.SetCodepage(codepage)
+    self.codepage = codepage
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
@@ -204,7 +244,7 @@ class PreprocessMediator(object):
     Raises:
       ValueError: if the language is not supported.
     """
-    self._knowledge_base.SetLanguage(language)
+    self.language = language
 
   def SetTimeZone(self, time_zone):
     """Sets the time zone.
@@ -232,8 +272,10 @@ class PreprocessMediator(object):
     # Map a Windows time zone name to a Python time zone name.
     time_zone = time_zones.WINDOWS_TIME_ZONES.get(time_zone, time_zone)
 
-    # TODO: check if time zone is set in knowledge base.
-    self._knowledge_base.SetTimeZone(time_zone)
+    try:
+      self.time_zone = pytz.timezone(time_zone)
+    except pytz.UnknownTimeZoneError:
+      raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.
@@ -245,5 +287,6 @@ class PreprocessMediator(object):
     Raises:
       TypeError: if the identifier is not a string type.
     """
-    if not self._knowledge_base.GetValue(identifier):
-      self._knowledge_base.SetValue(identifier, value)
+    identifier = identifier.lower()
+    if identifier not in self._values:
+      self._values[identifier] = value
