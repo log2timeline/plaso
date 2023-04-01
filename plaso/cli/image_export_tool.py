@@ -318,10 +318,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
+    environment_variables = (
+        extraction_engine.knowledge_base.GetEnvironmentVariables())
+
     try:
       extraction_engine.BuildCollectionFilters(
           artifact_definitions_path, custom_artifacts_path,
-          extraction_engine.knowledge_base, artifact_filters, filter_file)
+          environment_variables, artifact_filter_names=artifact_filters,
+          filter_file_path=filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
           'Unable to build collection filters with error: {0!s}'.format(

@@ -281,13 +281,14 @@ class BaseEngine(object):
 
   def BuildCollectionFilters(
       self, artifact_definitions_path, custom_artifacts_path,
-      knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
+      environment_variables, artifact_filter_names=None, filter_file_path=None):
     """Builds collection filters from artifacts or filter file if available.
 
     Args:
       artifact_definitions_path (str): path to artifact definitions file.
       custom_artifacts_path (str): path to custom artifact definitions file.
-      knowledge_base_object (KnowledgeBase): knowledge base.
+      environment_variables (list[EnvironmentVariableArtifact]):
+          environment variables.
       artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
@@ -296,7 +297,6 @@ class BaseEngine(object):
     Raises:
       InvalidFilter: if no valid file system find specifications are built.
     """
-    environment_variables = knowledge_base_object.GetEnvironmentVariables()
     if artifact_filter_names:
       logger.debug(
           'building find specification based on artifacts: {0:s}'.format(
@@ -306,7 +306,7 @@ class BaseEngine(object):
           artifact_definitions_path, custom_artifacts_path)
       self.collection_filters_helper = (
           artifact_filters.ArtifactDefinitionsFiltersHelper(
-              artifacts_registry_object, knowledge_base_object))
+              artifacts_registry_object))
       self.collection_filters_helper.BuildFindSpecs(
           artifact_filter_names, environment_variables=environment_variables)
 

@@ -8,7 +8,6 @@ from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
 from plaso.engine import artifact_filters
-from plaso.engine import knowledge_base as knowledge_base_engine
 from plaso.parsers import winreg_parser
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
@@ -144,7 +143,6 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     parser = winreg_parser.WinRegistryParser()
     parser.EnablePlugins(parser.ALL_PLUGINS)
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     artifact_filter_names = ['TestRegistryKey', 'TestRegistryValue']
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
@@ -153,8 +151,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     registry.ReadFromDirectory(reader, artifacts_path)
 
     artifacts_filters_helper = (
-        artifact_filters.ArtifactDefinitionsFiltersHelper(
-            registry, knowledge_base))
+        artifact_filters.ArtifactDefinitionsFiltersHelper(registry))
 
     artifacts_filters_helper.BuildFindSpecs(artifact_filter_names)
 

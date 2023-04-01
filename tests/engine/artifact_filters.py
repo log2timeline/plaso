@@ -18,7 +18,6 @@ from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
-from plaso.engine import knowledge_base as knowledge_base_engine
 
 from tests import test_lib as shared_test_lib
 
@@ -28,12 +27,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def _CreateTestArtifactDefinitionsFiltersHelper(self, knowledge_base):
+  def _CreateTestArtifactDefinitionsFiltersHelper(self):
     """Creates an artifact definitions filters helper for testing.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for filtering.
 
     Returns:
       ArtifactDefinitionsFiltersHelper: artifact definitions filters helper.
@@ -50,8 +45,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     registry.ReadFromDirectory(reader, test_artifacts_path)
 
-    return artifact_filters.ArtifactDefinitionsFiltersHelper(
-        registry, knowledge_base)
+    return artifact_filters.ArtifactDefinitionsFiltersHelper(registry)
 
   def _CreateTestUserAccounts(self):
     """Creates user accounts for testing Windows paths.
@@ -82,11 +76,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
     self._SkipIfPathNotExists(test_file_path)
 
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
     artifact_filter_names = ['TestFiles', 'TestFiles2']
-    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
-        knowledge_base)
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
@@ -135,11 +126,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
     self._SkipIfPathNotExists(test_file_path)
 
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
     artifact_filter_names = ['TestGroupExtract']
-    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
-        knowledge_base)
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
@@ -172,10 +160,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   def testBuildFindSpecsWithRegistry(self):
     """Tests the BuildFindSpecs function on Windows Registry sources."""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
     artifact_filter_names = ['TestRegistry', 'TestRegistryValue']
-    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
-        knowledge_base)
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     test_filters_helper.BuildFindSpecs(artifact_filter_names)
 
@@ -205,9 +191,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   def testCheckKeyCompatibility(self):
     """Tests the CheckKeyCompatibility function"""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper(
-        knowledge_base)
+    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     # Compatible Key.
     key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'
@@ -224,9 +208,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   def testBuildFindSpecsFromFileSourcePath(self):
     """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper(
-        knowledge_base)
+    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     separator = '\\'
     test_user_accounts = []
