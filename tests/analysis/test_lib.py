@@ -18,22 +18,17 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
   def _AnalyzeEvents(
-      self, event_values_list, plugin, knowledge_base_values=None,
-      user_accounts=None):
+      self, event_values_list, plugin, user_accounts=None):
     """Analyzes events using the analysis plugin.
 
     Args:
       event_values_list (list[dict[str, object]]): list of event values.
       plugin (AnalysisPlugin): plugin.
-      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
       user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
 
     Returns:
       FakeStorageWriter: storage writer.
     """
-    knowledge_base_object = self._SetUpKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
@@ -54,6 +49,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
       test_events.append((event, event_data, event_data_stream))
 
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     mediator = analysis_mediator.AnalysisMediator(
         session, knowledge_base_object)
     mediator.SetStorageWriter(storage_writer)
@@ -66,15 +62,13 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     return storage_writer
 
-  def _ParseAndAnalyzeFile(
-      self, path_segments, parser, plugin, knowledge_base_values=None):
+  def _ParseAndAnalyzeFile(self, path_segments, parser, plugin):
     """Parses and analyzes a file using the parser and analysis plugin.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
       plugin (AnalysisPlugin): plugin.
-      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -85,8 +79,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """
     session = sessions.Session()
 
-    knowledge_base_object = self._SetUpKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     storage_writer = self._ParseFile(
         path_segments, parser, knowledge_base_object)
@@ -132,12 +125,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-
-    if knowledge_base_object:
-      parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-      parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-      parser_mediator.SetPreferredTimeZone(knowledge_base_object.timezone.zone)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
@@ -163,8 +151,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     return storage_writer
 
-  def _ProcessEventData(
-      self, knowledge_base_object, storage_writer):
+  def _ProcessEventData(self, knowledge_base_object, storage_writer):
     """Generate events from event data.
 
     Args:
@@ -179,19 +166,3 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       event_data_timeliner.ProcessEventData(storage_writer, event_data)
 
       event_data = storage_writer.GetNextWrittenEventData()
-
-  def _SetUpKnowledgeBase(self, knowledge_base_values=None):
-    """Sets up a knowledge base.
-
-    Args:
-      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
-
-    Returns:
-      KnowledgeBase: knowledge base.
-    """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
-
-    return knowledge_base_object

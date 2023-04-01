@@ -14,9 +14,7 @@ from tests.parsers import test_lib
 class JSONLPluginTestCase(test_lib.ParserTestCase):
   """JSON-L parser plugin test case."""
 
-  def _ParseJSONLFileWithPlugin(
-      self, path_segments, plugin, knowledge_base_values=None,
-      time_zone_string=None):
+  def _ParseJSONLFileWithPlugin(self, path_segments, plugin):
     """Parses a file as an JSON-L log file and returns an event generator.
 
     This method will first test if a JSON-L log file has the required format
@@ -26,9 +24,6 @@ class JSONLPluginTestCase(test_lib.ParserTestCase):
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin (JSONLPlugin): JSON-L log file plugin.
-      knowledge_base_values (Optional[dict[str, object]]): knowledge base
-          values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -37,13 +32,7 @@ class JSONLPluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

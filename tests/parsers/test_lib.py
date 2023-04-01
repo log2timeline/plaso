@@ -12,7 +12,6 @@ from dfvfs.resolver import context as dfvfs_context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
-from plaso.engine import knowledge_base
 from plaso.parsers import interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -42,34 +41,9 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return file_object
 
-  def _CreateKnowledgeBase(
-      self, knowledge_base_values=None, time_zone_string='UTC'):
-    """Creates a knowledge base.
-
-    Args:
-      knowledge_base_values (Optional[dict]): knowledge base values.
-      time_zone_string (Optional[str]): time zone.
-
-    Returns:
-      KnowledgeBase: knowledge base.
-    """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        if identifier == 'codepage':
-          knowledge_base_object.SetCodepage(value)
-        else:
-          knowledge_base_object.SetValue(identifier, value)
-
-    if time_zone_string:
-      knowledge_base_object.SetTimeZone(time_zone_string)
-
-    return knowledge_base_object
-
   def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None,
-      file_entry=None, knowledge_base_values=None, parser_chain=None,
-      time_zone_string='UTC'):
+      self, storage_writer, collection_filters_helper=None, file_entry=None,
+      parser_chain=None):
     """Creates a parser mediator.
 
     Args:
@@ -77,22 +51,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
-      knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       ParserMediator: parser mediator.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
     parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:
@@ -129,8 +94,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         events.EventData.CONTAINER_TYPE, event_data_identifier)
 
   def _ParseFile(
-      self, path_segments, parser, collection_filters_helper=None,
-      knowledge_base_values=None, time_zone_string='UTC'):
+      self, path_segments, parser, collection_filters_helper=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -138,8 +102,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser (BaseParser): parser.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      knowledge_base_values (Optional[dict]): knowledge base values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -154,13 +116,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return self._ParseFileByPathSpec(
-        path_spec, parser, collection_filters_helper=collection_filters_helper,
-        knowledge_base_values=knowledge_base_values,
-        time_zone_string=time_zone_string)
+        path_spec, parser, collection_filters_helper=collection_filters_helper)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, collection_filters_helper=None,
-      knowledge_base_values=None, time_zone_string=None):
+      self, path_spec, parser, collection_filters_helper=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -168,8 +127,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       parser (BaseParser): parser.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      knowledge_base_values (Optional[dict]): knowledge base values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -178,15 +135,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

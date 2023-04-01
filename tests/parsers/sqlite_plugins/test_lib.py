@@ -51,8 +51,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     return file_entry, database
 
   def _ParseDatabaseFileWithPlugin(
-      self, path_segments, plugin, knowledge_base_values=None,
-      time_zone_string=None, wal_path_segments=None):
+      self, path_segments, plugin, wal_path_segments=None):
     """Parses a file as a SQLite database with a specific plugin.
 
     This method will first test if a SQLite database contains the required
@@ -62,9 +61,6 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin (SQLitePlugin): SQLite database plugin.
-      knowledge_base_values (Optional[dict[str, object]]): knowledge base
-          values.
-      time_zone_string (Optional[str]): time zone.
       wal_path_segments (list[str]): path segments inside the test data
           directory of the SQLite WAL file.
 
@@ -75,13 +71,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

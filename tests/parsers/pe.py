@@ -100,8 +100,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     test_file_path = self._GetTestFilePath(['wrc-test-wevt_template.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    knowledge_base_object = self._CreateKnowledgeBase()
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     test_event_provider = artifacts.WindowsEventLogMessageFileArtifact()
     parser_mediator._extract_winevt_resources = True

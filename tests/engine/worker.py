@@ -12,7 +12,6 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import configurations
-from plaso.engine import knowledge_base
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -76,8 +75,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def _TestProcessPathSpec(
       self, storage_writer, path_spec, expected_event_data_counts,
-      archive_types_string=None, extraction_worker=None,
-      knowledge_base_values=None):
+      archive_types_string=None, extraction_worker=None):
     """Tests processing a path specification.
 
     Args:
@@ -89,23 +87,13 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
           which embedded file entries should be processed.
       extraction_worker (Optional[EventExtractionWorker]): worker to process
           the path specification. If None, a new worker will be created.
-      knowledge_base_values (Optional[dict]): knowledge base values.
     """
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in knowledge_base_values.items():
-        knowledge_base_object.SetValue(identifier, value)
-
     resolver_context = context.Context()
-
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(knowledge_base_object.timezone.zone)
     parser_mediator.SetStorageWriter(storage_writer)
 
     if not extraction_worker:
@@ -164,11 +152,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests the _AnalyzeDataStream function."""
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -206,11 +192,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests the _AnalyzeFileObject function."""
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -267,11 +251,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests the _ExtractContentFromDataStream function."""
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -303,11 +285,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests the _ExtractMetadataFromFileEntry function."""
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -339,11 +319,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests the _GetCompressedStreamTypes function."""
     session = sessions.Session()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     resolver_context = context.Context()
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object, resolver_context=resolver_context)
+        resolver_context=resolver_context)
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

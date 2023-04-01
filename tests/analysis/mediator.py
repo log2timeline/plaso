@@ -10,6 +10,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.analysis import mediator
 from plaso.containers import artifacts
 from plaso.containers import sessions
+from plaso.engine import knowledge_base
 from plaso.storage.fake import writer as fake_writer
 
 from tests.analysis import test_lib
@@ -22,9 +23,10 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     """Tests the GetDisplayNameForPathSpec function."""
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
-    knowledge_base = self._SetUpKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    analysis_mediator = mediator.AnalysisMediator(session, knowledge_base)
+    analysis_mediator = mediator.AnalysisMediator(
+        session, knowledge_base_object)
     analysis_mediator.SetStorageWriter(storage_writer)
 
     storage_writer.Open()
@@ -50,9 +52,10 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
 
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
-    knowledge_base = self._SetUpKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    analysis_mediator = mediator.AnalysisMediator(session, knowledge_base)
+    analysis_mediator = mediator.AnalysisMediator(
+        session, knowledge_base_object)
     analysis_mediator.SetStorageWriter(storage_writer)
 
     storage_writer.Open()
@@ -78,9 +81,10 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     """Tests the SignalAbort function."""
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter()
-    knowledge_base = self._SetUpKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    analysis_mediator = mediator.AnalysisMediator(session, knowledge_base)
+    analysis_mediator = mediator.AnalysisMediator(
+        session, knowledge_base_object)
     analysis_mediator.SetStorageWriter(storage_writer)
 
     storage_writer.Open()

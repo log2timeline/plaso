@@ -46,26 +46,26 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, knowledge_base, collection_filters_helper=None,
+      self, collection_filters_helper=None, environment_variables=None,
       resolver_context=None):
     """Initializes a parser mediator.
 
     Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
     self._cached_parser_chain = None
+    self._environment_variables = environment_variables or []
     self._event_data_stream = None
     self._event_data_stream_identifier = None
     self._extract_winevt_resources = True
     self._file_entry = None
     self._format_checks_cpu_time_profiler = None
-    self._knowledge_base = knowledge_base
     self._language_tag = None
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
@@ -201,8 +201,8 @@ class ParserMediator(object):
     Returns:
       str: expanded Windows path.
     """
-    environment_variables = self._knowledge_base.GetEnvironmentVariables()
-    return path_helper.PathHelper.ExpandWindowsPath(path, environment_variables)
+    return path_helper.PathHelper.ExpandWindowsPath(
+        path, self._environment_variables)
 
   def GetCurrentYear(self):
     """Retrieves current year.
@@ -319,13 +319,12 @@ class ParserMediator(object):
     if (self._windows_event_log_providers_per_path is None and
         self._storage_writer):
       self._windows_event_log_providers_per_path = {}
-      environment_variables = self._knowledge_base.GetEnvironmentVariables()
 
       for provider in self._storage_writer.GetAttributeContainers(
           'windows_eventlog_provider'):
         for windows_path in provider.event_message_files or []:
           path, filename = path_helper.PathHelper.GetWindowsSystemPath(
-              windows_path, environment_variables)
+              windows_path, self._environment_variables)
           path = path.lower()
           filename = filename.lower()
 

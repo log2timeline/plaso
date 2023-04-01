@@ -7,6 +7,7 @@ import unittest
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
+from plaso.engine import knowledge_base
 from plaso.engine import timeliner
 from plaso.storage.fake import writer as fake_writer
 
@@ -88,9 +89,9 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
   def testGetBaseYear(self):
     """Tests the _GetBaseYear function."""
-    knowledge_base = self._CreateKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     current_year = event_data_timeliner._GetCurrentYear()
 
@@ -127,18 +128,18 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
   def testGetCurrentYear(self):
     """Tests the _GetCurrentYear function."""
-    knowledge_base = self._CreateKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     current_year = event_data_timeliner._GetCurrentYear()
     self.assertIsNotNone(current_year)
 
   def testGetEvent(self):
     """Tests the _GetEvent function."""
-    knowledge_base = self._CreateKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     event_data = TestEventData1()
     event_data.value = 'MyValue'
@@ -215,11 +216,11 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
   def testProcessEventData(self):
     """Tests the ProcessEventData function."""
-    knowledge_base = self._CreateKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     # Test creating an event.
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     event_data = TestEventData1()
     event_data.access_time = (
@@ -237,7 +238,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     # Test creating a placeholder event.
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     event_data = TestEventData1()
     event_data.value = 'MyValue'
@@ -252,7 +253,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     # Test creating no placeholder event.
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.TEST_DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
 
     event_data = TestEventData2()
     event_data.value = 'MyValue'
@@ -267,9 +268,9 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
   def testSetPreferredTimeZone(self):
     """Tests the SetPreferredTimeZone function."""
-    knowledge_base = self._CreateKnowledgeBase()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base, data_location=shared_test_lib.DATA_PATH)
+        knowledge_base_object, data_location=shared_test_lib.DATA_PATH)
 
     event_data_timeliner.SetPreferredTimeZone('Europe/Amsterdam')
 
