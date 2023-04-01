@@ -104,17 +104,13 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     return win_registry
 
-  def _ParseKeyWithPlugin(
-      self, registry_key, plugin, file_entry=None, knowledge_base_values=None,
-      time_zone_string='UTC'):
+  def _ParseKeyWithPlugin(self, registry_key, plugin, file_entry=None):
     """Parses a key within a Windows Registry file using the plugin.
 
     Args:
       registry_key (dfwinreg.WinRegistryKey): Windows Registry Key.
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
       file_entry (Optional[dfvfs.FileEntry]): file entry.
-      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -125,13 +121,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     self.assertIsNotNone(registry_key)
 
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

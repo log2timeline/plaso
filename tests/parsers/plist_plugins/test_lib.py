@@ -12,9 +12,7 @@ from tests.parsers import test_lib
 class PlistPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a plist plugin."""
 
-  def _ParsePlistFileWithPlugin(
-      self, plugin, path_segments, plist_name,
-      knowledge_base_values=None):
+  def _ParsePlistFileWithPlugin(self, plugin, path_segments, plist_name):
     """Parses a file using the parser and plugin object.
 
     Args:
@@ -22,8 +20,6 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       path_segments (list[str]): the path segments inside the test data
           directory to the test file.
       plist_name (str): name of the plist to parse.
-      knowledge_base_values (Optional[dict[str, object]]): knowledge base
-          values.
 
     Returns:
       FakeStorageWriter: a storage writer.
@@ -38,13 +34,10 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     top_level_object = plistlib.load(file_object)
     self.assertIsNotNone(top_level_object)
 
-    return self._ParsePlistWithPlugin(
-        plugin, plist_name, top_level_object,
-        knowledge_base_values=knowledge_base_values)
+    return self._ParsePlistWithPlugin(plugin, plist_name, top_level_object)
 
   def _ParsePlistWithPlugin(
-      self, plugin, plist_name, top_level_object,
-      file_entry=None, knowledge_base_values=None, time_zone_string='UTC'):
+      self, plugin, plist_name, top_level_object, file_entry=None):
     """Parses a plist using the plugin object.
 
     Args:
@@ -52,20 +45,11 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       plist_name (str): name of the plist to parse.
       top_level_object (dict[str, object]): plist top-level key.
       file_entry (Optional[dfvfs.FileEntry]): file entry.
-      knowledge_base_values (Optional[dict[str, object]]): knowledge base
-          values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: a storage writer.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
+    parser_mediator = parsers_mediator.ParserMediator()
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

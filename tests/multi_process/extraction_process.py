@@ -9,6 +9,7 @@ from dfvfs.path import fake_path_spec
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.engine import configurations
+from plaso.engine import knowledge_base
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.multi_process import extraction_process
@@ -69,9 +70,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
 
       task_storage_writer = self._CreateStorageWriter()
-      knowledge_base = self._CreateKnowledgeBase()
       test_process._parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+          task_storage_writer)
       status_attributes = test_process._GetStatus()
 
       self.assertIsNotNone(status_attributes)
@@ -111,9 +111,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           None, None, None, configuration, name='TestWorker')
 
       task_storage_writer = self._CreateStorageWriter()
-      knowledge_base = self._CreateKnowledgeBase()
-      parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+      parser_mediator = self._CreateParserMediator(task_storage_writer)
 
       path_spec = fake_path_spec.FakePathSpec(location='/test/file')
 
@@ -128,20 +126,19 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
     session = sessions.Session()
-    knowledge_base = self._CreateKnowledgeBase()
-
     with shared_test_lib.TempDirectory() as temp_directory:
       configuration = configurations.ProcessingConfiguration()
       configuration.task_storage_path = temp_directory
       configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
+      knowledge_base_object = knowledge_base.KnowledgeBase()
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, knowledge_base, configuration, name='TestWorker')
+          None, None, knowledge_base_object, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
       task_storage_writer = self._CreateStorageWriter()
       test_process._parser_mediator = self._CreateParserMediator(
-          task_storage_writer, knowledge_base)
+          task_storage_writer)
 
       task = tasks.Task(session_identifier=session.identifier)
       test_process._ProcessTask(task)

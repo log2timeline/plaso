@@ -24,7 +24,7 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
 
   def _CreateParserMediator(
       self, storage_writer, collection_filters_helper=None,
-      file_entry=None, knowledge_base_values=None, time_zone_string='UTC'):
+      file_entry=None, time_zone_string='UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -32,21 +32,13 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
-      knowledge_base_values (Optional[dict]): knowledge base values.
       time_zone_string (Optional[str]): time zone.
 
     Returns:
       ParserMediator: parser mediator.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
     parser_mediator = parsers_mediator.ParserMediator(
-        knowledge_base_object,
         collection_filters_helper=collection_filters_helper)
-
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
     parser_mediator.SetPreferredTimeZone(time_zone_string)
     parser_mediator.SetStorageWriter(storage_writer)
 

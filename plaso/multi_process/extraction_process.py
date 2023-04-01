@@ -95,18 +95,31 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
+    environment_variables = None
+    if knowledge_base:
+      environment_variables = self._knowledge_base.GetEnvironmentVariables()
+
+    preferred_codepage = None
     if knowledge_base:
       preferred_codepage = knowledge_base.codepage
-      preferred_language = knowledge_base.language
-      preferred_time_zone = knowledge_base.timezone.zone
-    else:
+    if not preferred_codepage:
       preferred_codepage = processing_configuration.preferred_codepage
+
+    preferred_language = None
+    if knowledge_base:
+      preferred_language = knowledge_base.language
+    if not preferred_language:
       preferred_language = processing_configuration.preferred_language
+
+    preferred_time_zone = None
+    if knowledge_base:
+      preferred_time_zone = knowledge_base.timezone.zone
+    if not preferred_time_zone:
       preferred_time_zone = processing_configuration.preferred_time_zone
 
     mediator = parsers_mediator.ParserMediator(
-        knowledge_base,
         collection_filters_helper=self._collection_filters_helper,
+        environment_variables=environment_variables,
         resolver_context=resolver_context)
 
     mediator.SetExtractWinEvtResources(

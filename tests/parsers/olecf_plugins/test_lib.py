@@ -14,18 +14,13 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
 
   # pylint: disable=no-member
 
-  def _ParseOLECFFileWithPlugin(
-      self, path_segments, plugin, codepage='cp1252',
-      knowledge_base_values=None, time_zone_string=None):
+  def _ParseOLECFFileWithPlugin(self, path_segments, plugin, codepage='cp1252'):
     """Parses a file as an OLE compound file and returns an event generator.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin (OLECFPlugin): OLE CF plugin.
       codepage (Optional[str]): codepage.
-      knowledge_base_values (Optional[dict[str, object]]): knowledge base
-          values.
-      time_zone_string (Optional[str]): time zone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -34,13 +29,8 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    knowledge_base_object = self._CreateKnowledgeBase(
-        knowledge_base_values=knowledge_base_values)
-
-    parser_mediator = parsers_mediator.ParserMediator(knowledge_base_object)
-    parser_mediator.SetPreferredCodepage(knowledge_base_object.codepage)
-    parser_mediator.SetPreferredLanguage(knowledge_base_object.language)
-    parser_mediator.SetPreferredTimeZone(time_zone_string)
+    parser_mediator = parsers_mediator.ParserMediator()
+    parser_mediator.SetPreferredCodepage(codepage)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
