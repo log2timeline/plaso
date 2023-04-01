@@ -4,8 +4,6 @@
 from plaso.analysis import mediator as analysis_mediator
 from plaso.analysis import tagging
 from plaso.containers import events
-from plaso.containers import sessions
-from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.storage.fake import writer as fake_writer
 
@@ -115,8 +113,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     tag_file_path = self._GetDataFilePath([self._TAG_FILE])
     self._SkipIfPathNotExists(tag_file_path)
 
-    session = sessions.Session()
-
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
@@ -131,10 +127,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     storage_writer.AddAttributeContainer(event)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    mediator = analysis_mediator.AnalysisMediator()
 
-    mediator = analysis_mediator.AnalysisMediator(
-        session, knowledge_base_object)
     mediator.SetStorageWriter(storage_writer)
 
     plugin = tagging.TaggingAnalysisPlugin()
