@@ -7,7 +7,6 @@ import os
 import unittest
 
 from plaso.engine import configurations
-from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.multi_process import output_engine
 from plaso.output import dynamic
@@ -251,36 +250,12 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     storage_file.Close()
 
-  def _ReadSystemConfiguration(self, path, knowledge_base_object):
-    """Reads system configuration.
-
-    The system configuration, contains information about various system
-    specific configuration data, for example the user accounts.
-
-    Args:
-      path (str): path.
-      knowledge_base_object (KnowledgeBase): is used to store the system
-          configuration.
-    """
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        path)
-
-    for session_index, session in enumerate(storage_reader.GetSessions()):
-      knowledge_base_object.SetActiveSession(session.identifier)
-
-      system_configuration = storage_reader.GetAttributeContainerByIndex(
-          'system_configuration', session_index)
-      knowledge_base_object.ReadSystemConfigurationArtifact(
-          system_configuration)
-
   # TODO: add test for _ExportEvent.
 
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
     output_mediator_object.ReadMessageFormattersFromDirectory(
@@ -293,17 +268,9 @@ class OutputAndFormattingMultiProcessEngineTest(
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
-      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      for session_index, session in enumerate(storage_reader.GetSessions()):
-        knowledge_base_object.SetActiveSession(session.identifier)
-
-        system_configuration = storage_reader.GetAttributeContainerByIndex(
-            'system_configuration', session_index)
-        knowledge_base_object.ReadSystemConfigurationArtifact(
-            system_configuration)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -313,10 +280,8 @@ class OutputAndFormattingMultiProcessEngineTest(
 
   def testInternalExportEventsDeduplicate(self):
     """Tests the _ExportEvents function with deduplication."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH)
+        data_location=shared_test_lib.TEST_DATA_PATH)
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
     output_mediator_object.ReadMessageFormattersFromDirectory(
@@ -329,17 +294,9 @@ class OutputAndFormattingMultiProcessEngineTest(
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
-      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
-      for session_index, session in enumerate(storage_reader.GetSessions()):
-        knowledge_base_object.SetActiveSession(session.identifier)
-
-        system_configuration = storage_reader.GetAttributeContainerByIndex(
-            'system_configuration', session_index)
-        knowledge_base_object.ReadSystemConfigurationArtifact(
-            system_configuration)
 
       test_engine._ExportEvents(storage_reader, output_module)
 
@@ -352,8 +309,6 @@ class OutputAndFormattingMultiProcessEngineTest(
     """Tests the ExportEvents function."""
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
     self._SkipIfPathNotExists(test_file_path)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     test_file_object = io.StringIO()
 
@@ -369,8 +324,7 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
 
-    test_engine.ExportEvents(
-        knowledge_base_object, storage_reader, output_module, configuration)
+    test_engine.ExportEvents(storage_reader, output_module, configuration)
 
     output = test_file_object.getvalue()
     lines = output.split('\n')

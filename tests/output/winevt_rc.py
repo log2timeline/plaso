@@ -45,7 +45,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(database_path)
 
     test_helper = winevt_rc.WinevtResourcesHelper(
-        None, shared_test_lib.TEST_DATA_PATH, 0x00000409, {})
+        None, shared_test_lib.TEST_DATA_PATH, 0x00000409)
 
     expected_message_string = (
         'Your computer has detected that the IP address {0:s} for the Network '
@@ -63,7 +63,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(database_path)
 
     test_helper = winevt_rc.WinevtResourcesHelper(
-        None, shared_test_lib.TEST_DATA_PATH, 0x00000409, {})
+        None, shared_test_lib.TEST_DATA_PATH, 0x00000409)
 
     expected_message_string = (
         'Your computer has detected that the IP address {0:s} for the Network '

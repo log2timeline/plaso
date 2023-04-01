@@ -131,20 +131,16 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._events_status = processing_status.EventsStatus()
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
-    self._knowledge_base = None
     self._number_of_consumed_events = 0
     self._output_mediator = None
     self._processing_configuration = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
 
-  def _CreateOutputMediator(
-      self, knowledge_base_object, processing_configuration):
+  def _CreateOutputMediator(self, processing_configuration):
     """Creates an output mediator.
 
     Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
 
@@ -157,7 +153,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           read.
     """
     mediator = output_mediator.OutputMediator(
-        knowledge_base_object,
         data_location=processing_configuration.data_location,
         dynamic_time=processing_configuration.dynamic_time,
         preferred_encoding=processing_configuration.preferred_encoding)
@@ -431,14 +426,12 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       self._status_update_callback(self._processing_status)
 
   def ExportEvents(
-      self, knowledge_base_object, storage_reader, output_module,
-      processing_configuration, deduplicate_events=True, event_filter=None,
-      status_update_callback=None, time_slice=None, use_time_slicer=False):
+      self, storage_reader, output_module, processing_configuration,
+      deduplicate_events=True, event_filter=None, status_update_callback=None,
+      time_slice=None, use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
       processing_configuration (ProcessingConfiguration): processing
@@ -458,7 +451,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           read.
     """
     self._events_status = processing_status.EventsStatus()
-    self._knowledge_base = knowledge_base_object
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
@@ -473,8 +465,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     self._events_status.total_number_of_events = total_number_of_events
 
-    self._output_mediator = self._CreateOutputMediator(
-        knowledge_base_object, processing_configuration)
+    self._output_mediator = self._CreateOutputMediator(processing_configuration)
     self._output_mediator.SetStorageReader(storage_reader)
 
     output_module.WriteHeader(output_mediator)
@@ -505,7 +496,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     # Reset values.
     self._events_status = None
-    self._knowledge_base = None
     self._output_mediator = None
     self._processing_configuration = None
     self._status_update_callback = None

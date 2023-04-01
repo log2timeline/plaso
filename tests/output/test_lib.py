@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Output related functions and classes for testing."""
 
-from plaso.engine import knowledge_base
 from plaso.output import mediator
 
 from tests import test_lib as shared_test_lib
@@ -20,8 +19,6 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
     Returns:
       OutputMediator: output mediator.
     """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
     return mediator.OutputMediator(
-        knowledge_base_object, data_location=shared_test_lib.TEST_DATA_PATH,
+        data_location=shared_test_lib.TEST_DATA_PATH,
         dynamic_time=dynamic_time)

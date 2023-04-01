@@ -367,8 +367,8 @@ class PstealTool(
           multi_output_engine.OutputAndFormattingMultiProcessEngine())
 
       output_engine.ExportEvents(
-          self._knowledge_base, storage_reader, self._output_module,
-          configuration, deduplicate_events=self._deduplicate_events,
+          storage_reader, self._output_module, configuration,
+          deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 

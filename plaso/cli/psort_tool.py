@@ -128,6 +128,7 @@ class PsortTool(
     if self._preferred_language:
       preferred_language = self._preferred_language
     else:
+      # TODO: remove after refactor
       preferred_language = self._knowledge_base.language
 
     configuration = configurations.ProcessingConfiguration()
@@ -481,6 +482,7 @@ class PsortTool(
       raise RuntimeError('Unable to create storage reader.')
 
     try:
+      # TODO: remove after refactor
       for session_index, session in enumerate(storage_reader.GetSessions()):
         self._knowledge_base.SetActiveSession(session.identifier)
 
@@ -520,8 +522,8 @@ class PsortTool(
       output_engine.SetStatusUpdateInterval(self._status_view_interval)
 
       output_engine.ExportEvents(
-          self._knowledge_base, storage_reader, self._output_module,
-          configuration, deduplicate_events=self._deduplicate_events,
+          storage_reader, self._output_module, configuration,
+          deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)

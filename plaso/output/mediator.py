@@ -34,12 +34,10 @@ class OutputMediator(object):
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
   def __init__(
-      self, knowledge_base, data_location=None, dynamic_time=False,
-      preferred_encoding='utf-8'):
+      self, data_location=None, dynamic_time=False, preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base.
       data_location (Optional[str]): path of the formatter data files.
       dynamic_time (Optional[bool]): True if date and time values should be
           represented in their granularity or semantically.
@@ -47,7 +45,7 @@ class OutputMediator(object):
     """
     super(OutputMediator, self).__init__()
     self._dynamic_time = dynamic_time
-    self._knowledge_base = knowledge_base
+    self._hostname = None
     self._language_tag = self._DEFAULT_LANGUAGE_TAG
     self._lcid = self._DEFAULT_LCID
     self._message_formatters = {}
@@ -62,7 +60,7 @@ class OutputMediator(object):
   @property
   def dynamic_time(self):
     """bool: True if date and time values should be represented in their
-             granularity or semantically.
+        granularity or semantically.
     """
     return self._dynamic_time
 
@@ -78,6 +76,26 @@ class OutputMediator(object):
       self._time_zone = self._DEFAULT_TIME_ZONE
 
     return self._time_zone
+
+  def _ReadHostname(self, storage_reader):
+    """Reads the hostname from the storage.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+
+    Returns:
+      HostnameArtifact: hostname or None if not available.
+    """
+    if not storage_reader:
+      return None
+
+    system_configurations = list(storage_reader.GetAttributeContainers(
+        'system_configuration'))
+
+    if not system_configurations:
+      return None
+
+    return system_configurations[-1].hostname
 
   def _ReadMessageFormattersFile(self, path):
     """Reads a message formatters configuration file.
@@ -102,6 +120,29 @@ class OutputMediator(object):
       self._message_formatters[message_formatter.data_type] = message_formatter
       self._source_mappings[message_formatter.data_type] = (
           message_formatter.source_mapping)
+
+  def _ReadUserAccount(self, storage_reader, user_identifier):
+    """Reads a specific user account from the storage.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      user_identifier (str): user identifier (UID or SID).
+
+    Returns:
+      UserAccountArtifact: user account or None if not available.
+    """
+    if not storage_reader:
+      return None
+
+    # TODO: get username related to the source.
+    filter_expression = 'identifier == "{0:s}"'.format(user_identifier)
+    user_accounts = list(storage_reader.GetAttributeContainers(
+        'user_account', filter_expression=filter_expression))
+
+    if not user_accounts:
+      return None
+
+    return user_accounts[0]
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
@@ -128,8 +169,13 @@ class OutputMediator(object):
     if hostname:
       return hostname
 
-    hostname = self._knowledge_base.GetHostname()
-    return hostname or default_hostname
+    # TODO: get hostname related to the source.
+    if not self._hostname:
+      hostname_artifact = self._ReadHostname(self._storage_reader)
+      if hostname_artifact:
+        self._hostname = hostname_artifact.name
+
+    return self._hostname or default_hostname
 
   def GetMACBRepresentation(self, event, event_data):
     """Retrieves the MACB representation.
@@ -308,17 +354,14 @@ class OutputMediator(object):
 
     username = default_username
 
-    if self._storage_reader:
-      user_identifier = getattr(event_data, 'user_sid', None)
-      if (user_identifier and
-          user_identifier not in self._username_by_identifier):
-        if self._storage_reader.HasAttributeContainers('user_account'):
-          filter_expression = 'identifier == "{0:s}"'.format(user_identifier)
-          user_accounts = list(self._storage_reader.GetAttributeContainers(
-              'user_account', filter_expression=filter_expression))
-          if user_accounts:
-            username = user_accounts[0].username
-            self._username_by_identifier[user_identifier] = username
+    user_identifier = getattr(event_data, 'user_sid', None)
+    if (user_identifier and
+        user_identifier not in self._username_by_identifier):
+      user_account = self._ReadUserAccount(
+          self._storage_reader, user_identifier)
+      if user_account:
+        username = user_account.username
+        self._username_by_identifier[user_identifier] = username
 
     return username or default_username
 
@@ -330,14 +373,8 @@ class OutputMediator(object):
     """
     lcid = self._lcid or self._DEFAULT_LCID
 
-    if not self._storage_reader.HasAttributeContainers('environment_variable'):
-      environment_variables = []
-    else:
-      environment_variables = list(
-          self._storage_reader.GetAttributeContainers('environment_variable'))
-
     return winevt_rc.WinevtResourcesHelper(
-        self._storage_reader, self.data_location, lcid, environment_variables)
+        self._storage_reader, self.data_location, lcid)
 
   def ReadMessageFormattersFromDirectory(self, path):
     """Reads message formatters from a directory.

@@ -5,7 +5,6 @@ import collections
 import os
 import sqlite3
 
-from plaso.containers import artifacts
 from plaso.engine import path_helper
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
@@ -344,23 +343,20 @@ class WinevtResourcesHelper(object):
 
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
-  def __init__(
-      self, storage_reader, data_location, lcid, environment_variables):
+  def __init__(self, storage_reader, data_location, lcid):
     """Initializes Windows EventLog resources helper.
 
     Args:
       storage_reader (StorageReader): storage reader.
       data_location (str): data location of the winevt-rc database.
       lcid (int): Windows Language Code Identifier (LCID).
-      environment_variables (list[EnvironmentVariableArtifact]): environment
-          variable artifacts.
     """
     language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
         lcid or self.DEFAULT_LCID)
 
     super(WinevtResourcesHelper, self).__init__()
     self._data_location = data_location
-    self._environment_variables = environment_variables or None
+    self._environment_variables = None
     self._language_tag = language_tag.lower()
     self._lcid = lcid or self.DEFAULT_LCID
     self._message_string_cache = collections.OrderedDict()
@@ -485,10 +481,9 @@ class WinevtResourcesHelper(object):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    # TODO: read environment variables from storage reader.
-    _ = storage_reader
-    self._environment_variables = [artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
+    # TODO: get environment variables related to the source.
+    self._environment_variables = list(storage_reader.GetAttributeContainers(
+        'environment_variable'))
 
   def _ReadWindowsEventLogMessageFiles(self, storage_reader):
     """Reads the Windows EventLog message files.
@@ -496,6 +491,7 @@ class WinevtResourcesHelper(object):
     Args:
       storage_reader (StorageReader): storage reader.
     """
+    # TODO: get windows eventlog message files related to the source.
     self._windows_eventlog_message_files = {}
     if storage_reader.HasAttributeContainers('windows_eventlog_message_file'):
       for message_file in storage_reader.GetAttributeContainers(
@@ -626,6 +622,7 @@ class WinevtResourcesHelper(object):
     Args:
       storage_reader (StorageReader): storage reader.
     """
+    # TODO: get windows eventlog providers to the source.
     self._windows_eventlog_providers = {}
     if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
       for provider in storage_reader.GetAttributeContainers(
@@ -654,6 +651,7 @@ class WinevtResourcesHelper(object):
     message_string = self._GetCachedMessageString(
         provider_identifier, log_source, message_identifier, event_version)
     if not message_string:
+      # TODO: change this logic.
       if self._storage_reader and self._storage_reader.HasAttributeContainers(
           'windows_eventlog_provider'):
         message_string = self._ReadWindowsEventLogMessageString(

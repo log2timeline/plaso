@@ -109,18 +109,3 @@ class RedisStorageWriter(writer.StorageWriter):
     self._store.Open(
         redis_client=redis_client, session_identifier=session_identifier,
         task_identifier=task_identifier)
-
-  def WritePreprocessingInformation(self, knowledge_base):
-    """Writes preprocessing information.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
-
-    Raises:
-      IOError: always as the Redis store does not support preprocessing
-          information.
-      OSError: always as the Redis store does not support preprocessing
-          information.
-    """
-    raise IOError(
-        'Preprocessing information is not supported by the redis store.')
