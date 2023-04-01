@@ -16,7 +16,7 @@ class SIMATICS7EventData(events.EventData):
 
   Attributes:
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-      was created.
+        was created.
     message (str): the message of the event.
   """
 
@@ -36,7 +36,7 @@ class WinCCSysLogEventData(events.EventData):
   Attributes:
     log_identifier (int): identifier for this log file.
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-      was created.
+        was created.
     event_number (int): a number specifying the type of event.
     unknown_int (int): an integer with unknown meaning.
     unknown_str (str): a string with unknown meaning (mostly empty).
