@@ -4,6 +4,9 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
+
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import macos_wifi
 
 from tests.parsers.text_plugins import test_lib
@@ -11,6 +14,43 @@ from tests.parsers.text_plugins import test_lib
 
 class MacOSWiFiLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the MacOS MacOS Wi-Fi log (wifi.log) files text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat method."""
+    plugin = macos_wifi.MacOSWiFiLogTextPlugin()
+
+    # Check MacOS Wi-Fi log format.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Thu Nov 14 20:14:37.123 ***Starting Up***\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertTrue(result)
+
+    # Check turned over MacOS Wi-Fi log format.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Jan  2 00:10:15 test-macbookpro newsyslog[50498]: logfile turned '
+        b'over\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertTrue(result)
 
   def testProcess(self):
     """Tests the Process function."""
