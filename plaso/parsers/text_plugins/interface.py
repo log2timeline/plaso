@@ -357,7 +357,10 @@ class TextPlugin(plugins.BasePlugin):
       file_object.seek(0, os.SEEK_SET)
       self._current_offset = 0
 
-      encoding = self.ENCODING or parser_mediator.codepage
+      encoding = self.ENCODING
+      if not encoding:
+        encoding = parser_mediator.GetCodePage()
+
       text_reader = text_parser.EncodedTextReader(
           file_object, encoding=encoding, encoding_errors='text_parser_handler')
 

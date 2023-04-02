@@ -151,8 +151,10 @@ class WinLnkParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
       display_name (str): display name.
     """
+    code_page = parser_mediator.GetCodePage()
+
     lnk_file = pylnk.file()
-    lnk_file.set_ascii_codepage(parser_mediator.codepage)
+    lnk_file.set_ascii_codepage(code_page)
 
     try:
       lnk_file.open_file_object(file_object)
@@ -169,7 +171,7 @@ class WinLnkParser(interface.FileObjectParser):
       shell_items_parser = shell_items.ShellItemsParser(display_name)
       shell_items_parser.ParseByteStream(
           parser_mediator, lnk_file.link_target_identifier_data,
-          codepage=parser_mediator.codepage)
+          codepage=code_page)
 
       link_target = shell_items_parser.CopyToPath()
 

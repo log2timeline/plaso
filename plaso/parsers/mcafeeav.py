@@ -55,6 +55,8 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
       'date', 'time', 'status', 'username', 'filename',
       'trigger_location', 'rule', 'action']
 
+  _ENCODING = 'utf-8'
+
   _NUMBER_OF_COLUMNS = len(COLUMNS)
 
   def _CreateDateTime(self, date_string, time_string):

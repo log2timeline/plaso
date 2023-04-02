@@ -152,7 +152,9 @@ class TextLogParser(interface.FileObjectParser):
       if not plugin.VERIFICATION_LITERALS:
         self._non_sigscan_plugin_names.add(plugin_name)
       else:
-        encoding = plugin.ENCODING or parser_mediator.codepage
+        encoding = plugin.ENCODING
+        if not encoding:
+          encoding = parser_mediator.GetCodePage()
 
         for index, literal in enumerate(plugin.VERIFICATION_LITERALS):
           identifier = '{0:s}{1:d}'.format(plugin_name, index)
@@ -242,7 +244,7 @@ class TextLogParser(interface.FileObjectParser):
         break
 
       if encoding == 'default':
-        encoding = parser_mediator.codepage
+        encoding = parser_mediator.GetCodePage()
 
       text_reader = None
 

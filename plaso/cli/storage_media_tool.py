@@ -393,12 +393,12 @@ class StorageMediaTool(tools.CLITool):
     self._artifact_filters = None
     self._credentials = []
     self._credential_configurations = []
+    self._file_system_path_specs = []
     self._filter_file = None
     self._mediator = StorageMediaToolMediator(
         input_reader=input_reader, output_writer=output_writer)
     self._partitions = None
     self._source_path = None
-    self._source_path_specs = []
     self._source_type = None
     self._volumes = None
     self._vss_only = False
@@ -656,5 +656,5 @@ class StorageMediaTool(tools.CLITool):
 
     # pylint: disable=protected-access
     self._credential_configurations = volume_scanner._credential_configurations
-    self._source_path_specs = base_path_specs
+    self._file_system_path_specs = base_path_specs
     self._source_type = volume_scanner.source_type

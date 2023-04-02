@@ -52,7 +52,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, None, configuration, name='TestWorker')
+          None, None, None, configuration, [], name='TestWorker')
       self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
@@ -62,7 +62,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, None, configuration, name='TestWorker')
+          None, None, None, configuration, [], name='TestWorker')
       status_attributes = test_process._GetStatus()
 
       self.assertIsNotNone(status_attributes)
@@ -94,7 +94,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          input_task_queue, None, None, configuration, name='TestWorker')
+          input_task_queue, None, None, configuration, [], name='TestWorker')
 
       test_process.start()
 
@@ -108,7 +108,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, None, configuration, name='TestWorker')
+          None, None, None, configuration, [], name='TestWorker')
 
       task_storage_writer = self._CreateStorageWriter()
       parser_mediator = self._CreateParserMediator(task_storage_writer)
@@ -133,7 +133,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
       knowledge_base_object = knowledge_base.KnowledgeBase()
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, knowledge_base_object, configuration, name='TestWorker')
+          None, None, knowledge_base_object, configuration, [],
+          name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
       task_storage_writer = self._CreateStorageWriter()
@@ -154,7 +155,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, None, configuration, name='TestWorker')
+          None, None, None, configuration, [], name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
       test_process._StartProfiling(None)
@@ -169,7 +170,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = extraction_process.ExtractionWorkerProcess(
-          None, None, None, configuration, name='TestWorker')
+          None, None, None, configuration, [], name='TestWorker')
       test_process.SignalAbort()
 
 

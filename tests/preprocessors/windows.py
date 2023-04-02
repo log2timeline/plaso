@@ -238,8 +238,8 @@ class WindowsAvailableTimeZonesPluginTest(
     self.assertEqual(available_time_zone.name, 'AUS Central Standard Time')
 
 
-class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
-  """Tests for the Windows codepage plugin."""
+class WindowsCodePagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Windows code page plugin."""
 
   def testParseValueData(self):
     """Tests the _ParseValueData function."""
@@ -248,7 +248,7 @@ class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     storage_writer = self._CreateTestStorageWriter()
 
-    plugin = windows.WindowsCodepagePlugin()
+    plugin = windows.WindowsCodePagePlugin()
     test_mediator = self._RunPreprocessorPluginOnWindowsRegistryValueSystem(
         storage_writer, plugin)
 
@@ -256,7 +256,7 @@ class WindowsCodepagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    self.assertEqual(test_mediator.codepage, 'cp1252')
+    self.assertEqual(test_mediator.code_page, 'cp1252')
 
 
 class WindowsEventLogPublishersPluginTest(

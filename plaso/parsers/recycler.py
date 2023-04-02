@@ -179,16 +179,16 @@ class WinRecyclerInfo2Parser(
           'Unable to map record data at offset: 0x{0:08x} with error: '
           '{1!s}').format(record_offset, exception))
 
-    codepage = parser_mediator.codepage or 'ascii'
+    code_page = parser_mediator.GetCodePage()
 
     # The original filename can contain remnant data after the end-of-string
     # character.
     ascii_filename = record.original_filename.split(b'\x00')[0]
 
     try:
-      ascii_filename = ascii_filename.decode(codepage)
+      ascii_filename = ascii_filename.decode(code_page)
     except UnicodeDecodeError:
-      ascii_filename = ascii_filename.decode(codepage, errors='replace')
+      ascii_filename = ascii_filename.decode(code_page, errors='replace')
 
       parser_mediator.ProduceExtractionWarning(
           'unable to decode original filename.')

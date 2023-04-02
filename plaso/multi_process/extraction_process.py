@@ -23,7 +23,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
   def __init__(
       self, task_queue, collection_filters_helper, knowledge_base,
-      processing_configuration, **kwargs):
+      processing_configuration, system_configurations, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -37,6 +37,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           information from the source data needed for parsing.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(ExtractionWorkerProcess, self).__init__(
@@ -54,6 +56,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._task = None
     self._task_queue = task_queue
+    self._system_configurations = system_configurations
 
   def _CacheFileSystem(self, path_spec):
     """Caches a dfVFS file system object.
@@ -81,13 +84,16 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
-  def _CreateParserMediator(self, resolver_context, processing_configuration):
+  def _CreateParserMediator(
+      self, resolver_context, processing_configuration, system_configurations):
     """Creates a parser mediator.
 
     Args:
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
 
     Returns:
       ParserMediator: parser mediator.
@@ -96,28 +102,16 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._knowledge_base:
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
 
-    preferred_codepage = processing_configuration.preferred_codepage
-    if not preferred_codepage and self._knowledge_base:
-      preferred_codepage = self._knowledge_base.codepage
-
-    preferred_language = processing_configuration.preferred_language
-    if not preferred_language and self._knowledge_base:
-      preferred_language = self._knowledge_base.language
-
-    preferred_time_zone = processing_configuration.preferred_time_zone
-    if not preferred_time_zone and self._knowledge_base:
-      preferred_time_zone = self._knowledge_base.timezone.zone
-
     mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self._collection_filters_helper,
         environment_variables=environment_variables,
-        resolver_context=resolver_context)
+        resolver_context=resolver_context,
+        system_configurations=system_configurations)
 
     mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
-    mediator.SetPreferredCodepage(preferred_codepage)
-    mediator.SetPreferredLanguage(preferred_language)
-    mediator.SetPreferredTimeZone(preferred_time_zone)
+    mediator.SetPreferredCodepage(processing_configuration.preferred_codepage)
+    mediator.SetPreferredLanguage(processing_configuration.preferred_language)
     mediator.SetTemporaryDirectory(processing_configuration.temporary_directory)
 
     return mediator
@@ -191,7 +185,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           credential_configuration.credential_data)
 
     self._parser_mediator = self._CreateParserMediator(
-        self._resolver_context, self._processing_configuration)
+        self._resolver_context, self._processing_configuration,
+        self._system_configurations)
 
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with

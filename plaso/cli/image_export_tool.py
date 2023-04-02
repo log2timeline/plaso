@@ -315,7 +315,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     # If the source is a directory or a storage media image
     # run pre-processing.
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine)
+      system_configurations = self._PreprocessSource(extraction_engine)
+
+      # TODO: use system_configurations instead of knowledge base
+      _ = system_configurations
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
@@ -468,27 +471,33 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         specification_store, signature_identifiers)
     self._filter_collection.AddFilter(file_entry_filter)
 
-  def _PreprocessSources(self, extraction_engine):
-    """Preprocesses the sources.
+  def _PreprocessSource(self, extraction_engine):
+    """Preprocesses the source.
 
     Args:
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
+
+    Returns:
+      list[SystemConfigurationArtifact]: system configurations found in
+          the source.
     """
     logger.debug('Starting preprocessing.')
 
     try:
       # Setting storage writer to None here since we do not want to store
       # preprocessing information.
-      extraction_engine.PreprocessSources(
+      system_configurations = extraction_engine.PreprocessSource(
           self._artifact_definitions_path, self._custom_artifacts_path,
-          self._source_path_specs, None,
+          self._file_system_path_specs, None,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
       logger.error('Unable to preprocess with error: {0!s}'.format(exception))
 
     logger.debug('Preprocessing done.')
+
+    return system_configurations
 
   def _ReadSpecificationFile(self, path):
     """Reads the format specification file.
@@ -790,8 +799,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Prints the filter collection."""
     self._filter_collection.Print(self._output_writer)
 
-  def ProcessSources(self):
-    """Processes the sources.
+  def ProcessSource(self):
+    """Processes the source.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
@@ -809,7 +818,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       os.makedirs(self._destination_path)
 
     self._Extract(
-        self._source_path_specs, self._destination_path,
+        self._file_system_path_specs, self._destination_path,
         self._output_writer, self._artifact_filters, self._filter_file,
         self._artifact_definitions_path, self._custom_artifacts_path,
         skip_duplicates=self._skip_duplicates)

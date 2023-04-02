@@ -273,8 +273,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self.assertEqual(output, expected_output)
 
-  def testProcessSourcesWithImage(self):
-    """Tests the ProcessSources function on a single partition image."""
+  def testProcessSourceWithImage(self):
+    """Tests the ProcessSource function on a single partition image."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -291,7 +291,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_output = '\n'.join([
           'Export started.',
@@ -303,8 +303,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output, expected_output)
 
-  def testProcessSourcesExtractWithDateTimeFilter(self):
-    """Tests the ProcessSources function with a date time filter."""
+  def testProcessSourceExtractWithDateTimeFilter(self):
+    """Tests the ProcessSource function with a date time filter."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -325,7 +325,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
@@ -335,8 +335,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithExtensionsFilter(self):
-    """Tests the ProcessSources function with an extensions filter."""
+  def testProcessSourceExtractWithExtensionsFilter(self):
+    """Tests the ProcessSource function with an extensions filter."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -357,7 +357,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'passwords.txt'),
@@ -366,8 +366,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithNamesFilter(self):
-    """Tests the ProcessSources function with a names filter."""
+  def testProcessSourceExtractWithNamesFilter(self):
+    """Tests the ProcessSource function with a names filter."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -388,7 +388,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
@@ -399,8 +399,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithFilter(self):
-    """Tests the ProcessSources function with a filter file."""
+  def testProcessSourceExtractWithFilter(self):
+    """Tests the ProcessSource function with a filter file."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -425,7 +425,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'filter.txt'),
@@ -438,8 +438,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithArtifactsFilter(self):
-    """Tests the ProcessSources function with a artifacts filter file."""
+  def testProcessSourceExtractWithArtifactsFilter(self):
+    """Tests the ProcessSource function with a artifacts filter file."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -460,7 +460,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
@@ -472,8 +472,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithArtifactsGroupFilter(self):
-    """Tests the ProcessSources function with a group artifacts filter file."""
+  def testProcessSourceExtractWithArtifactsGroupFilter(self):
+    """Tests the ProcessSource function with a group artifacts filter file."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -494,7 +494,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'a_directory'),
@@ -507,8 +507,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  def testProcessSourcesExtractWithSignaturesFilter(self):
-    """Tests the ProcessSources function with a signatures filter."""
+  def testProcessSourceExtractWithSignaturesFilter(self):
+    """Tests the ProcessSource function with a signatures filter."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -529,7 +529,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
           os.path.join(temp_directory, 'logs'),
@@ -561,7 +561,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ProcessSource()
 
       expected_json_data = [{
           'sha256':

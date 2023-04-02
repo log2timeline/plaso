@@ -82,7 +82,7 @@ class WinEvtParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       record_index (int): event record index.
       evt_record (pyevt.record): event record.
       recovered (Optional[bool]): True if the record was recovered.
@@ -146,7 +146,7 @@ class WinEvtParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       record_index (int): event record index.
       evt_record (pyevt.record): event record.
       recovered (Optional[bool]): True if the record was recovered.
@@ -195,7 +195,7 @@ class WinEvtParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       evt_file (pyevt.file): Windows EventLog (EVT) file.
     """
     # To handle errors when parsing a Windows EventLog (EVT) file in the most
@@ -233,11 +233,13 @@ class WinEvtParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
     """
+    code_page = parser_mediator.GetCodePage()
+
     evt_file = pyevt.file()
-    evt_file.set_ascii_codepage(parser_mediator.codepage)
+    evt_file.set_ascii_codepage(code_page)
 
     try:
       evt_file.open_file_object(file_object)

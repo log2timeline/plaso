@@ -380,7 +380,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if message_table_string.flags & 0x01:
           string_encoding = 'utf-16-le'
         else:
-          string_encoding = parser_mediator.codepage
+          string_encoding = parser_mediator.GetCodePage()
 
         try:
           string = message_table_string.data.decode(string_encoding)
@@ -426,7 +426,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         not message_table_resource.directory.entries[0].directory):
       return
 
-    desired_language_tag = parser_mediator.language.lower()
+    desired_language_tag = parser_mediator.GetLanguageTag().lower()
 
     for entry in message_table_resource.directory.entries[0].directory.entries:
       language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
@@ -527,7 +527,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         not wevt_template_resource.directory.entries[0].directory):
       return
 
-    desired_language_tag = parser_mediator.language.lower()
+    desired_language_tag = parser_mediator.GetLanguageTag().lower()
 
     for entry in wevt_template_resource.directory.entries[0].directory.entries:
       language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(

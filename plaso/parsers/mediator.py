@@ -5,8 +5,6 @@ import collections
 import datetime
 import time
 
-import pytz
-
 from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import warnings
@@ -35,27 +33,27 @@ class ParserMediator(object):
 
   _DEFAULT_CODE_PAGE = 'cp1252'
 
-  _DEFAULT_LANGUAGE_TAG = 'en-US'
+  _DEFAULT_LANGUAGE_TAG = 'en-US'.lower()
 
   # LCID 0x0409 is en-US.
   _DEFAULT_LCID = 0x0409
-
-  _DEFAULT_TIME_ZONE = pytz.UTC
 
   _INT64_MIN = -1 << 63
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
       self, collection_filters_helper=None, environment_variables=None,
-      resolver_context=None):
+      resolver_context=None, system_configurations=None):
     """Initializes a parser mediator.
 
     Args:
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      environment_variables (list[EnvironmentVariableArtifact]): environment
-          variables.
+      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
+          environment variables.
       resolver_context (Optional[dfvfs.Context]): resolver context.
+      system_configurations (Optional[list[SystemConfigurationArtifact]]):
+          system configurations.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
@@ -77,12 +75,12 @@ class ParserMediator(object):
     self._parser_chain_components = []
     self._parsers_cpu_time_profiler = None
     self._parsers_memory_profiler = None
-    self._preferred_codepage = None
+    self._preferred_code_page = None
     self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = None
+    self._system_configurations = system_configurations or []
     self._temporary_directory = None
-    self._time_zone = None
     self._windows_event_log_providers_per_path = None
 
     self.collection_filters_helper = collection_filters_helper
@@ -95,19 +93,9 @@ class ParserMediator(object):
     return self._abort
 
   @property
-  def codepage(self):
-    """str: preferred codepage in lower case."""
-    return self._preferred_codepage or self._DEFAULT_CODE_PAGE
-
-  @property
   def extract_winevt_resources(self):
     """bool: extract Windows EventLog resources."""
     return self._extract_winevt_resources
-
-  @property
-  def language(self):
-    """str: language tag in lower case."""
-    return self._language_tag or self._DEFAULT_LANGUAGE_TAG
 
   @property
   def number_of_produced_event_data(self):
@@ -133,11 +121,6 @@ class ParserMediator(object):
   def temporary_directory(self):
     """str: path of the directory for temporary files."""
     return self._temporary_directory
-
-  @property
-  def timezone(self):
-    """datetime.tzinfo: timezone."""
-    return self._time_zone or self._DEFAULT_TIME_ZONE
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -204,6 +187,26 @@ class ParserMediator(object):
     return path_helper.PathHelper.ExpandWindowsPath(
         path, self._environment_variables)
 
+  def GetCodePage(self, file_entry=None):
+    """Retrieves the code page related path specification.
+
+    Args:
+      file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
+          will use self._file_entry.
+
+    Returns:
+      str: code page.
+    """
+    if not file_entry:
+      file_entry = self._file_entry
+
+    path_spec = getattr(file_entry, 'path_spec', None)
+    if path_spec:
+      # TODO: determine code page from system_configurations.
+      pass
+
+    return self._preferred_code_page or self._DEFAULT_CODE_PAGE
+
   def GetCurrentYear(self):
     """Retrieves current year.
 
@@ -218,7 +221,7 @@ class ParserMediator(object):
 
     Args:
       file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will return the display name of self._file_entry.
+          will use self._file_entry.
 
     Returns:
       str: human readable string that describes the path to the file entry.
@@ -273,6 +276,26 @@ class ParserMediator(object):
       return '{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
 
     return self._file_entry.name
+
+  def GetLanguageTag(self, file_entry=None):
+    """Retrieves the language tag related path specification.
+
+    Args:
+      file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
+          will use self._file_entry.
+
+    Returns:
+      str: code page.
+    """
+    if not file_entry:
+      file_entry = self._file_entry
+
+    path_spec = getattr(file_entry, 'path_spec', None)
+    if path_spec:
+      # TODO: determine language tag from system_configurations.
+      pass
+
+    return self._language_tag or self._DEFAULT_LANGUAGE_TAG
 
   def GetParserChain(self):
     """Retrieves the current parser chain.
@@ -569,15 +592,15 @@ class ParserMediator(object):
     self._event_data_stream = None
     self._event_data_stream_identifier = None
 
-  def SetPreferredCodepage(self, codepage):
-    """Sets the preferred codepage.
+  def SetPreferredCodepage(self, code_page):
+    """Sets the preferred code page.
 
     Args:
-      codepage (str): codepage.
+      code_page (str): code page.
     """
-    if codepage:
-      codepage = codepage.lower()
-    self._preferred_codepage = codepage
+    if code_page:
+      code_page = code_page.lower()
+    self._preferred_code_page = code_page
 
   def SetPreferredLanguage(self, language_tag):
     """Sets the preferred language.
@@ -602,27 +625,6 @@ class ParserMediator(object):
 
     self._language_tag = language_tag
     self._lcid = lcid
-
-  def SetPreferredTimeZone(self, time_zone_string):
-    """Sets the preferred time zone for zone-less date and time values.
-
-    Args:
-      time_zone_string (str): time zone such as "Europe/Amsterdam" or None if
-          the time zone determined by preprocessing or the default should be
-          used.
-
-    Raises:
-      ValueError: if the time zone is not supported.
-    """
-    time_zone = None
-    if time_zone_string:
-      try:
-        time_zone = pytz.timezone(time_zone_string)
-      except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0!s}'.format(
-            time_zone_string))
-
-    self._time_zone = time_zone
 
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.

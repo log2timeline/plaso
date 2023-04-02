@@ -11,6 +11,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.engine import artifact_filters
 from plaso.engine import filter_file
@@ -201,12 +202,12 @@ class BaseEngine(object):
 
     return session
 
-  def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+  def GetSourceFileSystem(self, file_system_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec (dfvfs.PathSpec): path specifications of the sources
-          to process.
+      file_system_path_spec (dfvfs.PathSpec): path specifications of
+          the source file system to process.
       resolver_context (dfvfs.Context): resolver context.
 
     Returns:
@@ -221,34 +222,38 @@ class BaseEngine(object):
     Raises:
       RuntimeError: if source file system path specification is not set.
     """
-    if not source_path_spec:
-      raise RuntimeError('Missing source path specification.')
+    if not file_system_path_spec:
+      raise RuntimeError('Missing source file system path specification.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        source_path_spec, resolver_context=resolver_context)
+        file_system_path_spec, resolver_context=resolver_context)
 
-    type_indicator = source_path_spec.type_indicator
+    type_indicator = file_system_path_spec.type_indicator
     if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      mount_point = source_path_spec
+      mount_point = file_system_path_spec
     else:
-      mount_point = source_path_spec.parent
+      mount_point = file_system_path_spec.parent
 
     return file_system, mount_point
 
-  def PreprocessSources(
+  def PreprocessSource(
       self, artifact_definitions_path, custom_artifacts_path,
-      source_path_specs, storage_writer, resolver_context=None):
-    """Preprocesses the sources.
+      file_system_path_specs, storage_writer, resolver_context=None):
+    """Preprocesses a source.
 
     Args:
       artifact_definitions_path (str): path to artifact definitions directory
           or file.
       custom_artifacts_path (str): path to custom artifact definitions
           directory or file.
-      source_path_specs (list[dfvfs.PathSpec]): path specifications of
-          the sources to process.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
       storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
+
+    Returns:
+      list[SystemConfigurationArtifact]: system configurations found in
+          the source.
     """
     artifacts_registry_object = self._BuildArtifactsRegistry(
         artifact_definitions_path, custom_artifacts_path)
@@ -256,10 +261,10 @@ class BaseEngine(object):
     mediator = preprocess_mediator.PreprocessMediator(storage_writer)
 
     detected_operating_systems = []
-    for source_path_spec in source_path_specs:
+    for path_spec in file_system_path_specs:
       try:
         file_system, mount_point = self.GetSourceFileSystem(
-            source_path_spec, resolver_context=resolver_context)
+            path_spec, resolver_context=resolver_context)
       except (RuntimeError, dfvfs_errors.BackEndError) as exception:
         logger.error(exception)
         continue
@@ -271,26 +276,27 @@ class BaseEngine(object):
       if operating_system:
         detected_operating_systems.append(operating_system)
 
-    if mediator.codepage:
-      self.knowledge_base.SetCodepage(mediator.codepage)
-
-    for environment_variable in mediator.GetEnvironmentVariables():
-      self.knowledge_base.AddEnvironmentVariable(environment_variable)
-
-    self.knowledge_base.SetHostname(mediator.hostname)
-    self.knowledge_base.SetLanguage(mediator.language)
+    # TODO: add support for more than 1 system configuration.
+    system_configuration = artifacts.SystemConfigurationArtifact(
+        code_page=mediator.code_page, language=mediator.language)
+    system_configuration.hostname = mediator.hostname
+    system_configuration.keyboard_layout = mediator.GetValue('keyboard_layout')
+    system_configuration.operating_system = mediator.GetValue(
+        'operating_system')
+    system_configuration.operating_system_product = mediator.GetValue(
+        'operating_system_product')
+    system_configuration.operating_system_version = mediator.GetValue(
+        'operating_system_version')
 
     if mediator.time_zone:
-      self.knowledge_base.SetTimeZone(mediator.time_zone.zone)
+      system_configuration.time_zone = mediator.time_zone.zone
 
-    for identifier, value in mediator.GetValues():
-      self.knowledge_base.SetValue(identifier, value)
+    # TODO: add source file system path spec to system configuration.
 
-    if detected_operating_systems:
-      logger.info('Preprocessing detected operating systems: {0:s}'.format(
-          ', '.join(detected_operating_systems)))
-      self.knowledge_base.SetValue(
-          'operating_system', detected_operating_systems[0])
+    # TODO: kept for backwards compatibility.
+    self.knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
+
+    return [system_configuration]
 
   def BuildCollectionFilters(
       self, artifact_definitions_path, custom_artifacts_path,

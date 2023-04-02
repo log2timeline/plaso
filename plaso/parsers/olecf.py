@@ -48,8 +48,10 @@ class OLECFParser(interface.FileObjectParser):
           and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
+    code_page = parser_mediator.GetCodePage()
+
     olecf_file = pyolecf.file()
-    olecf_file.set_ascii_codepage(parser_mediator.codepage)
+    olecf_file.set_ascii_codepage(code_page)
 
     try:
       olecf_file.open_file_object(file_object)

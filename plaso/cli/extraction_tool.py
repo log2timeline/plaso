@@ -149,6 +149,28 @@ class ExtractionTool(
       raise errors.BadConfigOption(
           'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
+  def _CreateExtractionEngine(self, single_process_mode):
+    """Creates an extraction engine.
+
+    Args:
+      single_process_mode (bool): True if the engine should use single process
+          mode.
+
+    Returns:
+      BaseEngine: extraction engine.
+    """
+    if single_process_mode:
+      extraction_engine = single_extraction_engine.SingleProcessEngine()
+    else:
+      extraction_engine = multi_extraction_engine.ExtractionMultiProcessEngine(
+          number_of_worker_processes=self._number_of_extraction_workers,
+          worker_memory_limit=self._worker_memory_limit,
+          worker_timeout=self._worker_timeout)
+
+    extraction_engine.SetStatusUpdateInterval(self._status_view_interval)
+
+    return extraction_engine
+
   def _CreateExtractionProcessingConfiguration(self):
     """Creates an extraction processing configuration.
 
@@ -215,12 +237,11 @@ class ExtractionTool(
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
-  def _GetExpandedParserFilterExpression(self, knowledge_base):
+  def _GetExpandedParserFilterExpression(self, system_configuration):
     """Determines the expanded parser filter expression.
 
     Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
+      system_configuration (SystemConfigurationArtifact): system configuration.
 
     Returns:
       str: expanded parser filter expression.
@@ -230,16 +251,11 @@ class ExtractionTool(
           be expanded or if an invalid parser or plugin name is specified.
     """
     parser_filter_expression = self._parser_filter_expression
-    if not parser_filter_expression:
-      operating_system_family = knowledge_base.GetValue('operating_system')
-      operating_system_product = knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = knowledge_base.GetValue(
-          'operating_system_version')
-
+    if not parser_filter_expression and system_configuration:
       operating_system_artifact = artifacts.OperatingSystemArtifact(
-          family=operating_system_family, product=operating_system_product,
-          version=operating_system_version)
+          family=system_configuration.operating_system,
+          product=system_configuration.operating_system_product,
+          version=system_configuration.operating_system_version)
 
       preset_definitions = self._presets_manager.GetPresetsByOperatingSystem(
           operating_system_artifact)
@@ -391,33 +407,41 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_GPT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_GPT)
 
-  def _PreprocessSources(self, extraction_engine, storage_writer):
-    """Preprocesses the sources.
+  def _PreprocessSource(self, extraction_engine, storage_writer):
+    """Preprocesses the source.
 
     Args:
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
       storage_writer (StorageWriter): storage writer.
+
+    Returns:
+      list[SystemConfigurationArtifact]: system configurations found in
+          the source.
     """
     logger.debug('Starting preprocessing.')
 
     try:
-      extraction_engine.PreprocessSources(
+      system_configurations = extraction_engine.PreprocessSource(
           self._artifact_definitions_path, self._custom_artifacts_path,
-          self._source_path_specs, storage_writer,
+          self._file_system_path_specs, storage_writer,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
+      system_configurations = []
+
       logger.error('Unable to preprocess with error: {0!s}'.format(exception))
 
     logger.debug('Preprocessing done.')
 
-  def _ProcessSources(self, session, storage_writer):
-    """Processes the sources and extract events.
+    return system_configurations
+
+  def _ProcessSource(self, session, storage_writer):
+    """Processes the source and extract events.
 
     Args:
-      session (Session): session in which the sources are processed.
-      storage_writer (StorageWriter): storage writer for a session storage.
+      session (Session): session in which the source is processed.
+      storage_writer (StorageWriter): storage writer to store extracted events.
 
     Returns:
       ProcessingStatus: processing status.
@@ -429,24 +453,31 @@ class ExtractionTool(
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       single_process_mode = True
 
-    if single_process_mode:
-      extraction_engine = single_extraction_engine.SingleProcessEngine()
+    extraction_engine = self._CreateExtractionEngine(single_process_mode)
+
+    source_configuration = artifacts.SourceConfigurationArtifact(
+        path=self._source_path, source_type=self._source_type)
+
+    # TODO: check if the source was processed previously.
+    # TODO: add check for modification time of source.
+
+    if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
+      system_configurations = []
+      system_configuration = None
     else:
-      extraction_engine = multi_extraction_engine.ExtractionMultiProcessEngine(
-          number_of_worker_processes=self._number_of_extraction_workers,
-          worker_memory_limit=self._worker_memory_limit,
-          worker_timeout=self._worker_timeout)
+      # If the source is a directory or a storage media image
+      # run pre-processing.
+      system_configurations = self._PreprocessSource(
+          extraction_engine, storage_writer)
+      # TODO: add support for more than 1 system configuration.
+      system_configuration = system_configurations[0]
 
-    extraction_engine.SetStatusUpdateInterval(self._status_view_interval)
+      # TODO: check if the source was processed previously and if system
+      # configuration differs.
 
-    # If the source is a directory or a storage media image
-    # run pre-processing.
-    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(extraction_engine, storage_writer)
-
+    # TODO: add support for more than 1 system configuration.
     self._expanded_parser_filter_expression = (
-        self._GetExpandedParserFilterExpression(
-            extraction_engine.knowledge_base))
+        self._GetExpandedParserFilterExpression(system_configuration))
 
     enabled_parser_names = self._expanded_parser_filter_expression.split(',')
 
@@ -505,17 +536,10 @@ class ExtractionTool(
     processing_status = None
 
     try:
-      source_configurations = []
-      for path_spec in self._source_path_specs:
-        source_configuration = artifacts.SourceConfigurationArtifact(
-            path_spec=path_spec)
-        source_configurations.append(source_configuration)
+      storage_writer.AddAttributeContainer(source_configuration)
 
-      # TODO: improve to detect more than 1 system configurations.
-      # TODO: improve to add volumes to system configuration.
-      system_configuration = (
-          extraction_engine.knowledge_base.GetSystemConfigurationArtifact())
-      storage_writer.AddAttributeContainer(system_configuration)
+      for system_configuration in system_configurations:
+        storage_writer.AddAttributeContainer(system_configuration)
 
       status_update_callback = (
           self._status_view.GetExtractionStatusUpdateCallback())
@@ -523,20 +547,22 @@ class ExtractionTool(
       if single_process_mode:
         logger.debug('Starting extraction in single process mode.')
 
-        processing_status = extraction_engine.ProcessSources(
-            source_configurations, storage_writer, self._resolver_context,
-            configuration, force_parser=force_parser,
+        processing_status = extraction_engine.ProcessSource(
+            storage_writer, self._resolver_context, configuration,
+            system_configurations, self._file_system_path_specs,
+            force_parser=force_parser,
             status_update_callback=status_update_callback)
 
       else:
         logger.debug('Starting extraction in multi process mode.')
 
         # The following overrides are needed because pylint 2.6.0 gets confused
-        # about which ProcessSources to check against.
+        # about which ProcessSource to check against.
         # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-        processing_status = extraction_engine.ProcessSources(
-            source_configurations, storage_writer, session.identifier,
-            configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
+        processing_status = extraction_engine.ProcessSource(
+            storage_writer, session.identifier, configuration,
+            system_configurations, self._file_system_path_specs,
+            enable_sigsegv_handler=self._enable_sigsegv_handler,
             status_update_callback=status_update_callback,
             storage_file_path=self._storage_file_path)
 
@@ -705,9 +731,9 @@ class ExtractionTool(
 
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       archive_path_spec = self._ScanSourceForArchive(
-          self._source_path_specs[0])
+          self._file_system_path_specs[0])
       if archive_path_spec:
-        self._source_path_specs = [archive_path_spec]
+        self._file_system_path_specs = [archive_path_spec]
         self._source_type = definitions.SOURCE_TYPE_ARCHIVE
 
     self._status_view.SetMode(self._status_view_mode)
@@ -744,7 +770,7 @@ class ExtractionTool(
           storage_writer.GetNumberOfAttributeContainers('extraction_warning'))
 
       try:
-        processing_status = self._ProcessSources(session, storage_writer)
+        processing_status = self._ProcessSource(session, storage_writer)
 
       finally:
         number_of_extraction_warnings = (

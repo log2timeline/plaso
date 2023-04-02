@@ -254,6 +254,14 @@ plaso.parsers.olecf module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.onedrive module
+-----------------------------
+
+.. automodule:: plaso.parsers.onedrive
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.opera module
 --------------------------
 
@@ -418,6 +426,14 @@ plaso.parsers.winlnk module
 ---------------------------
 
 .. automodule:: plaso.parsers.winlnk
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.winpca module
+---------------------------
+
+.. automodule:: plaso.parsers.winpca
    :members:
    :undoc-members:
    :show-inheritance:

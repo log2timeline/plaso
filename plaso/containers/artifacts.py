@@ -417,31 +417,30 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
   """Source configuration artifact attribute container.
 
   The source configuration contains the configuration data of a source
-  that is (or going to be) processed such as volume in a storage media
-  image or a mounted directory.
+  that is (or going to be) processed such storage media image or a mounted
+  directory.
 
   Attributes:
-    mount_path (str): path of a "mounted" directory input source.
-    path_spec (dfvfs.PathSpec): path specification of the source that is
-        processed.
+    path (str): path of the source.
+    source_type (str): type of source.
   """
 
   CONTAINER_TYPE = 'source_configuration'
 
   SCHEMA = {
-      'mount_path': 'str',
-      'path_spec': 'dfvfs.PathSpec'}
+      'path': 'str',
+      'source_type': 'str'}
 
-  def __init__(self, path_spec=None):
+  def __init__(self, path=None, source_type=None):
     """Initializes a source configuration artifact.
 
     Args:
-      path_spec (Optional[dfvfs.PathSpec]): path specification of the source
-          that is processed.
+      path (Optional[str]): path of the source.
+      source_type (Optional[str]): type of source.
     """
     super(SourceConfigurationArtifact, self).__init__()
-    self.mount_path = None
-    self.path_spec = path_spec
+    self.path = path
+    self.source_type = source_type
 
 
 class SystemConfigurationArtifact(ArtifactAttributeContainer):

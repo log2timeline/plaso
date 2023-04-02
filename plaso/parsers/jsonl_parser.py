@@ -35,11 +35,14 @@ class JSONLParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+    encoding = self._ENCODING
+    if not encoding:
+      encoding = parser_mediator.GetCodePage()
+
     # Use strict encoding error handling in the verification step so that
     # a JSON-L parser does not generate extraction warning for encoding errors
     # of unsupported files.
-    text_file_object = text_file.TextFile(
-        file_object, encoding=self._ENCODING or parser_mediator.codepage)
+    text_file_object = text_file.TextFile(file_object, encoding=encoding)
 
     try:
       line = text_file_object.readline(size=self._MAXIMUM_LINE_LENGTH)
