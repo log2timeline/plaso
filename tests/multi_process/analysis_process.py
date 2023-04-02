@@ -7,7 +7,6 @@ import time
 import unittest
 
 from plaso.analysis import interface as analysis_interface
-from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.multi_process import analysis_process
 from plaso.multi_process import plaso_queue
@@ -64,7 +63,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = analysis_process.AnalysisProcess(
-          None, None, None, None, configuration, name='TestAnalysis')
+          None, None, configuration, [], name='TestAnalysis')
       self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
@@ -74,7 +73,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = analysis_process.AnalysisProcess(
-          None, None, None, None, configuration, name='TestAnalysis')
+          None, None, configuration, [], name='TestAnalysis')
       status_attributes = test_process._GetStatus()
 
       self.assertIsNotNone(status_attributes)
@@ -94,7 +93,6 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
         port=output_event_queue.port,
         timeout_seconds=self._QUEUE_TIMEOUT)
 
-    session = sessions.Session()
     analysis_plugin = TestAnalysisPlugin()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -106,7 +104,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = analysis_process.AnalysisProcess(
-          input_event_queue, None, session, analysis_plugin, configuration,
+          input_event_queue, analysis_plugin, configuration, [],
           name='TestAnalysis')
       test_process._FOREMAN_STATUS_WAIT = 1
 
@@ -128,7 +126,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       configuration.task_storage_path = temp_directory
 
       test_process = analysis_process.AnalysisProcess(
-          None, None, None, None, configuration, name='TestAnalysis')
+          None, None, configuration, [], name='TestAnalysis')
       test_process.SignalAbort()
 
 

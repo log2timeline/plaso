@@ -743,9 +743,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         port=self._task_queue_port,
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
+    environment_variables = self.knowledge_base.GetEnvironmentVariables()
+
     process = extraction_process.ExtractionWorkerProcess(
-        task_queue, self.collection_filters_helper, self.knowledge_base,
+        task_queue, self.collection_filters_helper,
         self._processing_configuration, self._system_configurations,
+        environment_variables,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -958,14 +961,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
-        preferred_year=processing_configuration.preferred_year)
-
-    preferred_time_zone = processing_configuration.preferred_time_zone
-    if not preferred_time_zone and self.knowledge_base:
-      preferred_time_zone = self.knowledge_base.timezone.zone
+        preferred_year=processing_configuration.preferred_year,
+        system_configurations=system_configurations)
 
     try:
-      self._event_data_timeliner.SetPreferredTimeZone(preferred_time_zone)
+      self._event_data_timeliner.SetPreferredTimeZone(
+          processing_configuration.preferred_time_zone)
     except ValueError as exception:
       raise errors.BadConfigOption(exception)
 

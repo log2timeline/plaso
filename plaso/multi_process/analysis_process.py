@@ -20,9 +20,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
   _FOREMAN_STATUS_WAIT = 5 * 60
 
   def __init__(
-      self, event_queue, knowledge_base, session, analysis_plugin,
-      processing_configuration, data_location=None,
-      event_filter_expression=None, **kwargs):
+      self, event_queue, analysis_plugin, processing_configuration,
+      user_accounts, data_location=None, event_filter_expression=None,
+      **kwargs):
     """Initializes an analysis worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -30,12 +30,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     Args:
       event_queue (plaso_queue.Queue): event queue.
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for analysis.
-      session (Session): session.
       analysis_plugin (AnalysisPlugin): plugin running in the process.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      user_accounts (list[UserAccountArtifact]): user accounts.
       data_location (Optional[str]): path to the location that data files
           should be loaded from.
       event_filter_expression (Optional[str]): event filter expression.
@@ -48,11 +46,10 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     self._event_filter_expression = event_filter_expression
     self._event_queue = event_queue
     self._foreman_status_wait_event = None
-    self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
-    self._session = session
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._task = None
+    self._user_accounts = user_accounts
 
   def _GetStatus(self):
     """Retrieves status information.
@@ -141,7 +138,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     task_storage_writer.Open(path=storage_file_path)
 
     self._analysis_mediator = analysis_mediator.AnalysisMediator(
-        data_location=self._data_location)
+        data_location=self._data_location, user_accounts=self._user_accounts)
+
+    # TODO: move into analysis process.
     self._analysis_mediator.SetStorageWriter(task_storage_writer)
 
     # TODO: set event_filter_expression in mediator.

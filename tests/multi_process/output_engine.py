@@ -254,12 +254,7 @@ class OutputAndFormattingMultiProcessEngineTest(
 
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
-    output_mediator_object = output_mediator.OutputMediator(
-        data_location=shared_test_lib.TEST_DATA_PATH)
-
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator_object.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
 
     output_module = TestOutputModule()
 
@@ -271,6 +266,11 @@ class OutputAndFormattingMultiProcessEngineTest(
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+
+      output_mediator_object = output_mediator.OutputMediator(
+          storage_reader, data_location=shared_test_lib.TEST_DATA_PATH)
+      output_mediator_object.ReadMessageFormattersFromDirectory(
+          formatters_directory_path)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
@@ -280,12 +280,7 @@ class OutputAndFormattingMultiProcessEngineTest(
 
   def testInternalExportEventsDeduplicate(self):
     """Tests the _ExportEvents function with deduplication."""
-    output_mediator_object = output_mediator.OutputMediator(
-        data_location=shared_test_lib.TEST_DATA_PATH)
-
     formatters_directory_path = self._GetDataFilePath(['formatters'])
-    output_mediator_object.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
 
     output_module = TestOutputModule()
 
@@ -297,6 +292,12 @@ class OutputAndFormattingMultiProcessEngineTest(
 
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
+
+      output_mediator_object = output_mediator.OutputMediator(
+          storage_reader, data_location=shared_test_lib.TEST_DATA_PATH)
+
+      output_mediator_object.ReadMessageFormattersFromDirectory(
+          formatters_directory_path)
 
       test_engine._ExportEvents(storage_reader, output_module)
 

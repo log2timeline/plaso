@@ -10,7 +10,6 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.containers import reports
-from plaso.engine import knowledge_base
 from plaso.multi_process import analysis_engine as multi_analysis_engine
 from plaso.storage import factory as storage_factory
 
@@ -46,7 +45,6 @@ class AnalysisTool(
     self._command_line_arguments = None
     self._event_filter_expression = None
     self._event_filter = None
-    self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_stored_analysis_reports = 0
     self._status_view_interval = 0.5
     self._storage_file_path = None
@@ -94,7 +92,7 @@ class AnalysisTool(
 
       try:
         processing_status = analysis_engine.AnalyzeEvents(
-            session, self._knowledge_base, storage_writer, self._data_location,
+            session, storage_writer, self._data_location,
             self._analysis_plugins, configuration,
             event_filter=self._event_filter,
             event_filter_expression=self._event_filter_expression,

@@ -22,9 +22,9 @@ class OutputMediator(object):
     data_location (Optional[str]): path of the formatter data files.
   """
 
-  _DEFAULT_LANGUAGE_TAG = 'en-US'
+  _DEFAULT_ENCODING = 'utf-8'
 
-  # LCID 0x0409 is en-US.
+  # The default LCID 0x0409, which represents en-US.
   _DEFAULT_LCID = 0x0409
 
   _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
@@ -34,10 +34,12 @@ class OutputMediator(object):
   _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
   def __init__(
-      self, data_location=None, dynamic_time=False, preferred_encoding='utf-8'):
+      self, storage_reader, data_location=None, dynamic_time=False,
+      preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       data_location (Optional[str]): path of the formatter data files.
       dynamic_time (Optional[bool]): True if date and time values should be
           represented in their granularity or semantically.
@@ -46,12 +48,13 @@ class OutputMediator(object):
     super(OutputMediator, self).__init__()
     self._dynamic_time = dynamic_time
     self._hostname = None
-    self._language_tag = self._DEFAULT_LANGUAGE_TAG
-    self._lcid = self._DEFAULT_LCID
+    self._language_tag = None
+    self._lcid = None
     self._message_formatters = {}
     self._preferred_encoding = preferred_encoding
     self._source_mappings = {}
-    self._storage_reader = None
+    self._storage_reader = storage_reader
+    self._system_configurations = None
     self._time_zone = None
     self._username_by_identifier = {}
 
@@ -59,43 +62,18 @@ class OutputMediator(object):
 
   @property
   def dynamic_time(self):
-    """bool: True if date and time values should be represented in their
-        granularity or semantically.
-    """
+    """bool: True if dynamic time should be used."""
     return self._dynamic_time
 
   @property
   def encoding(self):
-    """str: preferred encoding."""
-    return self._preferred_encoding
+    """str: preferred encoding to output."""
+    return self._preferred_encoding or self._DEFAULT_ENCODING
 
   @property
-  def timezone(self):
-    """The time zone."""
-    if not self._time_zone:
-      self._time_zone = self._DEFAULT_TIME_ZONE
-
-    return self._time_zone
-
-  def _ReadHostname(self, storage_reader):
-    """Reads the hostname from the storage.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-
-    Returns:
-      HostnameArtifact: hostname or None if not available.
-    """
-    if not storage_reader:
-      return None
-
-    system_configurations = list(storage_reader.GetAttributeContainers(
-        'system_configuration'))
-
-    if not system_configurations:
-      return None
-
-    return system_configurations[-1].hostname
+  def time_zone(self):
+    """datetime.tzinfo: time zone."""
+    return self._time_zone or self._DEFAULT_TIME_ZONE
 
   def _ReadMessageFormattersFile(self, path):
     """Reads a message formatters configuration file.
@@ -121,22 +99,18 @@ class OutputMediator(object):
       self._source_mappings[message_formatter.data_type] = (
           message_formatter.source_mapping)
 
-  def _ReadUserAccount(self, storage_reader, user_identifier):
+  def _ReadUserAccount(self, user_identifier):
     """Reads a specific user account from the storage.
 
     Args:
-      storage_reader (StorageReader): storage reader.
       user_identifier (str): user identifier (UID or SID).
 
     Returns:
       UserAccountArtifact: user account or None if not available.
     """
-    if not storage_reader:
-      return None
-
     # TODO: get username related to the source.
     filter_expression = 'identifier == "{0:s}"'.format(user_identifier)
-    user_accounts = list(storage_reader.GetAttributeContainers(
+    user_accounts = list(self._storage_reader.GetAttributeContainers(
         'user_account', filter_expression=filter_expression))
 
     if not user_accounts:
@@ -169,9 +143,13 @@ class OutputMediator(object):
     if hostname:
       return hostname
 
+    if self._system_configurations is None:
+      self._system_configurations = list(
+          self._storage_reader.GetAttributeContainers('system_configuration'))
+
     # TODO: get hostname related to the source.
-    if not self._hostname:
-      hostname_artifact = self._ReadHostname(self._storage_reader)
+    if not self._hostname and self._system_configurations:
+      hostname_artifact = self._system_configurations[-1].hostname
       if hostname_artifact:
         self._hostname = hostname_artifact.name
 
@@ -339,7 +317,7 @@ class OutputMediator(object):
     return self._source_mappings.get(data_type, (None, None))
 
   def GetUsername(self, event_data, default_username='-'):
-    """Retrieves the username related to the event.
+    """Retrieves the username related to the event data.
 
     Args:
       event_data (EventData): event data.
@@ -357,8 +335,7 @@ class OutputMediator(object):
     user_identifier = getattr(event_data, 'user_sid', None)
     if (user_identifier and
         user_identifier not in self._username_by_identifier):
-      user_account = self._ReadUserAccount(
-          self._storage_reader, user_identifier)
+      user_account = self._ReadUserAccount(user_identifier)
       if user_account:
         username = user_account.username
         self._username_by_identifier[user_identifier] = username
@@ -371,7 +348,12 @@ class OutputMediator(object):
     Returns:
       WinevtResourcesHelper: Windows EventLog resources helper.
     """
-    lcid = self._lcid or self._DEFAULT_LCID
+    lcid = self._lcid
+    if not lcid:
+      # TODO: determine LCID from system configurations
+      pass
+    if not lcid:
+      lcid = self._DEFAULT_LCID
 
     return winevt_rc.WinevtResourcesHelper(
         self._storage_reader, self.data_location, lcid)
@@ -427,14 +409,6 @@ class OutputMediator(object):
 
     self._language_tag = language_tag
     self._lcid = lcid
-
-  def SetStorageReader(self, storage_reader):
-    """Sets the storage reader.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    self._storage_reader = storage_reader
 
   def SetTimeZone(self, time_zone):
     """Sets the time zone.

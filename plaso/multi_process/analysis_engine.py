@@ -59,7 +59,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._event_labels_counter = None
     self._event_queues = {}
     self._events_status = processing_status.EventsStatus()
-    self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
     self._number_of_consumed_analysis_reports = 0
@@ -77,6 +76,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._session = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
+    self._user_accounts = None
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout or definitions.DEFAULT_WORKER_TIMEOUT
 
@@ -376,8 +376,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         timeout_seconds=self._QUEUE_TIMEOUT)
 
     process = analysis_process.AnalysisProcess(
-        input_event_queue, self._knowledge_base, self._session, analysis_plugin,
-        self._processing_configuration, data_location=self._data_location,
+        input_event_queue, analysis_plugin, self._processing_configuration,
+        self._user_accounts, data_location=self._data_location,
         event_filter_expression=self._event_filter_expression,
         name=process_name)
 
@@ -538,16 +538,14 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
   # pylint: disable=too-many-arguments
   def AnalyzeEvents(
-      self, session, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, processing_configuration, event_filter=None,
+      self, session, storage_writer, data_location, analysis_plugins,
+      processing_configuration, event_filter=None,
       event_filter_expression=None, status_update_callback=None,
       storage_file_path=None):
     """Analyzes events in a Plaso storage.
 
     Args:
       session (Session): session in which the events are analyzed.
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
       storage_writer (StorageWriter): storage writer.
       data_location (str): path to the location that data files should
           be loaded from.
@@ -579,11 +577,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._data_location = data_location
     self._event_filter_expression = event_filter_expression
     self._events_status = processing_status.EventsStatus()
-    self._knowledge_base = knowledge_base_object
     self._processing_configuration = processing_configuration
     self._session = session
     self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
+
+    self._user_accounts = list(
+        storage_writer.GetAttributeContainers('user_account'))
 
     stored_event_labels_counter = {}
     if storage_writer.HasAttributeContainers('event_label_count'):
@@ -696,11 +696,11 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._analysis_plugins = {}
     self._data_location = None
     self._event_filter_expression = None
-    self._knowledge_base = None
     self._processing_configuration = None
     self._session = None
     self._status_update_callback = None
     self._storage_file_path = None
+    self._user_accounts = None
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

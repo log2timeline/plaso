@@ -267,11 +267,12 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     event_data_timeliner.SetPreferredTimeZone('Europe/Amsterdam')
 
-    self.assertEqual(event_data_timeliner._time_zone.zone, 'Europe/Amsterdam')
+    self.assertEqual(
+        event_data_timeliner._preferred_time_zone.zone, 'Europe/Amsterdam')
 
     event_data_timeliner.SetPreferredTimeZone(None)
 
-    self.assertEqual(event_data_timeliner._time_zone.zone, 'UTC')
+    self.assertIsNone(event_data_timeliner._preferred_time_zone)
 
 
 if __name__ == '__main__':

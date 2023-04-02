@@ -128,7 +128,6 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
     storage_writer.AddAttributeContainer(event)
 
     mediator = analysis_mediator.AnalysisMediator()
-
     mediator.SetStorageWriter(storage_writer)
 
     plugin = tagging.TaggingAnalysisPlugin()

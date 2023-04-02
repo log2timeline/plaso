@@ -28,13 +28,17 @@ class EventDataTimeliner(object):
 
   _TIMELINER_CONFIGURATION_FILENAME = 'timeliner.yaml'
 
-  def __init__(self, data_location=None, preferred_year=None):
+  def __init__(
+      self, data_location=None, preferred_year=None,
+      system_configurations=None):
     """Initializes an event data timeliner.
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
       preferred_year (Optional[int]): preferred initial year value for year-less
           date and time values.
+      system_configurations (Optional[list[SystemConfigurationArtifact]]):
+          system configurations.
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
@@ -42,8 +46,9 @@ class EventDataTimeliner(object):
     self._current_year = self._GetCurrentYear()
     self._data_location = data_location
     self._place_holder_event = set()
+    self._preferred_time_zone = None
     self._preferred_year = preferred_year
-    self._time_zone = None
+    self._system_configurations = system_configurations
 
     self.number_of_produced_events = 0
     self.parsers_counter = collections.Counter()
@@ -172,7 +177,7 @@ class EventDataTimeliner(object):
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
       if not time_zone:
-        time_zone = self._time_zone
+        time_zone = self._GetTimeZone()
 
       if not time_zone:
         message = 'date and time is in local time and no time zone is defined'
@@ -204,6 +209,16 @@ class EventDataTimeliner(object):
     event.SetEventDataIdentifier(event_data_identifier)
 
     return event
+
+  def _GetTimeZone(self):
+    """Retrieves the time zone related to the event data.
+
+    Returns:
+      datetime.tzinfo: time zone.
+    """
+    # TODO: determine time zone from system_configurations.
+
+    return self._preferred_time_zone or self._DEFAULT_TIME_ZONE
 
   def _ProduceTimeliningWarning(self, storage_writer, event_data, message):
     """Produces a timelining warning.
@@ -332,4 +347,4 @@ class EventDataTimeliner(object):
         raise ValueError('Unsupported time zone: {0!s}'.format(
             time_zone_string))
 
-    self._time_zone = time_zone or self._DEFAULT_TIME_ZONE
+    self._preferred_time_zone = time_zone

@@ -27,12 +27,13 @@ class AnalysisMediator(object):
     number_of_produced_event_tags (int): number of produced event tags.
   """
 
-  def __init__(self, data_location=None):
+  def __init__(self, data_location=None, user_accounts=None):
     """Initializes an analysis plugin mediator.
 
     Args:
       data_location (Optional[str]): location of data files used during
           analysis.
+      user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
     """
     super(AnalysisMediator, self).__init__()
     self._abort = False
@@ -40,6 +41,7 @@ class AnalysisMediator(object):
     self._event_filter_expression = None
     self._number_of_warnings = 0
     self._storage_writer = None
+    self._user_accounts = user_accounts
     self._username_by_user_directory = {}
 
     self.analysis_reports_counter = collections.Counter()
@@ -85,9 +87,8 @@ class AnalysisMediator(object):
     path = path.lower()
 
     username = self._username_by_user_directory.get(path, None)
-    if not username and self._storage_writer:
-      for user_account in self._storage_writer.GetAttributeContainers(
-          'user_account'):
+    if not username and self._user_accounts:
+      for user_account in self._user_accounts:
         if user_account.user_directory:
           user_directory = user_account.user_directory.lower()
           if path.startswith(user_directory):
@@ -139,7 +140,7 @@ class AnalysisMediator(object):
     """
     if self._storage_writer:
       warning = warnings.AnalysisWarning(
-          message=message, plugin_name=plugin_name)
+         message=message, plugin_name=plugin_name)
       self._storage_writer.AddAttributeContainer(warning)
 
     self._number_of_warnings += 1

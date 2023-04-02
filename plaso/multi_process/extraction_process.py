@@ -22,8 +22,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(
-      self, task_queue, collection_filters_helper, knowledge_base,
-      processing_configuration, system_configurations, **kwargs):
+      self, task_queue, collection_filters_helper, processing_configuration,
+      system_configurations, environment_variables, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -33,12 +33,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       task_queue (PlasoQueue): task queue.
       collection_filters_helper (CollectionFiltersHelper): collection filters
           helper.
-      knowledge_base (KnowledgeBase): knowledge base which contains
-          information from the source data needed for parsing.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(ExtractionWorkerProcess, self).__init__(
@@ -47,9 +47,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._collection_filters_helper = collection_filters_helper
     self._buffer_size = 0
     self._current_display_name = ''
+    self._environment_variables = environment_variables
     self._extraction_worker = None
     self._file_system_cache = []
-    self._knowledge_base = knowledge_base
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._resolver_context = None
@@ -98,13 +98,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
-    environment_variables = None
-    if self._knowledge_base:
-      environment_variables = self._knowledge_base.GetEnvironmentVariables()
-
     mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self._collection_filters_helper,
-        environment_variables=environment_variables,
+        environment_variables=self._environment_variables,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 

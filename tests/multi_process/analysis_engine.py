@@ -9,7 +9,6 @@ import unittest
 from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
-from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.multi_process import analysis_engine
 from plaso.storage import factory as storage_factory
@@ -24,28 +23,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
   # pylint: disable=protected-access
 
-  def _ReadSystemConfiguration(self, path, knowledge_base_object):
-    """Reads system configuration.
-
-    The system configuration, contains information about various system
-    specific configuration data, for example the user accounts.
-
-    Args:
-      path (str): path.
-      knowledge_base_object (KnowledgeBase): is used to store the system
-          configuration.
-    """
-    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-        path)
-
-    for session_index, session in enumerate(storage_reader.GetSessions()):
-      knowledge_base_object.SetActiveSession(session.identifier)
-
-      system_configuration = storage_reader.GetAttributeContainerByIndex(
-          'system_configuration', session_index)
-      knowledge_base_object.ReadSystemConfigurationArtifact(
-          system_configuration)
-
   def testInternalAnalyzeEvents(self):
     """Tests the _AnalyzeEvents function."""
     test_file_path = self._GetTestFilePath(['psort_test.plaso'])
@@ -56,7 +33,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     self._SkipIfPathNotExists(test_tagging_file_path)
 
     session = sessions.Session()
-    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     analysis_plugin = tagging.TaggingAnalysisPlugin()
     analysis_plugin.SetAndLoadTagFile(test_tagging_file_path)
@@ -69,8 +45,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(test_file_path, temp_file)
-
-      self._ReadSystemConfiguration(temp_file, knowledge_base_object)
 
       storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
           definitions.DEFAULT_STORAGE_FORMAT)
@@ -113,7 +87,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     self._SkipIfPathNotExists(test_tagging_file_path)
 
     session = sessions.Session()
-    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     data_location = ''
 
@@ -140,8 +113,8 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         self.assertEqual(number_of_reports, 2)
 
         test_engine.AnalyzeEvents(
-            session, knowledge_base_object, storage_writer, data_location,
-            analysis_plugins, configuration, storage_file_path=temp_directory)
+            session, storage_writer, data_location, analysis_plugins,
+            configuration, storage_file_path=temp_directory)
 
         number_of_reports = storage_writer.GetNumberOfAttributeContainers(
             'analysis_report')
@@ -160,7 +133,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     self._SkipIfPathNotExists(test_tagging_file_path)
 
     session = sessions.Session()
-    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     data_location = ''
 
@@ -188,8 +160,8 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         self.assertEqual(number_of_reports, 2)
 
         test_engine.AnalyzeEvents(
-            session, knowledge_base_object, storage_writer, data_location,
-            analysis_plugins, configuration, event_filter=test_filter,
+            session, storage_writer, data_location, analysis_plugins,
+            configuration, event_filter=test_filter,
             storage_file_path=temp_directory)
 
         number_of_reports = storage_writer.GetNumberOfAttributeContainers(
