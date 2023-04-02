@@ -28,12 +28,10 @@ class EventDataTimeliner(object):
 
   _TIMELINER_CONFIGURATION_FILENAME = 'timeliner.yaml'
 
-  def __init__(self, knowledge_base, data_location=None, preferred_year=None):
+  def __init__(self, data_location=None, preferred_year=None):
     """Initializes an event data timeliner.
 
     Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for generation of the time line.
       data_location (Optional[str]): path of the timeliner configuration file.
       preferred_year (Optional[int]): preferred initial year value for year-less
           date and time values.
@@ -43,7 +41,6 @@ class EventDataTimeliner(object):
     self._base_years = {}
     self._current_year = self._GetCurrentYear()
     self._data_location = data_location
-    self._knowledge_base = knowledge_base
     self._place_holder_event = set()
     self._preferred_year = preferred_year
     self._time_zone = None
@@ -327,14 +324,12 @@ class EventDataTimeliner(object):
     Raises:
       ValueError: if the time zone is not supported.
     """
-    self._time_zone = None
-
+    time_zone = None
     if time_zone_string:
       try:
-        self._time_zone = pytz.timezone(time_zone_string)
+        time_zone = pytz.timezone(time_zone_string)
       except pytz.UnknownTimeZoneError:
         raise ValueError('Unsupported time zone: {0!s}'.format(
             time_zone_string))
 
-    if not self._time_zone:
-      self._time_zone = self._knowledge_base.timezone or self._DEFAULT_TIME_ZONE
+    self._time_zone = time_zone or self._DEFAULT_TIME_ZONE

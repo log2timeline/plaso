@@ -3,7 +3,6 @@
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import events
-from plaso.engine import knowledge_base
 from plaso.engine import timeliner
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import mediator as parsers_mediator
@@ -75,9 +74,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """
     mediator = analysis_mediator.AnalysisMediator()
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    storage_writer = self._ParseFile(
-        path_segments, parser, knowledge_base_object)
+    storage_writer = self._ParseFile(path_segments, parser)
     mediator.SetStorageWriter(storage_writer)
 
     for event in storage_writer.GetSortedEvents():
@@ -102,13 +99,12 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     return storage_writer
 
-  def _ParseFile(self, path_segments, parser, knowledge_base_object):
+  def _ParseFile(self, path_segments, parser):
     """Parses a file using the parser.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
-      knowledge_base_object (KnowledgeBase): knowledge base.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -139,19 +135,18 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     else:
       self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))
 
-    self._ProcessEventData(knowledge_base_object, storage_writer)
+    self._ProcessEventData(storage_writer)
 
     return storage_writer
 
-  def _ProcessEventData(self, knowledge_base_object, storage_writer):
+  def _ProcessEventData(self, storage_writer):
     """Generate events from event data.
 
     Args:
-      knowledge_base_object (KnowledgeBase): knowledge base.
       storage_writer (StorageWriter): storage writer.
     """
     event_data_timeliner = timeliner.EventDataTimeliner(
-        knowledge_base_object, data_location=shared_test_lib.DATA_PATH)
+        data_location=shared_test_lib.DATA_PATH)
 
     event_data = storage_writer.GetFirstWrittenEventData()
     while event_data:

@@ -81,13 +81,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
-  def _CreateParserMediator(
-      self, knowledge_base, resolver_context, processing_configuration):
+  def _CreateParserMediator(self, resolver_context, processing_configuration):
     """Creates a parser mediator.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base which contains
-          information from the source data needed for parsing.
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
@@ -96,26 +93,20 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       ParserMediator: parser mediator.
     """
     environment_variables = None
-    if knowledge_base:
+    if self._knowledge_base:
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
 
-    preferred_codepage = None
-    if knowledge_base:
-      preferred_codepage = knowledge_base.codepage
-    if not preferred_codepage:
-      preferred_codepage = processing_configuration.preferred_codepage
+    preferred_codepage = processing_configuration.preferred_codepage
+    if not preferred_codepage and self._knowledge_base:
+      preferred_codepage = self._knowledge_base.codepage
 
-    preferred_language = None
-    if knowledge_base:
-      preferred_language = knowledge_base.language
-    if not preferred_language:
-      preferred_language = processing_configuration.preferred_language
+    preferred_language = processing_configuration.preferred_language
+    if not preferred_language and self._knowledge_base:
+      preferred_language = self._knowledge_base.language
 
-    preferred_time_zone = None
-    if knowledge_base:
-      preferred_time_zone = knowledge_base.timezone.zone
-    if not preferred_time_zone:
-      preferred_time_zone = processing_configuration.preferred_time_zone
+    preferred_time_zone = processing_configuration.preferred_time_zone
+    if not preferred_time_zone and self._knowledge_base:
+      preferred_time_zone = self._knowledge_base.timezone.zone
 
     mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self._collection_filters_helper,
@@ -200,8 +191,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           credential_configuration.credential_data)
 
     self._parser_mediator = self._CreateParserMediator(
-        self._knowledge_base, self._resolver_context,
-        self._processing_configuration)
+        self._resolver_context, self._processing_configuration)
 
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
