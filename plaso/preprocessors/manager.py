@@ -124,6 +124,7 @@ class PreprocessPluginsManager(object):
 
   _plugins = {}
   _file_system_plugins = {}
+  # TODO: rename knowledge base plugins.
   _knowledge_base_plugins = {}
   _windows_registry_plugins = {}
 
@@ -338,9 +339,7 @@ class PreprocessPluginsManager(object):
     # Run the Registry plugins separately so we do not have to open
     # Registry files for every preprocess plugin.
 
-    environment_variables = None
-    if mediator.knowledge_base:
-      environment_variables = mediator.knowledge_base.GetEnvironmentVariables()
+    environment_variables = mediator.GetEnvironmentVariables()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
         file_system, mount_point, environment_variables=environment_variables)

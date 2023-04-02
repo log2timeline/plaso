@@ -56,8 +56,7 @@ class MacOSHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    hostname = test_mediator.knowledge_base.GetHostname()
-    self.assertEqual(hostname, 'Plaso\'s Mac mini')
+    self.assertEqual(test_mediator.hostname.name, 'Plaso\'s Mac mini')
 
 
 class MacOSKeyboardLayoutPluginTest(
@@ -79,7 +78,7 @@ class MacOSKeyboardLayoutPluginTest(
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    keyboard_layout = test_mediator.knowledge_base.GetValue('keyboard_layout')
+    keyboard_layout = test_mediator.GetValue('keyboard_layout')
     self.assertEqual(keyboard_layout, 'US')
 
 
@@ -118,7 +117,7 @@ class MacOSSystemVersionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    build = test_mediator.knowledge_base.GetValue('operating_system_version')
+    build = test_mediator.GetValue('operating_system_version')
     self.assertEqual(build, '10.9.2')
 
 
@@ -143,8 +142,7 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    self.assertEqual(
-        test_mediator.knowledge_base.timezone.zone, 'Europe/Amsterdam')
+    self.assertEqual(test_mediator.time_zone.zone, 'Europe/Amsterdam')
 
   def testParseFileEntryWithBogusLink(self):
     """Tests the _ParseFileEntry function a bogus symbolic link."""
@@ -164,7 +162,7 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 1)
 
-    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
+    self.assertIsNone(test_mediator.time_zone)
 
 
 class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

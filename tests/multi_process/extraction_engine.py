@@ -56,7 +56,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       try:
         test_engine.PreprocessSources(
-            artifacts_path, None, [source_path_spec], session, storage_writer)
+            artifacts_path, None, [source_path_spec], storage_writer)
 
         processing_status = test_engine.ProcessSources(
             [source_configuration], storage_writer, session.identifier,

@@ -127,19 +127,14 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
-    session = test_engine.CreateSession()
-
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     test_engine.PreprocessSources(
-        test_artifacts_path, None, [source_path_spec], session, storage_writer)
+        test_artifacts_path, None, [source_path_spec], storage_writer)
 
     operating_system = test_engine.knowledge_base.GetValue('operating_system')
     self.assertEqual(operating_system, 'Windows NT')
-
-    test_engine.PreprocessSources(
-        test_artifacts_path, None, [None], session, storage_writer)
 
 
 if __name__ == '__main__':

@@ -237,7 +237,7 @@ class BaseEngine(object):
 
   def PreprocessSources(
       self, artifact_definitions_path, custom_artifacts_path,
-      source_path_specs, session, storage_writer, resolver_context=None):
+      source_path_specs, storage_writer, resolver_context=None):
     """Preprocesses the sources.
 
     Args:
@@ -247,15 +247,13 @@ class BaseEngine(object):
           directory or file.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      session (Session): session the preprocessing is part of.
       storage_writer (StorageWriter): storage writer.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     artifacts_registry_object = self._BuildArtifactsRegistry(
         artifact_definitions_path, custom_artifacts_path)
 
-    mediator = preprocess_mediator.PreprocessMediator(
-        session, storage_writer, self.knowledge_base)
+    mediator = preprocess_mediator.PreprocessMediator(storage_writer)
 
     detected_operating_systems = []
     for source_path_spec in source_path_specs:
@@ -269,9 +267,24 @@ class BaseEngine(object):
       preprocess_manager.PreprocessPluginsManager.RunPlugins(
           artifacts_registry_object, file_system, mount_point, mediator)
 
-      operating_system = self.knowledge_base.GetValue('operating_system')
+      operating_system = mediator.GetValue('operating_system')
       if operating_system:
         detected_operating_systems.append(operating_system)
+
+    if mediator.codepage:
+      self.knowledge_base.SetCodepage(mediator.codepage)
+
+    for environment_variable in mediator.GetEnvironmentVariables():
+      self.knowledge_base.AddEnvironmentVariable(environment_variable)
+
+    self.knowledge_base.SetHostname(mediator.hostname)
+    self.knowledge_base.SetLanguage(mediator.language)
+
+    if mediator.time_zone:
+      self.knowledge_base.SetTimeZone(mediator.time_zone.zone)
+
+    for identifier, value in mediator.GetValues():
+      self.knowledge_base.SetValue(identifier, value)
 
     if detected_operating_systems:
       logger.info('Preprocessing detected operating systems: {0:s}'.format(

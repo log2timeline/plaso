@@ -8,8 +8,6 @@ from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.containers import sessions
-from plaso.engine import knowledge_base
 from plaso.preprocessors import generic
 from plaso.preprocessors import mediator
 from plaso.storage.fake import writer as fake_writer
@@ -32,11 +30,8 @@ class DetermineOperatingSystemPluginTest(
     file_system_builder.AddFileReadData(
         '/Windows/System32/config/SYSTEM', test_file_path)
 
-    session = sessions.Session()
-    test_knowledge_base = knowledge_base.KnowledgeBase()
     storage_writer = fake_writer.FakeStorageWriter()
-    test_mediator = mediator.PreprocessMediator(
-        session, storage_writer, test_knowledge_base)
+    test_mediator = mediator.PreprocessMediator(storage_writer)
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
     searcher = file_system_searcher.FileSystemSearcher(
@@ -52,7 +47,7 @@ class DetermineOperatingSystemPluginTest(
     finally:
       storage_writer.Close()
 
-    operating_system = test_mediator.knowledge_base.GetValue('operating_system')
+    operating_system = test_mediator.GetValue('operating_system')
     self.assertEqual(operating_system, 'Windows NT')
 
 

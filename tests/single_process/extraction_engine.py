@@ -10,7 +10,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
 from plaso.containers import artifacts
-from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.single_process import extraction_engine
 from plaso.storage.fake import writer as fake_writer
@@ -43,8 +42,6 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     source_configuration = artifacts.SourceConfigurationArtifact(
         path_spec=source_path_spec)
 
-    session = sessions.Session()
-
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = shared_test_lib.DATA_PATH
     configuration.parser_filter_expression = 'filestat'
@@ -54,8 +51,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     try:
       test_engine.PreprocessSources(
-          test_artifacts_path, None, [source_path_spec], session,
-          storage_writer)
+          test_artifacts_path, None, [source_path_spec], storage_writer)
 
       processing_status = test_engine.ProcessSources(
           [source_configuration], storage_writer, resolver_context,

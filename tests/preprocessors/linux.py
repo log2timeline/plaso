@@ -28,8 +28,7 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    hostname = test_mediator.knowledge_base.GetHostname()
-    self.assertEqual(hostname, 'plaso.kiddaland.net')
+    self.assertEqual(test_mediator.hostname.name, 'plaso.kiddaland.net')
 
 
 class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -48,8 +47,7 @@ class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = test_mediator.knowledge_base.GetValue(
-        'operating_system_product')
+    system_product = test_mediator.GetValue('operating_system_product')
     self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
 
 
@@ -72,8 +70,7 @@ Debian GNU/Linux 5.0 \\n \\l
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = test_mediator.knowledge_base.GetValue(
-        'operating_system_product')
+    system_product = test_mediator.GetValue('operating_system_product')
     self.assertEqual(system_product, 'Debian GNU/Linux 5.0')
 
 
@@ -98,8 +95,7 @@ DISTRIB_RELEASE=14.04"""
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = test_mediator.knowledge_base.GetValue(
-        'operating_system_product')
+    system_product = test_mediator.GetValue('operating_system_product')
     self.assertEqual(system_product, 'Ubuntu 14.04 LTS')
 
 
@@ -107,23 +103,23 @@ class LinuxSystemdOperatingSystemPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Linux operating system release plugin."""
 
-  _FILE_DATA = b"""\
-NAME=Fedora
-VERSION="26 (Workstation Edition)"
-ID=fedora
-VERSION_ID=26
-PRETTY_NAME="Fedora 26 (Workstation Edition)"
-ANSI_COLOR="0;34"
-CPE_NAME="cpe:/o:fedoraproject:fedora:26"
-HOME_URL="https://fedoraproject.org/"
-BUG_REPORT_URL="https://bugzilla.redhat.com/"
-REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=26
-REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=26
-PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy
-VARIANT="Workstation Edition"
-VARIANT_ID=workstation"""
+  _FILE_DATA = (
+      b'NAME=Fedora\n'
+      b'VERSION="26 (Workstation Edition)"\n'
+      b'ID=fedora\n'
+      b'VERSION_ID=26\n'
+      b'PRETTY_NAME="Fedora 26 (Workstation Edition)"\n'
+      b'ANSI_COLOR="0;34"\n'
+      b'CPE_NAME="cpe:/o:fedoraproject:fedora:26"\n'
+      b'HOME_URL="https://fedoraproject.org/"\n'
+      b'BUG_REPORT_URL="https://bugzilla.redhat.com/"\n'
+      b'REDHAT_BUGZILLA_PRODUCT="Fedora"\n'
+      b'REDHAT_BUGZILLA_PRODUCT_VERSION=26\n'
+      b'REDHAT_SUPPORT_PRODUCT="Fedora"\n'
+      b'REDHAT_SUPPORT_PRODUCT_VERSION=26\n'
+      b'PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy\n'
+      b'VARIANT="Workstation Edition"\n'
+      b'VARIANT_ID=workstation\n')
 
   def testParseFileData(self):
     """Tests the _ParseFileData function."""
@@ -136,8 +132,7 @@ VARIANT_ID=workstation"""
     test_mediator = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, None, plugin)
 
-    system_product = test_mediator.knowledge_base.GetValue(
-        'operating_system_product')
+    system_product = test_mediator.GetValue('operating_system_product')
     self.assertEqual(system_product, 'Fedora 26 (Workstation Edition)')
 
 
@@ -162,8 +157,7 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    self.assertEqual(
-        test_mediator.knowledge_base.timezone.zone, 'Europe/Zurich')
+    self.assertEqual(test_mediator.time_zone.zone, 'Europe/Zurich')
 
   def testParseFileEntryWithBogusLink(self):
     """Tests the _ParseFileEntry function on a bogus symbolic link."""
@@ -183,10 +177,10 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 1)
 
-    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
+    self.assertIsNone(test_mediator.time_zone)
 
   def testParseFileEntryWithTZif(self):
-    """Tests the _ParseFileEntry function on a timezone information file."""
+    """Tests the _ParseFileEntry function on a time zone information file."""
     test_file_path = self._GetTestFilePath(['localtime.tzif'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -205,7 +199,7 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'CET')
+    self.assertEqual(test_mediator.time_zone.zone, 'CET')
 
   def testParseFileEntryWithBogusTZif(self):
     """Tests the _ParseFileEntry function on a bogus TZif file."""
@@ -227,7 +221,7 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         'preprocessing_warning')
     self.assertEqual(number_of_warnings, 1)
 
-    self.assertEqual(test_mediator.knowledge_base.timezone.zone, 'UTC')
+    self.assertIsNone(test_mediator.time_zone)
 
 
 class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
