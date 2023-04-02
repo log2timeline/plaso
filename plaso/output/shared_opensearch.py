@@ -360,7 +360,9 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
                        dfdatetime_interface.DateTimeValues)):
           continue
 
-        event_values[attribute_name] = attribute_value
+        # Ignore protected internal only attributes.
+        if attribute_name[0] != '_':
+          event_values[attribute_name] = attribute_value
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
