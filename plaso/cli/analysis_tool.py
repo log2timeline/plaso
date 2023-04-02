@@ -10,7 +10,6 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.containers import reports
-from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.multi_process import analysis_engine as multi_analysis_engine
 from plaso.storage import factory as storage_factory
@@ -91,22 +90,9 @@ class AnalysisTool(
     session.debug_mode = self._debug_mode
 
     try:
-      # Writing a separate session start is kept for backwards compatibility.
-      if storage_writer.HasAttributeContainers(
-          sessions.SessionStart.CONTAINER_TYPE):
-        session_start = session.CreateSessionStart()
-        storage_writer.AddAttributeContainer(session_start)
-      else:
-        storage_writer.AddAttributeContainer(session)
+      storage_writer.AddAttributeContainer(session)
 
       try:
-        # Writing a separate session configuration is kept for backwards
-        # compatibility.
-        if storage_writer.HasAttributeContainers(
-            sessions.SessionStart.CONTAINER_TYPE):
-          session_configuration = session.CreateSessionConfiguration()
-          storage_writer.AddAttributeContainer(session_configuration)
-
         processing_status = analysis_engine.AnalyzeEvents(
             session, self._knowledge_base, storage_writer, self._data_location,
             self._analysis_plugins, configuration,
@@ -117,16 +103,8 @@ class AnalysisTool(
 
       finally:
         session.aborted = getattr(processing_status, 'aborted', True)
-
-        # Writing a separate session completion is kept for backwards
-        # compatibility.
-        if storage_writer.HasAttributeContainers(
-            sessions.SessionStart.CONTAINER_TYPE):
-          session_completion = session.CreateSessionCompletion()
-          storage_writer.AddAttributeContainer(session_completion)
-        else:
-          session.completion_time = int(time.time() * 1000000)
-          storage_writer.UpdateAttributeContainer(session)
+        session.completion_time = int(time.time() * 1000000)
+        storage_writer.UpdateAttributeContainer(session)
 
     finally:
       storage_writer.Close()
