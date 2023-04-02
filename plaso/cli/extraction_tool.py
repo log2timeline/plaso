@@ -26,7 +26,6 @@ from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import artifacts
-from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.single_process import extraction_engine as single_extraction_engine
@@ -501,24 +500,11 @@ class ExtractionTool(
     session.preferred_time_zone = self._preferred_time_zone
     session.preferred_year = self._preferred_year
 
-    # Writing a separate session start is kept for backwards compatibility.
-    if storage_writer.HasAttributeContainers(
-        sessions.SessionStart.CONTAINER_TYPE):
-      session_start = session.CreateSessionStart()
-      storage_writer.AddAttributeContainer(session_start)
-    else:
-      storage_writer.AddAttributeContainer(session)
+    storage_writer.AddAttributeContainer(session)
 
     processing_status = None
 
     try:
-      # Writing a separate session configuration is kept for backwards
-      # compatibility.
-      if storage_writer.HasAttributeContainers(
-          sessions.SessionStart.CONTAINER_TYPE):
-        session_configuration = session.CreateSessionConfiguration()
-        storage_writer.AddAttributeContainer(session_configuration)
-
       source_configurations = []
       for path_spec in self._source_path_specs:
         source_configuration = artifacts.SourceConfigurationArtifact(
@@ -556,16 +542,8 @@ class ExtractionTool(
 
     finally:
       session.aborted = getattr(processing_status, 'aborted', True)
-
-      # Writing a separate session completion is kept for backwards
-      # compatibility.
-      if storage_writer.HasAttributeContainers(
-          sessions.SessionStart.CONTAINER_TYPE):
-        session_completion = session.CreateSessionCompletion()
-        storage_writer.AddAttributeContainer(session_completion)
-      else:
-        session.completion_time = int(time.time() * 1000000)
-        storage_writer.UpdateAttributeContainer(session)
+      session.completion_time = int(time.time() * 1000000)
+      storage_writer.UpdateAttributeContainer(session)
 
     return processing_status
 
