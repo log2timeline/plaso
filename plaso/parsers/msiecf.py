@@ -131,7 +131,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       cache_directories (list[str]): cache directory names.
       msiecf_item (pymsiecf.leak): MSIECF leak item.
       recovered (Optional[bool]): True if the item was recovered.
@@ -157,7 +157,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       msiecf_file (pymsiecf.file): MSIECF file.
     """
     format_version = msiecf_file.format_version
@@ -225,7 +225,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       msiecf_item (pymsiecf.redirected): MSIECF redirected item.
       recovered (Optional[bool]): True if the item was recovered.
     """
@@ -245,7 +245,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       format_version (str): MSIECF format version.
       cache_directories (list[str]): cache directory names.
       msiecf_item (pymsiecf.url): MSIECF URL item.
@@ -278,7 +278,7 @@ class MSIECFParser(interface.FileObjectParser):
         if msiecf_item.data[:4] == b'HTTP':
           # Make sure the HTTP headers are ASCII encoded.
           # TODO: determine correct encoding currently indications that
-          # this could be the system narrow string codepage.
+          # this could be the system narrow string code page.
           try:
             http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
@@ -372,11 +372,13 @@ class MSIECFParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
+    code_page = parser_mediator.GetCodePage()
+
     msiecf_file = pymsiecf.file()
-    msiecf_file.set_ascii_codepage(parser_mediator.codepage)
+    msiecf_file.set_ascii_codepage(code_page)
 
     try:
       msiecf_file.open_file_object(file_object)

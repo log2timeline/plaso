@@ -341,9 +341,9 @@ class WindowsAvailableTimeZonesPlugin(
       time_zone_artifact.offset = tzi_record.bias
 
 
-class WindowsCodepagePlugin(
+class WindowsCodePagePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
-  """The Windows codepage plugin."""
+  """The Windows code page plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'WindowsCodePage'
 
@@ -365,13 +365,13 @@ class WindowsCodepagePlugin(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     # Map the Windows code page name to a Python equivalent name.
-    codepage = 'cp{0:s}'.format(value_data)
+    code_page = 'cp{0:s}'.format(value_data)
 
     try:
-      mediator.SetCodepage(codepage)
+      mediator.SetCodePage(code_page)
     except ValueError:
       mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME, 'Unable to set codepage.')
+          self.ARTIFACT_DEFINITION_NAME, 'Unable to set code page.')
 
 
 class WindowsEventLogPublishersPlugin(
@@ -948,7 +948,7 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsAllUsersProfileEnvironmentVariablePlugin,
     WindowsAllUsersAppProfileKnowledgeBasePlugin,
     WindowsAvailableTimeZonesPlugin,
-    WindowsCodepagePlugin, WindowsEventLogPublishersPlugin,
+    WindowsCodePagePlugin, WindowsEventLogPublishersPlugin,
     WindowsEventLogSourcesPlugin, WindowsHostnamePlugin, WindowsLanguagePlugin,
     WindowsMountedDevicesPlugin, WindowsProgramDataEnvironmentVariablePlugin,
     WindowsProgramDataKnowledgeBasePlugin,

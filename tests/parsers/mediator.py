@@ -9,7 +9,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
-from plaso.engine import knowledge_base
 from plaso.parsers import mediator
 from plaso.storage.fake import writer as fake_writer
 
@@ -24,10 +23,18 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for AppendToParserChain.
   # TODO: add tests for ClearParserChain.
 
+  def testGetCodePage(self):
+    """Tests the GetCodePage function."""
+    parser_mediator = mediator.ParserMediator()
+
+    code_page = parser_mediator.GetCodePage()
+    self.assertEqual(code_page, 'cp1252')
+
+    # TODO: improve test coverage.
+
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -80,8 +87,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetDisplayNameForPathSpec(self):
     """Tests the GetDisplayNameForPathSpec function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -98,8 +104,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetFileEntry(self):
     """Tests the GetFileEntry function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -109,8 +114,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetFilename(self):
     """Tests the GetFilename function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -118,14 +122,22 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     filename = parser_mediator.GetFilename()
     self.assertIsNone(filename)
 
+  def testGetLanguageTag(self):
+    """Tests the GetLanguageTag function."""
+    parser_mediator = mediator.ParserMediator()
+
+    language_tag = parser_mediator.GetLanguageTag()
+    self.assertEqual(language_tag, 'en-us')
+
+    # TODO: improve test coverage.
+
   # TODO: add tests for GetParserChain.
   # TODO: add tests for GetRelativePathForPathSpec.
   # TODO: add tests for PopFromParserChain.
 
   def testProduceEventData(self):
     """Tests the ProduceEventData method."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -158,8 +170,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testProduceExtractionWarning(self):
     """Tests the ProduceExtractionWarning method."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -178,8 +189,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testProduceRecoveryWarning(self):
     """Tests the ProduceRecoveryWarning method."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -198,8 +208,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testResetFileEntry(self):
     """Tests the ResetFileEntry function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -208,8 +217,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSetFileEntry(self):
     """Tests the SetFileEntry function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -218,8 +226,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSetStorageWriter(self):
     """Tests the SetStorageWriter function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
@@ -228,8 +235,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    parser_mediator = mediator.ParserMediator(knowledge_base_object)
+    parser_mediator = mediator.ParserMediator()
 
     storage_writer = fake_writer.FakeStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)

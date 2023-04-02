@@ -156,6 +156,14 @@ plaso.parsers.text\_plugins.postgresql module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.powershell\_transcript module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.powershell_transcript
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.santa module
 ----------------------------------------
 

@@ -93,19 +93,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     hostname = knowledge_base_object.GetHostname()
     self.assertEqual(hostname, '')
 
-  def testGetSystemConfigurationArtifact(self):
-    """Tests the GetSystemConfigurationArtifact function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
-    knowledge_base_object.SetHostname(hostname_artifact)
-
-    system_configuration = (
-        knowledge_base_object.GetSystemConfigurationArtifact())
-    self.assertIsNotNone(system_configuration)
-    self.assertIsNotNone(system_configuration.hostname)
-    self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
-
   def testGetSetValue(self):
     """Tests the Get and SetValue functions."""
     knowledge_base_object = knowledge_base.KnowledgeBase()

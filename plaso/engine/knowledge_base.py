@@ -10,7 +10,6 @@ of the source data.
 import codecs
 import pytz
 
-from plaso.containers import artifacts
 from plaso.engine import logger
 
 
@@ -98,38 +97,6 @@ class KnowledgeBase(object):
       return ''
 
     return hostname_artifact.name or ''
-
-  def GetSystemConfigurationArtifact(self):
-    """Retrieves the knowledge base as a system configuration artifact.
-
-    Returns:
-      SystemConfigurationArtifact: system configuration artifact.
-    """
-    system_configuration = artifacts.SystemConfigurationArtifact()
-
-    system_configuration.code_page = self.GetValue(
-        'codepage', default_value=self._codepage)
-
-    system_configuration.hostname = self._hostnames.get(
-        self._active_session, None)
-
-    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
-
-    system_configuration.language = self._language
-
-    system_configuration.operating_system = self.GetValue('operating_system')
-    system_configuration.operating_system_product = self.GetValue(
-        'operating_system_product')
-    system_configuration.operating_system_version = self.GetValue(
-        'operating_system_version')
-
-    time_zone = self._time_zone.zone
-    if isinstance(time_zone, bytes):
-      time_zone = time_zone.decode('ascii')
-
-    system_configuration.time_zone = time_zone
-
-    return system_configuration
 
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.

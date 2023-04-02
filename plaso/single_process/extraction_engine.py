@@ -170,14 +170,14 @@ class SingleProcessEngine(engine.BaseEngine):
 
         self._StartStatusUpdateThread()
 
-  def _ProcessSources(self, source_configurations, parser_mediator):
-    """Processes the sources.
+  def _ProcessSource(self, parser_mediator, file_system_path_specs):
+    """Processes file systems within a source.
 
     Args:
-      source_configurations (list[SourceConfigurationArtifact]): configurations
-          of the sources to process.
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -191,12 +191,9 @@ class SingleProcessEngine(engine.BaseEngine):
       find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
 
-    source_path_specs = [
-        configuration.path_spec for configuration in source_configurations]
-
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=find_specs, recurse_file_system=False,
-        resolver_context=self._resolver_context)
+        file_system_path_specs, find_specs=find_specs,
+        recurse_file_system=False, resolver_context=self._resolver_context)
 
     for path_spec in path_spec_generator:
       if self._abort:
@@ -290,13 +287,16 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  def _CreateParserMediator(self, resolver_context, processing_configuration):
+  def _CreateParserMediator(
+      self, resolver_context, processing_configuration, system_configurations):
     """Creates a parser mediator.
 
     Args:
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
 
     Returns:
       ParserMediator: parser mediator.
@@ -305,46 +305,38 @@ class SingleProcessEngine(engine.BaseEngine):
     if self.knowledge_base:
       environment_variables = self.knowledge_base.GetEnvironmentVariables()
 
-    preferred_codepage = processing_configuration.preferred_codepage
-    if not preferred_codepage and self.knowledge_base:
-      preferred_codepage = self.knowledge_base.codepage
-
-    preferred_language = processing_configuration.preferred_language
-    if not preferred_language and self.knowledge_base:
-      preferred_language = self.knowledge_base.language
-
-    preferred_time_zone = processing_configuration.preferred_time_zone
-    if not preferred_time_zone and self.knowledge_base:
-      preferred_time_zone = self.knowledge_base.timezone.zone
-
     parser_mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self.collection_filters_helper,
         environment_variables=environment_variables,
-        resolver_context=resolver_context)
+        resolver_context=resolver_context,
+        system_configurations=system_configurations)
 
     parser_mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
-    parser_mediator.SetPreferredCodepage(preferred_codepage)
-    parser_mediator.SetPreferredLanguage(preferred_language)
-    parser_mediator.SetPreferredTimeZone(preferred_time_zone)
+    parser_mediator.SetPreferredCodepage(
+        processing_configuration.preferred_codepage)
+    parser_mediator.SetPreferredLanguage(
+        processing_configuration.preferred_language)
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
 
     return parser_mediator
 
-  def ProcessSources(
-      self, source_configurations, storage_writer, resolver_context,
-      processing_configuration, force_parser=False,
+  def ProcessSource(
+      self, storage_writer, resolver_context, processing_configuration,
+      system_configurations, file_system_path_specs, force_parser=False,
       status_update_callback=None):
-    """Processes the sources.
+    """Processes file systems within a source.
 
     Args:
-      source_configurations (list[SourceConfigurationArtifact]): configurations
-          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
       force_parser (Optional[bool]): True if a specified parser should be forced
           to be used to extract events.
       status_update_callback (Optional[function]): callback function for status
@@ -357,7 +349,7 @@ class SingleProcessEngine(engine.BaseEngine):
       BadConfigOption: if the preferred time zone is invalid.
     """
     parser_mediator = self._CreateParserMediator(
-        resolver_context, processing_configuration)
+        resolver_context, processing_configuration, system_configurations)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(
@@ -413,7 +405,7 @@ class SingleProcessEngine(engine.BaseEngine):
             'parser_count')})
 
     try:
-      self._ProcessSources(source_configurations, parser_mediator)
+      self._ProcessSource(parser_mediator, file_system_path_specs)
 
       self._ProcessEventData()
 

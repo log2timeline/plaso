@@ -36,12 +36,12 @@ class TestEngine(engine.BaseEngine):
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
-  def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+  def GetSourceFileSystem(self, file_system_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec (dfvfs.PathSpec): path specifications of the sources
-          to process.
+      file_system_path_spec (dfvfs.PathSpec): path specifications of
+          the source file system to process.
       resolver_context (dfvfs.Context): resolver context.
 
     Returns:
@@ -111,8 +111,8 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
-  def testPreprocessSources(self):
-    """Tests the PreprocessSources function."""
+  def testPreprocessSource(self):
+    """Tests the PreprocessSource function."""
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -130,11 +130,11 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
-    test_engine.PreprocessSources(
+    source_configurations = test_engine.PreprocessSource(
         test_artifacts_path, None, [source_path_spec], storage_writer)
 
-    operating_system = test_engine.knowledge_base.GetValue('operating_system')
-    self.assertEqual(operating_system, 'Windows NT')
+    self.assertEqual(len(source_configurations), 1)
+    self.assertEqual(source_configurations[0].operating_system, 'Windows NT')
 
 
 if __name__ == '__main__':

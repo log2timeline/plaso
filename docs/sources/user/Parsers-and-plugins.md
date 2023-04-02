@@ -29,6 +29,7 @@ mft | Parser for NTFS $MFT metadata files.
 msiecf | Parser for Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) files.
 networkminer_fileinfo | Parser for NetworkMiner .fileinfos files.
 olecf | Parser for OLE Compound File (OLECF) format.
+onedrive_log | Parser for OneDrive Log files.
 opera_global | Parser for Opera global history (global_history.dat) files.
 opera_typed_history | Parser for Opera typed history (typed_history.xml) files.
 pe | Parser for Portable Executable (PE) files.
@@ -52,6 +53,8 @@ windefender_history | Parser for Windows Defender scan DetectionHistory files.
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
 winjob | Parser for Windows Scheduled Task job (or at-job) files.
+winpca_db0 | Parser for Windows PCA DB0 log files.
+winpca_dic | Parser for Windows PCA DIC log files.
 winreg | Parser for Windows NT Registry (REGF) files.
 
 ### Parser plugins: bencode
@@ -184,6 +187,7 @@ mac_securityd | Parser for MacOS security daemon (securityd) log files.
 mac_wifi | Parser for MacOS Wi-Fi log (wifi.log) files.
 popularity_contest | Parser for Popularity Contest log files.
 postgresql | Parser for PostgreSQL application log files.
+powershell_transcript | Parser for PowerShell transcript event.
 santa | Parser for Santa log (santa.log) files.
 sccm | Parser for System Center Configuration Manager (SCCM) client log files.
 selinux | Parser for SELinux audit log (audit.log) files.
@@ -253,7 +257,7 @@ linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_containe
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
-win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
+win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, text/powershell_transcript, winevtx, win_gen, winpca_db0, winpca_dic
 win7_slow | esedb, mft, win7
 win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/winfirewall, usnjrnl, webhist, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt

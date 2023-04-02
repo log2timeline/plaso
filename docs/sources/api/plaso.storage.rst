@@ -38,6 +38,14 @@ plaso.storage.reader module
    :undoc-members:
    :show-inheritance:
 
+plaso.storage.serializers module
+--------------------------------
+
+.. automodule:: plaso.storage.serializers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.storage.time\_range module
 --------------------------------
 

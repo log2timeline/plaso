@@ -13,7 +13,7 @@ class PreprocessMediator(object):
   """Preprocess mediator.
 
   Attributes:
-    codepage (str): code page.
+    code_page (str): code page.
     hostname (HostnameArtifact): hostname.
     language (str): language.
     time_zone (datetime.tzinfo): time zone.
@@ -37,7 +37,7 @@ class PreprocessMediator(object):
     self._windows_eventlog_providers_by_identifier = {}
     self._values = {}
 
-    self.codepage = None
+    self.code_page = None
     self.hostname = None
     self.language = None
     self.time_zone = None
@@ -215,17 +215,17 @@ class PreprocessMediator(object):
 
     logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
 
-  def SetCodepage(self, codepage):
-    """Sets the codepage.
+  def SetCodePage(self, code_page):
+    """Sets the code page.
 
     Args:
-      codepage (str): codepage.
+      code_page (str): code_page.
 
     Raises:
-      ValueError: if the codepage is not supported.
+      ValueError: if the code page is not supported.
     """
-    logger.debug('setting codepage to: "{0:s}"'.format(codepage))
-    self.codepage = codepage
+    logger.debug('setting code page to: "{0:s}"'.format(code_page))
+    self.code_page = code_page
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.

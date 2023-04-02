@@ -69,6 +69,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     Raises:
       ParseError: if the value data could not be parsed.
     """
+    code_page = parser_mediator.GetCodePage()
+
     value_data = registry_value.data
 
     value_data_size = len(value_data)
@@ -147,8 +149,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
 
       shell_items_parser = shell_items.ShellItemsParser(display_name)
       shell_items_parser.ParseByteStream(
-          parser_mediator, value_data[value_data_offset:],
-          codepage=parser_mediator.codepage)
+          parser_mediator, value_data[value_data_offset:], codepage=code_page)
 
       link_target = shell_items_parser.CopyToPath()
       if link_target:

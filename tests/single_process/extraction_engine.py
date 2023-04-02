@@ -9,7 +9,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
-from plaso.containers import artifacts
 from plaso.engine import configurations
 from plaso.single_process import extraction_engine
 from plaso.storage.fake import writer as fake_writer
@@ -22,8 +21,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def testProcessSources(self):
-    """Tests the ProcessSources function."""
+  def testProcessSource(self):
+    """Tests the PreprocessSource and ProcessSource functions."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -39,9 +38,6 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
-    source_configuration = artifacts.SourceConfigurationArtifact(
-        path_spec=source_path_spec)
-
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = shared_test_lib.DATA_PATH
     configuration.parser_filter_expression = 'filestat'
@@ -50,12 +46,12 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     try:
-      test_engine.PreprocessSources(
+      system_configurations = test_engine.PreprocessSource(
           test_artifacts_path, None, [source_path_spec], storage_writer)
 
-      processing_status = test_engine.ProcessSources(
-          [source_configuration], storage_writer, resolver_context,
-          configuration)
+      processing_status = test_engine.ProcessSource(
+          storage_writer, resolver_context, configuration,
+          system_configurations, [source_path_spec])
 
       number_of_events = storage_writer.GetNumberOfAttributeContainers('event')
       number_of_extraction_warnings = (

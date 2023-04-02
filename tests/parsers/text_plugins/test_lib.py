@@ -46,9 +46,12 @@ class TextPluginTestCase(test_lib.ParserTestCase):
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain('text')
 
+    encoding = plugin.ENCODING
+    if not encoding:
+      encoding = parser_mediator.GetCodePage()
+
     file_object = file_entry.GetFileObject()
-    text_reader = text_parser.EncodedTextReader(
-        file_object, encoding=plugin.ENCODING or parser_mediator.codepage)
+    text_reader = text_parser.EncodedTextReader(file_object, encoding=encoding)
 
     text_reader.ReadLines()
 

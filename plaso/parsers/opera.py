@@ -311,11 +311,13 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    encoding = self._ENCODING or parser_mediator.codepage
+    encoding = self._ENCODING
+    if not encoding:
+      encoding = parser_mediator.GetCodePage()
+
     text_file_object = text_file.TextFile(file_object, encoding=encoding)
     if not self._ParseAndValidateRecord(parser_mediator, text_file_object):
-      raise errors.WrongParser(
-          'Unable to parse as Opera global_history.dat.')
+      raise errors.WrongParser('Unable to parse as Opera global_history.dat.')
 
     while self._ParseRecord(parser_mediator, text_file_object):
       pass

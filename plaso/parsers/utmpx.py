@@ -87,11 +87,11 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     if entry.type not in self._SUPPORTED_TYPES:
       raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
 
-    encoding = parser_mediator.codepage or 'utf8'
+    code_page = parser_mediator.GetCodePage()
 
     try:
       username = entry.username.split(b'\x00')[0]
-      username = username.decode(encoding).rstrip()
+      username = username.decode(code_page).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode username string')
@@ -99,7 +99,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       terminal = entry.terminal.split(b'\x00')[0]
-      terminal = terminal.decode(encoding).rstrip()
+      terminal = terminal.decode(code_page).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode terminal string')
@@ -110,7 +110,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       hostname = entry.hostname.split(b'\x00')[0]
-      hostname = hostname.decode(encoding).rstrip()
+      hostname = hostname.decode(code_page).rstrip()
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionWarning(
           'unable to decode hostname string')

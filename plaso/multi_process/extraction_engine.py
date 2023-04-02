@@ -184,6 +184,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._task_storage_format = None
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
+    self._system_configurations = None
 
   def _FillEventSourceHeap(
       self, storage_writer, event_source_heap, start_with_first=False):
@@ -513,16 +514,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           self._task_manager.SampleTaskStatus(self._merge_task, 'merge_resumed')
 
-  def _ProcessSources(
-      self, source_configurations, storage_writer, session_identifier):
-    """Processes the sources.
+  def _ProcessSource(
+      self, storage_writer, session_identifier, file_system_path_specs):
+    """Processes file systems within a source.
 
     Args:
-      source_configurations (list[SourceConfigurationArtifact]): configurations
-          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       session_identifier (str): the identifier of the session the tasks are
           part of.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -544,12 +545,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
 
-    source_path_specs = [
-        configuration.path_spec for configuration in source_configurations]
-
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=find_specs, recurse_file_system=False,
-        resolver_context=self._resolver_context)
+        file_system_path_specs, find_specs=find_specs,
+        recurse_file_system=False, resolver_context=self._resolver_context)
 
     for path_spec in path_spec_generator:
       if self._abort:
@@ -747,7 +745,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self.collection_filters_helper, self.knowledge_base,
-        self._processing_configuration,
+        self._processing_configuration, self._system_configurations,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -926,20 +924,23 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  def ProcessSources(
-      self, source_configurations, storage_writer, session_identifier,
-      processing_configuration, enable_sigsegv_handler=False,
-      status_update_callback=None, storage_file_path=None):
-    """Processes the sources and extract events.
+  def ProcessSource(
+      self, storage_writer, session_identifier, processing_configuration,
+      system_configurations, file_system_path_specs,
+      enable_sigsegv_handler=False, status_update_callback=None,
+      storage_file_path=None):
+    """Processes file systems within a source.
 
     Args:
-      source_configurations (list[SourceConfigurationArtifact]): configurations
-          of the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       session_identifier (str): the identifier of the session the tasks are
           part of.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
       status_update_callback (Optional[function]): callback function for status
@@ -953,6 +954,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       BadConfigOption: if the preferred time zone is invalid.
     """
     self._enable_sigsegv_handler = enable_sigsegv_handler
+    self._system_configurations = system_configurations
 
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
@@ -1013,8 +1015,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._StartStatusUpdateThread()
 
     try:
-      self._ProcessSources(
-          source_configurations, storage_writer, session_identifier)
+      self._ProcessSource(
+          storage_writer, session_identifier, file_system_path_specs)
 
     finally:
       # Stop the status update thread after close of the storage writer
@@ -1073,6 +1075,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status_update_callback = None
     self._storage_file_path = None
     self._storage_writer = None
+    self._system_configurations = None
     self._task_storage_format = None
 
     return self._processing_status

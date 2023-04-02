@@ -59,7 +59,7 @@ def Main():
   tool.PrintFilterCollection()
 
   try:
-    tool.ProcessSources()
+    tool.ProcessSource()
 
   # Writing to stdout and stderr will raise BrokenPipeError if it
   # receives a SIGPIPE.
@@ -76,7 +76,7 @@ def Main():
 
   except errors.SourceScannerError as exception:
     logging.warning((
-        'Unable to scan for a supported filesystem with error: {0!s}\n'
+        'Unable to scan for a supported file system with error: {0!s}\n'
         'Most likely the image format is not supported by the '
         'tool.').format(exception))
     return False

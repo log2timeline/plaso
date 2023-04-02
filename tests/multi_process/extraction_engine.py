@@ -9,7 +9,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.engine import configurations
@@ -22,8 +21,8 @@ from tests import test_lib as shared_test_lib
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the task-based multi-process extraction engine."""
 
-  def testProcessSources(self):
-    """Tests the PreprocessSources and ProcessSources function."""
+  def testProcessSource(self):
+    """Tests the PreprocessSource and ProcessSource functions."""
     artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(artifacts_path)
 
@@ -39,9 +38,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
-    source_configuration = artifacts.SourceConfigurationArtifact(
-        path_spec=source_path_spec)
-
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
@@ -55,12 +51,13 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer.Open(path=temp_file)
 
       try:
-        test_engine.PreprocessSources(
+        system_configurations = test_engine.PreprocessSource(
             artifacts_path, None, [source_path_spec], storage_writer)
 
-        processing_status = test_engine.ProcessSources(
-            [source_configuration], storage_writer, session.identifier,
-            configuration, storage_file_path=temp_directory)
+        processing_status = test_engine.ProcessSource(
+            storage_writer, session.identifier, configuration,
+            system_configurations, [source_path_spec],
+            storage_file_path=temp_directory)
 
         number_of_events = storage_writer.GetNumberOfAttributeContainers(
             'event')

@@ -92,7 +92,7 @@ class DSVParser(interface.FileObjectParser):
     Args:
       file_object (dfvfs.FileIO): file-like object.
       encoding (Optional[str]): encoding used in the DSV file, where None
-          indicates the codepage of the parser mediator should be used.
+          indicates the code page of the parser mediator should be used.
 
     Returns:
       TextFile: an object that implements an iterator over lines in a text file.
@@ -128,7 +128,7 @@ class DSVParser(interface.FileObjectParser):
     Args:
       file_object (dfvfs.FileIO): file-like object.
       encoding (Optional[str]): encoding used in the DSV file, where None
-          indicates the codepage of the parser mediator should be used.
+          indicates the code page of the parser mediator should be used.
 
     Returns:
       bool: True if the file has lines of the expected length.
@@ -213,10 +213,9 @@ class DSVParser(interface.FileObjectParser):
           '[{0:s}] Unable to parse DSV file: {1:s} encoding does not match the '
           'one required by the parser.').format(self._encoding, display_name))
 
+    encoding = self._encoding
     if not encoding:
-      # Fallback to UTF-8 as a last resort otherwise the creation of
-      # text_file.TextFile will fail if no encoding is set.
-      encoding = self._encoding or parser_mediator.codepage or 'utf-8'
+      encoding = parser_mediator.GetCodePage()
 
     file_object.seek(text_offset, os.SEEK_SET)
 
