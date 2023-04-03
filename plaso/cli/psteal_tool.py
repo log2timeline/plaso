@@ -14,7 +14,6 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import reports
 from plaso.engine import configurations
 from plaso.engine import engine
-from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_process import output_engine as multi_output_engine
@@ -87,7 +86,6 @@ class PstealTool(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._deduplicate_events = True
-    self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._output_format = None
     self._parsers_manager = parsers_manager.ParsersManager
@@ -107,17 +105,12 @@ class PstealTool(
     Returns:
       ProcessingConfiguration: output and formatting processing configuration.
     """
-    if self._preferred_language:
-      preferred_language = self._preferred_language
-    else:
-      preferred_language = self._knowledge_base.language
-
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
     configuration.debug_output = self._debug_mode
     configuration.dynamic_time = self._output_dynamic_time
     configuration.log_filename = self._log_file
-    configuration.preferred_language = preferred_language
+    configuration.preferred_language = self._preferred_language
     configuration.preferred_time_zone = self._output_time_zone
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.profilers = self._profilers

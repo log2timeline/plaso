@@ -97,7 +97,7 @@ class FieldFormattingHelper(object):
       if iso8601_string[-1] == 'Z':
         iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
 
-      if output_mediator.timezone != pytz.UTC or date_time.time_zone_offset:
+      if output_mediator.time_zone != pytz.UTC or date_time.time_zone_offset:
         # For output in a specific time zone overwrite the date, time in
         # seconds and time zone offset in the UTC ISO8601 string.
         year, month, day_of_month, hours, minutes, seconds = (
@@ -108,7 +108,8 @@ class FieldFormattingHelper(object):
               year, month, day_of_month, hours, minutes, seconds,
               tzinfo=pytz.UTC)
 
-          datetime_object = datetime_object.astimezone(output_mediator.timezone)
+          datetime_object = datetime_object.astimezone(
+              output_mediator.time_zone)
 
           isoformat_string = datetime_object.isoformat()
           iso8601_string = ''.join([
@@ -143,7 +144,7 @@ class FieldFormattingHelper(object):
         datetime_object = datetime.datetime(1970, 1, 1) + datetime.timedelta(
             microseconds=timestamp)
 
-        datetime_object = datetime_object.astimezone(output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
         iso8601_string = datetime_object.isoformat()
         iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
@@ -432,13 +433,13 @@ class FieldFormattingHelper(object):
     year, month, day_of_month, hours, minutes, seconds = (
         date_time.GetDateWithTimeOfDay())
 
-    if output_mediator.timezone != pytz.UTC:
+    if output_mediator.time_zone != pytz.UTC:
       try:
         datetime_object = datetime.datetime(
             year, month, day_of_month, hours, minutes, seconds,
             tzinfo=pytz.UTC)
 
-        datetime_object = datetime_object.astimezone(output_mediator.timezone)
+        datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
         hours, minutes, seconds = (
             datetime_object.hour, datetime_object.minute,
@@ -477,7 +478,7 @@ class FieldFormattingHelper(object):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=event.timestamp)
 
-    if output_mediator.timezone == pytz.UTC:
+    if output_mediator.time_zone == pytz.UTC:
       return 'UTC'
 
     year, month, day_of_month, hours, minutes, seconds = (
@@ -488,7 +489,7 @@ class FieldFormattingHelper(object):
       # a time zone).
       datetime_object = datetime.datetime(
           year, month, day_of_month, hours, minutes, seconds)
-      return output_mediator.timezone.tzname(datetime_object)
+      return output_mediator.time_zone.tzname(datetime_object)
 
     except (OverflowError, TypeError, ValueError):
       self._ReportEventError(event, event_data, (

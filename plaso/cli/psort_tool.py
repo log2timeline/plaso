@@ -125,18 +125,12 @@ class PsortTool(
     Returns:
       ProcessingConfiguration: output and formatting processing configuration.
     """
-    if self._preferred_language:
-      preferred_language = self._preferred_language
-    else:
-      # TODO: remove after refactor
-      preferred_language = self._knowledge_base.language
-
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
     configuration.debug_output = self._debug_mode
     configuration.dynamic_time = self._output_dynamic_time
     configuration.log_filename = self._log_file
-    configuration.preferred_language = preferred_language
+    configuration.preferred_language = self._preferred_language
     configuration.preferred_time_zone = self._output_time_zone
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.profilers = self._profilers
@@ -482,19 +476,9 @@ class PsortTool(
       raise RuntimeError('Unable to create storage reader.')
 
     try:
-      # TODO: remove after refactor
-      for session_index, session in enumerate(storage_reader.GetSessions()):
-        self._knowledge_base.SetActiveSession(session.identifier)
-
-        system_configuration = storage_reader.GetAttributeContainerByIndex(
-            'system_configuration', session_index)
-        self._knowledge_base.ReadSystemConfigurationArtifact(
-            system_configuration)
-
       self._number_of_stored_analysis_reports = (
           storage_reader.GetNumberOfAttributeContainers(
               self._CONTAINER_TYPE_ANALYSIS_REPORT))
-
     finally:
       storage_reader.Close()
 

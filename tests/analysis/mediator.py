@@ -9,7 +9,6 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.analysis import mediator
 from plaso.containers import artifacts
-from plaso.storage.fake import writer as fake_writer
 
 from tests.analysis import test_lib
 
@@ -21,22 +20,13 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     """Tests the GetDisplayNameForPathSpec function."""
     analysis_mediator = mediator.AnalysisMediator()
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    analysis_mediator.SetStorageWriter(storage_writer)
+    test_path = self._GetTestFilePath(['syslog.gz'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    storage_writer.Open()
-
-    try:
-      test_path = self._GetTestFilePath(['syslog.gz'])
-      os_path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
-
-      expected_display_name = 'OS:{0:s}'.format(test_path)
-      display_name = analysis_mediator.GetDisplayNameForPathSpec(os_path_spec)
-      self.assertEqual(display_name, expected_display_name)
-
-    finally:
-      storage_writer.Close()
+    expected_display_name = 'OS:{0:s}'.format(test_path)
+    display_name = analysis_mediator.GetDisplayNameForPathSpec(os_path_spec)
+    self.assertEqual(display_name, expected_display_name)
 
   def testGetUsernameForPath(self):
     """Tests the GetUsernameForPath function."""
@@ -45,26 +35,15 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
         user_directory='C:\\Users\\testuser1',
         username='testuser1')
 
-    analysis_mediator = mediator.AnalysisMediator()
+    analysis_mediator = mediator.AnalysisMediator(user_accounts=[test_user1])
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    analysis_mediator.SetStorageWriter(storage_writer)
+    username = analysis_mediator.GetUsernameForPath(
+        'C:\\Users\\testuser1\\Downloads')
+    self.assertEqual(username, 'testuser1')
 
-    storage_writer.Open()
-
-    try:
-      storage_writer.AddAttributeContainer(test_user1)
-
-      username = analysis_mediator.GetUsernameForPath(
-          'C:\\Users\\testuser1\\Downloads')
-      self.assertEqual(username, 'testuser1')
-
-      username = analysis_mediator.GetUsernameForPath(
-          'C:\\Users\\testuser2\\Downloads')
-      self.assertIsNone(username)
-
-    finally:
-      storage_writer.Close()
+    username = analysis_mediator.GetUsernameForPath(
+        'C:\\Users\\testuser2\\Downloads')
+    self.assertIsNone(username)
 
   # TODO: add test for ProduceAnalysisReport.
   # TODO: add test for ProduceEventTag.
@@ -73,16 +52,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     """Tests the SignalAbort function."""
     analysis_mediator = mediator.AnalysisMediator()
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    analysis_mediator.SetStorageWriter(storage_writer)
-
-    storage_writer.Open()
-
-    try:
-      analysis_mediator.SignalAbort()
-
-    finally:
-      storage_writer.Close()
+    analysis_mediator.SignalAbort()
 
 
 if __name__ == '__main__':

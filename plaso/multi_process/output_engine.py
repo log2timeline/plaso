@@ -137,10 +137,11 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
 
-  def _CreateOutputMediator(self, processing_configuration):
+  def _CreateOutputMediator(self, storage_reader, processing_configuration):
     """Creates an output mediator.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
 
@@ -153,7 +154,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           read.
     """
     mediator = output_mediator.OutputMediator(
-        data_location=processing_configuration.data_location,
+        storage_reader, data_location=processing_configuration.data_location,
         dynamic_time=processing_configuration.dynamic_time,
         preferred_encoding=processing_configuration.preferred_encoding)
 
@@ -465,8 +466,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     self._events_status.total_number_of_events = total_number_of_events
 
-    self._output_mediator = self._CreateOutputMediator(processing_configuration)
-    self._output_mediator.SetStorageReader(storage_reader)
+    self._output_mediator = self._CreateOutputMediator(
+        storage_reader, processing_configuration)
 
     output_module.WriteHeader(output_mediator)
 

@@ -46,7 +46,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
       test_events.append((event, event_data, event_data_stream))
 
-    mediator = analysis_mediator.AnalysisMediator()
+    mediator = analysis_mediator.AnalysisMediator(
+        user_accounts=user_accounts)
     mediator.SetStorageWriter(storage_writer)
 
     for event, event_data, event_data_stream in test_events:
@@ -72,9 +73,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       SkipTest: if the path inside the test data directory does not exist and
           the test should be skipped.
     """
-    mediator = analysis_mediator.AnalysisMediator()
-
     storage_writer = self._ParseFile(path_segments, parser)
+    mediator = analysis_mediator.AnalysisMediator()
     mediator.SetStorageWriter(storage_writer)
 
     for event in storage_writer.GetSortedEvents():

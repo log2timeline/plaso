@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.containers import artifacts
-from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.storage.fake import writer as fake_writer
 from plaso.output import mediator
@@ -30,13 +29,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
        'username': 'root'}]
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._knowledge_base = knowledge_base.KnowledgeBase()
-
-    hostname_artifact = artifacts.HostnameArtifact(name='myhost')
-    self._knowledge_base.SetHostname(hostname_artifact)
-
   # TODO: add tests for _GetWinevtRcDatabaseReader
 
   def testReadMessageFormattersFile(self):
@@ -44,10 +36,16 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
     self._SkipIfPathNotExists(test_file_path)
 
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
 
-    output_mediator._ReadMessageFormattersFile(test_file_path)
-    self.assertEqual(len(output_mediator._message_formatters), 2)
+    try:
+      output_mediator = mediator.OutputMediator(storage_writer)
+
+      output_mediator._ReadMessageFormattersFile(test_file_path)
+      self.assertEqual(len(output_mediator._message_formatters), 2)
+    finally:
+      storage_writer.Close()
 
   # TODO: add tests for _ReadSourceMappings
 
@@ -55,23 +53,47 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
   def testGetHostname(self):
     """Tests the GetHostname function."""
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    system_configuration = artifacts.SystemConfigurationArtifact()
+    system_configuration.hostname = artifacts.HostnameArtifact(name='myhost')
 
-    _, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
 
-    hostname = output_mediator.GetHostname(event_data)
-    self.assertEqual(hostname, 'ubuntu')
+    try:
+      storage_writer.AddAttributeContainer(system_configuration)
+
+      output_mediator = mediator.OutputMediator(storage_writer)
+
+      _, event_data, _ = containers_test_lib.CreateEventFromValues(
+          self._TEST_EVENTS[0])
+
+      hostname = output_mediator.GetHostname(event_data)
+      self.assertEqual(hostname, 'ubuntu')
+
+      event_data.hostname = None
+
+      hostname = output_mediator.GetHostname(event_data)
+      self.assertEqual(hostname, 'myhost')
+
+    finally:
+      storage_writer.Close()
 
   def testGetMACBRepresentation(self):
     """Tests the GetMACBRepresentation function."""
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
 
-    event, event_data, _ = containers_test_lib.CreateEventFromValues(
-        self._TEST_EVENTS[0])
-    macb_representation = output_mediator.GetMACBRepresentation(
-        event, event_data)
-    self.assertEqual(macb_representation, '..C.')
+    try:
+      output_mediator = mediator.OutputMediator(storage_writer)
+
+      event, event_data, _ = containers_test_lib.CreateEventFromValues(
+          self._TEST_EVENTS[0])
+      macb_representation = output_mediator.GetMACBRepresentation(
+          event, event_data)
+      self.assertEqual(macb_representation, '..C.')
+
+    finally:
+      storage_writer.Close()
 
   # TODO: add tests for GetMACBRepresentationFromDescriptions
   # TODO: add tests for GetMessageFormatter
@@ -85,13 +107,11 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         username='testuser1')
 
     storage_writer = fake_writer.FakeStorageWriter()
-
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
-    output_mediator.SetStorageReader(storage_writer)
-
     storage_writer.Open()
 
     try:
+      output_mediator = mediator.OutputMediator(storage_writer)
+
       storage_writer.AddAttributeContainer(test_user1)
 
       _, event_data, _ = containers_test_lib.CreateEventFromValues(
@@ -121,20 +141,34 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
     test_directory_path = self._GetTestFilePath(['formatters'])
     self._SkipIfPathNotExists(test_directory_path)
 
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
 
-    output_mediator.ReadMessageFormattersFromDirectory(test_directory_path)
-    self.assertEqual(len(output_mediator._message_formatters), 2)
+    try:
+      output_mediator = mediator.OutputMediator(storage_writer)
+
+      output_mediator.ReadMessageFormattersFromDirectory(test_directory_path)
+      self.assertEqual(len(output_mediator._message_formatters), 2)
+
+    finally:
+      storage_writer.Close()
 
   def testReadMessageFormattersFromFile(self):
     """Tests the ReadMessageFormattersFromFile function."""
     test_file_path = self._GetTestFilePath(['formatters', 'format_test.yaml'])
     self._SkipIfPathNotExists(test_file_path)
 
-    output_mediator = mediator.OutputMediator(self._knowledge_base, None)
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
 
-    output_mediator.ReadMessageFormattersFromFile(test_file_path)
-    self.assertEqual(len(output_mediator._message_formatters), 2)
+    try:
+      output_mediator = mediator.OutputMediator(storage_writer)
+
+      output_mediator.ReadMessageFormattersFromFile(test_file_path)
+      self.assertEqual(len(output_mediator._message_formatters), 2)
+
+    finally:
+      storage_writer.Close()
 
   # TODO: add tests for SetPreferredLanguageIdentifier
   # TODO: add tests for SetTimezone

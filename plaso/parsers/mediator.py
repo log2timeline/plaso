@@ -188,11 +188,11 @@ class ParserMediator(object):
         path, self._environment_variables)
 
   def GetCodePage(self, file_entry=None):
-    """Retrieves the code page related path specification.
+    """Retrieves the code page related to the file entry.
 
     Args:
       file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will use self._file_entry.
+          will use the active file entry.
 
     Returns:
       str: code page.
@@ -221,7 +221,7 @@ class ParserMediator(object):
 
     Args:
       file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will use self._file_entry.
+          will use the active file entry.
 
     Returns:
       str: human readable string that describes the path to the file entry.
@@ -278,11 +278,11 @@ class ParserMediator(object):
     return self._file_entry.name
 
   def GetLanguageTag(self, file_entry=None):
-    """Retrieves the language tag related path specification.
+    """Retrieves the language tag related to the file entry.
 
     Args:
       file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will use self._file_entry.
+          will use the active file entry.
 
     Returns:
       str: code page.
