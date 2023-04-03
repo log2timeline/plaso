@@ -743,7 +743,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         port=self._task_queue_port,
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
-    environment_variables = self.knowledge_base.GetEnvironmentVariables()
+    # Ensure environment_variables is a list otherwise pickle will fail
+    # on Windows when creating a new process.
+    environment_variables = list(self.knowledge_base.GetEnvironmentVariables())
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self.collection_filters_helper,
