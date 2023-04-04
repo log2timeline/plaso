@@ -303,6 +303,10 @@ class WinCCSysLogParser(interface.FileObjectParser):
 
     Raises:
       WrongParser: when the file cannot be parsed.
+    """
+    # Note that we cannot use the DSVParser here since this WinCC file format is
+    # not strict and clean file format.
+    line_reader = text_file.TextFile(
         file_object, encoding=self.ENCODING, end_of_line='\r\n')
 
     line_number = 0
