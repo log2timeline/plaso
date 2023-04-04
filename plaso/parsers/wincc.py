@@ -16,7 +16,7 @@ class SIMATICS7EventData(events.EventData):
 
   Attributes:
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-      was created.
+        was created.
     body (str): the message content of the event.
   """
 
@@ -25,7 +25,6 @@ class SIMATICS7EventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SIMATICS7EventData, self).__init__(data_type=self.DATA_TYPE)
-
     self.creation_time = None
     self.body = None
 
@@ -36,7 +35,7 @@ class WinCCSysLogEventData(events.EventData):
   Attributes:
     log_identifier (int): identifier for this log file.
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-      was created.
+        was created.
     event_number (int): a number specifying the type of event.
     log_hostname (str): the hostname of the machine logging the event.
     source_device (str): which device generated the event.
@@ -108,10 +107,6 @@ class SIMATICLogParser(interface.FileObjectParser):
       expected_string = '| LogFileCount'
       if values[1].find(expected_string) < 0:
         error_string = 'Expected third line to contain {0:s}'.format(
-            expected_string)
-        raise errors.WrongParser(error_string)
-
-    event_data = SIMATICS7EventData()
             expected_string)
         raise errors.WrongParser(error_string)
 
