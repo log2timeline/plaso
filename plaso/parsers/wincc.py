@@ -16,8 +16,8 @@ class SIMATICS7EventData(events.EventData):
 
   Attributes:
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-        was created.
-    message (str): the message of the event.
+      was created.
+    body (str): the message content of the event.
   """
 
   DATA_TYPE = 'wincc:simatic_s7:entry'
@@ -25,8 +25,9 @@ class SIMATICS7EventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SIMATICS7EventData, self).__init__(data_type=self.DATA_TYPE)
+
     self.creation_time = None
-    self.message = None
+    self.body = None
 
 
 class WinCCSysLogEventData(events.EventData):
@@ -35,13 +36,11 @@ class WinCCSysLogEventData(events.EventData):
   Attributes:
     log_identifier (int): identifier for this log file.
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
-        was created.
+      was created.
     event_number (int): a number specifying the type of event.
-    unknown_int (int): an integer with unknown meaning.
-    unknown_str (str): a string with unknown meaning (mostly empty).
-    hostname (str): the hostname of the machine logging the event.
-    source (str): which device generated the event.
-    message (str): the content of the log's message.
+    log_hostname (str): the hostname of the machine logging the event.
+    source_device (str): which device generated the event.
+    body (str): the content of the log's message.
   """
 
   DATA_TYPE = 'wincc:sys_log:entry'
@@ -53,11 +52,9 @@ class WinCCSysLogEventData(events.EventData):
     self.log_identifier = None
     self.creation_time = None
     self.event_number = None
-    self.unknown_int = None
-    self.unknown_str = None
-    self.hostname = None
-    self.source = None
-    self.message = None
+    self.log_hostname = None
+    self.source_device = None
+    self.body = None
 
 
 class SIMATICLogParser(interface.FileObjectParser):
@@ -93,26 +90,29 @@ class SIMATICLogParser(interface.FileObjectParser):
     # 2019-05-27 10:05:43,405 INFO     Log starting ...
     # 2019-05-27 10:05:43,405 INFO     | LogFileName   : C:\.....
     # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
-
     if line_number == 0:
-      expected_str = 'Log starting ...'+self.END_OF_LINE
-      if not values[1].endswith(expected_str):
+      expected_string = 'Log starting ...'+self.END_OF_LINE
+      if not values[1].endswith(expected_string):
         error_string = 'Expected first line to end with "{0:s}"."{1!s}"'.format(
-            expected_str, values[1])
+            expected_string, values[1])
         raise errors.WrongParser(error_string)
 
     if line_number == 1:
-      expected_str = '| LogFileName'
-      if values[1].find(expected_str) < 0:
+      expected_string = '| LogFileName'
+      if values[1].find(expected_string) < 0:
         error_string = 'Expected second line to contain "{0:s}"'.format(
-            expected_str)
+            expected_string)
         raise errors.WrongParser(error_string)
 
     if line_number == 2:
-      expected_str = '| LogFileCount'
-      if values[1].find(expected_str) < 0:
+      expected_string = '| LogFileCount'
+      if values[1].find(expected_string) < 0:
         error_string = 'Expected third line to contain {0:s}'.format(
-            expected_str)
+            expected_string)
+        raise errors.WrongParser(error_string)
+
+    event_data = SIMATICS7EventData()
+            expected_string)
         raise errors.WrongParser(error_string)
 
     event_data = SIMATICS7EventData()
@@ -126,7 +126,7 @@ class SIMATICLogParser(interface.FileObjectParser):
           '{0!s} on line {1:d} {2!s}').format(exception, line_number, values)
       parser_mediator.ProduceExtractionWarning(error_string)
 
-    event_data.message = ','.join(values[1:]).strip()
+    event_data.body = ','.join(values[1:]).strip()
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -248,18 +248,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
       self._ParseValuesFail(
           parser_mediator, first_line, exception, error_string)
 
-    try:
-      event_data.unknown_int = int(values[4])
-    except ValueError as exception:
-      error_string = (
-          'Type of 5th value ({0!s}) should be an int in line:'
-          '{1:d}').format(values[4], line_number)
-      self._ParseValuesFail(
-          parser_mediator, first_line, exception, error_string)
-
-    # This seems to always be empty, however, we don't want to stop parsing if
-    # is not in future data.
-    event_data.unknown_str = values[5]
+    # Column 4 and 5 contain unknown values, we are not parsing them.
 
     # We are checking this only once, on the first line, as we expect all
     # following lines to contain the same hostname, as the logs are
@@ -289,16 +278,16 @@ class WinCCSysLogParser(interface.FileObjectParser):
           self._ParseValuesFail(
               parser_mediator, first_line, exception, error_string)
 
-    event_data.hostname = hostname
+    event_data.log_hostname = hostname
 
-    event_data.source = values[7]
+    event_data.source_device = values[7]
 
     # The second to last field is the one that might contain unquoted separator.
     # The last field can contain a string such as MSG_STATE_COME, MSG_STATE_GO,
     # but also sometimes contains a message string.
 
     text_message = ' '.join(values[8:])
-    event_data.message = text_message
+    event_data.body = text_message
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -319,10 +308,6 @@ class WinCCSysLogParser(interface.FileObjectParser):
 
     Raises:
       WrongParser: when the file cannot be parsed.
-    """
-    # Note that we cannot use the DSVParser here since this WinCC file format is
-    # not strict and clean file format.
-    line_reader = text_file.TextFile(
         file_object, encoding=self.ENCODING, end_of_line='\r\n')
 
     line_number = 0
