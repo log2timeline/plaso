@@ -15,9 +15,9 @@ class SIMATICS7EventData(events.EventData):
   """SIMATIC S7 event data.
 
   Attributes:
+    body (str): the message content of the event.
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
         was created.
-    body (str): the message content of the event.
   """
 
   DATA_TYPE = 'wincc:simatic_s7:entry'
@@ -25,21 +25,21 @@ class SIMATICS7EventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SIMATICS7EventData, self).__init__(data_type=self.DATA_TYPE)
-    self.creation_time = None
     self.body = None
+    self.creation_time = None
 
 
 class WinCCSysLogEventData(events.EventData):
   """WinCC Sys Log event data.
 
   Attributes:
-    log_identifier (int): identifier for this log file.
+    body (str): the content of the log's message.
     creation_time (dfdatetime.DateTimeValues): date and time the log entry
         was created.
     event_number (int): a number specifying the type of event.
     log_hostname (str): the hostname of the machine logging the event.
+    log_identifier (int): identifier for this log file.
     source_device (str): which device generated the event.
-    body (str): the content of the log's message.
   """
 
   DATA_TYPE = 'wincc:sys_log:entry'
@@ -47,13 +47,12 @@ class WinCCSysLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(WinCCSysLogEventData, self).__init__(data_type=self.DATA_TYPE)
-
-    self.log_identifier = None
+    self.body = None
     self.creation_time = None
     self.event_number = None
     self.log_hostname = None
+    self.log_identifier = None
     self.source_device = None
-    self.body = None
 
 
 class SIMATICLogParser(interface.FileObjectParser):
