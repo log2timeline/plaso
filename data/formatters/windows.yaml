@@ -86,7 +86,7 @@ message:
 - '{body}'
 short_message:
 - '{body}'
-short_source: 'WINCC'
+short_source: 'LOG'
 source: 'SIMATIC S7 log'
 ---
 type: 'conditional'
@@ -98,7 +98,7 @@ message:
 short_message:
 - '{source_device}'
 - '{body}'
-short_source: 'WINCC'
+short_source: 'LOG'
 source: 'WinCC Sys Log'
 ---
 type: 'conditional'
