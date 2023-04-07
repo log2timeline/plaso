@@ -3,7 +3,7 @@
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
-from dfvfs.resolver import resolver
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import worker
 from plaso.lib import definitions
@@ -70,7 +70,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     """
     if (path_spec and not path_spec.IsSystemLevel() and
         path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = resolver.Resolver.OpenFileSystem(
+      file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
 
       if file_system not in self._file_system_cache:
@@ -175,7 +175,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._resolver_context = context.Context()
 
     for credential_configuration in self._processing_configuration.credentials:
-      resolver.Resolver.key_chain.SetCredential(
+      path_spec_resolver.Resolver.key_chain.SetCredential(
           credential_configuration.path_spec,
           credential_configuration.credential_type,
           credential_configuration.credential_data)
@@ -287,8 +287,18 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     try:
       self._CacheFileSystem(path_spec)
 
-      extraction_worker.ProcessPathSpec(
-          parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
+      if excluded_find_specs:
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(
+            path_spec, resolver_context=self._resolver_context)
+
+        for find_spec in excluded_find_specs:
+          if find_spec.ComparePathSpecLocation(path_spec, file_system):
+            logger.debug('Excluded from extraction: {0:s}.'.format(
+                self._current_display_name))
+            self._status = definitions.STATUS_INDICATOR_IDLE
+            return
+
+      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
