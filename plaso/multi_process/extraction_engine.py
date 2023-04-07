@@ -545,26 +545,29 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
 
-    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        file_system_path_specs, find_specs=find_specs,
-        recurse_file_system=False, resolver_context=self._resolver_context)
-
-    for path_spec in path_spec_generator:
+    for file_system_path_spec in file_system_path_specs:
       if self._abort:
         break
 
-      # TODO: determine if event sources should be DataStream or FileEntry
-      # or both.
-      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      storage_writer.AddAttributeContainer(event_source)
+      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+          file_system_path_spec, find_specs=find_specs,
+          recurse_file_system=False, resolver_context=self._resolver_context)
+      for path_spec in path_spec_generator:
+        if self._abort:
+          break
 
-      self._number_of_produced_sources += 1
+        # TODO: determine if event sources should be DataStream or FileEntry
+        # or both.
+        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+        storage_writer.AddAttributeContainer(event_source)
 
-      # Update the foreman process status in case we are using a filter file.
-      self._UpdateForemanProcessStatus()
+        self._number_of_produced_sources += 1
 
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
+        # Update the foreman process status in case we are using a filter file.
+        self._UpdateForemanProcessStatus()
+
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
 
     self._ScheduleTasks(storage_writer, session_identifier)
 

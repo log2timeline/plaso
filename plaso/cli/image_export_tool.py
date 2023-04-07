@@ -127,7 +127,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     return hasher_object.GetStringDigest()
 
   def _CreateSanitizedDestination(
-      self, source_file_entry, source_path_spec, source_data_stream_name,
+      self, source_file_entry, file_system_path_spec, source_data_stream_name,
       destination_path):
     """Creates a sanitized path of both destination directory and filename.
 
@@ -136,7 +136,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     Args:
       source_file_entry (dfvfs.FileEntry): file entry of the source file.
-      source_path_spec (dfvfs.PathSpec): path specification of the source file.
+      file_system_path_spec (dfvfs.PathSpec): path specifications of the source
+          file system to process.
       source_data_stream_name (str): name of the data stream of the source file
           entry.
       destination_path (str): path of the destination directory.
@@ -146,7 +147,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           filename.
     """
     file_system = source_file_entry.GetFileSystem()
-    path = getattr(source_path_spec, 'location', None)
+    path = getattr(file_system_path_spec, 'location', None)
     path_segments = file_system.SplitPath(path)
 
     # Sanitize each path segment.
@@ -286,7 +287,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   # TODO: merge with collector and/or engine.
   def _Extract(
-      self, source_path_specs, destination_path, output_writer,
+      self, file_system_path_specs, destination_path, output_writer,
       artifact_filters, filter_file, artifact_definitions_path,
       custom_artifacts_path, skip_duplicates=True):
     """Extracts files.
@@ -295,7 +296,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     potentially on every VSS if that is wanted.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
       destination_path (str): path where the extracted files should be stored.
       output_writer (CLIOutputWriter): output writer.
       artifact_definitions_path (str): path to artifact definitions file.
@@ -342,34 +344,36 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       included_find_specs = filters_helper.included_file_system_find_specs
 
     output_writer.Write('Extracting file entries.\n')
-    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=included_find_specs,
-        resolver_context=self._resolver_context)
 
-    for path_spec in path_spec_generator:
-      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=self._resolver_context)
+    for file_system_path_spec in file_system_path_specs:
+      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+          file_system_path_spec, find_specs=included_find_specs,
+          resolver_context=self._resolver_context)
 
-      if not file_entry:
-        path_spec_string = self._GetPathSpecificationString(path_spec)
-        logger.warning(
-            'Unable to open file entry for path specfication: {0:s}'.format(
-                path_spec_string))
-        continue
+      for path_spec in path_spec_generator:
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+            path_spec, resolver_context=self._resolver_context)
 
-      skip_file_entry = False
-      for find_spec in excluded_find_specs or []:
-        skip_file_entry = find_spec.CompareLocation(file_entry)
+        if not file_entry:
+          path_spec_string = self._GetPathSpecificationString(path_spec)
+          logger.warning(
+              'Unable to open file entry for path specfication: {0:s}'.format(
+                  path_spec_string))
+          continue
+
+        skip_file_entry = False
+        for find_spec in excluded_find_specs or []:
+          skip_file_entry = find_spec.CompareLocation(file_entry)
+          if skip_file_entry:
+            break
+
         if skip_file_entry:
-          break
+          logger.info('Skipped: {0:s} because of exclusion filter.'.format(
+              file_entry.path_spec.location))
+          continue
 
-      if skip_file_entry:
-        logger.info('Skipped: {0:s} because of exclusion filter.'.format(
-            file_entry.path_spec.location))
-        continue
-
-      self._ExtractFileEntry(
-          file_entry, destination_path, skip_duplicates=skip_duplicates)
+        self._ExtractFileEntry(
+            file_entry, destination_path, skip_duplicates=skip_duplicates)
 
   def _ParseExtensionsString(self, extensions_string):
     """Parses the extensions string.

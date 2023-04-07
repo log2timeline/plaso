@@ -351,53 +351,6 @@ class PathSpecExtractor(object):
 
   _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
-  def _ExtractPathSpecs(
-      self, path_spec, find_specs=None, recurse_file_system=True,
-      resolver_context=None):
-    """Extracts path specification from a specific source.
-
-    Args:
-      path_spec (dfvfs.PathSpec): path specification.
-      find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
-      recurse_file_system (Optional[bool]): True if extraction should
-          recurse into a file system.
-      resolver_context (Optional[dfvfs.Context]): resolver context.
-
-    Yields:
-      dfvfs.PathSpec: path specification of a file entry found in the source.
-    """
-    file_entry = None
-    try:
-      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=resolver_context)
-    except (
-        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
-        dfvfs_errors.PathSpecError) as exception:
-      logger.error('Unable to open file entry with error: {0!s}'.format(
-          exception))
-
-    if not file_entry:
-      path_spec_string = self._GetPathSpecificationString(path_spec)
-      logger.warning('Unable to open: {0:s}'.format(path_spec_string))
-
-    elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
-          not file_entry.IsDevice()):
-      path_spec_string = self._GetPathSpecificationString(path_spec)
-      logger.warning((
-          'Source path specification not a device, file or directory.\n'
-          '{0:s}').format(path_spec_string))
-
-    elif file_entry.IsFile():
-      yield path_spec
-
-    else:
-      for extracted_path_spec in self._ExtractPathSpecsFromFileSystem(
-          path_spec, find_specs=find_specs,
-          recurse_file_system=recurse_file_system,
-          resolver_context=resolver_context):
-        yield extracted_path_spec
-
   def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
     """Extracts path specification from a directory.
 
@@ -550,12 +503,12 @@ class PathSpecExtractor(object):
     return path_spec_string
 
   def ExtractPathSpecs(
-      self, path_specs, find_specs=None, recurse_file_system=True,
+      self, path_spec, find_specs=None, recurse_file_system=True,
       resolver_context=None):
     """Extracts path specification from a specific source.
 
     Args:
-      path_specs (Optional[list[dfvfs.PathSpec]]): path specifications.
+      path_spec (dfvfs.PathSpec): path specification.
       find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
       recurse_file_system (Optional[bool]): True if extraction should
@@ -565,8 +518,32 @@ class PathSpecExtractor(object):
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the source.
     """
-    for path_spec in path_specs:
-      for extracted_path_spec in self._ExtractPathSpecs(
+    file_entry = None
+    try:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=resolver_context)
+    except (
+        dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+        dfvfs_errors.PathSpecError) as exception:
+      logger.error('Unable to open file entry with error: {0!s}'.format(
+          exception))
+
+    if not file_entry:
+      path_spec_string = self._GetPathSpecificationString(path_spec)
+      logger.warning('Unable to open: {0:s}'.format(path_spec_string))
+
+    elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
+          not file_entry.IsDevice()):
+      path_spec_string = self._GetPathSpecificationString(path_spec)
+      logger.warning((
+          'Source path specification not a device, file or directory.\n'
+          '{0:s}').format(path_spec_string))
+
+    elif file_entry.IsFile():
+      yield path_spec
+
+    else:
+      for extracted_path_spec in self._ExtractPathSpecsFromFileSystem(
           path_spec, find_specs=find_specs,
           recurse_file_system=recurse_file_system,
           resolver_context=resolver_context):
