@@ -186,27 +186,29 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = ''
     self._number_of_consumed_sources = 0
 
-    find_specs = None
+    included_find_specs = None
     if self.collection_filters_helper:
-      find_specs = (
+      included_find_specs = (
           self.collection_filters_helper.included_file_system_find_specs)
 
-    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        file_system_path_specs, find_specs=find_specs,
-        recurse_file_system=False, resolver_context=self._resolver_context)
-
-    for path_spec in path_spec_generator:
+    for file_system_path_spec in file_system_path_specs:
       if self._abort:
         break
 
-      self._status = definitions.STATUS_INDICATOR_COLLECTING
-      self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
-          path_spec)
+      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+          file_system_path_spec, find_specs=included_find_specs,
+          recurse_file_system=False, resolver_context=self._resolver_context)
+      for path_spec in path_spec_generator:
+        if self._abort:
+          break
 
-      # TODO: determine if event sources should be DataStream or FileEntry
-      # or both.
-      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-      parser_mediator.ProduceEventSource(event_source)
+        self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
+            path_spec)
+
+        # TODO: determine if event sources should be DataStream or FileEntry
+        # or both.
+        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+        parser_mediator.ProduceEventSource(event_source)
 
     self._status = definitions.STATUS_INDICATOR_RUNNING
 

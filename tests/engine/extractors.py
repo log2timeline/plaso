@@ -192,7 +192,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
       resolver_context = context.Context()
       test_extractor = extractors.PathSpecExtractor()
       path_specs = list(test_extractor.ExtractPathSpecs(
-          [source_path_spec], resolver_context=resolver_context))
+          source_path_spec, resolver_context=resolver_context))
 
       self.assertEqual(len(path_specs), 4)
 
@@ -221,7 +221,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
 
     find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec], find_specs=find_specs,
+        source_path_spec, find_specs=find_specs,
         resolver_context=resolver_context))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS,
@@ -280,7 +280,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor()
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec], resolver_context=resolver_context))
+        source_path_spec, resolver_context=resolver_context))
 
     self.assertEqual(len(path_specs), 3)
 
@@ -305,7 +305,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
 
     find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec], find_specs=find_specs,
+        source_path_spec, find_specs=find_specs,
         resolver_context=resolver_context))
 
     self.assertEqual(len(path_specs), 2)
@@ -342,25 +342,17 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
     p1_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
         part_index=2, start_offset=0x00010000, parent=image_path_spec)
-    p1_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=p1_path_spec)
-
-    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
-        part_index=3, start_offset=0x00510000, parent=image_path_spec)
-    p2_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
-        parent=p2_path_spec)
 
     test_extractor = extractors.PathSpecExtractor()
 
     resolver_context = context.Context()
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [p1_file_system_path_spec, p2_file_system_path_spec],
-        resolver_context=resolver_context))
+        source_path_spec, resolver_context=resolver_context))
 
-    expected_paths_p1 = [
+    expected_paths = [
         '/$AttrDef',
         '/$BadClus',
         '/$BadClus:$Bad',
@@ -384,7 +376,22 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         '/file1.txt',
         '/file2.txt']
 
-    expected_paths_p2 = [
+    paths = self._GetFilePaths(path_specs)
+
+    self.assertEqual(len(path_specs), len(expected_paths))
+    self.assertEqual(sorted(paths), sorted(expected_paths))
+
+    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
+        part_index=3, start_offset=0x00510000, parent=image_path_spec)
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
+        parent=p2_path_spec)
+
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        source_path_spec, resolver_context=resolver_context))
+
+    expected_paths = [
         '/$AttrDef',
         '/$BadClus',
         '/$BadClus:$Bad',
@@ -409,8 +416,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         '/file2_on_part_2.txt']
 
     paths = self._GetFilePaths(path_specs)
-    expected_paths = expected_paths_p1
-    expected_paths.extend(expected_paths_p2)
 
     self.assertEqual(len(path_specs), len(expected_paths))
     self.assertEqual(sorted(paths), sorted(expected_paths))

@@ -581,8 +581,7 @@ class EventExtractionWorker(object):
 
     try:
       path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          [archive_path_spec],
-          resolver_context=parser_mediator.resolver_context)
+          archive_path_spec, resolver_context=parser_mediator.resolver_context)
 
       for generated_path_spec in path_spec_generator:
         if self._abort:
