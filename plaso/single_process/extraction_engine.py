@@ -64,7 +64,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     if (path_spec and not path_spec.IsSystemLevel() and
         path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = resolver.Resolver.OpenFileEntry(
+      file_system = resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
 
       if file_system not in self._file_system_cache:
@@ -133,14 +133,14 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
-    self._CacheFileSystem(path_spec)
-
     excluded_find_specs = None
     if self.collection_filters_helper:
       excluded_find_specs = (
           self.collection_filters_helper.excluded_file_system_find_specs)
 
     try:
+      self._CacheFileSystem(path_spec)
+
       self._extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
 
