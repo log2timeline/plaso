@@ -55,7 +55,7 @@ pyparsing >= 2.4.2,< 3.1.0
 python-dateutil >= 1.5
 pytsk3 >= 20210419
 pytz
-pyxattr >= 0.7.2
+pyxattr >= 0.7.2 ; platform_system != "Windows"
 pyzmq >= 2.1.11
 redis >= 3.4
 requests >= 2.18.0
