@@ -15,27 +15,69 @@ class OneDriveTest(test_lib.ParserTestCase):
   # pylint: disable=protected-access
 
   _AES_KEY = (
-        b'\xe5\x06\x02\x00\xa3\x07\xbc\xa8'
-        b'\x04\x77\xf7\xf1\x33\x10\x73\xb7'
-        b'\xb2\xfc\x52\x05\xcb\xb1\xdf\x3b'
-        b'\xd0\xc7\x98\x8f\x4e\x5f\x8c\xed')
+      b'\xe5\x06\x02\x00\xa3\x07\xbc\xa8\x04\x77\xf7\xf1\x33\x10\x73\xb7'
+      b'\xb2\xfc\x52\x05\xcb\xb1\xdf\x3b\xd0\xc7\x98\x8f\x4e\x5f\x8c\xed')
 
   _RAW_PARAMETER_DATA_BYTES = (
-      b'n\x01\x00\x00pnQNrDddt8-OpipvhdqEoA:\\'
-      b'tv99OFuY_KXMMwlQaXTSjQ\\agYrXq28vbJnPpFW_BXEkA\\'
-      b'7Wkdl_bsbhXjgy3mxq5yEg\\'
-      b'-SHZdzOU0wA0iP5IsARudt0nSV1LvPW6JoOIFzce_Ck\\'
-      b'8rCHT9NIvsVDQFxNxEN3tg\\ZKekHDq5ByJMCunDdo7QHw\\'
-      b'-Od38zWspQ0v9xeoHHteiQ\\'
-      b'LBn1U6SqmvuW-I7vXWfWyRXY7PXItZbDbj7fy52ubH0\\'
-      b'3jxHZ1c8WaPczE8XdVpS9A\\aOYl9sH9CRI3lU4XSyMpwg\\'
-      b'GrwrivqnY-LdeR-N5W9Hqw\\'
-      b'gWnvkJWs277FUkYsqPUHiOedbvQSoMBRQj-u_CotLVk.cpp'
-      b'\x1e\x00\x00\x00CWnpConnManager::AsyncGetProxy'
-      b'\xad\x00\x00\x00\x0e\xda\x04\x80')
+      b'n\x01\x00\x00pnQNrDddt8-OpipvhdqEoA:\\tv99OFuY_KXMMwlQaXTSjQ\\agYrXq28'
+      b'vbJnPpFW_BXEkA\\7Wkdl_bsbhXjgy3mxq5yEg\\-SHZdzOU0wA0iP5IsARudt0nSV1LvP'
+      b'W6JoOIFzce_Ck\\8rCHT9NIvsVDQFxNxEN3tg\\ZKekHDq5ByJMCunDdo7QHw\\-Od38zW'
+      b'spQ0v9xeoHHteiQ\\LBn1U6SqmvuW-I7vXWfWyRXY7PXItZbDbj7fy52ubH0\\3jxHZ1c8'
+      b'WaPczE8XdVpS9A\\aOYl9sH9CRI3lU4XSyMpwg\\GrwrivqnY-LdeR-N5W9Hqw\\gWnvkJ'
+      b'Ws277FUkYsqPUHiOedbvQSoMBRQj-u_CotLVk.cpp\x1e\x00\x00\x00CWnpConnManag'
+      b'er::AsyncGetProxy\xad\x00\x00\x00\x0e\xda\x04\x80')
 
-  def testParseODLGZFile(self):
-    """Tests parsing a compressed OneDrive log file."""
+  def testProcessRawParameters(self):
+    """Tests the _ProcessRawParameters function."""
+    parser = onedrive.OneDriveLogFileParser()
+
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator = self._CreateParserMediator(storage_writer)
+
+    extracted_strings = parser._ProcessRawParameters(
+        parser_mediator, self._RAW_PARAMETER_DATA_BYTES, self._AES_KEY, {})
+
+    self.assertEqual(extracted_strings, [
+        ('K:\\dbs\\sh\\odct\\1017_210557\\cmd\\2\\client\\'
+         'onedrive\\Product\\wns\\trans\\WnpConnManager.cpp'),
+        'CWnpConnManager::AsyncGetProxy'])
+
+  def testRemovePKCS7Padding(self):
+    """Tests the _RemovePKCS7Padding function."""
+    parser = onedrive.OneDriveLogFileParser()
+
+    unpadded_data = parser._RemovePKCS7Padding(
+        b'\x08\x08\x08\x08\x08\x08\x08\x08')
+    self.assertEqual(unpadded_data, b'')
+
+    unpadded_data = parser._RemovePKCS7Padding(
+        b'\x01\x02\x03\xff\x04\x04\x04\x04')
+    self.assertEqual(unpadded_data, b'\x01\x02\x03\xff')
+
+    unpadded_data = parser._RemovePKCS7Padding(
+        b'\x01\x02\x03\x04\x05\x06\xff\x01')
+    self.assertEqual(unpadded_data, b'\x01\x02\x03\x04\x05\x06\xff')
+
+    unpadded_data = parser._RemovePKCS7Padding(
+        b'\x01\x02\x03\x04\x05\x06\x07\xff\x08\x08\x08\x08\x08\x08\x08\x08')
+    self.assertEqual(unpadded_data, b'\x01\x02\x03\x04\x05\x06\x07\xff')
+
+    unpadded_data = parser._RemovePKCS7Padding(
+        b'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\xff\x02\x02')
+    self.assertEqual(
+        unpadded_data, b'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\xff')
+
+    with self.assertRaises(ValueError):
+      parser._RemovePKCS7Padding(b'\x01\x02\x03\x04\x00\x00\x00\x00')
+
+    with self.assertRaises(ValueError):
+      parser._RemovePKCS7Padding(b'\x01\x02\x03\x04\xff\xff\xff\xff')
+
+    with self.assertRaises(ValueError):
+      parser._RemovePKCS7Padding(b'\x01\x02\x03\xff\x04\xff\x04\x04')
+
+  def testParse(self):
+    """Tests the Parse function."""
     parser = onedrive.OneDriveLogFileParser()
 
     storage_writer = self._ParseFile([
@@ -69,19 +111,6 @@ class OneDriveTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2700)
     self.CheckEventData(event_data, expected_event_values)
-
-  def test_encrypted_parameters_data(self):
-    """Tests the _ProcessRawParameters method with encrypted parameter data."""
-    parser = onedrive.OneDriveLogFileParser()
-
-    extracted_strings = parser._ProcessRawParameters(
-        self._RAW_PARAMETER_DATA_BYTES,
-        aes_key=self._AES_KEY, obfuscated_string_map=None)
-
-    self.assertEqual(extracted_strings, [
-        ('K:\\dbs\\sh\\odct\\1017_210557\\cmd\\2\\client\\'
-         'onedrive\\Product\\wns\\trans\\WnpConnManager.cpp'),
-        'CWnpConnManager::AsyncGetProxy'])
 
 
 if __name__ == '__main__':
