@@ -13,8 +13,6 @@ import zlib
 
 import pycaes
 
-from cryptography.hazmat.primitives import padding
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from dfvfs.helpers import text_file as dfvfs_text_file
@@ -191,20 +189,38 @@ class OneDriveLogFileParser(
 
     return deobfuscated_strings
 
-  def _DecryptStrings(self, extracted_strings, aes_key):
-    """Decrypt strings extracted from OneDrive logs.
-
-    Encrypted strings are decrypted as follows:
-    * split into tokens using delimiters ('%', '\', '/', '://', '?', ':', '.')
-    * URL safe base64 decoded
-    * decrypted using AES in CBC mode where the AES key is parsed from the
-      general.keystore file and the IV are 16 zero bytes
-    * unpadded using PKCS7
-    * decoded as a UTF-16-LE string
+  def _DecryptAES(self, aes_key, encrypted_data):
+    """Decrypt AES-CBC encrypted data.
 
     Args:
-      extracted_strings (list[str]): strings extracted from OneDrive log files.
       aes_key (bytes): the AES key.
+      data (bytes): AES-CBC encrypted data.
+
+    Returns:
+      bytes: decrypted data.
+    """
+    aes_context = pycaes.context()
+    aes_context.set_key(pycaes.crypt_modes.DECRYPT, aes_key)
+    return pycaes.crypt_cbc(
+        aes_context, pycaes.crypt_modes.DECRYPT,
+        self._AES_IV, encrypted_data)
+
+  def _DecryptStrings(self, parser_mediator, aes_key, extracted_strings):
+    """Decrypt strings extracted from OneDrive logs.
+
+    The encrypted strings are stored as follows:
+    * split into tokens using delimiters ('%', '\', '/', '://', '?', ':', '.')
+    * URL safe base64 encoded
+    * encrypted using AES-CBC where the AES key is parsed from the
+      general.keystore file and the IV is 16 zero byte values
+    * padded using PKCS#7
+    * encoded in UTF-16 little-endian
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      aes_key (bytes): the AES key.
+      extracted_strings (list[str]): strings extracted from OneDrive log files.
 
     Returns:
       list[str]: the decrypted strings.
@@ -222,7 +238,7 @@ class OneDriveLogFileParser(
 
         token_size = len(token)
 
-        # minimum block size of base64 encoded AES-CBC is 22 bytes
+        # The minimum block size of base64 encoded AES-CBC is 22 bytes.
         if token_size < 22:
           output_string_parts.append(token)
           continue
@@ -246,22 +262,24 @@ class OneDriveLogFileParser(
           output_string_parts.append(token)
           continue
 
-        aes_context = pycaes.context()
-        aes_context.set_key(pycaes.crypt_modes.DECRYPT, aes_key)
-        plaintext = pycaes.crypt_cbc(
-            aes_context, pycaes.crypt_modes.DECRYPT,
-            self._AES_IV, ciphertext)
+        plaintext = self._DecryptAES(aes_key, ciphertext)
 
-        unpadder = padding.PKCS7(128).unpadder()
         try:
-          data = unpadder.update(plaintext) + unpadder.finalize()
-        except ValueError:
+          data = self._RemovePKCS7Padding(plaintext, block_size=128)
+        except ValueError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to remove PKCS#7 padding with error: {0!s}'.format(
+                  exception))
+
           output_string_parts.append(token)
           continue
 
         try:
           decoded_string = data.decode('utf-16-le')
-        except UnicodeError:
+        except UnicodeError as exception:
+          parser_mediator.ProduceExtractionWarning(
+              'unable to decode string with error: {0!s}'.format(exception))
+
           output_string_parts.append(token)
           continue
 
@@ -299,34 +317,71 @@ class OneDriveLogFileParser(
     return strings_array
 
   def _ProcessRawParameters(
-      self, raw_parameters_data, aes_key, obfuscated_string_map):
-    """Processes (extracts and decrypt/deobfuscate) the raw parameters.
+      self, parser_mediator, raw_parameters_data, aes_key,
+      obfuscated_string_map):
+    """Processes (extracts and decrypts/deobfuscates) the raw parameters.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       raw_parameters_data (bytes): the raw parameters data from a log entry.
-      aes_key (Optional[bytes]): the AES key used to decrypt strings,
-          or None if there is no parsed AES key.
-      obfuscated_string_map (Optional[dict[str, str]]): the obfuscated string
-          map used to deobfuscate strings, or None if there is no parsed string
-          mapping.
+      aes_key (bytes): the AES key used to decrypt strings, or None if there
+          is no parsed AES key.
+      obfuscated_string_map (dict[str, str]): the obfuscated string map used
+          to deobfuscate strings, or None if there is no parsed string mapping.
 
     Returns:
       list[str]: a list of strings that were parsed from the raw parameters.
     """
     extracted_strings = self._ExtractStringsFromParameters(raw_parameters_data)
     if aes_key:
-      extracted_strings = self._DecryptStrings(extracted_strings, aes_key)
+      extracted_strings = self._DecryptStrings(
+          parser_mediator, aes_key, extracted_strings)
+
     if obfuscated_string_map:
       extracted_strings = self._DeobfuscateStrings(
           extracted_strings, obfuscated_string_map)
+
     return extracted_strings
+
+  def _RemovePKCS7Padding(self, padded_data, block_size=8):
+    """Validates and removes PKCS#7 padding.
+
+    Args:
+      padded_data (bytes): data with PKCS#7 padding.
+      block_size (Optional[int]): block size.
+
+    Returns:
+      bytes: data without PKCS#7 padding.
+
+    Raises:
+      ValueError: if the padding is invalid.
+    """
+    if padded_data:
+      padding_size = padded_data[-1]
+    else:
+      padding_size = 0
+
+    if padding_size <= 0 or padding_size > block_size:
+      raise ValueError(
+          'Invalid padding size: {0:d} value out of bounds'.format(
+              padding_size))
+
+    for byte_index in range(2, padding_size + 1):
+      check_padding_size = padded_data[-byte_index]
+      if check_padding_size != padding_size:
+        raise ValueError((
+            'Mismatch in padding size: {0:d} and: {1:d} at byte index: '
+            '{2:d}').format(padding_size, check_padding_size, -byte_index))
+
+    return padded_data[:-padding_size]
 
   def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses a OneDrive Log file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): file entry.
 
     Raises:
@@ -403,8 +458,8 @@ class OneDriveLogFileParser(
                 data_block_stream, stream_offset, odl_data_block_header_map))
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse data block header at stream offset: 0x{0:08x} with'
-            ' error: {1!s}').format(stream_offset, exception))
+            'unable to parse data block header at stream offset: 0x{0:08x} '
+            'with error: {1!s}').format(stream_offset, exception))
         return
 
       stream_offset += header_data_size
@@ -414,8 +469,8 @@ class OneDriveLogFileParser(
             data_block_stream, stream_offset, odl_data_block_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse data block at stream offset: '
-            '0x{0:08x} with error: {1!s}').format(stream_offset, exception))
+            'unable to parse data block at stream offset: 0x{0:08x} with '
+            'error: {1!s}').format(stream_offset, exception))
         return
 
       # read the raw function parameter data
@@ -425,9 +480,7 @@ class OneDriveLogFileParser(
       stream_offset += raw_parameters_size
 
       extracted_strings = self._ProcessRawParameters(
-          raw_parameters_data,
-          aes_key=aes_key,
-          obfuscated_string_map=obfuscated_string_map)
+          parser_mediator, raw_parameters_data, aes_key, obfuscated_string_map)
 
       event_data = OneDriveLogEvent()
       event_data.code_filename = odl_data_block.code_filename.decode('utf-8')
