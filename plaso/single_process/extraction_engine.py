@@ -8,7 +8,7 @@ import threading
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.resolver import resolver
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import counts
 from plaso.containers import event_sources
@@ -64,7 +64,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     if (path_spec and not path_spec.IsSystemLevel() and
         path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = resolver.Resolver.OpenFileSystem(
+      file_system = path_spec_resolver.Resolver.OpenFileSystem(
           path_spec, resolver_context=self._resolver_context)
 
       if file_system not in self._file_system_cache:
@@ -141,8 +141,18 @@ class SingleProcessEngine(engine.BaseEngine):
     try:
       self._CacheFileSystem(path_spec)
 
-      self._extraction_worker.ProcessPathSpec(
-          parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
+      if excluded_find_specs:
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(
+            path_spec, resolver_context=self._resolver_context)
+
+        for find_spec in excluded_find_specs:
+          if find_spec.ComparePathSpecLocation(path_spec, file_system):
+            logger.debug('Excluded from extraction: {0:s}.'.format(
+                self._current_display_name))
+            self._processing_status = definitions.STATUS_INDICATOR_IDLE
+            return
+
+      self._extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except KeyboardInterrupt:
       self._abort = True
