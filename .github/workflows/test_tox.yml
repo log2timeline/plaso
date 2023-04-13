@@ -50,6 +50,10 @@ jobs:
     - name: Install tox
       run: |
         python3 -m pip install tox
+    - name: Download Codecov Uploader
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
     - name: Run tests
       env:
         LANG: en_US.UTF-8
