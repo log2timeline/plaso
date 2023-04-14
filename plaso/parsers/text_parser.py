@@ -17,10 +17,14 @@ class EncodedTextReader(object):
   """Encoded text reader.
 
   Attributes:
+    line_number (int): current line number.
     lines (str): lines of text.
+    lines_size (int): size of the lines of text.
   """
 
   BUFFER_SIZE = 65536
+
+  _READ_BUFFER_SIZE = 16 * BUFFER_SIZE
 
   def __init__(
       self, file_object, encoding='utf-8', encoding_errors='strict'):
@@ -38,8 +42,9 @@ class EncodedTextReader(object):
     self._stream_reader = stream_reader_class(
         file_object, errors=encoding_errors)
 
-    self.lines = ''
     self.line_number = 0
+    self.lines = ''
+    self.lines_size = 0
 
   def ReadLine(self):
     """Reads a line.
@@ -51,25 +56,30 @@ class EncodedTextReader(object):
       self.ReadLines()
 
     line, _, self.lines = self.lines.partition('\n')
+    self.lines_size += len(line) + 1
     self.line_number += 1
 
     return line
 
   def ReadLines(self):
     """Reads lines into the lines buffer."""
-    current_offset = self._file_object.tell()
+    if self.lines_size < self.BUFFER_SIZE:
+      current_offset = self._file_object.tell()
 
-    decoded_data = self._stream_reader.read(size=self.BUFFER_SIZE)
-    if decoded_data:
-      # Remove a byte-order mark at the start of the file.
-      if current_offset == 0 and decoded_data[0] == '\ufeff':
-        decoded_data = decoded_data[1:]
+      # Consequative reads, decodes and joins are expensive hence we read
+      # a larger buffer at once.
+      decoded_data = self._stream_reader.read(size=self._READ_BUFFER_SIZE)
+      if decoded_data:
+        # Remove a byte-order mark at the start of the file.
+        if current_offset == 0 and decoded_data[0] == '\ufeff':
+          decoded_data = decoded_data[1:]
 
-      # Strip carriage returns from the text.
-      decoded_data = '\n'.join([
-          line.rstrip('\r') for line in decoded_data.split('\n')])
+        # Strip carriage returns from the text.
+        decoded_data = '\n'.join([
+            line.rstrip('\r') for line in decoded_data.split('\n')])
 
-      self.lines = ''.join([self.lines, decoded_data])
+        self.lines = ''.join([self.lines, decoded_data])
+        self.lines_size += len(decoded_data)
 
   def SkipAhead(self, number_of_characters):
     """Skips ahead a number of characters.
@@ -77,18 +87,20 @@ class EncodedTextReader(object):
     Args:
       number_of_characters (int): number of characters.
     """
-    lines_size = len(self.lines)
-    while number_of_characters >= lines_size:
-      number_of_characters -= lines_size
+    while number_of_characters >= self.lines_size:
+      number_of_characters -= self.lines_size
 
       self.lines = ''
+      self.lines_size = 0
+
       self.ReadLines()
-      lines_size = len(self.lines)
-      if lines_size == 0:
+
+      if self.lines_size == 0:
         return
 
     self.line_number += self.lines[:number_of_characters].count('\n')
     self.lines = self.lines[number_of_characters:]
+    self.lines_size -= number_of_characters
 
   # Note: that the following functions do not follow the style guide
   # because they are part of the file-like object interface.
