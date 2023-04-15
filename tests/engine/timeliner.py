@@ -150,7 +150,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_timeliner._base_years = {}
 
     event = event_data_timeliner._GetEvent(
-        storage_writer, event_data, date_time, 'Test Time')
+        storage_writer, event_data, None, date_time, 'Test Time')
     self.assertIsNotNone(event)
     self.assertIsNotNone(event.date_time)
     self.assertEqual(event.date_time.year, 2010)
@@ -169,7 +169,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_timeliner._base_years = {}
 
     event = event_data_timeliner._GetEvent(
-        storage_writer, event_data, date_time, 'Test Time')
+        storage_writer, event_data, None, date_time, 'Test Time')
     self.assertIsNotNone(event)
     self.assertIsNotNone(event.date_time)
     self.assertEqual(event.date_time.year, 2012)
@@ -189,7 +189,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     with self.assertRaises(ValueError):
       event_data_timeliner._GetEvent(
-          storage_writer, event_data, date_time, 'Test Time')
+          storage_writer, event_data, None, date_time, 'Test Time')
 
     # Test date time delta without a base year.
     storage_writer = self._CreateStorageWriter(event_data)
@@ -201,7 +201,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_timeliner._base_years = {}
 
     event = event_data_timeliner._GetEvent(
-        storage_writer, event_data, date_time, 'Test Time')
+        storage_writer, event_data, None, date_time, 'Test Time')
     self.assertIsNotNone(event)
     self.assertIsNotNone(event.date_time)
     self.assertEqual(event.date_time.year, 4)
@@ -226,7 +226,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     storage_writer = self._CreateStorageWriter(event_data)
 
-    event_data_timeliner.ProcessEventData(storage_writer, event_data)
+    event_data_timeliner.ProcessEventData(storage_writer, event_data, None)
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 1)
 
@@ -241,7 +241,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     storage_writer = self._CreateStorageWriter(event_data)
 
-    event_data_timeliner.ProcessEventData(storage_writer, event_data)
+    event_data_timeliner.ProcessEventData(storage_writer, event_data, None)
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 1)
 
@@ -256,7 +256,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     storage_writer = self._CreateStorageWriter(event_data)
 
-    event_data_timeliner.ProcessEventData(storage_writer, event_data)
+    event_data_timeliner.ProcessEventData(storage_writer, event_data, None)
 
     self.assertEqual(event_data_timeliner.number_of_produced_events, 0)
 

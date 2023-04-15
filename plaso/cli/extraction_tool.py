@@ -463,17 +463,18 @@ class ExtractionTool(
 
     if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
       system_configurations = []
-      system_configuration = None
     else:
       # If the source is a directory or a storage media image
       # run pre-processing.
       system_configurations = self._PreprocessSource(
           extraction_engine, storage_writer)
-      # TODO: add support for more than 1 system configuration.
-      system_configuration = system_configurations[0]
 
       # TODO: check if the source was processed previously and if system
       # configuration differs.
+
+    system_configuration = None
+    if system_configurations:
+      system_configuration = system_configurations[0]
 
     # TODO: add support for more than 1 system configuration.
     self._expanded_parser_filter_expression = (

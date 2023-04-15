@@ -335,8 +335,18 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       self._status = definitions.STATUS_INDICATOR_TIMELINING
 
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+
+      event_data_stream = None
+      if event_data_stream_identifier:
+        event_data_stream = (
+            self._storage_writer.GetAttributeContainerByIdentifier(
+                self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+                event_data_stream_identifier))
+
       # Generate events on merge.
-      self._event_data_timeliner.ProcessEventData(storage_writer, container)
+      self._event_data_timeliner.ProcessEventData(
+          storage_writer, container, event_data_stream)
 
       self._number_of_consumed_event_data += 1
       self._number_of_produced_events += (
@@ -964,10 +974,18 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._system_configurations = system_configurations
 
+    time_zones_per_path_spec = {}
+    for system_configuration in system_configurations:
+      if system_configuration.time_zone:
+        for path_spec in system_configuration.path_specs:
+          if path_spec.parent:
+            time_zones_per_path_spec[path_spec.parent] = (
+                system_configuration.time_zone)
+
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,
-        system_configurations=system_configurations)
+        time_zones_per_path_spec=time_zones_per_path_spec)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(

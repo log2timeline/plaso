@@ -460,6 +460,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
         "Windows XP".
     operating_system_version (str): operating system version for example
         "10.9.2" or "8.1".
+    path_specs (list[dfvfs.PathSpec]): path specifications of the file systems
+        the system configuration was retrieved from.
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
   """
@@ -475,6 +477,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   #     'operating_system': 'str',
   #     'operating_system_product': 'str',
   #     'operating_system_version': 'str',
+  #     'path_specs': 'List[dfvfs.PathSpec]',
   #     'time_zone': 'str'}
 
   def __init__(self, code_page=None, language=None, time_zone=None):
@@ -495,6 +498,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     self.operating_system = None
     self.operating_system_product = None
     self.operating_system_version = None
+    self.path_specs = []
     self.time_zone = time_zone
     # TODO: kept for backwards compatibility.
     self.user_accounts = []
