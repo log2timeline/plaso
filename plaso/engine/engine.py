@@ -261,6 +261,7 @@ class BaseEngine(object):
     mediator = preprocess_mediator.PreprocessMediator(storage_writer)
 
     detected_operating_systems = []
+    system_configurations = []
     for path_spec in file_system_path_specs:
       try:
         file_system, mount_point = self.GetSourceFileSystem(
@@ -273,30 +274,36 @@ class BaseEngine(object):
           artifacts_registry_object, file_system, mount_point, mediator)
 
       operating_system = mediator.GetValue('operating_system')
-      if operating_system:
-        detected_operating_systems.append(operating_system)
+      if not operating_system:
+        continue
 
-    # TODO: add support for more than 1 system configuration.
-    system_configuration = artifacts.SystemConfigurationArtifact(
-        code_page=mediator.code_page, language=mediator.language)
-    system_configuration.hostname = mediator.hostname
-    system_configuration.keyboard_layout = mediator.GetValue('keyboard_layout')
-    system_configuration.operating_system = mediator.GetValue(
-        'operating_system')
-    system_configuration.operating_system_product = mediator.GetValue(
-        'operating_system_product')
-    system_configuration.operating_system_version = mediator.GetValue(
-        'operating_system_version')
+      detected_operating_systems.append(operating_system)
 
-    if mediator.time_zone:
-      system_configuration.time_zone = mediator.time_zone.zone
+      system_configuration = artifacts.SystemConfigurationArtifact(
+          code_page=mediator.code_page, language=mediator.language)
+      system_configuration.hostname = mediator.hostname
+      system_configuration.keyboard_layout = mediator.GetValue(
+          'keyboard_layout')
+      system_configuration.operating_system = mediator.GetValue(
+          'operating_system')
+      system_configuration.operating_system_product = mediator.GetValue(
+          'operating_system_product')
+      system_configuration.operating_system_version = mediator.GetValue(
+          'operating_system_version')
+      # TODO: add support for multi file system system configurations.
+      system_configuration.path_specs = [path_spec]
 
-    # TODO: add source file system path spec to system configuration.
+      if mediator.time_zone:
+        system_configuration.time_zone = mediator.time_zone.zone
 
-    # TODO: kept for backwards compatibility.
-    self.knowledge_base.ReadSystemConfigurationArtifact(system_configuration)
+      system_configurations.append(system_configuration)
 
-    return [system_configuration]
+    if system_configurations:
+      # TODO: kept for backwards compatibility.
+      self.knowledge_base.ReadSystemConfigurationArtifact(
+          system_configurations[0])
+
+    return system_configurations
 
   def BuildCollectionFilters(
       self, artifact_definitions_path, custom_artifacts_path,

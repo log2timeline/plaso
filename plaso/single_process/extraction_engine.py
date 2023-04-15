@@ -12,6 +12,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import counts
 from plaso.containers import event_sources
+from plaso.containers import events
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import logger
@@ -25,6 +26,8 @@ from plaso.parsers import mediator as parsers_mediator
 
 class SingleProcessEngine(engine.BaseEngine):
   """Single process extraction engine."""
+
+  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
 
   # Maximum number of dfVFS file system objects to cache.
   _FILE_SYSTEM_CACHE_SIZE = 3
@@ -97,8 +100,23 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
+      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+
+      event_data_stream = None
+      if event_data_stream_identifier:
+        if self._processing_profiler:
+          self._processing_profiler.StartTiming('get_event_data_stream')
+
+        event_data_stream = (
+            self._storage_writer.GetAttributeContainerByIdentifier(
+                self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+                event_data_stream_identifier))
+
+        if self._processing_profiler:
+          self._processing_profiler.StopTiming('get_event_data_stream')
+
       self._event_data_timeliner.ProcessEventData(
-          self._storage_writer, event_data)
+          self._storage_writer, event_data, event_data_stream)
 
       self._number_of_consumed_event_data += 1
       self._number_of_produced_events += (
@@ -371,10 +389,18 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
+    time_zones_per_path_spec = {}
+    for system_configuration in system_configurations:
+      if system_configuration.time_zone:
+        for path_spec in system_configuration.path_specs:
+          if path_spec.parent:
+            time_zones_per_path_spec[path_spec.parent] = (
+                system_configuration.time_zone)
+
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,
-        system_configurations=system_configurations)
+        time_zones_per_path_spec=time_zones_per_path_spec)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(

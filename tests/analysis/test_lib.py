@@ -150,6 +150,14 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     event_data = storage_writer.GetFirstWrittenEventData()
     while event_data:
-      event_data_timeliner.ProcessEventData(storage_writer, event_data)
+      event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+
+      event_data_stream = None
+      if event_data_stream_identifier:
+        event_data_stream = storage_writer.GetAttributeContainerByIdentifier(
+            events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
+
+      event_data_timeliner.ProcessEventData(
+          storage_writer, event_data, event_data_stream)
 
       event_data = storage_writer.GetNextWrittenEventData()

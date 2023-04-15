@@ -30,15 +30,15 @@ class EventDataTimeliner(object):
 
   def __init__(
       self, data_location=None, preferred_year=None,
-      system_configurations=None):
+      time_zones_per_path_spec=None):
     """Initializes an event data timeliner.
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
       preferred_year (Optional[int]): preferred initial year value for year-less
           date and time values.
-      system_configurations (Optional[list[SystemConfigurationArtifact]]):
-          system configurations.
+      time_zones_per_path_spec (Optional[dict[dfvfs.PathSpec, pytz.tzfile]]):
+          time zones per file system parent path specification.
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
@@ -48,7 +48,7 @@ class EventDataTimeliner(object):
     self._place_holder_event = set()
     self._preferred_time_zone = None
     self._preferred_year = preferred_year
-    self._system_configurations = system_configurations
+    self._time_zones_per_path_spec = time_zones_per_path_spec or {}
 
     self.number_of_produced_events = 0
     self.parsers_counter = collections.Counter()
@@ -146,12 +146,14 @@ class EventDataTimeliner(object):
     return datetime_object.year
 
   def _GetEvent(
-      self, storage_writer, event_data, date_time, date_time_description):
+      self, storage_writer, event_data, event_data_stream, date_time,
+      date_time_description):
     """Retrieves an event.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
       date_time (dfdatetime.DateTimeValues): date and time values.
       date_time_description (str): description of the meaning of the date and
           time values.
@@ -176,29 +178,26 @@ class EventDataTimeliner(object):
               'zone').format(date_time.time_zone_hint)
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      if not time_zone:
-        time_zone = self._GetTimeZone()
+      if not time_zone and event_data_stream and event_data_stream.path_spec:
+        time_zone = self._time_zones_per_path_spec.get(
+            event_data_stream.path_spec.parent, None)
 
       if not time_zone:
-        message = 'date and time is in local time and no time zone is defined'
-        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+        time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE
 
-        date_time = dfdatetime_semantic_time.NotSet()
+      date_time = copy.deepcopy(date_time)
+      date_time.is_local_time = False
 
-      else:
-        date_time = copy.deepcopy(date_time)
-        date_time.is_local_time = False
+      if time_zone != pytz.UTC:
+        datetime_object = datetime.datetime(
+            1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
+        datetime_object += datetime.timedelta(microseconds=timestamp)
 
-        if time_zone != pytz.UTC:
-          datetime_object = datetime.datetime(
-              1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
-          datetime_object += datetime.timedelta(microseconds=timestamp)
+        datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
+        seconds_delta = int(datetime_delta.total_seconds())
+        timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
-          datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
-          seconds_delta = int(datetime_delta.total_seconds())
-          timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
-
-          date_time.time_zone_offset = seconds_delta // 60
+        date_time.time_zone_offset = seconds_delta // 60
 
     event = events.EventObject()
     event.date_time = date_time
@@ -209,16 +208,6 @@ class EventDataTimeliner(object):
     event.SetEventDataIdentifier(event_data_identifier)
 
     return event
-
-  def _GetTimeZone(self):
-    """Retrieves the time zone related to the event data.
-
-    Returns:
-      datetime.tzinfo: time zone.
-    """
-    # TODO: determine time zone from system_configurations.
-
-    return self._preferred_time_zone or self._DEFAULT_TIME_ZONE
 
   def _ProduceTimeliningWarning(self, storage_writer, event_data, message):
     """Produces a timelining warning.
@@ -265,12 +254,13 @@ class EventDataTimeliner(object):
       if timeliner_definition.place_holder_event:
         self._place_holder_event.add(timeliner_definition.data_type)
 
-  def ProcessEventData(self, storage_writer, event_data):
+  def ProcessEventData(self, storage_writer, event_data, event_data_stream):
     """Generate events from event data.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
     """
     self.number_of_produced_events = 0
 
@@ -294,7 +284,8 @@ class EventDataTimeliner(object):
       for attribute_value in attribute_values:
         try:
           event = self._GetEvent(
-              storage_writer, event_data, attribute_value, time_description)
+              storage_writer, event_data, event_data_stream, attribute_value,
+              time_description)
 
         except ValueError as exception:
           self._ProduceTimeliningWarning(
@@ -317,7 +308,7 @@ class EventDataTimeliner(object):
         event_data.data_type in self._place_holder_event):
       date_time = dfdatetime_semantic_time.NotSet()
       event = self._GetEvent(
-          storage_writer, event_data, date_time,
+          storage_writer, event_data, event_data_stream, date_time,
           definitions.TIME_DESCRIPTION_NOT_A_TIME)
 
       storage_writer.AddAttributeContainer(event)
