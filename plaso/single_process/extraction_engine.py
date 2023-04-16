@@ -32,8 +32,13 @@ class SingleProcessEngine(engine.BaseEngine):
   # Maximum number of dfVFS file system objects to cache.
   _FILE_SYSTEM_CACHE_SIZE = 3
 
-  def __init__(self):
-    """Initializes a single process extraction engine."""
+  def __init__(self, status_update_callback=None):
+    """Initializes a single process extraction engine.
+
+    Args:
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+    """
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
     self._event_data_timeliner = None
@@ -51,7 +56,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._resolver_context = None
     self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_active = False
-    self._status_update_callback = None
+    self._status_update_callback = status_update_callback
     self._status_update_thread = None
     self._storage_writer = None
 
@@ -354,8 +359,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def ProcessSource(
       self, storage_writer, resolver_context, processing_configuration,
-      system_configurations, file_system_path_specs, force_parser=False,
-      status_update_callback=None):
+      system_configurations, file_system_path_specs, force_parser=False):
     """Processes file systems within a source.
 
     Args:
@@ -369,8 +373,6 @@ class SingleProcessEngine(engine.BaseEngine):
           the source file systems to process.
       force_parser (Optional[bool]): True if a specified parser should be forced
           to be used to extract events.
-      status_update_callback (Optional[function]): callback function for status
-          updates.
 
     Returns:
       ProcessingStatus: processing status.
@@ -411,7 +413,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._parser_mediator = parser_mediator
     self._processing_configuration = processing_configuration
     self._resolver_context = resolver_context
-    self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
 
     logger.debug('Processing started.')
@@ -501,7 +502,6 @@ class SingleProcessEngine(engine.BaseEngine):
     self._parser_mediator = None
     self._processing_configuration = None
     self._resolver_context = None
-    self._status_update_callback = None
     self._storage_writer = None
 
     return self._processing_status

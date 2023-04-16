@@ -110,13 +110,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
   def __init__(
       self, maximum_number_of_tasks=None, number_of_worker_processes=0,
-      worker_memory_limit=None, worker_timeout=None):
+      status_update_callback=None, worker_memory_limit=None,
+      worker_timeout=None):
     """Initializes an engine.
 
     Args:
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
       number_of_worker_processes (Optional[int]): number of worker processes.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
           allowed to consume, where None represents the default memory limit
           and 0 represents no limit.
@@ -176,6 +179,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._status = definitions.STATUS_INDICATOR_IDLE
+    self._status_update_callback = status_update_callback
     self._task_manager = task_manager.TaskManager()
     self._task_merge_helper = None
     self._task_merge_helper_on_hold = None
@@ -945,8 +949,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   def ProcessSource(
       self, storage_writer, session_identifier, processing_configuration,
       system_configurations, file_system_path_specs,
-      enable_sigsegv_handler=False, status_update_callback=None,
-      storage_file_path=None):
+      enable_sigsegv_handler=False, storage_file_path=None):
     """Processes file systems within a source.
 
     Args:
@@ -961,8 +964,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           the source file systems to process.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
-      status_update_callback (Optional[function]): callback function for status
-          updates.
       storage_file_path (Optional[str]): path to the session storage file.
 
     Returns:
@@ -998,7 +999,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._debug_output = processing_configuration.debug_output
     self._log_filename = processing_configuration.log_filename
-    self._status_update_callback = status_update_callback
     self._storage_file_path = storage_file_path
     self._storage_writer = storage_writer
     self._task_storage_format = processing_configuration.task_storage_format
@@ -1096,7 +1096,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._enable_sigsegv_handler = None
     self._event_data_timeliner = None
     self._processing_configuration = None
-    self._status_update_callback = None
     self._storage_file_path = None
     self._storage_writer = None
     self._system_configurations = None
