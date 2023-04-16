@@ -30,15 +30,15 @@ class EventDataTimeliner(object):
 
   def __init__(
       self, data_location=None, preferred_year=None,
-      time_zones_per_path_spec=None):
+      system_configurations=None):
     """Initializes an event data timeliner.
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
       preferred_year (Optional[int]): preferred initial year value for year-less
           date and time values.
-      time_zones_per_path_spec (Optional[dict[dfvfs.PathSpec, pytz.tzfile]]):
-          time zones per file system parent path specification.
+      system_configurations (Optional[list[SystemConfigurationArtifact]]):
+          system configurations.
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
@@ -48,12 +48,28 @@ class EventDataTimeliner(object):
     self._place_holder_event = set()
     self._preferred_time_zone = None
     self._preferred_year = preferred_year
-    self._time_zones_per_path_spec = time_zones_per_path_spec or {}
+    self._time_zone_per_path_spec = None
 
     self.number_of_produced_events = 0
     self.parsers_counter = collections.Counter()
 
+    self._CreateTimeZonePerPathSpec(system_configurations)
     self._ReadConfigurationFile()
+
+  def _CreateTimeZonePerPathSpec(self, system_configurations):
+    """Creates the time zone per path specification lookup table.
+
+    Args:
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
+    """
+    self._time_zone_per_path_spec = {}
+    for system_configuration in system_configurations or []:
+      if system_configuration.time_zone:
+        for path_spec in system_configuration.path_specs:
+          if path_spec.parent:
+            self._time_zone_per_path_spec[path_spec.parent] = (
+                system_configuration.time_zone)
 
   def _GetBaseYear(self, storage_writer, event_data):
     """Retrieves the base year.
@@ -178,9 +194,14 @@ class EventDataTimeliner(object):
               'zone').format(date_time.time_zone_hint)
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      if not time_zone and event_data_stream and event_data_stream.path_spec:
-        time_zone = self._time_zones_per_path_spec.get(
-            event_data_stream.path_spec.parent, None)
+      if not time_zone and event_data_stream:
+        try:
+          time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
+        except pytz.UnknownTimeZoneError:
+          message = (
+              'unsupported system time zone: {0:s}, using default time '
+              'zone').format(date_time.time_zone_hint)
+          self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
       if not time_zone:
         time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE
@@ -208,6 +229,35 @@ class EventDataTimeliner(object):
     event.SetEventDataIdentifier(event_data_identifier)
 
     return event
+
+  def _GetTimeZoneByPathSpec(self, path_spec):
+    """Retrieves a time zone for a specific path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      pytz.tzfile: time zone or None if not available.
+
+    Raises:
+      pytz.UnknownTimeZoneError: if the time zone is unknown.
+    """
+    if not path_spec or not path_spec.parent:
+      return None
+
+    time_zone = self._time_zone_per_path_spec.get(path_spec.parent, None)
+    if not time_zone:
+      return None
+
+    if isinstance(time_zone, str):
+      try:
+        time_zone = pytz.timezone(time_zone)
+        self._time_zone_per_path_spec[path_spec.parent] = time_zone
+      except pytz.UnknownTimeZoneError as exeception:
+        self._time_zone_per_path_spec[path_spec.parent] = None
+        raise exeception
+
+    return time_zone
 
   def _ProduceTimeliningWarning(self, storage_writer, event_data, message):
     """Produces a timelining warning.

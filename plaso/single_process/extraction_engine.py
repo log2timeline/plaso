@@ -391,18 +391,10 @@ class SingleProcessEngine(engine.BaseEngine):
     self._extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
-    time_zones_per_path_spec = {}
-    for system_configuration in system_configurations:
-      if system_configuration.time_zone:
-        for path_spec in system_configuration.path_specs:
-          if path_spec.parent:
-            time_zones_per_path_spec[path_spec.parent] = (
-                system_configuration.time_zone)
-
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,
-        time_zones_per_path_spec=time_zones_per_path_spec)
+        system_configurations=system_configurations)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(

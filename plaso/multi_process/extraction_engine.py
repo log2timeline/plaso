@@ -986,7 +986,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,
-        time_zones_per_path_spec=time_zones_per_path_spec)
+        system_configurations=system_configurations)
 
     try:
       self._event_data_timeliner.SetPreferredTimeZone(
