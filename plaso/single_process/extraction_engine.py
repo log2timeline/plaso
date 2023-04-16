@@ -350,7 +350,6 @@ class SingleProcessEngine(engine.BaseEngine):
 
     parser_mediator = parsers_mediator.ParserMediator(
         collection_filters_helper=self._collection_filters_helper,
-        environment_variables=environment_variables,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 

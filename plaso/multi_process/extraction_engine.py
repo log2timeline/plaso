@@ -757,14 +757,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         port=self._task_queue_port,
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
-    # Ensure environment_variables is a list otherwise pickle will fail
-    # on Windows when creating a new process.
-    environment_variables = list(self.knowledge_base.GetEnvironmentVariables())
-
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self._collection_filters_helper,
         self._processing_configuration, self._system_configurations,
-        environment_variables,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging

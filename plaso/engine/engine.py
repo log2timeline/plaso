@@ -354,6 +354,8 @@ class BaseEngine(object):
 
       system_configuration = artifacts.SystemConfigurationArtifact(
           code_page=mediator.code_page, language=mediator.language)
+      system_configuration.environment_variables = (
+          mediator.GetEnvironmentVariables())
       system_configuration.hostname = mediator.hostname
       system_configuration.keyboard_layout = mediator.GetValue(
           'keyboard_layout')
@@ -370,6 +372,8 @@ class BaseEngine(object):
         system_configuration.time_zone = mediator.time_zone.zone
 
       system_configurations.append(system_configuration)
+
+      mediator.Reset()
 
     if system_configurations:
       # TODO: kept for backwards compatibility.
