@@ -159,11 +159,16 @@ class ExtractionTool(
     Returns:
       BaseEngine: extraction engine.
     """
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
+
     if single_process_mode:
-      extraction_engine = single_extraction_engine.SingleProcessEngine()
+      extraction_engine = single_extraction_engine.SingleProcessEngine(
+          status_update_callback=status_update_callback)
     else:
       extraction_engine = multi_extraction_engine.ExtractionMultiProcessEngine(
           number_of_worker_processes=self._number_of_extraction_workers,
+          status_update_callback=status_update_callback,
           worker_memory_limit=self._worker_memory_limit,
           worker_timeout=self._worker_timeout)
 
@@ -542,17 +547,13 @@ class ExtractionTool(
       for system_configuration in system_configurations:
         storage_writer.AddAttributeContainer(system_configuration)
 
-      status_update_callback = (
-          self._status_view.GetExtractionStatusUpdateCallback())
-
       if single_process_mode:
         logger.debug('Starting extraction in single process mode.')
 
         processing_status = extraction_engine.ProcessSource(
             storage_writer, self._resolver_context, configuration,
             system_configurations, self._file_system_path_specs,
-            force_parser=force_parser,
-            status_update_callback=status_update_callback)
+            force_parser=force_parser)
 
       else:
         logger.debug('Starting extraction in multi process mode.')
@@ -564,7 +565,6 @@ class ExtractionTool(
             storage_writer, session.identifier, configuration,
             system_configurations, self._file_system_path_specs,
             enable_sigsegv_handler=self._enable_sigsegv_handler,
-            status_update_callback=status_update_callback,
             storage_file_path=self._storage_file_path)
 
     finally:

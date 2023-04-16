@@ -53,7 +53,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
     self._status_update_active = False
-    self._status_update_callback = None
     self._status_update_thread = None
     self._storage_writer = None
     self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
