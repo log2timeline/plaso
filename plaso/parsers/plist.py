@@ -142,6 +142,7 @@ class PlistParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionWarning(
           'XML plist file with leading whitespace')
 
+    display_name = parser_mediator.GetDisplayName()
     filename_lower_case = filename.lower()
 
     try:
@@ -156,8 +157,6 @@ class PlistParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
-      file_entry = parser_mediator.GetFileEntry()
-      display_name = parser_mediator.GetDisplayName(file_entry)
       profiling_name = '/'.join([self.NAME, plugin.NAME])
 
       parser_mediator.SampleFormatCheckStartTiming(profiling_name)

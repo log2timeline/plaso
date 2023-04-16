@@ -189,14 +189,14 @@ class EventDataExtractor(object):
 
     # We catch IOError so we can determine the parser that generated the error.
     except (IOError, dfvfs_errors.BackEndError) as exception:
-      display_name = parser_mediator.GetDisplayName(file_entry)
+      display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
       logger.warning(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
       result = self._PARSE_RESULT_FAILURE
 
     except errors.WrongParser as exception:
-      display_name = parser_mediator.GetDisplayName(file_entry)
+      display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
       logger.debug(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
@@ -240,7 +240,7 @@ class EventDataExtractor(object):
           parse_results = self._PARSE_RESULT_SUCCESS
           continue
 
-      display_name = parser_mediator.GetDisplayName(file_entry)
+      display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
       logger.debug((
           '[ParseFileEntryWithParsers] parsing file: {0:s} with parser: '
           '{1:s}').format(display_name, parser_name))

@@ -438,7 +438,7 @@ class SQLiteParser(interface.FileEntryParser):
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
 
-    display_name = parser_mediator.GetDisplayName(file_entry)
+    display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
 
     try:
       for plugin in self._plugins_per_name.values():
@@ -465,7 +465,7 @@ class SQLiteParser(interface.FileEntryParser):
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
 
-    display_name = parser_mediator.GetDisplayName(wal_file_entry)
+    display_name = parser_mediator.GetDisplayName(file_entry=wal_file_entry)
 
     try:
       for plugin in self._plugins_per_name.values():
