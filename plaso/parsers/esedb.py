@@ -114,6 +114,8 @@ class ESEDBParser(interface.FileObjectParser):
           'unable to open file with error: {0!s}'.format(exception))
       return
 
+    display_name = parser_mediator.GetDisplayName()
+
     # Compare the list of available plugin objects.
     cache = ESEDBCache()
     try:
@@ -121,8 +123,6 @@ class ESEDBParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
-        file_entry = parser_mediator.GetFileEntry()
-        display_name = parser_mediator.GetDisplayName(file_entry)
         profiling_name = '/'.join([self.NAME, plugin.NAME])
 
         parser_mediator.SampleFormatCheckStartTiming(profiling_name)

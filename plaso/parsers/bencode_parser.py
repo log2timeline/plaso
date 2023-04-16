@@ -167,12 +167,12 @@ class BencodeParser(interface.FileObjectParser):
     if not self._BENCODE_RE.match(header_data):
       raise errors.WrongParser('Not a valid Bencoded file.')
 
+    display_name = parser_mediator.GetDisplayName()
     bencode_file = BencodeFile()
 
     try:
       bencode_file.Open(file_object)
     except IOError as exception:
-      display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
           '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
@@ -186,8 +186,6 @@ class BencodeParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
-        file_entry = parser_mediator.GetFileEntry()
-        display_name = parser_mediator.GetDisplayName(file_entry)
         profiling_name = '/'.join([self.NAME, plugin.NAME])
 
         parser_mediator.SampleFormatCheckStartTiming(profiling_name)

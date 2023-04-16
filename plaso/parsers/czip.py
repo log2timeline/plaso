@@ -54,8 +54,6 @@ class CompoundZIPParser(interface.FileObjectParser):
       if parser_mediator.abort:
         break
 
-      file_entry = parser_mediator.GetFileEntry()
-      display_name = parser_mediator.GetDisplayName(file_entry)
       profiling_name = '/'.join([self.NAME, plugin.NAME])
 
       parser_mediator.SampleFormatCheckStartTiming(profiling_name)

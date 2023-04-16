@@ -64,6 +64,8 @@ class OLECFParser(interface.FileObjectParser):
     if not root_item:
       return
 
+    display_name = parser_mediator.GetDisplayName()
+
     # Get a list of all items in the root item from the OLECF file.
     item_names = [item.name for item in root_item.sub_items]
 
@@ -79,8 +81,6 @@ class OLECFParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
-        file_entry = parser_mediator.GetFileEntry()
-        display_name = parser_mediator.GetDisplayName(file_entry)
         profiling_name = '/'.join([self.NAME, plugin.NAME])
 
         parser_mediator.SampleFormatCheckStartTiming(profiling_name)
