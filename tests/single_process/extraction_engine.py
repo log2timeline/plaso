@@ -30,6 +30,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     test_engine = extraction_engine.SingleProcessEngine()
+    test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
     resolver_context = context.Context()
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -38,19 +39,19 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
-    configuration = configurations.ProcessingConfiguration()
-    configuration.data_location = shared_test_lib.DATA_PATH
-    configuration.parser_filter_expression = 'filestat'
+    processing_configuration = configurations.ProcessingConfiguration()
+    processing_configuration.data_location = shared_test_lib.DATA_PATH
+    processing_configuration.parser_filter_expression = 'filestat'
 
     storage_writer = fake_writer.FakeStorageWriter()
     storage_writer.Open()
 
     try:
       system_configurations = test_engine.PreprocessSource(
-          test_artifacts_path, None, [source_path_spec], storage_writer)
+          [source_path_spec], storage_writer)
 
       processing_status = test_engine.ProcessSource(
-          storage_writer, resolver_context, configuration,
+          storage_writer, resolver_context, processing_configuration,
           system_configurations, [source_path_spec])
 
       number_of_events = storage_writer.GetNumberOfAttributeContainers('event')

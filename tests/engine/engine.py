@@ -78,6 +78,23 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
       test_engine._StartProfiling(configuration.profiling)
       test_engine._StopProfiling()
 
+  def testBuildArtifactsRegistry(self):
+    """Tests the BuildArtifactsRegistry function."""
+    test_artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_engine = TestEngine()
+
+    self.assertIsNone(test_engine._artifacts_registry)
+
+    test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
+
+    self.assertIsNotNone(test_engine._artifacts_registry)
+
+    # TODO: add test that raises BadConfigOption
+
+  # TODO: add tests for BuildCollectionFilters.
+
   def testCreateSession(self):
     """Tests the CreateSession function."""
     test_engine = engine.BaseEngine()
@@ -123,6 +140,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     self._SkipIfPathNotExists(test_artifacts_path)
 
     test_engine = TestEngine()
+    test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
@@ -131,7 +149,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     source_configurations = test_engine.PreprocessSource(
-        test_artifacts_path, None, [source_path_spec], storage_writer)
+        [source_path_spec], storage_writer)
 
     self.assertEqual(len(source_configurations), 1)
     self.assertEqual(source_configurations[0].operating_system, 'Windows NT')

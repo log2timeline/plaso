@@ -314,20 +314,35 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     extraction_engine = engine.BaseEngine()
 
-    # If the source is a directory or a storage media image
-    # run pre-processing.
-    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      system_configurations = self._PreprocessSource(extraction_engine)
+    extraction_engine.BuildArtifactsRegistry(
+        artifact_definitions_path, custom_artifacts_path)
 
-      # TODO: use system_configurations instead of knowledge base
-      _ = system_configurations
+    # If the source is a directory or a storage media image run pre-processing.
+
+    system_configurations = []
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
+      try:
+        logger.debug('Starting preprocessing.')
+
+        # Setting storage writer to None here since we do not want to store
+        # preprocessing information.
+        system_configurations = extraction_engine.PreprocessSource(
+            self._file_system_path_specs, None,
+            resolver_context=self._resolver_context)
+
+        logger.debug('Preprocessing done.')
+
+      except IOError as exception:
+        logger.error('Unable to preprocess with error: {0!s}'.format(exception))
+
+    # TODO: use system_configurations instead of knowledge base
+    _ = system_configurations
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
 
     try:
       extraction_engine.BuildCollectionFilters(
-          artifact_definitions_path, custom_artifacts_path,
           environment_variables, artifact_filter_names=artifact_filters,
           filter_file_path=filter_file)
     except errors.InvalidFilter as exception:
@@ -335,13 +350,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
-    filters_helper = extraction_engine.collection_filters_helper
-
-    excluded_find_specs = None
-    included_find_specs = None
-    if filters_helper:
-      excluded_find_specs = filters_helper.excluded_file_system_find_specs
-      included_find_specs = filters_helper.included_file_system_find_specs
+    excluded_find_specs = extraction_engine.GetCollectionExcludedFindSpecs()
+    included_find_specs = extraction_engine.GetCollectionIncludedFindSpecs()
 
     output_writer.Write('Extracting file entries.\n')
 
@@ -474,34 +484,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     file_entry_filter = file_entry_filters.SignaturesFileEntryFilter(
         specification_store, signature_identifiers)
     self._filter_collection.AddFilter(file_entry_filter)
-
-  def _PreprocessSource(self, extraction_engine):
-    """Preprocesses the source.
-
-    Args:
-      extraction_engine (BaseEngine): extraction engine to preprocess
-          the sources.
-
-    Returns:
-      list[SystemConfigurationArtifact]: system configurations found in
-          the source.
-    """
-    logger.debug('Starting preprocessing.')
-
-    try:
-      # Setting storage writer to None here since we do not want to store
-      # preprocessing information.
-      system_configurations = extraction_engine.PreprocessSource(
-          self._artifact_definitions_path, self._custom_artifacts_path,
-          self._file_system_path_specs, None,
-          resolver_context=self._resolver_context)
-
-    except IOError as exception:
-      logger.error('Unable to preprocess with error: {0!s}'.format(exception))
-
-    logger.debug('Preprocessing done.')
-
-    return system_configurations
 
   def _ReadSpecificationFile(self, path):
     """Reads the format specification file.

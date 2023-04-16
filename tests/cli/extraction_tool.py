@@ -216,7 +216,6 @@ Test argument parser.
 
     test_tool._ParseProcessingOptions(options)
 
-  # TODO: add test for _PreprocessSource
   # TODO: add test for _ReadParserPresetsFromFile
   # TODO: add test for _SetExtractionPreferredTimeZone
 

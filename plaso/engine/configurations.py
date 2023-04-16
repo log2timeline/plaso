@@ -183,10 +183,14 @@ class ProcessingConfiguration(interface.AttributeContainer):
   """Configuration settings for processing.
 
   Attributes:
+    artifact_definitions_path (str): path to artifact definitions directory
+        or file.
     artifact_filters (Optional list[str]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
     credentials (list[CredentialConfiguration]): credential configurations.
+    custom_artifacts_path (str): path to custom artifact definitions
+        directory or file.
     data_location (str): path to the data files.
     debug_output (bool): True if debug output should be enabled.
     dynamic_time (bool): True if date and time values should be represented
@@ -195,6 +199,8 @@ class ProcessingConfiguration(interface.AttributeContainer):
         configuration.
     extraction (ExtractionConfiguration): extraction configuration.
     filter_file (str): path to a file with find specifications.
+    force_parser (bool): True if a specified parser should be forced to be used
+        to extract events.
     log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
@@ -215,14 +221,17 @@ class ProcessingConfiguration(interface.AttributeContainer):
   def __init__(self):
     """Initializes a process configuration object."""
     super(ProcessingConfiguration, self).__init__()
+    self.artifact_definitions_path = None
     self.artifact_filters = None
     self.credentials = []
+    self.custom_artifacts_path = None
     self.data_location = None
     self.debug_output = False
     self.dynamic_time = False
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()
     self.filter_file = None
+    self.force_parser = None
     self.log_filename = None
     self.parser_filter_expression = None
     self.preferred_codepage = None
