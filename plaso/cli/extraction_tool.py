@@ -183,6 +183,8 @@ class ExtractionTool(
       ProcessingConfiguration: extraction processing configuration.
     """
     configuration = configurations.ProcessingConfiguration()
+    configuration.artifact_definitions_path = self._artifact_definitions_path
+    configuration.custom_artifacts_path = self._custom_artifacts_path
     configuration.data_location = self._data_location
     configuration.extraction.archive_types_string = self._archive_types_string
     configuration.artifact_filters = self._artifact_filters
@@ -412,35 +414,6 @@ class ExtractionTool(
       dfvfs_definitions.PREFERRED_GPT_BACK_END = (
           dfvfs_definitions.TYPE_INDICATOR_GPT)
 
-  def _PreprocessSource(self, extraction_engine, storage_writer):
-    """Preprocesses the source.
-
-    Args:
-      extraction_engine (BaseEngine): extraction engine to preprocess
-          the sources.
-      storage_writer (StorageWriter): storage writer.
-
-    Returns:
-      list[SystemConfigurationArtifact]: system configurations found in
-          the source.
-    """
-    logger.debug('Starting preprocessing.')
-
-    try:
-      system_configurations = extraction_engine.PreprocessSource(
-          self._artifact_definitions_path, self._custom_artifacts_path,
-          self._file_system_path_specs, storage_writer,
-          resolver_context=self._resolver_context)
-
-    except IOError as exception:
-      system_configurations = []
-
-      logger.error('Unable to preprocess with error: {0!s}'.format(exception))
-
-    logger.debug('Preprocessing done.')
-
-    return system_configurations
-
   def _ProcessSource(self, session, storage_writer):
     """Processes the source and extract events.
 
@@ -460,19 +433,32 @@ class ExtractionTool(
 
     extraction_engine = self._CreateExtractionEngine(single_process_mode)
 
+    extraction_engine.BuildArtifactsRegistry(
+        self._artifact_definitions_path, self._custom_artifacts_path)
+
     source_configuration = artifacts.SourceConfigurationArtifact(
         path=self._source_path, source_type=self._source_type)
 
     # TODO: check if the source was processed previously.
     # TODO: add check for modification time of source.
 
-    if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
-      system_configurations = []
-    else:
-      # If the source is a directory or a storage media image
-      # run pre-processing.
-      system_configurations = self._PreprocessSource(
-          extraction_engine, storage_writer)
+    # If the source is a directory or a storage media image run pre-processing.
+
+    system_configurations = []
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
+      try:
+        logger.debug('Starting preprocessing.')
+
+        system_configurations = extraction_engine.PreprocessSource(
+            self._file_system_path_specs, storage_writer,
+            resolver_context=self._resolver_context)
+
+        logger.debug('Preprocessing done.')
+
+      except IOError as exception:
+        system_configurations = []
+
+        logger.error('Unable to preprocess with error: {0!s}'.format(exception))
 
       # TODO: check if the source was processed previously and if system
       # configuration differs.
@@ -510,13 +496,15 @@ class ExtractionTool(
 
       self._extract_winevt_resources = False
 
-    configuration = self._CreateExtractionProcessingConfiguration()
+    processing_configuration = (
+        self._CreateExtractionProcessingConfiguration())
+    processing_configuration.force_parser = force_parser
+
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
 
     try:
       extraction_engine.BuildCollectionFilters(
-          self._artifact_definitions_path, self._custom_artifacts_path,
           environment_variables, artifact_filter_names=self._artifact_filters,
           filter_file_path=self._filter_file)
     except errors.InvalidFilter as exception:
@@ -551,18 +539,17 @@ class ExtractionTool(
         logger.debug('Starting extraction in single process mode.')
 
         processing_status = extraction_engine.ProcessSource(
-            storage_writer, self._resolver_context, configuration,
-            system_configurations, self._file_system_path_specs,
-            force_parser=force_parser)
+            storage_writer, self._resolver_context, processing_configuration,
+            system_configurations, self._file_system_path_specs)
 
       else:
         logger.debug('Starting extraction in multi process mode.')
 
-        # The following overrides are needed because pylint 2.6.0 gets confused
-        # about which ProcessSource to check against.
-        # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-        processing_status = extraction_engine.ProcessSource(
-            storage_writer, session.identifier, configuration,
+        # The method is named ProcessSourceMulti because pylint 2.6.0 and
+        # later gets confused about keyword arguments when ProcessSource
+        # is used.
+        processing_status = extraction_engine.ProcessSourceMulti(
+            storage_writer, session.identifier, processing_configuration,
             system_configurations, self._file_system_path_specs,
             enable_sigsegv_handler=self._enable_sigsegv_handler,
             storage_file_path=self._storage_file_path)

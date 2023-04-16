@@ -156,10 +156,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
-    excluded_find_specs = None
-    if self.collection_filters_helper:
-      excluded_find_specs = (
-          self.collection_filters_helper.excluded_file_system_find_specs)
+    excluded_find_specs = self.GetCollectionExcludedFindSpecs()
 
     try:
       self._CacheFileSystem(path_spec)
@@ -219,10 +216,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = ''
     self._number_of_consumed_sources = 0
 
-    included_find_specs = None
-    if self.collection_filters_helper:
-      included_find_specs = (
-          self.collection_filters_helper.included_file_system_find_specs)
+    included_find_specs = self.GetCollectionIncludedFindSpecs()
 
     for file_system_path_spec in file_system_path_specs:
       if self._abort:
@@ -335,13 +329,27 @@ class SingleProcessEngine(engine.BaseEngine):
 
     Returns:
       ParserMediator: parser mediator.
+
+    Raises:
+      BadConfigOption: if an invalid collection filter was specified.
     """
+    # TODO: get environment_variables per system_configuration
     environment_variables = None
     if self.knowledge_base:
       environment_variables = self.knowledge_base.GetEnvironmentVariables()
 
+    try:
+      self.BuildCollectionFilters(
+          environment_variables,
+          artifact_filter_names=processing_configuration.artifact_filters,
+          filter_file_path=processing_configuration.filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
+
     parser_mediator = parsers_mediator.ParserMediator(
-        collection_filters_helper=self.collection_filters_helper,
+        collection_filters_helper=self._collection_filters_helper,
         environment_variables=environment_variables,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
@@ -359,7 +367,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def ProcessSource(
       self, storage_writer, resolver_context, processing_configuration,
-      system_configurations, file_system_path_specs, force_parser=False):
+      system_configurations, file_system_path_specs):
     """Processes file systems within a source.
 
     Args:
@@ -371,21 +379,27 @@ class SingleProcessEngine(engine.BaseEngine):
           configurations.
       file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
           the source file systems to process.
-      force_parser (Optional[bool]): True if a specified parser should be forced
-          to be used to extract events.
 
     Returns:
       ProcessingStatus: processing status.
 
     Raises:
-      BadConfigOption: if the preferred time zone is invalid.
+      BadConfigOption: if an invalid collection filter was specified or if
+          the preferred time zone is invalid.
     """
+    if not self._artifacts_registry:
+      # TODO: refactor.
+      self.BuildArtifactsRegistry(
+          processing_configuration.artifact_definitions_path,
+          processing_configuration.custom_artifacts_path)
+
     parser_mediator = self._CreateParserMediator(
         resolver_context, processing_configuration, system_configurations)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(
-        force_parser=force_parser, parser_filter_expression=(
+        force_parser=processing_configuration.force_parser,
+        parser_filter_expression=(
             processing_configuration.parser_filter_expression))
 
     self._extraction_worker.SetExtractionConfiguration(

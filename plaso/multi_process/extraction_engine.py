@@ -554,17 +554,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         for parser_count in storage_writer.GetAttributeContainers(
             'parser_count')})
 
-    find_specs = None
-    if self.collection_filters_helper:
-      find_specs = (
-          self.collection_filters_helper.included_file_system_find_specs)
+    included_find_specs = self.GetCollectionIncludedFindSpecs()
 
     for file_system_path_spec in file_system_path_specs:
       if self._abort:
         break
 
       path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=find_specs,
+          file_system_path_spec, find_specs=included_find_specs,
           recurse_file_system=False, resolver_context=self._resolver_context)
       for path_spec in path_spec_generator:
         if self._abort:
@@ -765,7 +762,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     environment_variables = list(self.knowledge_base.GetEnvironmentVariables())
 
     process = extraction_process.ExtractionWorkerProcess(
-        task_queue, self.collection_filters_helper,
+        task_queue, self._collection_filters_helper,
         self._processing_configuration, self._system_configurations,
         environment_variables,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
@@ -946,7 +943,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  def ProcessSource(
+  def ProcessSourceMulti(
       self, storage_writer, session_identifier, processing_configuration,
       system_configurations, file_system_path_specs,
       enable_sigsegv_handler=False, storage_file_path=None):
@@ -970,10 +967,30 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       ProcessingStatus: processing status.
 
     Raises:
-      BadConfigOption: if the preferred time zone is invalid.
+      BadConfigOption: if an invalid collection filter was specified or if
+          the preferred time zone is invalid.
     """
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._system_configurations = system_configurations
+
+    if not self._artifacts_registry:
+      # TODO: refactor.
+      self.BuildArtifactsRegistry(
+          processing_configuration.artifact_definitions_path,
+          processing_configuration.custom_artifacts_path)
+
+    # TODO: get environment_variables per system_configuration
+    environment_variables = self.knowledge_base.GetEnvironmentVariables()
+
+    try:
+      self.BuildCollectionFilters(
+          environment_variables,
+          artifact_filter_names=processing_configuration.artifact_filters,
+          filter_file_path=processing_configuration.filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
     time_zones_per_path_spec = {}
     for system_configuration in system_configurations:
@@ -982,7 +999,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           if path_spec.parent:
             time_zones_per_path_spec[path_spec.parent] = (
                 system_configuration.time_zone)
-
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,

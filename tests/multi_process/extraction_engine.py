@@ -23,11 +23,12 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   def testProcessSource(self):
     """Tests the PreprocessSource and ProcessSource functions."""
-    artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
-    self._SkipIfPathNotExists(artifacts_path)
+    test_artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
 
     test_engine = extraction_engine.ExtractionMultiProcessEngine(
         maximum_number_of_tasks=100)
+    test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
 
     test_file_path = self._GetTestFilePath(['ímynd.dd'])
     self._SkipIfPathNotExists(test_file_path)
@@ -40,10 +41,11 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     session = sessions.Session()
 
-    configuration = configurations.ProcessingConfiguration()
-    configuration.data_location = shared_test_lib.DATA_PATH
-    configuration.parser_filter_expression = 'filestat'
-    configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+    processing_configuration = configurations.ProcessingConfiguration()
+    processing_configuration.data_location = shared_test_lib.DATA_PATH
+    processing_configuration.parser_filter_expression = 'filestat'
+    processing_configuration.task_storage_format = (
+        definitions.STORAGE_FORMAT_SQLITE)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
@@ -52,10 +54,13 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       try:
         system_configurations = test_engine.PreprocessSource(
-            artifacts_path, None, [source_path_spec], storage_writer)
+            [source_path_spec], storage_writer)
 
-        processing_status = test_engine.ProcessSource(
-            storage_writer, session.identifier, configuration,
+        # The method is named ProcessSourceMulti because pylint 2.6.0 and
+        # later gets confused about keyword arguments when ProcessSource
+        # is used.
+        processing_status = test_engine.ProcessSourceMulti(
+            storage_writer, session.identifier, processing_configuration,
             system_configurations, [source_path_spec],
             storage_file_path=temp_directory)
 
