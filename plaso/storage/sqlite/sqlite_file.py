@@ -241,7 +241,13 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           json_dict['_event_data_stream_identifier'] = (
               event_data_stream_identifier.CopyToString())
 
-      serialized_string = json.dumps(json_dict)
+      try:
+        serialized_string = json.dumps(json_dict)
+      except TypeError as exception:
+        raise IOError((
+            'Unable to serialize attribute container: {0:s} with error: '
+            '{1!s}.').format(container.CONTAINER_TYPE, exception))
+
       if not serialized_string:
         raise IOError('Unable to serialize attribute container: {0:s}.'.format(
             container.CONTAINER_TYPE))

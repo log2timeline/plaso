@@ -354,7 +354,9 @@ class BaseEngine(object):
 
       system_configuration = artifacts.SystemConfigurationArtifact(
           code_page=mediator.code_page, language=mediator.language)
-      system_configuration.environment_variables = (
+      # Ensure environment_variables is a list otherwise serialization will
+      # fail.
+      system_configuration.environment_variables = list(
           mediator.GetEnvironmentVariables())
       system_configuration.hostname = mediator.hostname
       system_configuration.keyboard_layout = mediator.GetValue(
