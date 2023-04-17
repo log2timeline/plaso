@@ -452,6 +452,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   Attributes:
     available_time_zones (list[TimeZone]): available time zones.
     code_page (str): system code page.
+    environment_variables (list[EnvironmentVariableArtifact]): environment
+        variables.
     hostname (HostnameArtifact): hostname.
     keyboard_layout (str): keyboard layout.
     language (str): system language.
@@ -471,6 +473,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   # TODO: add SCHEMA
   # SCHEMA = {
   #     'code_page': 'str',
+  #     'environment_variables': Llist[EnvironmentVariableArtifact]',
   #     'keyboard_layout': 'str',
   #     'hostname': 'HostnameArtifact',
   #     'language': 'str',
@@ -492,6 +495,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     # TODO: kept for backwards compatibility.
     self.available_time_zones = []
     self.code_page = code_page
+    self.environment_variables = []
     self.hostname = None
     self.keyboard_layout = None
     self.language = language

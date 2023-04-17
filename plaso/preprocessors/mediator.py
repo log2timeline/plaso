@@ -215,6 +215,20 @@ class PreprocessMediator(object):
 
     logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
 
+  def Reset(self):
+    """Resets the values stored in the mediator."""
+    self._available_time_zones = {}
+    self._environment_variables = {}
+    self._file_entry = None
+    self._windows_eventlog_providers = {}
+    self._windows_eventlog_providers_by_identifier = {}
+    self._values = {}
+
+    self.code_page = None
+    self.hostname = None
+    self.language = None
+    self.time_zone = None
+
   def SetCodePage(self, code_page):
     """Sets the code page.
 

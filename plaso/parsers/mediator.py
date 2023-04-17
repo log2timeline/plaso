@@ -42,15 +42,13 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, collection_filters_helper=None, environment_variables=None,
-      resolver_context=None, system_configurations=None):
+      self, collection_filters_helper=None, resolver_context=None,
+      system_configurations=None):
     """Initializes a parser mediator.
 
     Args:
       collection_filters_helper (Optional[CollectionFiltersHelper]): collection
           filters helper.
-      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
-          environment variables.
       resolver_context (Optional[dfvfs.Context]): resolver context.
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
@@ -58,7 +56,7 @@ class ParserMediator(object):
     super(ParserMediator, self).__init__()
     self._abort = False
     self._cached_parser_chain = None
-    self._environment_variables = environment_variables or []
+    self._environment_variables_per_path_spec = None
     self._event_data_stream = None
     self._event_data_stream_identifier = None
     self._extract_winevt_resources = True
@@ -79,13 +77,14 @@ class ParserMediator(object):
     self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = None
-    self._system_configurations = system_configurations or []
     self._temporary_directory = None
     self._windows_event_log_providers_per_path = None
 
     self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
     self.parsers_counter = collections.Counter()
+
+    self._CreateEnvironmentVariablesPerPathSpec(system_configurations)
 
   @property
   def abort(self):
@@ -121,6 +120,35 @@ class ParserMediator(object):
   def temporary_directory(self):
     """str: path of the directory for temporary files."""
     return self._temporary_directory
+
+  def _CreateEnvironmentVariablesPerPathSpec(self, system_configurations):
+    """Creates the environment variables per path specification lookup table.
+
+    Args:
+      system_configurations (list[SystemConfigurationArtifact]): system
+          configurations.
+    """
+    self._environment_variables_per_path_spec = {}
+    for system_configuration in system_configurations or []:
+      if system_configuration.environment_variables:
+        for path_spec in system_configuration.path_specs:
+          if path_spec.parent:
+            self._environment_variables_per_path_spec[path_spec.parent] = (
+                system_configuration.environment_variables)
+
+  def _GetEnvironmentVariablesByPathSpec(self, path_spec):
+    """Retrieves the environment variables for a specific path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      list[EnvironmentVariableArtifact]: environment variables.
+    """
+    if not path_spec or not path_spec.parent:
+      return None
+
+    return self._environment_variables_per_path_spec.get(path_spec.parent, None)
 
   def AddYearLessLogHelper(self, year_less_log_helper):
     """Adds a year-less log helper.
@@ -184,23 +212,17 @@ class ParserMediator(object):
     Returns:
       str: expanded Windows path.
     """
-    return path_helper.PathHelper.ExpandWindowsPath(
-        path, self._environment_variables)
+    path_spec = getattr(self._file_entry, 'path_spec', None)
+    environment_variables = self._GetEnvironmentVariablesByPathSpec(path_spec)
+    return path_helper.PathHelper.ExpandWindowsPath(path, environment_variables)
 
-  def GetCodePage(self, file_entry=None):
+  def GetCodePage(self):
     """Retrieves the code page related to the file entry.
-
-    Args:
-      file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will use the active file entry.
 
     Returns:
       str: code page.
     """
-    if not file_entry:
-      file_entry = self._file_entry
-
-    path_spec = getattr(file_entry, 'path_spec', None)
+    path_spec = getattr(self._file_entry, 'path_spec', None)
     if path_spec:
       # TODO: determine code page from system_configurations.
       pass
@@ -277,20 +299,13 @@ class ParserMediator(object):
 
     return self._file_entry.name
 
-  def GetLanguageTag(self, file_entry=None):
+  def GetLanguageTag(self):
     """Retrieves the language tag related to the file entry.
-
-    Args:
-      file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
-          will use the active file entry.
 
     Returns:
       str: code page.
     """
-    if not file_entry:
-      file_entry = self._file_entry
-
-    path_spec = getattr(file_entry, 'path_spec', None)
+    path_spec = getattr(self._file_entry, 'path_spec', None)
     if path_spec:
       # TODO: determine language tag from system_configurations.
       pass
@@ -314,11 +329,11 @@ class ParserMediator(object):
       str: relative path of the current file entry or None if no current
           file entry.
     """
-    if self._file_entry is None:
+    path_spec = getattr(self._file_entry, 'path_spec', None)
+    if not path_spec:
       return None
 
-    return path_helper.PathHelper.GetRelativePathForPathSpec(
-        self._file_entry.path_spec)
+    return path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
 
   def GetRelativePathForPathSpec(self, path_spec):
     """Retrieves the relative path for a path specification.
@@ -339,15 +354,19 @@ class ParserMediator(object):
           if no current file entry or no Windows EventLog message file was
           found.
     """
+    path_spec = getattr(self._file_entry, 'path_spec', None)
+
     if (self._windows_event_log_providers_per_path is None and
         self._storage_writer):
+      environment_variables = self._GetEnvironmentVariablesByPathSpec(path_spec)
+
       self._windows_event_log_providers_per_path = {}
 
       for provider in self._storage_writer.GetAttributeContainers(
           'windows_eventlog_provider'):
         for windows_path in provider.event_message_files or []:
           path, filename = path_helper.PathHelper.GetWindowsSystemPath(
-              windows_path, self._environment_variables)
+              windows_path, environment_variables)
           path = path.lower()
           filename = filename.lower()
 
@@ -360,13 +379,13 @@ class ParserMediator(object):
           self._windows_event_log_providers_per_path[path][filename] = provider
 
     message_file = None
-    if self._file_entry:
+    if path_spec:
       relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-          self._file_entry.path_spec)
+          path_spec)
       lookup_path = relative_path.lower()
 
       path_segment_separator = path_helper.PathHelper.GetPathSegmentSeparator(
-          self._file_entry.path_spec)
+          path_spec)
 
       lookup_path, _, lookup_filename = lookup_path.rpartition(
           path_segment_separator)
@@ -588,9 +607,9 @@ class ParserMediator(object):
     Args:
       file_entry (dfvfs.FileEntry): file entry.
     """
-    self._file_entry = file_entry
     self._event_data_stream = None
     self._event_data_stream_identifier = None
+    self._file_entry = file_entry
 
   def SetPreferredCodepage(self, code_page):
     """Sets the preferred code page.
