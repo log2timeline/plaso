@@ -241,9 +241,6 @@ class WinRegistryParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): parser mediator.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    registry_find_specs = getattr(
-        parser_mediator.collection_filters_helper, 'registry_find_specs', None)
-
     code_page = parser_mediator.GetCodePage()
 
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
@@ -268,7 +265,7 @@ class WinRegistryParser(interface.FileObjectParser):
         if root_key.name.lower() in self._AMCACHE_ROOT_KEY_NAMES:
           self._ParseRecurseKeys(parser_mediator, root_key)
 
-        elif not registry_find_specs:
+        elif not parser_mediator.registry_find_specs:
           self._ParseRecurseKeys(parser_mediator, root_key)
 
         elif not self._ARTIFACTS_FILTER_HELPER.CheckKeyCompatibility(
@@ -284,7 +281,8 @@ class WinRegistryParser(interface.FileObjectParser):
           registry_file = None
 
           self._ParseKeysFromFindSpecs(
-              parser_mediator, win_registry, registry_find_specs)
+              parser_mediator, win_registry,
+              parser_mediator.registry_find_specs)
 
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))

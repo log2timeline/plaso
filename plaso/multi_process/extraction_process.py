@@ -95,8 +95,11 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
+    registry_find_specs = getattr(
+        self._collection_filters_helper, 'registry_find_specs', None)
+
     mediator = parsers_mediator.ParserMediator(
-        collection_filters_helper=self._collection_filters_helper,
+        registry_find_specs=registry_find_specs,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 

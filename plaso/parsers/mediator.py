@@ -18,8 +18,6 @@ class ParserMediator(object):
   """Parser mediator.
 
   Attributes:
-    collection_filters_helper (CollectionFiltersHelper): collection filters
-        helper.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
         when the mediator produces an attribute container, such as an event
@@ -29,6 +27,8 @@ class ParserMediator(object):
         not responding (stalled).
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
+    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+        specifications.
   """
 
   _DEFAULT_CODE_PAGE = 'cp1252'
@@ -42,13 +42,13 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, collection_filters_helper=None, resolver_context=None,
+      self, registry_find_specs=None, resolver_context=None,
       system_configurations=None):
     """Initializes a parser mediator.
 
     Args:
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
+      registry_find_specs (Optional[list[dfwinreg.FindSpec]]): Windows Registry
+          find specifications.
       resolver_context (Optional[dfvfs.Context]): resolver context.
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
@@ -80,7 +80,7 @@ class ParserMediator(object):
     self._temporary_directory = None
     self._windows_event_log_providers_per_path = None
 
-    self.collection_filters_helper = collection_filters_helper
+    self.registry_find_specs = registry_find_specs
     self.last_activity_timestamp = 0.0
     self.parsers_counter = collections.Counter()
 
