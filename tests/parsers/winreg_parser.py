@@ -156,7 +156,8 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     artifacts_filters_helper.BuildFindSpecs(artifact_filter_names)
 
     storage_writer = self._ParseFile(
-        ['SYSTEM'], parser, collection_filters_helper=artifacts_filters_helper)
+        ['SYSTEM'], parser,
+        registry_find_specs=artifacts_filters_helper.registry_find_specs)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

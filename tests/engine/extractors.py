@@ -22,21 +22,17 @@ from tests.engine import test_lib
 class EventDataExtractorTest(test_lib.EngineTestCase):
   """Tests for the event data extractor."""
 
-  def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None, file_entry=None):
+  def _CreateParserMediator(self, storage_writer, file_entry=None):
     """Creates a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
 
     Returns:
       ParserMediator: parser mediator.
     """
-    parser_mediator = parsers_mediator.ParserMediator(
-        collection_filters_helper=collection_filters_helper)
+    parser_mediator = parsers_mediator.ParserMediator()
     parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:

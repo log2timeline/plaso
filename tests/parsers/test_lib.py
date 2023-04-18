@@ -41,31 +41,21 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return file_object
 
-  def _CreateParserMediator(
-      self, storage_writer, collection_filters_helper=None, file_entry=None,
-      parser_chain=None):
+  def _CreateParserMediator(self, storage_writer, file_entry=None):
     """Creates a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
-      parser_chain (Optional[str]): parsing chain up to this point.
 
     Returns:
       ParserMediator: parser mediator.
     """
-    parser_mediator = parsers_mediator.ParserMediator(
-        collection_filters_helper=collection_filters_helper)
+    parser_mediator = parsers_mediator.ParserMediator()
     parser_mediator.SetStorageWriter(storage_writer)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)
-
-    if parser_chain:
-      # AppendToParserChain needs to be run after SetFileEntry.
-      parser_mediator.AppendToParserChain(parser_chain)
 
     return parser_mediator
 
@@ -93,15 +83,14 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return storage_writer.GetAttributeContainerByIdentifier(
         events.EventData.CONTAINER_TYPE, event_data_identifier)
 
-  def _ParseFile(
-      self, path_segments, parser, collection_filters_helper=None):
+  def _ParseFile(self, path_segments, parser, registry_find_specs=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
+      registry_find_specs (Optional[list[dfwinreg.FindSpec]]): Windows Registry
+          find specifications.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -116,17 +105,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     return self._ParseFileByPathSpec(
-        path_spec, parser, collection_filters_helper=collection_filters_helper)
+        path_spec, parser, registry_find_specs=registry_find_specs)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, collection_filters_helper=None):
+      self, path_spec, parser, registry_find_specs=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
       parser (BaseParser): parser.
-      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
-          filters helper.
+      registry_find_specs (Optional[list[dfwinreg.FindSpec]]): Windows Registry
+          find specifications.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -136,7 +125,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
           the test should be skipped.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        collection_filters_helper=collection_filters_helper)
+        registry_find_specs=registry_find_specs)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator.SetStorageWriter(storage_writer)
