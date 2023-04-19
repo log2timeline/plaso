@@ -3,16 +3,15 @@
 
 from artifacts import definitions as artifact_types
 
-from dfwinreg import registry_searcher
+from dfvfs.helpers import file_system_searcher as dfvfs_file_system_searcher
 
-from dfvfs.helpers import file_system_searcher
+from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
-from plaso.engine import filters_helper
 from plaso.engine import logger
 from plaso.engine import path_helper
 
 
-class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
+class ArtifactDefinitionsFiltersHelper(object):
   """Helper to create collection filters based on artifact definitions.
 
   Builds collection filters from forensic artifact definitions.
@@ -23,8 +22,12 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
   Attributes:
     file_system_artifact_names (set[str]): names of artifacts definitions that
         generated file system find specifications.
+    file_system_find_specs (list[dfvfs.FindSpec]): file system find
+        specifications of paths to include in the collection.
     registry_artifact_names (set[str]): names of artifacts definitions that
         generated Windows Registry find specifications.
+    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+        specifications.
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
@@ -46,7 +49,9 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
     self._artifacts_registry = artifacts_registry
 
     self.file_system_artifact_names = set()
+    self.file_system_find_specs = []
     self.registry_artifact_names = set()
+    self.registry_find_specs = []
 
   def _BuildFindSpecsFromArtifact(
       self, definition, environment_variables, user_accounts):
@@ -161,7 +166,8 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
       elif key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
         key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
 
-      find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
+      find_spec = dfwinreg_registry_searcher.FindSpec(
+          key_path_glob=key_path_glob)
       find_specs.append(find_spec)
 
     return find_specs
@@ -203,7 +209,7 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
           continue
 
         try:
-          find_spec = file_system_searcher.FindSpec(
+          find_spec = dfvfs_file_system_searcher.FindSpec(
               case_sensitive=False, location_glob=path,
               location_separator=path_separator)
         except ValueError as exception:
@@ -244,10 +250,10 @@ class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
       find_specs.extend(artifact_find_specs)
 
     for find_spec in find_specs:
-      if isinstance(find_spec, file_system_searcher.FindSpec):
-        self.included_file_system_find_specs.append(find_spec)
+      if isinstance(find_spec, dfvfs_file_system_searcher.FindSpec):
+        self.file_system_find_specs.append(find_spec)
 
-      elif isinstance(find_spec, registry_searcher.FindSpec):
+      elif isinstance(find_spec, dfwinreg_registry_searcher.FindSpec):
         self.registry_find_specs.append(find_spec)
 
       else:

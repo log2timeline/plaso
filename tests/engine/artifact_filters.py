@@ -87,14 +87,13 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         artifact_filter_names, environment_variables=[environment_variable],
         user_accounts=test_user_accounts)
 
-    self.assertEqual(
-        len(test_filters_helper.included_file_system_find_specs), 16)
+    self.assertEqual(len(test_filters_helper.file_system_find_specs), 16)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     # Last find_spec should contain the testuser2 profile path.
     location_segments = sorted([
         find_spec._location_segments
-        for find_spec in test_filters_helper.included_file_system_find_specs])
+        for find_spec in test_filters_helper.file_system_find_specs])
     path_segments = [
         'Users', 'testuser2', 'Documents', 'WindowsPowerShell', 'profile\\.ps1']
     self.assertEqual(location_segments[2], path_segments)
@@ -106,7 +105,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=test_filters_helper.included_file_system_find_specs)
+        find_specs=test_filters_helper.file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
@@ -137,8 +136,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         artifact_filter_names, environment_variables=[environment_variable],
         user_accounts=test_user_accounts)
 
-    self.assertEqual(
-        len(test_filters_helper.included_file_system_find_specs), 16)
+    self.assertEqual(len(test_filters_helper.file_system_find_specs), 16)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -148,14 +146,13 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=test_filters_helper.included_file_system_find_specs)
+        find_specs=test_filters_helper.file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
 
     # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt
-    # files,
-    # total 6 path specifications.
+    # files, which total 6 path specifications.
     self.assertEqual(len(path_specs), 6)
 
   def testBuildFindSpecsWithRegistry(self):
@@ -166,8 +163,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_filters_helper.BuildFindSpecs(artifact_filter_names)
 
     # There should be 3 Windows Registry find specifications.
-    self.assertEqual(
-        len(test_filters_helper.included_file_system_find_specs), 0)
+    self.assertEqual(len(test_filters_helper.file_system_find_specs), 0)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 3)
 
     file_entry = self._GetTestFileEntry(['SYSTEM'])

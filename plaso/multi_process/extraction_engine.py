@@ -758,8 +758,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
 
     process = extraction_process.ExtractionWorkerProcess(
-        task_queue, self._collection_filters_helper,
-        self._processing_configuration, self._system_configurations,
+        task_queue, self._processing_configuration, self._system_configurations,
+        self._excluded_file_system_find_specs, self._registry_find_specs,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging

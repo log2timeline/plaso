@@ -42,11 +42,13 @@ class BaseEngine(object):
     self._abort = False
     self._analyzers_profiler = None
     self._artifacts_registry = None
-    self._collection_filters_helper = None
+    self._excluded_file_system_find_specs = None
+    self._included_file_system_find_specs = None
     self._memory_profiler = None
     self._name = 'Main'
     self._processing_status = processing_status.ProcessingStatus()
     self._processing_profiler = None
+    self._registry_find_specs = None
     self._serializers_profiler = None
     # The interval of status updates in number of seconds.
     self._status_update_interval = 0.5
@@ -202,10 +204,14 @@ class BaseEngine(object):
             self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
             environment_variables=environment_variables)
 
-      if not filters_helper.included_file_system_find_specs:
+      if not filters_helper.file_system_find_specs:
         raise errors.InvalidFilter(
             'No valid file system find specifications were built from '
             'artifacts.')
+
+      self._included_file_system_find_specs = (
+          filters_helper.file_system_find_specs)
+      self._registry_find_specs = filters_helper.registry_find_specs
 
     elif filter_file_path:
       logger.debug(
@@ -232,7 +238,10 @@ class BaseEngine(object):
             'No valid file system find specifications were built from filter '
             'file: {0:s}.').format(filter_file_path))
 
-    self._collection_filters_helper = filters_helper
+      self._excluded_file_system_find_specs = (
+          filters_helper.excluded_file_system_find_specs)
+      self._included_file_system_find_specs = (
+          filters_helper.included_file_system_find_specs)
 
   # pylint: disable=too-many-arguments
   @classmethod
@@ -269,9 +278,7 @@ class BaseEngine(object):
     Returns:
       list[dfvfs.FindSpec]: find specifications to exclude from collection.
     """
-    return getattr(
-        self._collection_filters_helper, 'excluded_file_system_find_specs',
-        None) or []
+    return self._excluded_file_system_find_specs or []
 
   def GetCollectionIncludedFindSpecs(self):
     """Retrieves find specifications to include in collection.
@@ -279,9 +286,7 @@ class BaseEngine(object):
     Returns:
       list[dfvfs.FindSpec]: find specifications to include in collection.
     """
-    return getattr(
-        self._collection_filters_helper, 'included_file_system_find_specs',
-        None) or []
+    return self._included_file_system_find_specs or []
 
   def GetSourceFileSystem(self, file_system_path_spec, resolver_context=None):
     """Retrieves the file system of the source.

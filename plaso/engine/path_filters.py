@@ -7,7 +7,6 @@ to include or exclude file system paths.
 
 from dfvfs.helpers import file_system_searcher
 
-from plaso.engine import filters_helper
 from plaso.engine import logger
 from plaso.engine import path_helper
 
@@ -51,8 +50,21 @@ class PathFilter(object):
     self.paths = paths or []
 
 
-class PathCollectionFiltersHelper(filters_helper.CollectionFiltersHelper):
-  """Path collection filters helper."""
+class PathCollectionFiltersHelper(object):
+  """Path collection filters helper.
+
+  Attributes:
+    excluded_file_system_find_specs (list[dfvfs.FindSpec]): file system find
+        specifications of paths to exclude from the collection.
+    included_file_system_find_specs (list[dfvfs.FindSpec]): file system find
+        specifications of paths to include in the collection.
+  """
+
+  def __init__(self):
+    """Initializes a collection filters helper."""
+    super(PathCollectionFiltersHelper, self).__init__()
+    self.excluded_file_system_find_specs = []
+    self.included_file_system_find_specs = []
 
   def BuildFindSpecs(self, path_filters, environment_variables=None):
     """Builds find specifications from path filters.
