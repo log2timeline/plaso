@@ -122,6 +122,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     analysis_reports_counter = collections.Counter()
     analysis_reports_counter_error = False
 
+    data_types_counter = {}
+    if storage_reader.HasAttributeContainers('data_type_count'):
+      data_types_counter = {
+          data_type_count.name: data_type_count.number_of_events
+          for data_type_count in storage_reader.GetAttributeContainers(
+              'data_type_count')}
+
+    data_types_counter = collections.Counter(data_types_counter)
+    data_types_counter_error = False
+
     event_labels_counter = {}
     if storage_reader.HasAttributeContainers('event_label_count'):
       event_labels_counter = {
@@ -193,6 +203,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     if not analysis_reports_counter_error:
       storage_counters['analysis_reports'] = analysis_reports_counter
+
+    if not data_types_counter_error:
+      storage_counters['data_types'] = data_types_counter
 
     if not event_labels_counter_error:
       storage_counters['event_labels'] = event_labels_counter
@@ -270,6 +283,20 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_counters = self._CalculateStorageCounters(storage_reader)
     compare_storage_counters = self._CalculateStorageCounters(
         compare_storage_reader)
+
+    # Compare number of events by data type.
+    data_types_counter = storage_counters.get('data_types', collections.Counter())
+    compare_data_types_counter = compare_storage_counters.get(
+        'data_types', collections.Counter())
+    differences = self._CompareCounter(data_types_counter, compare_data_types_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences,
+          column_names=['Data type name', 'Number of events'],
+          title='Events generated per data type')
 
     # Compare number of events.
     parsers_counter = storage_counters.get('parsers', collections.Counter())
@@ -709,6 +736,52 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
+  def _PrintDataTypesCounter(self, data_types_counter, session_identifier=None):
+    """Prints the data types counter
+
+    Args:
+      data_types_counter (collections.Counter): number of events per data type.
+      session_identifier (Optional[str]): session identifier, formatted as
+          a UUID.
+    """
+    if self._output_format == 'json':
+      if session_identifier:
+        self._output_writer.Write(', ')
+
+      json_string = json.dumps(data_types_counter)
+      self._output_writer.Write('"data_types": {0:s}'.format(json_string))
+
+    elif self._output_format in ('markdown', 'text'):
+      if self._output_format == 'text' and not data_types_counter:
+        if not session_identifier:
+          self._output_writer.Write('\nNo events stored.\n')
+
+      else:
+        title = 'Events generated per data type'
+        if session_identifier:
+          title = '{0:s}: {1:s}'.format(title, session_identifier)
+          title_level = 4
+        else:
+          title_level = 2
+
+        if not data_types_counter:
+          if not session_identifier:
+            self._output_writer.Write('{0:s} {1:s}\n\nN/A\n\n'.format(
+                '#' * title_level, title))
+        else:
+          table_view = views.ViewsFactory.GetTableView(
+              self._views_format_type,
+              column_names=['Data type name', 'Number of events'],
+              title=title, title_level=title_level)
+
+          for key, value in sorted(data_types_counter.items()):
+            if key != 'total':
+              table_view.AddRow([key, value])
+
+          table_view.AddRow(['Total', data_types_counter['total']])
+
+          table_view.Write(self._output_writer)
+
   def _PrintEventLabelsCounter(
       self, event_labels_counter, session_identifier=None):
     """Prints the event labels counter.
@@ -1146,6 +1219,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     section_written = False
 
     if self._sections == 'all' or 'events' in self._sections:
+      data_types = storage_counters.get('data_types', collections.Counter())
+
+      self._PrintDataTypesCounter(data_types)
+      section_written = True
+
+      if self._output_format == 'json' and section_written:
+        self._output_writer.Write(', ')
+
+      section_written = False
       parsers = storage_counters.get('parsers', collections.Counter())
 
       self._PrintParsersCounter(parsers)

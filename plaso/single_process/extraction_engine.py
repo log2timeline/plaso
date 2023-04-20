@@ -33,6 +33,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes a single process extraction engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
+    self._data_types_counter = None
     self._event_data_timeliner = None
     self._extraction_worker = None
     self._file_system_cache = []
@@ -399,6 +400,11 @@ class SingleProcessEngine(engine.BaseEngine):
 
     self._StartStatusUpdateThread()
 
+    self._data_types_counter = collections.Counter({
+        data_type_count.name: data_type_count
+        for data_type_count in self._storage_writer.GetAttributeContainers(
+            'data_type_count')})
+
     self._parsers_counter = collections.Counter({
         parser_count.name: parser_count
         for parser_count in self._storage_writer.GetAttributeContainers(
@@ -428,6 +434,16 @@ class SingleProcessEngine(engine.BaseEngine):
 
       self._StopProfiling()
       parser_mediator.StopProfiling()
+
+    for key, value in self._event_data_timeliner.data_types_counter.items():
+      data_type_count = self._data_types_counter.get(key, None)
+      if data_type_count:
+        data_type_count.number_of_events += value
+        self._storage_writer.UpdateAttributeContainer(data_type_count)
+      else:
+        data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
+        self._data_types_counter[key] = data_type_count
+        self._storage_writer.AddAttributeContainer(data_type_count)
 
     for key, value in self._event_data_timeliner.parsers_counter.items():
       parser_count = self._parsers_counter.get(key, None)
