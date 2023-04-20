@@ -107,8 +107,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return self._ParseFileByPathSpec(
         path_spec, parser, registry_find_specs=registry_find_specs)
 
-  def _ParseFileByPathSpec(
-      self, path_spec, parser, registry_find_specs=None):
+  def _ParseFileByPathSpec(self, path_spec, parser, registry_find_specs=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:

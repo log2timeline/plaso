@@ -22,8 +22,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(
-      self, task_queue, collection_filters_helper, processing_configuration,
-      system_configurations, **kwargs):
+      self, task_queue, processing_configuration, system_configurations,
+      excluded_file_system_find_specs, registry_find_specs, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -31,24 +31,27 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     Args:
       task_queue (PlasoQueue): task queue.
-      collection_filters_helper (CollectionFiltersHelper): collection filters
-          helper.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
+     excluded_file_system_find_specs (list[dfvfs.FindSpec]): file system find
+         specifications of paths to exclude from the collection.
+     registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+         specifications.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(ExtractionWorkerProcess, self).__init__(
         processing_configuration, **kwargs)
     self._abort = False
-    self._collection_filters_helper = collection_filters_helper
     self._buffer_size = 0
     self._current_display_name = ''
+    self._excluded_file_system_find_specs = excluded_file_system_find_specs
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
+    self._registry_find_specs = registry_find_specs
     self._resolver_context = None
     self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._task = None
@@ -95,11 +98,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
-    registry_find_specs = getattr(
-        self._collection_filters_helper, 'registry_find_specs', None)
-
     mediator = parsers_mediator.ParserMediator(
-        registry_find_specs=registry_find_specs,
+        registry_find_specs=self._registry_find_specs,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 
@@ -275,22 +275,17 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    excluded_find_specs = None
-    if self._collection_filters_helper:
-      excluded_find_specs = (
-          self._collection_filters_helper.excluded_file_system_find_specs)
-
     self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
     try:
       self._CacheFileSystem(path_spec)
 
-      if excluded_find_specs:
+      if self._excluded_file_system_find_specs:
         file_system = path_spec_resolver.Resolver.OpenFileSystem(
             path_spec, resolver_context=self._resolver_context)
 
-        for find_spec in excluded_find_specs:
+        for find_spec in self._excluded_file_system_find_specs:
           if find_spec.ComparePathSpecLocation(path_spec, file_system):
             logger.debug('Excluded from extraction: {0:s}.'.format(
                 self._current_display_name))

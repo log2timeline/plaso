@@ -348,11 +348,8 @@ class SingleProcessEngine(engine.BaseEngine):
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
-    registry_find_specs = getattr(
-        self._collection_filters_helper, 'registry_find_specs', None)
-
     parser_mediator = parsers_mediator.ParserMediator(
-        registry_find_specs=registry_find_specs,
+        registry_find_specs=self._registry_find_specs,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 
