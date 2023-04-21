@@ -991,25 +991,16 @@ class EventExtractionWorker(object):
     """
     return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 
-  def ProcessPathSpec(self, parser_mediator, path_spec):
-    """Processes a path specification.
+  def ProcessFileEntry(self, parser_mediator, file_entry):
+    """Processes a file entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      path_spec (dfvfs.PathSpec): path specification.
+      file_entry (dfvfs.FileEntry): file entry.
     """
     self.last_activity_timestamp = time.time()
     self.processing_status = definitions.STATUS_INDICATOR_RUNNING
-
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=parser_mediator.resolver_context)
-
-    if file_entry is None:
-      display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
-      logger.warning('Unable to open file entry: {0:s}'.format(display_name))
-      self.processing_status = definitions.STATUS_INDICATOR_IDLE
-      return
 
     parser_mediator.SetFileEntry(file_entry)
 
@@ -1024,6 +1015,25 @@ class EventExtractionWorker(object):
 
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
+
+  def ProcessPathSpec(self, parser_mediator, path_spec):
+    """Processes a path specification.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      path_spec (dfvfs.PathSpec): path specification.
+    """
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=parser_mediator.resolver_context)
+
+    if file_entry is None:
+      display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+      logger.warning('Unable to open file entry: {0:s}'.format(display_name))
+      self.processing_status = definitions.STATUS_INDICATOR_IDLE
+      return
+
+    self.ProcessFileEntry(parser_mediator, file_entry)
 
   # TODO: move the functionality of this method into the constructor.
   def SetExtractionConfiguration(self, configuration):

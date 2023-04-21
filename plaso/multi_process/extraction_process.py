@@ -23,7 +23,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
   def __init__(
       self, task_queue, processing_configuration, system_configurations,
-      excluded_file_system_find_specs, registry_find_specs, **kwargs):
+      registry_find_specs, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -35,8 +35,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
-     excluded_file_system_find_specs (list[dfvfs.FindSpec]): file system find
-         specifications of paths to exclude from the collection.
      registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
          specifications.
       kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -46,7 +44,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = ''
-    self._excluded_file_system_find_specs = excluded_file_system_find_specs
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
@@ -279,20 +276,19 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         path_spec)
 
     try:
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=parser_mediator.resolver_context)
+      if file_entry is None:
+        logger.warning('Unable to open file entry: {0:s}'.format(
+            self._current_display_name))
+        return
+
+      # file_system = file_entry.GetFileSystem()
+
+      # TODO: pass file_system
       self._CacheFileSystem(path_spec)
 
-      if self._excluded_file_system_find_specs:
-        file_system = path_spec_resolver.Resolver.OpenFileSystem(
-            path_spec, resolver_context=self._resolver_context)
-
-        for find_spec in self._excluded_file_system_find_specs:
-          if find_spec.ComparePathSpecLocation(path_spec, file_system):
-            logger.debug('Excluded from extraction: {0:s}.'.format(
-                self._current_display_name))
-            self._status = definitions.STATUS_INDICATOR_IDLE
-            return
-
-      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+      extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
