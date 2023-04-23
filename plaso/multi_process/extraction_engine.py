@@ -12,12 +12,14 @@ import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import warnings
 from plaso.engine import extractors
+from plaso.engine import path_helper
 from plaso.engine import timeliner
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -175,7 +177,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._number_of_produced_events = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = number_of_worker_processes
-    self._parsers_counter = collections.Counter()
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._status = definitions.STATUS_INDICATOR_IDLE
@@ -189,6 +190,103 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
     self._system_configurations = None
+
+  def _CheckExcludedPathSpec(self, file_system, path_spec):
+    """Determines if the path specification should be excluded from extraction.
+
+    Args:
+      file_system (dfvfs.FileSystem): file system which the path specification
+          is part of.
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      bool: True if the path specification should be excluded from extraction.
+    """
+    for find_spec in self._excluded_file_system_find_specs or []:
+      if find_spec.ComparePathSpecLocation(path_spec, file_system):
+        return True
+
+    return False
+
+  def _CollectInitialEventSources(self, storage_writer, file_system_path_specs):
+    """Collects the initial event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
+    """
+    self._status = definitions.STATUS_INDICATOR_COLLECTING
+
+    included_find_specs = self.GetCollectionIncludedFindSpecs()
+
+    for file_system_path_spec in file_system_path_specs:
+      if self._abort:
+        break
+
+      file_system = path_spec_resolver.Resolver.OpenFileSystem(
+          file_system_path_spec, resolver_context=self._resolver_context)
+
+      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+          file_system_path_spec, find_specs=included_find_specs,
+          recurse_file_system=False, resolver_context=self._resolver_context)
+      for path_spec in path_spec_generator:
+        if self._abort:
+          break
+
+        if self._CheckExcludedPathSpec(file_system, path_spec):
+          display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+              path_spec)
+          logger.debug('Excluded from extraction: {0:s}.'.format(display_name))
+          continue
+
+        # TODO: determine if event sources should be DataStream or FileEntry
+        # or both.
+        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+        storage_writer.AddAttributeContainer(event_source)
+
+        self._number_of_produced_sources += 1
+
+        # Update the foreman process status in case we are using a filter file.
+        self._UpdateForemanProcessStatus()
+
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
+
+  def _CreateTask(self, storage_writer, session_identifier, event_source):
+    """Creates a task to processes an event source.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+      event_source (EventSource): event source.
+
+    Returns:
+      Task: task or None if no task could be created.
+    """
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        event_source.path_spec, resolver_context=self._resolver_context)
+    if file_entry is None:
+      self._ProduceExtractionWarning(
+          storage_writer, 'Unable to open file entry', event_source.path_spec)
+      return None
+
+    file_system = file_entry.GetFileSystem()
+
+    if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
+      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+          event_source.path_spec)
+      logger.debug('Excluded from extraction: {0:s}.'.format(
+          display_name))
+      return None
+
+    task = self._task_manager.CreateTask(
+        session_identifier, storage_format=self._task_storage_format)
+    task.file_entry_type = event_source.file_entry_type
+    task.path_spec = event_source.path_spec
+
+    return task
 
   def _FillEventSourceHeap(
       self, storage_writer, event_source_heap, start_with_first=False):
@@ -528,6 +626,120 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           self._task_manager.SampleTaskStatus(self._merge_task, 'merge_resumed')
 
+  def _ProduceExtractionWarning(self, storage_writer, message, path_spec):
+    """Produces an extraction warning.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      message (str): message of the warning.
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    warning = warnings.ExtractionWarning(message=message, path_spec=path_spec)
+    storage_writer.AddAttributeContainer(warning)
+
+    if path_spec:
+      self._processing_status.error_path_specs.append(path_spec)
+
+  def _ProcessEventSources(self, storage_writer, session_identifier):
+    """Processes event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+    """
+    logger.debug('Task scheduler started')
+
+    self._status = definitions.STATUS_INDICATOR_RUNNING
+
+    # TODO: make tasks persistent.
+
+    # TODO: protect task scheduler loop by catch all and
+    # handle abort path.
+
+    event_source_heap = _EventSourceHeap()
+
+    self._FillEventSourceHeap(
+        storage_writer, event_source_heap, start_with_first=True)
+
+    event_source = event_source_heap.PopEventSource()
+
+    task = None
+    has_pending_tasks = True
+
+    while event_source or has_pending_tasks:
+      if self._abort:
+        break
+
+      try:
+        if not task:
+          task = self._task_manager.CreateRetryTask()
+
+        if not task and event_source:
+          task = self._CreateTask(
+              storage_writer, session_identifier, event_source)
+
+          event_source = None
+
+          self._number_of_consumed_sources += 1
+
+        if task:
+          if not self._ScheduleTask(task):
+            self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
+
+          else:
+            path_spec_string = self._GetPathSpecificationString(task.path_spec)
+            logger.debug(
+                'Scheduled task: {0:s} for path specification: {1:s}'.format(
+                    task.identifier, path_spec_string.replace('\n', ' ')))
+
+            self._task_manager.SampleTaskStatus(task, 'scheduled')
+
+            task = None
+
+        self._MergeTaskStorage(storage_writer, session_identifier)
+
+        if event_source_heap.IsFull():
+          logger.debug('Event source heap is full.')
+        else:
+          self._FillEventSourceHeap(storage_writer, event_source_heap)
+
+        if not task and not event_source:
+          event_source = event_source_heap.PopEventSource()
+
+        has_pending_tasks = self._task_manager.HasPendingTasks()
+
+      except KeyboardInterrupt:
+        if self._debug_output:
+          traceback.print_exc()
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
+
+      # All exceptions need to be caught here to prevent the foreman
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        self._ProduceExtractionWarning(storage_writer, (
+            'unable to process path specification with error: '
+            '{0!s}').format(exception), event_source.path_spec)
+
+    for task in self._task_manager.GetFailedTasks():
+      self._ProduceExtractionWarning(
+          storage_writer, 'Worker failed to process path specification',
+          task.path_spec)
+
+    self._status = definitions.STATUS_INDICATOR_IDLE
+
+    if self._abort:
+      logger.debug('Task scheduler aborted')
+    else:
+      logger.debug('Task scheduler stopped')
+
   def _ProcessSource(
       self, storage_writer, session_identifier, file_system_path_specs):
     """Processes file systems within a source.
@@ -540,9 +752,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           the source file systems to process.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming('process_sources')
+      self._processing_profiler.StartTiming('process_source')
 
-    self._status = definitions.STATUS_INDICATOR_COLLECTING
     self._number_of_consumed_event_data = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_event_data = 0
@@ -554,33 +765,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         for parser_count in storage_writer.GetAttributeContainers(
             'parser_count')})
 
-    included_find_specs = self.GetCollectionIncludedFindSpecs()
+    self._CollectInitialEventSources(storage_writer, file_system_path_specs)
 
-    for file_system_path_spec in file_system_path_specs:
-      if self._abort:
-        break
-
-      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=included_find_specs,
-          recurse_file_system=False, resolver_context=self._resolver_context)
-      for path_spec in path_spec_generator:
-        if self._abort:
-          break
-
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-        storage_writer.AddAttributeContainer(event_source)
-
-        self._number_of_produced_sources += 1
-
-        # Update the foreman process status in case we are using a filter file.
-        self._UpdateForemanProcessStatus()
-
-        if self._status_update_callback:
-          self._status_update_callback(self._processing_status)
-
-    self._ScheduleTasks(storage_writer, session_identifier)
+    self._ProcessEventSources(storage_writer, session_identifier)
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -596,18 +783,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         parser_count = counts.ParserCount(name=key, number_of_events=value)
         storage_writer.AddAttributeContainer(parser_count)
 
-    # TODO: remove after completion event and event data split.
-    for key, value in self._parsers_counter.items():
-      parser_count = stored_parsers_counter.get(key, None)
-      if parser_count:
-        parser_count.number_of_events += value
-        storage_writer.UpdateAttributeContainer(parser_count)
-      else:
-        parser_count = counts.ParserCount(name=key, number_of_events=value)
-        storage_writer.AddAttributeContainer(parser_count)
-
     if self._processing_profiler:
-      self._processing_profiler.StopTiming('process_sources')
+      self._processing_profiler.StopTiming('process_source')
 
     # Update the foreman process and task status in case we are using
     # a filter file.
@@ -646,99 +823,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     return is_scheduled
 
-  def _ScheduleTasks(self, storage_writer, session_identifier):
-    """Schedules tasks.
-
-    Args:
-      storage_writer (StorageWriter): storage writer for a session storage.
-      session_identifier (str): the identifier of the session the tasks are
-          part of.
-    """
-    logger.debug('Task scheduler started')
-
-    self._status = definitions.STATUS_INDICATOR_RUNNING
-
-    # TODO: make tasks persistent.
-
-    # TODO: protect task scheduler loop by catch all and
-    # handle abort path.
-
-    event_source_heap = _EventSourceHeap()
-
-    self._FillEventSourceHeap(
-        storage_writer, event_source_heap, start_with_first=True)
-
-    event_source = event_source_heap.PopEventSource()
-
-    task = None
-    has_pending_tasks = True
-
-    while event_source or has_pending_tasks:
-      if self._abort:
-        break
-
-      try:
-        if not task:
-          task = self._task_manager.CreateRetryTask()
-
-        if not task and event_source:
-          task = self._task_manager.CreateTask(
-              session_identifier, storage_format=self._task_storage_format)
-          task.file_entry_type = event_source.file_entry_type
-          task.path_spec = event_source.path_spec
-          event_source = None
-
-          self._number_of_consumed_sources += 1
-
-        if task:
-          if not self._ScheduleTask(task):
-            self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
-
-          else:
-            path_spec_string = self._GetPathSpecificationString(task.path_spec)
-            logger.debug(
-                'Scheduled task: {0:s} for path specification: {1:s}'.format(
-                    task.identifier, path_spec_string.replace('\n', ' ')))
-
-            self._task_manager.SampleTaskStatus(task, 'scheduled')
-
-            task = None
-
-        self._MergeTaskStorage(storage_writer, session_identifier)
-
-        if not event_source_heap.IsFull():
-          self._FillEventSourceHeap(storage_writer, event_source_heap)
-        else:
-          logger.debug('Event source heap is full.')
-
-        if not task and not event_source:
-          event_source = event_source_heap.PopEventSource()
-
-        has_pending_tasks = self._task_manager.HasPendingTasks()
-
-      except KeyboardInterrupt:
-        if self._debug_output:
-          traceback.print_exc()
-        self._abort = True
-
-        self._processing_status.aborted = True
-        if self._status_update_callback:
-          self._status_update_callback(self._processing_status)
-
-    for task in self._task_manager.GetFailedTasks():
-      warning = warnings.ExtractionWarning(
-          message='Worker failed to process path specification',
-          path_spec=task.path_spec)
-      self._storage_writer.AddAttributeContainer(warning)
-      self._processing_status.error_path_specs.append(task.path_spec)
-
-    self._status = definitions.STATUS_INDICATOR_IDLE
-
-    if self._abort:
-      logger.debug('Task scheduler aborted')
-    else:
-      logger.debug('Task scheduler stopped')
-
   def _StartWorkerProcess(self, process_name):
     """Creates, starts, monitors and registers a worker process.
 
@@ -759,7 +843,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = extraction_process.ExtractionWorkerProcess(
         task_queue, self._processing_configuration, self._system_configurations,
-        self._excluded_file_system_find_specs, self._registry_find_specs,
+        self._registry_find_specs,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging
@@ -987,13 +1071,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           'Unable to build collection filters with error: {0!s}'.format(
               exception))
 
-    time_zones_per_path_spec = {}
-    for system_configuration in system_configurations:
-      if system_configuration.time_zone:
-        for path_spec in system_configuration.path_specs:
-          if path_spec.parent:
-            time_zones_per_path_spec[path_spec.parent] = (
-                system_configuration.time_zone)
     self._event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=processing_configuration.data_location,
         preferred_year=processing_configuration.preferred_year,

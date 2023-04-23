@@ -14,8 +14,8 @@ simultaneously.**
 
 ## Using Forensic Artifacts definitions
 
-[Forensic Artifacts](https://github.com/ForensicArtifacts/artifacts) definitions provide a more analyst centric approach to
-collection filters.
+[Forensic Artifacts](https://github.com/ForensicArtifacts/artifacts) definitions
+provide a more analyst centric approach to collection filters.
 
 For example based on the definition:
 
@@ -46,10 +46,7 @@ be stored in a file.**
 
 ## Using filter files
 
-Due a limitations in the original text-based filter file format the YAML-based
-filter format was introduced. We recommend using the YAML-based format.
-
-A YAML-based filter can be used to describe the path of each file or
+A YAML-based filter file can be used to describe the path of each file or
 directory Plaso should include or exclude from parsing.
 
 * Inclusion filters are applied before exclusion filters.
@@ -64,56 +61,10 @@ To use:
 log2timeline.py --file-filter windows.yaml --storage-file timeline.plaso source.raw
 ```
 
-### Text-based filter file format
-
-A text-based filter can be used to describe the path of each file or
-directory Plaso should include in parsing.
-
-**Note that the text-based filter file does not support exclusion filters.
-If you need this functionality use the YAML-based filter file instead.**
-
-The text-based filter file itself contains a path filter per line or a line
-starting `#` for comment.
-
-```
-# This is comment.
-/ segment1 / segment2 / segment3 / ...
-{systemroot} / segment2 / segment3 / ...
-```
-
-The path segment separator is a forward slash '/'.
-
-A path segment can be defined as
-
-* a string representing the exact name of the directory or file;
-* a regular expression representing the name of the directory or file;
-* a path expansion variable, denoted by a curly bracket, such as `{systemroot}`.
-
-The path must be an absolute path, meaning that is should start with '/' or
-with path expansion variable that Plaso was able to resolve during
-preprocessing. Plaso will ignore path filters it does not consider valid.
-
-For example:
-
-```
-{systemroot}/System32/config/.+[.]evt
-/(Users|Documents And Settings)/.+/AppData/Roaming/Mozilla/Firefox/Profiles/.+/places.sqlite
-```
-
-The first line defines a path filter that uses the "systemroot" path expansion
-variable that is discovered during preprocessing and denotes the Windows
-SystemRoot folder. It will then process the directories and files with a name
-that endswith ".evt".
-
-The second line defines a path filter using both regular expressions and
-strings to denote the location of Firefox history files.
+**Note that filter files only support source-level filtering, meaning that
+filters do not apply to archives or other composite files inside the source.**
 
 ### YAML-based filter file format
-
-A YAML-based filter can be used to describe the path of each file or
-directory Plaso should include or exclude from parsing.
-
-Include filters have precedence above exclude filters.
 
 A path filter is defined as a set of attributes:
 

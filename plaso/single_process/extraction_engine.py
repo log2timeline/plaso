@@ -60,7 +60,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._status_update_thread = None
     self._storage_writer = None
 
-  def _CacheFileSystem(self, path_spec):
+  def _CacheFileSystem(self, file_system):
     """Caches a dfVFS file system object.
 
     Keeping and additional reference to a dfVFS file system object causes the
@@ -68,23 +68,73 @@ class SingleProcessEngine(engine.BaseEngine):
     times the file system is re-opened.
 
     Args:
-      path_spec (dfvfs.PathSpec): path specification.
+      file_system (dfvfs.FileSystem): file system.
     """
-    if (path_spec and not path_spec.IsSystemLevel() and
-        path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
+    if file_system not in self._file_system_cache:
+      if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        self._file_system_cache.pop(0)
+      self._file_system_cache.append(file_system)
+
+    elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+      # Move the file system to the end of the list to preserve the most
+      # recently file system object.
+      self._file_system_cache.remove(file_system)
+      self._file_system_cache.append(file_system)
+
+  def _CheckExcludedPathSpec(self, file_system, path_spec):
+    """Determines if the path specification should be excluded from extraction.
+
+    Args:
+      file_system (dfvfs.FileSystem): file system which the path specification
+          is part of.
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      bool: True if the path specification should be excluded from extraction.
+    """
+    for find_spec in self._excluded_file_system_find_specs or []:
+      if find_spec.ComparePathSpecLocation(path_spec, file_system):
+        return True
+
+    return False
+
+  def _CollectInitialEventSources(
+      self, parser_mediator, file_system_path_specs):
+    """Collects the initial event sources.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the source file systems to process.
+    """
+    self._status = definitions.STATUS_INDICATOR_COLLECTING
+
+    included_find_specs = self.GetCollectionIncludedFindSpecs()
+
+    for file_system_path_spec in file_system_path_specs:
+      if self._abort:
+        break
+
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          path_spec, resolver_context=self._resolver_context)
+          file_system_path_spec, resolver_context=self._resolver_context)
 
-      if file_system not in self._file_system_cache:
-        if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-          self._file_system_cache.pop(0)
-        self._file_system_cache.append(file_system)
+      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+          file_system_path_spec, find_specs=included_find_specs,
+          recurse_file_system=False, resolver_context=self._resolver_context)
+      for path_spec in path_spec_generator:
+        if self._abort:
+          break
 
-      elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-        # Move the file system to the end of the list to preserve the most
-        # recently file system object.
-        self._file_system_cache.remove(file_system)
-        self._file_system_cache.append(file_system)
+        if self._CheckExcludedPathSpec(file_system, path_spec):
+          display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+          logger.debug('Excluded from extraction: {0:s}.'.format(display_name))
+          continue
+
+        # TODO: determine if event sources should be DataStream or FileEntry
+        # or both.
+        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+        parser_mediator.ProduceEventSource(event_source)
 
   def _ProcessEventData(self):
     """Generate events from event data."""
@@ -145,6 +195,40 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_event_data')
 
+  def _ProcessEventSources(self, storage_writer, parser_mediator):
+    """Processes event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    self._status = definitions.STATUS_INDICATOR_RUNNING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('get_event_source')
+
+    event_source = storage_writer.GetFirstWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming('get_event_source')
+
+    while event_source:
+      if self._abort:
+        break
+
+      self._ProcessPathSpec(parser_mediator, event_source.path_spec)
+
+      self._number_of_consumed_sources += 1
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming('get_event_source')
+
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming('get_event_source')
+
   def _ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -153,26 +237,29 @@ class SingleProcessEngine(engine.BaseEngine):
           and other components, such as storage and dfVFS.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
-        path_spec)
-
-    excluded_find_specs = self.GetCollectionExcludedFindSpecs()
-
     try:
-      self._CacheFileSystem(path_spec)
+      self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
+          path_spec)
 
-      if excluded_find_specs:
-        file_system = path_spec_resolver.Resolver.OpenFileSystem(
-            path_spec, resolver_context=self._resolver_context)
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=parser_mediator.resolver_context)
+      if file_entry is None:
+        logger.warning('Unable to open file entry: {0:s}'.format(
+            self._current_display_name))
+        return
 
-        for find_spec in excluded_find_specs:
-          if find_spec.ComparePathSpecLocation(path_spec, file_system):
-            logger.debug('Excluded from extraction: {0:s}.'.format(
-                self._current_display_name))
-            self._processing_status = definitions.STATUS_INDICATOR_IDLE
-            return
+      file_system = file_entry.GetFileSystem()
 
-      self._extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+      if (path_spec and not path_spec.IsSystemLevel() and
+          path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
+        self._CacheFileSystem(file_system)
+
+      if self._CheckExcludedPathSpec(file_system, path_spec):
+        logger.debug('Excluded from extraction: {0:s}.'.format(
+            self._current_display_name))
+        return
+
+      self._extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
 
     except KeyboardInterrupt:
       self._abort = True
@@ -209,67 +296,24 @@ class SingleProcessEngine(engine.BaseEngine):
       file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
           the source file systems to process.
     """
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming('process_sources')
-
-    self._status = definitions.STATUS_INDICATOR_COLLECTING
     self._current_display_name = ''
     self._number_of_consumed_sources = 0
 
-    included_find_specs = self.GetCollectionIncludedFindSpecs()
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming('process_source')
 
-    for file_system_path_spec in file_system_path_specs:
-      if self._abort:
-        break
+    self._CollectInitialEventSources(
+        parser_mediator, file_system_path_specs)
 
-      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=included_find_specs,
-          recurse_file_system=False, resolver_context=self._resolver_context)
-      for path_spec in path_spec_generator:
-        if self._abort:
-          break
-
-        self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
-            path_spec)
-
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-        parser_mediator.ProduceEventSource(event_source)
-
-    self._status = definitions.STATUS_INDICATOR_RUNNING
+    self._ProcessEventSources(self._storage_writer, parser_mediator)
 
     if self._processing_profiler:
-      self._processing_profiler.StartTiming('get_event_source')
-
-    event_source = self._storage_writer.GetFirstWrittenEventSource()
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming('get_event_source')
-
-    while event_source:
-      if self._abort:
-        break
-
-      self._ProcessPathSpec(parser_mediator, event_source.path_spec)
-
-      self._number_of_consumed_sources += 1
-
-      if self._processing_profiler:
-        self._processing_profiler.StartTiming('get_event_source')
-
-      event_source = self._storage_writer.GetNextWrittenEventSource()
-
-      if self._processing_profiler:
-        self._processing_profiler.StopTiming('get_event_source')
+      self._processing_profiler.StopTiming('process_source')
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming('process_sources')
 
   def _StartStatusUpdateThread(self):
     """Starts the status update thread."""

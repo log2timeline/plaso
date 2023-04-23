@@ -23,7 +23,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
   def __init__(
       self, task_queue, processing_configuration, system_configurations,
-      excluded_file_system_find_specs, registry_find_specs, **kwargs):
+      registry_find_specs, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -35,8 +35,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
-     excluded_file_system_find_specs (list[dfvfs.FindSpec]): file system find
-         specifications of paths to exclude from the collection.
      registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
          specifications.
       kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -46,7 +44,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = ''
-    self._excluded_file_system_find_specs = excluded_file_system_find_specs
     self._extraction_worker = None
     self._file_system_cache = []
     self._number_of_consumed_sources = 0
@@ -58,7 +55,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._task_queue = task_queue
     self._system_configurations = system_configurations
 
-  def _CacheFileSystem(self, path_spec):
+  def _CacheFileSystem(self, file_system):
     """Caches a dfVFS file system object.
 
     Keeping and additional reference to a dfVFS file system object causes the
@@ -66,23 +63,18 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     times the file system is re-opened.
 
     Args:
-      path_spec (dfvfs.PathSpec): path specification.
+      file_system (dfvfs.FileSystem): file system.
     """
-    if (path_spec and not path_spec.IsSystemLevel() and
-        path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          path_spec, resolver_context=self._resolver_context)
+    if file_system not in self._file_system_cache:
+      if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        self._file_system_cache.pop(0)
+      self._file_system_cache.append(file_system)
 
-      if file_system not in self._file_system_cache:
-        if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-          self._file_system_cache.pop(0)
-        self._file_system_cache.append(file_system)
-
-      elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-        # Move the file system to the end of the list to preserve the most
-        # recently file system object.
-        self._file_system_cache.remove(file_system)
-        self._file_system_cache.append(file_system)
+    elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+      # Move the file system to the end of the list to preserve the most
+      # recently file system object.
+      self._file_system_cache.remove(file_system)
+      self._file_system_cache.append(file_system)
 
   def _CreateParserMediator(
       self, resolver_context, processing_configuration, system_configurations):
@@ -279,20 +271,19 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         path_spec)
 
     try:
-      self._CacheFileSystem(path_spec)
+      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+          path_spec, resolver_context=parser_mediator.resolver_context)
+      if file_entry is None:
+        logger.warning('Unable to open file entry: {0:s}'.format(
+            self._current_display_name))
+        return
 
-      if self._excluded_file_system_find_specs:
-        file_system = path_spec_resolver.Resolver.OpenFileSystem(
-            path_spec, resolver_context=self._resolver_context)
+      if (path_spec and not path_spec.IsSystemLevel() and
+          path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
+        file_system = file_entry.GetFileSystem()
+        self._CacheFileSystem(file_system)
 
-        for find_spec in self._excluded_file_system_find_specs:
-          if find_spec.ComparePathSpecLocation(path_spec, file_system):
-            logger.debug('Excluded from extraction: {0:s}.'.format(
-                self._current_display_name))
-            self._status = definitions.STATUS_INDICATOR_IDLE
-            return
-
-      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+      extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
