@@ -60,7 +60,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._status_update_thread = None
     self._storage_writer = None
 
-  def _CacheFileSystem(self, path_spec):
+  def _CacheFileSystem(self, file_system):
     """Caches a dfVFS file system object.
 
     Keeping and additional reference to a dfVFS file system object causes the
@@ -68,23 +68,18 @@ class SingleProcessEngine(engine.BaseEngine):
     times the file system is re-opened.
 
     Args:
-      path_spec (dfvfs.PathSpec): path specification.
+      file_system (dfvfs.FileSystem): file system.
     """
-    if (path_spec and not path_spec.IsSystemLevel() and
-        path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          path_spec, resolver_context=self._resolver_context)
+    if file_system not in self._file_system_cache:
+      if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        self._file_system_cache.pop(0)
+      self._file_system_cache.append(file_system)
 
-      if file_system not in self._file_system_cache:
-        if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-          self._file_system_cache.pop(0)
-        self._file_system_cache.append(file_system)
-
-      elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
-        # Move the file system to the end of the list to preserve the most
-        # recently file system object.
-        self._file_system_cache.remove(file_system)
-        self._file_system_cache.append(file_system)
+    elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+      # Move the file system to the end of the list to preserve the most
+      # recently file system object.
+      self._file_system_cache.remove(file_system)
+      self._file_system_cache.append(file_system)
 
   def _CheckExcludedPathSpec(self, file_system, path_spec):
     """Determines if the path specification should be excluded from extraction.
@@ -255,8 +250,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
       file_system = file_entry.GetFileSystem()
 
-      # TODO: pass file_system
-      self._CacheFileSystem(path_spec)
+      if (path_spec and not path_spec.IsSystemLevel() and
+          path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_GZIP):
+        self._CacheFileSystem(file_system)
 
       if self._CheckExcludedPathSpec(file_system, path_spec):
         logger.debug('Excluded from extraction: {0:s}.'.format(

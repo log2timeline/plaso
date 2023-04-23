@@ -253,6 +253,41 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if self._status_update_callback:
           self._status_update_callback(self._processing_status)
 
+  def _CreateTask(self, storage_writer, session_identifier, event_source):
+    """Creates a task to processes an event source.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      session_identifier (str): the identifier of the session the tasks are
+          part of.
+      event_source (EventSource): event source.
+
+    Returns:
+      Task: task or None if no task could be created.
+    """
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        event_source.path_spec, resolver_context=self._resolver_context)
+    if file_entry is None:
+      self._ProduceExtractionWarning(
+          storage_writer, 'Unable to open file entry', event_source.path_spec)
+      return None
+
+    file_system = file_entry.GetFileSystem()
+
+    if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
+      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+          event_source.path_spec)
+      logger.debug('Excluded from extraction: {0:s}.'.format(
+          display_name))
+      return None
+
+    task = self._task_manager.CreateTask(
+        session_identifier, storage_format=self._task_storage_format)
+    task.file_entry_type = event_source.file_entry_type
+    task.path_spec = event_source.path_spec
+
+    return task
+
   def _FillEventSourceHeap(
       self, storage_writer, event_source_heap, start_with_first=False):
     """Fills the event source heap with the available written event sources.
@@ -644,25 +679,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           task = self._task_manager.CreateRetryTask()
 
         if not task and event_source:
-          file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-              event_source.path_spec, resolver_context=self._resolver_context)
-          if file_entry is None:
-            self._ProduceExtractionWarning(
-                storage_writer, 'Unable to open file entry',
-                event_source.path_spec)
-          else:
-            file_system = file_entry.GetFileSystem()
-
-            if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
-              display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-                  event_source.path_spec)
-              logger.debug('Excluded from extraction: {0:s}.'.format(
-                  display_name))
-            else:
-              task = self._task_manager.CreateTask(
-                  session_identifier, storage_format=self._task_storage_format)
-              task.file_entry_type = event_source.file_entry_type
-              task.path_spec = event_source.path_spec
+          task = self._CreateTask(
+              storage_writer, session_identifier, event_source)
 
           event_source = None
 
