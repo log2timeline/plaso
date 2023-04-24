@@ -65,6 +65,10 @@ class SIMATICLogParser(interface.FileObjectParser):
   ENCODING = 'ascii'
   END_OF_LINE = '\r\n'
 
+  _EXPECTED_FIRST_LINE_STRING = 'Log starting ...' + END_OF_LINE
+  _EXPECTED_SECOND_LINE_STRING = '| LogFileName'
+  _EXPECTED_THIRD_LINE_STRING = '| LogFileCount'
+
   def _ParseValues(self, parser_mediator, line_number, values):
     """Parses SIMATIC S7 log file values.
 
@@ -89,24 +93,21 @@ class SIMATICLogParser(interface.FileObjectParser):
     # 2019-05-27 10:05:43,405 INFO     | LogFileName   : C:\.....
     # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
     if line_number == 0:
-      expected_string = 'Log starting ...'+self.END_OF_LINE
-      if not values[1].endswith(expected_string):
+      if not values[1].endswith(self._EXPECTED_FIRST_LINE_STRING):
         error_string = 'Expected first line to end with "{0:s}"."{1!s}"'.format(
-            expected_string, values[1])
+            self._EXPECTED_FIRST_LINE_STRING, values[1])
         raise errors.WrongParser(error_string)
 
     if line_number == 1:
-      expected_string = '| LogFileName'
-      if values[1].find(expected_string) < 0:
+      if values[1].find(self._EXPECTED_SECOND_LINE_STRING) < 0:
         error_string = 'Expected second line to contain "{0:s}"'.format(
-            expected_string)
+            self._EXPECTED_SECOND_LINE_STRING)
         raise errors.WrongParser(error_string)
 
     if line_number == 2:
-      expected_string = '| LogFileCount'
-      if values[1].find(expected_string) < 0:
+      if values[1].find(self._EXPECTED_THIRD_LINE_STRING) < 0:
         error_string = 'Expected third line to contain {0:s}'.format(
-            expected_string)
+            self._EXPECTED_THIRD_LINE_STRING)
         raise errors.WrongParser(error_string)
 
     event_data = SIMATICS7EventData()
@@ -125,7 +126,7 @@ class SIMATICLogParser(interface.FileObjectParser):
     parser_mediator.ProduceEventData(event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a bodyfile file-like object.
+    """Parses a SIMATIC Log file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -170,6 +171,10 @@ class WinCCSysLogParser(interface.FileObjectParser):
   DELIMITER = ','
   ENCODING = 'utf-16-le'
 
+  _DISALLOWED_HOSTNAME_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+
+  _END_OF_LOG_FILE_STRING = '======>'
+
   def _ParseValues(self, parser_mediator, line_number, values, first_line):
     """Parses WinCC log file values.
 
@@ -200,7 +205,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
     event_data = WinCCSysLogEventData()
 
     try:
-      log_identifier = int(values[0])
+      log_identifier = int(values[0], 10)
       event_data.log_identifier = log_identifier
     except ValueError as exception:
       error_string = (
@@ -213,9 +218,9 @@ class WinCCSysLogParser(interface.FileObjectParser):
       date_string = values[1]
       time_string = values[2]
       day_of_month, month, year = [
-          int(element) for element in date_string.split('.')]
+          int(element, 10) for element in date_string.split('.')]
       hours, minutes, seconds, milliseconds = [
-          int(element) for element in time_string.split(':')]
+          int(element, 10) for element in time_string.split(':')]
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, milliseconds)
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
@@ -229,15 +234,16 @@ class WinCCSysLogParser(interface.FileObjectParser):
     except (TypeError, ValueError) as exception:
       error_string = (
           'Unable to parse time elements with error: '
-          '{0!s} on line {1:d} {2!s}').format(exception, line_number, values)
+          '{0!s} on line {1:d} {2!s}').format(
+              exception, line_number, values[1:2])
       self._ParseValuesFail(
           parser_mediator, first_line, exception, error_string)
 
     try:
-      event_data.event_number = int(values[3])
+      event_data.event_number = int(values[3], 10)
     except ValueError as exception:
       error_string = (
-          'Type of event_number value ({0!s}) should be an int in line:'
+          'Type of event_number value ({0!s}) should be a decimal in line:'
           '{1:d}').format(values[3], line_number)
       self._ParseValuesFail(
           parser_mediator, first_line, exception, error_string)
@@ -263,8 +269,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
             '{1:d}').format(hostname, line_number)
         self._ParseValuesFail(
             parser_mediator, first_line, exception, error_string)
-      disallowed_characters = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
-      for character in disallowed_characters:
+      for character in self._DISALLOWED_HOSTNAME_CHARS:
         if character in hostname:
           error_string = (
               'Hostname ({0!s}) can\'t contain the character {1:s} on line'
@@ -293,7 +298,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
     parser_mediator.ProduceExtractionWarning(error_string)
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a bodyfile file-like object.
+    """Parses a WinCC Sys Log file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -322,7 +327,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
               line_number, exception))
 
     while line:
-      if line.startswith('======>'):
+      if line.startswith(self._END_OF_LOG_FILE_STRING):
         # It seems that sometimes WinCC logs will end with a line starting like
         # this, with the name of the next log file.
         # But this is not always the case though.
