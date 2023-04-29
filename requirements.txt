@@ -60,4 +60,4 @@ pyzmq >= 2.1.11
 redis >= 3.4
 requests >= 2.18.0
 six >= 1.1.0
-yara-python >= 3.4.0,< 4.3.0
+yara-python >= 3.4.0
