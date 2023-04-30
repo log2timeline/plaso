@@ -189,7 +189,6 @@ class WinCCSysLogParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the values cannot be parsed.
     """
-
     number_of_values = len(values)
     if len(values) < 10:
       error_string = 'invalid number of values : {0:d} in line: {1:d}'.format(
