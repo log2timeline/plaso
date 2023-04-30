@@ -81,6 +81,27 @@ short_source: 'REG'
 source: 'Task Cache Registry Key'
 ---
 type: 'conditional'
+data_type: 'wincc:simatic_s7:entry'
+message:
+- '{body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'SIMATIC S7 log'
+---
+type: 'conditional'
+data_type: 'wincc:sys_log:entry'
+message:
+- 'Hostname: {log_hostname}'
+- 'Source: {source_device}'
+- '{body}'
+short_message:
+- '{source_device}'
+- '{body}'
+short_source: 'LOG'
+source: 'WinCC Sys Log'
+---
+type: 'conditional'
 data_type: 'windows:diagnosis:eventtranscript'
 message:
 - 'Event: {event_name}'

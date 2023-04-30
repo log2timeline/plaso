@@ -1242,6 +1242,18 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'wincc:simatic_s7:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
+data_type: 'wincc:sys_log:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'windows:distributed_link_tracking:creation'
 attribute_mappings:
 - name: 'creation_time'
