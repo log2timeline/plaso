@@ -38,6 +38,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'title': 'Ubuntu Start Page',
         'typed_count': 0,
         'url': 'http://start.ubuntu.com/10.04/Google/',
+        'visit_count': 4,
         'visit_source': 3}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -88,6 +89,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'last_visited_time': '2018-01-21T14:09:53.885478+00:00',
         'title': '',
         'typed_count': 0,
+        'visit_count': 1,
         'url': expected_url}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -136,6 +138,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'last_visited_time': '2018-01-21T14:09:27.315765+00:00',
         'title': '',
         'typed_count': 0,
+        'visit_count': 1,
         'url': expected_url}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -184,6 +187,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'last_visited_time': '2018-01-21T14:08:52.037692+00:00',
         'title': '',
         'typed_count': 0,
+        'visit_count': 1,
         'url': expected_url}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -234,6 +238,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         'last_visited_time': '2018-01-21T14:08:52.037692+00:00',
         'title': '',
         'typed_count': 0,
+        'visit_count': 1,
         'url': expected_url}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

@@ -64,9 +64,10 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     page_transition_type (int): type of transitions between pages.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the visited page.
-    typed_count (int): number of characters of the URL that were typed.
+    typed_count (int): number of times this URL was visit via typing.
     url (str): URL of the visited page.
     url_hidden (bool): True if the URL is hidden.
+    visit_count (int): number of times this URL has been visited.
     visit_source (int): source of the page visit.
   """
 
@@ -85,6 +86,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     self.typed_count = None
     self.url = None
     self.url_hidden = None
+    self.visit_count = None
     self.visit_source = None
 
 
@@ -233,6 +235,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
     event_data.typed_count = self._GetRowValue(query_hash, row, 'typed_count')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.url_hidden = hidden == '1'
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
     event_data.visit_source = self._GetVisitSource(
         visit_identifier, cache, database)
 
