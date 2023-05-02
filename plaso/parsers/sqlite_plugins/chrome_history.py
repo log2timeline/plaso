@@ -64,10 +64,11 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     page_transition_type (int): type of transitions between pages.
     query (str): SQL query that was used to obtain the event data.
     title (str): title of the visited page.
-    typed_count (int): number of times this URL was visit via typing.
+    typed_count (int): number of times the user has navigated to
+        the page by typing in the address.
     url (str): URL of the visited page.
     url_hidden (bool): True if the URL is hidden.
-    visit_count (int): number of times this URL has been visited.
+    visit_count (int): number of times the user has navigated to this page.
     visit_source (int): source of the page visit.
   """
 
