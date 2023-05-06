@@ -182,6 +182,11 @@ class EventDataTimeliner(object):
       date_time = date_time.NewFromDeltaAndYear(base_year)
 
     timestamp = date_time.GetPlasoTimestamp()
+    if timestamp is None:
+      self._ProduceTimeliningWarning(
+          storage_writer, event_data, 'unable to determine timestamp')
+      return
+
     if date_time.is_local_time:
       time_zone = None
       if date_time.time_zone_hint:
