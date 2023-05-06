@@ -252,13 +252,15 @@ class GenericBinaryOperator(BinaryOperator):
 
     if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
       attribute_value = getattr(event, attribute_name, None)
-
-      # Make sure timestamp attribute values are (dfdatetime) date time objects.
-      # TODO: remove when timestamp values are (de)serialized as dfdatetime
-      # objects.
-      if attribute_name == 'timestamp' and not isinstance(attribute_value, (
-          dfdatetime_interface.DateTimeValues, value_types.DateTimeValueType)):
-        attribute_value = value_types.DateTimeValueType(attribute_value)
+      if attribute_value is not None:
+        # Make sure timestamp attribute values are (dfDateTime) date time
+        # objects.
+        # TODO: remove when timestamp values are (de)serialized as dfDateTime
+        # objects.
+        if attribute_name == 'timestamp' and not isinstance(attribute_value, (
+            dfdatetime_interface.DateTimeValues,
+            value_types.DateTimeValueType)):
+          attribute_value = value_types.DateTimeValueType(attribute_value)
 
     elif (event_data_stream and
           attribute_name in event_data_stream.GetAttributeNames()):
