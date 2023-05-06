@@ -727,6 +727,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._ProduceExtractionWarning(storage_writer, (
             'unable to process path specification with error: '
             '{0!s}').format(exception), event_source.path_spec)
+        event_source = None
 
     for task in self._task_manager.GetFailedTasks():
       self._ProduceExtractionWarning(
