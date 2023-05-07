@@ -176,6 +176,9 @@ class EventDataTimeliner(object):
 
     Returns:
       EventObject: event.
+
+    Raises:
+      ValueError: if the timestamp cannot be determined.
     """
     if date_time.is_delta:
       base_year = self._GetBaseYear(storage_writer, event_data)
@@ -183,9 +186,7 @@ class EventDataTimeliner(object):
 
     timestamp = date_time.GetPlasoTimestamp()
     if timestamp is None:
-      self._ProduceTimeliningWarning(
-          storage_writer, event_data, 'unable to determine timestamp')
-      return
+      raise ValueError('unable to determine timestamp')
 
     if date_time.is_local_time:
       time_zone = None
