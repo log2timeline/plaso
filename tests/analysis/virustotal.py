@@ -36,6 +36,8 @@ class MockResponse(dict):
 class VirusTotalTest(test_lib.AnalysisPluginTestCase):
   """Tests for the VirusTotal analysis plugin."""
 
+  # pylint: disable=protected-access
+
   _EVENT_1_HASH = '90'
 
   _FAKE_API_KEY = '4'
@@ -50,19 +52,20 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       'timestamp': '2015-01-01 17:00:00',
       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
-  def _MockGet(self, url, params):
+  def _MockGet(self, url, params=None, timeout=None):
     """Mock function to simulate a VirusTotal API request.
 
     Args:
       url (str): URL being requested.
-      params (dict[str, object]): HTTP parameters for the VirusTotal API
-          request.
+      params (Optional[dict[str, object]]): HTTP parameters for the VirusTotal
+          API request.
+      timeout (Optional[int]): number of seconds to wait for to establish
+          a connection to a remote machine.
 
     Returns:
       MockResponse: mocked response that simulates a real response object
           returned by the requests library from the VirusTotal API.
     """
-    # pylint: disable=protected-access
     self.assertEqual(
         url, virustotal.VirusTotalAnalysisPlugin._VIRUSTOTAL_API_REPORT_URL)
 
