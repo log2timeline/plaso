@@ -43,6 +43,7 @@ class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler = profilers.SampleFileProfiler(
           'test', profiling_configuration)
 
+      # pylint: disable=invalid-name
       test_profiler._FILENAME_PREFIX = 'test'
       test_profiler._FILE_HEADER = 'test'
 
