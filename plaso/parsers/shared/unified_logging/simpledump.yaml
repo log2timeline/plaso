@@ -50,7 +50,7 @@ members:
   data_type: uint64
 - name: continuous_time
   data_type: uint64
-- name: thread_id
+- name: thread_identifier
   data_type: uint64
 - name: unknown_offset
   data_type: uint32

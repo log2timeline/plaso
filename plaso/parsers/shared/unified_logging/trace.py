@@ -30,7 +30,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the records cannot be parsed.
     """
-    logger.debug("Reading Trace")
+    logger.debug('Reading Trace')
     data = tracepoint.data
 
     event_data = unified_logging_event.AULEventData()
@@ -42,9 +42,7 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
       uuid_file = tracev3.catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
-    except IndexError:
-      uuid_file = None
-    except AttributeError:
+    except (AttributeError, IndexError):
       uuid_file = None
 
     offset = 0
@@ -56,20 +54,20 @@ class TraceParser(dtfabric_helper.DtFabricHelper):
 
     item_data = b''
     if len(data[offset:]) < 4:
-      logger.warning("Insufficent trace data")
+      logger.warning('Insufficent trace data')
     else:
       item_data = data[offset:offset+2]
       offset += 2
 
-    fmt = tracev3.ExtractFormatStrings(tracepoint.format_string_location,
-                                           uuid_file)
-    logger.debug("Format string: {0:s}".format(fmt))
+    format_string = tracev3.ExtractFormatStrings(
+        tracepoint.format_string_location, uuid_file)
 
-    if fmt:
+    if format_string:
+      logger.debug('Format string: {0:s}'.format(format_string))
       event_data.body = tracev3.FormatString(
-          fmt, [(0, len(item_data), item_data)])
+          format_string, [(0, len(item_data), item_data)])
 
-    event_data.thread_id = hex(tracepoint.thread_identifier)
+    event_data.thread_identifier = tracepoint.thread_identifier
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
     if uuid_file:

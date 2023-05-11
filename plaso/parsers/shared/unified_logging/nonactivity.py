@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Apple Unified Logging (AUL) Non-activity chunk parser."""
+"""The Apple Unified Logging (AUL) non-activity chunk parser."""
 
 import base64
 
@@ -20,9 +20,10 @@ class NonactivityParser(object):
 
   _NON_ACTIVITY_SENINTEL = 0x80000000
 
-  def ParseNonActivity(self, tracev3, parser_mediator, tracepoint, proc_info,
-                       time, private_strings):
-    """Processes a Non Activity chunk.
+  def ParseNonActivity(
+      self, tracev3, parser_mediator, tracepoint, proc_info, time,
+      private_strings):
+    """Processes a non-activity chunk.
 
     Args:
       tracev3 (TraceV3FileParser): TraceV3 File Parser.
@@ -80,7 +81,7 @@ class NonactivityParser(object):
                                                    uint32_data_type_map)
       offset += 4
       if sentinel != self._NON_ACTIVITY_SENINTEL:
-        logger.error('Incorrect sentinel value for Non-Activity')
+        logger.error('Incorrect sentinel value for non-activity')
         return
 
     if flags & constants.PRIVATE_STRING_RANGE:
@@ -114,58 +115,58 @@ class NonactivityParser(object):
       ttl_value = tracev3.ReadStructureFromByteStream(
           data[offset:], offset, uint8_data_type_map)
       offset += 1
-      logger.debug("Non-activity has TTL: {0:d}".format(ttl_value))
+      logger.debug('Non-activity has TTL: {0:d}'.format(ttl_value))
 
     if flags & constants.HAS_DATA_REF:
       data_ref_id = tracev3.ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
       offset += 1
-      logger.debug("Non-activity with data reference: {0:d}".format(
+      logger.debug('Non-activity with data reference: {0:d}'.format(
           data_ref_id))
 
     if flags & constants.HAS_SIGNPOST_NAME:
-      logger.error("Non-activity signpost not supported")
+      logger.error('Non-activity signpost not supported')
       return
 
     if flags & constants.HAS_MESSAGE_IN_UUIDTEXT:
-      logger.debug("Non-activity has message in UUID Text file")
+      logger.debug('Non-activity has message in UUID Text file')
       if (flags & constants.HAS_ALTERNATE_UUID and
           flags & constants.HAS_SIGNPOST_NAME):
         logger.error(
-            "Non-activity with Alternate UUID and Signpost not supported")
+            'Non-activity with Alternate UUID and Signpost not supported')
         return
       if not uuid_file:
         logger.error(
-            "Unable to continue without matching UUID file")
+            'Unable to continue without matching UUID file')
         return
       if flags & constants.HAS_SIGNPOST_NAME:
-        logger.error("Non-activity signpost not supported (2)")
+        logger.error('Non-activity signpost not supported (2)')
         return
 
     if flags & constants.PRIVATE_STRING_RANGE:
       if private_strings:
         string_start = private_strings_offset - private_strings[0]
         if string_start > len(private_strings[1] or string_start < 0):
-          logger.error("Error with private string offset")
+          logger.error('Error with private string offset')
           return
         private_string = private_strings[1][string_start:string_start +
                                             private_strings_size]
       else:
-        logger.error("Private strings wanted but not supplied")
+        logger.error('Private strings wanted but not supplied')
         return
 
     if tracepoint.log_activity_type == (
         constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS):
-      logger.error("Loss Type not supported")
+      logger.error('Loss Type not supported')
       return
 
     data_meta = tracev3.ReadStructureFromByteStream(
         data[offset:], offset,
-        tracev3.GetDataTypeMap("tracev3_firehose_tracepoint_data"))
+        tracev3.GetDataTypeMap('tracev3_firehose_tracepoint_data'))
     offset += 2
 
     logger.debug(
-        "After activity data: Unknown {0:d} // Number of Items {1:d}".format(
+        'After activity data: Unknown {0:d} // Number of Items {1:d}'.format(
             data_meta.unknown1, data_meta.num_items))
     try:
       (log_data, deferred_data_items,
@@ -176,21 +177,21 @@ class NonactivityParser(object):
 
     backtrace_strings = []
     if flags & constants.HAS_CONTEXT_DATA != 0 and len(data[offset:]) >= 6:
-      logger.debug("Backtrace data in Firehose log chunk")
-      backtrace_strings = ["Backtrace:\n"]
+      logger.debug('Backtrace data in Firehose log chunk')
+      backtrace_strings = ['Backtrace:\n']
       backtrace_data = tracev3.ReadStructureFromByteStream(
-          data[offset:], offset, tracev3.GetDataTypeMap("tracev3_backtrace"))
+          data[offset:], offset, tracev3.GetDataTypeMap('tracev3_backtrace'))
       for count, idx in enumerate(backtrace_data.indices):
         try:
-          backtrace_strings.append("{0:s} +0x{1:d}\n".format(
+          backtrace_strings.append('{0:s} +0x{1:d}\n'.format(
               backtrace_data.uuids[idx].hex.upper(),
               backtrace_data.offsets[count]))
         except IndexError:
           pass
     elif len(data[offset:]) > 3:
-      if data[offset:offset + 3] == r"\x01\x00\x18":
+      if data[offset:offset + 3] == r'\x01\x00\x18':
         logger.error(
-            "Backtrace signature without context not yet implemented")
+            'Backtrace signature without context not yet implemented')
         return
 
     #TODO(fryy): Turn item tuple into an object with names
@@ -201,21 +202,21 @@ class NonactivityParser(object):
         result = ""
       elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         if not private_string:
-          logger.error("Trying to read from empty Private String")
+          logger.error('Trying to read from empty Private String')
           return
         if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
           result = private_string[item[1]:item[1] + item[2]]
         else:
           result = tracev3.ReadStructureFromByteStream(
-              private_string[item[1]:], 0, tracev3.GetDataTypeMap("cstring"))
-          logger.debug("End result: {0:s}".format(result))
+              private_string[item[1]:], 0, tracev3.GetDataTypeMap('cstring'))
+          logger.debug('End result: {0:s}'.format(result))
       elif item[0] == constants.FIREHOSE_ITEM_STRING_PRIVATE:
         if not private_string:
           # A <private> string
           if item[2] == 0x8000:
             result = ""
           else:
-            logger.error("Trying to read from empty Private String")
+            logger.error('Trying to read from empty Private String')
             return
         else:
           result = private_string[item[1]:item[1] + item[2]]
@@ -228,17 +229,17 @@ class NonactivityParser(object):
         else:
           try:
             result = tracev3.ReadStructureFromByteStream(
-                data[offset + item[1]:], 0, tracev3.GetDataTypeMap("cstring"))
+                data[offset + item[1]:], 0, tracev3.GetDataTypeMap('cstring'))
           except errors.ParseError:
             result = data[offset + item[1]:].decode('utf-8')
-          logger.debug("End result: {0:s}".format(result))
+          logger.debug('End result: {0:s}'.format(result))
       log_data.insert(item[3], (item[0], item[2], result))
 
     if (
         tracepoint.log_activity_type
         == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
     ):
-      logger.error("Loss Type not supported")
+      logger.error('Loss Type not supported')
       return
 
     dsc_range = dsc.DSCRange()
@@ -253,16 +254,16 @@ class NonactivityParser(object):
           formatter_flags.large_offset_data = (
               formatter_flags.large_shared_cache / 2
           )
-          extra_offset_value = "{0:X}{1:08x}".format(
+          extra_offset_value = '{0:X}{1:08x}'.format(
               formatter_flags.large_offset_data,
               tracepoint.format_string_location)
         elif formatter_flags.shared_cache:
           formatter_flags.large_offset_data = 8
-          extra_offset_value = "{0:X}{1:07x}".format(
+          extra_offset_value = '{0:X}{1:07x}'.format(
               formatter_flags.large_offset_data,
               tracepoint.format_string_location)
         else:
-          extra_offset_value = "{0:X}{1:08x}".format(
+          extra_offset_value = '{0:X}{1:08x}'.format(
               formatter_flags.large_offset_data,
               tracepoint.format_string_location)
         extra_offset_value_result = int(extra_offset_value, 16)
@@ -300,11 +301,11 @@ class NonactivityParser(object):
           found = True
           break
       if not found:
-        logger.warning(
-            "Did not find any oversize log entries from Data Ref ID: {0:d}"
-            ", First Proc ID: {1:d}, and Second Proc ID: {2:d}"
-            .format(data_ref_id, proc_info.first_number_proc_id,
-                    proc_info.second_number_proc_id))
+        logger.warning((
+            'Did not find any oversize log entries from Data Ref ID: {0:d}, '
+            'First Proc ID: {1:d}, and Second Proc ID: {2:d}').format(
+                data_ref_id, proc_info.first_number_proc_id,
+                proc_info.second_number_proc_id))
 
     if fmt:
       event_data.body = "".join(backtrace_strings) + tracev3.FormatString(
@@ -316,11 +317,11 @@ class NonactivityParser(object):
         uuid = uuid_file.uuid
       else:
         uuid = 'UNKNOWN'
-      event_data.body = "Error: Invalid offset {0:d} for UUID {1:s}".format(
-        tracepoint.format_string_location, uuid)
+      event_data.body = 'Error: Invalid offset {0:d} for UUID {1:s}'.format(
+          tracepoint.format_string_location, uuid)
 
-    event_data.thread_id = hex(tracepoint.thread_identifier)
-    event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, "Default")
+    event_data.thread_identifier = tracepoint.thread_identifier
+    event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
     if activity_id:
       event_data.activity_id = hex(activity_id)
     if ttl_value:

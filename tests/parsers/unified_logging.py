@@ -1,41 +1,43 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Apple Unified Logging parser."""
+"""Tests for the Apple Unified Logging (AUL) parser."""
 
 import os
 import unittest
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.parsers import aul
+from plaso.parsers import unified_logging
 
-from tests import test_lib as tests_test_lib
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class AULParserTest(test_lib.ParserTestCase):
   """Tests for the AUL parser."""
-  test_path_spec = None
 
-  def setUp(self) -> None:
+  def setUp(self):
+    """Makes preparations before running an individual test."""
     aul_test_data = os.path.join(
-        tests_test_lib.TEST_DATA_PATH, 'AUL', 'aul_test_data.zip')
-    self.test_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=aul_test_data)
-    return super().setUp()
+        shared_test_lib.TEST_DATA_PATH, 'AUL', 'aul_test_data.zip')
+    self._zip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=aul_test_data)
 
   def testSpecialParsing(self):
     """Tests the Parse function on a Special tracev3."""
-    parser = aul.AULParser()
+    test_file = os.path.join(
+        '/', 'private', 'var', 'db', 'Diagnostics', 'Special',
+        '0000000000000001.tracev3')
     zip_path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_ZIP, location=os.path.join('/', 'private',
-          'var', 'db', 'Diagnostics', 'Special', '0000000000000001.tracev3'),
-        parent=self.test_path_spec)
+        dfvfs_definitions.TYPE_INDICATOR_ZIP, location=test_file,
+        parent=self._zip_path_spec)
+
+    parser = unified_logging.AULParser()
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers(
-      'event_data')
+        'event_data')
     self.assertEqual(number_of_events, 12154)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
@@ -51,7 +53,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'creation_time': '2023-01-12T01:36:27.111432704+00:00',
         'level': 'Default',
         'subsystem': 'com.apple.SkyLight',
-        'thread_id': '0x7d1',
+        'thread_identifier': 0x7d1,
         'pid': 24,
         'euid': 0,
         'library': ('/System/Library/PrivateFrameworks/'
@@ -68,7 +70,7 @@ class AULParserTest(test_lib.ParserTestCase):
 
   def testPersistParsing(self):
     """Tests the Parse function on a Persist tracev3."""
-    parser = aul.AULParser()
+    parser = unified_logging.AULParser()
     storage_writer = self._ParseFile([
         'AUL', 'private', 'var', 'db', 'Diagnostics', 'Persist',
         '0000000000000001.tracev3'
@@ -90,7 +92,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'data_type': 'macos:unified_logging:event',
         'creation_time': '2023-01-12T01:35:35.240424704+00:00',
         'level': 'Default',
-        'thread_id': '0x0',
+        'thread_identifier': 0,
         'pid': 0,
         'euid': 0,
         'library': '/kernel',
@@ -106,7 +108,7 @@ class AULParserTest(test_lib.ParserTestCase):
 
   def testSignpostParsing(self):
     """Tests the Parse function on a Signpost tracev3."""
-    parser = aul.AULParser()
+    parser = unified_logging.AULParser()
     storage_writer = self._ParseFile([
         'AUL', 'private', 'var', 'db', 'Diagnostics', 'Signpost',
         '0000000000000001.tracev3'
@@ -128,7 +130,7 @@ class AULParserTest(test_lib.ParserTestCase):
         'data_type': 'macos:unified_logging:event',
         'creation_time': '2023-01-12T01:36:31.338352128+00:00',
         'level': 'Signpost',
-        'thread_id': '0x7cb',
+        'thread_identifier': 0x7cb,
         'pid': 50,
         'euid': 0,
         'library': '/usr/libexec/kernelmanagerd',

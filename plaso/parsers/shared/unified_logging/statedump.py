@@ -39,18 +39,18 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the records cannot be parsed.
     """
-    logger.debug("Reading Statedump")
+    logger.debug('Reading Statedump')
     data_type_map = self._GetDataTypeMap('tracev3_statedump')
 
     statedump_structure = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
     logger.debug(
-        ("Statedump data: ProcID 1 {0:d} // ProcID 2 {1:d} // "
-        "TTL {2:d} // CT {3:d} // String Name {4:s}")
-        .format(statedump_structure.first_number_proc_id,
-                statedump_structure.second_number_proc_id,
-                statedump_structure.ttl, statedump_structure.continuous_time,
-                statedump_structure.string_name))
+        ('Statedump data: ProcID 1 {0:d} // ProcID 2 {1:d} // '
+         'TTL {2:d} // CT {3:d} // String Name {4:s}').format(
+             statedump_structure.first_number_proc_id,
+             statedump_structure.second_number_proc_id,
+             statedump_structure.ttl, statedump_structure.continuous_time,
+             statedump_structure.string_name))
 
     try:
       statedump_structure.string1 = self._ReadStructureFromByteStream(
@@ -72,7 +72,7 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     ]
     if len(proc_info) == 0:
       logger.error(
-          "Could not find Process Info block for ID: {0:d}".format(proc_id))
+          'Could not find Process Info block for ID: {0:d}'.format(proc_id))
       return
     proc_info = proc_info[0]
 
@@ -86,7 +86,7 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
     generation_subchunk = tracev3.header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
-    event_data.level = "StateDump"
+    event_data.level = 'StateDump'
 
     ct = statedump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(
@@ -103,37 +103,37 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
       try:
         event_data.body = str(plistlib.loads(statedump_structure.data))
       except plistlib.InvalidFileException:
-        logger.warning("Statedump PList not valid")
+        logger.warning('Statedump PList not valid')
         return
     elif statedump_structure.data_type == self._STATETYPE_PROTOBUF:
-      event_data.body  = "Statedump Protocol Buffer"
-      logger.error("Statedump Protobuf not supported")
+      event_data.body = 'Statedump Protocol Buffer'
+      logger.error('Statedump Protobuf not supported')
     elif statedump_structure.data_type == self._STATETYPE_CUSTOM:
-      if statedump_structure.string1 == "location":
+      if statedump_structure.string1 == 'location':
         state_tracker_structure = {}
         extra_state_tracker_structure = {}
 
-        if statedump_structure.string_name == "CLDaemonStatusStateTracker":
+        if statedump_structure.string_name == 'CLDaemonStatusStateTracker':
           state_tracker_structure = self._ReadStructureFromByteStream(
               statedump_structure.data, 0,
               self._GetDataTypeMap('location_tracker_daemon_data')).__dict__
 
           if state_tracker_structure['reachability'] == 0x2:
-            state_tracker_structure['reachability'] = "kReachabilityLarge"
+            state_tracker_structure['reachability'] = 'kReachabilityLarge'
           else:
-            state_tracker_structure['reachability'] = "Unknown"
+            state_tracker_structure['reachability'] = 'Unknown'
 
           if state_tracker_structure['charger_type'] == 0x0:
-            state_tracker_structure['charger_type'] = "kChargerTypeUnknown"
+            state_tracker_structure['charger_type'] = 'kChargerTypeUnknown'
           else:
-            state_tracker_structure['charger_type'] = "Unknown"
-        elif statedump_structure.string_name == "CLClientManagerStateTracker":
+            state_tracker_structure['charger_type'] = 'Unknown'
+        elif statedump_structure.string_name == 'CLClientManagerStateTracker':
           state_tracker_structure = (
               location.LocationClientStateTrackerParser().Parse(
                   statedump_structure.data
               )
           )
-        elif statedump_structure.string_name == "CLLocationManagerStateTracker":
+        elif statedump_structure.string_name == 'CLLocationManagerStateTracker':
           (
               state_tracker_structure,
               extra_state_tracker_structure,
@@ -142,18 +142,18 @@ class StatedumpParser(dtfabric_helper.DtFabricHelper):
           )
         else:
           raise errors.ParseError(
-            "Unknown location Statedump Custom object not supported")
+            'Unknown location Statedump Custom object not supported')
 
         event_data.body = str({
             **state_tracker_structure,
             **extra_state_tracker_structure
         })
       else:
-        logger.error("Non-location Statedump Custom object not supported")
-        event_data.body = "Unsupported Statedump object: {}".format(
+        logger.error('Non-location Statedump Custom object not supported')
+        event_data.body = 'Unsupported Statedump object: {0:s}'.format(
             statedump_structure.string_name)
     else:
-      logger.error("Unknown Statedump data type {0:d}".format(
+      logger.error('Unknown Statedump data type {0:d}'.format(
           statedump_structure.data_type))
       return
 

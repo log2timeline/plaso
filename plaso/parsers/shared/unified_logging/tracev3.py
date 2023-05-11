@@ -59,7 +59,7 @@ class TraceV3FileParser(interface.FileObjectParser,
 
   format_strings_re = re.compile(
       r'%(\{[^\}]{1,64}\})?([0-9.'
-      r" *\-+#']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])"
+      r' *\-+#\']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])'
   )
 
   def __init__(self, timesync_parser, uuid_parser, dsc_parser):
@@ -194,7 +194,7 @@ class TraceV3FileParser(interface.FileObjectParser,
 
       if (specifier
           not in ('p', 'P', 's', 'S')) and '*' in flags_width_precision:
-        logger.error("* not supported for p/P/s/S")
+        logger.error('* not supported for p/P/s/S')
         output += 'Unsupported specifier'
         i += 1
         continue
@@ -289,10 +289,10 @@ class TraceV3FileParser(interface.FileObjectParser,
             output += dfdatetime_posix_time.PosixTime(
                 timestamp=number).CopyToDateTimeString()
           elif 'darwin.errno' in custom_specifier or specifier == 'm':
-            output += "[{0:d}: {1:s}]".format(
+            output += '[{0:d}: {1:s}]'.format(
               number, darwin.DarwinErrorHelper.GetError(number))
           elif '{darwin.mode}' in custom_specifier:
-            output += "{0:s} ({1:s})".format(
+            output += '{0:s} ({1:s})'.format(
               oct(number).replace('o', ''), stat.filemode(number))
           elif 'odtypes:ODError' in custom_specifier:
             output += opendirectory.OpenDirectoryErrorsHelper.GetError(number)
@@ -308,16 +308,16 @@ class TraceV3FileParser(interface.FileObjectParser,
             output += location.SubharvesterIDHelper.GetCode(number)
           elif 'mdns:addrmv' in custom_specifier:
             if number == 1:
-              output += "add"
+              output += 'add'
             else:
-              output += "rmv"
+              output += 'rmv'
           elif 'mdns:rrtype' in custom_specifier:
             output += dns.DNS.GetRecordType(number)
           elif 'mdns:yesno' in custom_specifier:
             if number == 0:
-              output += "no"
+              output += 'no'
             else:
-              output += "yes"
+              output += 'yes'
           elif 'mdns:protocol' in custom_specifier:
             output += dns.DNS.GetProtocolType(number)
           elif 'mdns:dns.idflags' in custom_specifier:
@@ -344,9 +344,9 @@ class TraceV3FileParser(interface.FileObjectParser,
               authority_records, additional_records)
           elif 'mdns:acceptable' in custom_specifier:
             if number == 0:
-              output += "unacceptable"
+              output += 'unacceptable'
             else:
-              output += "acceptable"
+              output += 'acceptable'
           elif '{mdns:nreason}' in custom_specifier:
             output += dns.DNS.GetReasons(number)
           elif '{mdns:gaiopts}' in custom_specifier:
@@ -1074,7 +1074,7 @@ class TraceV3FileParser(interface.FileObjectParser,
       tp = trace.TraceParser()
       tp.ParceTrace(self, parser_mediator, tracepoint, proc_info, time)
     elif tracepoint.log_activity_type == 0x0:
-      logger.warning("Remnant/Garbage data")
+      logger.warning('Remnant/Garbage data')
     else:
       logger.error('Unsupported log activity type: {}'.format(
           tracepoint.log_activity_type))

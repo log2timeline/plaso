@@ -26,23 +26,23 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
       parser_mediator (ParserMediator): a parser mediator.
       chunk_data (bytes): oversize chunk data.
       data_offset (int): offset of the oversize chunk relative to the start
-        of the chunk set.
+          of the chunk set.
 
     Raises:
       ParseError: if the records cannot be parsed.
     """
-    logger.debug("Reading Statedump")
+    logger.debug('Reading Statedump')
     data_type_map = self._GetDataTypeMap('tracev3_simpledump')
 
     simpledump_structure = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
     logger.debug(
-        ("Simpledump data: ProcID 1 {0:d} // ProcID 2 {1:d} // "
-        "CT {2:d} // ThreadID {3:d}")
-        .format(simpledump_structure.first_number_proc_id,
-                simpledump_structure.second_number_proc_id,
-                simpledump_structure.continuous_time,
-                simpledump_structure.thread_id))
+        ('Simpledump data: ProcID 1 {0:d} // ProcID 2 {1:d} // '
+         'CT {2:d} // ThreadID {3:d}').format(
+             simpledump_structure.first_number_proc_id,
+             simpledump_structure.second_number_proc_id,
+             simpledump_structure.continuous_time,
+             simpledump_structure.thread_identifier))
     logger.debug('Substring: {0:s} // Message string: {1:s}'.format(
         simpledump_structure.subsystem_string,
         simpledump_structure.message_string
@@ -52,15 +52,15 @@ class SimpledumpParser(dtfabric_helper.DtFabricHelper):
     generation_subchunk = tracev3.header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
-    event_data.level = "Simpledump"
+    event_data.level = 'Simpledump'
 
-    event_data.thread_id = hex(simpledump_structure.thread_id)
+    event_data.thread_identifier = simpledump_structure.thread_identifier
     event_data.pid = simpledump_structure.first_number_proc_id
     event_data.subsystem = simpledump_structure.subsystem_string
     event_data.library_uuid = simpledump_structure.sender_uuid.hex.upper()
     event_data.process_uuid = simpledump_structure.dsc_uuid.hex
     event_data.body = simpledump_structure.message_string
-    logger.debug("Log line: {0!s}".format(event_data.body))
+    logger.debug('Log line: {0!s}'.format(event_data.body))
 
     ct = simpledump_structure.continuous_time
     ts = aul_time.FindClosestTimesyncItemInList(

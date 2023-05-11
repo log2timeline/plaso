@@ -3,7 +3,6 @@
 
 from plaso.parsers import android_app_usage
 from plaso.parsers import asl
-from plaso.parsers import aul
 from plaso.parsers import bencode_parser
 from plaso.parsers import bodyfile
 from plaso.parsers import bsm
@@ -39,6 +38,7 @@ from plaso.parsers import symantec
 from plaso.parsers import systemd_journal
 from plaso.parsers import text_parser
 from plaso.parsers import trendmicroav
+from plaso.parsers import unified_logging
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import wincc

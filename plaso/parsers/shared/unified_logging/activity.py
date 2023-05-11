@@ -217,7 +217,7 @@ class ActivityParser(object):
 
     if activity_id:
       event_data.activity_id = hex(activity_id)
-    event_data.thread_id = hex(tracepoint.thread_identifier)
+    event_data.thread_identifier = tracepoint.thread_identifier
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
 

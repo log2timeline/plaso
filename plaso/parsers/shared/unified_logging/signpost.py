@@ -247,7 +247,7 @@ class SignpostParser(dtfabric_helper.DtFabricHelper):
     event_data.library_uuid = (
         dsc_range.uuid.hex.upper() if dsc_range.uuid else uuid_file.uuid.upper()
     )
-    event_data.thread_id = hex(tracepoint.thread_identifier)
+    event_data.thread_identifier = tracepoint.thread_identifier
     event_data.subsystem = (proc_info.items.get(subsystem_value, ('', '')))[0]
     event_data.category = (proc_info.items.get(subsystem_value, ('', '')))[1]
 

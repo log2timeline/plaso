@@ -30,15 +30,15 @@ class LossParser(dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the non-activity chunk cannot be parsed.
     """
-    logger.debug("Reading Loss")
+    logger.debug('Reading Loss')
     data_type_map = self._GetDataTypeMap('tracev3_firehose_loss')
 
     loss_structure = self._ReadStructureFromByteStream(
         tracepoint.data, 0, data_type_map)
-    logger.debug("Loss data: Start Time {0:d} // End time {1:d} "
-      "// Count {2:d}".format(
-      loss_structure.start_time, loss_structure.end_time, loss_structure.count
-    ))
+    logger.debug(
+        'Loss data: Start Time {0:d} // End time {1:d} // Count {2:d}'.format(
+            loss_structure.start_time, loss_structure.end_time,
+            loss_structure.count))
 
     event_data = unified_logging_event.AULEventData()
     generation_subchunk = tracev3.header.generation_subchunk
@@ -46,9 +46,9 @@ class LossParser(dtfabric_helper.DtFabricHelper):
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
-    event_data.level = "Loss"
-    event_data.thread_id = hex(tracepoint.thread_identifier)
-    event_data.body = "Lost {0:d} log messages".format(loss_structure.count)
+    event_data.level = 'Loss'
+    event_data.thread_identifier = tracepoint.thread_identifier
+    event_data.body = 'Lost {0:d} log messages'.format(loss_structure.count)
 
     event_data.creation_time = dfdatetime_apfs_time.APFSTime(
         timestamp=int(time))

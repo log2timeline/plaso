@@ -45,16 +45,16 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the oversize chunk cannot be parsed.
     """
-    logger.debug("Reading Oversize")
+    logger.debug('Reading Oversize')
     data_type_map = self._GetDataTypeMap('tracev3_oversize')
 
     oversize = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
-    logger.debug(
+    logger.debug((
         'Firehose Header data: ProcID 1 {0:d} // ProcID 2 {1:d} // '
-        'Ref Index {2:d} // CT {3:d} (Oversize)'
-        .format(oversize.first_number_proc_id, oversize.second_number_proc_id,
-                oversize.data_ref_index, oversize.continuous_time))
+        'Ref Index {2:d} // CT {3:d} (Oversize)').format(
+            oversize.first_number_proc_id, oversize.second_number_proc_id,
+            oversize.data_ref_index, oversize.continuous_time))
 
     offset = 0
     data_meta = self._ReadStructureFromByteStream(
@@ -64,8 +64,8 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
     offset += 2
 
     logger.debug(
-        "After activity data: Unknown {0:d} // Number of Items {1:d}".format(
-          data_meta.unknown1, data_meta.num_items))
+        'After activity data: Unknown {0:d} // Number of Items {1:d}'.format(
+            data_meta.unknown1, data_meta.num_items))
     try:
       (oversize_strings, deferred_data_items,
           offset) = tracev3_parser.ReadItems(
@@ -76,7 +76,7 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
 
     # Check for backtrace
     if oversize.data[offset:offset+3] == [0x01, 0x00, 0x18]:
-      logger.error("Backtrace found in Oversize chunk")
+      logger.error('Backtrace found in Oversize chunk')
       return None
 
     data_type_map = self._GetDataTypeMap('cstring')
@@ -89,7 +89,7 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
         continue
 
       if item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
-        logger.debug("Private Oversize")
+        logger.debug('Private Oversize')
         private_items.append((item, index))
         oversize_strings.insert(index, (item[0], item[2], '<private>'))
         continue
@@ -112,5 +112,5 @@ class OversizeParser(dtfabric_helper.DtFabricHelper):
         oversize.second_number_proc_id,
         oversize.data_ref_index)
     oversize.strings = oversize_strings
-    logger.debug("Oversize Data: {0!s}".format(oversize_strings))
+    logger.debug('Oversize Data: {0!s}'.format(oversize_strings))
     return oversize

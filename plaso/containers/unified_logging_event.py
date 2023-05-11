@@ -21,7 +21,7 @@ class AULEventData(events.EventData):
     process (str): originating process path.
     process_uuid (str): unique process identifier.
     subsystem (str): subsystem that produced the logging event.
-    thread_id (str): hex representation of the thread ID.
+    thread_identifier (int): thread identifier.
     ttl (int): log time to live (TTL).
   """
   DATA_TYPE = 'macos:unified_logging:event'
@@ -42,5 +42,5 @@ class AULEventData(events.EventData):
     self.process = None
     self.process_uuid = None
     self.subsystem = None
-    self.thread_id = None
+    self.thread_identifier = None
     self.ttl = None

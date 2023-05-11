@@ -148,7 +148,7 @@ data_type: 'macos:unified_logging:event'
 message:
 - 'Level: {level}'
 - 'Subsystem: {subsystem}'
-- 'Thread Identifier: {thread_id}'
+- 'Thread Identifier: 0x{thread_identifier:x}'
 - 'Process Identifier: {pid}'
 - 'Effective User Identifier: {euid}'
 - 'Boot Identifier: {boot_uuid}'
