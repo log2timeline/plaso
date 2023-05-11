@@ -48,6 +48,8 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
   _DEFAULT_LOOKUP_HASH = 'sha256'
   _DEFAULT_WAIT_AFTER_ANALYSIS = 0.0
 
+  _REQUEST_TIMEOUT = 60
+
   def __init__(self):
     """Initializes a hash tagging analysis plugin."""
     super(HashTaggingAnalysisPlugin, self).__init__()
@@ -106,10 +108,10 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
     try:
       if method_upper == 'GET':
-        response = requests.get(url, **kwargs)
+        response = requests.get(url, timeout=self._REQUEST_TIMEOUT, **kwargs)
 
       elif method_upper == 'POST':
-        response = requests.post(url, **kwargs)
+        response = requests.post(url, timeout=self._REQUEST_TIMEOUT, **kwargs)
 
       response.raise_for_status()
 
