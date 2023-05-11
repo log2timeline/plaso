@@ -52,6 +52,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       'timestamp': '2015-01-01 17:00:00',
       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
+  # pylint: disable=unused-argument
   def _MockGet(self, url, params=None, timeout=None):
     """Mock function to simulate a VirusTotal API request.
 
