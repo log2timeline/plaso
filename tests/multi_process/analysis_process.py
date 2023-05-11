@@ -106,7 +106,8 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
       test_process = analysis_process.AnalysisProcess(
           input_event_queue, analysis_plugin, configuration, [],
           name='TestAnalysis')
-      test_process._FOREMAN_STATUS_WAIT = 1
+
+      setattr(test_process, '_FOREMAN_STATUS_WAIT', 1)
 
       test_process.start()
 

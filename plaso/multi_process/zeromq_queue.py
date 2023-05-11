@@ -3,14 +3,9 @@
 
 import abc
 import errno
+import queue
 import threading
 import time
-
-# The 'Queue' module was renamed to 'queue' in Python 3
-try:
-  import Queue  # pylint: disable=import-error
-except ImportError:
-  import queue as Queue  # pylint: disable=import-error
 
 import zmq
 
@@ -368,6 +363,8 @@ class ZeroMQPullQueue(ZeroMQQueue):
         self.Close(abort=True)
         raise
 
+    return None
+
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
@@ -530,6 +527,8 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         self.Close(abort=True)
         raise
 
+    return None
+
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
 
@@ -593,7 +592,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
           and PushItem may block for, before returning queue.QueueEmpty.
     """
     self._buffer_timeout_seconds = buffer_timeout_seconds
-    self._queue = Queue.Queue(maxsize=buffer_max_size)
+    self._queue = queue.Queue(maxsize=buffer_max_size)
     self._zmq_thread = None
 
     # We need to set up the internal buffer queue before we call super, so that
@@ -617,7 +616,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     """Listens for requests and replies to clients.
 
     Args:
-      source_queue (Queue.queue): queue to to pull items from.
+      source_queue (queue.queue): queue to to pull items from.
     """
 
   def Close(self, abort=False):
@@ -669,7 +668,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     try:
       while True:
         self._queue.get(False)
-    except Queue.Empty:
+    except queue.Empty:
       pass
 
 
@@ -692,7 +691,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     """Listens for requests and replies to clients.
 
     Args:
-      source_queue (Queue.queue): queue to use to pull items from.
+      source_queue (queue.Queue): queue to use to pull items from.
 
     Raises:
       RuntimeError: if closed or terminate event is missing.
@@ -711,7 +710,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
           else:
             item = source_queue.get(True, self._buffer_timeout_seconds)
 
-        except Queue.Empty:
+        except queue.Empty:
           if self._closed_event.is_set():
             break
 
@@ -777,7 +776,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         self._queue.put(item, timeout=self.timeout_seconds)
       else:
         self._queue.put(item, block=False)
-    except Queue.Full as exception:
+    except queue.Full as exception:
       raise errors.QueueFull(exception)
 
 

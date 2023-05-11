@@ -399,7 +399,7 @@ class PathSpecExtractor(object):
     for sub_file_entry in sub_directories:
       try:
         for path_spec in self._ExtractPathSpecsFromDirectory(
-            sub_file_entry, depth=(depth + 1)):
+            sub_file_entry, depth=depth + 1):
           yield path_spec
 
       except (

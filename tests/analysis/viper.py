@@ -50,12 +50,14 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   # pylint: disable=unused-argument
-  def _MockPost(self, url, data=None):
+  def _MockPost(self, url, data=None, timeout=None):
     """Mock function to simulate a Viper API request.
 
     Args:
       url (str): URL being requested.
-      data (dict[str, object]): simulated form data for the Viper API request.
+      data (Optional[dict[str, object]]): data for the Viper API request.
+      timeout (Optional[int]): number of seconds to wait for to establish
+          a connection to a remote machine.
 
     Returns:
       MockResponse: mocked response that simulates a real response object

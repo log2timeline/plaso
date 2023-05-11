@@ -22,6 +22,8 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
   _TITLE_RE = re.compile(r'<title>([^<]+)</title>')
   _WEB_STORE_URL = 'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
+  _REQUEST_TIMEOUT = 60
+
   def __init__(self):
     """Initializes an Chrome extension analysis plugin."""
     super(ChromeExtensionPlugin, self).__init__()
@@ -41,7 +43,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     """
     web_store_url = self._WEB_STORE_URL.format(xid=extension_identifier)
     try:
-      response = requests.get(web_store_url)
+      response = requests.get(web_store_url, timeout=self._REQUEST_TIMEOUT)
 
     except (requests.ConnectionError, requests.HTTPError) as exception:
       logger.warning((
