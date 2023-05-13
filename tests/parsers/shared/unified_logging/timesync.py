@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the  Apple Unified Logging (AUL) timesync database file parser."""
+"""Tests for the Apple Unified Logging (AUL) timesync database file parser."""
 
 import os
 import unittest
@@ -15,7 +15,7 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class TimesyncDatabaseParserTest(test_lib.ParserTestCase):
+class TimesyncDatabaseFileParserTest(test_lib.ParserTestCase):
   """Tests for the timesync database file parser."""
 
   def testParseFileObject(self):
@@ -39,7 +39,7 @@ class TimesyncDatabaseParserTest(test_lib.ParserTestCase):
         dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_location,
         parent=test_path_spec)
 
-    parser = timesync.TimesyncDatabaseParser()
+    parser = timesync.TimesyncDatabaseFileParser()
     file_object = path_spec_resolver.Resolver.OpenFileObject(test_path_spec)
     parser.ParseFileObject(file_object)
 

@@ -7,7 +7,7 @@ from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
 
-class TimesyncDatabaseParser(dtfabric_helper.DtFabricHelper):
+class TimesyncDatabaseFileParser(dtfabric_helper.DtFabricHelper):
   """Timesync database file parser.
 
   Attributes:
@@ -22,7 +22,7 @@ class TimesyncDatabaseParser(dtfabric_helper.DtFabricHelper):
 
   def __init__(self):
     """Initialises a timesync database file parser."""
-    super(TimesyncDatabaseParser, self).__init__()
+    super(TimesyncDatabaseFileParser, self).__init__()
     self._boot_record_data_map = self._GetDataTypeMap('timesync_boot_record')
     self._sync_record_data_map = self._GetDataTypeMap('timesync_sync_record')
     self.records = []

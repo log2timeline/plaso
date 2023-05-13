@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Apple Unified Logging (AUL) UUIDText file parser."""
+"""The Apple Unified Logging (AUL) uuidtext file parser."""
 
 import os
 
@@ -9,46 +9,56 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
-from plaso.parsers import interface
 from plaso.parsers import logger
 
 
-class UUIDText(dtfabric_helper.DtFabricHelper):
-  """Apple Unified Logging (AUL) UUIDText file.
+class UUIDTextFile(dtfabric_helper.DtFabricHelper):
+  """Apple Unified Logging (AUL) uuidtext file.
 
   Attributes:
-    data (str): the raw data.
-    entries (tuple[int, int, int]): a tuple of (offset, rolling data size total
-       and entry data_size).
+    data (bytes): the format string data.
+    entries (list[tuple[int, int, int]]): uuidtext file entries consisting of
+        tuples of offset, rolling data size total and data size.
     library_name (str): the library name associated with the UUID file.
     library_path (str): the library path associated with the UUID file.
-    uuid (uuid.UUID): the UUID.
   """
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'uuidfile.yaml')
 
-  def __init__(self, library_path, library_name, uuid, data, entries):
-    """Initializes an Apple Unified Logging (AUL) UUIDText file."""
-    super(UUIDText, self).__init__()
+  def __init__(
+      self, data=None, entries=None, library_name=None, library_path=None):
+    """Initializes an uuidtext file.
+
+    Args:
+      data (Optional[bytes]): the format string data.
+      entries (Optional[list[tuple[int, int, int}]]): uuidtext file entries
+         consisting of tuples of offset, rolling data size total and data size.
+      library_name (Optional[str]): name of the library associated with
+          the uuidtext file.
+      library_path (Optional[str]): path of the library associated with
+          the uuidtext file.
+      uuid (uuid.UUID): the UUID.
+    """
+    super(UUIDTextFile, self).__init__()
+    self._cstring_data_map = self._GetDataTypeMap('cstring')
     self.data = data
     self.entries = entries
     self.library_name = library_name
     self.library_path = library_path
-    self.uuid = uuid
+    self.uuid = None
 
   def ReadFormatString(self, offset):
-    """Reads the format string located at the given offset.
+    """Reads the format string located at a specific offset.
 
     Args:
-      offset (int): Requested offset.
+      offset (int): offset of the format string.
 
     Returns:
-      str: The string at the given offset.
+      str: format string at the given offset.
 
     Raises:
-      ParseError: if the structure cannot be read.
-      ValueError: if file-like object or data type map is missing.
+      ParseError: if the format string cannot be read.
     """
     if offset & 0x80000000:
       return '%s'
@@ -59,13 +69,13 @@ class UUIDText(dtfabric_helper.DtFabricHelper):
         rel_offset = offset - range_start_offset
         return self._ReadStructureFromByteStream(
           self.data[data_offset + rel_offset:],
-          0, self._GetDataTypeMap('cstring'))
+          0, self._cstring_data_map)
+
     return ''
 
 
-class UUIDFileParser(
-  interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """UUID file parser.
+class UUIDTextFileParser(dtfabric_helper.DtFabricHelper):
+  """UUIDText file parser.
 
   Attributes:
     file_entry (dfvfs.FileEntry): file entry.
@@ -77,27 +87,27 @@ class UUIDFileParser(
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'uuidfile.yaml')
 
+  _SUPPORTED_FORMAT_VERSION = (2, 1)
+
   def __init__(self, file_entry, file_system):
-    """Initializes a UUID file parser.
+    """Initializes an uuidtext file parser.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry.
       file_system (dfvfs.FileSystem): file system.
-      uuid (UUID): the UUID.
-      uuidtext_location (str): File path to the location of DSC files.
 
     Raises:
       ParseError: if the location of the UUID file is invalid.
     """
-    super(UUIDFileParser, self).__init__()
+    super(UUIDTextFileParser, self).__init__()
+    self._uuidtext_file_footer_data_map = self._GetDataTypeMap(
+        'uuidtext_file_footer')
+    self._uuidtext_file_header_data_map = self._GetDataTypeMap(
+        'uuidtext_file_header')
     self.file_entry = file_entry
     self.file_system = file_system
-    self.uuid = None
 
-    path_segments = file_system.SplitPath(file_entry.path_spec.location)
-    self.uuidtext_location = file_system.JoinPath(
-        path_segments[:-3] + ['uuidtext'])
-
+  # TODO: move this method to the main parser.
   def FindFile(self, parser_mediator, uuid):
     """Finds the UUID File for the given UUID on the file system.
 
@@ -106,70 +116,80 @@ class UUIDFileParser(
       uuid (str): the requested UUID.
 
     Returns:
-      UUIDText object or None if the file was not found.
+      UUIDTextFile: an uuidtext file or None if not available.
     """
-    self.uuid = uuid
+    path_segments = self.file_system.SplitPath(
+        self.file_entry.path_spec.location)
+    uuidtext_location = self.file_system.JoinPath(
+        path_segments[:-3] + ['uuidtext'])
+
     kwargs = {}
     if self.file_entry.path_spec.parent:
       kwargs['parent'] = self.file_entry.path_spec.parent
     kwargs['location'] = self.file_system.JoinPath(
-        [self.uuidtext_location] + [uuid[0:2]] + [uuid[2:]])
+        [uuidtext_location] + [uuid[0:2]] + [uuid[2:]])
     uuid_file_path_spec = path_spec_factory.Factory.NewPathSpec(
         self.file_entry.path_spec.TYPE_INDICATOR, **kwargs)
 
-    uuid_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+    file_object = path_spec_resolver.Resolver.OpenFileObject(
         uuid_file_path_spec)
-
-    if not uuid_file_entry:
+    if not file_object:
       return None
 
-    uuid_file_object = uuid_file_entry.GetFileObject()
     try:
-      return self.ParseFileObject(parser_mediator, uuid_file_object)
+      uuidtext_file = self.ParseFileObject(file_object)
+      uuidtext_file.uuid = uuid
+
     except (IOError, errors.ParseError) as exception:
       message = (
           'Unable to parse UUID file: {0:s} with error: '
           '{1!s}').format(uuid, exception)
       logger.warning(message)
       parser_mediator.ProduceExtractionWarning(message)
-    return None
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a UUID file-like object.
+      uuidtext_file = None
+
+    return uuidtext_file
+
+  def ParseFileObject(self, file_object):
+    """Parses an uuidtext file-like object.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
       file_object (dfvfs.FileIO): a file-like object to parse.
 
-    Raises:
-      ParseError: if the records cannot be parsed.
-    """
-    offset = 0
-    entries = []
+    Returns:
+      UUIDTextFile: an uuidtext file.
 
-    uuid_header_data_map = self._GetDataTypeMap('uuidtext_file_header')
-    uuid_header, size = self._ReadStructureFromFileObject(
-        file_object, offset, uuid_header_data_map)
+    Raises:
+      ParseError: if the uuidtext file cannot be parsed.
+    """
+    file_header, read_size = self._ReadStructureFromFileObject(
+        file_object, 0, self._uuidtext_file_header_data_map)
+
     format_version = (
-        uuid_header.major_format_version, uuid_header.minor_format_version)
-    if format_version != (2, 1):
+        file_header.major_format_version, file_header.minor_format_version)
+    if format_version != self._SUPPORTED_FORMAT_VERSION:
       raise errors.ParseError(
           'Unsupported format version: {0:d}.{1:d}.'.format(
-              uuid_header.major_format_version,
-              uuid_header.minor_format_version))
-    data_size = 0
-    for entry in uuid_header.entry_descriptors:
-      entry_tuple = (entry.offset, data_size, entry.data_size)
-      data_size += entry.data_size
-      entries.append(entry_tuple)
-    data = file_object.read(data_size)
-    offset = size + data_size
-    uuid_footer, _ = self._ReadStructureFromFileObject(
-        file_object, offset, self._GetDataTypeMap('uuidtext_file_footer'))
+              file_header.major_format_version,
+              file_header.minor_format_version))
 
-    return UUIDText(
-        library_path=uuid_footer.library_path,
-        library_name=os.path.basename(uuid_footer.library_path),
-        uuid=self.uuid,
-        data=data,
-        entries=entries)
+    data_size = 0
+    entries = []
+
+    for entry in file_header.entry_descriptors:
+      entry_tuple = (entry.offset, data_size, entry.data_size)
+      entries.append(entry_tuple)
+
+      data_size += entry.data_size
+
+    data = file_object.read(data_size)
+
+    footer_offset = read_size + data_size
+    file_footer, _ = self._ReadStructureFromFileObject(
+        file_object, footer_offset, self._uuidtext_file_footer_data_map)
+
+    library_name = file_footer.library_path.rsplit('/', maxsplit=1)[-1]
+    return UUIDTextFile(
+        data=data, entries=entries, library_name=library_name,
+        library_path=file_footer.library_path)
