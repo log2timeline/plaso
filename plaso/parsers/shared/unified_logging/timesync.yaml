@@ -59,11 +59,13 @@ attributes:
   byte_order: little-endian
 members:
 - name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 2
+  value: "\xb0\xbb"
+- name: record_size
   data_type: uint16
-  value: 0xbbb0
-- name: header_size
-  data_type: uint16
-- name: unknown
+- name: unknown1
   data_type: uint32
 - name: boot_uuid
   data_type: uuid_be
@@ -87,8 +89,10 @@ members:
 - name: signature
   type: stream
   element_data_type: byte
-  elements_data_size: 4
-  value: "\x54\x73\x20\x00"
+  elements_data_size: 2
+  value: "Ts"
+- name: record_size
+  data_type: uint16
 - name: unknown1
   data_type: uint32
 - name: kernel_continuous_timestamp

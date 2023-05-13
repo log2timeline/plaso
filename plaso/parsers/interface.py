@@ -229,10 +229,11 @@ class FileEntryParser(BaseParser):
   """The file entry parser interface."""
 
   def Parse(self, parser_mediator):
-    """Parses the file entry and extracts event objects.
+    """Parses a file entry.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
 
     Raises:
       WrongParser: when the file cannot be parsed.
@@ -259,7 +260,8 @@ class FileEntryParser(BaseParser):
     """Parses a file entry.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_entry (dfvfs.FileEntry): a file entry to parse.
 
     Raises:
@@ -286,7 +288,8 @@ class FileObjectParser(BaseParser):
     """Parses a single file-like object.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
@@ -332,7 +335,8 @@ class FileObjectParser(BaseParser):
     """Parses a file-like object.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:

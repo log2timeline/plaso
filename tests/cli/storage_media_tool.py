@@ -63,12 +63,12 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+    test_gpt_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.PREFERRED_GPT_BACK_END, location='/p1',
         parent=test_raw_path_spec)
     test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
-        parent=test_tsk_partition_path_spec)
+        parent=test_gpt_partition_path_spec)
 
     volume_system = apfs_volume_system.APFSVolumeSystem()
     volume_system.Open(test_apfs_container_path_spec)
@@ -276,12 +276,12 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
-    test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+    test_gpt_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.PREFERRED_GPT_BACK_END, location='/p1',
         parent=test_raw_path_spec)
     test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/',
-        parent=test_tsk_partition_path_spec)
+        parent=test_gpt_partition_path_spec)
 
     volume_system = apfs_volume_system.APFSVolumeSystem()
     volume_system.Open(test_apfs_container_path_spec)

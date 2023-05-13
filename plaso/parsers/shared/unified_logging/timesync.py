@@ -1,120 +1,78 @@
 # -*- coding: utf-8 -*-
-"""The Apple Unified Logging (AUL) Timesync file parser."""
-import os
+"""The Apple Unified Logging (AUL) timesync database file parser."""
 
-from dfvfs.helpers import file_system_searcher
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
+import os
 
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 
-from plaso.parsers import interface
 
-
-class TimesyncParser(
-  interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """Timesync record file parser
+class TimesyncDatabaseParser(dtfabric_helper.DtFabricHelper):
+  """Timesync database file parser.
 
   Attributes:
-    records (List[timesync_boot_record]): List of Timesync records.
+    records (List[timesync_boot_record]): timesync boot records.
   """
+
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'timesync.yaml')
 
+  _BOOT_RECORD_SIGNATURE = b'\xb0\xbb'
+  _SYNC_RECORD_SIGNATURE = b'Ts'
+
   def __init__(self):
-    """Initialises the parser."""
-    super(TimesyncParser, self).__init__()
+    """Initialises a timesync database file parser."""
+    super(TimesyncDatabaseParser, self).__init__()
+    self._boot_record_data_map = self._GetDataTypeMap('timesync_boot_record')
+    self._sync_record_data_map = self._GetDataTypeMap('timesync_sync_record')
     self.records = []
 
-  def ParseAll(self, parser_mediator, file_entry, file_system):
-    """Finds and parses all the timesync files
+  def ParseFileObject(self, file_object):
+    """Parses a timesync database file-like object.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_system (dfvfs.FileSystem): file system.
-      file_entry (dfvfs.FileEntry): file entry.
-    """
-    path_segments = file_system.SplitPath(file_entry.path_spec.location)
-    timesync_location = file_system.JoinPath(path_segments[:-2] + ['timesync'])
-    kwargs = {}
-    if file_entry.path_spec.parent:
-      kwargs['parent'] = file_entry.path_spec.parent
-    kwargs['location'] = timesync_location
-    timesync_file_path_spec = path_spec_factory.Factory.NewPathSpec(
-        file_entry.path_spec.TYPE_INDICATOR, **kwargs)
-
-    location_glob = None
-    if file_entry.TYPE_INDICATOR == 'ZIP':
-      location_glob = os.path.join(timesync_location, '*.timesync')
-
-    find_spec = file_system_searcher.FindSpec(
-          file_entry_types=[definitions.FILE_ENTRY_TYPE_FILE],
-          location_glob=location_glob)
-
-    path_spec_generator = file_system_searcher.FileSystemSearcher(
-        file_system, timesync_file_path_spec).Find(
-          find_specs=[find_spec])
-
-    for path_spec in path_spec_generator:
-      try:
-        timesync_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-            path_spec)
-
-      except RuntimeError as exception:
-        message = (
-            'Unable to open timesync file: {0:s} with error: '
-            '{1!s}'.format(path_spec, exception))
-        parser_mediator.ProduceExtractionWarning(message)
-        continue
-      try:
-        timesync_file_object = timesync_file_entry.GetFileObject()
-        self.ParseFileObject(parser_mediator, timesync_file_object)
-      except (IOError, errors.ParseError) as exception:
-        message = (
-            'Unable to parse data block file: {0:s} with error: '
-            '{1!s}').format(path_spec, exception)
-        parser_mediator.ProduceExtractionWarning(message)
-        continue
-
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a shared-cache strings (dsc) file-like object.
-
-    Args:
-      parser_mediator (ParserMediator): a parser mediator.
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
-      ParseError: if the records cannot be parsed.
+      ParseError: when the file cannot be parsed.
     """
-    boot_record_data_map = self._GetDataTypeMap('timesync_boot_record')
-    sync_record_data_map = self._GetDataTypeMap('timesync_sync_record')
-
+    file_offset = 0
     file_size = file_object.get_size()
-    offset = 0
-    current_boot_record = None
-    while offset < file_size:
-      try:
-        boot_record, size = self._ReadStructureFromFileObject(
-            file_object, offset, boot_record_data_map)
-        offset += size
-        if current_boot_record is not None:
-          self.records.append(current_boot_record)
-        current_boot_record = boot_record
-        current_boot_record.sync_records = []
-        continue
-      except errors.ParseError:
-        pass
 
+    file_object.seek(file_offset, os.SEEK_SET)
+
+    current_boot_record = None
+
+    while file_offset < file_size:
       try:
-        sync_record, size = self._ReadStructureFromFileObject(
-            file_object, offset, sync_record_data_map)
-        offset += size
-        current_boot_record.sync_records.append(sync_record)
-      except errors.ParseError as exception:
-        raise errors.ParseError(
-            'Unable to parse time sync file with error: {0!s}'.format(
-                exception))
-    self.records.append(current_boot_record)
+        signature_data = file_object.read(2)
+
+        if signature_data == self._BOOT_RECORD_SIGNATURE:
+          boot_record, _ = self._ReadStructureFromFileObject(
+              file_object, file_offset, self._boot_record_data_map)
+
+          file_offset += boot_record.record_size
+
+          current_boot_record = boot_record
+          current_boot_record.sync_records = []
+
+          self.records.append(current_boot_record)
+
+        elif signature_data == self._SYNC_RECORD_SIGNATURE:
+          sync_record, _ = self._ReadStructureFromFileObject(
+              file_object, file_offset, self._sync_record_data_map)
+
+          file_offset += sync_record.record_size
+
+          if current_boot_record:
+            current_boot_record.sync_records.append(sync_record)
+
+        else:
+          raise errors.ParseError(
+              'Unsupported timesync record at offset: 0x{0:08x}'.format(
+                  file_offset))
+
+      except (IOError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to parse timesync record at offset: 0x{0:08x} with error: '
+            '{1!s}').format(file_offset, exception))
