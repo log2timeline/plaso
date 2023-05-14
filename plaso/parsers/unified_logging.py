@@ -9,6 +9,8 @@ import os
 import re
 import stat
 
+import plistlib
+
 import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -29,12 +31,8 @@ from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers.shared.unified_logging import dsc
-from plaso.parsers.shared.unified_logging import loss
-from plaso.parsers.shared.unified_logging import simpledump
-from plaso.parsers.shared.unified_logging import statedump
 from plaso.parsers.shared.unified_logging import timesync
-from plaso.parsers.shared.unified_logging import trace
-from plaso.parsers.shared.unified_logging import uuidfile
+from plaso.parsers.shared.unified_logging import uuidtext
 
 
 class AULFormatterFlags(object):
@@ -101,8 +99,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   _CHUNK_TAG_OVERSIZE = 0x6002
   _CHUNK_TAG_STATEDUMP = 0x6003
   _CHUNK_TAG_SIMPLEDUMP = 0x6004
-  _CHUNK_TAG_CATALOG = 0x600B
-  _CHUNK_TAG_CHUNKSET = 0x600D
+  _CHUNK_TAG_CATALOG = 0x600b
+  _CHUNK_TAG_CHUNKSET = 0x600d
 
   _NON_ACTIVITY_SENINTEL = 0x80000000
 
@@ -134,20 +132,27 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       r' *\-+#\']{0,6})([hljztLq]{0,2})([@dDiuUxXoOfeEgGcCsSpaAFPm])'
   )
 
+  # StateDump data types
+  _STATEDUMP_DATA_TYPE_PLIST = 1
+  _STATEDUMP_DATA_TYPE_PROTOBUF = 2
+  _STATEDUMP_DATA_TYPE_CUSTOM = 3
+
   def __init__(self):
     """Initializes an Apple Unified Logging tracev3 file parser."""
     super(AULParser, self).__init__()
-    self._dsc_parser = None
+    self._boot_uuid_ts = None
+    self._cached_dsc_files = {}
+    self._cached_uuidtext_files = {}
+    self._catalog_files = []
+    self._dsc_parser = dsc.DSCFileParser()
+    self._oversize_data = []
     self._timesync_parser = None
-    self._uuid_parser = None
+    self._tracev3_file_entry = None
+    self._uuidtext_file_entry = None
+    self._uuidtext_parser = uuidtext.UUIDTextFileParser()
 
-    self.boot_uuid_ts = None
     self.catalog = None
-    self.catalog_files = []
-    self.chunksets = []
     self.header = None
-    self.logs = []
-    self.oversize_data = []
 
   def _ExtractAbsoluteStrings(
       self, original_offset, uuid_file_index, proc_info,
@@ -192,7 +197,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the requested UUID file was not found.
     """
-    uuid_file = [f for f in self.catalog_files if f.uuid == uuid.hex.upper()]
+    uuid_file = [f for f in self._catalog_files if f.uuid == uuid.hex.upper()]
     if len(uuid_file) != 1:
       logger.error('Couldn\'t find UUID file for {0:s}'.format(
           uuid.hex))
@@ -239,6 +244,60 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     logger.debug('Fmt string: {0:s}'.format(format_string))
     return (format_string, dsc_range)
+
+  def _GetCatalogSubSystemStringMap(self, catalog):
+    """Retrieves a map of the catalog sub system strings and offsets.
+
+    Args:
+      catalog (tracev3_catalog): catalog.
+
+    Returns:
+      dict[int, str]: catalog sub system string per offset.
+    """
+    strings_map = {}
+
+    map_offset = 0
+    for string in catalog.sub_system_strings:
+      strings_map[map_offset] = string
+      map_offset += len(string) + 1
+
+    return strings_map
+
+  def _GetDSCFile(self, parser_mediator, uuid):
+    """Retrieves a specific shared-cache strings (DSC) file.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      uuid (str): the UUID.
+
+    Returns:
+      DSCFile: a shared-cache strings (DSC) file or None if not available.
+    """
+    dsc_file = self._cached_dsc_files.get(uuid, None)
+    if not dsc_file:
+      dsc_file = self._ReadDSCFile(parser_mediator, uuid)
+      self._cached_dsc_files[uuid] = dsc_file
+
+    return dsc_file
+
+  def _GetUUIDTextFile(self, parser_mediator, uuid):
+    """Retrieves a specific uuidtext file.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      uuid (str): the UUID.
+
+    Returns:
+      UUIDTextFile: an uuidtext file or None if not available.
+    """
+    uuidtext_file = self._cached_uuidtext_files.get(uuid, None)
+    if not uuidtext_file:
+      uuidtext_file = self._ReadUUIDTextFile(parser_mediator, uuid)
+      self._cached_uuidtext_files[uuid] = uuidtext_file
+
+    return uuidtext_file
 
   def _FormatFlags(self, flags, data, offset):
     """Parses the format flags.
@@ -852,10 +911,13 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     Args:
       file_object (file): file-like object.
       file_offset (int): offset of the catalog data relative to the start of the
-        file.
+          file.
+
+    Returns:
+      tracev3_catalog: catalog.
 
     Raises:
-      ParseError: if the chunk header cannot be read.
+      ParseError: if the catalog chunk cannot be read.
     """
     data_type_map = self._GetDataTypeMap('tracev3_catalog')
 
@@ -884,7 +946,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         catalog.files.append(None)
         continue
 
-      for file in self.catalog_files:
+      for file in self._catalog_files:
         if file.uuid == filename:
           found = file
           found_in_cache = True
@@ -892,9 +954,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           break
 
       if not found:
-        found = self._dsc_parser.FindFile(parser_mediator, filename)
+        found = self._GetDSCFile(parser_mediator, filename)
+
       if not found:
-        found = self._uuid_parser.FindFile(parser_mediator, filename)
+        found = self._GetUUIDTextFile(parser_mediator, filename)
         if not found:
           logger.error(
               'Neither UUID nor DSC file found for UUID: {0:s}'.format(
@@ -903,49 +966,51 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           continue
 
         if not found_in_cache:
-          self.catalog_files.append(found)
+          self._catalog_files.append(found)
         catalog.files.append(found)
 
       else:
         if not found_in_cache:
-          self.catalog_files.append(found)
+          self._catalog_files.append(found)
         catalog.files.append(found)
 
     data_type_map = self._GetDataTypeMap(
         'tracev3_catalog_process_information_entry')
     catalog.process_entries = []
 
+    catalog_strings_map = self._GetCatalogSubSystemStringMap(catalog)
+
     for _ in range(catalog.number_of_process_information_entries):
       process_entry, new_bytes = self._ReadStructureFromFileObject(
           file_object, file_offset + offset_bytes, data_type_map)
+
       try:
         process_entry.main_uuid = catalog.uuids[process_entry.main_uuid_index]
       except IndexError:
         pass
+
       try:
         process_entry.dsc_uuid = catalog.uuids[process_entry.catalog_dsc_index]
       except IndexError:
         pass
-      process_entry.items = {}
+
       logger.debug('Process Entry data: PID {0:d} // EUID {1:d}'.format(
           process_entry.pid, process_entry.euid))
+
+      process_entry.items = {}
       for subsystem in process_entry.subsystems:
-        offset = 0
-        subsystem_string = None
-        category_string = None
-        for string in catalog.sub_system_strings:
-          if subsystem_string is None:
-            if offset >= subsystem.subsystem_offset:
-              subsystem_string = string
-          if category_string is None:
-            if offset >= subsystem.category_offset:
-              category_string = string
-          offset += len(string) + 1
-        process_entry.items[subsystem.identifier] = (subsystem_string,
-                                                     category_string)
+        subsystem_string = catalog_strings_map.get(
+            subsystem.subsystem_offset, None)
+        category_string = catalog_strings_map.get(
+            subsystem.category_offset, None)
+
+        process_entry.items[subsystem.identifier] = (
+            subsystem_string, category_string)
+
         logger.debug(
             'Process Entry coalesce: Subsystem {0:s} // Category {1:s}'.format(
                 subsystem_string, category_string))
+
       catalog.process_entries.append(process_entry)
       offset_bytes += new_bytes
 
@@ -993,16 +1058,17 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       file_offset (int): offset of the chunk set data relative to the start of
         the file.
       chunk_header (tracev3_chunk_header): the chunk header of the chunk set.
-      chunkset_index (int): What number chunk this is in the catalog.
+      chunkset_index (int): number of the chunk within the catalog.
 
     Raises:
-      ParseError: if the chunk header cannot be read.
+      ParseError: if the chunk set cannot be read.
     """
-    if self.catalog.subchunks[
-        chunkset_index].compression_algorithm != self._CATALOG_LZ4_COMPRESSION:
-      logger.error('Unknown compression algorithm : {0:s}'.format(
-          self.catalog.compression_algorithm))
-      return
+    compression_algorithm = (
+        self.catalog.subchunks[chunkset_index].compression_algorithm)
+    if compression_algorithm != self._CATALOG_LZ4_COMPRESSION:
+      raise errors.ParseError(
+          'Unsupported compression algorithm: {0:s} for chunk: {1:d}'.format(
+              compression_algorithm, chunkset_index))
 
     chunk_data = file_object.read(chunk_header.chunk_data_size)
 
@@ -1010,10 +1076,6 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     lz4_block_header, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, data_type_map)
-    logger.debug(
-        'Read LZ4 block: Compressed size {0:d} // Uncompressed size {1:d}'
-        .format(lz4_block_header.compressed_data_size,
-                lz4_block_header.uncompressed_data_size))
 
     end_of_compressed_data_offset = 12 + lz4_block_header.compressed_data_size
 
@@ -1023,19 +1085,16 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           uncompressed_size=lz4_block_header.uncompressed_data_size)
 
     elif lz4_block_header.signature == b'bv4-':
-      logger.debug('It was already uncompressed!')
       uncompressed_data = chunk_data[12:end_of_compressed_data_offset]
 
     else:
-      logger.error('Unsupported start of compressed data marker')
-      return
+      raise errors.ParseError('Unsupported start of compressed data marker')
 
     end_of_compressed_data_identifier = chunk_data[
         end_of_compressed_data_offset:end_of_compressed_data_offset + 4]
 
     if end_of_compressed_data_identifier != b'bv4$':
-      logger.error('Unsupported end of compressed data marker')
-      return
+      raise errors.ParseError('Unsupported end of compressed data marker')
 
     data_type_map = self._GetDataTypeMap('tracev3_chunk_header')
 
@@ -1043,41 +1102,31 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     while data_offset < lz4_block_header.uncompressed_data_size:
       chunkset_chunk_header = self._ReadStructureFromByteStream(
           uncompressed_data[data_offset:], data_offset, data_type_map)
-      data_offset += 16
-      logger.debug('Processing a chunk: Tag {0:d} // Size {1:d}'.format(
-          chunkset_chunk_header.chunk_tag,
-          chunkset_chunk_header.chunk_data_size))
 
+      data_offset += 16
       data_end_offset = data_offset + chunkset_chunk_header.chunk_data_size
       chunkset_chunk_data = uncompressed_data[data_offset:data_end_offset]
 
       if chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_FIREHOSE:
-        logger.debug('Processing a Firehose Chunk (0x6001)')
         self._ReadFirehoseChunkData(
             parser_mediator, chunkset_chunk_data, data_offset)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_OVERSIZE:
-        logger.debug('Processing an Oversize Chunk (0x6002)')
         oversized_data = self._ParseOversizeChunkData(
             chunkset_chunk_data, data_offset)
-        self.oversize_data.append(oversized_data)
+        self._oversize_data.append(oversized_data)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_STATEDUMP:
-        logger.debug('Processing an Statedump Chunk (0x6003)')
-        statedump_parser = statedump.StatedumpParser()
-        statedump_parser.ReadStatedumpChunkData(
-            self, parser_mediator, chunkset_chunk_data, data_offset)
+        self._ReadStateDumpChunkData(
+            parser_mediator, chunkset_chunk_data, data_offset)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_SIMPLEDUMP:
-        logger.debug('Processing an Simpledump Chunk (0x6004)')
-        simpledump_parser = simpledump.SimpledumpParser()
-        simpledump_parser.ReadSimpledumpChunkData(
-            self, parser_mediator, chunkset_chunk_data, data_offset)
+        self._ReadSimpleDumpChunkData(
+            parser_mediator, chunkset_chunk_data, data_offset)
 
       else:
-        logger.error('Unsupported Chunk Type: {0:d}'.format(
+        raise errors.ParseError('Unsupported chunk tag: 0x{0:04x}'.format(
             chunkset_chunk_header.chunk_tag))
-        return
 
       data_offset = data_end_offset
 
@@ -1085,13 +1134,43 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       count = 0
       new_data_offset = data_offset
       try:
-        while (uncompressed_data[new_data_offset]) == 0:
+        while uncompressed_data[new_data_offset] == 0:
           new_data_offset += 1
           count += 1
       except IndexError:
         pass
 
       data_offset = new_data_offset
+
+  def _ReadDSCFile(self, parser_mediator, uuid):
+    """Reads a specific shared-cache strings (DSC) file.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      uuid (str): the UUID.
+
+    Returns:
+      DSCFile: a shared-cache strings (DSC) file or None if not available.
+    """
+    file_entry = self._uuidtext_file_entry.GetSubFileEntryByName('dsc')
+    if file_entry:
+      file_entry = file_entry.GetSubFileEntryByName(uuid)
+
+    dsc_file = None
+    if file_entry:
+      try:
+        file_object = file_entry.GetFileObject()
+        dsc_file = self._dsc_parser.ParseFileObject(file_object)
+        dsc_file.uuid = uuid
+      except (IOError, errors.ParseError) as exception:
+        message = (
+            'Unable to parse DSC file: {0:s} with error: '
+            '{1!s}').format(uuid, exception)
+        logger.warning(message)
+        parser_mediator.ProduceExtractionWarning(message)
+
+    return dsc_file
 
   def _ReadFirehoseChunkData(self, parser_mediator, chunk_data, data_offset):
     """Reads firehose chunk data.
@@ -1104,21 +1183,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the firehose chunk cannot be read.
     """
-    logger.debug('Reading Firehose')
     data_type_map = self._GetDataTypeMap('tracev3_firehose_header')
 
     firehose_header = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
-
-    logger.debug(
-        'Firehose Header data: ProcID 1 {0:d} // ProcID 2 {1:d} // TTL {2:d} //'
-        ' CT {3:d}'.format(
-            firehose_header.first_number_proc_id,
-            firehose_header.second_number_proc_id,
-            firehose_header.ttl,
-            firehose_header.base_continuous_time,
-        )
-    )
 
     proc_id = firehose_header.second_number_proc_id | (
         firehose_header.first_number_proc_id << 32)
@@ -1142,8 +1210,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     logger.debug(
         'Firehose Header Timestamp: %s',
-        aul_time.TimestampFromContTime(self.boot_uuid_ts.sync_records,
-                                       firehose_header.base_continuous_time))
+        aul_time.TimestampFromContTime(
+            self._boot_uuid_ts.sync_records,
+            firehose_header.base_continuous_time))
 
     tracepoint_map = self._GetDataTypeMap('tracev3_firehose_tracepoint')
     chunk_data_offset = 32
@@ -1168,19 +1237,20 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       wt = 0
       kct = 0
       if firehose_header.base_continuous_time == 0:
-        wt = self.boot_uuid_ts.boot_time
+        wt = self._boot_uuid_ts.boot_time
       ts = aul_time.FindClosestTimesyncItemInList(
-          self.boot_uuid_ts.sync_records, ct, wt == 0)
+          self._boot_uuid_ts.sync_records, ct, wt == 0)
       if ts:
         wt = ts.wall_time
         kct = ts.kernel_continuous_timestamp
       time = (
           wt
-          + (ct * self.boot_uuid_ts.adjustment)
-          - (kct * self.boot_uuid_ts.adjustment)
+          + (ct * self._boot_uuid_ts.adjustment)
+          - (kct * self._boot_uuid_ts.adjustment)
       )
-      self._ParseTracepointData(parser_mediator, firehose_tracepoint, proc_info,
-                                time, private_strings)
+      self._ParseTracepointData(
+          parser_mediator, firehose_tracepoint, proc_info, time,
+          private_strings)
 
       chunk_data_offset += 24 + firehose_tracepoint.data_size
       _, alignment = divmod(chunk_data_offset, 8)
@@ -1189,8 +1259,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
       chunk_data_offset += alignment
 
-  def _ReadHeader(self, file_object, file_offset):
-    """Reads a tracev3 header.
+  def _ReadHeaderChunk(self, file_object, file_offset):
+    """Reads a tracev3 header chunk.
 
     Args:
       file_object (file): file-like object.
@@ -1198,9 +1268,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         file.
 
     Raises:
-      ParseError: if the chunk header cannot be read.
+      ParseError: if the header chunk cannot be read.
     """
-    data_type_map = self._GetDataTypeMap('tracev3_header')
+    data_type_map = self._GetDataTypeMap('tracev3_header_chunk')
 
     self.header, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, data_type_map)
@@ -1216,13 +1286,13 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     logger.debug('TZ Info: {0:s}'.format(
         self.header.timezone_subchunk.timezone_subchunk_data.path_to_tzfile))
 
-    self.boot_uuid_ts = aul_time.GetBootUuidTimeSync(
+    self._boot_uuid_ts = aul_time.GetBootUuidTimeSync(
         self._timesync_parser.records,
         self.header.generation_subchunk.generation_subchunk_data.boot_uuid)
     logger.debug(
         'Tracev3 Header Timestamp: %s',
         aul_time.TimestampFromContTime(
-            self.boot_uuid_ts.sync_records,
+            self._boot_uuid_ts.sync_records,
             self.header.continuous_time_subchunk.continuous_time_data))
 
   def _ReadItems(self, data_meta, data, offset):
@@ -1273,14 +1343,239 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         raise errors.ParseError(
             'Unsupported item type: {0:s}'.format(data_item.item_type))
 
-    return (log_data, deferred_data_items, offset)
+    return log_data, deferred_data_items, offset
+
+  def _ReadSimpleDumpChunkData(self, parser_mediator, chunk_data, data_offset):
+    """Parses the SimpleDump Chunk and adds a DateTimeEvent.
+
+    Args:
+      parser_mediator (ParserMediator): a parser mediator.
+      chunk_data (bytes): oversize chunk data.
+      data_offset (int): offset of the oversize chunk relative to the start
+          of the chunk set.
+
+    Raises:
+      ParseError: if the records cannot be parsed.
+    """
+    logger.debug('Reading SimpleDump')
+    data_type_map = self._GetDataTypeMap('tracev3_simpledump_chunk')
+
+    simpledump_structure = self._ReadStructureFromByteStream(
+        chunk_data, data_offset, data_type_map)
+    logger.debug(
+        ('SimpleDump data: ProcID 1 {0:d} // ProcID 2 {1:d} // '
+         'CT {2:d} // ThreadID {3:d}').format(
+             simpledump_structure.first_number_proc_id,
+             simpledump_structure.second_number_proc_id,
+             simpledump_structure.continuous_time,
+             simpledump_structure.thread_identifier))
+    logger.debug('Substring: {0:s} // Message string: {1:s}'.format(
+        simpledump_structure.subsystem_string,
+        simpledump_structure.message_string
+    ))
+
+    event_data = unified_logging_event.AULEventData()
+    generation_subchunk = self.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
+    event_data.level = 'SimpleDump'
+
+    event_data.thread_identifier = simpledump_structure.thread_identifier
+    event_data.pid = simpledump_structure.first_number_proc_id
+    event_data.subsystem = simpledump_structure.subsystem_string
+    event_data.library_uuid = simpledump_structure.sender_uuid.hex.upper()
+    event_data.process_uuid = simpledump_structure.dsc_uuid.hex
+    event_data.body = simpledump_structure.message_string
+    logger.debug('Log line: {0!s}'.format(event_data.body))
+
+    ct = simpledump_structure.continuous_time
+    ts = aul_time.FindClosestTimesyncItemInList(
+        self._boot_uuid_ts.sync_records, ct, True)
+    wt = ts.wall_time if ts else 0
+    kct = ts.kernel_continuous_timestamp if ts else 0
+    time = (
+        wt
+        + (ct * self._boot_uuid_ts.adjustment)
+        - (kct * self._boot_uuid_ts.adjustment)
+    )
+
+    event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+        timestamp=int(time))
+    parser_mediator.ProduceEventData(event_data)
+
+  def _ReadStateDumpChunkData(self, parser_mediator, chunk_data, data_offset):
+    """Parses the StateDump Chunk and adds a DateTimeEvent.
+
+    Args:
+      parser_mediator (ParserMediator): a parser mediator.
+      chunk_data (bytes): oversize chunk data.
+      data_offset (int): offset of the oversize chunk relative to the start
+        of the chunk set.
+
+    Raises:
+      ParseError: if the records cannot be parsed.
+    """
+    logger.debug('Reading StateDump')
+    data_type_map = self._GetDataTypeMap('tracev3_statedump_chunk')
+
+    statedump_structure = self._ReadStructureFromByteStream(
+        chunk_data, data_offset, data_type_map)
+    logger.debug(
+        ('StateDump data: ProcID 1 {0:d} // ProcID 2 {1:d} // '
+         'TTL {2:d} // CT {3:d} // String Name {4:s}').format(
+             statedump_structure.first_number_proc_id,
+             statedump_structure.second_number_proc_id,
+             statedump_structure.ttl, statedump_structure.continuous_time,
+             statedump_structure.string_name))
+
+    try:
+      statedump_structure.string1 = self._ReadStructureFromByteStream(
+        statedump_structure.string1, 0, self._GetDataTypeMap('cstring'))
+    except errors.ParseError:
+      statedump_structure.string1 = ''
+
+    try:
+      statedump_structure.string2 = self._ReadStructureFromByteStream(
+        statedump_structure.string2, 0, self._GetDataTypeMap('cstring'))
+    except errors.ParseError:
+      statedump_structure.string2 = ''
+
+    proc_id = statedump_structure.second_number_proc_id | (
+        statedump_structure.first_number_proc_id << 32)
+    proc_info = [
+        c for c in self.catalog.process_entries
+        if c.second_number_proc_id | (c.first_number_proc_id << 32) == proc_id
+    ]
+    if len(proc_info) == 0:
+      logger.error(
+          'Could not find Process Info block for ID: {0:d}'.format(proc_id))
+      return
+    proc_info = proc_info[0]
+
+    event_data = unified_logging_event.AULEventData()
+    try:
+      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      event_data.process_uuid = uuid_file.uuid
+      event_data.process = uuid_file.library_path
+    except (IndexError, AttributeError):
+      pass
+    generation_subchunk = self.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
+    event_data.level = 'StateDump'
+
+    ct = statedump_structure.continuous_time
+    ts = aul_time.FindClosestTimesyncItemInList(
+      self._boot_uuid_ts.sync_records, ct, True)
+    wt = ts.wall_time if ts else 0
+    kct = ts.kernel_continuous_timestamp if ts else 0
+    time = (
+        wt
+        + (ct * self._boot_uuid_ts.adjustment)
+        - (kct * self._boot_uuid_ts.adjustment)
+    )
+
+    if statedump_structure.data_type == self._STATEDUMP_DATA_TYPE_PLIST:
+      try:
+        event_data.body = str(plistlib.loads(statedump_structure.data))
+      except plistlib.InvalidFileException:
+        logger.warning('StateDump PList not valid')
+        return
+    elif statedump_structure.data_type == self._STATEDUMP_DATA_TYPE_PROTOBUF:
+      event_data.body = 'StateDump Protocol Buffer'
+      logger.error('StateDump Protobuf not supported')
+    elif statedump_structure.data_type == self._STATEDUMP_DATA_TYPE_CUSTOM:
+      if statedump_structure.string1 == 'location':
+        state_tracker_structure = {}
+        extra_state_tracker_structure = {}
+
+        if statedump_structure.string_name == 'CLDaemonStatusStateTracker':
+          state_tracker_structure = self._ReadStructureFromByteStream(
+              statedump_structure.data, 0,
+              self._GetDataTypeMap('location_tracker_daemon_data')).__dict__
+
+          if state_tracker_structure['reachability'] == 0x2:
+            state_tracker_structure['reachability'] = 'kReachabilityLarge'
+          else:
+            state_tracker_structure['reachability'] = 'Unknown'
+
+          if state_tracker_structure['charger_type'] == 0x0:
+            state_tracker_structure['charger_type'] = 'kChargerTypeUnknown'
+          else:
+            state_tracker_structure['charger_type'] = 'Unknown'
+        elif statedump_structure.string_name == 'CLClientManagerStateTracker':
+          state_tracker_structure = (
+              location.LocationClientStateTrackerParser().Parse(
+                  statedump_structure.data
+              )
+          )
+        elif statedump_structure.string_name == 'CLLocationManagerStateTracker':
+          (
+              state_tracker_structure,
+              extra_state_tracker_structure,
+          ) = location.LocationManagerStateTrackerParser().Parse(
+              statedump_structure.data_size, statedump_structure.data
+          )
+        else:
+          raise errors.ParseError(
+            'Unknown location StateDump Custom object not supported')
+
+        event_data.body = str({
+            **state_tracker_structure,
+            **extra_state_tracker_structure
+        })
+      else:
+        logger.error('Non-location StateDump Custom object not supported')
+        event_data.body = 'Unsupported StateDump object: {0:s}'.format(
+            statedump_structure.string_name)
+    else:
+      logger.error('Unknown StateDump data type {0:d}'.format(
+          statedump_structure.data_type))
+      return
+
+    event_data.activity_id = hex(statedump_structure.activity_id)
+    event_data.pid = statedump_structure.first_number_proc_id
+
+    event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+        timestamp=int(time))
+    parser_mediator.ProduceEventData(event_data)
+
+  def _ReadUUIDTextFile(self, parser_mediator, uuid):
+    """Reads a specific uuidtext file.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      uuid (str): the UUID.
+
+    Returns:
+      UUIDTextFile: an uuidtext file or None if not available.
+    """
+    file_entry = self._uuidtext_file_entry.GetSubFileEntryByName(uuid[0:2])
+    if file_entry:
+      file_entry = file_entry.GetSubFileEntryByName(uuid[2:])
+
+    uuidtext_file = None
+    if file_entry:
+      try:
+        file_object = file_entry.GetFileObject()
+        uuidtext_file = self._uuidtext_parser.ParseFileObject(file_object)
+        uuidtext_file.uuid = uuid
+
+      except (IOError, errors.ParseError) as exception:
+        message = 'Unable to parse UUID file: {0:s} with error: {1!s}'.format(
+            uuid, exception)
+        parser_mediator.ProduceExtractionWarning(message)
+
+    return uuidtext_file
 
   def _ParseActivityChunk(
       self, parser_mediator, tracepoint, proc_info, time):
     """Parses an activity chunk.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       tracepoint (tracev3_firehose_tracepoint): Firehose tracepoint chunk.
       proc_info (tracev3_catalog_process_information_entry): Process Info entry.
       time (int): Log timestamp.
@@ -1498,12 +1793,49 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
 
+  def _ParseLoss(self, parser_mediator, tracepoint, proc_info, time):
+    """Processes a Loss chunk.
+
+    Args:
+      parser_mediator (ParserMediator): a parser mediator.
+      tracepoint (tracev3_firehose_tracepoint): Firehose tracepoint chunk.
+      proc_info (tracev3_catalog_process_information_entry): Process Info entry.
+      time (int): Log timestamp.
+
+    Raises:
+      ParseError: if the non-activity chunk cannot be parsed.
+    """
+    logger.debug('Reading Loss')
+    data_type_map = self._GetDataTypeMap('tracev3_firehose_loss')
+
+    loss_structure = self._ReadStructureFromByteStream(
+        tracepoint.data, 0, data_type_map)
+    logger.debug(
+        'Loss data: Start Time {0:d} // End time {1:d} // Count {2:d}'.format(
+            loss_structure.start_time, loss_structure.end_time,
+            loss_structure.count))
+
+    event_data = unified_logging_event.AULEventData()
+    generation_subchunk = self.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
+    event_data.pid = proc_info.pid
+    event_data.euid = proc_info.euid
+    event_data.level = 'Loss'
+    event_data.thread_identifier = tracepoint.thread_identifier
+    event_data.body = 'Lost {0:d} log messages'.format(loss_structure.count)
+
+    event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+        timestamp=int(time))
+    parser_mediator.ProduceEventData(event_data)
+
   def _ParseNonActivityChunk(
       self, parser_mediator, tracepoint, proc_info, time, private_strings):
     """Parses a non-activity chunk.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       tracepoint (tracev3_firehose_tracepoint): firehose tracepoint chunk.
       proc_info (tracev3_catalog_process_information_entry): process information
           entry.
@@ -1782,13 +2114,14 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     found = False
     if data_ref_id != 0:
-      for oversize_data in self.oversize_data:
-        if oversize_data.first_proc_id == proc_info.first_number_proc_id and \
-          oversize_data.second_proc_id == proc_info.second_number_proc_id and \
-          oversize_data.data_ref_index == data_ref_id:
+      for oversize_data in self._oversize_data:
+        if (oversize_data.first_proc_id == proc_info.first_number_proc_id and
+            oversize_data.second_proc_id == proc_info.second_number_proc_id and
+            oversize_data.data_ref_index == data_ref_id):
           log_data = oversize_data.strings
           found = True
           break
+
       if not found:
         logger.warning((
             'Did not find any oversize log entries from Data Ref ID: {0:d}, '
@@ -1797,7 +2130,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
                 proc_info.second_number_proc_id))
 
     if fmt:
-      event_data.body = "".join(backtrace_strings) + self._FormatString(
+      event_data.body = ''.join(backtrace_strings) + self._FormatString(
           fmt, log_data)
     elif not fmt and not log_data:
       return  # Nothing to do ??
@@ -1817,8 +2150,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       event_data.ttl = ttl_value
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
-    event_data.subsystem = (proc_info.items.get(subsystem_value, ("", "")))[0]
-    event_data.category = (proc_info.items.get(subsystem_value, ("", "")))[1]
+    event_data.subsystem = (proc_info.items.get(subsystem_value, ('', '')))[0]
+    event_data.category = (proc_info.items.get(subsystem_value, ('', '')))[1]
 
     if dsc_range.uuid_index:
       dsc_uuid = dsc_file.uuids[dsc_range.uuid_index]
@@ -1856,7 +2189,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       ParseError: if the oversize chunk cannot be parsed.
     """
     logger.debug('Reading Oversize')
-    data_type_map = self._GetDataTypeMap('tracev3_oversize')
+    data_type_map = self._GetDataTypeMap('tracev3_oversize_chunk')
 
     oversize = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
@@ -1929,7 +2262,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Processes a Signpost chunk.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       tracepoint (tracev3_firehose_tracepoint): Firehose tracepoint chunk.
       proc_info (tracev3_catalog_process_information_entry): Process Info entry.
       time (int): Log timestamp.
@@ -2099,15 +2433,14 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     dsc_range = dsc.DSCRange()
 
     if data_ref_id != 0:
-      for oversize_data in self.oversize_data:
-        if (
-            oversize_data.first_proc_id == proc_info.first_number_proc_id
-            and oversize_data.second_proc_id == proc_info.second_number_proc_id
-            and oversize_data.data_ref_index == data_ref_id
-        ):
+      for oversize_data in self._oversize_data:
+        if (oversize_data.first_proc_id == proc_info.first_number_proc_id and
+            oversize_data.second_proc_id == proc_info.second_number_proc_id and
+            oversize_data.data_ref_index == data_ref_id):
           log_data = oversize_data.strings
           found = True
           break
+
       if not found:
         logger.debug((
             'Did not find any oversize log entries from Data Ref ID: '
@@ -2170,19 +2503,18 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
 
-  def _ParseTimeSyncDatabases(self, parser_mediator, tracev3_file_entry):
+  def _ParseTimeSyncDatabases(self, parser_mediator):
     """Parses the timesync database files.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      tracev3_file_entry (dfvfs.FileEntry): a tracev3 file entry.
     """
     self._timesync_parser = timesync.TimesyncDatabaseFileParser()
 
     # The timesync database files are stored in ../../timesync relative from
     # the tracev3 file.
-    timesync_file_entry = tracev3_file_entry.GetParentFileEntry()
+    timesync_file_entry = self._tracev3_file_entry.GetParentFileEntry()
     timesync_file_entry = timesync_file_entry.GetParentFileEntry()
     timesync_file_entry = timesync_file_entry.GetSubFileEntryByName('timesync')
 
@@ -2235,14 +2567,11 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
     elif tracepoint.log_activity_type == (
         constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS):
-      # This is Loss
-      lp = loss.LossParser()
-      lp.ParseLoss(self, parser_mediator, tracepoint, proc_info, time)
+      self._ParseLoss(parser_mediator, tracepoint, proc_info, time)
 
     elif tracepoint.log_activity_type == (
         constants.FIREHOSE_LOG_ACTIVITY_TYPE_TRACE):
-      tp = trace.TraceParser()
-      tp.ParceTrace(self, parser_mediator, tracepoint, proc_info, time)
+      self._ParceTrace(parser_mediator, tracepoint, proc_info, time)
 
     elif tracepoint.log_activity_type == 0x0:
       logger.warning('Remnant/Garbage data')
@@ -2250,6 +2579,68 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     else:
       logger.error('Unsupported log activity type: {}'.format(
           tracepoint.log_activity_type))
+
+  def _ParceTrace(
+      self, parser_mediator, tracepoint, proc_info, time):
+    """Parses a Trace chunk.
+
+    Args:
+      parser_mediator (ParserMediator): a parser mediator.
+      tracepoint (tracev3_firehose_tracepoint): Firehose tracepoint chunk.
+      proc_info (tracev3_catalog_process_information_entry): Process Info entry.
+      time (int): Log timestamp.
+
+    Raises:
+      ParseError: if the records cannot be parsed.
+    """
+    logger.debug('Reading Trace')
+    data = tracepoint.data
+
+    event_data = unified_logging_event.AULEventData()
+    generation_subchunk = self.header.generation_subchunk
+    generation_subchunk_data = generation_subchunk.generation_subchunk_data
+    event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
+
+    try:
+      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      event_data.process_uuid = uuid_file.uuid
+      event_data.process = uuid_file.library_path
+    except (AttributeError, IndexError):
+      uuid_file = None
+
+    offset = 0
+
+    message_string_reference = self._ReadStructureFromByteStream(
+        data[offset:], offset, self._GetDataTypeMap('uint32'))
+    logger.debug('Unknown PCID: {0:d}'.format(message_string_reference))
+    offset += 4
+
+    item_data = b''
+    if len(data[offset:]) < 4:
+      logger.warning('Insufficent trace data')
+    else:
+      item_data = data[offset:offset+2]
+      offset += 2
+
+    format_string = self._ExtractFormatStrings(
+        tracepoint.format_string_location, uuid_file)
+
+    if format_string:
+      logger.debug('Format string: {0:s}'.format(format_string))
+      event_data.body = self._FormatString(
+          format_string, [(0, len(item_data), item_data)])
+
+    event_data.thread_identifier = tracepoint.thread_identifier
+    event_data.pid = proc_info.pid
+    event_data.euid = proc_info.euid
+    if uuid_file:
+      event_data.library = uuid_file.library_path
+    if uuid_file:
+      event_data.library_uuid = uuid_file.uuid.upper()
+
+    event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+        timestamp=int(time))
+    parser_mediator.ProduceEventData(event_data)
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -2282,12 +2673,19 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           '[{0:s}] unable to open tracev3 file {1:s}'.format(
               self.NAME, display_name))
 
-    self._ParseTimeSyncDatabases(parser_mediator, file_entry)
+    self._tracev3_file_entry = file_entry
 
-    file_system = file_entry.GetFileSystem()
+    # The uuidtext files are stored in ../../../uuidtext/ relative from
+    # the tracev3 file.
+    self._uuidtext_file_entry = file_entry.GetParentFileEntry()
+    self._uuidtext_file_entry = self._uuidtext_file_entry.GetParentFileEntry()
+    self._uuidtext_file_entry = self._uuidtext_file_entry.GetParentFileEntry()
+    self._uuidtext_file_entry = self._uuidtext_file_entry.GetSubFileEntryByName(
+        'uuidtext')
 
-    self._uuid_parser = uuidfile.UUIDTextFileParser(file_entry, file_system)
-    self._dsc_parser = dsc.DSCFileParser(file_entry, file_system)
+    self._cached_uuidtext_files = {}
+
+    self._ParseTimeSyncDatabases(parser_mediator)
 
     try:
       self.ParseFileObject(parser_mediator, file_object)
@@ -2301,7 +2699,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Parses a timezone information file-like object.
 
     Args:
-      parser_mediator (ParserMediator): a parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
@@ -2318,25 +2717,22 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       file_offset += 16
 
       if chunk_header.chunk_tag == self._CHUNK_TAG_HEADER:
-        logger.debug('Processing a HEADER (0x1000)')
-        self._ReadHeader(file_object, file_offset)
+        self._ReadHeaderChunk(file_object, file_offset)
 
       elif chunk_header.chunk_tag == self._CHUNK_TAG_CATALOG:
-        logger.debug('Processing a CATALOG (0x600B)')
         self.catalog = self._ReadCatalog(
             parser_mediator, file_object, file_offset)
         chunkset_index = 0
 
       elif chunk_header.chunk_tag == self._CHUNK_TAG_CHUNKSET:
-        logger.debug('Processing a CHUNKSET (0x600D)')
         self._ReadChunkSet(
             parser_mediator, file_object, file_offset, chunk_header,
             chunkset_index)
         chunkset_index += 1
 
       else:
-        logger.error(
-          'UNKNOWN CHUNK TAG: {0:d}'.format(chunk_header.chunk_tag))
+        raise errors.ParseError(
+            'Unsupported chunk tag: 0x{0:04x}'.format(chunk_header.chunk_tag))
 
       file_offset += chunk_header.chunk_data_size
 

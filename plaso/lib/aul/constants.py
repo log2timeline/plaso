@@ -2,9 +2,6 @@
 """The Apple Unified Logging (AUL) constants."""
 
 
-# Supported Versions
-SUPPORTED_DSC_VERSIONS = [(1, 0), (2, 0)]
-
 # ARM Processor Timebase Adjustment
 ARM_TIMEBASE_NUMERATOR = 125
 ARM_TIMEBASE_DENOMINATOR = 3

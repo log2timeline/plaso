@@ -3,13 +3,8 @@
 
 import os
 
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
-
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-
-from plaso.parsers import logger
 
 
 class UUIDTextFile(dtfabric_helper.DtFabricHelper):
@@ -24,7 +19,7 @@ class UUIDTextFile(dtfabric_helper.DtFabricHelper):
   """
 
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'uuidfile.yaml')
+      os.path.dirname(__file__), 'uuidtext.yaml')
 
   def __init__(
       self, data=None, entries=None, library_name=None, library_path=None):
@@ -66,35 +61,24 @@ class UUIDTextFile(dtfabric_helper.DtFabricHelper):
     for range_start_offset, data_offset, data_len in self.entries:
       range_end_offset = range_start_offset + data_len
       if range_start_offset <= offset < range_end_offset:
-        rel_offset = offset - range_start_offset
-        return self._ReadStructureFromByteStream(
-          self.data[data_offset + rel_offset:],
-          0, self._cstring_data_map)
+        string_offset = data_offset + (offset - range_start_offset)
+        format_string = self._ReadStructureFromByteStream(
+            self.data[string_offset:], 0, self._cstring_data_map)
+        return format_string
 
     return ''
 
 
 class UUIDTextFileParser(dtfabric_helper.DtFabricHelper):
-  """UUIDText file parser.
-
-  Attributes:
-    file_entry (dfvfs.FileEntry): file entry.
-    file_system (dfvfs.FileSystem): file system.
-    uuid (uuid.UUID): the UUID.
-    uuidtext_location: The path of the uuidtext directory.
-  """
+  """UUIDText file parser."""
 
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'uuidfile.yaml')
+      os.path.dirname(__file__), 'uuidtext.yaml')
 
   _SUPPORTED_FORMAT_VERSION = (2, 1)
 
-  def __init__(self, file_entry, file_system):
+  def __init__(self):
     """Initializes an uuidtext file parser.
-
-    Args:
-      file_entry (dfvfs.FileEntry): file entry.
-      file_system (dfvfs.FileSystem): file system.
 
     Raises:
       ParseError: if the location of the UUID file is invalid.
@@ -104,52 +88,6 @@ class UUIDTextFileParser(dtfabric_helper.DtFabricHelper):
         'uuidtext_file_footer')
     self._uuidtext_file_header_data_map = self._GetDataTypeMap(
         'uuidtext_file_header')
-    self.file_entry = file_entry
-    self.file_system = file_system
-
-  # TODO: move this method to the main parser.
-  def FindFile(self, parser_mediator, uuid):
-    """Finds the UUID File for the given UUID on the file system.
-
-    Args:
-      parser_mediator (ParserMediator): a parser mediator.
-      uuid (str): the requested UUID.
-
-    Returns:
-      UUIDTextFile: an uuidtext file or None if not available.
-    """
-    path_segments = self.file_system.SplitPath(
-        self.file_entry.path_spec.location)
-    uuidtext_location = self.file_system.JoinPath(
-        path_segments[:-3] + ['uuidtext'])
-
-    kwargs = {}
-    if self.file_entry.path_spec.parent:
-      kwargs['parent'] = self.file_entry.path_spec.parent
-    kwargs['location'] = self.file_system.JoinPath(
-        [uuidtext_location] + [uuid[0:2]] + [uuid[2:]])
-    uuid_file_path_spec = path_spec_factory.Factory.NewPathSpec(
-        self.file_entry.path_spec.TYPE_INDICATOR, **kwargs)
-
-    file_object = path_spec_resolver.Resolver.OpenFileObject(
-        uuid_file_path_spec)
-    if not file_object:
-      return None
-
-    try:
-      uuidtext_file = self.ParseFileObject(file_object)
-      uuidtext_file.uuid = uuid
-
-    except (IOError, errors.ParseError) as exception:
-      message = (
-          'Unable to parse UUID file: {0:s} with error: '
-          '{1!s}').format(uuid, exception)
-      logger.warning(message)
-      parser_mediator.ProduceExtractionWarning(message)
-
-      uuidtext_file = None
-
-    return uuidtext_file
 
   def ParseFileObject(self, file_object):
     """Parses an uuidtext file-like object.

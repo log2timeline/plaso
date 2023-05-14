@@ -1,8 +1,8 @@
 # dtFabric format specification.
 ---
-name: aul_dsc
+name: aul_uuidtext
 type: format
-description: Apple Unified Logging and Activity Tracing formats
+description: Apple Unified Logging uuidtext file format
 urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
 ---
 name: char
