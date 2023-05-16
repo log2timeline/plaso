@@ -62,7 +62,10 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
       del json_dict['type_indicator']
 
     if 'parent' in json_dict:
-      json_dict['parent'] = self.DeserializeValue(json_dict['parent'])
+      # Some parent pathspecs may already be deserialized.
+      # See issue #4655 for more detail.
+      if isinstance(json_dict['parent'], str):
+        json_dict['parent'] = self.DeserializeValue(json_dict['parent'])
 
     # Remove the class type from the JSON dictionary since we cannot pass it.
     del json_dict['__type__']
