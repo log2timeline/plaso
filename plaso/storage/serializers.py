@@ -55,17 +55,19 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     Returns:
       dfvfs.PathSpec: runtime value.
     """
-    json_dict = json.loads(value)
+    # Some parent pathspecs may already be deserialized.
+    # See issue #4655 for more detail.
+    if isinstance(value, dict):
+      json_dict = value
+    else:
+      json_dict = json.loads(value)
 
     type_indicator = json_dict.get('type_indicator', None)
     if type_indicator:
       del json_dict['type_indicator']
 
     if 'parent' in json_dict:
-      # Some parent pathspecs may already be deserialized.
-      # See issue #4655 for more detail.
-      if isinstance(json_dict['parent'], str):
-        json_dict['parent'] = self.DeserializeValue(json_dict['parent'])
+      json_dict['parent'] = self.DeserializeValue(json_dict['parent'])
 
     # Remove the class type from the JSON dictionary since we cannot pass it.
     del json_dict['__type__']
