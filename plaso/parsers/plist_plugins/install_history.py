@@ -10,7 +10,7 @@ class MacOSInstallHistoryEventData(events.EventData):
   """MacOS install history event data.
 
   Attributes:
-    identifiers (list[str]): indentifiers of the installed package.
+    identifiers (list[str]): identifiers of the installed package.
     name (str): display name of the installed package.
     process_name (str): name of the process that installed the package.
     version (str): display version of the installed package.

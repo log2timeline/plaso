@@ -24,7 +24,7 @@ short_source: 'LOG'
 source: 'dpkg log file'
 ---
 # TODO: paths is kept for backwards compatibility
-type: 'basic'
+type: 'conditional'
 data_type: 'linux:locate_database:entry'
 message:
 - 'Folder Path: {path}'
@@ -52,7 +52,7 @@ type: 'conditional'
 data_type: 'linux:popularity_contest_log:session'
 message:
 - 'Session {session}'
-- 'Host identifier: {host_indentifier}'
+- 'Host identifier: {host_identifier}'
 - '[{details}]'
 short_message:
 - 'Session {session}'
