@@ -42,7 +42,6 @@ class SerializersTest(test_lib.StorageTestCase):
 
     self.assertEqual(deserialized_value.comparable, path_spec.comparable)
 
-
   def testJSONStringsListAttributeSerializer(self):
     """Tests the JSON strings list attribute serializer."""
     serializer = serializers.JSONStringsListAttributeSerializer()
