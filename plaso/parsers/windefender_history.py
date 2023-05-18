@@ -73,7 +73,7 @@ class WinDefenderHistoryParser(
        24: 'Domain user2'}]
 
   _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'detection_history.yaml')
+      os.path.dirname(__file__), 'windefender_history.yaml')
 
   _VALUE_DATA_TYPE_BINARY_DATA = 0x00000028
   _VALUE_DATA_TYPE_FILETIME = 0x0000000a

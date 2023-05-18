@@ -1,6 +1,6 @@
 # dtFabric format specification.
 ---
-name: detection_history
+name: windefender_history
 type: format
 description: Windows Defender scan DetectionHistory file format
 urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Windows%20Defender%20scan%20DetectionHistory%20file%20format.asciidoc"]
