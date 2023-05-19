@@ -1,5 +1,8 @@
 ## Packaging with PyInstaller
 
+**Note that packaging with PyInstaller is no longer a supported build method.
+You are expected to be able to debug and fix build issues yourself.**
+
 To create a Windows packaged release from the development release you also need:
 
 * PyInstaller
