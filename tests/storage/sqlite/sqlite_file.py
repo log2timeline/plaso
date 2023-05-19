@@ -110,7 +110,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       finally:
         test_store.Close()
 
-  # TODO: add tests for _CreatetAttributeContainerFromRow
+  # TODO: add tests for _CreateAttributeContainerFromRow
   # TODO: add tests for _DeserializeAttributeContainer
 
   def testGetAttributeContainersWithFilter(self):
