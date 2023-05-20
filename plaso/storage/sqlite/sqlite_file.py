@@ -66,7 +66,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       raise IOError('Unsupported compression format: {0!s}'.format(
           compression_format))
 
-  def _CreatetAttributeContainerFromRow(
+  def _CreateAttributeContainerFromRow(
       self, container_type, column_names, row, first_column_index):
     """Creates an attribute container of a row in the database.
 
@@ -86,7 +86,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       schema = None
 
     if schema:
-      return super(SQLiteStorageFile, self)._CreatetAttributeContainerFromRow(
+      return super(SQLiteStorageFile, self)._CreateAttributeContainerFromRow(
           container_type, column_names, row, first_column_index)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -458,7 +458,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     if not row:
       return None
 
-    container = self._CreatetAttributeContainerFromRow(
+    container = self._CreateAttributeContainerFromRow(
         container_type, column_names, row, 0)
 
     identifier = containers_interface.AttributeContainerIdentifier(
