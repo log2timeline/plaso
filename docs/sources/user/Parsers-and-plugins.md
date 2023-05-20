@@ -39,6 +39,7 @@ prefetch | Parser for Windows Prefetch File (PF).
 recycle_bin | Parser for Windows $Recycle.Bin $I files.
 recycle_bin_info2 | Parser for Windows Recycler INFO2 files.
 rplog | Parser for Windows Restore Point log (rp.log) files.
+simatic_s7 | Parser for SIMATIC S7 Log files.
 spotlight_storedb | Parser for Apple Spotlight store database (store.db) files.
 sqlite | Parser for SQLite database files.
 symantec_scanlog | Parser for Symantec AV Corporate Edition and Endpoint Protection log files.
@@ -49,6 +50,7 @@ trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
 usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
+wincc_sys | Parser for WinCC Sys Log files.
 windefender_history | Parser for Windows Defender scan DetectionHistory files.
 winevt | Parser for Windows EventLog (EVT) files.
 winevtx | Parser for Windows XML EventLog (EVTX) files.
