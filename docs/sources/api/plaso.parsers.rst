@@ -390,6 +390,14 @@ plaso.parsers.utmpx module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.wincc module
+--------------------------
+
+.. automodule:: plaso.parsers.wincc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.windefender\_history module
 -----------------------------------------
 
