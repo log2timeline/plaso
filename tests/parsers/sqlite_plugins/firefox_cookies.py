@@ -14,7 +14,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    plugin = firefox_cookies.FirefoxCookiePlugin()
+    plugin = firefox_cookies.FirefoxCookie2Plugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_cookies.sqlite'], plugin)
 

@@ -51,35 +51,13 @@ class FirefoxCookieEventData(events.EventData):
     self.url = None
 
 
-class FirefoxCookiePlugin(
+class BaseFirefoxCookiePlugin(
     interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Mozilla Firefox cookies database files.
 
   Also see:
-    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
-  """
+    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h  """
 
-  NAME = 'firefox_cookies'
-  DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file'
-
-  REQUIRED_STRUCTURE = {
-      'moz_cookies': frozenset([
-          'id', 'name', 'value', 'host', 'path', 'expiry',
-          'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
-
-  QUERIES = [
-      (('SELECT id, name, value, host, path, expiry, '
-        'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
-       'ParseCookieRow')]
-
-  SCHEMAS = [{
-      'moz_cookies': (
-          'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, '
-          'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
-          'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
-          'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
-          'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
-          'path, appId, inBrowserElement))')}]
 
   def _GetPosixTimeDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a POSIX time (in seconds) date and time value from the row.
@@ -175,5 +153,61 @@ class FirefoxCookiePlugin(
 
     self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
+class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
+  '''
+  In Firefox Cookie Schema version 2, baseDomain was introduced
+  '''
 
-sqlite.SQLiteParser.RegisterPlugin(FirefoxCookiePlugin)
+  NAME = 'firefox_2_cookies'
+  DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 2'
+
+  REQUIRED_STRUCTURE = {
+      'moz_cookies': frozenset([
+          'id', 'baseDomain', 'name', 'value', 'host', 'path', 'expiry',
+          'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
+
+  QUERIES = [
+      (('SELECT id, baseDomain, name, value, host, path, expiry, '
+        'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
+       'ParseCookieRow')]
+
+  SCHEMAS = [{
+      'moz_cookies': (
+          'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain TEXT, '
+          'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
+          'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
+          'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
+          'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
+          'path, appId, inBrowserElement))')}]
+
+class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
+  '''
+  In Firefox Cookie Schema version 10, baseDomain was eliminated
+  https://searchfox.org/mozilla-central/source/netwerk/cookie/CookiePersistentStorage.cpp#1298
+  '''
+
+  NAME = 'firefox_10_cookies'
+  DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 10'
+
+  REQUIRED_STRUCTURE = {
+      'moz_cookies': frozenset([
+          'id', 'name', 'value', 'host', 'path', 'expiry',
+          'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
+
+  QUERIES = [
+      (('SELECT id, name, value, host, path, expiry, '
+        'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
+       'ParseCookieRow')]
+
+  SCHEMAS = [{
+      'moz_cookies': (
+          'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, '
+          'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
+          'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
+          'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
+          'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
+          'path, appId, inBrowserElement))')}]
+  
+sqlite.SQLiteParser.RegisterPlugins([FirefoxCookie2Plugin, FirefoxCookie10Plugin])
+  
+  
