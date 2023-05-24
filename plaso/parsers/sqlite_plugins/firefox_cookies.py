@@ -64,17 +64,17 @@ class FirefoxCookiePlugin(
 
   REQUIRED_STRUCTURE = {
       'moz_cookies': frozenset([
-          'id', 'baseDomain', 'name', 'value', 'host', 'path', 'expiry',
+          'id', 'name', 'value', 'host', 'path', 'expiry',
           'lastAccessed', 'creationTime', 'isSecure', 'isHttpOnly'])}
 
   QUERIES = [
-      (('SELECT id, baseDomain, name, value, host, path, expiry, '
+      (('SELECT id, name, value, host, path, expiry, '
         'lastAccessed, creationTime, isSecure, isHttpOnly FROM moz_cookies'),
        'ParseCookieRow')]
 
   SCHEMAS = [{
       'moz_cookies': (
-          'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain TEXT, '
+          'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, '
           'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
           'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
