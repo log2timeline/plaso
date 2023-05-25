@@ -56,8 +56,8 @@ class BaseFirefoxCookiePlugin(
   """SQLite parser plugin for Mozilla Firefox cookies database files.
 
   Also see:
-    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h  """
-
+    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
+  """
 
   def _GetPosixTimeDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a POSIX time (in seconds) date and time value from the row.
