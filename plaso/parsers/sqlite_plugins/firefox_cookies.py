@@ -208,5 +208,6 @@ class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
-  
+
+
 sqlite.SQLiteParser.RegisterPlugins([FirefoxCookie2Plugin, FirefoxCookie10Plugin])
