@@ -154,9 +154,9 @@ class BaseFirefoxCookiePlugin(
     self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
 class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
-  '''
+  """
   In Firefox Cookie Schema version 2, baseDomain was introduced
-  '''
+  """
 
   NAME = 'firefox_2_cookies'
   DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 2'
@@ -179,6 +179,7 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
           'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
           'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
           'path, appId, inBrowserElement))')}]
+
 
 class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
   '''
@@ -209,5 +210,3 @@ class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
           'path, appId, inBrowserElement))')}]
   
 sqlite.SQLiteParser.RegisterPlugins([FirefoxCookie2Plugin, FirefoxCookie10Plugin])
-  
-  
