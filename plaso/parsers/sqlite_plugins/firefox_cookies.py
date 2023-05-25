@@ -210,4 +210,5 @@ class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
           'path, appId, inBrowserElement))')}]
 
 
-sqlite.SQLiteParser.RegisterPlugins([FirefoxCookie2Plugin, FirefoxCookie10Plugin])
+sqlite.SQLiteParser.RegisterPlugins([
+    FirefoxCookie2Plugin, FirefoxCookie10Plugin])
