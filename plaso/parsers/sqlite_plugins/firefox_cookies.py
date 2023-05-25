@@ -153,10 +153,9 @@ class BaseFirefoxCookiePlugin(
 
     self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
 
+
 class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
-  """
-  In Firefox Cookie Schema version 2, baseDomain was introduced
-  """
+  """In Firefox Cookie Schema version 2, baseDomain was introduced."""
 
   NAME = 'firefox_2_cookies'
   DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 2'
@@ -182,10 +181,11 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
 
 
 class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
-  '''
-  In Firefox Cookie Schema version 10, baseDomain was eliminated
-  https://searchfox.org/mozilla-central/source/netwerk/cookie/CookiePersistentStorage.cpp#1298
-  '''
+  """In Firefox Cookie Schema version 10, baseDomain was removed.
+  
+  Also see:
+    https://searchfox.org/mozilla-central/source/netwerk/cookie/CookiePersistentStorage.cpp
+  """
 
   NAME = 'firefox_10_cookies'
   DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 10'
