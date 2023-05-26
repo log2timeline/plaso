@@ -124,7 +124,8 @@ parsers:
 - sqlite/chrome_66_cookies
 - sqlite/chrome_autofill
 - sqlite/chrome_extension_activity
-- sqlite/firefox_cookies
+- sqlite/firefox_2_cookies
+- sqlite/firefox_10_cookies
 - sqlite/firefox_downloads
 - sqlite/firefox_history
 - sqlite/safari_historydb
