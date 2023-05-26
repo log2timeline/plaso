@@ -155,7 +155,7 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
 
   Also see:
     https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
-  """  
+  """
 
   NAME = 'firefox_2_cookies'
   DATA_FORMAT = 'Mozilla Firefox cookies SQLite database file version 2'
