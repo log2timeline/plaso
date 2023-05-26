@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Firefox cookie database plugin."""
+"""Tests for the Firefox cookie database plugins."""
 
 import unittest
 
@@ -10,13 +10,10 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class Firefox2CookiesPluginTest(test_lib.SQLitePluginTestCase):
-  """
-  Tests for the Firefox cookie database 
-  with the Firefox cookie schema version 10
-  """
+  """Tests for the Firefox cookie database schema version 2."""
 
   def testProcess(self):
-    """Tests the Process function on a Firefox 29 cookie database file."""
+    """Tests the Process function."""
     plugin = firefox_cookies.FirefoxCookie2Plugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_2_cookies.sqlite'], plugin)
@@ -52,10 +49,7 @@ class Firefox10CookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Firefox cookie database version 10 plugin."""
 
   def testProcess(self):
-    """
-    Tests the Process function on a Firefox cookie database file 
-    with the Firefox cookie schema version 10
-    """
+    """Tests the Process function."""
     plugin = firefox_cookies.FirefoxCookie10Plugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['firefox_10_cookies.sqlite'], plugin)
