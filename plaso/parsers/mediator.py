@@ -38,9 +38,6 @@ class ParserMediator(object):
   # LCID 0x0409 is en-US.
   _DEFAULT_LCID = 0x0409
 
-  _INT64_MIN = -1 << 63
-  _INT64_MAX = (1 << 63) - 1
-
   def __init__(
       self, registry_find_specs=None, resolver_context=None,
       system_configurations=None):

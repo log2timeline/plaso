@@ -11,6 +11,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import warnings
+from plaso.engine import logger
 from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
@@ -25,6 +26,9 @@ class EventDataTimeliner(object):
   """
 
   _DEFAULT_TIME_ZONE = pytz.UTC
+
+  _INT64_MIN = -1 << 63
+  _INT64_MAX = (1 << 63) - 1
 
   _TIMELINER_CONFIGURATION_FILENAME = 'timeliner.yaml'
 
@@ -178,7 +182,7 @@ class EventDataTimeliner(object):
       EventObject: event.
 
     Raises:
-      ValueError: if the timestamp cannot be determined.
+      ValueError: if the timestamp cannot be determined or is out of bounds.
     """
     if date_time.is_delta:
       base_year = self._GetBaseYear(storage_writer, event_data)
@@ -187,6 +191,14 @@ class EventDataTimeliner(object):
     timestamp = date_time.GetPlasoTimestamp()
     if timestamp is None:
       raise ValueError('unable to determine timestamp')
+
+    # Check for out of bounds timestamps, for example if a data format has
+    # changed and the conversion leads to an incorrect large integer value.
+    # Integer values that are larger than 64-bit will cause an OverflowError
+    # in the storage.
+
+    if timestamp < self._INT64_MIN or timestamp > self._INT64_MAX:
+      raise ValueError('timestamp out of bounds')
 
     if date_time.is_local_time:
       time_zone = None
@@ -348,7 +360,11 @@ class EventDataTimeliner(object):
               storage_writer, event_data, str(exception))
           continue
 
-        storage_writer.AddAttributeContainer(event)
+        try:
+          storage_writer.AddAttributeContainer(event)
+        except OverflowError as exception:
+          logger.error('Unable to add event with error: {0!s}'.format(
+              exception))
 
         number_of_events += 1
 
