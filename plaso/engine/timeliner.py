@@ -180,9 +180,6 @@ class EventDataTimeliner(object):
 
     Returns:
       EventObject: event.
-
-    Raises:
-      ValueError: if the timestamp cannot be determined or is out of bounds.
     """
     if date_time.is_delta:
       base_year = self._GetBaseYear(storage_writer, event_data)
@@ -190,53 +187,62 @@ class EventDataTimeliner(object):
 
     timestamp = date_time.GetPlasoTimestamp()
     if timestamp is None:
-      raise ValueError('unable to determine timestamp')
+      self._ProduceTimeliningWarning(
+          storage_writer, event_data, 'unable to determine timestamp')
+
+      date_time = dfdatetime_semantic_time.InvalidTime()
+      timestamp = 0
 
     # Check for out of bounds timestamps, for example if a data format has
     # changed and the conversion leads to an incorrect large integer value.
     # Integer values that are larger than 64-bit will cause an OverflowError
-    # in the storage.
+    # in the SQLite storage.
 
-    if timestamp < self._INT64_MIN or timestamp > self._INT64_MAX:
-      raise ValueError('timestamp out of bounds')
+    elif timestamp < self._INT64_MIN or timestamp > self._INT64_MAX:
+      self._ProduceTimeliningWarning(
+          storage_writer, event_data, 'timestamp out of bounds')
 
-    if date_time.is_local_time:
-      time_zone = None
-      if date_time.time_zone_hint:
-        # TODO: cache time zones per hint.
-        try:
-          time_zone = pytz.timezone(date_time.time_zone_hint)
-        except pytz.UnknownTimeZoneError:
-          message = (
-              'unsupported time zone hint: {0:s}, using default time '
-              'zone').format(date_time.time_zone_hint)
-          self._ProduceTimeliningWarning(storage_writer, event_data, message)
+      date_time = dfdatetime_semantic_time.InvalidTime()
+      timestamp = 0
 
-      if not time_zone and event_data_stream:
-        try:
-          time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
-        except pytz.UnknownTimeZoneError:
-          message = (
-              'unsupported system time zone: {0:s}, using default time '
-              'zone').format(date_time.time_zone_hint)
-          self._ProduceTimeliningWarning(storage_writer, event_data, message)
+    else:
+      if date_time.is_local_time:
+        time_zone = None
+        if date_time.time_zone_hint:
+          # TODO: cache time zones per hint.
+          try:
+            time_zone = pytz.timezone(date_time.time_zone_hint)
+          except pytz.UnknownTimeZoneError:
+            message = (
+                'unsupported time zone hint: {0:s}, using default time '
+                'zone').format(date_time.time_zone_hint)
+            self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      if not time_zone:
-        time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE
+        if not time_zone and event_data_stream:
+          try:
+            time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
+          except pytz.UnknownTimeZoneError:
+            message = (
+                'unsupported system time zone: {0:s}, using default time '
+                'zone').format(date_time.time_zone_hint)
+            self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      date_time = copy.deepcopy(date_time)
-      date_time.is_local_time = False
+        if not time_zone:
+          time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE
 
-      if time_zone != pytz.UTC:
-        datetime_object = datetime.datetime(
-            1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
-        datetime_object += datetime.timedelta(microseconds=timestamp)
+        date_time = copy.deepcopy(date_time)
+        date_time.is_local_time = False
 
-        datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
-        seconds_delta = int(datetime_delta.total_seconds())
-        timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
+        if time_zone != pytz.UTC:
+          datetime_object = datetime.datetime(
+              1970, 1, 1, 0, 0, 0, 0, tzinfo=None)
+          datetime_object += datetime.timedelta(microseconds=timestamp)
 
-        date_time.time_zone_offset = seconds_delta // 60
+          datetime_delta = time_zone.utcoffset(datetime_object, is_dst=False)
+          seconds_delta = int(datetime_delta.total_seconds())
+          timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
+
+          date_time.time_zone_offset = seconds_delta // 60
 
     event = events.EventObject()
     event.date_time = date_time
@@ -350,15 +356,9 @@ class EventDataTimeliner(object):
         attribute_values = [attribute_values]
 
       for attribute_value in attribute_values:
-        try:
-          event = self._GetEvent(
-              storage_writer, event_data, event_data_stream, attribute_value,
-              time_description)
-
-        except ValueError as exception:
-          self._ProduceTimeliningWarning(
-              storage_writer, event_data, str(exception))
-          continue
+        event = self._GetEvent(
+            storage_writer, event_data, event_data_stream, attribute_value,
+            time_description)
 
         try:
           storage_writer.AddAttributeContainer(event)
