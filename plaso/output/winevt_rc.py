@@ -408,6 +408,7 @@ class WinevtResourcesHelper(object):
     Returns:
       str: message string or None if not available.
     """
+    lookup_key = None
     message_string = None
 
     if provider_identifier:
