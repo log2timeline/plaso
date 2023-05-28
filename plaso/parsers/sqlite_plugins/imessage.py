@@ -2,8 +2,10 @@
 """SQLite parser plugin for MacOS and iOS iMessage database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+from dfdatetime import definitions as dfdatetime_definitions
 
 from plaso.containers import events
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -13,6 +15,7 @@ class IMessageEventData(events.EventData):
 
   Attributes:
     attachment_location (str): location of the attachment.
+    client_version (int): client version.
     creation_time (dfdatetime.DateTimeValues): date and time the message
         was created.
     imessage_id (str): mobile number or email address the message was sent
@@ -33,6 +36,7 @@ class IMessageEventData(events.EventData):
     """Initializes event data."""
     super(IMessageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.attachment_location = None
+    self.client_version = None
     self.creation_time = None
     self.imessage_id = None
     self.message_type = None
@@ -46,13 +50,15 @@ class IMessageEventData(events.EventData):
 class IMessagePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for MacOS and iOS iMessage database files.
 
-  The iMessage database file is typically stored in chat.db or sms.db
+  The iMessage database file is typically stored in chat.db or sms.db.
   """
 
   NAME = 'imessage'
   DATA_FORMAT = 'MacOS and iOS iMessage database (chat.db, sms.db) file'
 
   REQUIRED_STRUCTURE = {
+      '_SqliteDatabaseProperties': frozenset([
+          'key', 'value']),
       'message': frozenset([
           'date', 'ROWID', 'is_read', 'is_from_me', 'service', 'text',
           'handle_id']),
@@ -64,76 +70,47 @@ class IMessagePlugin(interface.SQLitePlugin):
           'message_id', 'attachment_id'])}
 
   QUERIES = [
-      ('SELECT m.date, m.ROWID, h.id AS imessage_id, m.is_read AS '
-       'read_receipt, m.is_from_me AS message_type, m.service, a.filename AS'
-       '"attachment_location", m.text FROM message AS m JOIN handle AS h ON '
-       'h.ROWID = m.handle_id LEFT OUTER JOIN message_attachment_join AS maj '
-       'ON m.ROWID = maj.message_id LEFT OUTER JOIN attachment AS a ON '
-       'maj.attachment_id = a.ROWID', 'ParseMessageRow')]
+      ('SELECT message.date, message.ROWID, handle.id AS imessage_id, '
+       'message.is_read AS read_receipt, message.is_from_me AS message_type, '
+       'message.service, attachment.filename AS attachment_location, '
+       'message.text FROM message JOIN handle '
+       'ON handle.ROWID = message.handle_id '
+       'LEFT OUTER JOIN message_attachment_join AS maj '
+       'ON message.ROWID = maj.message_id LEFT OUTER JOIN attachment '
+       'ON maj.attachment_id = attachment.ROWID', 'ParseMessageRow')]
 
-  SCHEMAS = [{
-      '_SqliteDatabaseProperties': (
-          'CREATE TABLE _SqliteDatabaseProperties (key TEXT, value TEXT, '
-          'UNIQUE(key))'),
-      'attachment': (
-          'CREATE TABLE attachment (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, '
-          'guid TEXT UNIQUE NOT NULL, created_date INTEGER DEFAULT 0, '
-          'start_date INTEGER DEFAULT 0, filename TEXT, uti TEXT, mime_type '
-          'TEXT, transfer_state INTEGER DEFAULT 0, is_outgoing INTEGER '
-          'DEFAULT 0, user_info BLOB, transfer_name TEXT, total_bytes INTEGER '
-          'DEFAULT 0)'),
-      'chat': (
-          'CREATE TABLE chat (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, guid '
-          'TEXT UNIQUE NOT NULL, style INTEGER, state INTEGER, account_id '
-          'TEXT, properties BLOB, chat_identifier TEXT, service_name TEXT, '
-          'room_name TEXT, account_login TEXT, is_archived INTEGER DEFAULT 0, '
-          'last_addressed_handle TEXT, display_name TEXT, group_id TEXT, '
-          'is_filtered INTEGER, successful_query INTEGER)'),
-      'chat_handle_join': (
-          'CREATE TABLE chat_handle_join (chat_id INTEGER REFERENCES chat '
-          '(ROWID) ON DELETE CASCADE, handle_id INTEGER REFERENCES handle '
-          '(ROWID) ON DELETE CASCADE, UNIQUE(chat_id, handle_id))'),
-      'chat_message_join': (
-          'CREATE TABLE chat_message_join (chat_id INTEGER REFERENCES chat '
-          '(ROWID) ON DELETE CASCADE, message_id INTEGER REFERENCES message '
-          '(ROWID) ON DELETE CASCADE, PRIMARY KEY (chat_id, message_id))'),
-      'deleted_messages': (
-          'CREATE TABLE deleted_messages (ROWID INTEGER PRIMARY KEY '
-          'AUTOINCREMENT UNIQUE, guid TEXT NOT NULL)'),
-      'handle': (
-          'CREATE TABLE handle (ROWID INTEGER PRIMARY KEY AUTOINCREMENT '
-          'UNIQUE, id TEXT NOT NULL, country TEXT, service TEXT NOT NULL, '
-          'uncanonicalized_id TEXT, UNIQUE (id, service) )'),
-      'message': (
-          'CREATE TABLE message (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, '
-          'guid TEXT UNIQUE NOT NULL, text TEXT, replace INTEGER DEFAULT 0, '
-          'service_center TEXT, handle_id INTEGER DEFAULT 0, subject TEXT, '
-          'country TEXT, attributedBody BLOB, version INTEGER DEFAULT 0, type '
-          'INTEGER DEFAULT 0, service TEXT, account TEXT, account_guid TEXT, '
-          'error INTEGER DEFAULT 0, date INTEGER, date_read INTEGER, '
-          'date_delivered INTEGER, is_delivered INTEGER DEFAULT 0, '
-          'is_finished INTEGER DEFAULT 0, is_emote INTEGER DEFAULT 0, '
-          'is_from_me INTEGER DEFAULT 0, is_empty INTEGER DEFAULT 0, '
-          'is_delayed INTEGER DEFAULT 0, is_auto_reply INTEGER DEFAULT 0, '
-          'is_prepared INTEGER DEFAULT 0, is_read INTEGER DEFAULT 0, '
-          'is_system_message INTEGER DEFAULT 0, is_sent INTEGER DEFAULT 0, '
-          'has_dd_results INTEGER DEFAULT 0, is_service_message INTEGER '
-          'DEFAULT 0, is_forward INTEGER DEFAULT 0, was_downgraded INTEGER '
-          'DEFAULT 0, is_archive INTEGER DEFAULT 0, cache_has_attachments '
-          'INTEGER DEFAULT 0, cache_roomnames TEXT, was_data_detected INTEGER '
-          'DEFAULT 0, was_deduplicated INTEGER DEFAULT 0, is_audio_message '
-          'INTEGER DEFAULT 0, is_played INTEGER DEFAULT 0, date_played '
-          'INTEGER, item_type INTEGER DEFAULT 0, other_handle INTEGER DEFAULT '
-          '0, group_title TEXT, group_action_type INTEGER DEFAULT 0, '
-          'share_status INTEGER DEFAULT 0, share_direction INTEGER DEFAULT 0, '
-          'is_expirable INTEGER DEFAULT 0, expire_state INTEGER DEFAULT 0, '
-          'message_action_type INTEGER DEFAULT 0, message_source INTEGER '
-          'DEFAULT 0)'),
-      'message_attachment_join': (
-          'CREATE TABLE message_attachment_join (message_id INTEGER '
-          'REFERENCES message (ROWID) ON DELETE CASCADE, attachment_id '
-          'INTEGER REFERENCES attachment (ROWID) ON DELETE CASCADE, '
-          'UNIQUE(message_id, attachment_id))')}]
+  _CLIENT_VERSION_QUERY = (
+      'SELECT key, value FROM _SqliteDatabaseProperties '
+      'WHERE key = "_ClientVersion"')
+
+  def _GetClientVersion(self, cache, database):
+    """Retrieves the client version.
+
+    Args:
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+
+    Returns:
+      int: client version or None if the client version cannot be determined.
+    """
+    cache_results = cache.GetResults('client_version')
+    if not cache_results:
+      query_result = database.Query(self._CLIENT_VERSION_QUERY)
+
+      cache.CacheQueryResults(
+          query_result, 'client_version', 'key', ('value', ))
+      cache_results = cache.GetResults('client_version')
+
+    client_version = cache_results.get('_ClientVersion', [])[0]
+
+    if isinstance(client_version, str):
+      try:
+        client_version = int(client_version, 10)
+        cache_results['_ClientVersion'] = [client_version]
+      except (ValueError, TypeError):
+        return None
+
+    return client_version
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
@@ -151,9 +128,22 @@ class IMessagePlugin(interface.SQLitePlugin):
     if timestamp is None:
       return None
 
-    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    precision = dfdatetime_definitions.PRECISION_1_SECOND
 
-  def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
+    # In current versions the timestamp is stored in nanoseconds.
+    # Note that a Cocoa timestamp of 1000000000 is somewhere in 2032 and
+    # the timestamp apprears to have been changes around 2017.
+    if (timestamp < -definitions.NANOSECONDS_PER_SECOND or
+        timestamp > definitions.NANOSECONDS_PER_SECOND):
+      timestamp /= definitions.NANOSECONDS_PER_SECOND
+      precision = dfdatetime_definitions.PRECISION_1_NANOSECOND
+
+    return dfdatetime_cocoa_time.CocoaTime(
+        precision=precision, timestamp=timestamp)
+
+  def ParseMessageRow(
+      self, parser_mediator, query, row, cache=None, database=None,
+      **unused_kwargs):
     """Parses a message row.
 
     Args:
@@ -161,12 +151,16 @@ class IMessagePlugin(interface.SQLitePlugin):
           and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
+      cache (SQLiteCache): cache which contains cached results from querying
+          the visits and urls tables.
+      database (Optional[SQLiteDatabase]): database.
     """
     query_hash = hash(query)
 
     event_data = IMessageEventData()
     event_data.attachment_location = self._GetRowValue(
         query_hash, row, 'attachment_location')
+    event_data.client_version = self._GetClientVersion(cache, database)
     event_data.creation_time = self._GetDateTimeRowValue(
         query_hash, row, 'date')
     event_data.imessage_id = self._GetRowValue(query_hash, row, 'imessage_id')

@@ -5,7 +5,7 @@ import os
 import sqlite3
 import tempfile
 
-from dfvfs.path import factory as dfvfs_factory
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
 from plaso.lib import specification
@@ -329,7 +329,7 @@ class SQLiteParser(interface.FileEntryParser):
 
     location_wal = '{0:s}-wal'.format(location)
     file_system = database_file_entry.GetFileSystem()
-    wal_path_spec = dfvfs_factory.Factory.NewPathSpec(
+    wal_path_spec = path_spec_factory.Factory.NewPathSpec(
         file_system.type_indicator, parent=path_spec.parent,
         location=location_wal)
 
