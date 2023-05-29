@@ -7,11 +7,11 @@ import datetime
 import os
 import pytz
 
+from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import warnings
-from plaso.engine import logger
 from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
@@ -356,6 +356,12 @@ class EventDataTimeliner(object):
         attribute_values = [attribute_values]
 
       for attribute_value in attribute_values:
+        if not isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+          message = 'unsupported date time attribute: {0:s}'.format(
+              attribute_name)
+          self._ProduceTimeliningWarning(storage_writer, event_data, message)
+          continue
+
         event = self._GetEvent(
             storage_writer, event_data, event_data_stream, attribute_value,
             time_description)
@@ -363,8 +369,9 @@ class EventDataTimeliner(object):
         try:
           storage_writer.AddAttributeContainer(event)
         except OverflowError as exception:
-          logger.error('Unable to add event with error: {0!s}'.format(
-              exception))
+          message = 'unable to add event with error: {0!s}'.format(exception)
+          self._ProduceTimeliningWarning(storage_writer, event_data, message)
+          continue
 
         number_of_events += 1
 
