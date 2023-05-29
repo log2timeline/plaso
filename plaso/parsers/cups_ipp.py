@@ -102,6 +102,8 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       _DELIMITER_TAG_PRINTER_ATTRIBUTES,
       _DELIMITER_TAG_UNSUPPORTED_ATTRIBUTES])
 
+  _TAG_VALUE_NONE = 0x13
+
   _TAG_VALUE_INTEGER = 0x21
   _TAG_VALUE_BOOLEAN = 0x22
   _TAG_VALUE_ENUM = 0x23
@@ -194,8 +196,10 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       raise errors.ParseError(
           'Unable to parse attribute with error: {0!s}'.format(exception))
 
-    value = None
-    if attribute.tag_value in self._INTEGER_TAG_VALUES:
+    if attribute.tag_value == self._TAG_VALUE_NONE:
+      value = None
+
+    elif attribute.tag_value in self._INTEGER_TAG_VALUES:
       # TODO: correct file offset to point to the start of value_data.
       value = self._ParseIntegerValue(attribute.value_data, file_offset)
 
@@ -381,6 +385,9 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     try:
       for name, value in self._ParseAttributesGroup(file_object):
+        if value is None:
+          continue
+
         name = self._ATTRIBUTE_NAME_TRANSLATION.get(name, name)
 
         cupp_ipp_values.setdefault(name, []).append(value)
