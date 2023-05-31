@@ -33,6 +33,16 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
+data_type: 'ios:idstatuscache:lookup'
+message:
+- 'Process Name: {process_name}'
+- 'Apple Identifier: {apple_identifier}'
+short_message:
+- 'Apple Identifier: {apple_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS Identityservices Idstatuscache plist'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
