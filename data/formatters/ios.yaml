@@ -35,7 +35,7 @@ source: 'Apple iOS Car Play application plist'
 type: 'conditional'
 data_type: 'ios:datausage:event'
 message:
-- 'Bundle Identifier: {bundle_identifier'
+- 'Bundle Identifier: {bundle_identifier}'
 - 'Process Name: {process_name}'
 - 'Wifi In: {wifi_in}'
 - 'Wifi Out: {wifi_out}'
