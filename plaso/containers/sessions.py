@@ -43,7 +43,7 @@ class Session(interface.AttributeContainer):
   SCHEMA = {
       'file_entropy': 'str',
       'aborted': 'bool',
-      'artifact_filters': 'str',
+      'artifact_filters': 'List[str]',
       'command_line_arguments': 'str',
       'completion_time': 'int',
       'debug_mode': 'bool',
