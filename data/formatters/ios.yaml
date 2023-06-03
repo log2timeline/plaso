@@ -44,7 +44,7 @@ message:
 short_message:
 - 'Process Name: {process_name}'
 short_source: 'HISTORY'
-source: 'iOS datausage.sqlite database'
+source: 'iOS data usage database'
 ---
 type: 'conditional'
 data_type: 'ios:kik:messaging'
