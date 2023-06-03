@@ -16,8 +16,8 @@ class IOSDatausageEventData(events.EventData):
     process_name (str): name of the process.
     start_time (dfdatetime.DateTimeValues): date and time the start of
         the network connection was established.
-    wifi_in (int): number of bytes received over wifi.
-    wifi_out (int): number of bytes sent over wifi.
+    wifi_in (int): number of bytes received over Wi-Fi.
+    wifi_out (int): number of bytes sent over Wi-Fi.
     wireless_wan_in (int): number of bytes received over cellular.
     wireless_wan_out (int): number of bytes sent over cellular.
   """
