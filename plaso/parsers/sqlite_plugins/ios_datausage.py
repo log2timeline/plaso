@@ -10,7 +10,8 @@ from plaso.parsers.sqlite_plugins import interface
 
 class IOSDatausageEventData(events.EventData):
   """iOS datausage event data.
-    Attributes:
+  
+  Attributes:
     bundle_identifier (str): bundle identifier.
     process_name (str): name of the process.
     start_time (dfdatetime.DateTimeValues): date and time the start of
