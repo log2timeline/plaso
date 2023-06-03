@@ -25,7 +25,7 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -51,7 +51,7 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -77,7 +77,7 @@ class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -110,7 +110,7 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -145,7 +145,7 @@ class LinuxSystemdOperatingSystemPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -182,7 +182,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -227,7 +227,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 

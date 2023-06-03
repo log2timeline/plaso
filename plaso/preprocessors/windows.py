@@ -22,7 +22,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -56,7 +56,7 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -132,7 +132,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -178,7 +178,7 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
@@ -230,7 +230,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
@@ -269,7 +269,7 @@ class WindowsAvailableTimeZonesPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -352,7 +352,7 @@ class WindowsCodePagePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -385,7 +385,7 @@ class WindowsEventLogPublishersPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -439,7 +439,7 @@ class WindowsEventLogSourcesPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -510,7 +510,7 @@ class WindowsHostnamePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -541,7 +541,7 @@ class WindowsLanguagePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -583,7 +583,7 @@ class WindowsMountedDevicesPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -677,7 +677,7 @@ class WindowsProgramDataKnowledgeBasePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
@@ -730,7 +730,7 @@ class WindowsServicesAndDriversPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -794,7 +794,7 @@ class WindowsSystemProductPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -829,7 +829,7 @@ class WindowsSystemVersionPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -855,7 +855,7 @@ class WindowsTimeZonePlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -906,7 +906,7 @@ class WindowsUserAccountsPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.

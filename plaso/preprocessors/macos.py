@@ -47,7 +47,7 @@ class PlistFileArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -97,7 +97,7 @@ class PlistFileArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
@@ -115,7 +115,7 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
@@ -136,7 +136,7 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
@@ -161,7 +161,7 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
@@ -179,7 +179,7 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -232,7 +232,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
