@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for iOS com.apple.identityservices.idstatuscache.plist
-files."""
+"""Plist parser plugin for iOS identity services status cache files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -10,27 +9,30 @@ from plaso.parsers.plist_plugins import interface
 
 
 class IOSIdstatusacheEventData(events.EventData):
-  """iOS com.apple.identityservices.idstatuscache.plist event.
+  """iOS identity services status cache event data.
 
   Attributes:
-    process_name: (str) Name of the process that looked up an identifier.
-    apple_identifier: (str) type and value of the identifier.
+    apple_identifier (str): type and value of the identifier.
     lookup_time (dfdatetime.DateTimeValues): date and time of the lookup.
+    process_name (str)" name of the process that looked up an identifier.
   """
 
   DATA_TYPE = 'ios:idstatuscache:lookup'
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSIdstatusacheEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.process_name = None
+    super(IOSIdstatusacheEventData, self).__init__(data_type=self.DATA_TYPE
     self.apple_identifier = None
     self.lookup_time = None
+    self.process_name = None
 
 
 class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
-  """Plist parser plugin for com.apple.identityservices.idstatuscache.plist
-  files."""
+  """Plist parser plugin for identity services status cache files.
+  
+  Identity services status cache plist files are typically named:
+  com.apple.identityservices.idstatuscache.plist
+  """
 
   NAME = 'io_identityservices_idstatuscache'
   DATA_FORMAT = 'Idstatuscache plist file'
@@ -58,12 +60,13 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
   # pylint: disable=arguments-differ
   def _ParsePlist(
       self, parser_mediator, match=None, top_level=None, **unused_kwargs):
-    """Extract Apple ids queried by process name.
+    """Extracts identity services status cache information from the plist.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+      top_level (Optional[dict[str, object]]): plist top-level item.
     """
     for _, process_name, process_values in self._RecurseKey(top_level, depth=1):
 
