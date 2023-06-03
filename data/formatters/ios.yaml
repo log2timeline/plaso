@@ -33,6 +33,20 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
+data_type: 'ios:datausage:event'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Process Name: {process_name}'
+- 'Wifi In: {wifi_in}'
+- 'Wifi Out: {wifi_out}'
+- 'Wireless Wan In: {wireless_wan_in}'
+- 'Wireless Wan Out: {wireless_wan_out}'
+short_message:
+- 'Process Name: {process_name}'
+short_source: 'HISTORY'
+source: 'iOS data usage database'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
