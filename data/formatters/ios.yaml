@@ -40,7 +40,7 @@ message:
 short_message:
 - 'Apple Identifier: {apple_identifier}'
 short_source: 'PLIST'
-source: 'Apple iOS Identityservices Idstatuscache plist'
+source: 'Apple iOS identity services status cache plist'
 ---
 type: 'conditional'
 data_type: 'ios:kik:messaging'
