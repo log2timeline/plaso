@@ -15,7 +15,7 @@ import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.containers import unified_logging_event
+from plaso.containers import events
 from plaso.helpers import sqlite
 from plaso.helpers.macos import darwin
 from plaso.helpers.macos import dns
@@ -25,14 +25,168 @@ from plaso.helpers.macos import tcp
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.lib.aul import constants
-from plaso.lib.aul import time as aul_time
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers.shared.unified_logging import dsc
 from plaso.parsers.shared.unified_logging import timesync
 from plaso.parsers.shared.unified_logging import uuidtext
+
+
+# ARM Processor Timebase Adjustment
+ARM_TIMEBASE_NUMERATOR = 125
+ARM_TIMEBASE_DENOMINATOR = 3
+
+# Flags
+CURRENT_AID = 0x1
+UNIQUE_PID = 0x10
+PRIVATE_STRING_RANGE = 0x100
+HAS_MESSAGE_IN_UUIDTEXT = 0x0002
+HAS_ALTERNATE_UUID = 0x0008
+HAS_SUBSYSTEM = 0x0200
+HAS_TTL = 0x0400
+HAS_DATA_REF = 0x0800
+HAS_CONTEXT_DATA = 0x1000
+HAS_SIGNPOST_NAME = 0x8000
+
+# Activity Types
+FIREHOSE_LOG_ACTIVITY_TYPE_ACTIVITY = 0x2
+FIREHOSE_LOG_ACTIVITY_TYPE_TRACE = 0x3
+FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY = 0x4
+FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST = 0x6
+FIREHOSE_LOG_ACTIVITY_TYPE_LOSS = 0x7
+
+# Item Types
+FIREHOSE_ITEM_DYNAMIC_PRECISION_TYPE = 0x0
+FIREHOSE_ITEM_NUMBER_TYPES = [0x0, 0x2]
+FIREHOSE_ITEM_STRING_PRIVATE = 0x1
+FIREHOSE_ITEM_PRIVATE_STRING_TYPES = [
+    0x21, 0x25, 0x31, 0x35, 0x41]
+FIREHOSE_ITEM_STRING_TYPES = [
+    0x20, 0x22, 0x30, 0x32, 0x40, 0x42, 0xf2]
+FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES = [
+    0x30, 0x31, 0x32]
+FIREHOSE_ITEM_STRING_BASE64_TYPE = 0xf2
+FIREHOSE_ITEM_PRECISION_TYPES = [0x10, 0x12]
+FIREHOSE_ITEM_SENSITIVE = 0x45
+
+# Log Types
+LOG_TYPES = {
+    0x01: 'Info',
+    0x02: 'Debug',
+    0x03: 'Useraction',
+    0x10: 'Error',
+    0x11: 'Fault',
+    0x40: 'Thread Signpost Event',
+    0x41: 'Thread Signpost Start',
+    0x42: 'Thread Signpost End',
+    0x80: 'Process Signpost Event',
+    0x81: 'Process Signpost Start',
+    0x82: 'Process Signpost End',
+    0xc0: 'System Signpost Event',
+    0xc1: 'System Signpost Start',
+    0xc2: 'System Signpost End'}
+
+# MBR Details Types
+USER_TYPES = [0x24, 0xA0, 0xA4]
+UID_TYPES = [0x23, 0xA3]
+GROUP_TYPES = [0x44]
+GID_TYPES = [0xC3]
+
+
+def GetBootUuidTimeSync(records, uuid):
+  """Retrieves the timesync for a specific boot identifier.
+
+  Args:
+    records (List[timesync_boot_record]): List of Timesync records.
+    uuid (uuid): boot identifier.
+
+  Returns:
+    timesync_boot_record or None if not available.
+  """
+  for ts in records:
+    if ts.boot_uuid == uuid:
+      ts.adjustment = 1
+      # ARM processors.
+      if (
+          ts.timebase_numerator == ARM_TIMEBASE_NUMERATOR
+          and ts.timebase_denominator == ARM_TIMEBASE_DENOMINATOR
+      ):
+        ts.adjustment = ARM_TIMEBASE_NUMERATOR / ARM_TIMEBASE_DENOMINATOR
+      return ts
+  logger.error("Could not find boot uuid {} in Timesync!".format(uuid))
+  return None
+
+
+def FindClosestTimesyncItemInList(
+    sync_records, continuous_time, return_first=False):
+  """Returns the closest timesync item from the provided list without going over
+
+  Args:
+    sync_records (List[timesync_sync_record]): List of timesync boot records.
+    continuous_time (int): The timestamp we're looking for.
+    return_first (Optional[bool]): Whether to return the first largest record.
+
+  Returns:
+    timesync_boot_record or None if not available.
+  """
+  if not sync_records:
+    return None
+
+  i = 1
+  closest_tsi = None
+  for item in sync_records:
+    if item.kernel_continuous_timestamp > continuous_time:
+      if return_first and i == 1:
+        closest_tsi = item
+      break
+    i += 1
+    closest_tsi = item
+
+  return closest_tsi
+
+
+class AULEventData(events.EventData):
+  """Apple Unified Logging (AUL) event data.
+
+  Attributes:
+    activity_id (str): activity identifier.
+    body (str): the log message.
+    boot_uuid (str): unique boot identifier.
+    category (str): event category.
+    creation_time (dfdatetime.DateTimeValues): file entry creation date
+        and time.
+    euid (int): effective user identifier (UID)
+    level (str): level of criticality of the event.
+    library (str): originating library path.
+    library_uuid (str): Unique library identifier.
+    pid (int): process identifier (PID).
+    process (str): originating process path.
+    process_uuid (str): unique process identifier.
+    subsystem (str): subsystem that produced the logging event.
+    thread_identifier (int): thread identifier.
+    ttl (int): log time to live (TTL).
+  """
+  DATA_TYPE = 'macos:unified_logging:event'
+
+  def __init__(self):
+    """Initialise event data."""
+    super(AULEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.activity_id = None
+    self.body = None
+    self.boot_uuid = None
+    self.category = None
+    self.creation_time = None
+    self.euid = None
+    self.level = None
+    self.library = None
+    self.library_uuid = None
+    self.pid = None
+    self.process = None
+    self.process_uuid = None
+    self.subsystem = None
+    self.thread_identifier = None
+    self.ttl = None
 
 
 class AULFormatterFlags(object):
@@ -141,18 +295,18 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Initializes an Apple Unified Logging tracev3 file parser."""
     super(AULParser, self).__init__()
     self._boot_uuid_ts = None
+    self._cached_catalog_files = {}
     self._cached_dsc_files = {}
     self._cached_uuidtext_files = {}
-    self._catalog_files = []
+    self._catalog = None
+    self._catalog_process_entries = {}
     self._dsc_parser = dsc.DSCFileParser()
+    self._header = None
     self._oversize_data = []
     self._timesync_parser = None
     self._tracev3_file_entry = None
     self._uuidtext_file_entry = None
     self._uuidtext_parser = uuidtext.UUIDTextFileParser()
-
-    self.catalog = None
-    self.header = None
 
   def _ExtractAbsoluteStrings(
       self, original_offset, uuid_file_index, proc_info,
@@ -160,10 +314,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """Extracts absolute strings from an uuidtext file.
 
     Args:
-      message_string_reference (int): Offset into file of message string
       original_offset (int): Original offset into file
-      proc_info (tracev3_catalog_process_information_entry): Process Info entry
       uuid_file_index (int): Which UUID file to extract from
+      proc_info (tracev3_catalog_process_information_entry): Process Info entry
+      message_string_reference (int): Offset into file of message string
 
     Returns:
       A uuid_file or a string.
@@ -182,7 +336,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     ]
     if len(absolute_uuids) != 1:
       return '<compose failure [missing precomposed log]>'
-    uuid_file = self.catalog.files[absolute_uuids[0].catalog_uuid_index]
+    uuid_file = self._catalog.files[absolute_uuids[0].catalog_uuid_index]
     return uuid_file
 
   def _ExtractAltUUID(self, uuid):
@@ -197,7 +351,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the requested UUID file was not found.
     """
-    uuid_file = [f for f in self._catalog_files if f.uuid == uuid.hex.upper()]
+    uuid_file = [
+        f for f in self._cached_catalog_files.values()
+        if f.uuid == uuid.hex.upper()]
     if len(uuid_file) != 1:
       logger.error('Couldn\'t find UUID file for {0:s}'.format(
           uuid.hex))
@@ -314,20 +470,33 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       ParseError: if the format flags cannot be parsed.
     """
     ret = AULFormatterFlags()
-    uint16_data_type_map = self._GetDataTypeMap('uint16')
+    uint16_data_type_map = self._GetDataTypeMap('uint16le')
 
-    if flags & self._FORMAT_FLAGS_BITMASK == self._FORMAT_FLAG_HAS_LARGE_OFFSET:
-      ret.large_offset_data = self._ReadStructureFromByteStream(
-        data[offset:], offset, uint16_data_type_map)
-      offset += 2
+    formatter_type = flags & self._FORMAT_FLAGS_BITMASK
 
-      if flags & self._FORMAT_FLAG_HAS_LARGE_SHARED_CACHE:
-        ret.large_shared_cache = self._ReadStructureFromByteStream(
+    if formatter_type == self._FORMAT_FLAG_HAS_FMT_IN_UUID:
+      pass
+
+    elif formatter_type == self._FORMAT_FLAG_HAS_SHARED_CACHE:
+      ret.shared_cache = True
+      if flags & self._FORMAT_FLAG_HAS_LARGE_OFFSET:
+        ret.large_offset_data = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
         offset += 2
 
-    elif flags & self._FORMAT_FLAGS_BITMASK == (
-        self._FORMAT_FLAG_HAS_LARGE_SHARED_CACHE):
+    elif formatter_type == self._FORMAT_FLAG_HAS_ABSOLUTE:
+      ret.absolute = True
+      ret.uuid_file_index = self._ReadStructureFromByteStream(
+        data[offset:], offset, uint16_data_type_map)
+      offset += 2
+
+    elif formatter_type == self._FORMAT_FLAG_HAS_UUID_RELATIVE:
+      data_type_map = self._GetDataTypeMap('uuid_be')
+      ret.uuid_relative = self._ReadStructureFromByteStream(
+          data[offset:], offset, data_type_map)
+      offset += 16
+
+    elif formatter_type == self._FORMAT_FLAG_HAS_LARGE_SHARED_CACHE:
       if flags & self._FORMAT_FLAG_HAS_LARGE_OFFSET:
         ret.large_offset_data = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
@@ -337,34 +506,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         data[offset:], offset, uint16_data_type_map)
       offset += 2
 
-    elif flags & self._FORMAT_FLAGS_BITMASK == self._FORMAT_FLAG_HAS_ABSOLUTE:
-      ret.absolute = True
-      if flags & self._FORMAT_FLAG_HAS_FMT_IN_UUID == 0:
-        ret.uuid_file_index = self._ReadStructureFromByteStream(
-          data[offset:], offset, uint16_data_type_map)
-        offset += 2
-
-    elif flags & self._FORMAT_FLAGS_BITMASK == (
-        self._FORMAT_FLAG_HAS_FMT_IN_UUID):
-      pass
-
-    elif flags & self._FORMAT_FLAGS_BITMASK == (
-        self._FORMAT_FLAG_HAS_SHARED_CACHE):
-      ret.shared_cache = True
-      if flags & self._FORMAT_FLAG_HAS_LARGE_OFFSET:
-        ret.large_offset_data = self._ReadStructureFromByteStream(
-          data[offset:], offset, uint16_data_type_map)
-        offset += 2
-
-    elif flags & self._FORMAT_FLAGS_BITMASK == (
-        self._FORMAT_FLAG_HAS_UUID_RELATIVE):
-      data_type_map = self._GetDataTypeMap('uuid_be')
-      ret.uuid_relative = self._ReadStructureFromByteStream(
-          data[offset:], offset, data_type_map)
-      offset += 16
-
     else:
-      logger.error('Unknown formatter flag')
+      raise errors.ParseError(
+          'Unsupported formatter type: 0x{0:04x}'.format(formatter_type))
 
     ret.offset = offset
     return ret
@@ -421,7 +565,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
       data_item = data[i]
       if (
-          data_item[0] == constants.FIREHOSE_ITEM_DYNAMIC_PRECISION_TYPE
+          data_item[0] == FIREHOSE_ITEM_DYNAMIC_PRECISION_TYPE
           and '%*' in match.group()
       ):
         i += 1
@@ -457,20 +601,20 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       if (
           (
               data_type
-              in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
-              + constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
-              + [constants.FIREHOSE_ITEM_STRING_PRIVATE]
+              in FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+              + FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
+              + [FIREHOSE_ITEM_STRING_PRIVATE]
           )
           and len(raw_data) == 0
           and (
               data_size == 0
               or (
-                  data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE
+                  data_type == FIREHOSE_ITEM_STRING_PRIVATE
                   and data_size == 0x8000
               )
           )
       ) or (
-          data_type == constants.FIREHOSE_ITEM_SENSITIVE
+          data_type == FIREHOSE_ITEM_SENSITIVE
           and custom_specifier == '{sensitive}'
       ):
         output += '<private>'
@@ -485,7 +629,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         continue
 
       if (
-          data_type in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
+          data_type in FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES
           and specifier != 'P'
       ):
         logger.error('Non-P specifier not supported for arbitrary data types')
@@ -497,7 +641,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         number = 0
         if (
             data_size == 0
-            and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
+            and data_type != FIREHOSE_ITEM_STRING_PRIVATE
         ):
           output += 'Invalid specifier'
           logger.error(
@@ -507,7 +651,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           continue
 
         if (
-            data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
+            data_type == FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
           output += '0'  # A private number
         else:
@@ -656,7 +800,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         number = 0
         if (
             data_size == 0
-            and data_type != constants.FIREHOSE_ITEM_STRING_PRIVATE
+            and data_type != FIREHOSE_ITEM_STRING_PRIVATE
         ):
           logger.error(
               'Size 0 in float fmt {0:s} // data {1!s}'.format(
@@ -665,7 +809,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           i += 1
           continue
         if (
-            data_type == constants.FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
+            data_type == FIREHOSE_ITEM_STRING_PRIVATE and not raw_data
         ):
           output += '0'  # A private number
         else:
@@ -695,9 +839,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         specifier = 's'
         chars = ''
         if data_size == 0:
-          if data_type in constants.FIREHOSE_ITEM_STRING_TYPES:
+          if data_type in FIREHOSE_ITEM_STRING_TYPES:
             chars = '(null)'
-          elif data_type & constants.FIREHOSE_ITEM_STRING_PRIVATE:
+          elif data_type & FIREHOSE_ITEM_STRING_PRIVATE:
             chars = '<private>'
         else:
           chars = raw_data
@@ -724,7 +868,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           continue
         if 'uuid_t' in custom_specifier:
           if (
-              data_type in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+              data_type in FIREHOSE_ITEM_PRIVATE_STRING_TYPES
               and not raw_data
           ):
             chars = '<private>'
@@ -733,22 +877,22 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
                                                      uuid_data_type_map)
             chars = str(uuid).upper()
         elif 'odtypes:mbr_details' in custom_specifier:
-          if raw_data[0] in constants.USER_TYPES + constants.GROUP_TYPES:
+          if raw_data[0] in USER_TYPES + GROUP_TYPES:
             user_group_type = self._ReadStructureFromByteStream(
                 raw_data[1:], 1, self._GetDataTypeMap('mbr_user_group_type'))
             mbr_type = 'group'
-            if raw_data[0] in constants.USER_TYPES:
+            if raw_data[0] in USER_TYPES:
               mbr_type = 'user'
             chars = '{0:s}: {1:s}@{2:s}'.format(
                 mbr_type,
                 user_group_type.name,
                 (user_group_type.domain or '<not found>'),
             )
-          elif raw_data[0] in constants.UID_TYPES + constants.GID_TYPES:
+          elif raw_data[0] in UID_TYPES + GID_TYPES:
             uid_gid_type = self._ReadStructureFromByteStream(
                 raw_data[1:], 1, self._GetDataTypeMap('mbr_uid_gid_type'))
             mbr_type = 'group'
-            if raw_data[0] in constants.UID_TYPES:
+            if raw_data[0] in UID_TYPES:
               mbr_type = 'user'
             chars = '{0:s}: {1:d}@{2:s}'.format(
                 mbr_type,
@@ -866,7 +1010,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         output += chars
       elif specifier == 'p':
         if data_size == 0:
-          if data_type & constants.FIREHOSE_ITEM_STRING_PRIVATE:
+          if data_type & FIREHOSE_ITEM_STRING_PRIVATE:
             output += '<private>'
           else:
             logger.error(
@@ -946,12 +1090,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         catalog.files.append(None)
         continue
 
-      for file in self._catalog_files:
-        if file.uuid == filename:
-          found = file
-          found_in_cache = True
-          logger.debug('Found in cache')
-          break
+      found = self._cached_catalog_files.get(filename, None)
+      if found:
+        found_in_cache = True
+        logger.debug('Found in cache')
 
       if not found:
         found = self._GetDSCFile(parser_mediator, filename)
@@ -966,23 +1108,26 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           continue
 
         if not found_in_cache:
-          self._catalog_files.append(found)
+          self._cached_catalog_files[found.uuid] = found
         catalog.files.append(found)
 
       else:
         if not found_in_cache:
-          self._catalog_files.append(found)
+          self._cached_catalog_files[found.uuid] = found
         catalog.files.append(found)
 
     data_type_map = self._GetDataTypeMap(
         'tracev3_catalog_process_information_entry')
-    catalog.process_entries = []
 
     catalog_strings_map = self._GetCatalogSubSystemStringMap(catalog)
+
+    self._catalog_process_entries = {}
 
     for _ in range(catalog.number_of_process_information_entries):
       process_entry, new_bytes = self._ReadStructureFromFileObject(
           file_object, file_offset + offset_bytes, data_type_map)
+
+      offset_bytes += new_bytes
 
       try:
         process_entry.main_uuid = catalog.uuids[process_entry.main_uuid_index]
@@ -1011,8 +1156,13 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
             'Process Entry coalesce: Subsystem {0:s} // Category {1:s}'.format(
                 subsystem_string, category_string))
 
-      catalog.process_entries.append(process_entry)
-      offset_bytes += new_bytes
+      proc_id = '{0:d}@{1:d}'.format(
+          process_entry.first_number_proc_id,
+          process_entry.second_number_proc_id)
+      if proc_id in self._catalog_process_entries:
+        raise errors.ParseError('proc_id: {0:s} already set'.format(proc_id))
+
+      self._catalog_process_entries[proc_id] = process_entry
 
     data_type_map = self._GetDataTypeMap('tracev3_catalog_subchunk')
     catalog.subchunks = []
@@ -1064,7 +1214,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       ParseError: if the chunk set cannot be read.
     """
     compression_algorithm = (
-        self.catalog.subchunks[chunkset_index].compression_algorithm)
+        self._catalog.subchunks[chunkset_index].compression_algorithm)
     if compression_algorithm != self._CATALOG_LZ4_COMPRESSION:
       raise errors.ParseError(
           'Unsupported compression algorithm: {0:s} for chunk: {1:d}'.format(
@@ -1178,7 +1328,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     Args:
       chunk_data (bytes): firehose chunk data.
       data_offset (int): offset of the firehose chunk relative to the start of
-        the chunk set.
+          the chunk set.
 
     Raises:
       ParseError: if the firehose chunk cannot be read.
@@ -1188,17 +1338,14 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     firehose_header = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
 
-    proc_id = firehose_header.second_number_proc_id | (
-        firehose_header.first_number_proc_id << 32)
-    proc_info = [
-        c for c in self.catalog.process_entries
-        if c.second_number_proc_id | (c.first_number_proc_id << 32) == proc_id
-    ]
-    if len(proc_info) == 0:
+    proc_id = '{0:d}@{1:d}'.format(
+        firehose_header.first_number_proc_id,
+        firehose_header.second_number_proc_id)
+
+    proc_info = self._catalog_process_entries.get(proc_id, None)
+    if not proc_info:
       logger.error('Could not find Process Info block for ID: %d', proc_id)
       return
-
-    proc_info = proc_info[0]
 
     private_strings = None
     private_data_len = 0
@@ -1208,11 +1355,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       private_strings = (firehose_header.private_data_virtual_offset,
                          chunk_data[-private_data_len:])
 
-    logger.debug(
-        'Firehose Header Timestamp: %s',
-        aul_time.TimestampFromContTime(
-            self._boot_uuid_ts.sync_records,
-            firehose_header.base_continuous_time))
+    date_time_string = self._TimestampFromContTime(
+        self._boot_uuid_ts.sync_records, firehose_header.base_continuous_time)
+    logger.debug('Firehose Header Timestamp: {0:s}'.format(date_time_string))
 
     tracepoint_map = self._GetDataTypeMap('tracev3_firehose_tracepoint')
     chunk_data_offset = 32
@@ -1238,7 +1383,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       kct = 0
       if firehose_header.base_continuous_time == 0:
         wt = self._boot_uuid_ts.boot_time
-      ts = aul_time.FindClosestTimesyncItemInList(
+      ts = FindClosestTimesyncItemInList(
           self._boot_uuid_ts.sync_records, ct, wt == 0)
       if ts:
         wt = ts.wall_time
@@ -1272,28 +1417,31 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     """
     data_type_map = self._GetDataTypeMap('tracev3_header_chunk')
 
-    self.header, _ = self._ReadStructureFromFileObject(
+    self._header, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, data_type_map)
 
-    logger.debug('Header data: CT {0:d} // Bias {1:d}'.format(
-        self.header.continuous_time, self.header.bias_in_minutes))
-    logger.debug('SI Info: BVS: {0:s} // HMS: {1:s}'.format(
-        self.header.systeminfo_subchunk.systeminfo_subchunk_data
-        .build_version_string, self.header.systeminfo_subchunk
-        .systeminfo_subchunk_data.hardware_model_string))
-    logger.debug('Boot UUID: {0:s}'.format(
-        self.header.generation_subchunk.generation_subchunk_data.boot_uuid.hex))
-    logger.debug('TZ Info: {0:s}'.format(
-        self.header.timezone_subchunk.timezone_subchunk_data.path_to_tzfile))
+    systeminfo_subchunk = self._header.systeminfo_subchunk
+    generation_subchunk = self._header.generation_subchunk
 
-    self._boot_uuid_ts = aul_time.GetBootUuidTimeSync(
+    logger.debug('Header data: CT {0:d} // Bias {1:d}'.format(
+        self._header.continuous_time, self._header.bias_in_minutes))
+    logger.debug('SI Info: BVS: {0:s} // HMS: {1:s}'.format(
+        systeminfo_subchunk.systeminfo_subchunk_data.build_version_string,
+        systeminfo_subchunk.systeminfo_subchunk_data.hardware_model_string))
+
+    logger.debug('Boot UUID: {0:s}'.format(
+        generation_subchunk.generation_subchunk_data.boot_uuid.hex))
+    logger.debug('TZ Info: {0:s}'.format(
+        self._header.timezone_subchunk.timezone_subchunk_data.path_to_tzfile))
+
+    self._boot_uuid_ts = GetBootUuidTimeSync(
         self._timesync_parser.records,
-        self.header.generation_subchunk.generation_subchunk_data.boot_uuid)
-    logger.debug(
-        'Tracev3 Header Timestamp: %s',
-        aul_time.TimestampFromContTime(
-            self._boot_uuid_ts.sync_records,
-            self.header.continuous_time_subchunk.continuous_time_data))
+        generation_subchunk.generation_subchunk_data.boot_uuid)
+
+    date_time_string = self._TimestampFromContTime(
+        self._boot_uuid_ts.sync_records,
+        self._header.continuous_time_subchunk.continuous_time_data)
+    logger.debug('Tracev3 Header Timestamp: {0:s}'.format(date_time_string))
 
   def _ReadItems(self, data_meta, data, offset):
     """Use the metadata and raw data to retrieve the data items."""
@@ -1310,16 +1458,16 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
               data_item.item_type, data_item.item_size
           )
       )
-      if data_item.item_type in constants.FIREHOSE_ITEM_NUMBER_TYPES:
+      if data_item.item_type in FIREHOSE_ITEM_NUMBER_TYPES:
         log_data.append(
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
 
       elif (
           data_item.item_type
-          in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES
-          + constants.FIREHOSE_ITEM_STRING_TYPES
-          + [constants.FIREHOSE_ITEM_STRING_PRIVATE]
+          in FIREHOSE_ITEM_PRIVATE_STRING_TYPES
+          + FIREHOSE_ITEM_STRING_TYPES
+          + [FIREHOSE_ITEM_STRING_PRIVATE]
       ):
         offset -= data_item.item_size
         string_message = self._ReadStructureFromByteStream(
@@ -1331,10 +1479,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
                                     string_message.message_data_size, index))
         index += 1
 
-      elif data_item.item_type in constants.FIREHOSE_ITEM_PRECISION_TYPES:
+      elif data_item.item_type in FIREHOSE_ITEM_PRECISION_TYPES:
         pass
 
-      elif data_item.item_type == constants.FIREHOSE_ITEM_SENSITIVE:
+      elif data_item.item_type == FIREHOSE_ITEM_SENSITIVE:
         log_data.append(
             (data_item.item_type, data_item.item_size, data_item.item))
         index += 1
@@ -1374,8 +1522,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         simpledump_structure.message_string
     ))
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = 'SimpleDump'
@@ -1389,8 +1537,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     logger.debug('Log line: {0!s}'.format(event_data.body))
 
     ct = simpledump_structure.continuous_time
-    ts = aul_time.FindClosestTimesyncItemInList(
-        self._boot_uuid_ts.sync_records, ct, True)
+    ts = FindClosestTimesyncItemInList(
+        self._boot_uuid_ts.sync_records, ct, return_first=True)
     wt = ts.wall_time if ts else 0
     kct = ts.kernel_continuous_timestamp if ts else 0
     time = (
@@ -1440,33 +1588,31 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     except errors.ParseError:
       statedump_structure.string2 = ''
 
-    proc_id = statedump_structure.second_number_proc_id | (
-        statedump_structure.first_number_proc_id << 32)
-    proc_info = [
-        c for c in self.catalog.process_entries
-        if c.second_number_proc_id | (c.first_number_proc_id << 32) == proc_id
-    ]
-    if len(proc_info) == 0:
+    proc_id = '{0:d}@{1:d}'.format(
+        statedump_structure.first_number_proc_id,
+        statedump_structure.second_number_proc_id)
+
+    proc_info = self._catalog_process_entries.get(proc_id, None)
+    if not proc_info:
       logger.error(
           'Could not find Process Info block for ID: {0:d}'.format(proc_id))
       return
-    proc_info = proc_info[0]
 
-    event_data = unified_logging_event.AULEventData()
+    event_data = AULEventData()
     try:
-      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      uuid_file = self._catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
     except (IndexError, AttributeError):
       pass
-    generation_subchunk = self.header.generation_subchunk
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.level = 'StateDump'
 
     ct = statedump_structure.continuous_time
-    ts = aul_time.FindClosestTimesyncItemInList(
-      self._boot_uuid_ts.sync_records, ct, True)
+    ts = FindClosestTimesyncItemInList(
+      self._boot_uuid_ts.sync_records, ct, return_first=True)
     wt = ts.wall_time if ts else 0
     kct = ts.kernel_continuous_timestamp if ts else 0
     time = (
@@ -1595,25 +1741,25 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     activity_id = None
     dsc_range = dsc.DSCRange()
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
-      dsc_file = self.catalog.files[proc_info.catalog_dsc_index]
+      dsc_file = self._catalog.files[proc_info.catalog_dsc_index]
     except IndexError:
       dsc_file = None
 
     try:
-      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      uuid_file = self._catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
     except (AttributeError, IndexError):
       uuid_file = None
 
-    uint32_data_type_map = self._GetDataTypeMap('uint32')
-    uint64_data_type_map = self._GetDataTypeMap('uint64')
+    uint32_data_type_map = self._GetDataTypeMap('uint32le')
+    uint64_data_type_map = self._GetDataTypeMap('uint64le')
 
     if tracepoint.log_type != self._USER_ACTION_ACTIVITY_TYPE:
       activity_id = self._ReadStructureFromByteStream(
@@ -1623,13 +1769,13 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           data[offset:], offset, uint32_data_type_map)
       offset += 4
 
-    if flags & constants.UNIQUE_PID:
+    if flags & UNIQUE_PID:
       unique_pid = self._ReadStructureFromByteStream(
           data[offset:], offset, uint64_data_type_map)
       offset += 8
       logger.debug('Signpost has unique_pid: {0:d}'.format(unique_pid))
 
-    if flags & constants.CURRENT_AID:
+    if flags & CURRENT_AID:
       logger.debug('Activity has current_aid')
       activity_id = self._ReadStructureFromByteStream(
           data, offset, uint32_data_type_map)
@@ -1638,7 +1784,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           data[offset:], offset, uint32_data_type_map)
       offset += 4
 
-    if flags & constants.HAS_SUBSYSTEM:
+    if flags & HAS_SUBSYSTEM:
       logger.debug('Activity has has_other_current_aid')
       activity_id = self._ReadStructureFromByteStream(
           data, offset, uint32_data_type_map)
@@ -1658,7 +1804,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     formatter_flags = self._FormatFlags(flags, data, offset)
     offset = formatter_flags.offset
 
-    if flags & constants.PRIVATE_STRING_RANGE:
+    if flags & PRIVATE_STRING_RANGE:
       logger.error('Activity with Private String Range unsupported')
       return
 
@@ -1679,18 +1825,18 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         logger.error('Unable to parse data items: {0!s}'.format(exception))
         return
 
-      if flags & constants.HAS_CONTEXT_DATA != 0:
+      if flags & HAS_CONTEXT_DATA != 0:
         logger.error('Backtrace data in Activity log chunk unsupported')
         return
 
-      if flags & constants.HAS_DATA_REF:
+      if flags & HAS_DATA_REF:
         logger.error('Activity log chunk with Data Ref unsupported')
         return
 
       for item in deferred_data_items:
         if item[2] == 0:
           result = ''
-        elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
+        elif item[0] in FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
           if not private_string:
             logger.error('Trying to read from empty Private String')
             return
@@ -1702,10 +1848,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           except errors.ParseError:
             result = ''  # Private
         else:
-          if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
+          if item[0] in FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
             result = data[offset + item[1]:offset + item[1] + item[2]]
 
-          elif item[0] == constants.FIREHOSE_ITEM_STRING_BASE64_TYPE:
+          elif item[0] == FIREHOSE_ITEM_STRING_BASE64_TYPE:
             result = base64.encodebytes(
                 data[offset + item[1]:offset + item[1] + item[2]]).strip()
 
@@ -1760,7 +1906,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         fmt = self._ExtractFormatStrings(
             tracepoint.format_string_location, uuid_file)
 
-    event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
+    event_data.level = LOG_TYPES.get(tracepoint.log_type, 'Default')
 
     # Info is 'Create' when it's an Activity
     if tracepoint.log_type == 0x1:
@@ -1815,8 +1961,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
             loss_structure.start_time, loss_structure.end_time,
             loss_structure.count))
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
@@ -1859,28 +2005,28 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     private_string = None
     ttl_value = None
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
-      dsc_file = self.catalog.files[proc_info.catalog_dsc_index]
+      dsc_file = self._catalog.files[proc_info.catalog_dsc_index]
     except (AttributeError, IndexError):
       dsc_file = None
 
     try:
-      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      uuid_file = self._catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
     except (AttributeError, IndexError):
       uuid_file = None
 
     uint8_data_type_map = self._GetDataTypeMap('uint8')
-    uint16_data_type_map = self._GetDataTypeMap('uint16')
-    uint32_data_type_map = self._GetDataTypeMap('uint32')
+    uint16_data_type_map = self._GetDataTypeMap('uint16le')
+    uint32_data_type_map = self._GetDataTypeMap('uint32le')
 
-    if flags & constants.CURRENT_AID:
+    if flags & CURRENT_AID:
       logger.debug('Non-activity has current_aid')
 
       activity_id = self._ReadStructureFromByteStream(
@@ -1895,7 +2041,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         logger.error('Incorrect sentinel value for non-activity')
         return
 
-    if flags & constants.PRIVATE_STRING_RANGE:
+    if flags & PRIVATE_STRING_RANGE:
       logger.debug(
           'Non-activity has private_string_range (has_private_data flag)')
 
@@ -1915,33 +2061,32 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     offset = formatter_flags.offset
 
     subsystem_value = ''
-    if flags & constants.HAS_SUBSYSTEM:
+    if flags & HAS_SUBSYSTEM:
       subsystem_value = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
       offset += 2
       logger.debug('Non-activity has subsystem: {0:d}'.format(subsystem_value))
 
-    if flags & constants.HAS_TTL:
+    if flags & HAS_TTL:
       ttl_value = self._ReadStructureFromByteStream(
           data[offset:], offset, uint8_data_type_map)
       offset += 1
       logger.debug('Non-activity has TTL: {0:d}'.format(ttl_value))
 
-    if flags & constants.HAS_DATA_REF:
+    if flags & HAS_DATA_REF:
       data_ref_id = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
       offset += 1
       logger.debug('Non-activity with data reference: {0:d}'.format(
           data_ref_id))
 
-    if flags & constants.HAS_SIGNPOST_NAME:
+    if flags & HAS_SIGNPOST_NAME:
       logger.error('Non-activity signpost not supported')
       return
 
-    if flags & constants.HAS_MESSAGE_IN_UUIDTEXT:
+    if flags & HAS_MESSAGE_IN_UUIDTEXT:
       logger.debug('Non-activity has message in UUID Text file')
-      if (flags & constants.HAS_ALTERNATE_UUID and
-          flags & constants.HAS_SIGNPOST_NAME):
+      if (flags & HAS_ALTERNATE_UUID and flags & HAS_SIGNPOST_NAME):
         logger.error(
             'Non-activity with Alternate UUID and Signpost not supported')
         return
@@ -1949,11 +2094,11 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         logger.error(
             'Unable to continue without matching UUID file')
         return
-      if flags & constants.HAS_SIGNPOST_NAME:
+      if flags & HAS_SIGNPOST_NAME:
         logger.error('Non-activity signpost not supported (2)')
         return
 
-    if flags & constants.PRIVATE_STRING_RANGE:
+    if flags & PRIVATE_STRING_RANGE:
       if private_strings:
         string_start = private_strings_offset - private_strings[0]
         if string_start > len(private_strings[1] or string_start < 0):
@@ -1965,8 +2110,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         logger.error('Private strings wanted but not supplied')
         return
 
-    if tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS):
+    if tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
       logger.error('Loss Type not supported')
       return
 
@@ -1979,14 +2123,14 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         'After activity data: Unknown {0:d} // Number of Items {1:d}'.format(
             data_meta.unknown1, data_meta.num_items))
     try:
-      (log_data, deferred_data_items,
-      offset) = self._ReadItems(data_meta, data, offset)
+      (log_data, deferred_data_items, offset) = self._ReadItems(
+          data_meta, data, offset)
     except errors.ParseError as exception:
       logger.error('Unable to parse data items: {0!s}'.format(exception))
       return
 
     backtrace_strings = []
-    if flags & constants.HAS_CONTEXT_DATA != 0 and len(data[offset:]) >= 6:
+    if flags & HAS_CONTEXT_DATA != 0 and len(data[offset:]) >= 6:
       logger.debug('Backtrace data in Firehose log chunk')
       backtrace_strings = ['Backtrace:\n']
 
@@ -2012,11 +2156,11 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         continue
       if item[2] == 0:
         result = ""
-      elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
+      elif item[0] in FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         if not private_string:
           logger.error('Trying to read from empty Private String')
           return
-        if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
+        if item[0] in FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
           result = private_string[item[1]:item[1] + item[2]]
         else:
           data_type_map = self._GetDataTypeMap('cstring')
@@ -2024,7 +2168,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
               private_string[item[1]:], 0, data_type_map)
           logger.debug('End result: {0:s}'.format(result))
 
-      elif item[0] == constants.FIREHOSE_ITEM_STRING_PRIVATE:
+      elif item[0] == FIREHOSE_ITEM_STRING_PRIVATE:
         # TODO: flip logic to reduce unnecessary indentation
         if not private_string:
           # A <private> string
@@ -2037,10 +2181,10 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         else:
           result = private_string[item[1]:item[1] + item[2]]
       else:
-        if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
+        if item[0] in FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
           result = data[offset + item[1]:offset + item[1] + item[2]]
 
-        elif item[0] == constants.FIREHOSE_ITEM_STRING_BASE64_TYPE:
+        elif item[0] == FIREHOSE_ITEM_STRING_BASE64_TYPE:
           result = base64.encodebytes(data[offset + item[1]:offset + item[1] +
                                            item[2]]).strip()
         else:
@@ -2056,10 +2200,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
 
       log_data.insert(item[3], (item[0], item[2], result))
 
-    if (
-        tracepoint.log_activity_type
-        == constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS
-    ):
+    if tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
       logger.error('Loss Type not supported')
       return
 
@@ -2143,7 +2284,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
           tracepoint.format_string_location, uuid)
 
     event_data.thread_identifier = tracepoint.thread_identifier
-    event_data.level = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
+    event_data.level = LOG_TYPES.get(tracepoint.log_type, 'Default')
     if activity_id:
       event_data.activity_id = hex(activity_id)
     if ttl_value:
@@ -2230,7 +2371,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         oversize_strings.append((item[0], item[2], ""))
         continue
 
-      if item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
+      if item[0] in FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         logger.debug('Private Oversize')
         private_items.append((item, index))
         oversize_strings.insert(index, (item[0], item[2], '<private>'))
@@ -2285,20 +2426,20 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     private_string = None
     ttl_value = None
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
     event_data.pid = proc_info.pid
     event_data.euid = proc_info.euid
 
     try:
-      dsc_file = self.catalog.files[proc_info.catalog_dsc_index]
+      dsc_file = self._catalog.files[proc_info.catalog_dsc_index]
     except IndexError:
       dsc_file = None
 
     try:
-      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      uuid_file = self._catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
     except IndexError:
@@ -2309,7 +2450,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     uint32_data_type_map = self._GetDataTypeMap('uint32')
     uint64_data_type_map = self._GetDataTypeMap('uint64')
 
-    if flags & constants.CURRENT_AID:
+    if flags & CURRENT_AID:
       logger.debug('Signpost has current_aid')
       activity_id = self._ReadStructureFromByteStream(
           data, offset, uint32_data_type_map)
@@ -2323,7 +2464,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       _ = activity_id
       _ = sentinel
 
-    if flags & constants.PRIVATE_STRING_RANGE:
+    if flags & PRIVATE_STRING_RANGE:
       logger.debug('Signpost has private_string_range (has_private_data flag)')
 
       private_strings_offset = self._ReadStructureFromByteStream(
@@ -2342,7 +2483,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     offset = formatter_flags.offset
 
     subsystem_value = ''
-    if flags & constants.HAS_SUBSYSTEM:
+    if flags & HAS_SUBSYSTEM:
       subsystem_value = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
       offset += 2
@@ -2352,26 +2493,26 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         data[offset:], offset, uint64_data_type_map)
     offset += 8
 
-    if flags & constants.HAS_TTL:
+    if flags & HAS_TTL:
       ttl_value = self._ReadStructureFromByteStream(
           data[offset:], offset, uint8_data_type_map)
       offset += 1
       logger.debug('Signpost has TTL: {0:d}'.format(ttl_value))
 
-    if flags & constants.HAS_DATA_REF:
+    if flags & HAS_DATA_REF:
       data_ref_id = self._ReadStructureFromByteStream(
           data[offset:], offset, uint16_data_type_map)
       offset += 1
       logger.debug('Signpost with data reference: {0:d}'.format(data_ref_id))
 
-    if flags & constants.HAS_SIGNPOST_NAME:
+    if flags & HAS_SIGNPOST_NAME:
       signpost_name = self._ReadStructureFromByteStream(
           data[offset:], offset, uint32_data_type_map)
       offset += 4
       if formatter_flags.large_shared_cache != 0:
         offset += 2
 
-    if flags & constants.PRIVATE_STRING_RANGE:
+    if flags & PRIVATE_STRING_RANGE:
       if private_strings:
         string_start = private_strings_offset - private_strings[0]
         if string_start > len(private_strings[1] or string_start < 0):
@@ -2398,14 +2539,14 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       logger.error('Unable to parse data items: {0!s}'.format(exception))
       return
 
-    if flags & constants.HAS_CONTEXT_DATA != 0:
+    if flags & HAS_CONTEXT_DATA != 0:
       logger.error('Backtrace data in Signpost log chunk')
       return
 
     for item in deferred_data_items:
       if item[2] == 0:
         result = ''
-      elif item[0] in constants.FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
+      elif item[0] in FIREHOSE_ITEM_PRIVATE_STRING_TYPES:
         if not private_string:
           logger.error('Trying to read from empty Private String')
           return
@@ -2417,9 +2558,9 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         except errors.ParseError:
           result = ''  # Private
       else:
-        if item[0] in constants.FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
+        if item[0] in FIREHOSE_ITEM_STRING_ARBITRARY_DATA_TYPES:
           result = data[offset + item[1]:offset + item[1] + item[2]]
-        elif item[0] == constants.FIREHOSE_ITEM_STRING_BASE64_TYPE:
+        elif item[0] == FIREHOSE_ITEM_STRING_BASE64_TYPE:
           result = base64.encodebytes(data[offset + item[1]:offset + item[1] +
                                            item[2]]).strip()
         else:
@@ -2546,9 +2687,8 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       TODO:
     """
     logger.debug('Parsing log line')
-    log_type = constants.LOG_TYPES.get(tracepoint.log_type, 'Default')
-    if tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY):
+    log_type = LOG_TYPES.get(tracepoint.log_type, 'Default')
+    if tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_NONACTIVITY:
       if log_type == 0x80:
         logger.error('Non Activity Signpost not supported')
         return
@@ -2556,21 +2696,17 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
       self._ParseNonActivityChunk(
           parser_mediator, tracepoint, proc_info, time, private_strings)
 
-    elif tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST):
+    elif tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_SIGNPOST:
       self._ParseSignpostChunk(
           parser_mediator, tracepoint, proc_info, time, private_strings)
 
-    elif tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_ACTIVITY):
+    elif tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_ACTIVITY:
       self._ParseActivityChunk(parser_mediator, tracepoint, proc_info, time)
 
-    elif tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_LOSS):
+    elif tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_LOSS:
       self._ParseLoss(parser_mediator, tracepoint, proc_info, time)
 
-    elif tracepoint.log_activity_type == (
-        constants.FIREHOSE_LOG_ACTIVITY_TYPE_TRACE):
+    elif tracepoint.log_activity_type == FIREHOSE_LOG_ACTIVITY_TYPE_TRACE:
       self._ParceTrace(parser_mediator, tracepoint, proc_info, time)
 
     elif tracepoint.log_activity_type == 0x0:
@@ -2596,13 +2732,13 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     logger.debug('Reading Trace')
     data = tracepoint.data
 
-    event_data = unified_logging_event.AULEventData()
-    generation_subchunk = self.header.generation_subchunk
+    event_data = AULEventData()
+    generation_subchunk = self._header.generation_subchunk
     generation_subchunk_data = generation_subchunk.generation_subchunk_data
     event_data.boot_uuid = generation_subchunk_data.boot_uuid.hex.upper()
 
     try:
-      uuid_file = self.catalog.files[proc_info.main_uuid_index]
+      uuid_file = self._catalog.files[proc_info.main_uuid_index]
       event_data.process_uuid = uuid_file.uuid
       event_data.process = uuid_file.library_path
     except (AttributeError, IndexError):
@@ -2619,7 +2755,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     if len(data[offset:]) < 4:
       logger.warning('Insufficent trace data')
     else:
-      item_data = data[offset:offset+2]
+      item_data = data[offset:offset + 2]
       offset += 2
 
     format_string = self._ExtractFormatStrings(
@@ -2641,6 +2777,26 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
     event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=int(time))
     parser_mediator.ProduceEventData(event_data)
+
+  def _TimestampFromContTime(self, boot_uuid_ts_list, ct):
+    """Converts a continuous time into a Date Time string.
+
+    Args:
+      boot_uuid_ts_list (List[timesync_sync_record]): List of
+          timesync boot records.
+      ct (int): A continuous time stamp.
+
+    Returns:
+      str: date time string or "N/A" if not available.
+    """
+    ts = FindClosestTimesyncItemInList(boot_uuid_ts_list, ct)
+    time_string = 'N/A'
+    if ts is not None:
+      time = ts.wall_time + ct - ts.kernel_continuous_timestamp
+      date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+          timestamp=int(time))
+      time_string = date_time.CopyToDateTimeString()
+    return time_string
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -2720,7 +2876,7 @@ class AULParser(interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
         self._ReadHeaderChunk(file_object, file_offset)
 
       elif chunk_header.chunk_tag == self._CHUNK_TAG_CATALOG:
-        self.catalog = self._ReadCatalog(
+        self._catalog = self._ReadCatalog(
             parser_mediator, file_object, file_offset)
         chunkset_index = 0
 

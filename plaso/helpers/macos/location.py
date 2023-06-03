@@ -5,7 +5,6 @@ import os
 
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.lib.aul import constants
 
 
 class ClientAuthStatusHelper(object):
@@ -118,6 +117,9 @@ class LocationManagerStateTrackerParser(dtfabric_helper.DtFabricHelper):
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'location.yaml')
 
+  # Legal LocationManagerStateTracker Size values
+  _LEGAL_LOCATION_SIZES = [64, 72]
+
   def Parse(self, size, data):
     """Parses given data of a given size as a LocationManagerStateTracker chunk.
 
@@ -132,9 +134,9 @@ class LocationManagerStateTrackerParser(dtfabric_helper.DtFabricHelper):
     Raises:
       ParseError: if the data cannot be parsed.
     """
-    if size not in constants.LEGAL_LOCATION_SIZES:
+    if size not in self._LEGAL_LOCATION_SIZES:
       raise errors.ParseError(
-        'Possibly corrupted CLLocationManagerStateTracker block')
+          'Possibly corrupted CLLocationManagerStateTracker block')
 
     data_type_map = self._GetDataTypeMap('location_manager_state_data')
 
