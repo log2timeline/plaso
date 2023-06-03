@@ -69,7 +69,6 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     for _, process_name, process_values in self._RecurseKey(top_level, depth=1):
-
       if process_name == 'CacheVersion':
         continue
 
