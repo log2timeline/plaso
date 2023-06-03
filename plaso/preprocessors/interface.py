@@ -36,7 +36,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -53,7 +53,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       artifact_definition (artifacts.ArtifactDefinition): artifact definition.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
@@ -62,6 +62,8 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
     Raises:
       PreProcessFail: if the preprocessing fails.
     """
+    last_exception = None
+
     for source in artifact_definition.sources:
       if source.type_indicator not in (
           artifact_definitions.TYPE_INDICATOR_FILE,
@@ -74,9 +76,19 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
             location_separator=source.separator)
 
         for path_specification in searcher.Find(find_specs=[find_spec]):
-          self._ParsePathSpecification(
-              mediator, searcher, file_system, path_specification,
-              source.separator)
+          try:
+            self._ParsePathSpecification(
+                mediator, searcher, file_system, path_specification,
+                source.separator)
+
+            last_exception = None
+          except errors.PreProcessFail as exception:
+            last_exception = exception
+
+    if last_exception:
+      # Only raise an exception if none of the sources were successfully
+      # pre-processed.
+      raise last_exception
 
 
 class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
@@ -92,7 +104,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -107,7 +119,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
           the file system.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -149,7 +161,7 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
@@ -162,7 +174,7 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
@@ -191,7 +203,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -206,7 +218,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       artifact_definition (artifacts.ArtifactDefinition): artifact definition.
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
@@ -265,7 +277,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value or None if not
           specified.
@@ -292,7 +304,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
       value_data (object): Windows Registry value data.
 
     Raises:
@@ -314,7 +326,7 @@ class KnowledgeBasePreprocessorPlugin(object):
 
     Args:
       mediator (PreprocessMediator): mediates interactions between preprocess
-          plugins and other components, such as storage and knowledge base.
+          plugins and other components, such as storage.
 
     Raises:
       PreProcessFail: if the preprocessing fails.
