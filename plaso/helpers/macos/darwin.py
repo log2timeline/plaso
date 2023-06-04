@@ -2,13 +2,14 @@
 """MacOS Darwin helpers."""
 
 
-class DarwinErrorHelper(object):
-  """Darwin Error helper.
+class DarwinSystemErrorHelper(object):
+  """Darwin system error helper.
 
-  Also see: https://github.com/apple/darwin-xnu/blob/main/bsd/sys/errno.h
+  Also see:
+    https://github.com/apple/darwin-xnu/blob/main/bsd/sys/errno.h
   """
 
-  _DARWIN_ERRORS = {
+  _ERROR_CODES = {
       -1: 'Restart syscall',
       -2: 'Don\'t modify regs, just return',
       -5: 'Restart lookup under heavy vnode pressure/recycling',
@@ -124,13 +125,13 @@ class DarwinErrorHelper(object):
       106: 'Interface output queue is full, Must be equal largest errno'}
 
   @classmethod
-  def GetError(cls, code):
-    """Retrieves the description for a specific error.
+  def GetDescription(cls, error_code):
+    """Retrieves the description of a specific error code.
 
     Args:
-      code (int): error code.
+      error_code (int): error code.
 
     Returns:
       str: description of the error.
     """
-    return cls._DARWIN_ERRORS.get(code, 'UNKNOWN: {0:d}'.format(code))
+    return cls._ERROR_CODES.get(error_code, 'UNKNOWN: {0:d}'.format(error_code))

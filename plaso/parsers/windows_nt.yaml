@@ -1,0 +1,55 @@
+# dtFabric format specification.
+---
+name: windows_nt
+type: format
+description: Windows NT data types
+urls: ["https://github.com/libyal/libfwnt/blob/main/documentation/Security%20Descriptor.asciidoc"]
+---
+name: uint8
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint16be
+type: integer
+attributes:
+  byte_order: big-endian
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32be
+type: integer
+attributes:
+  byte_order: big-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: windows_nt_security_identifier
+type: structure
+description: Windows NT security identifier (SID)
+attributes:
+  byte_order: little-endian
+members:
+- name: revision_number
+  data_type: uint8
+- name: number_of_sub_authorities
+  data_type: uint8
+- name: authority_upper
+  data_type: uint16be
+- name: authority_lower
+  data_type: uint32be
+- name: sub_authorities
+  type: sequence
+  element_data_type: uint32
+  number_of_elements: windows_nt_security_identifier.number_of_sub_authorities

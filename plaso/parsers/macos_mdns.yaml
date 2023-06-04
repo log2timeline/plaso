@@ -1,0 +1,66 @@
+# dtFabric format specification.
+---
+name: macos_mdns
+type: format
+description: MacOS mDNS (Multicast DNS)
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: mdsn_dns_counters
+type: structure
+description: mDNS DNS counters
+attributes:
+  byte_order: little-endian
+members:
+- name: number_of_additional_records
+  data_type: uint16
+- name: number_of_authority_records
+  data_type: uint16
+- name: number_of_answers
+  data_type: uint16
+- name: number_of_questions
+  data_type: uint16
+---
+name: mdsn_dns_header
+type: structure
+description: mDNS DNS header
+attributes:
+  byte_order: big-endian
+members:
+- name: identifier
+  data_type: uint16
+- name: flags
+  data_type: uint16
+- name: number_of_questions
+  data_type: uint16
+- name: number_of_answers
+  data_type: uint16
+- name: number_of_authority_records
+  data_type: uint16
+- name: number_of_additional_records
+  data_type: uint16
+---
+name: mdsn_dns_identifier_and_flags
+type: structure
+description: mDNS DNS identifier and flags
+attributes:
+  byte_order: little-endian
+members:
+- name: flags
+  data_type: uint16
+- name: identifier
+  data_type: uint16
+- name: unknown1
+  data_type: uint32

@@ -2,7 +2,7 @@
 ---
 name: aul_dsc
 type: format
-description: Apple Unified Logging shared-cache strings (dsc) format
+description: Apple Unified Logging (AUL) shared-cache strings (DSC) format
 urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
 ---
 name: byte
@@ -18,12 +18,6 @@ attributes:
   format: signed
   size: 1
   units: bytes
----
-name: cstring
-type: string
-encoding: utf8
-element_data_type: char
-elements_terminator: "\x00"
 ---
 name: uint16
 type: integer
@@ -45,6 +39,12 @@ attributes:
   format: unsigned
   size: 8
   units: bytes
+---
+name: cstring
+type: string
+encoding: utf8
+element_data_type: char
+elements_terminator: "\x00"
 ---
 name: uuid_be
 type: uuid
@@ -91,7 +91,7 @@ members:
   data_type: uint32
 - name: text_size
   data_type: uint32
-- name: sender_identifier
+- name: image_identifier
   data_type: uuid_be
 - name: path_offset
   data_type: uint32
@@ -106,7 +106,7 @@ members:
   data_type: uint64
 - name: text_size
   data_type: uint32
-- name: sender_identifier
+- name: image_identifier
   data_type: uuid_be
 - name: path_offset
   data_type: uint32
