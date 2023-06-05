@@ -2484,25 +2484,15 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return dsc_file
 
-  def _OpenTimesyncDatabaseFile(self, filename):
+  def _OpenTimesyncDatabaseFile(self, file_entry):
     """Opens a specific timesync database file.
 
     Args:
-      filename (str): name of the timesync database file.
+      file_entry (dfvfs.FileEntry): file entry of the timesync database file.
 
     Returns:
       TimesyncDatabaseFile: a timesync database file or None if not available.
     """
-    if not self._timesync_path:
-      return None
-
-    timesync_file_path = self._file_system.JoinPath([
-        self._timesync_path, filename])
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        self._file_entry.type_indicator, location=timesync_file_path,
-        parent=self._file_entry.path_spec.parent)
-    file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
     if not file_entry:
       return None
 
@@ -3383,14 +3373,14 @@ class TraceV3File(BaseUnifiedLoggingFile):
     if not file_entry:
       return
 
-    for directory_entry in file_entry.sub_file_entries:
+    for sub_file_entry in file_entry.sub_file_entries:
       if self._timesync_boot_record:
         break
 
-      if not directory_entry.endswith('.timesync'):
+      if not sub_file_entry.name.endswith('.timesync'):
         continue
 
-      timesync_file = self._OpenTimesyncDatabaseFile(directory_entry)
+      timesync_file = self._OpenTimesyncDatabaseFile(sub_file_entry)
 
       for record in timesync_file.ReadRecords():
         record_boot_identifier = getattr(record, 'boot_identifier', None)
@@ -3488,12 +3478,23 @@ class TraceV3File(BaseUnifiedLoggingFile):
     # * in ../timesync/ for *.logarchive/logdata.LiveData.tracev3
     # * in ../../timesync/ for .logarchive/*/*.tracev3
     # * in ../../timesync/ for /private/var/db/diagnostics/*/*.tracev3
+    # * in ../timesync/ for /private/var/db/diagnostics/*/*.tracev3
     path_segments.append('timesync')
+
     timesync_path = self._file_system.JoinPath(path_segments)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         self._file_entry.type_indicator, location=timesync_path,
         parent=self._file_entry.path_spec.parent)
+    if not self._file_system.FileEntryExistsByPathSpec(path_spec):
+      path_segments.insert(-1, 'diagnostics')
+
+      timesync_path = self._file_system.JoinPath(path_segments)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          self._file_entry.type_indicator, location=timesync_path,
+          parent=self._file_entry.path_spec.parent)
+
     if self._file_system.FileEntryExistsByPathSpec(path_spec):
       self._timesync_path = timesync_path
 
@@ -3752,6 +3753,7 @@ class UnifiedLoggingParser(interface.FileEntryParser):
     """
     file_system = file_entry.GetFileSystem()
 
+    # TODO: add oversize chunk support
     # TODO: extract timesync events
     # TODO: extract SimpleDump events
     # TODO: extract StateDump events
