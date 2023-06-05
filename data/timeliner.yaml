@@ -668,8 +668,8 @@ place_holder_event: true
 ---
 data_type: 'macos:unified_logging:event'
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'macos:bluetooth:entry'

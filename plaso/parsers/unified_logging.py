@@ -29,19 +29,22 @@ class UnifiedLoggingEventData(events.EventData):
   """Apple Unified Logging (AUL) event data.
 
   Attributes:
-    activity_id (str): activity identifier.
-    body (str): the log message.
-    boot_uuid (str): unique boot identifier.
+    activity_identifier (int): activity identifier.
+    boot_identifier (str): boot identifier.
     category (str): event category.
-    creation_time (dfdatetime.DateTimeValues): file entry creation date
-        and time.
     euid (int): effective user identifier (UID)
-    level (str): level of criticality of the event.
-    library (str): originating library path.
-    library_uuid (str): Unique library identifier.
+    event_message (str): event message.
+    event_type (str): event type.
+    message_type (str): message type.
     pid (int): process identifier (PID).
-    process (str): originating process path.
-    process_uuid (str): unique process identifier.
+    process_image_identifier (str): process image identifier.
+    process_image_identifier (str): process image identifier, contains an UUID.
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+        recorded.
+    sender_image_identifier (str): (sender) image identifier, contains an UUID.
+    sender_image_path (str): path of the (sender) image.
+    signpost_identifier (int): signpost identifier.
+    signpost_name (str): signpost name.
     subsystem (str): subsystem that produced the logging event.
     thread_identifier (int): thread identifier.
     ttl (int): log time to live (TTL).
@@ -51,18 +54,21 @@ class UnifiedLoggingEventData(events.EventData):
   def __init__(self):
     """Initialise event data."""
     super(UnifiedLoggingEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.activity_id = None
-    self.body = None
-    self.boot_uuid = None
+    self.activity_identifier = None
+    self.boot_identifier = None
     self.category = None
-    self.creation_time = None
     self.euid = None
-    self.level = None
-    self.library = None
-    self.library_uuid = None
+    self.event_message = None
+    self.event_type = None
+    self.message_type = None
     self.pid = None
-    self.process = None
-    self.process_uuid = None
+    self.process_image_identifier = None
+    self.process_image_path = None
+    self.recorded_time = None
+    self.sender_image_identifier = None
+    self.sender_image_path = None
+    self.signpost_identifier = None
+    self.signpost_name = None
     self.subsystem = None
     self.thread_identifier = None
     self.ttl = None
@@ -135,7 +141,7 @@ class LogEntry(object):
   Attributes:
     activity_identifier (int): activity identifier.
     backtrace_frames (list[BacktraceFrame]): backtrace frames.
-    boot_identifier (str): boot identifier (UUID).
+    boot_identifier (uuid.UUID): boot identifier.
     category (str): (sub system) category.
     creator_activity_identifier (int): creator activity identifier.
     event_message (str): event message.
@@ -145,9 +151,9 @@ class LogEntry(object):
     message_type (str): message type.
     parent_activity_identifier (int): parent activity identifier.
     process_identifier (int): process identifier (PID).
-    process_image_identifier (str): process image identifier, contains an UUID.
+    process_image_identifier (uuid.UUID): process image identifier.
     process_image_path (str): path of the process image.
-    sender_image_identifier (str): (sender) image identifier, contains an UUID.
+    sender_image_identifier (uuid.UUID): (sender) image identifier.
     sender_image_path (str): path of the (sender) image.
     sender_program_counter (int): (sender) program counter.
     signpost_identifier (int): signpost identifier.
@@ -3754,10 +3760,11 @@ class UnifiedLoggingParser(interface.FileEntryParser):
     file_system = file_entry.GetFileSystem()
 
     # TODO: add oversize chunk support
-    # TODO: extract timesync events
     # TODO: extract SimpleDump events
-    # TODO: extract StateDump events
     # TODO: extract Loss events
+
+    # TODO: extract timesync events
+    # TODO: extract StateDump events
     # TODO: extract Trace events
 
     tracev3_file = TraceV3File(file_system=file_system)
@@ -3771,23 +3778,26 @@ class UnifiedLoggingParser(interface.FileEntryParser):
     try:
       for log_entry in tracev3_file.ReadLogEntries():
         event_data = UnifiedLoggingEventData()
-        event_data.activity_id = (
+        event_data.activity_identifier = (
             log_entry.activity_identifier &
             tracev3_file.ACTIVITY_IDENTIFIER_BITMASK)
-        event_data.body = log_entry.event_message
-        event_data.boot_uuid = str(log_entry.boot_identifier).upper()
+        event_data.boot_identifier = str(log_entry.boot_identifier).upper()
         event_data.category = log_entry.category
-        event_data.creation_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
-            timestamp=log_entry.timestamp)
         event_data.euid = None
-        event_data.level = log_entry.message_type
-        event_data.library = log_entry.sender_image_path
-        event_data.library_uuid = str(
-            log_entry.sender_image_identifier).upper()
+        event_data.event_message = log_entry.event_message
+        event_data.event_type = log_entry.event_type
+        event_data.message_type = log_entry.message_type
         event_data.pid = log_entry.process_identifier
-        event_data.process = log_entry.process_image_path
-        event_data.process_uuid = str(
+        event_data.process_image_identifier = str(
             log_entry.process_image_identifier).upper()
+        event_data.process_image_path = log_entry.process_image_path
+        event_data.recorded_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
+            timestamp=log_entry.timestamp)
+        event_data.signpost_identifier = log_entry.signpost_identifier
+        event_data.signpost_name = log_entry.signpost_name
+        event_data.sender_image_identifier = str(
+            log_entry.sender_image_identifier).upper()
+        event_data.sender_image_path = log_entry.sender_image_path
         event_data.subsystem = log_entry.sub_system
         event_data.thread_identifier = log_entry.thread_identifier
         event_data.ttl = log_entry.ttl
