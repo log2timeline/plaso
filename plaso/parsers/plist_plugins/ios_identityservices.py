@@ -40,23 +40,6 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
   PLIST_PATH_FILTERS = frozenset([interface.PlistPathFilter(
       'com.apple.identityservices.idstatuscache.plist')])
 
-  def _GetDateTimeValueFromPlistKey(self, plist_key, plist_value_name):
-    """Retrieves a date and time value from a specific value in a plist key.
-
-    Args:
-      plist_key (object): plist key.
-      plist_value_name (str): name of the value in the plist key.
-
-    Returns:
-      dfdatetime.TimeElementsInMicroseconds: date and time or None if not
-          available.
-    """
-    timestamp = plist_key.get(plist_value_name, None)
-    if not timestamp:
-      return None
-
-    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
   # pylint: disable=arguments-differ
   def _ParsePlist(
       self, parser_mediator, match=None, top_level=None, **unused_kwargs):
@@ -76,8 +59,9 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
         event_data = IOSIdstatusacheEventData()
         event_data.process_name = process_name
         event_data.apple_identifier = apple_identifier
-        event_data.lookup_time = self._GetDateTimeValueFromPlistKey(
-          apple_identifier_values, 'LookupDate')
+        timestamp = apple_identifier_values.get('LookupDate')
+        event_data.lookup_time = dfdatetime_cocoa_time.CocoaTime(
+            timestamp=timestamp)
 
         parser_mediator.ProduceEventData(event_data)
 
