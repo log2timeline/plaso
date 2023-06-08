@@ -487,6 +487,12 @@ attribute_mappings:
   description: 'Lookup Time'
 place_holder_event: true
 ---
+data_type: 'ios:datausage:event'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'ios:kik:messaging'
 attribute_mappings:
 - name: 'received_time'
