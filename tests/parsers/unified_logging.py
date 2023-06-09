@@ -32,58 +32,9 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER,
         parent=test_path_spec, volume_index=0)
 
-  def testSpecialParsing(self):
-    """Tests the Parse function on a Special tracev3 file."""
-    test_file_path = (
-        '/private/var/db/Diagnostics/Special/0000000000000001.tracev3')
-    test_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
-        parent=self._parent_path_spec)
-
-    parser = unified_logging.UnifiedLoggingParser()
-    storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
-
-    number_of_events = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    # self.assertEqual(number_of_events, 12154)
-    self.assertEqual(number_of_events, 12134)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    expected_event_values = {
-        'activity_identifier': 0,
-        'boot_identifier': 'DCA6F382-13F5-4A21-BF2B-4F1BE8B136BD',
-        'data_type': 'macos:unified_logging:event',
-        # 'euid': 0,
-        'event_message': (
-            'Failed to look up the port for "com.apple.windowserver.active" '
-            '(1102)'),
-        'event_type': 'logEvent',
-        'message_type': 'Default',
-        'pid': 24,
-        'process_image_identifier': '36B63A88-3FE7-30FC-B7BA-46C45DD6B7D8',
-        'process_image_path': '/usr/libexec/UserEventAgent',
-        # 'recorded_time': '2023-01-12T01:36:27.111432704+00:00',
-        'recorded_time': '2023-01-12T01:36:27.098762953+00:00',
-        'sender_image_identifier': 'C0FDF86C-F960-37A3-A380-DB8700D43801',
-        'sender_image_path': (
-            '/System/Library/PrivateFrameworks/'
-            'SkyLight.framework/Versions/A/SkyLight'),
-        'subsystem': 'com.apple.SkyLight',
-        'thread_identifier': 0x7d1}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
-    self.CheckEventData(event_data, expected_event_values)
-
   @unittest.skip('slow test: 113.768s')
-  def testPersistParsing(self):
-    """Tests the Parse function on a Persist tracev3 file."""
+  def testParseWithPersistTraceV3(self):
+    """Tests the Parse function with a Persist tracev3 file."""
     test_file_path = (
         '/private/var/db/Diagnostics/Persist/0000000000000001.tracev3')
     test_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -126,8 +77,8 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 22)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testSignpostParsing(self):
-    """Tests the Parse function on a Signpost tracev3 file."""
+  def testParseWithSignpostTraceV3(self):
+    """Tests the Parse function with a Signpost tracev3 file."""
     test_file_path = (
         '/private/var/db/Diagnostics/Signpost/0000000000000001.tracev3')
     test_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -139,7 +90,7 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_events, 2461)
+    self.assertEqual(number_of_events, 2466)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -166,14 +117,62 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         'process_image_identifier': '5FCEBDDD-0174-3777-BB92-E98174383008',
         'process_image_path': '/usr/libexec/kernelmanagerd',
         # 'recorded_time': '2023-01-12T01:36:31.338352128+00:00',
-        'recorded_time': '2023-01-12T01:36:31.258051782+00:00',
+        'recorded_time': '2023-01-12T01:36:31.338352250+00:00',
         'sender_image_identifier': '5FCEBDDD-0174-3777-BB92-E98174383008',
         'sender_image_path': '/usr/libexec/kernelmanagerd',
         'signpost_identifier': 0xeeeeb0b5b2b2eeee,
         'signpost_name': 'validateExtFilesystem(into:)',
         'thread_identifier': 0x7cb}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 7)
+    self.CheckEventData(event_data, expected_event_values)
+
+  def testParseWithSpecialTraceV3(self):
+    """Tests the Parse function with a Special tracev3 file."""
+    test_file_path = (
+        '/private/var/db/Diagnostics/Special/0000000000000001.tracev3')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    parser = unified_logging.UnifiedLoggingParser()
+    storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
+
+    number_of_events = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_events, 12159)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_event_values = {
+        'activity_identifier': 0,
+        'boot_identifier': 'DCA6F382-13F5-4A21-BF2B-4F1BE8B136BD',
+        'data_type': 'macos:unified_logging:event',
+        # 'euid': 0,
+        'event_message': (
+            'Failed to look up the port for "com.apple.windowserver.active" '
+            '(1102)'),
+        'event_type': 'logEvent',
+        'message_type': 'Default',
+        'pid': 24,
+        'process_image_identifier': '36B63A88-3FE7-30FC-B7BA-46C45DD6B7D8',
+        'process_image_path': '/usr/libexec/UserEventAgent',
+        # 'recorded_time': '2023-01-12T01:36:27.111432704+00:00',
+        'recorded_time': '2023-01-12T01:36:27.111432708+00:00',
+        'sender_image_identifier': 'C0FDF86C-F960-37A3-A380-DB8700D43801',
+        'sender_image_path': (
+            '/System/Library/PrivateFrameworks/'
+            'SkyLight.framework/Versions/A/SkyLight'),
+        'subsystem': 'com.apple.SkyLight',
+        'thread_identifier': 0x7d1}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 8)
     self.CheckEventData(event_data, expected_event_values)
 
 

@@ -52,6 +52,39 @@ attributes:
   size: 8
   units: bytes
 ---
+name: location_daemon_status_state_tracker
+type: structure
+description: Daemon status state tracker (CLDaemonStatusStateTracker)
+attributes:
+  byte_order: little-endian
+members:
+- name: level
+  data_type: float64
+- name: is_charged
+  data_type: bool8
+- name: is_connected
+  data_type: bool8
+- name: charger_type
+  data_type: uint32
+- name: was_connected
+  data_type: bool8
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 9
+- name: reachability
+  data_type: uint32
+- name: thermal_level
+  data_type: int32
+- name: airplane_mode
+  data_type: bool8
+- name: battery_saver_mode
+  data_type: bool8
+- name: push_service
+  data_type: bool8
+- name: restricted_mode
+  data_type: bool8
+---
 name: client_manager_state_tracker_state
 type: structure
 description: Client manager (CLClientManager) state tracker state

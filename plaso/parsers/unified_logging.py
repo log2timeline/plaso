@@ -120,6 +120,46 @@ class DSCUUID(object):
     self.text_size = None
 
 
+class ImageValues(object):
+  """Image values.
+
+  Attributes:
+    identifier (uuid.UUID): the identifier.
+    path (str): the path.
+    string (str): the string.
+    text_offset (int): the offset of the text.
+  """
+
+  def __init__(
+      self, identifier=None, path=None, string=None, text_offset=None):
+    """Initializes image values.
+
+    Args:
+      identifier (Optional[uuid.UUID]): the identifier.
+      path (Optional[str]): the path.
+      string (Optional[str]): the string.
+      text_offset (Optional[int]): the offset of the text.
+    """
+    super(ImageValues, self).__init__()
+    self._string_formatter = None
+    self.identifier = identifier
+    self.path = path
+    self.string = string
+    self.text_offset = text_offset
+
+  def GetStringFormatter(self):
+    """Retrieves a string formatter.
+
+    Returns:
+      StringFormatter: string formatter.
+    """
+    if not self._string_formatter:
+      self._string_formatter = StringFormatter()
+      self._string_formatter.ParseFormatString(self.string)
+
+    return self._string_formatter
+
+
 class BacktraceFrame(object):
   """Backtrace frame.
 
@@ -147,6 +187,15 @@ class LogEntry(object):
     event_message (str): event message.
     event_type (str): event type.
     format_string (str): format string.
+    loss_count (int): number of message lost.
+    loss_end_mach_timestamp (int): Mach timestamp of the end of the message
+        loss.
+    loss_end_timestamp (int): timestamp of the end of the message loss, in
+        number of nanoseconds since January 1, 1970 00:00:00.000000000
+    loss_start_mach_timestamp (int): Mach timestamp of the start of the message
+        loss.
+    loss_start_timestamp (int): timestamp of the start of the message loss, in
+        number of nanoseconds since January 1, 1970 00:00:00.000000000
     mach_timestamp (int): Mach timestamp.
     message_type (str): message type.
     parent_activity_identifier (int): parent activity identifier.
@@ -180,6 +229,11 @@ class LogEntry(object):
     self.event_message = None
     self.event_type = None
     self.format_string = None
+    self.loss_count = None
+    self.loss_end_mach_timestamp = None
+    self.loss_end_timestamp = None
+    self.loss_start_mach_timestamp = None
+    self.loss_start_timestamp = None
     self.mach_timestamp = None
     self.message_type = None
     self.parent_activity_identifier = None
@@ -199,6 +253,20 @@ class LogEntry(object):
     self.time_zone_name = None
     self.trace_identifier = None
     self.ttl = None
+
+  # This method is necessary for heap sort.
+  def __lt__(self, other):
+    """Compares if the log entry is less than the other.
+
+    Events are compared by timestamp.
+
+    Args:
+      other (LogEntry): log entry to compare to.
+
+    Returns:
+      bool: True if the log entry is less than the other.
+    """
+    return self.timestamp < other.timestamp
 
 
 class StringFormatter(object):
@@ -367,8 +435,6 @@ class StringFormatter(object):
       if literal == '%%':
         literal = '%'
       elif specifier:
-        flags = flags.replace('-', '>')
-
         decoder = decoder or ''
         decoder_names = [value.strip() for value in decoder.split(',')]
 
@@ -378,6 +444,10 @@ class StringFormatter(object):
 
         if specifier == 'm':
           decoder_names.append('internal:m')
+        elif specifier == 'x' and flags == '#':
+          decoder_names.append('internal:#x')
+
+        flags = flags.replace('-', '>')
 
         width = width or ''
 
@@ -450,6 +520,27 @@ class BaseFormatStringDecoder(object):
     """
 
 
+class AlternativeHexadecimalFormFormatStringDecoder(BaseFormatStringDecoder):
+  """Alternative hexadecimal form format string decoder."""
+
+  VALUE_IN_BYTES = False
+
+  def FormatValue(self, value, value_formatter=None):
+    """Formats an integer value in alternative hexadecimal form.
+
+    Args:
+      value (int): integer value.
+      value_formatter (Optional[str]): value formatter.
+
+    Returns:
+      str: formatted integer value formatted in alternative hexadecimal form.
+    """
+    if value:
+      return f'{value:#x}'
+
+    return f'{value:x}'
+
+
 class BooleanFormatStringDecoder(BaseFormatStringDecoder):
   """Boolean value format string decoder."""
 
@@ -459,7 +550,8 @@ class BooleanFormatStringDecoder(BaseFormatStringDecoder):
     """Initializes a boolean value format string decoder.
 
     Args:
-      number (Optional[int]): Signpost telemetry number.
+      false_value (Optional[str]): value that represents False.
+      true_value (Optional[str]): value that represents True.
     """
     super(BooleanFormatStringDecoder, self).__init__()
     self._false_value = false_value
@@ -1073,6 +1165,31 @@ class MDNSProtocolFormatStringDecoder(BaseFormatStringDecoder):
     return self._PROTOCOLS.get(value, 'UNKNOWN: {0:d}'.format(value))
 
 
+class MDNSReasonFormatStringDecoder(BaseFormatStringDecoder):
+  """mDNS reason format string decoder."""
+
+  VALUE_IN_BYTES = False
+
+  _REASONS = {
+      1: 'no-data',
+      2: 'nxdomain',
+      3: 'query-suppressed',
+      4: 'no-dns-service',
+      5: 'server error'}
+
+  def FormatValue(self, value, value_formatter=None):
+    """Formats a mDNS reason value.
+
+    Args:
+      value (int): mDNS reason value.
+      value_formatter (Optional[str]): value formatter.
+
+    Returns:
+      str: formatted mDNS reason value.
+    """
+    return self._REASONS.get(value, 'UNKNOWN: {0:d}'.format(value))
+
+
 class MDNSResourceRecordTypeFormatStringDecoder(BaseFormatStringDecoder):
   """mDNS resource record type format string decoder."""
 
@@ -1427,7 +1544,7 @@ class SignpostTelemetryStringFormatStringDecoder(BaseFormatStringDecoder):
             f'#_##_#{value:s}##__##')
 
 
-class SocketAdressFormatStringDecoder(BaseFormatStringDecoder):
+class SocketAddressFormatStringDecoder(BaseFormatStringDecoder):
   """Socker address value format string decoder."""
 
   def FormatValue(self, value, value_formatter=None):
@@ -1441,6 +1558,9 @@ class SocketAdressFormatStringDecoder(BaseFormatStringDecoder):
       str: formatted socket address value.
     """
     value_size = len(value)
+    if value_size == 0:
+      return '<NULL>'
+
     if value_size >= 2:
       address_family = value[1]
       if address_family == 2 and value_size == 16:
@@ -1452,8 +1572,14 @@ class SocketAdressFormatStringDecoder(BaseFormatStringDecoder):
         # Note that socket.inet_ntop() is not supported on Windows.
         octet_pairs = zip(ipv6_address[0::2], ipv6_address[1::2])
         octet_pairs = [octet1 << 8 | octet2 for octet1, octet2 in octet_pairs]
-        # TODO: determine if ":0000" should be omitted from the string.
-        return ':'.join([f'{octet_pair:04x}' for octet_pair in octet_pairs])
+        string_segments = [
+            f'{octet_pair:04x}' if octet_pair else ''
+            for octet_pair in octet_pairs]
+        ip_string = ':'.join(string_segments)
+        # TODO: find a more elegant solution.
+        if ip_string == ':::::::':
+          ip_string = '::'
+        return ip_string
 
     # TODO: determine what the MacOS log tool shows.
     return 'ERROR: unsupported value'
@@ -1741,19 +1867,18 @@ class DSCFile(BaseUnifiedLoggingFile):
 
       yield dsc_uuid
 
-  def GetImageValuesAndString(self, string_reference, is_dynamic):
-    """Retrieves image values and string.
+  def GetImageValues(self, string_reference, is_dynamic):
+    """Retrieves image values.
 
     Args:
       string_reference (int): reference of the string.
       is_dynamic (bool): dynamic flag.
 
     Returns:
-      tuple[uuid.UUID, int, str, str]: image identifier, image text offset,
-          image path and string or (None, 0, None, None) if not available.
+      ImageValues: image value or None if not available.
 
     Raises:
-      ParseError: if the string cannot be read.
+      ParseError: if the image values cannot be read.
     """
     for dsc_range in self.ranges:
       if is_dynamic:
@@ -1769,18 +1894,19 @@ class DSCFile(BaseUnifiedLoggingFile):
       relative_offset = string_reference - range_offset
       if relative_offset <= range_size:
         if is_dynamic:
-          format_string = '%s'
+          string = '%s'
         else:
           file_offset = dsc_range.data_offset + relative_offset
-          format_string = self._ReadString(self._file_object, file_offset)
+          string = self._ReadString(self._file_object, file_offset)
 
-        return (dsc_range.image_identifier, dsc_range.text_offset,
-                dsc_range.image_path, format_string)
+        return ImageValues(
+            identifier=dsc_range.image_identifier, path=dsc_range.image_path,
+            string=string, text_offset=dsc_range.text_offset)
 
     # TODO: if string_reference is invalid use:
     # "<Invalid shared cache format string offset>"
 
-    return None, 0, None, None
+    return None
 
   def ReadFileObject(self, file_object):
     """Reads a shared-cache strings (dsc) file-like object.
@@ -1904,6 +2030,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
   _EVENT_TYPE_DESCRIPTIONS = {
       _RECORD_TYPE_ACTIVITY: 'activityCreateEvent',
       _RECORD_TYPE_LOG: 'logEvent',
+      _RECORD_TYPE_LOSS: 'lossEvent',
       _RECORD_TYPE_SIGNPOST: 'signpostEvent'}
 
   _RECORD_TYPE_DESCRIPTIONS = {
@@ -2004,6 +2131,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       'in_addr': IPv4FormatStringDecoder(),
       'in6_addr': IPv6FormatStringDecoder(),
       'internal:m': ErrorCodeFormatStringDecoder(),
+      'internal:#x': AlternativeHexadecimalFormFormatStringDecoder(),
       'location:_CLClientManagerStateTrackerState': (
           LocationClientManagerStateFormatStringDecoder()),
       'location:_CLLocationManagerStateTrackerState': (
@@ -2018,12 +2146,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
       'mdns:dns.idflags': MDNSDNSIdentifierAndFlagsFormatStringDecoder(),
       'mdns:dnshdr': MDNSDNSHeaderFormatStringDecoder(),
       'mdns:protocol': MDNSProtocolFormatStringDecoder(),
+      'mdns:nreason': MDNSReasonFormatStringDecoder(),
       'mdns:rrtype': MDNSResourceRecordTypeFormatStringDecoder(),
       'mdns:yesno': BooleanFormatStringDecoder(
           false_value='no', true_value='yes'),
       'network:in_addr': IPv4FormatStringDecoder(),
       'network:in6_addr': IPv6FormatStringDecoder(),
-      'network:sockaddr': SocketAdressFormatStringDecoder(),
+      'network:sockaddr': SocketAddressFormatStringDecoder(),
       'mask.hash': MaskHashFormatStringDecoder(),
       'odtypes:mbr_details': (
           OpenDirectoryMembershipDetailsFormatStringDecoder()),
@@ -2046,14 +2175,14 @@ class TraceV3File(BaseUnifiedLoggingFile):
           SignpostTelemetryStringFormatStringDecoder(number=1)),
       'signpost.telemetry:string2': (
           SignpostTelemetryStringFormatStringDecoder(number=2)),
-      'sockaddr': SocketAdressFormatStringDecoder(),
+      'sockaddr': SocketAddressFormatStringDecoder(),
       'time_t': DateTimeInSecondsFormatStringDecoder(),
       'uuid_t': UUIDFormatStringDecoder()}
 
   _FORMAT_STRING_DECODER_NAMES = frozenset(_FORMAT_STRING_DECODERS.keys())
 
   _MAXIMUM_CACHED_FILES = 64
-  _MAXIMUM_CACHED_FORMAT_STRINGS = 1024
+  _MAXIMUM_CACHED_IMAGE_VALUES = 8192
 
   _NANOSECONDS_PER_SECOND = 1000000000
 
@@ -2068,19 +2197,20 @@ class TraceV3File(BaseUnifiedLoggingFile):
     super(TraceV3File, self).__init__()
     self._boot_identifier = None
     self._cached_dsc_files = collections.OrderedDict()
+    self._cached_image_values = collections.OrderedDict()
     self._cached_uuidtext_files = collections.OrderedDict()
     self._catalog = None
     self._catalog_process_information_entries = {}
     self._catalog_strings_map = {}
     self._chunk_index = 0
     self._file_system = file_system
-    self._header_timebase = 1
+    self._header_timebase = 1.0
     self._header_timestamp = 0
     self._sorted_timesync_sync_records = []
     self._timesync_boot_record = None
     self._timesync_path = None
     self._timesync_sync_records = []
-    self._timesync_timebase = 1
+    self._timesync_timebase = 1.0
     self._uuidtext_path = None
 
   def _BuildCatalogProcessInformationEntries(self, catalog):
@@ -2235,10 +2365,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return dsc_file
 
-  def _GetImageValuesAndString(
+  def _GetImageValues(
       self, process_information_entry, firehose_tracepoint,
       tracepoint_data_object, string_reference, is_dynamic):
-    """Retrieves image values and string.
+    """Retrieves image values.
 
     Args:
       process_information_entry (tracev3_catalog_process_information_entry):
@@ -2249,11 +2379,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
       is_dynamic (bool): dynamic flag.
 
     Returns:
-      tuple[uuid.UUID, int, str, str]: image identifier, image text offset,
-          image path and string or (None, None, None, None) if not available.
+      ImageValues: image values.
 
     Raises:
-      ParseError: if the image path or string cannot be retrieved.
+      ParseError: if the image values cannot be retrieved.
     """
     strings_file_type = firehose_tracepoint.flags & 0x000e
 
@@ -2295,43 +2424,54 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     uuid_string = strings_file_identifier.hex.upper()
 
-    large_offset_data = getattr(
-        tracepoint_data_object, 'large_offset_data', None) or 0
+    lookup_key = f'{uuid_string:s}:0x{string_reference:x}'
+    image_values = self._cached_image_values.get(lookup_key, None)
+    if not image_values:
+      large_offset_data = getattr(
+          tracepoint_data_object, 'large_offset_data', None) or 0
 
-    image_identifier = None
-    image_path = None
-    string = None
+      if strings_file_type in self._UUIDTEXT_STRINGS_FILE_TYPES:
+        image_values = ImageValues(
+            identifier=strings_file_identifier, text_offset=image_text_offset)
 
-    if strings_file_type in self._UUIDTEXT_STRINGS_FILE_TYPES:
-      uuidtext_file = self._GetUUIDTextFile(uuid_string)
-      if uuidtext_file:
-        image_identifier = strings_file_identifier
-        image_path = uuidtext_file.GetImagePath()
-        if is_dynamic:
-          string = '%s'
-        else:
-          string = uuidtext_file.GetString(string_reference)
-          if string is None:
-            # ~~> Invalid bounds INTEGER for UUID
-            image_text_offset = large_offset_data << 31
+        uuidtext_file = self._GetUUIDTextFile(uuid_string)
+        if uuidtext_file:
+          image_values.path = uuidtext_file.GetImagePath()
+          if is_dynamic:
+            image_values.string = '%s'
+          else:
+            image_values.string = uuidtext_file.GetString(string_reference)
+            if image_values.string is None:
+              # ~~> Invalid bounds INTEGER for UUID
+              image_values.text_offset = large_offset_data << 31
 
-    else:
-      dsc_file = self._GetDSCFile(uuid_string)
-      if dsc_file:
-        image_identifier, image_text_offset, image_path, string = (
-            dsc_file.GetImageValuesAndString(string_reference, is_dynamic))
+      else:
+        dsc_file = self._GetDSCFile(uuid_string)
+        if dsc_file:
+          image_values = dsc_file.GetImageValues(string_reference, is_dynamic)
 
-      large_shared_cache_data = getattr(
-          tracepoint_data_object, 'large_shared_cache_data', None)
+        if not image_values:
+          image_values = ImageValues(
+              identifier=strings_file_identifier, text_offset=image_text_offset)
 
-      if large_offset_data and large_shared_cache_data:
-        calculated_large_offset_data = large_shared_cache_data >> 1
-        if large_offset_data != calculated_large_offset_data:
-          image_identifier = strings_file_identifier
-          image_text_offset = 0
-          image_path = ''
+        large_shared_cache_data = getattr(
+            tracepoint_data_object, 'large_shared_cache_data', None)
 
-    return image_identifier, image_text_offset, image_path, string
+        if large_offset_data and large_shared_cache_data:
+          calculated_large_offset_data = large_shared_cache_data >> 1
+          if large_offset_data != calculated_large_offset_data:
+            image_values.identifier = strings_file_identifier
+            image_values.text_offset = 0
+            image_values.path = ''
+
+      if len(self._cached_image_values) >= self._MAXIMUM_CACHED_IMAGE_VALUES:
+        self._cached_image_values.popitem(last=True)
+
+      self._cached_image_values[lookup_key] = image_values
+
+    self._cached_image_values.move_to_end(lookup_key, last=False)
+
+    return image_values
 
   def _GetProcessImageValues(self, process_information_entry):
     """Retrieves the process image value.
@@ -2387,7 +2527,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     Args:
       continuous_time (int): continuous time.
-      description (Optional[str]): description of the time value.
 
     Returns:
       int: timestamp containing the number of nanoseconds since January 1, 1970
@@ -2396,15 +2535,15 @@ class TraceV3File(BaseUnifiedLoggingFile):
     timesync_record = self._GetTimesyncRecord(continuous_time)
     if timesync_record:
       continuous_time -= timesync_record.kernel_time
-      timestamp = timesync_record.timestamp + (
+      timestamp = timesync_record.timestamp + int(
           continuous_time * self._timesync_timebase)
 
     elif self._timesync_boot_record:
-      timestamp = self._timesync_boot_record.timestamp + (
+      timestamp = self._timesync_boot_record.timestamp + int(
           continuous_time * self._timesync_timebase)
 
     else:
-      timestamp = self._header_timestamp + (
+      timestamp = self._header_timestamp + int(
           continuous_time * self._header_timebase)
 
     return timestamp
@@ -2541,6 +2680,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       file_object (file): file-like object.
       file_offset (int): offset of the catalog data relative to the start
           of the file.
+      chunk_data_size (int): size of the catalog chunk data.
 
     Returns:
       tracev3_catalog: catalog.
@@ -2590,7 +2730,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return chunk_header
 
-  def _ReadChunkSet(self, file_object, file_offset, chunk_header):
+  def _ReadChunkSet(
+        self, file_object, file_offset, chunk_header, oversize_chunks):
     """Reads a chunk set.
 
     Args:
@@ -2598,6 +2739,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
       file_offset (int): offset of the chunk set data relative to the start
           of the file.
       chunk_header (tracev3_chunk_header): the chunk header of the chunk set.
+      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+          reference.
 
     Yields:
       LogEntry: a log entry.
@@ -2645,16 +2788,20 @@ class TraceV3File(BaseUnifiedLoggingFile):
       if chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_FIREHOSE:
         yield from self._ReadFirehoseChunkData(
             chunkset_chunk_data, chunkset_chunk_header.chunk_data_size,
-            data_offset)
+            data_offset, oversize_chunks)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_OVERSIZE:
-        self._ReadOversizeChunkData(chunkset_chunk_data, data_offset)
+        oversize_chunk = self._ReadOversizeChunkData(
+            chunkset_chunk_data, data_offset)
+        oversize_chunks[oversize_chunk.data_reference] = oversize_chunk
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_STATEDUMP:
-        self._ReadStateDumpChunkData(chunkset_chunk_data, data_offset)
+        yield from self._ReadStateDumpChunkData(
+            chunkset_chunk_data, data_offset)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_SIMPLEDUMP:
-        self._ReadSimpleDumpChunkData(chunkset_chunk_data, data_offset)
+        yield from self._ReadSimpleDumpChunkData(
+            chunkset_chunk_data, data_offset)
 
       data_offset = data_end_offset
 
@@ -2702,7 +2849,137 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return backtrace_frames
 
-  def _ReadFirehoseChunkData(self, chunk_data, chunk_data_size, data_offset):
+  def _ReadDataItems(
+      self, data_items, values_data, private_data, private_data_range_offset,
+      string_formatter):
+    """Reads data items.
+
+    Args:
+      data_items (list[tracev3_data_item]): data items.
+      values_data (bytes): (public) values data.
+      private_data (bytes): firehose private data.
+      private_data_range_offset (int): offset of the private data range
+          relative to the start of the private data.
+      string_formatter (StringFormatter): string formatter.
+
+    Returns:
+      list[str]: values formatted as strings.
+
+    Raises:
+      ParseError: if the data items cannot be read.
+    """
+    values = []
+
+    value_index = 0
+    precision = None
+
+    for data_item in data_items:
+      value_data = None
+      value = None
+
+      if data_item.value_type in self._DATA_ITEM_NUMERIC_VALUE_TYPES:
+        type_hint = string_formatter.GetTypeHintByIndex(value_index)
+        data_type_map_name = self._DATA_ITEM_NUMERIC_DATA_MAP_NAMES.get(
+            type_hint or 'unsigned', {}).get(data_item.data_size, None)
+
+        if data_type_map_name:
+          data_type_map = self._GetDataTypeMap(data_type_map_name)
+
+          # TODO: calculate data offset for debugging purposes.
+
+          value_data = data_item.data
+          value = self._ReadStructureFromByteStream(
+              value_data, 0, data_type_map)
+
+      elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
+        if data_item.value_data_size > 0:
+          # Note that the string data does not necessarily include
+          # an end-of-string character hence the cstring data_type_map is not
+          # used here.
+          value_data_offset = data_item.value_data_offset
+          value_data = values_data[
+              value_data_offset:value_data_offset + data_item.value_data_size]
+
+          try:
+            value = value_data.decode('utf-8').rstrip('\x00')
+          except UnicodeDecodeError:
+            pass
+
+      elif data_item.value_type == 0x21:
+        if data_item.value_data_size > 0:
+          # Note that the string data does not necessarily include
+          # an end-of-string character hence the cstring data_type_map is not
+          # used here.
+          value_data_offset = (
+              private_data_range_offset + data_item.value_data_offset)
+          value_data = private_data[
+              value_data_offset:value_data_offset + data_item.value_data_size]
+
+          try:
+            value = value_data.decode('utf-8').rstrip('\x00')
+          except UnicodeDecodeError:
+            pass
+
+      elif data_item.value_type in self._DATA_ITEM_BINARY_DATA_VALUE_TYPES:
+        value_data_offset = data_item.value_data_offset
+        value_data = values_data[
+            value_data_offset:value_data_offset + data_item.value_data_size]
+        value = value_data
+
+      if data_item.value_type not in (
+          0x00, 0x01, 0x02, 0x10, 0x12, 0x20, 0x21, 0x22, 0x25, 0x30, 0x31,
+          0x32, 0x35, 0x40, 0x41, 0x42, 0x45, 0x72, 0xf2):
+        raise errors.ParseError((
+            f'Unsupported data item value type: '
+            f'0x{data_item.value_type:02x}.'))
+
+      if data_item.value_type in (0x10, 0x12):
+        precision = value
+        continue
+
+      value_formatter = string_formatter.GetValueFormatter(
+          value_index, precision=precision)
+
+      decoder_names = string_formatter.GetDecoderNamesByIndex(value_index)
+      if data_item.value_type in self._DATA_ITEM_PRIVATE_VALUE_TYPES:
+        if value is None:
+          value = '<private>'
+
+      elif decoder_names:
+        decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_names[0], None)
+        if not decoder_class:
+          value = f'<decode: unsupported decoder: {decoder_names[0]:s}>'
+        elif decoder_class.VALUE_IN_BYTES:
+          value = decoder_class.FormatValue(
+              value_data, value_formatter=value_formatter)
+        else:
+          value = decoder_class.FormatValue(
+              value, value_formatter=value_formatter)
+
+      elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
+        if value is None:
+          value = '(null)'
+
+      elif isinstance(value, bytes):
+        # TODO: determine how binary data is formatted
+        value = f'\'{value!s}\''
+
+      elif value_formatter:
+        value = value_formatter.format(value)
+
+      else:
+        value = '<decode: missing format string>'
+
+      precision = None
+
+      values.append(value)
+
+      value_index += 1
+
+    return values
+
+  def _ReadFirehoseChunkData(
+      self, chunk_data, chunk_data_size, data_offset, oversize_chunks):
     """Reads firehose chunk data.
 
     Args:
@@ -2710,6 +2987,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
       chunk_data_size (int): size of the firehose chunk data.
       data_offset (int): offset of the firehose chunk relative to the start
           of the chunk set.
+      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+          reference.
 
     Yields:
       LogEntry: a log entry.
@@ -2722,14 +3001,17 @@ class TraceV3File(BaseUnifiedLoggingFile):
     firehose_header = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
 
-    proc_id = (f'{firehose_header.proc_id_upper:d}@'
-               f'{firehose_header.proc_id_lower:d}')
-    process_information_entry = (
-        self._catalog_process_information_entries.get(proc_id, None))
-    if not process_information_entry:
-      raise errors.ParseError((
-          f'Unable to retrieve process information entry: {proc_id:s} from '
-          f'catalog'))
+    if not self._catalog:
+      process_information_entry = None
+    else:
+      proc_id = (f'{firehose_header.proc_id_upper:d}@'
+                 f'{firehose_header.proc_id_lower:d}')
+      process_information_entry = (
+          self._catalog_process_information_entries.get(proc_id, None))
+      if not process_information_entry:
+        raise errors.ParseError((
+            f'Unable to retrieve process information entry: {proc_id:s} from '
+            f'catalog'))
 
     private_data_virtual_offset = (
         firehose_header.private_data_virtual_offset & 0x0fff)
@@ -2810,7 +3092,41 @@ class TraceV3File(BaseUnifiedLoggingFile):
                 firehose_tracepoint.flags, firehose_tracepoint.data,
                 tracepoint_data_offset))
 
-      if tracepoint_data_object:
+      continuous_time = firehose_tracepoint.continuous_time_lower | (
+          firehose_tracepoint.continuous_time_upper << 32)
+      continuous_time += firehose_header.base_continuous_time
+
+      process_image_identifier, process_image_path = (
+          self._GetProcessImageValues(process_information_entry))
+
+      log_entry = LogEntry()
+      log_entry.boot_identifier = self._boot_identifier
+      log_entry.event_type = self._EVENT_TYPE_DESCRIPTIONS.get(
+          firehose_tracepoint.record_type, None)
+      log_entry.mach_timestamp = continuous_time
+      log_entry.process_image_identifier = process_image_identifier
+      log_entry.thread_identifier = firehose_tracepoint.thread_identifier
+      log_entry.timestamp = self._GetTimestamp(continuous_time)
+      log_entry.trace_identifier = self._GetTraceIdentifier(firehose_tracepoint)
+
+      if record_type == self._RECORD_TYPE_LOSS:
+        loss_count = tracepoint_data_object.number_of_messages or 0
+        loss_start_time = tracepoint_data_object.start_time or 0
+        loss_end_time = tracepoint_data_object.end_time or 0
+
+        log_entry.event_message = (
+            f'lost >={loss_count:d} unreliable messages from '
+            f'{loss_start_time:d}-{loss_end_time:d} (Mach continuous exact '
+            f'start-approx. end)')
+        log_entry.loss_count = loss_count
+        log_entry.loss_end_mach_timestamp = loss_end_time
+        log_entry.loss_end_timestamp = self._GetTimestamp(loss_end_time)
+        log_entry.loss_start_mach_timestamp = loss_start_time
+        log_entry.loss_start_timestamp = self._GetTimestamp(loss_start_time)
+
+        # TODO: add support for lossCountSaturated
+
+      else:
         values_data_offset = bytes_read
 
         if firehose_tracepoint.flags & 0x1000 == 0:
@@ -2823,18 +3139,28 @@ class TraceV3File(BaseUnifiedLoggingFile):
         string_reference, is_dynamic = self._CalculateFormatStringReference(
             tracepoint_data_object, firehose_tracepoint.format_string_reference)
 
-        image_identifier, image_text_offset, image_path, format_string = (
-            self._GetImageValuesAndString(
-                process_information_entry, firehose_tracepoint,
-                tracepoint_data_object, string_reference, is_dynamic))
+        image_values = self._GetImageValues(
+            process_information_entry, firehose_tracepoint,
+            tracepoint_data_object, string_reference, is_dynamic)
 
-        string_formatter = StringFormatter()
-        string_formatter.ParseFormatString(format_string)
+        string_formatter = image_values.GetStringFormatter()
 
-        data_items = getattr(tracepoint_data_object, 'data_items', None)
-        if data_items is None:
-          values = []
+        data_reference = getattr(tracepoint_data_object, 'data_reference', None)
+        if not data_reference:
+          data_items = getattr(tracepoint_data_object, 'data_items', None)
+          values_data = firehose_tracepoint.data[values_data_offset:]
         else:
+          oversize_chunk = oversize_chunks.get(data_reference, None)
+          if oversize_chunk:
+            data_items = oversize_chunk.data_items
+            values_data = oversize_chunk.values_data
+          else:
+            # Seen in certain tracev3 files that oversize chunks can be missing.
+            data_items = None
+            values_data = None
+
+        values = []
+        if data_items:
           private_data_range = getattr(
               tracepoint_data_object, 'private_data_range', None)
           if private_data_range is None:
@@ -2846,55 +3172,36 @@ class TraceV3File(BaseUnifiedLoggingFile):
                 private_data_range.offset - private_data_virtual_offset)
 
           # TODO: calculate item data offset for debugging purposes.
-          values = self._ReadFirehoseTracepointDataItems(
-              firehose_tracepoint.data, data_offset + chunk_data_offset,
-              data_items, values_data_offset, private_data,
-              private_data_offset, string_formatter)
-
-        continuous_time = firehose_tracepoint.continuous_time_lower | (
-            firehose_tracepoint.continuous_time_upper << 32)
-        continuous_time += firehose_header.base_continuous_time
+          values = self._ReadDataItems(
+              data_items, values_data, private_data, private_data_offset,
+              string_formatter)
 
         sub_system_identifier = getattr(
             tracepoint_data_object, 'sub_system_identifier', None)
         category, sub_system = self._GetSubSystemStrings(
             process_information_entry, sub_system_identifier)
 
-        process_image_identifier, process_image_path = (
-            self._GetProcessImageValues(process_information_entry))
-
         program_counter = self._CalculateProgramCounter(
-            tracepoint_data_object, image_text_offset)
+            tracepoint_data_object, image_values.text_offset)
 
         if not backtrace_frames:
           backtrace_frame = BacktraceFrame()
-          backtrace_frame.image_identifier = image_identifier
+          backtrace_frame.image_identifier = image_values.identifier
           backtrace_frame.image_offset = program_counter or 0
 
           backtrace_frames.append(backtrace_frame)
 
-        log_entry = LogEntry()
         log_entry.backtrace_frames = backtrace_frames
-        log_entry.boot_identifier = self._boot_identifier
         log_entry.category = category
-        log_entry.event_message = string_formatter.FormatString(values)
-        log_entry.event_type = self._EVENT_TYPE_DESCRIPTIONS.get(
-            firehose_tracepoint.record_type, None)
-        log_entry.format_string = format_string
-        log_entry.mach_timestamp = continuous_time
+        log_entry.format_string = image_values.string
         log_entry.process_identifier = getattr(
             process_information_entry, 'process_identifier', None) or 0
-        log_entry.process_image_identifier = process_image_identifier
         log_entry.process_image_path = process_image_path
-        log_entry.sender_image_identifier = image_identifier
-        log_entry.sender_image_path = image_path
+        log_entry.sender_image_identifier = image_values.identifier
+        log_entry.sender_image_path = image_values.path
         log_entry.sender_program_counter = program_counter or 0
         log_entry.sub_system = sub_system
-        log_entry.thread_identifier = firehose_tracepoint.thread_identifier
-        log_entry.timestamp = self._GetTimestamp(continuous_time)
         log_entry.time_zone_name = None
-        log_entry.trace_identifier = self._GetTraceIdentifier(
-            firehose_tracepoint)
         log_entry.ttl = getattr(tracepoint_data_object, 'ttl', None) or 0
 
         if firehose_tracepoint.record_type != self._RECORD_TYPE_SIGNPOST:
@@ -2931,9 +3238,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
           if not name_string_reference:
             name_string = None
           else:
-            _, _, _, name_string = self._GetImageValuesAndString(
+            name_image_values = self._GetImageValues(
                 process_information_entry, firehose_tracepoint,
                 tracepoint_data_object, name_string_reference, is_dynamic)
+            name_string = name_image_values.string
 
           log_entry.signpost_identifier = getattr(
               tracepoint_data_object, 'signpost_identifier', None)
@@ -2943,7 +3251,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
           log_entry.signpost_type = self._SIGNPOST_TYPE_DESCRIPTIONS.get(
               firehose_tracepoint.log_type & 0x0f, None)
 
-        yield log_entry
+        log_entry.event_message = string_formatter.FormatString(values)
+
+      yield log_entry
 
       chunk_data_offset += firehose_tracepoint.data_size
 
@@ -3009,140 +3319,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
         tracepoint_data, data_offset, data_type_map, context=context)
 
     return activity, context.byte_size
-
-  def _ReadFirehoseTracepointDataItems(
-      self, tracepoint_data, data_offset, data_items, values_data_offset,
-      private_data, private_data_range_offset, string_formatter):
-    """Reads firehose tracepoint data items.
-
-    Args:
-      tracepoint_data (bytes): firehose tracepoint data.
-      data_offset (int): offset of the firehose tracepoint data relative to
-          the start of the chunk set.
-      data_items (list[tracev3_firehose_tracepoint_data_item]): data items.
-      values_data_offset (int): offset of the values data relative to the start
-          of the firehose tracepoint data.
-      private_data (bytes): firehose private data.
-      private_data_range_offset (int): offset of the private data range
-          relative to the start of the private data.
-      string_formatter (StringFormatter): string formatter.
-
-    Returns:
-      list[str]: values formatted as strings.
-
-    Raises:
-      ParseError: if the data items cannot be read.
-    """
-    values = []
-
-    value_index = 0
-    precision = None
-
-    for data_item in data_items:
-      value_data = None
-      value = None
-
-      if data_item.value_type in self._DATA_ITEM_NUMERIC_VALUE_TYPES:
-        type_hint = string_formatter.GetTypeHintByIndex(value_index)
-        data_type_map_name = self._DATA_ITEM_NUMERIC_DATA_MAP_NAMES.get(
-            type_hint or 'unsigned', {}).get(data_item.data_size, None)
-
-        if data_type_map_name:
-          data_type_map = self._GetDataTypeMap(data_type_map_name)
-
-          # TODO: calculate data offset for debugging purposes.
-          _ = data_offset
-
-          value_data = data_item.data
-          value = self._ReadStructureFromByteStream(
-              value_data, 0, data_type_map)
-
-      elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
-        if data_item.value_data_size > 0:
-          # Note that the string data does not necessarily include
-          # an end-of-string character hence the cstring data_type_map is not
-          # used here.
-          value_data_offset = values_data_offset + data_item.value_data_offset
-          value_data = tracepoint_data[
-              value_data_offset:value_data_offset + data_item.value_data_size]
-
-          try:
-            value = value_data.decode('utf-8').rstrip('\x00')
-          except UnicodeDecodeError:
-            pass
-
-      elif data_item.value_type == 0x21:
-        if data_item.value_data_size > 0:
-          # Note that the string data does not necessarily include
-          # an end-of-string character hence the cstring data_type_map is not
-          # used here.
-          value_data_offset = (
-              private_data_range_offset + data_item.value_data_offset)
-          value_data = private_data[
-              value_data_offset:value_data_offset + data_item.value_data_size]
-
-          try:
-            value = value_data.decode('utf-8').rstrip('\x00')
-          except UnicodeDecodeError:
-            pass
-
-      elif data_item.value_type in self._DATA_ITEM_BINARY_DATA_VALUE_TYPES:
-        value_data_offset = values_data_offset + data_item.value_data_offset
-        value_data = tracepoint_data[
-            value_data_offset:value_data_offset + data_item.value_data_size]
-        value = value_data
-
-      if data_item.value_type not in (
-          0x00, 0x01, 0x02, 0x10, 0x12, 0x20, 0x21, 0x22, 0x25, 0x30, 0x31,
-          0x32, 0x35, 0x40, 0x41, 0x42, 0x45, 0x72, 0xf2):
-        raise errors.ParseError((
-            f'Unsupported data item value type: '
-            f'0x{data_item.value_type:02x}.'))
-
-      if data_item.value_type in (0x10, 0x12):
-        precision = value
-        continue
-
-      value_formatter = string_formatter.GetValueFormatter(
-          value_index, precision=precision)
-
-      decoder_names = string_formatter.GetDecoderNamesByIndex(value_index)
-      if data_item.value_type in self._DATA_ITEM_PRIVATE_VALUE_TYPES:
-        if value is None:
-          value = '<private>'
-
-      elif decoder_names:
-        decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_names[0], None)
-        if not decoder_class:
-          value = f'<decode: unsupported decoder: {decoder_names[0]:s}>'
-        elif decoder_class.VALUE_IN_BYTES:
-          value = decoder_class.FormatValue(
-              value_data, value_formatter=value_formatter)
-        else:
-          value = decoder_class.FormatValue(
-              value, value_formatter=value_formatter)
-
-      elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
-        if value is None:
-          value = '(null)'
-
-      elif isinstance(value, bytes):
-        # TODO: determine how binary data is formatted
-        value = f'\'{value!s}\''
-
-      elif value_formatter:
-        value = value_formatter.format(value)
-
-      else:
-        value = '<decode: missing format string>'
-
-      precision = None
-
-      values.append(value)
-
-      value_index += 1
-
-    return values
 
   def _ReadFirehoseTracepointLogData(self, flags, tracepoint_data, data_offset):
     """Reads firehose tracepoint log data.
@@ -3319,8 +3495,19 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """
     data_type_map = self._GetDataTypeMap('tracev3_oversize_chunk')
 
-    return self._ReadStructureFromByteStream(
-        chunk_data, data_offset, data_type_map)
+    context = dtfabric_data_maps.DataTypeMapContext()
+
+    oversize_chunk = self._ReadStructureFromByteStream(
+        chunk_data, data_offset, data_type_map, context=context)
+
+    if oversize_chunk.private_data_size:
+      raise errors.ParseError(
+          'Oversize chunk with private data is currently unsupported')
+
+    data_size = 48 + oversize_chunk.data_size + oversize_chunk.private_data_size
+    oversize_chunk.values_data = chunk_data[context.byte_size:data_size]
+
+    return oversize_chunk
 
   def _ReadSimpleDumpChunkData(self, chunk_data, data_offset):
     """Reads SimpleDump chunk data.
@@ -3330,16 +3517,60 @@ class TraceV3File(BaseUnifiedLoggingFile):
       data_offset (int): offset of the SimpleDump chunk relative to the start
           of the chunk set.
 
-    Returns:
-      simpledump_chunk: a SimpleDump chunk.
+    Yields:
+      LogEntry: a log entry.
 
     Raises:
       ParseError: if the chunk cannot be read.
     """
     data_type_map = self._GetDataTypeMap('tracev3_simpledump_chunk')
 
-    return self._ReadStructureFromByteStream(
-        chunk_data, data_offset, data_type_map)
+    context = dtfabric_data_maps.DataTypeMapContext()
+
+    simpledump_chunk = self._ReadStructureFromByteStream(
+        chunk_data, data_offset, data_type_map, context=context)
+
+    if not self._catalog:
+      process_information_entry = None
+    else:
+      proc_id = (f'{simpledump_chunk.proc_id_upper:d}@'
+                 f'{simpledump_chunk.proc_id_lower:d}')
+      process_information_entry = (
+          self._catalog_process_information_entries.get(proc_id, None))
+      if not process_information_entry:
+        raise errors.ParseError((
+            f'Unable to retrieve process information entry: {proc_id:s} from '
+            f'catalog'))
+
+    backtrace_frame = BacktraceFrame()
+    backtrace_frame.image_identifier = simpledump_chunk.sender_image_identifier
+    backtrace_frame.image_offset = simpledump_chunk.load_address
+
+    process_image_identifier, process_image_path = (
+        self._GetProcessImageValues(process_information_entry))
+
+    log_entry = LogEntry()
+    log_entry.backtrace_frames = [backtrace_frame]
+    log_entry.boot_identifier = self._boot_identifier
+    log_entry.event_message = simpledump_chunk.message_string
+    log_entry.event_type = 'logEvent'
+    log_entry.mach_timestamp = simpledump_chunk.continuous_time
+    log_entry.message_type = self._LOG_TYPE_DESCRIPTIONS.get(
+        simpledump_chunk.log_type, None)
+    log_entry.process_identifier = getattr(
+        process_information_entry, 'process_identifier', None) or 0
+    log_entry.process_image_identifier = process_image_identifier
+    log_entry.process_image_path = process_image_path
+    log_entry.sub_system = simpledump_chunk.sub_system_string
+    log_entry.sender_image_identifier = simpledump_chunk.sender_image_identifier
+    # TODO: implement
+    log_entry.sender_image_path = None
+    log_entry.sender_program_counter = simpledump_chunk.load_address
+    log_entry.thread_identifier = simpledump_chunk.thread_identifier
+    log_entry.timestamp = self._GetTimestamp(simpledump_chunk.continuous_time)
+    log_entry.trace_identifier = 0
+
+    yield log_entry
 
   def _ReadStateDumpChunkData(self, chunk_data, data_offset):
     """Reads StateDump chunk data.
@@ -3349,16 +3580,71 @@ class TraceV3File(BaseUnifiedLoggingFile):
       data_offset (int): offset of the StateDump chunk relative to the start
           of the chunk set.
 
-    Returns:
-      statedump_chunk: a StateDump chunk.
+    Yields:
+      LogEntry: a log entry.
 
     Raises:
       ParseError: if the chunk cannot be read.
     """
     data_type_map = self._GetDataTypeMap('tracev3_statedump_chunk')
 
-    return self._ReadStructureFromByteStream(
-        chunk_data, data_offset, data_type_map)
+    context = dtfabric_data_maps.DataTypeMapContext()
+
+    statedump_chunk = self._ReadStructureFromByteStream(
+        chunk_data, data_offset, data_type_map, context=context)
+
+    if not self._catalog:
+      process_information_entry = None
+    else:
+      proc_id = (f'{statedump_chunk.proc_id_upper:d}@'
+                 f'{statedump_chunk.proc_id_lower:d}')
+      process_information_entry = (
+          self._catalog_process_information_entries.get(proc_id, None))
+      if not process_information_entry:
+        raise errors.ParseError((
+            f'Unable to retrieve process information entry: {proc_id:s} from '
+            f'catalog'))
+
+    event_message = ''
+    if statedump_chunk.state_data_type == 0x03:
+      library = statedump_chunk.library.decode('ascii').rstrip('\x00')
+      decoder_type = statedump_chunk.decoder_type.decode('ascii').rstrip('\x00')
+
+      decoder_name = f'{library:s}:{decoder_type:s}'
+      decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_name, None)
+      if not decoder_class:
+        value = f'<decode: unsupported decoder: {decoder_name:s}>'
+      else:
+        value = decoder_class.FormatValue(statedump_chunk.state_data)
+
+      event_message = f'{statedump_chunk.title:s}\n{value:s}'
+
+    activity_identifier = statedump_chunk.activity_identifier or 0
+
+    backtrace_frame = BacktraceFrame()
+    backtrace_frame.image_identifier = statedump_chunk.sender_image_identifier
+    backtrace_frame.image_offset = 0
+
+    process_image_identifier, process_image_path = (
+        self._GetProcessImageValues(process_information_entry))
+
+    log_entry = LogEntry()
+    log_entry.activity_identifier = (
+        activity_identifier & self.ACTIVITY_IDENTIFIER_BITMASK)
+    log_entry.backtrace_frames = [backtrace_frame]
+    log_entry.boot_identifier = self._boot_identifier
+    log_entry.event_message = event_message
+    log_entry.event_type = 'stateEvent'
+    log_entry.mach_timestamp = statedump_chunk.continuous_time
+    log_entry.process_identifier = getattr(
+        process_information_entry, 'process_identifier', None) or 0
+    log_entry.process_image_identifier = process_image_identifier
+    log_entry.process_image_path = process_image_path
+    log_entry.sender_image_identifier = statedump_chunk.sender_image_identifier
+    log_entry.timestamp = self._GetTimestamp(statedump_chunk.continuous_time)
+    log_entry.trace_identifier = 0
+
+    yield log_entry
 
   def _ReadTimesyncRecords(self, boot_identifier):
     """Reads the timesync records corresponding to the boot identifier.
@@ -3383,7 +3669,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
       if self._timesync_boot_record:
         break
 
-      if not sub_file_entry.name.endswith('.timesync'):
+      lower_name = sub_file_entry.name.lower()
+      if not lower_name.endswith('.timesync'):
         continue
 
       timesync_file = self._OpenTimesyncDatabaseFile(sub_file_entry)
@@ -3402,7 +3689,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     if self._timesync_boot_record:
       self._timesync_timebase = (
-          self._timesync_boot_record.timebase_numerator //
+          self._timesync_boot_record.timebase_numerator /
           self._timesync_boot_record.timebase_denominator)
 
       # Sort the timesync records starting with the largest kernel time.
@@ -3450,11 +3737,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
     lower_last_path_segment = path_segments[-1].lower()
     if not lower_last_path_segment.endswith('.logarchive'):
       path_segments.pop(-1)
-      lower_last_path_segment = path_segments[-1].lower()
+      if path_segments:
+        lower_last_path_segment = path_segments[-1].lower()
 
     if not lower_last_path_segment.endswith('.logarchive'):
       path_segments.pop(-1)
-      lower_last_path_segment = path_segments[-1].lower()
+      if path_segments:
+        lower_last_path_segment = path_segments[-1].lower()
 
     if lower_last_path_segment.endswith('.logarchive'):
       path_segments.append('dsc')
@@ -3483,10 +3772,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
     # the tracev3 file.
     # * in ../timesync/ for *.logarchive/logdata.LiveData.tracev3
     # * in ../../timesync/ for .logarchive/*/*.tracev3
-    # * in ../../timesync/ for /private/var/db/diagnostics/*/*.tracev3
     # * in ../timesync/ for /private/var/db/diagnostics/*/*.tracev3
     path_segments.append('timesync')
-
     timesync_path = self._file_system.JoinPath(path_segments)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -3524,7 +3811,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     self._header_timestamp = (
         header_chunk.timestamp * self._NANOSECONDS_PER_SECOND)
     self._header_timebase = (
-        header_chunk.timebase_numerator // header_chunk.timebase_denominator)
+        header_chunk.timebase_numerator / header_chunk.timebase_denominator)
 
     self._ReadTimesyncRecords(self._boot_identifier)
 
@@ -3537,7 +3824,42 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Raises:
       ParseError: if the file cannot be read.
     """
+    if self._timesync_boot_record:
+      boot_identifier_string = str(self._boot_identifier).upper()
+
+      log_entry = LogEntry()
+      log_entry.boot_identifier = self._boot_identifier
+      log_entry.event_message = f'=== system boot: {boot_identifier_string:s}'
+      log_entry.event_type = 'timesyncEvent'
+      log_entry.mach_timestamp = 0
+      log_entry.thread_identifier = 0
+      log_entry.timestamp = self._timesync_boot_record.timestamp
+      log_entry.trace_identifier = 0
+
+      yield log_entry
+
+    # TODO: generate timesyncEvent LogEntry
+    # "=== log class: persist begins"
+    # "=== log class: in-memory begins"
+
+    for record in self._timesync_sync_records:
+      boot_identifier_string = str(self._boot_identifier).upper()
+
+      log_entry = LogEntry()
+      log_entry.boot_identifier = self._boot_identifier
+      log_entry.event_message = '=== system wallclock time adjusted'
+      log_entry.event_type = 'timesyncEvent'
+      log_entry.mach_timestamp = record.kernel_time
+      log_entry.parent_activity_identifier = 0
+      log_entry.thread_identifier = 0
+      log_entry.timestamp = record.timestamp
+      log_entry.trace_identifier = 0
+
+      yield log_entry
+
     file_offset = self._file_object.tell()
+
+    oversize_chunks = {}
 
     while file_offset < self._file_entry.size:
       chunk_header = self._ReadChunkHeader(self._file_object, file_offset)
@@ -3549,7 +3871,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
       elif chunk_header.chunk_tag == self._CHUNK_TAG_CHUNK_SET:
         yield from self._ReadChunkSet(
-            self._file_object, file_offset, chunk_header)
+            self._file_object, file_offset, chunk_header, oversize_chunks)
 
       else:
         raise errors.ParseError(
@@ -3699,32 +4021,6 @@ class UUIDTextFile(BaseUnifiedLoggingFile):
     self._file_footer = self._ReadFileFooter(file_object, file_offset)
 
 
-# TODO: refactor
-class AULOversizeData(object):
-  """Apple Unified Logging (AUL) oversize data.
-
-  Attributes:
-    data_ref_index (str): index of the data reference.
-    first_proc_id (str): First process identifier.
-    second_proc_id (str): Second process identifier.
-    strings (List[str]): oversized strings.
-  """
-
-  def __init__(self, first_proc_id, second_proc_id, data_ref_index):
-    """Initialises oversized data.
-
-    Args:
-      first_proc_id (str): First process identifier.
-      second_proc_id (str): Second process identifier.
-      data_ref_index (str): index of the data reference.
-    """
-    super(AULOversizeData, self).__init__()
-    self.data_ref_index = data_ref_index
-    self.first_proc_id = first_proc_id
-    self.second_proc_id = second_proc_id
-    self.strings = []
-
-
 class UnifiedLoggingParser(interface.FileEntryParser):
   """Parses Apple Unified Logging (AUL) tracev3 files."""
 
@@ -3759,12 +4055,8 @@ class UnifiedLoggingParser(interface.FileEntryParser):
     """
     file_system = file_entry.GetFileSystem()
 
-    # TODO: add oversize chunk support
-    # TODO: extract SimpleDump events
-    # TODO: extract Loss events
-
+    # TODO: improve extract of StateDump events
     # TODO: extract timesync events
-    # TODO: extract StateDump events
     # TODO: extract Trace events
 
     tracev3_file = TraceV3File(file_system=file_system)
@@ -3777,10 +4069,11 @@ class UnifiedLoggingParser(interface.FileEntryParser):
 
     try:
       for log_entry in tracev3_file.ReadLogEntries():
+        activity_identifier = log_entry.activity_identifier or 0
+
         event_data = UnifiedLoggingEventData()
         event_data.activity_identifier = (
-            log_entry.activity_identifier &
-            tracev3_file.ACTIVITY_IDENTIFIER_BITMASK)
+            activity_identifier & tracev3_file.ACTIVITY_IDENTIFIER_BITMASK)
         event_data.boot_identifier = str(log_entry.boot_identifier).upper()
         event_data.category = log_entry.category
         event_data.euid = None
