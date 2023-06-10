@@ -5,6 +5,8 @@
 import time
 import unittest
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.multi_process import task_manager
@@ -75,6 +77,7 @@ class PendingMergeTaskHeapTest(shared_test_lib.BaseTestCase):
   def testPushTask(self):
     """Tests the PushTask function."""
     task = tasks.Task()
+    task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_FILE
     task.storage_file_size = 10
 
     heap = task_manager._PendingMergeTaskHeap()
@@ -84,10 +87,22 @@ class PendingMergeTaskHeapTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(heap), 1)
 
     task = tasks.Task()
+    task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_FILE
     task.storage_file_size = 100
 
     heap.PushTask(task)
     self.assertEqual(len(heap), 2)
+    self.assertIsNotNone(heap._heap[0])
+    self.assertEqual(heap._heap[0][0], 10)
+
+    task = tasks.Task()
+    task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY
+    task.storage_file_size = 1000
+
+    heap.PushTask(task)
+    self.assertEqual(len(heap), 3)
+    self.assertIsNotNone(heap._heap[0])
+    self.assertEqual(heap._heap[0][0], -1)
 
     task = tasks.Task()
     with self.assertRaises(ValueError):
