@@ -17,8 +17,7 @@ from plaso.parsers import mediator as parsers_mediator
 class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
   """Multi-processing extraction worker process."""
 
-  # Maximum number of dfVFS file system objects to cache in the worker
-  # process.
+  # Maximum number of dfVFS file system objects to cache in the worker process.
   _FILE_SYSTEM_CACHE_SIZE = 3
 
   def __init__(

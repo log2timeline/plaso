@@ -98,6 +98,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_YEAR_LESS_LOG_HELPER = events.YearLessLogHelper.CONTAINER_TYPE
 
+  # Maximum number of dfVFS file system objects to cache in the foreman process.
+  _FILE_SYSTEM_CACHE_SIZE = 3
+
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
@@ -167,6 +170,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._enable_sigsegv_handler = False
     self._event_data_timeliner = None
     self._extraction_worker = None
+    self._file_system_cache = []
     self._maximum_number_of_containers = 50
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
@@ -190,6 +194,27 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
     self._system_configurations = None
+
+  def _CacheFileSystem(self, file_system):
+    """Caches a dfVFS file system object.
+
+    Keeping and additional reference to a dfVFS file system object causes the
+    object to remain cached in the resolver context. This minimizes the number
+    times the file system is re-opened.
+
+    Args:
+      file_system (dfvfs.FileSystem): file system.
+    """
+    if file_system not in self._file_system_cache:
+      if len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+        self._file_system_cache.pop(0)
+      self._file_system_cache.append(file_system)
+
+    elif len(self._file_system_cache) == self._FILE_SYSTEM_CACHE_SIZE:
+      # Move the file system to the end of the list to preserve the most
+      # recently file system object.
+      self._file_system_cache.remove(file_system)
+      self._file_system_cache.append(file_system)
 
   def _CheckExcludedPathSpec(self, file_system, path_spec):
     """Determines if the path specification should be excluded from extraction.
@@ -273,6 +298,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       return None
 
     file_system = file_entry.GetFileSystem()
+
+    if not event_source.path_spec.IsSystemLevel():
+      self._CacheFileSystem(file_system)
 
     if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
       display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
@@ -1184,6 +1212,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._event_data_timeliner = None
+    self._file_system_cache = []
     self._processing_configuration = None
     self._storage_file_path = None
     self._storage_writer = None
