@@ -32,7 +32,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER,
         parent=test_path_spec, volume_index=0)
 
-  @unittest.skip('slow test: 113.768s')
   def testParseWithPersistTraceV3(self):
     """Tests the Parse function with a Persist tracev3 file."""
     test_file_path = (
@@ -46,7 +45,7 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
 
     number_of_events = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_events, 82995)
+    self.assertEqual(number_of_events, 83000)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -69,12 +68,13 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         'pid': 0,
         'process_image_identifier': 'D1CD0AAF-523E-312F-9299-6116B1D511FE',
         'process_image_path': '/kernel',
-        'recorded_time': '2023-01-12T01:35:35.240424704+00:00',
+        # 'recorded_time': '2023-01-12T01:35:35.240424704+00:00',
+        'recorded_time': '2023-01-12T01:35:35.240424708+00:00',
         'sender_image_identifier': 'D1CD0AAF-523E-312F-9299-6116B1D511FE',
         'sender_image_path': '/kernel',
         'thread_identifier': 0}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 22)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 27)
     self.CheckEventData(event_data, expected_event_values)
 
   def testParseWithSignpostTraceV3(self):

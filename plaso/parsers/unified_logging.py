@@ -274,6 +274,7 @@ class StringFormatter(object):
 
   _DECODERS_TO_IGNORE = (
       '',
+      'bluetooth:OI_STATUS',
       'private',
       'public',
       'sensitive',
@@ -871,6 +872,32 @@ class LocationLocationManagerStateFormatStringDecoder(
     return self._FormatStructure(tracker_state, self._VALUE_MAPPINGS)
 
 
+class LocationClientAuthorizationStatusFormatStringDecoder(
+    BaseFormatStringDecoder):
+  """Location client authorization status format string decoder."""
+
+  VALUE_IN_BYTES = False
+
+  _VALUES = {
+      0: 'Not Determined',
+      1: 'Restricted',
+      2: 'Denied',
+      3: 'Authorized Always',
+      4: 'Authorized When In Use'}
+
+  def FormatValue(self, value, value_formatter=None):
+    """Formats a client authorization status value.
+
+    Args:
+      value (int): client authorization status value.
+      value_formatter (Optional[str]): value formatter.
+
+    Returns:
+      str: formatted client authorization status value.
+    """
+    return self._VALUES.get(value, 'UNKNOWN: {0:d}'.format(value))
+
+
 class LocationEscapeOnlyFormatStringDecoder(BaseFormatStringDecoder):
   """Location escape only format string decoder."""
 
@@ -1400,7 +1427,7 @@ class OpenDirectoryMembershipTypeFormatStringDecoder(BaseFormatStringDecoder):
       1: 'GID',
       3: 'SID',
       4: 'Username',
-      5: 'GROUPNAME',
+      5: 'Groupname',
       6: 'UUID',
       7: 'GROUP NFS',
       8: 'USER NFS',
@@ -2031,7 +2058,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
       _RECORD_TYPE_ACTIVITY: 'activityCreateEvent',
       _RECORD_TYPE_LOG: 'logEvent',
       _RECORD_TYPE_LOSS: 'lossEvent',
-      _RECORD_TYPE_SIGNPOST: 'signpostEvent'}
+      _RECORD_TYPE_SIGNPOST: 'signpostEvent',
+      _RECORD_TYPE_TRACE: 'traceEvent'}
 
   _RECORD_TYPE_DESCRIPTIONS = {
       _RECORD_TYPE_ACTIVITY: 'Activity',
@@ -2136,6 +2164,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
           LocationClientManagerStateFormatStringDecoder()),
       'location:_CLLocationManagerStateTrackerState': (
           LocationLocationManagerStateFormatStringDecoder()),
+      'location:CLClientAuthorizationStatus': (
+          LocationClientAuthorizationStatusFormatStringDecoder()),
       'location:escape_only': LocationEscapeOnlyFormatStringDecoder(),
       'location:SqliteResult': LocationSQLiteResultFormatStringDecoder(),
       'mdns:acceptable': BooleanFormatStringDecoder(
@@ -2905,7 +2935,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
           except UnicodeDecodeError:
             pass
 
-      elif data_item.value_type == 0x21:
+      elif data_item.value_type in (0x21, 0x41):
         if data_item.value_data_size > 0:
           # Note that the string data does not necessarily include
           # an end-of-string character hence the cstring data_type_map is not
@@ -3059,7 +3089,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
         tracepoint_data_object, bytes_read = (
             self._ReadFirehoseTracepointTraceData(
                 firehose_tracepoint.flags, firehose_tracepoint.data,
-                tracepoint_data_offset))
+                firehose_tracepoint.data_size, tracepoint_data_offset))
 
       elif record_type == self._RECORD_TYPE_LOG:
         if firehose_tracepoint.log_type not in (0x00, 0x01, 0x02, 0x10, 0x11):
@@ -3421,12 +3451,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
     return signpost, context.byte_size
 
   def _ReadFirehoseTracepointTraceData(
-      self, flags, tracepoint_data, data_offset):
+      self, flags, tracepoint_data, data_size, data_offset):
     """Reads firehose tracepoint trace data.
 
     Args:
       flags (bytes): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
+      data_size (int): size of the firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
 
@@ -3437,6 +3468,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Raises:
       ParseError: if the trace data cannot be read.
     """
+    if data_size < 5:
+      raise errors.ParseError(f'Unsupported data size: {data_size:d}')
+
     supported_flags = 0x0002
 
     if flags & ~supported_flags != 0:
@@ -3451,7 +3485,34 @@ class TraceV3File(BaseUnifiedLoggingFile):
     trace = self._ReadStructureFromByteStream(
         tracepoint_data, data_offset, data_type_map, context=context)
 
-    return trace, context.byte_size
+    trace.number_of_values = tracepoint_data[-1]
+
+    bytes_read = context.byte_size + 1
+
+    if trace.number_of_values not in (0, 1):
+      raise errors.ParseError(
+          f'Unsupported number of values: {trace.number_of_values:d}')
+
+    if trace.number_of_values == 1:
+      trace.value_size = tracepoint_data[-2]
+
+      if trace.value_size not in (4, 8):
+        raise errors.ParseError(f'Unsupported value size: {trace.value_size:d}')
+
+      data_type_map_name = self._DATA_ITEM_NUMERIC_DATA_MAP_NAMES.get(
+          'unsigned', {}).get(trace.value_size, None)
+
+      data_type_map = self._GetDataTypeMap(data_type_map_name)
+
+      # TODO: calculate data offset for debugging purposes.
+
+      trace.integer = self._ReadStructureFromByteStream(
+          tracepoint_data[bytes_read:], data_offset + data_offset,
+          data_type_map, data_type_map_name)
+
+      bytes_read += 1 + trace.value_size
+
+    return trace, bytes_read
 
   def _ReadHeaderChunk(self, file_object, file_offset):
     """Reads a header chunk.
@@ -4055,9 +4116,7 @@ class UnifiedLoggingParser(interface.FileEntryParser):
     """
     file_system = file_entry.GetFileSystem()
 
-    # TODO: improve extract of StateDump events
     # TODO: extract timesync events
-    # TODO: extract Trace events
 
     tracev3_file = TraceV3File(file_system=file_system)
 

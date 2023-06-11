@@ -11,10 +11,10 @@ attributes:
   size: 1
   units: bytes
 ---
-name: uint32
+name: int32
 type: integer
 attributes:
-  format: unsigned
+  format: signed
   size: 4
   units: bytes
 ---
@@ -25,7 +25,7 @@ attributes:
   byte_order: little-endian
 members:
 - name: identifier
-  data_type: uint32
+  data_type: int32
 - name: domain
   type: string
   encoding: utf8
