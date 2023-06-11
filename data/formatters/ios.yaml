@@ -33,6 +33,16 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
+data_type: 'ios:idstatuscache:lookup'
+message:
+- 'Process Name: {process_name}'
+- 'Apple Identifier: {apple_identifier}'
+short_message:
+- 'Apple Identifier: {apple_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS identity services status cache plist'
+---
+type: 'conditional'
 data_type: 'ios:datausage:event'
 message:
 - 'Bundle Identifier: {bundle_identifier}'
