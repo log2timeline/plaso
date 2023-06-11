@@ -39,14 +39,14 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
 
   PLIST_PATH_FILTERS = frozenset([interface.PlistPathFilter(
       'com.apple.identityservices.idstatuscache.plist')])
-  
+
   def _GetDateTimeValueFromPlistKey(self, plist_key, plist_value_name):
     """Retrieves a date and time value from a specific value in a plist key.
-    
+
     Args:
       plist_key (object): plist key.
       plist_value_name (str): name of the value in the plist key.
-      
+
     Returns:
       dfdatetime.TimeElementsInMicroseconds: date and time or None if not
           available.
