@@ -28,10 +28,10 @@ class IOSIdstatusachePlistPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'ios:idstatuscache:lookup',
-        'process_name': 'com.apple.private.alloy.tincan.audio',
         'apple_identifier': 'tel:+13233208923',
-        'lookup_time': '2021-02-20T01:00:30.799723+00:00'}
+        'data_type': 'ios:idstatuscache:lookup',
+        'lookup_time': '2021-02-20T01:00:30.799723+00:00',
+        'process_name': 'com.apple.private.alloy.tincan.audio'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
