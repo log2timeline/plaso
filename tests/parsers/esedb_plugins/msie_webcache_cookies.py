@@ -41,9 +41,6 @@ class MsieWebCacheESEDBCookiePluginTest(test_lib.ESEDBPluginTestCase):
             "data_type": "msie:cookie:entry",
             "entry_identifier": 13,
             "flags": 2148017153,
-            "inode": "-",
-            "message": "(abid) Flags: 2148017153    ",
-            "parser": "esedb/msie_webcache_cookies",
             "rdomain": "com.associates-amazon",
              }
 
