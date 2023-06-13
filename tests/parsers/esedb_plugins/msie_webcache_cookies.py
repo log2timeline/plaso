@@ -34,7 +34,7 @@ class MsieWebCacheESEDBCookiePluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-            "cookie_hash": "e8f278e06e2b0ae186e5a07d"
+            "cookie_hash": "e8f278e06e2b0ae186e5a07d",
             "cookie_name": "SRCHHPGUSR",
             "cookie_value": "SRCHLANG=en",
             "cookie_value_raw": "535243484c414e473d656e00",
