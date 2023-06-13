@@ -129,7 +129,7 @@ class MSIE11CookiePlugin(
       event_data.entry_identifier = record_values.get('EntryId', None)
       event_data.flags = record_values.get('Flags',None)
       event_data.expiration_time = self._GetDateTimeValue(
-          record_values, 'ExpiryTime')
+          record_values, 'Expires')
       event_data.flags = record_values.get('Flags',None)
       event_data.modification_time = self._GetDateTimeValue(
           record_values, 'LastModified')
