@@ -28,7 +28,6 @@ class MsieWebCacheCookieData(events.EventData):
     modification_time (dfdatetime.DateTimeValues): modification date and time.
     rdomain (str): Request domain for which the cookie was set.
   """
-  
 
   DATA_TYPE = 'msie:cookie:entry'
 
@@ -50,7 +49,6 @@ class MsieWebCacheCookieData(events.EventData):
 class MSIE11CookiePlugin(
     interface.ESEDBPlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Internet cookies in the MSIE webcache file."""
-  
   NAME = 'msie_webcache_cookies'
   DATA_FORMAT = (
       'Internet Explorer WebCache ESE database (WebCacheV01.dat, '
@@ -81,7 +79,7 @@ class MSIE11CookiePlugin(
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
-  def _ParseCookieExTable(self, parser_mediator, table, container_name):
+  def _ParseCookieExTable(self, parser_mediator, table):
     """Parses a CookieEntryEx_# table.
 
     Args:
@@ -103,15 +101,15 @@ class MSIE11CookiePlugin(
             'Unable to retrieve record values from record: {0:d} '
             'in table: {1:s}').format(record_index, table.name))
         continue
-      
-      def cookie_hex_to_ascii(raw_cookie):
+
+      def CookieHexToAscii(raw_cookie):
         if raw_cookie is not None:
           if raw_cookie.endswith(b'\x00'):
             raw_cookie = raw_cookie[:-1]
           return raw_cookie.decode('ascii')
-
-      cookie_name = cookie_hex_to_ascii(record_values.get('Name',None))
-      cookie_value = cookie_hex_to_ascii(record_values.get('Value',None))
+        return None
+      cookie_name = CookieHexToAscii(record_values.get('Name',None))
+      cookie_value = CookieHexToAscii(record_values.get('Value',None))
 
       cookie_hash = record_values.get('CookieHash',None)
       if cookie_hash is not None:
@@ -124,7 +122,7 @@ class MSIE11CookiePlugin(
       event_data.container_identifier = record_values.get('ContainerId', None)
       event_data.cookie_hash = cookie_hash
       event_data.cookie_name = cookie_name
-      event_data.cookie_value_raw = cookie_value_raw 
+      event_data.cookie_value_raw = cookie_value_raw
       event_data.cookie_value = cookie_value
       event_data.entry_identifier = record_values.get('EntryId', None)
       event_data.flags = record_values.get('Flags',None)
@@ -154,19 +152,16 @@ class MSIE11CookiePlugin(
 
     if table is None:
       raise ValueError('Missing table value.')
-    
     for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
         break
-      
       record_values = self._GetRecordValues(
           parser_mediator, table.name, record_index, esedb_record)
       container_identifier = record_values.get('ContainerId', None)
-      
       # Each Container table may have a CookieEx table attached to it.
       cookie_table_name = 'CookieEntryEx_{0:d}'.format(container_identifier)
       cookie_table = database.GetTableByName(cookie_table_name)
       if cookie_table.name==cookie_table_name:
-        self._ParseCookieExTable(parser_mediator, cookie_table, "CookieEx")
+        self._ParseCookieExTable(parser_mediator, cookie_table)
 
 esedb.ESEDBParser.RegisterPlugin(MSIE11CookiePlugin)

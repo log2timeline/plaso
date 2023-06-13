@@ -34,18 +34,21 @@ class MsieWebCacheESEDBCookiePluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-            "cookie_hash": "e8f278e06e2b0ae186e5a07d",
-            "cookie_name": "SRCHHPGUSR",
-            "cookie_value": "SRCHLANG=en",
-            "cookie_value_raw": "535243484c414e473d656e00",
+            "cookie_hash": "5b4342ed6e2b0ae16f7e2c4c",
+            "cookie_name": "abid",
+            "cookie_value": "fcc450d1-8674-1bd3-4074-a240cff5c5b1",
+            "cookie_value_raw": "66636334353064312d383637342d316264332d343037342d61323430636666356335623100",
             "data_type": "msie:cookie:entry",
-            "entry_identifier": 39,
-            "flags": 525312,
+            "entry_identifier": 13,
+            "flags": 2148017153,
             "inode": "-",
-            "message": "(SRCHHPGUSR) Flags: 525312",
+            "message": "(abid) Flags: 2148017153    ",
             "parser": "esedb/msie_webcache_cookies",
-            "rdomain": "com.bing",
-            }
+            "rdomain": "com.associates-amazon",
+             }
+
+
+
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
     self.CheckEventData(event_data, expected_event_values)
