@@ -6,6 +6,7 @@ import base64
 import collections
 import os
 import re
+import struct
 import uuid
 
 import lz4.block
@@ -269,6 +270,104 @@ class LogEntry(object):
     return self.timestamp < other.timestamp
 
 
+class FormatStringOperator(object):
+  """Format string operator.
+
+  Attributes:
+    flags (str): flags.
+    precision (str): precision.
+    specifier (str): conversion specifier.
+    width (str): width.
+  """
+
+  _PYTHON_SPECIFIERS = {
+      '@': 's',
+      'a': 'f',
+      'A': 'f',
+      'C': 'c',
+      'D': 'd',
+      'i': 'd',
+      'm': 'd',
+      'O': 'o',
+      'p': 'x',
+      'P': 's',
+      'S': 's',
+      'u': 'd',
+      'U': 'd'}
+
+  def __init__(self, flags=None, precision=None, specifier=None, width=None):
+    """Initializes a format string operator.
+
+    Args:
+      flags (Optional[str]): flags.
+      precision (Optional[str]): precision.
+      specifier (Optional[str]): conversion specifier.
+      width (Optional[str]): width.
+    """
+    super(FormatStringOperator, self).__init__()
+    self._format_string = None
+    self.flags = flags
+    self.precision = precision
+    self.specifier = specifier
+    self.width = width
+
+  def GetPythonFormatString(self):
+    """Retrieves the Python format string.
+
+    Returns:
+      str: Python format string.
+    """
+    if self._format_string is None:
+      flags = self.flags or ''
+      precision = self.precision or ''
+      width = self.width or ''
+
+      python_specifier = self._PYTHON_SPECIFIERS.get(
+          self.specifier, self.specifier)
+
+      # Format "%3.3d" with 0 padding.
+      if self.specifier == 'd' and width and precision:
+        flags = '0'
+
+      # Ignore the precision of specifier "P" since it refers to the binary
+      # data not the resulting string.
+      if self.specifier == 'P':
+        precision = ''
+
+      # Prevent: "ValueError: Format specifier missing precision"
+      elif precision == '.':
+        precision = '.0'
+
+      elif precision == '.*':
+        precision = ''
+
+      if python_specifier in ('d', 'o', 'x', 'X'):
+        flags = flags.replace('-', '<')
+
+        # Prevent: "ValueError: Precision not allowed in integer format
+        # specifier"
+        precision = ''
+
+      elif python_specifier == 's':
+        if width and not flags:
+          flags = '>'
+        else:
+          flags = flags.replace('-', '<')
+
+        # Prevent: "%.0s" formatting as an empty string.
+        if precision == '.0':
+          precision = ''
+
+      if self.specifier == 'p':
+        self._format_string = (
+            f'0x{{0:{flags:s}{precision:s}{width:s}{python_specifier:s}}}')
+      else:
+        self._format_string = (
+            f'{{0:{flags:s}{precision:s}{width:s}{python_specifier:s}}}')
+
+    return self._format_string
+
+
 class StringFormatter(object):
   """String formatter."""
 
@@ -282,6 +381,31 @@ class StringFormatter(object):
 
   _ESCAPE_REGEX = re.compile(r'([{}])')
 
+  _INTERNAL_DECODERS = {
+      '@': 'internal:s',
+      'a': 'internal:f',
+      'A': 'internal:f',
+      'c': 'internal:u',
+      'd': 'internal:i',
+      'D': 'internal:i',
+      'e': 'internal:f',
+      'E': 'internal:f',
+      'f': 'internal:f',
+      'F': 'internal:f',
+      'g': 'internal:f',
+      'G': 'internal:f',
+      'i': 'internal:i',
+      'm': 'internal:m',
+      'o': 'internal:u',
+      'O': 'internal:u',
+      'p': 'internal:u',
+      'P': 'internal:s',
+      's': 'internal:s',
+      'u': 'internal:u',
+      'U': 'internal:u',
+      'x': 'internal:u',
+      'X': 'internal:u'}
+
   _OPERATOR_REGEX = re.compile(
       r'(%'
       r'(?:\{([^\}]{1,128})\})?'         # Optional value type decoder.
@@ -292,50 +416,12 @@ class StringFormatter(object):
       r'([@aAcCdDeEfFgGimnoOpPsSuUxX])'  # Conversion specifier.
       r'|%%)')
 
-  _PYTHON_SPECIFIERS = {
-      '@': 's',
-      'D': 'd',
-      'i': 'd',
-      'm': 'd',
-      'O': 'o',
-      'p': 'x',
-      'P': 's',
-      'u': 'd',
-      'U': 'd'}
-
-  _TYPE_HINTS = {
-      'a': 'floating-point',
-      'A': 'floating-point',
-      'd': 'signed',
-      'D': 'signed',
-      'e': 'floating-point',
-      'E': 'floating-point',
-      'f': 'floating-point',
-      'F': 'floating-point',
-      'g': 'floating-point',
-      'G': 'floating-point',
-      'i': 'signed',
-      'm': 'signed',
-      'o': 'unsigned',
-      'O': 'unsigned',
-      'p': 'unsigned',
-      'u': 'unsigned',
-      'U': 'unsigned',
-      'x': 'unsigned',
-      'X': 'unsigned'}
-
   def __init__(self):
     """Initializes a string formatter."""
     super(StringFormatter, self).__init__()
     self._decoders = []
     self._format_string = None
-    self._type_hints = []
-    self._value_formatters = []
-
-  @property
-  def number_of_formatters(self):
-    """int: number of value formatters."""
-    return len(self._value_formatters)
+    self._operators = []
 
   def FormatString(self, values):
     """Formats the string.
@@ -347,12 +433,12 @@ class StringFormatter(object):
       str: formatted string.
     """
     # Add place holders for missing values.
-    while len(values) < len(self._value_formatters):
+    while len(values) < len(self._operators):
       values.append('<decode: missing data>')
 
     if self._format_string is None:
       formatted_string = ''
-    elif self._value_formatters:
+    elif self._operators:
       formatted_string = self._format_string.format(*values)
     else:
       formatted_string = self._format_string
@@ -373,38 +459,19 @@ class StringFormatter(object):
     except IndexError:
       return []
 
-  def GetTypeHintByIndex(self, value_index):
-    """Retrieves the specific type of a specific value..
+  def GetFormatStringOperator(self, value_index):
+    """Retrieves the format string operator of a specific value.
 
     Args:
       value_index (int): value index.
 
     Returns:
-      list[str]: type hint or None if not available.
+      FormatStringOperator: format string operator or None if not available.
     """
     try:
-      return self._type_hints[value_index]
+      return self._operators[value_index]
     except IndexError:
       return None
-
-  def GetValueFormatter(self, value_index, precision=None):
-    """Retrieves a value formatter.
-
-    Args:
-      value_index (int): value index.
-      precision (int): precision.
-
-    Returns:
-      str: value formatter or None if not available.
-    """
-    try:
-      value_formatter = self._value_formatters[value_index]
-    except IndexError:
-      return None
-
-    # TODO: add precision support.
-    _ = precision
-    return value_formatter
 
   def ParseFormatString(self, format_string):
     """Parses an Unified Logging format string.
@@ -414,8 +481,7 @@ class StringFormatter(object):
     """
     self._decoders = []
     self._format_string = None
-    self._type_hints = []
-    self._value_formatters = []
+    self._operators = []
 
     if not format_string:
       return
@@ -443,44 +509,17 @@ class StringFormatter(object):
         decoder_names = [value for value in decoder_names if (
             value not in self._DECODERS_TO_IGNORE and value[:5] != 'name=')]
 
-        if specifier == 'm':
-          decoder_names.append('internal:m')
-        elif specifier == 'x' and flags == '#':
-          decoder_names.append('internal:#x')
+        if not decoder_names:
+          internal_decoder = self._INTERNAL_DECODERS.get(specifier, None)
+          if internal_decoder:
+            decoder_names = [internal_decoder]
 
-        flags = flags.replace('-', '>')
-
-        width = width or ''
-
-        python_specifier = self._PYTHON_SPECIFIERS.get(specifier, specifier)
-
-        # Ignore the precision of specifier "P" since it refers to the binary
-        # data not the resulting string.
-
-        # Prevent: "Precision not allowed in integer format specifier",
-        # "Format specifier missing precision" and ".0" formatting as an empty
-        # string.
-        if (specifier == 'P' or python_specifier in ('d', 'o', 'x', 'X') or
-            precision in ('.', '.*') or (
-                python_specifier == 's' and precision == '.0')):
-          precision = ''
-        else:
-          precision = precision or ''
-
-        # TODO: add support for "a" and "A"
-
-        if specifier == 'p':
-          value_formatter = (
-              f'0x{{0:{flags:s}{precision:s}{width:s}{python_specifier:s}}}')
-        else:
-          value_formatter = (
-              f'{{0:{flags:s}{precision:s}{width:s}{python_specifier:s}}}')
-
-        type_hint = self._TYPE_HINTS.get(specifier, None)
+        format_string_operator = FormatStringOperator(
+            flags=flags or None, precision=precision, specifier=specifier,
+            width=width)
 
         self._decoders.append(decoder_names)
-        self._type_hints.append(type_hint)
-        self._value_formatters.append(value_formatter)
+        self._operators.append(format_string_operator)
 
         literal = f'{{{specifier_index:d}:s}}'
         specifier_index += 1
@@ -497,7 +536,7 @@ class StringFormatter(object):
 
     self._format_string = ''.join(segments)
 
-    if not self._value_formatters:
+    if not self._operators:
       self._format_string = self._format_string.replace('{{', '{')
       self._format_string = self._format_string.replace('}}', '}')
 
@@ -505,47 +544,22 @@ class StringFormatter(object):
 class BaseFormatStringDecoder(object):
   """Format string decoder interface."""
 
-  # True if the value should be bytes.
-  VALUE_IN_BYTES = True
-
   @abc.abstractmethod
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a value.
 
     Args:
-      value (object): value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted value.
     """
 
 
-class AlternativeHexadecimalFormFormatStringDecoder(BaseFormatStringDecoder):
-  """Alternative hexadecimal form format string decoder."""
-
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
-    """Formats an integer value in alternative hexadecimal form.
-
-    Args:
-      value (int): integer value.
-      value_formatter (Optional[str]): value formatter.
-
-    Returns:
-      str: formatted integer value formatted in alternative hexadecimal form.
-    """
-    if value:
-      return f'{value:#x}'
-
-    return f'{value:x}'
-
-
 class BooleanFormatStringDecoder(BaseFormatStringDecoder):
   """Boolean value format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   def __init__(self, false_value='false', true_value='true'):
     """Initializes a boolean value format string decoder.
@@ -558,17 +572,20 @@ class BooleanFormatStringDecoder(BaseFormatStringDecoder):
     self._false_value = false_value
     self._true_value = true_value
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a boolean value.
 
     Args:
-      value (int): boolean value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): boolean value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted boolean value.
     """
-    if value:
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    if integer_value:
       return self._true_value
 
     return self._false_value
@@ -577,69 +594,72 @@ class BooleanFormatStringDecoder(BaseFormatStringDecoder):
 class DateTimeInSecondsFormatStringDecoder(BaseFormatStringDecoder):
   """Date and time value in seconds format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a date and time value in seconds.
 
     Args:
-      value (int): timestamp that contains the number of seconds since
+      value (bytes): timestamp that contains the number of seconds since
           1970-01-01 00:00:00.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted date and time value in seconds.
     """
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=value)
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=integer_value)
     return date_time.CopyToDateTimeString()
 
 
 class ErrorCodeFormatStringDecoder(BaseFormatStringDecoder):
   """Error code format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an error code value.
 
     Args:
-      value (int): error code.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): error code value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted error code value.
     """
-    # TODO: determine what the MacOS log tool shows when an error message is
-    # not defined.
-    return darwin.DarwinSystemErrorHelper.GetDescription(value)
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return darwin.DarwinSystemErrorHelper.GetDescription(integer_value)
 
 
 class ExtendedErrorCodeFormatStringDecoder(BaseFormatStringDecoder):
   """Extended error code format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an error code value.
 
     Args:
-      value (int): error code.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): error code value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted error code value.
     """
-    # TODO: determine what the MacOS log tool shows when an error message is
-    # not defined.
-    error_message = darwin.DarwinSystemErrorHelper.GetDescription(value)
+    if len(value) != 4:
+      return '<decode: unsupported value>'
 
-    return f'[{value:d}: {error_message:s}]'
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    error_message = darwin.DarwinSystemErrorHelper.GetDescription(integer_value)
+
+    return f'[{integer_value:d}: {error_message:s}]'
 
 
 class FileModeFormatStringDecoder(BaseFormatStringDecoder):
   """File mode format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   _FILE_TYPES = {
       0x1000: 'p',
@@ -649,53 +669,89 @@ class FileModeFormatStringDecoder(BaseFormatStringDecoder):
       0xa000: 'l',
       0xc000: 's'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a file mode value.
 
     Args:
-      value (int): file mode.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): file mode value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted file mode value.
     """
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
     string_parts = 10 * ['-']
 
-    if value & 0x0001:
+    if integer_value & 0x0001:
       string_parts[9] = 'x'
-    if value & 0x0002:
+    if integer_value & 0x0002:
       string_parts[8] = 'w'
-    if value & 0x0004:
+    if integer_value & 0x0004:
       string_parts[7] = 'r'
 
-    if value & 0x0008:
+    if integer_value & 0x0008:
       string_parts[6] = 'x'
-    if value & 0x0010:
+    if integer_value & 0x0010:
       string_parts[5] = 'w'
-    if value & 0x0020:
+    if integer_value & 0x0020:
       string_parts[4] = 'r'
 
-    if value & 0x0040:
+    if integer_value & 0x0040:
       string_parts[3] = 'x'
-    if value & 0x0080:
+    if integer_value & 0x0080:
       string_parts[2] = 'w'
-    if value & 0x0100:
+    if integer_value & 0x0100:
       string_parts[1] = 'r'
 
-    string_parts[0] = self._FILE_TYPES.get(value & 0xf000, '-')
+    string_parts[0] = self._FILE_TYPES.get(integer_value & 0xf000, '-')
 
     return ''.join(string_parts)
+
+
+class FloatingPointFormatStringDecoder(BaseFormatStringDecoder):
+  """Floating-point value format string decoder."""
+
+  def FormatValue(self, value, format_string_operator=None):
+    """Formats a floating-point value.
+
+    Args:
+      value (bytes): floating-point value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted floating-point value.
+    """
+    value_size = len(value)
+    if value_size not in (4, 8):
+      return '<decode: unsupported value>'
+
+    if value_size == 4:
+      float_value = struct.unpack('<f', value)
+    else:
+      float_value = struct.unpack('<d', value)
+
+    # TODO: add support for "a" and "A"
+    if format_string_operator:
+      format_string = format_string_operator.GetPythonFormatString()
+    else:
+      format_string = '{0:f}'
+
+    return format_string.format(float_value[0])
 
 
 class IPv4FormatStringDecoder(BaseFormatStringDecoder):
   """IPv4 value format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an IPv4 value.
 
     Args:
       value (bytes): IPv4 value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted IPv4 value.
@@ -703,19 +759,19 @@ class IPv4FormatStringDecoder(BaseFormatStringDecoder):
     if len(value) == 4:
       return '.'.join([f'{octet:d}' for octet in value])
 
-    # TODO: determine what the MacOS log tool shows.
-    return 'ERROR: unsupported value'
+    return '<decode: unsupported value>'
 
 
 class IPv6FormatStringDecoder(BaseFormatStringDecoder):
   """IPv6 value format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an IPv6 value.
 
     Args:
       value (bytes): IPv6 value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted IPv6 value.
@@ -727,8 +783,7 @@ class IPv6FormatStringDecoder(BaseFormatStringDecoder):
       # TODO: determine if ":0000" should be omitted from the string.
       return ':'.join([f'{octet_pair:04x}' for octet_pair in octet_pairs])
 
-    # TODO: determine what the MacOS log tool shows.
-    return 'ERROR: unsupported value'
+    return '<decode: unsupported value>'
 
 
 class BaseLocationStructureFormatStringDecoder(
@@ -785,19 +840,19 @@ class LocationClientManagerStateFormatStringDecoder(
       ('locationRestricted', 'location_restricted'),
       ('locationServicesEnabledStatus', 'location_enabled_status')]
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a location client manager state value.
 
     Args:
       value (bytes): location client manager state value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted location client manager state value.
     """
     if len(value) != 8:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap('client_manager_state_tracker_state')
 
@@ -846,12 +901,13 @@ class LocationLocationManagerStateFormatStringDecoder(
       ('courtesyPromptNeeded', 'courtesy_prompt_needed'),
       ('headingFilter', 'heading_filter')]
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a location location manager state value.
 
     Args:
       value (bytes): location location manager state value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted location location manager state value.
@@ -862,8 +918,7 @@ class LocationLocationManagerStateFormatStringDecoder(
     elif value_size == 72:
       data_type_name = 'location_manager_state_tracker_state_v2'
     else:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap(data_type_name)
 
@@ -876,8 +931,6 @@ class LocationClientAuthorizationStatusFormatStringDecoder(
     BaseFormatStringDecoder):
   """Location client authorization status format string decoder."""
 
-  VALUE_IN_BYTES = False
-
   _VALUES = {
       0: 'Not Determined',
       1: 'Restricted',
@@ -885,37 +938,49 @@ class LocationClientAuthorizationStatusFormatStringDecoder(
       3: 'Authorized Always',
       4: 'Authorized When In Use'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a client authorization status value.
 
     Args:
-      value (int): client authorization status value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): client authorization status value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted client authorization status value.
     """
-    return self._VALUES.get(value, 'UNKNOWN: {0:d}'.format(value))
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    string_value = self._VALUES.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
+
+    return f'"{string_value:s}"'
 
 
 class LocationEscapeOnlyFormatStringDecoder(BaseFormatStringDecoder):
   """Location escape only format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a location value.
 
     Args:
-      value (str): location value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): location value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted location value.
     """
-    value = value or ''
-    value = value.replace('/', '\\/')
-    return ''.join(['"', value, '"'])
+    # Note that the string data does not necessarily include an end-of-string
+    # character.
+
+    try:
+      string_value = value.decode('utf-8').rstrip('\x00')
+    except UnicodeDecodeError:
+      return '<decode: unsupported value>'
+
+    string_value = string_value.replace('/', '\\/')
+    return f'"{string_value:s}"'
 
 
 class LocationSQLiteResultFormatStringDecoder(BaseFormatStringDecoder):
@@ -955,38 +1020,37 @@ class LocationSQLiteResultFormatStringDecoder(BaseFormatStringDecoder):
       101: 'SQLITE_DONE',
       266: 'SQLITE IO ERR READ'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a SQLite result value.
 
     Args:
       value (bytes): SQLite result.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted SQLite result value.
     """
     if len(value) != 4:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     integer_value = int.from_bytes(value, 'little', signed=False)
     string_value = self._SQLITE_RESULTS.get(
-        integer_value, 'SQLITE UNKNOWN: {0:d}'.format(integer_value))
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
 
-    # TODO: determine what the MacOS log tool shows when an SQLite result is
-    # not defined.
     return f'"{string_value:s}"'
 
 
 class MaskHashFormatStringDecoder(BaseFormatStringDecoder):
   """Mask hash format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a value as a mask hash.
 
     Args:
       value (bytes): value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted value as a mask hash.
@@ -1006,8 +1070,7 @@ class BaseMDNSDNSStructureFormatStringDecoder(
 
   # pylint: disable=abstract-method
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'macos_mdns.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'macos_mdns.yaml')
 
   # Note that the flag names have a specific formatting order.
   _FLAG_NAMES = [
@@ -1081,19 +1144,19 @@ class MDNSDNSCountersFormatStringDecoder(
     BaseMDNSDNSStructureFormatStringDecoder):
   """mDNS DNS counters format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS counters value.
 
     Args:
       value (bytes): mDNS DNS counters value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS DNS counters value.
     """
     if len(value) != 8:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap('mdsn_dns_counters')
 
@@ -1108,19 +1171,19 @@ class MDNSDNSCountersFormatStringDecoder(
 class MDNSDNSHeaderFormatStringDecoder(BaseMDNSDNSStructureFormatStringDecoder):
   """mDNS DNS header format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS header value.
 
     Args:
       value (bytes): mDNS DNS header value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS DNS header value.
     """
     if len(value) != 12:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap('mdsn_dns_header')
 
@@ -1142,19 +1205,19 @@ class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
     BaseMDNSDNSStructureFormatStringDecoder):
   """mDNS DNS identifier and flags string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS identifier and flags value.
 
     Args:
       value (bytes): mDNS DNS identifier and flags value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS DNS identifier and flags value.
     """
     if len(value) != 8:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap('mdsn_dns_identifier_and_flags')
 
@@ -1172,30 +1235,33 @@ class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
 class MDNSProtocolFormatStringDecoder(BaseFormatStringDecoder):
   """mDNS protocol format string decoder."""
 
-  VALUE_IN_BYTES = False
-
   _PROTOCOLS = {
       1: 'UDP',
       2: 'TCP',
       4: 'HTTPS'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS protocol value.
 
     Args:
-      value (int): mDNS protocol value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): mDNS protocol value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS protocol value.
     """
-    return self._PROTOCOLS.get(value, 'UNKNOWN: {0:d}'.format(value))
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return self._PROTOCOLS.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
 
 
 class MDNSReasonFormatStringDecoder(BaseFormatStringDecoder):
   """mDNS reason format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   _REASONS = {
       1: 'no-data',
@@ -1204,23 +1270,28 @@ class MDNSReasonFormatStringDecoder(BaseFormatStringDecoder):
       4: 'no-dns-service',
       5: 'server error'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS reason value.
 
     Args:
-      value (int): mDNS reason value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): mDNS reason value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS reason value.
     """
-    return self._REASONS.get(value, 'UNKNOWN: {0:d}'.format(value))
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return self._REASONS.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
 
 
 class MDNSResourceRecordTypeFormatStringDecoder(BaseFormatStringDecoder):
   """mDNS resource record type format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   _RECORD_TYPES = {
       1: 'A',
@@ -1271,23 +1342,28 @@ class MDNSResourceRecordTypeFormatStringDecoder(BaseFormatStringDecoder):
       32768: 'TA',
       32769: 'DLV'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS resource record type value.
 
     Args:
-      value (int): mDNS resource record type value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): mDNS resource record type value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted mDNS resource record type value.
     """
-    return self._RECORD_TYPES.get(value, 'UNKNOWN: {0:d}'.format(value))
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return self._RECORD_TYPES.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
 
 
 class OpenDirectoryErrorFormatStringDecoder(BaseFormatStringDecoder):
   """Open Directory error format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   _ERROR_CODES = {
       0: 'ODNoError',
@@ -1355,17 +1431,24 @@ class OpenDirectoryErrorFormatStringDecoder(BaseFormatStringDecoder):
       10002: 'ODErrorDaemonError',
       10003: 'ODErrorPluginOperationTimeout'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an Open Directory error value.
 
     Args:
-      value (int): Open Directory error value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Open Directory error value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Open Directory error value.
     """
-    return self._ERROR_CODES.get(value, 'UNKNOWN: {0:d}'.format(value))
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return self._ERROR_CODES.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
 
 
 class OpenDirectoryMembershipDetailsFormatStringDecoder(
@@ -1384,19 +1467,19 @@ class OpenDirectoryMembershipDetailsFormatStringDecoder(
       0xa4: ('user', 'membership_details_with_name'),
       0xc3: ('group', 'membership_details_with_identifier')}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an Open Directory membership details value.
 
     Args:
       value (bytes): Open Directory membership details value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Open Directory membership details value.
     """
     if len(value) < 1:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     type_indicator = value[0]
     type_name, data_type_map_name = self._TYPES.get(
@@ -1420,8 +1503,6 @@ class OpenDirectoryMembershipDetailsFormatStringDecoder(
 class OpenDirectoryMembershipTypeFormatStringDecoder(BaseFormatStringDecoder):
   """Open Directory membership type format string decoder."""
 
-  VALUE_IN_BYTES = False
-
   _TYPES = {
       0: 'UID',
       1: 'GID',
@@ -1435,82 +1516,180 @@ class OpenDirectoryMembershipTypeFormatStringDecoder(BaseFormatStringDecoder):
       11: 'X509 DN',
       12: 'KERBEROS'}
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an Open Directory membership type value.
 
     Args:
-      value (int): Open Directory membership type value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Open Directory membership type value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Open Directory membership type value.
     """
-    return self._TYPES.get(value, 'UNKNOWN: {0:d}'.format(value))
+    if len(value) != 4:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return self._TYPES.get(
+        integer_value, f'<decode: unknown value: {integer_value:d}>')
+
+
+class SignedIntegerFormatStringDecoder(BaseFormatStringDecoder):
+  """Signed integer value format string decoder."""
+
+  def FormatValue(self, value, format_string_operator=None):
+    """Formats a signed integer value.
+
+    Args:
+      value (bytes): signed integer value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted signed integer value.
+    """
+    if len(value) not in (1, 2, 4, 8):
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=True)
+
+    if format_string_operator:
+      format_string = format_string_operator.GetPythonFormatString()
+    else:
+      format_string = '{0:d}'
+
+    return format_string.format(integer_value)
 
 
 class SignpostDescriptionAttributeFormatStringDecoder(BaseFormatStringDecoder):
   """Signpost description attribute value format string decoder."""
 
-  VALUE_IN_BYTES = False
+  def _GetStringValue(self, value, format_string_operator=None):
+    """Retrieves the values as a string.
 
-  def FormatValue(self, value, value_formatter=None):
+    Args:
+      value (bytes): Signpost value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted Signpost value.
+    """
+    specifier = getattr(format_string_operator, 'specifier', 's')
+    value_size = len(value)
+
+    if not value:
+      string_value = ''
+
+    elif specifier in ('a', 'A', 'e', 'E', 'f', 'F', 'g', 'G'):
+      if value_size not in (4, 8):
+        return '<decode: unsupported value>'
+
+      if value_size == 4:
+        float_value = struct.unpack('<f', value)
+      else:
+        float_value = struct.unpack('<d', value)
+
+      string_value = '{0:.16g}'.format(float_value[0])
+
+    elif specifier in ('c', 'C', 'o', 'O', 'p', 'u', 'U', 'x', 'X'):
+      if value_size not in (1, 2, 4, 8):
+        return '<decode: unsupported value>'
+
+      integer_value = int.from_bytes(value, 'little', signed=False)
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:d}'
+
+      string_value = format_string.format(integer_value)
+
+    elif specifier in ('d', 'D', 'i', 'm'):
+      if value_size not in (1, 2, 4, 8):
+        return '<decode: unsupported value>'
+
+      integer_value = int.from_bytes(value, 'little', signed=True)
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:d}'
+
+      string_value = format_string.format(integer_value)
+
+    elif specifier in ('@', 's', 'S'):
+      try:
+        string_value = value.decode('utf-8').rstrip('\x00')
+      except UnicodeDecodeError:
+        return '<decode: unsupported value>'
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:s}'
+
+      string_value = format_string.format(string_value)
+
+    else:
+      return '<decode: unsupported value>'
+
+    return string_value
+
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a Signpost description attribute value.
 
     Args:
-      value (object): Signpost description attribute value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Signpost description attribute value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Signpost description attribute value.
     """
-    if value is None:
-      value = ''
-    elif not isinstance(value, str):
-      value = value_formatter.format(value)
+    string_value = self._GetStringValue(
+        value, format_string_operator=format_string_operator)
 
-    return f'__##__signpost.description#____#attribute#_##_#{value:s}##__##'
+    return (f'__##__signpost.description#____#attribute'
+            f'#_##_#{string_value:s}##__##')
 
 
-class SignpostDescriptionBeginTimeFormatStringDecoder(BaseFormatStringDecoder):
-  """Signpost description begin time value format string decoder."""
+class SignpostDescriptionTimeFormatStringDecoder(BaseFormatStringDecoder):
+  """Signpost description time value format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
-    """Formats a Signpost description begin time value.
+  def __init__(self, time='begin'):
+    """Initializes a Signpost description time value format string decoder.
 
     Args:
-      value (int): Signpost description begin time value.
-      value_formatter (Optional[str]): value formatter.
-
-    Returns:
-      str: formatted Signpost description begin time value.
+      time (Optional[str]): Signpost description time.
     """
-    return f'__##__signpost.description#____#begin_time#_##_#{value:d}##__##'
+    super(SignpostDescriptionTimeFormatStringDecoder, self).__init__()
+    self._time = time
 
-
-class SignpostDescriptionEndTimeFormatStringDecoder(BaseFormatStringDecoder):
-  """Signpost description end time value format string decoder."""
-
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
-    """Formats a Signpost description end time value.
+  def FormatValue(self, value, format_string_operator=None):
+    """Formats a Signpost description time value.
 
     Args:
-      value (int): Signpost description end time value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Signpost description time value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
-      str: formatted Signpost description end time value.
+      str: formatted Signpost description time value.
     """
-    return f'__##__signpost.description#____#end_time#_##_#{value:d}##__##'
+    if len(value) != 8:
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    return (f'__##__signpost.description#____#{self._time:s}_time'
+            f'#_##_#{integer_value:d}##__##')
 
 
 class SignpostTelemetryNumberFormatStringDecoder(BaseFormatStringDecoder):
   """Signpost telemetry number value format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   def __init__(self, number=1):
     """Initializes a Signpost telemetry number value format string decoder.
@@ -1521,32 +1700,98 @@ class SignpostTelemetryNumberFormatStringDecoder(BaseFormatStringDecoder):
     super(SignpostTelemetryNumberFormatStringDecoder, self).__init__()
     self._number = number
 
-  def FormatValue(self, value, value_formatter=None):
+  def _GetStringValue(self, value, format_string_operator=None):
+    """Retrieves the values as a string.
+
+    Args:
+      value (bytes): Signpost value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted Signpost value.
+    """
+    specifier = getattr(format_string_operator, 'specifier', 's')
+    value_size = len(value)
+
+    if not value:
+      string_value = ''
+
+    elif specifier in ('a', 'A', 'e', 'E', 'f', 'F', 'g', 'G'):
+      if value_size not in (4, 8):
+        return '<decode: unsupported value>'
+
+      if value_size == 4:
+        float_value = struct.unpack('<f', value)
+      else:
+        float_value = struct.unpack('<d', value)
+
+      string_value = '{0:.16g}'.format(float_value[0])
+
+    elif specifier in ('c', 'C', 'o', 'O', 'p', 'u', 'U', 'x', 'X'):
+      if value_size not in (1, 2, 4, 8):
+        return '<decode: unsupported value>'
+
+      integer_value = int.from_bytes(value, 'little', signed=False)
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:d}'
+
+      string_value = format_string.format(integer_value)
+
+    elif specifier in ('d', 'D', 'i', 'm'):
+      if value_size not in (1, 2, 4, 8):
+        return '<decode: unsupported value>'
+
+      integer_value = int.from_bytes(value, 'little', signed=True)
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:d}'
+
+      string_value = format_string.format(integer_value)
+
+    elif specifier in ('@', 's', 'S'):
+      try:
+        string_value = value.decode('utf-8').rstrip('\x00')
+      except UnicodeDecodeError:
+        return '<decode: unsupported value>'
+
+      if format_string_operator:
+        format_string = format_string_operator.GetPythonFormatString()
+      else:
+        format_string = '{0:s}'
+
+      string_value = format_string.format(string_value)
+
+    else:
+      return '<decode: unsupported value>'
+
+    return string_value
+
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a Signpost telemetry number value.
 
     Args:
-      value (object): Signpost telemetry number value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Signpost telemetry number value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Signpost telemetry number value.
     """
-    if isinstance(value, float):
-      value_formatter = '{0:.9g}'
-
-    if value is None:
-      value = ''
-    elif not isinstance(value, str):
-      value = value_formatter.format(value)
+    string_value = self._GetStringValue(
+        value, format_string_operator=format_string_operator)
 
     return (f'__##__signpost.telemetry#____#number{self._number}'
-            f'#_##_#{value:s}##__##')
+            f'#_##_#{string_value:s}##__##')
 
 
 class SignpostTelemetryStringFormatStringDecoder(BaseFormatStringDecoder):
   """Signpost telemetry string value format string decoder."""
-
-  VALUE_IN_BYTES = False
 
   def __init__(self, number=1):
     """Initializes a Signpost telemetry string value format string decoder.
@@ -1557,29 +1802,36 @@ class SignpostTelemetryStringFormatStringDecoder(BaseFormatStringDecoder):
     super(SignpostTelemetryStringFormatStringDecoder, self).__init__()
     self._number = number
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a Signpost telemetry string value.
 
     Args:
-      value (str): Signpost telemetry string value.
-      value_formatter (Optional[str]): value formatter.
+      value (bytes): Signpost telemetry string value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Signpost telemetry string value.
     """
+    try:
+      string_value = value.decode('utf-8').rstrip('\x00')
+    except UnicodeDecodeError:
+      return '<decode: unsupported value>'
+
     return (f'__##__signpost.telemetry#____#string{self._number}'
-            f'#_##_#{value:s}##__##')
+            f'#_##_#{string_value:s}##__##')
 
 
 class SocketAddressFormatStringDecoder(BaseFormatStringDecoder):
-  """Socker address value format string decoder."""
+  """Socket address value format string decoder."""
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a socket address value.
 
     Args:
       value (bytes): socket address value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted socket address value.
@@ -1608,21 +1860,83 @@ class SocketAddressFormatStringDecoder(BaseFormatStringDecoder):
           ip_string = '::'
         return ip_string
 
-    # TODO: determine what the MacOS log tool shows.
-    return 'ERROR: unsupported value'
+    return '<decode: unsupported value>'
+
+
+class StringFormatStringDecoder(BaseFormatStringDecoder):
+  """String value format string decoder."""
+
+  def FormatValue(self, value, format_string_operator=None):
+    """Formats a string value.
+
+    Args:
+      value (bytes): string value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted string value.
+    """
+    if not value:
+      return '(null)'
+
+    # Note that the string data does not necessarily include an end-of-string
+    # character.
+
+    try:
+      string_value = value.decode('utf-8').rstrip('\x00')
+    except UnicodeDecodeError:
+      return '<decode: unsupported value>'
+
+    if format_string_operator:
+      format_string = format_string_operator.GetPythonFormatString()
+    else:
+      format_string = '{0:s}'
+
+    return format_string.format(string_value)
+
+
+class UnsignedIntegerFormatStringDecoder(BaseFormatStringDecoder):
+  """Unsigned integer value format string decoder."""
+
+  def FormatValue(self, value, format_string_operator=None):
+    """Formats an unsigned integer value.
+
+    Args:
+      value (bytes): unsigned integer value.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
+
+    Returns:
+      str: formatted unsigned integer value.
+    """
+    if len(value) not in (1, 2, 4, 8):
+      return '<decode: unsupported value>'
+
+    integer_value = int.from_bytes(value, 'little', signed=False)
+
+    if format_string_operator:
+      if (integer_value == 0 and format_string_operator.flags == '#' and
+          format_string_operator.specifier == 'x'):
+        return f'{integer_value:x}'
+
+      format_string = format_string_operator.GetPythonFormatString()
+    else:
+      format_string = '{0:d}'
+
+    return format_string.format(integer_value)
 
 
 class UUIDFormatStringDecoder(BaseFormatStringDecoder):
   """UUID value format string decoder."""
 
-  VALUE_IN_BYTES = False
-
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats an UUID value.
 
     Args:
       value (bytes): UUID value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted UUID value.
@@ -1635,22 +1949,21 @@ class WindowsNTSecurityIdentifierFormatStringDecoder(
     BaseFormatStringDecoder, dtfabric_helper.DtFabricHelper):
   """Windows NT security identifier (SID) format string decoder."""
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'windows_nt.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'windows_nt.yaml')
 
-  def FormatValue(self, value, value_formatter=None):
+  def FormatValue(self, value, format_string_operator=None):
     """Formats a Windows NT security identifier (SID) value.
 
     Args:
       value (bytes): Windows NT security identifier (SID) value.
-      value_formatter (Optional[str]): value formatter.
+      format_string_operator (Optional[FormatStringOperator]): format string
+          operator.
 
     Returns:
       str: formatted Windows NT security identifier (SID) value.
     """
     if len(value) < 8:
-      # TODO: determine what the MacOS log tool shows.
-      return 'ERROR: unsupported value'
+      return '<decode: unsupported value>'
 
     data_type_map = self._GetDataTypeMap('windows_nt_security_identifier')
 
@@ -1727,8 +2040,7 @@ class DSCFile(BaseUnifiedLoggingFile):
     uuids (list[DSCUUID]): the UUIDs.
   """
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'aul_dsc.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'aul_dsc.yaml')
 
   _SUPPORTED_FORMAT_VERSIONS = ((1, 0), (2, 0))
 
@@ -2045,8 +2357,7 @@ class TimesyncDatabaseFile(BaseUnifiedLoggingFile):
 class TraceV3File(BaseUnifiedLoggingFile):
   """Apple Unified Logging and Activity Tracing (tracev3) file."""
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'aul_tracev3.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'aul_tracev3.yaml')
 
   _RECORD_TYPE_ACTIVITY = 0x02
   _RECORD_TYPE_TRACE = 0x03
@@ -2054,8 +2365,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
   _RECORD_TYPE_SIGNPOST = 0x06
   _RECORD_TYPE_LOSS = 0x07
 
+  _ACTIVITY_EVENT_TYPE_DESCRIPTIONS = {
+      0x01: 'activityCreateEvent',
+      0x03: 'userActionEvent'}
+
   _EVENT_TYPE_DESCRIPTIONS = {
-      _RECORD_TYPE_ACTIVITY: 'activityCreateEvent',
       _RECORD_TYPE_LOG: 'logEvent',
       _RECORD_TYPE_LOSS: 'lossEvent',
       _RECORD_TYPE_SIGNPOST: 'signpostEvent',
@@ -2095,24 +2409,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
   _DATA_ITEM_BINARY_DATA_VALUE_TYPES = (0x30, 0x32, 0xf2)
   _DATA_ITEM_NUMERIC_VALUE_TYPES = (0x00, 0x02)
+  _DATA_ITEM_PRECISION_VALUE_TYPES = (0x10, 0x12)
+  _DATA_ITEM_PRIVATE_STRING_VALUE_TYPES = (0x21, 0x41)
   _DATA_ITEM_PRIVATE_VALUE_TYPES = (
       0x01, 0x21, 0x25, 0x31, 0x35, 0x41, 0x45)
   _DATA_ITEM_STRING_VALUE_TYPES = (0x20, 0x22, 0x40, 0x42)
-
-  _DATA_ITEM_NUMERIC_DATA_MAP_NAMES = {
-      'floating-point': {
-          4: 'float32le',
-          8: 'float64le'},
-      'signed': {
-          1: 'int8',
-          2: 'int16le',
-          4: 'int32le',
-          8: 'int64le'},
-      'unsigned': {
-          1: 'uint8',
-          2: 'uint16le',
-          4: 'uint32le',
-          8: 'uint64le'}}
 
   _FLAG_HAS_ACTIVITY_IDENTIFIER = 0x0001
   _FLAG_HAS_LARGE_OFFSET = 0x0020
@@ -2158,8 +2459,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
       'errno': ExtendedErrorCodeFormatStringDecoder(),
       'in_addr': IPv4FormatStringDecoder(),
       'in6_addr': IPv6FormatStringDecoder(),
+      'internal:f': FloatingPointFormatStringDecoder(),
+      'internal:i': SignedIntegerFormatStringDecoder(),
       'internal:m': ErrorCodeFormatStringDecoder(),
-      'internal:#x': AlternativeHexadecimalFormFormatStringDecoder(),
+      'internal:s': StringFormatStringDecoder(),
+      'internal:u': UnsignedIntegerFormatStringDecoder(),
       'location:_CLClientManagerStateTrackerState': (
           LocationClientManagerStateFormatStringDecoder()),
       'location:_CLLocationManagerStateTrackerState': (
@@ -2192,9 +2496,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
       'signpost.description:attribute': (
           SignpostDescriptionAttributeFormatStringDecoder()),
       'signpost.description:begin_time': (
-          SignpostDescriptionBeginTimeFormatStringDecoder()),
+          SignpostDescriptionTimeFormatStringDecoder(time='begin')),
       'signpost.description:end_time': (
-          SignpostDescriptionEndTimeFormatStringDecoder()),
+          SignpostDescriptionTimeFormatStringDecoder(time='end')),
       'signpost.telemetry:number1': (
           SignpostTelemetryNumberFormatStringDecoder(number=1)),
       'signpost.telemetry:number2': (
@@ -2232,7 +2536,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
     self._catalog = None
     self._catalog_process_information_entries = {}
     self._catalog_strings_map = {}
-    self._chunk_index = 0
     self._file_system = file_system
     self._header_timebase = 1.0
     self._header_timestamp = 0
@@ -2248,6 +2551,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     Args:
       catalog (tracev3_catalog): catalog.
+
+    Raises:
+      ParseError: if a process information entry already exists.
     """
     self._catalog_strings_map = self._GetCatalogSubSystemStringMap(catalog)
 
@@ -2354,6 +2660,35 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return load_address - image_text_offset
 
+  def _DecodeValue(
+      self, string_formatter, value_index, value_data, precision=None):
+    """Decodes value data using the string formatter.
+
+    Args:
+      string_formatter (StringFormatter): string formatter.
+      value_index (int): index of the value in the string formatter.
+      value_data (bytes): value data.
+      precision (Optional[int]): value format string precision.
+
+    Returns:
+      str: decoded value.
+    """
+    decoder_names = string_formatter.GetDecoderNamesByIndex(value_index)
+    if not decoder_names:
+      return '<decode: missing decoder>'
+
+    decoder_object = self._FORMAT_STRING_DECODERS.get(decoder_names[0], None)
+    if not decoder_object:
+      return f'<decode: unsupported decoder: {decoder_names[0]:s}>'
+
+    # TODO: add support for precision
+    _ = precision
+
+    format_string_operator = string_formatter.GetFormatStringOperator(
+        value_index)
+    return decoder_object.FormatValue(
+        value_data, format_string_operator=format_string_operator)
+
   def _GetCatalogSubSystemStringMap(self, catalog):
     """Retrieves a map of the catalog sub system strings and offsets.
 
@@ -2371,6 +2706,32 @@ class TraceV3File(BaseUnifiedLoggingFile):
       map_offset += len(string) + 1
 
     return strings_map
+
+  def _GetDataItemsAndValuesData(
+      self, tracepoint_data_object, values_data, oversize_chunks):
+    """Retrieves the data items and values data.
+
+    Args:
+      tracepoint_data_object (object): firehose tracepoint data object.
+      values_data (bytes): (public) values data.
+      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+          reference.
+
+    Returns:
+      tuple[list[tracev3_data_item], bytes]: data items and values data.
+    """
+    data_reference = getattr(tracepoint_data_object, 'data_reference', None)
+    if not data_reference:
+      data_items = getattr(tracepoint_data_object, 'data_items', None)
+      return data_items, values_data
+
+    oversize_chunk = oversize_chunks.get(data_reference, None)
+    if oversize_chunk:
+      return oversize_chunk.data_items, oversize_chunk.values_data
+
+    # Seen in certain tracev3 files that oversize chunks can be missing.
+    # TODO: issue warning.
+    return None, None
 
   def _GetDSCFile(self, uuid_string):
     """Retrieves a specific shared-cache strings (DSC) file.
@@ -2490,6 +2851,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
         if large_offset_data and large_shared_cache_data:
           calculated_large_offset_data = large_shared_cache_data >> 1
           if large_offset_data != calculated_large_offset_data:
+            # "<Invalid shared cache code pointer offset>"
+
             image_values.identifier = strings_file_identifier
             image_values.text_offset = 0
             image_values.path = ''
@@ -2668,7 +3031,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Returns:
       TimesyncDatabaseFile: a timesync database file or None if not available.
     """
-    if not file_entry:
+    if not self._timesync_path:
       return None
 
     timesync_file = TimesyncDatabaseFile()
@@ -2710,7 +3073,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
       file_object (file): file-like object.
       file_offset (int): offset of the catalog data relative to the start
           of the file.
-      chunk_data_size (int): size of the catalog chunk data.
 
     Returns:
       tracev3_catalog: catalog.
@@ -2841,10 +3203,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
       data_offset += alignment
 
-  def _ReadBacktraceData(self, backtrace_data, data_offset):
+  def _ReadBacktraceData(self, flags, backtrace_data, data_offset):
     """Reads firehose tracepoint backtrace data.
 
     Args:
+      flags (int): firehose tracepoint flags.
       backtrace_data (bytes): firehose tracepoint backtrace data.
       data_offset (int): offset of the firehose tracepoint backtrace data
           relative to the start of the chunk set.
@@ -2855,6 +3218,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Raises:
       ParseError: if the backtrace data cannot be read.
     """
+    if flags & 0x1000 == 0:
+      return []
+
     data_type_map = self._GetDataTypeMap(
         'tracev3_firehose_tracepoint_backtrace_data')
 
@@ -2905,56 +3271,28 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     for data_item in data_items:
       value_data = None
-      value = None
 
       if data_item.value_type in self._DATA_ITEM_NUMERIC_VALUE_TYPES:
-        type_hint = string_formatter.GetTypeHintByIndex(value_index)
-        data_type_map_name = self._DATA_ITEM_NUMERIC_DATA_MAP_NAMES.get(
-            type_hint or 'unsigned', {}).get(data_item.data_size, None)
+        value_data = data_item.data
 
-        if data_type_map_name:
-          data_type_map = self._GetDataTypeMap(data_type_map_name)
-
-          # TODO: calculate data offset for debugging purposes.
-
-          value_data = data_item.data
-          value = self._ReadStructureFromByteStream(
-              value_data, 0, data_type_map)
+      elif data_item.value_type in self._DATA_ITEM_PRECISION_VALUE_TYPES:
+        value_data = data_item.data
 
       elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
-        if data_item.value_data_size > 0:
-          # Note that the string data does not necessarily include
-          # an end-of-string character hence the cstring data_type_map is not
-          # used here.
-          value_data_offset = data_item.value_data_offset
-          value_data = values_data[
-              value_data_offset:value_data_offset + data_item.value_data_size]
+        value_data_offset = data_item.value_data_offset
+        value_data = values_data[
+            value_data_offset:value_data_offset + data_item.value_data_size]
 
-          try:
-            value = value_data.decode('utf-8').rstrip('\x00')
-          except UnicodeDecodeError:
-            pass
-
-      elif data_item.value_type in (0x21, 0x41):
-        if data_item.value_data_size > 0:
-          # Note that the string data does not necessarily include
-          # an end-of-string character hence the cstring data_type_map is not
-          # used here.
-          value_data_offset = (
-              private_data_range_offset + data_item.value_data_offset)
-          value_data = private_data[
-              value_data_offset:value_data_offset + data_item.value_data_size]
-
-          try:
-            value = value_data.decode('utf-8').rstrip('\x00')
-          except UnicodeDecodeError:
-            pass
+      elif data_item.value_type in self._DATA_ITEM_PRIVATE_STRING_VALUE_TYPES:
+        value_data_offset = (
+            private_data_range_offset + data_item.value_data_offset)
+        value_data = private_data[
+            value_data_offset:value_data_offset + data_item.value_data_size]
 
       elif data_item.value_type in self._DATA_ITEM_BINARY_DATA_VALUE_TYPES:
         value_data_offset = data_item.value_data_offset
         value_data = values_data[
             value_data_offset:value_data_offset + data_item.value_data_size]
-        value = value_data
 
       if data_item.value_type not in (
           0x00, 0x01, 0x02, 0x10, 0x12, 0x20, 0x21, 0x22, 0x25, 0x30, 0x31,
@@ -2963,42 +3301,18 @@ class TraceV3File(BaseUnifiedLoggingFile):
             f'Unsupported data item value type: '
             f'0x{data_item.value_type:02x}.'))
 
-      if data_item.value_type in (0x10, 0x12):
-        precision = value
+      if data_item.value_type in self._DATA_ITEM_PRECISION_VALUE_TYPES:
+        precision = int.from_bytes(value_data, 'little', signed=False)
         continue
 
-      value_formatter = string_formatter.GetValueFormatter(
-          value_index, precision=precision)
-
-      decoder_names = string_formatter.GetDecoderNamesByIndex(value_index)
+      value = None
       if data_item.value_type in self._DATA_ITEM_PRIVATE_VALUE_TYPES:
-        if value is None:
+        if not value_data:
           value = '<private>'
 
-      elif decoder_names:
-        decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_names[0], None)
-        if not decoder_class:
-          value = f'<decode: unsupported decoder: {decoder_names[0]:s}>'
-        elif decoder_class.VALUE_IN_BYTES:
-          value = decoder_class.FormatValue(
-              value_data, value_formatter=value_formatter)
-        else:
-          value = decoder_class.FormatValue(
-              value, value_formatter=value_formatter)
-
-      elif data_item.value_type in self._DATA_ITEM_STRING_VALUE_TYPES:
-        if value is None:
-          value = '(null)'
-
-      elif isinstance(value, bytes):
-        # TODO: determine how binary data is formatted
-        value = f'\'{value!s}\''
-
-      elif value_formatter:
-        value = value_formatter.format(value)
-
-      else:
-        value = '<decode: missing format string>'
+      if not value:
+        value = self._DecodeValue(
+            string_formatter, value_index, value_data, precision=precision)
 
       precision = None
 
@@ -3031,17 +3345,14 @@ class TraceV3File(BaseUnifiedLoggingFile):
     firehose_header = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map)
 
-    if not self._catalog:
-      process_information_entry = None
-    else:
-      proc_id = (f'{firehose_header.proc_id_upper:d}@'
-                 f'{firehose_header.proc_id_lower:d}')
-      process_information_entry = (
-          self._catalog_process_information_entries.get(proc_id, None))
-      if not process_information_entry:
-        raise errors.ParseError((
-            f'Unable to retrieve process information entry: {proc_id:s} from '
-            f'catalog'))
+    proc_id = (f'{firehose_header.proc_id_upper:d}@'
+               f'{firehose_header.proc_id_lower:d}')
+    process_information_entry = (
+        self._catalog_process_information_entries.get(proc_id, None))
+    if not process_information_entry:
+      raise errors.ParseError((
+          f'Unable to retrieve process information entry: {proc_id:s} from '
+          f'catalog'))
 
     private_data_virtual_offset = (
         firehose_header.private_data_virtual_offset & 0x0fff)
@@ -3089,7 +3400,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
         tracepoint_data_object, bytes_read = (
             self._ReadFirehoseTracepointTraceData(
                 firehose_tracepoint.flags, firehose_tracepoint.data,
-                firehose_tracepoint.data_size, tracepoint_data_offset))
+                tracepoint_data_offset))
 
       elif record_type == self._RECORD_TYPE_LOG:
         if firehose_tracepoint.log_type not in (0x00, 0x01, 0x02, 0x10, 0x11):
@@ -3131,13 +3442,18 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
       log_entry = LogEntry()
       log_entry.boot_identifier = self._boot_identifier
-      log_entry.event_type = self._EVENT_TYPE_DESCRIPTIONS.get(
-          firehose_tracepoint.record_type, None)
       log_entry.mach_timestamp = continuous_time
       log_entry.process_image_identifier = process_image_identifier
       log_entry.thread_identifier = firehose_tracepoint.thread_identifier
       log_entry.timestamp = self._GetTimestamp(continuous_time)
       log_entry.trace_identifier = self._GetTraceIdentifier(firehose_tracepoint)
+
+      if record_type == self._RECORD_TYPE_ACTIVITY:
+        log_entry.event_type = self._ACTIVITY_EVENT_TYPE_DESCRIPTIONS.get(
+            firehose_tracepoint.log_type, None)
+      else:
+        log_entry.event_type = self._EVENT_TYPE_DESCRIPTIONS.get(
+            firehose_tracepoint.record_type, None)
 
       if record_type == self._RECORD_TYPE_LOSS:
         loss_count = tracepoint_data_object.number_of_messages or 0
@@ -3158,13 +3474,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
       else:
         values_data_offset = bytes_read
+        values_data = firehose_tracepoint.data[values_data_offset:]
 
-        if firehose_tracepoint.flags & 0x1000 == 0:
-          backtrace_frames = []
-        else:
-          backtrace_frames = self._ReadBacktraceData(
-              firehose_tracepoint.data[values_data_offset:],
-              tracepoint_data_offset + values_data_offset)
+        backtrace_frames = self._ReadBacktraceData(
+            firehose_tracepoint.flags, values_data,
+            tracepoint_data_offset + values_data_offset)
 
         string_reference, is_dynamic = self._CalculateFormatStringReference(
             tracepoint_data_object, firehose_tracepoint.format_string_reference)
@@ -3175,36 +3489,30 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
         string_formatter = image_values.GetStringFormatter()
 
-        data_reference = getattr(tracepoint_data_object, 'data_reference', None)
-        if not data_reference:
-          data_items = getattr(tracepoint_data_object, 'data_items', None)
-          values_data = firehose_tracepoint.data[values_data_offset:]
-        else:
-          oversize_chunk = oversize_chunks.get(data_reference, None)
-          if oversize_chunk:
-            data_items = oversize_chunk.data_items
-            values_data = oversize_chunk.values_data
-          else:
-            # Seen in certain tracev3 files that oversize chunks can be missing.
-            data_items = None
-            values_data = None
-
         values = []
-        if data_items:
-          private_data_range = getattr(
-              tracepoint_data_object, 'private_data_range', None)
-          if private_data_range is None:
-            private_data_offset = 0
-          else:
-            # TODO: error if private_data_virtual_offset >
-            # private_data_range.offset
-            private_data_offset = (
-                private_data_range.offset - private_data_virtual_offset)
+        if record_type == self._RECORD_TYPE_TRACE:
+          values = self._ReadFirehoseTracepointTraceValuesData(
+              tracepoint_data_object, values_data, string_formatter)
 
-          # TODO: calculate item data offset for debugging purposes.
-          values = self._ReadDataItems(
-              data_items, values_data, private_data, private_data_offset,
-              string_formatter)
+        else:
+          data_items, values_data = self._GetDataItemsAndValuesData(
+              tracepoint_data_object, values_data, oversize_chunks)
+
+          if data_items:
+            private_data_range = getattr(
+                tracepoint_data_object, 'private_data_range', None)
+            if private_data_range is None:
+              private_data_offset = 0
+            else:
+              # TODO: error if private_data_virtual_offset >
+              # private_data_range.offset
+              private_data_offset = (
+                  private_data_range.offset - private_data_virtual_offset)
+
+            # TODO: calculate item data offset for debugging purposes.
+            values = self._ReadDataItems(
+                data_items, values_data, private_data, private_data_offset,
+                string_formatter)
 
         sub_system_identifier = getattr(
             tracepoint_data_object, 'sub_system_identifier', None)
@@ -3244,11 +3552,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
           log_entry.activity_identifier = (
               new_activity_identifier & self.ACTIVITY_IDENTIFIER_BITMASK)
 
-          current_activity_identifier = getattr(
-              tracepoint_data_object, 'current_activity_identifier', None) or 0
-          # Note that the creator activity identifier is not masked in
-          # the output.
-          log_entry.creator_activity_identifier = current_activity_identifier
+          if firehose_tracepoint.log_type == 0x01:
+            current_activity_identifier = getattr(
+                tracepoint_data_object, 'current_activity_identifier',
+                None) or 0
+            # Note that the creator activity identifier is not masked in
+            # the output.
+            log_entry.creator_activity_identifier = current_activity_identifier
 
           other_activity_identifier = getattr(
               tracepoint_data_object, 'other_activity_identifier', None) or 0
@@ -3320,8 +3630,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """Reads firehose tracepoint activity data.
 
     Args:
-      log_type (bytes): firehose tracepoint log type.
-      flags (bytes): firehose tracepoint flags.
+      log_type (int): firehose tracepoint log type.
+      flags (int): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
@@ -3354,7 +3664,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """Reads firehose tracepoint log data.
 
     Args:
-      flags (bytes): firehose tracepoint flags.
+      flags (int): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
@@ -3388,7 +3698,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """Reads firehose tracepoint loss data.
 
     Args:
-      flags (bytes): firehose tracepoint flags.
+      flags (int): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
@@ -3421,7 +3731,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """Reads firehose tracepoint signpost data.
 
     Args:
-      flags (bytes): firehose tracepoint flags.
+      flags (int): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
@@ -3451,13 +3761,12 @@ class TraceV3File(BaseUnifiedLoggingFile):
     return signpost, context.byte_size
 
   def _ReadFirehoseTracepointTraceData(
-      self, flags, tracepoint_data, data_size, data_offset):
+      self, flags, tracepoint_data, data_offset):
     """Reads firehose tracepoint trace data.
 
     Args:
-      flags (bytes): firehose tracepoint flags.
+      flags (int): firehose tracepoint flags.
       tracepoint_data (bytes): firehose tracepoint data.
-      data_size (int): size of the firehose tracepoint data.
       data_offset (int): offset of the firehose tracepoint data relative to
           the start of the chunk set.
 
@@ -3468,9 +3777,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Raises:
       ParseError: if the trace data cannot be read.
     """
-    if data_size < 5:
-      raise errors.ParseError(f'Unsupported data size: {data_size:d}')
-
     supported_flags = 0x0002
 
     if flags & ~supported_flags != 0:
@@ -3487,32 +3793,54 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     trace.number_of_values = tracepoint_data[-1]
 
-    bytes_read = context.byte_size + 1
+    return trace, context.byte_size
 
-    if trace.number_of_values not in (0, 1):
+  def _ReadFirehoseTracepointTraceValuesData(
+      self, trace, values_data, string_formatter):
+    """Reads firehose tracepoint trace values data.
+
+    Args:
+      trace (tracev3_firehose_tracepoint_trace): trace.
+      values_data (bytes): (public) values data.
+      string_formatter (StringFormatter): string formatter.
+
+    Returns:
+      list[str]: values formatted as strings.
+
+    Raises:
+      ParseError: if the values cannot be read.
+    """
+    if not trace.number_of_values:
+      return []
+
+    # TODO: currently unknown if the value sizes are stored front-to-back or
+    # back-to-front.
+    if trace.number_of_values != 1:
       raise errors.ParseError(
           f'Unsupported number of values: {trace.number_of_values:d}')
 
-    if trace.number_of_values == 1:
-      trace.value_size = tracepoint_data[-2]
+    values = []
 
-      if trace.value_size not in (4, 8):
-        raise errors.ParseError(f'Unsupported value size: {trace.value_size:d}')
+    value_data_offset = 0
+    value_size_offset = -2
 
-      data_type_map_name = self._DATA_ITEM_NUMERIC_DATA_MAP_NAMES.get(
-          'unsigned', {}).get(trace.value_size, None)
+    for value_index in range(trace.number_of_values):
+      value_data_size = values_data[value_size_offset]
 
-      data_type_map = self._GetDataTypeMap(data_type_map_name)
+      if value_data_size not in (4, 8):
+        raise errors.ParseError(f'Unsupported value size: {value_data_size:d}')
 
-      # TODO: calculate data offset for debugging purposes.
+      value_data = values_data[
+          value_data_offset:value_data_offset + value_data_size]
 
-      trace.integer = self._ReadStructureFromByteStream(
-          tracepoint_data[bytes_read:], data_offset + data_offset,
-          data_type_map, data_type_map_name)
+      value = self._DecodeValue(string_formatter, value_index, value_data)
 
-      bytes_read += 1 + trace.value_size
+      values.append(value)
 
-    return trace, bytes_read
+      value_data_offset += value_data_size
+      value_size_offset -= 1
+
+    return values
 
   def _ReadHeaderChunk(self, file_object, file_offset):
     """Reads a header chunk.
@@ -3591,17 +3919,14 @@ class TraceV3File(BaseUnifiedLoggingFile):
     simpledump_chunk = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map, context=context)
 
-    if not self._catalog:
-      process_information_entry = None
-    else:
-      proc_id = (f'{simpledump_chunk.proc_id_upper:d}@'
-                 f'{simpledump_chunk.proc_id_lower:d}')
-      process_information_entry = (
-          self._catalog_process_information_entries.get(proc_id, None))
-      if not process_information_entry:
-        raise errors.ParseError((
-            f'Unable to retrieve process information entry: {proc_id:s} from '
-            f'catalog'))
+    proc_id = (f'{simpledump_chunk.proc_id_upper:d}@'
+               f'{simpledump_chunk.proc_id_lower:d}')
+    process_information_entry = (
+        self._catalog_process_information_entries.get(proc_id, None))
+    if not process_information_entry:
+      raise errors.ParseError((
+          f'Unable to retrieve process information entry: {proc_id:s} from '
+          f'catalog'))
 
     backtrace_frame = BacktraceFrame()
     backtrace_frame.image_identifier = simpledump_chunk.sender_image_identifier
@@ -3654,22 +3979,23 @@ class TraceV3File(BaseUnifiedLoggingFile):
     statedump_chunk = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map, context=context)
 
-    if not self._catalog:
-      process_information_entry = None
-    else:
-      proc_id = (f'{statedump_chunk.proc_id_upper:d}@'
-                 f'{statedump_chunk.proc_id_lower:d}')
-      process_information_entry = (
-          self._catalog_process_information_entries.get(proc_id, None))
-      if not process_information_entry:
-        raise errors.ParseError((
-            f'Unable to retrieve process information entry: {proc_id:s} from '
-            f'catalog'))
+    proc_id = (f'{statedump_chunk.proc_id_upper:d}@'
+               f'{statedump_chunk.proc_id_lower:d}')
+    process_information_entry = (
+        self._catalog_process_information_entries.get(proc_id, None))
+    if not process_information_entry:
+      raise errors.ParseError((
+          f'Unable to retrieve process information entry: {proc_id:s} from '
+          f'catalog'))
 
     event_message = ''
     if statedump_chunk.state_data_type == 0x03:
-      library = statedump_chunk.library.decode('ascii').rstrip('\x00')
-      decoder_type = statedump_chunk.decoder_type.decode('ascii').rstrip('\x00')
+      library_data = statedump_chunk.library.split(b'\x00', maxsplit=1)[0]
+      library = library_data.decode('utf8')
+
+      decoder_type_data = statedump_chunk.decoder_type.split(
+          b'\x00', maxsplit=1)[0]
+      decoder_type = decoder_type_data.decode('utf8')
 
       decoder_name = f'{library:s}:{decoder_type:s}'
       decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_name, None)
@@ -3853,7 +4179,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
       self._timesync_path = timesync_path
 
     file_offset = 0
-    self._chunk_index = 1
 
     chunk_header = self._ReadChunkHeader(file_object, file_offset)
     file_offset += 16
@@ -3902,6 +4227,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
     # TODO: generate timesyncEvent LogEntry
     # "=== log class: persist begins"
     # "=== log class: in-memory begins"
+    # are these determined based on the base continuous time of the first
+    # firehose chunk?
 
     for record in self._timesync_sync_records:
       boot_identifier_string = str(self._boot_identifier).upper()

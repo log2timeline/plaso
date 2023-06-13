@@ -19,13 +19,6 @@ attributes:
   size: 1
   units: bytes
 ---
-name: int8
-type: integer
-attributes:
-  format: signed
-  size: 1
-  units: bytes
----
 name: uint8
 type: integer
 attributes:
@@ -61,13 +54,6 @@ attributes:
   size: 4
   units: bytes
 ---
-name: int64
-type: integer
-attributes:
-  format: signed
-  size: 8
-  units: bytes
----
 name: uint64
 type: integer
 attributes:
@@ -80,68 +66,6 @@ type: string
 encoding: utf8
 element_data_type: char
 elements_terminator: "\x00"
----
-name: int16le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: signed
-  size: 2
-  units: bytes
----
-name: int32le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: signed
-  size: 4
-  units: bytes
----
-name: int64le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: signed
-  size: 8
-  units: bytes
----
-name: uint16le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: unsigned
-  size: 2
-  units: bytes
----
-name: uint32le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: unsigned
-  size: 4
-  units: bytes
----
-name: uint64le
-type: integer
-attributes:
-  byte_order: little-endian
-  format: unsigned
-  size: 8
-  units: bytes
----
-name: float32le
-type: floating-point
-attributes:
-  byte_order: little-endian
-  size: 4
-  units: bytes
----
-name: float64le
-type: floating-point
-attributes:
-  byte_order: little-endian
-  size: 8
-  units: bytes
 ---
 name: uuid_be
 type: uuid
@@ -731,8 +655,6 @@ attributes:
 members:
 - name: load_address_lower
   data_type: uint32
-- name: unknown1
-  data_type: uint8
 ---
 name: tracev3_oversize_chunk
 type: structure
