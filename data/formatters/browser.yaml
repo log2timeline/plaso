@@ -514,6 +514,19 @@ short_source: 'WEBHIST'
 source: 'MSIE WebCache partitions record'
 ---
 type: 'conditional'
+data_type: 'msie:cookie:entry'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flags}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache Cookies'
+---
+type: 'conditional'
 data_type: 'opera:history:entry'
 message:
 - '{url}'

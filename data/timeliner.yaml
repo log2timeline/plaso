@@ -873,6 +873,14 @@ attribute_mappings:
   description: 'Synchronization Time'
 place_holder_event: true
 ---
+data_type: 'msie:cookie:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
 data_type: 'networkminer:fileinfos:file'
 attribute_mappings:
 - name: 'written_time'
