@@ -282,7 +282,7 @@ Test argument parser.
 
     lines = frozenset(lines)
 
-    self.assertEqual(number_of_tables, 11)
+    self.assertEqual(number_of_tables, 12)
 
     expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)
