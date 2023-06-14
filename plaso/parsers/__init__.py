@@ -16,6 +16,7 @@ from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
+from plaso.parsers import ips_parser
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
@@ -56,6 +57,7 @@ from plaso.parsers import winrestore
 from plaso.parsers import bencode_plugins
 from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
+from plaso.parsers import ips_plugins
 from plaso.parsers import jsonl_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
