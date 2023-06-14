@@ -14,7 +14,6 @@ class MsieWebCacheESEDBCookiePluginTest(test_lib.ESEDBPluginTestCase):
 
   # pylint: disable=protected-access
 
-
   def testProcessOnDatabaseWithCookiesExTable(self):
     """Tests the Process function on database with a PartitionsEx table."""
     plugin = msie_webcache_cookies.MSIE11CookiePlugin()
@@ -34,18 +33,16 @@ class MsieWebCacheESEDBCookiePluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-            "cookie_hash": "5b4342ed6e2b0ae16f7e2c4c",
+            "cookie_hash": "0x5b4342ed6e2b0ae16f7e2c4c",
             "cookie_name": "abid",
             "cookie_value": "fcc450d1-8674-1bd3-4074-a240cff5c5b1",
-            "cookie_value_raw": "66636334353064312d383637342d316264332d343037342d61323430636666356335623100",
+            "cookie_value_raw": ("0x66636334353064312d383637342d316"
+                "264332d343037342d61323430636666356335623100"),
             "data_type": "msie:cookie:entry",
             "entry_identifier": 13,
             "flags": 2148017153,
-            "rdomain": "com.associates-amazon",
+            "request_domain": "com.associates-amazon",
              }
-
-
-
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
     self.CheckEventData(event_data, expected_event_values)

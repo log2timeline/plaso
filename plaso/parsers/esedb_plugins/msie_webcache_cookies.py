@@ -13,6 +13,7 @@ from plaso.lib import cookie_plugins_helper
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
+
 class MsieWebCacheCookieData(events.EventData):
   """MSIE WebCache Container table event data.
 
@@ -26,7 +27,7 @@ class MsieWebCacheCookieData(events.EventData):
     expiration_time (dfdatetime.DateTimeValues): expiration date and time.
     flags (int): an representation of cookie flags
     modification_time (dfdatetime.DateTimeValues): modification date and time.
-    rdomain (str): Request domain for which the cookie was set.
+    request_domain (str): Request domain for which the cookie was set.
   """
 
   DATA_TYPE = 'msie:cookie:entry'
@@ -44,11 +45,13 @@ class MsieWebCacheCookieData(events.EventData):
     self.expiration_time = None
     self.flags = None
     self.modification_time = None
-    self.rdomain = None
+    self.request_domain = None
+
 
 class MSIE11CookiePlugin(
     interface.ESEDBPlugin, cookie_plugins_helper.CookiePluginsHelper):
   """SQLite parser plugin for Internet cookies in the MSIE webcache file."""
+
   NAME = 'msie_webcache_cookies'
   DATA_FORMAT = (
       'Internet Explorer WebCache ESE database (WebCacheV01.dat, '
@@ -56,7 +59,6 @@ class MSIE11CookiePlugin(
   REQUIRED_TABLES = {
       'Containers': 'ParseContainersTableCookie',
   }
-
 
   def _GetDateTimeValue(self, record_values, value_name):
     """Retrieves a date and time record value.
@@ -79,6 +81,18 @@ class MSIE11CookiePlugin(
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
+  def _CookieHexToAscii(self, raw_cookie):
+    """Translates a cookie from a bytestring to a string"""
+    if raw_cookie is not None:
+      raw_cookie = raw_cookie.rstrip(b'\x00')
+      return raw_cookie.decode('ascii')
+    return None
+
+  def GetRawCookieValue(self, record_values, value_name): 
+    cookie_hash = record_values.get(value_name, None)
+    if cookie_hash is not None:
+      return f"0x{cookie_hash.hex()}"
+  
   def _ParseCookieExTable(self, parser_mediator, table):
     """Parses a CookieEntryEx_# table.
 
@@ -102,21 +116,11 @@ class MSIE11CookiePlugin(
             'in table: {1:s}').format(record_index, table.name))
         continue
 
-      def CookieHexToAscii(raw_cookie):
-        if raw_cookie is not None:
-          if raw_cookie.endswith(b'\x00'):
-            raw_cookie = raw_cookie[:-1]
-          return raw_cookie.decode('ascii')
-        return None
-      cookie_name = CookieHexToAscii(record_values.get('Name',None))
-      cookie_value = CookieHexToAscii(record_values.get('Value',None))
+      cookie_name = self._CookieHexToAscii(record_values.get('Name', None))
+      cookie_value = self._CookieHexToAscii(record_values.get('Value', None))
 
-      cookie_hash = record_values.get('CookieHash',None)
-      if cookie_hash is not None:
-        cookie_hash=cookie_hash.hex()
-      cookie_value_raw = record_values.get('Value',None)
-      if cookie_value_raw is not None:
-        cookie_value_raw=cookie_value_raw.hex()
+      cookie_hash = self.GetRawCookieValue(record_values, 'CookieHash')
+      cookie_value_raw = self.GetRawCookieValue(record_values, 'Value')
 
       event_data = MsieWebCacheCookieData()
       event_data.container_identifier = record_values.get('ContainerId', None)
@@ -125,13 +129,12 @@ class MSIE11CookiePlugin(
       event_data.cookie_value_raw = cookie_value_raw
       event_data.cookie_value = cookie_value
       event_data.entry_identifier = record_values.get('EntryId', None)
-      event_data.flags = record_values.get('Flags',None)
+      event_data.flags = record_values.get('Flags', None)
       event_data.expiration_time = self._GetDateTimeValue(
           record_values, 'Expires')
-      event_data.flags = record_values.get('Flags',None)
       event_data.modification_time = self._GetDateTimeValue(
           record_values, 'LastModified')
-      event_data.rdomain = record_values.get('RDomain',None)
+      event_data.request_domain = record_values.get('RDomain', None)
       parser_mediator.ProduceEventData(event_data)
 
   def ParseContainersTableCookie(
@@ -163,5 +166,6 @@ class MSIE11CookiePlugin(
       cookie_table = database.GetTableByName(cookie_table_name)
       if cookie_table.name==cookie_table_name:
         self._ParseCookieExTable(parser_mediator, cookie_table)
+
 
 esedb.ESEDBParser.RegisterPlugin(MSIE11CookiePlugin)
