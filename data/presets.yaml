@@ -92,7 +92,7 @@ parsers:
 - text/bash_history
 - text/gdrive_synclog
 - text/mac_appfirewall_log
-- text/mac_launchd
+- text/macos_launchd_log
 - text/mac_securityd
 - text/mac_wifi
 - text/syslog
