@@ -1234,6 +1234,218 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     test_file.Close()
 
 
+class TimesyncDatabaseFileTest(shared_test_lib.BaseTestCase):
+  """Tests for the timesync database file."""
+
+  # pylint: disable=protected-access
+
+  def setUp(self):
+    """Makes preparations before running an individual test."""
+    test_file_path = os.path.join(
+        shared_test_lib.TEST_DATA_PATH, 'unified_logging1.dmg')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_MODI, parent=test_path_spec)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
+        parent=test_path_spec)
+    self._parent_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER,
+        parent=test_path_spec, volume_index=0)
+
+  def testReadFileRecord(self):
+    """Tests the _ReadRecord method."""
+    test_file_path = (
+        '/private/var/db/Diagnostics/timesync/0000000000000002.timesync')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.TimesyncDatabaseFile()
+    file_object = file_entry.GetFileObject()
+
+    # Boot record
+    record, _ = test_file._ReadRecord(file_object, 0)
+
+    self.assertEqual(record.signature, b'\xb0\xbb')
+    self.assertEqual(record.record_size, 48)
+    self.assertEqual(record.timebase_numerator, 125)
+    self.assertEqual(record.timebase_denominator, 3)
+    self.assertEqual(record.timestamp, 1673487330693054000)
+    self.assertEqual(record.time_zone_offset, 480)
+    self.assertEqual(record.daylight_saving_flag, 0)
+
+    # sync record
+    record, _ = test_file._ReadRecord(file_object, 48)
+
+    self.assertEqual(record.signature, b'Ts')
+    self.assertEqual(record.record_size, 32)
+    self.assertEqual(record.kernel_time, 1442026097)
+    self.assertEqual(record.timestamp, 1673487385699687000)
+    self.assertEqual(record.time_zone_offset, 480)
+    self.assertEqual(record.daylight_saving_flag, 0)
+
+  def testReadFileObject(self):
+    """Tests the ReadFileObject method."""
+    test_file_path = (
+        '/private/var/db/Diagnostics/timesync/0000000000000002.timesync')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.TimesyncDatabaseFile()
+    test_file.Open(file_entry)
+    test_file.Close()
+
+
+# TODO: add tests for TraceV3File
+
+
+class UUIDTextFileTest(shared_test_lib.BaseTestCase):
+  """Apple Unified Logging and Activity Tracing (uuidtext) file tests."""
+
+  # pylint: disable=protected-access
+
+  def setUp(self):
+    """Makes preparations before running an individual test."""
+    test_file_path = os.path.join(
+        shared_test_lib.TEST_DATA_PATH, 'unified_logging1.dmg')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_MODI, parent=test_path_spec)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
+        parent=test_path_spec)
+    self._parent_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER,
+        parent=test_path_spec, volume_index=0)
+
+  def testReadFileFooter(self):
+    """Tests the _ReadFileFooter function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    file_object = file_entry.GetFileObject()
+
+    test_file = unified_logging.UUIDTextFile()
+    file_footer = test_file._ReadFileFooter(file_object, 0x000003e4)
+
+    self.assertIsNotNone(file_footer)
+
+    expected_image_path = (
+        '/System/Library/Frameworks/CryptoTokenKit.framework/PlugIns/'
+        'pivtoken.appex/Contents/MacOS/pivtoken')
+    self.assertEqual(file_footer.image_path, expected_image_path)
+
+  def testReadFileHeader(self):
+    """Tests the _ReadFileHeader function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    file_object = file_entry.GetFileObject()
+
+    test_file = unified_logging.UUIDTextFile()
+    file_header = test_file._ReadFileHeader(file_object)
+
+    self.assertIsNotNone(file_header)
+    self.assertEqual(file_header.major_format_version, 2)
+    self.assertEqual(file_header.minor_format_version, 1)
+    self.assertEqual(file_header.number_of_entries, 2)
+
+  def testReadString(self):
+    """Tests the _ReadString function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.UUIDTextFile()
+    test_file.Open(file_entry)
+
+    try:
+      string = test_file._ReadString(test_file._file_object, 32)
+    finally:
+      test_file.Close()
+
+    self.assertEqual(string, 'PIN')
+
+  def testGetImagePath(self):
+    """Tests the GetImagePath function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.UUIDTextFile()
+    test_file.Open(file_entry)
+
+    try:
+      image_path = test_file.GetImagePath()
+    finally:
+      test_file.Close()
+
+    expected_image_path = (
+        '/System/Library/Frameworks/CryptoTokenKit.framework/PlugIns/'
+        'pivtoken.appex/Contents/MacOS/pivtoken')
+    self.assertEqual(image_path, expected_image_path)
+
+  def testGetString(self):
+    """Tests the GetString function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.UUIDTextFile()
+    test_file.Open(file_entry)
+
+    try:
+      string = test_file.GetString(0x000069c4)
+    finally:
+      test_file.Close()
+
+    self.assertEqual(string, 'PIN')
+
+  def testReadFileObject(self):
+    """Tests the ReadFileObject function."""
+    test_file_path = (
+        '/private/var/db/uuidtext/22/3ED293DBE031C889F9F7689D86339D')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location=test_file_path,
+        parent=self._parent_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+    test_file = unified_logging.UUIDTextFile()
+    test_file.Open(file_entry)
+    test_file.Close()
+
+
 class UnifiedLoggingParserTest(test_lib.ParserTestCase):
   """Tests for the Apple Unified Logging (AUL) tracev3 file parser."""
 
