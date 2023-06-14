@@ -255,20 +255,6 @@ class LogEntry(object):
     self.trace_identifier = None
     self.ttl = None
 
-  # This method is necessary for heap sort.
-  def __lt__(self, other):
-    """Compares if the log entry is less than the other.
-
-    Events are compared by timestamp.
-
-    Args:
-      other (LogEntry): log entry to compare to.
-
-    Returns:
-      bool: True if the log entry is less than the other.
-    """
-    return self.timestamp < other.timestamp
-
 
 class FormatStringOperator(object):
   """Format string operator.
@@ -2081,27 +2067,6 @@ class DSCFile(BaseUnifiedLoggingFile):
 
     return file_header
 
-  def _ReadString(self, file_object, file_offset):
-    """Reads a string.
-
-    Args:
-      file_object (file): file-like object.
-      file_offset (int): offset of the string data relative to the start
-          of the file.
-
-    Returns:
-      str: string.
-
-    Raises:
-      ParseError: if the string cannot be read.
-    """
-    data_type_map = self._GetDataTypeMap('cstring')
-
-    format_string, _ = self._ReadStructureFromFileObject(
-        file_object, file_offset, data_type_map)
-
-    return format_string
-
   def _ReadImagePath(self, file_object, file_offset):
     """Reads an image path.
 
@@ -2162,6 +2127,27 @@ class DSCFile(BaseUnifiedLoggingFile):
       dsc_range.range_size = range_descriptor.range_size
       dsc_range.uuid_index = range_descriptor.uuid_descriptor_index
       yield dsc_range
+
+  def _ReadString(self, file_object, file_offset):
+    """Reads a string.
+
+    Args:
+      file_object (file): file-like object.
+      file_offset (int): offset of the string data relative to the start
+          of the file.
+
+    Returns:
+      str: string.
+
+    Raises:
+      ParseError: if the string cannot be read.
+    """
+    data_type_map = self._GetDataTypeMap('cstring')
+
+    format_string, _ = self._ReadStructureFromFileObject(
+        file_object, file_offset, data_type_map)
+
+    return format_string
 
   def _ReadUUIDDescriptors(
       self, file_object, file_offset, version, number_of_uuids):
