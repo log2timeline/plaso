@@ -106,11 +106,14 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'key_path': key_path,
         'last_written_time': '2009-08-04T15:22:18.4196250+00:00',
         'values': [
-            ('StartMenu_Start_Time', 'REG_BINARY', '(8 bytes)'),
-            ('FavoritesResolve', 'REG_BINARY', '(8 bytes)'),
-            ('Favorites', 'REG_BINARY', '(55 bytes)'),
+            ('StartMenu_Start_Time', 'REG_BINARY', '0x74da83131615ca01'),
+            ('FavoritesResolve', 'REG_BINARY', '0x0000000000000000'),
+            ('Favorites', 'REG_BINARY',
+             ('0x001600000014001f80f4a15925d721d411bdaf00c04f60b9f'
+             '00000001600000014001f80f5a15925d721d411bdaf00c04f60b9'
+             'f00000ff')),
             ('FavoritesChanges', 'REG_DWORD_LE', '1'),
-            ('StartMenu_Balloon_Time', 'REG_BINARY', '(8 bytes)')]}
+            ('StartMenu_Balloon_Time', 'REG_BINARY', '0xba9dd4441715ca01')]}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 26)
     self.CheckEventData(event_data, expected_event_values)

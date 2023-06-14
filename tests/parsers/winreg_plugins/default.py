@@ -86,7 +86,8 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         'values': [
             ('MRUList', 'REG_SZ', 'acb'),
             ('a', 'REG_SZ', 'Some random text here'),
-            ('b', 'REG_BINARY', '(22 bytes)'),
+            ('b', 'REG_BINARY',
+             '0x63003a002f006500760069006c002e00650078006500'),
             ('c', 'REG_SZ', 'C:/looks_legit.exe')]}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

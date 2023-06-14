@@ -217,7 +217,7 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = interface.WindowsRegistryPlugin()
 
     expected_value_tuples = [
-        ('MRUList', 'REG_BINARY', '(2 bytes)'),
+        ('MRUList', 'REG_BINARY', '0x6100'),
         ('a', 'REG_SZ', 'one')]
 
     value_tuples = plugin._GetValuesFromKey(parser_mediator, registry_key)

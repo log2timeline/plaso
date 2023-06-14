@@ -289,8 +289,11 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
                 registry_value.DataIsString()):
             value_string = '{0!s}'.format(value_object)
 
+          elif registry_value.DataIsBinaryData():
+            value_string = '0x{}'.format(value_object.hex())
+
           else:
-            # Represent remaining types like REG_BINARY and
+            # Represent remaining types like
             # REG_RESOURCE_REQUIREMENT_LIST.
             value_string = '({0:d} bytes)'.format(len(value_object))
 
