@@ -88,11 +88,13 @@ class MSIE11CookiePlugin(
       return raw_cookie.decode('ascii')
     return None
 
-  def GetRawCookieValue(self, record_values, value_name): 
+  def GetRawCookieValue(self, record_values, value_name):
+    """return the binary string as a hex string"""
     cookie_hash = record_values.get(value_name, None)
     if cookie_hash is not None:
       return f"0x{cookie_hash.hex()}"
-  
+    return None
+
   def _ParseCookieExTable(self, parser_mediator, table):
     """Parses a CookieEntryEx_# table.
 
