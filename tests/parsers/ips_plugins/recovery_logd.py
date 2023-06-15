@@ -27,9 +27,15 @@ class AppleRecoveryLogdIPSPluginTest(test_lib.IPSPluginTestCase):
         'application_version': '',
         'bug_type': '309',
         'device_model': 'iBridge2,14',
-        'event_time': '2023-06-08T14:49:13+00:00',
+        'exception_type': 'EXC_CRASH',
+        'event_time': '2023-06-08T14:49:13.520+00:00',
         'incident_identifier': '9505C5CC-07DE-4E81-BCCE-60D07C96D1B1',
-        'os_version': 'Bridge OS 7.5 (20P5058)'}
+        'os_version': 'Bridge OS 7.5 (20P5058)',
+        'parent_process': 'launchd',
+        'parent_process_identifier': 1,
+        'process_identifier': 74,
+        'process_launch_time': '2023-06-08T14:49:12.507+00:00',
+        'user_identifier': 501}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
