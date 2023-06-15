@@ -26,6 +26,7 @@ class AppleRecoveryLogdIPSPluginTest(test_lib.IPSPluginTestCase):
         'application_name': 'recoverylogd',
         'application_version': '',
         'bug_type': '309',
+        'crash_reporter_key': 'c0dec0dec0dec0dec0dec0dec0dec0dec0de0001',
         'device_model': 'iBridge2,14',
         'exception_type': 'EXC_CRASH',
         'event_time': '2023-06-08T14:49:13.520+00:00',
