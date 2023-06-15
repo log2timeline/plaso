@@ -96,13 +96,15 @@ attribute_mappings:
 place_holder_event: true
 ---
 data_type: 'apple:ips_recovery_logd'
-attributes_mapping:
+attribute_mappings:
 - name: 'event_time'
   description: 'Event Time'
+- name: 'process_launch_time'
+  description: 'Process Launch Time'
 place_holder_event: true
 ---
 data_type: 'apple:ips_stacks'
-attributes_mapping:
+attribute_mappings:
 - name: 'event_time'
   description: 'Event Time'
 place_holder_event: true
