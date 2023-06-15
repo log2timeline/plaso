@@ -1,0 +1,5318 @@
+{"bug_type":"288","timestamp":"2023-06-08 15:18:42.00 +0000","os_version":"Bridge OS 7.5 (20P5058)","roots_installed":0,"incident_id":"1F5C6CB4-E1F7-4B36-894D-23D193CBB8DD"}
+{
+  "build" : "Bridge OS 7.5 (20P5058)",
+  "product" : "iBridge2,14",
+  "kernel" : "Darwin Kernel Version 22.5.0: Mon Apr 24 20:06:41 PDT 2023; root:xnu-8796.121.2~1\/RELEASE_ARM64_T8010",
+  "tuning" : {
+
+  },
+  "incident" : "1F5C6CB4-E1F7-4B36-894D-23D193CBB8DD",
+  "crashReporterKey" : "c0dec0dec0dec0dec0dec0dec0dec0dec0de0001",
+  "date" : "2023-06-08 15:18:42.66 +0000",
+  "reason" : "stackshot via sysdiagnose (Remote)",
+  "frontmostPids" : [
+
+  ],
+  "exception" : "0xbaaaaaad",
+  "absoluteTime" : 21486995702,
+  "roots_installed" : 0,
+  "bug_type" : "288",
+  "memoryStatus" : {"compressorSize":0,"compressions":0,"decompressions":0,"busyBufferCount":0,"memoryPressureDetails":{"pagesWanted":0,"pagesReclaimed":0},"pageSize":16384,"memoryPressure":false,"memoryPages":{"active":8823,"throttled":0,"fileBacked":16129,"wired":6296,"purgeable":47,"inactive":3581,"free":3516,"speculative":7645}},
+  "processByPid" : {
+    "0" : {
+  "timesThrottled" : 0,
+  "pageIns" : 0,
+  "rawFlags" : "0x20800001",
+  "timesDidThrottle" : 0,
+  "procname" : "kernel_task",
+  "jetsamCoalition" : 3,
+  "copyOnWriteFaults" : 0,
+  "pageFaults" : 591,
+  "threadById" : {
+    "381" : {
+      "userTime" : 0.00034779100000000002,
+      "systemTime" : 0,
+      "name" : "AppleS8000AESAccelerator",
+      "id" : 381,
+      "basePriority" : 81,
+      "user_usec" : 347,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235325
+      ]
+    },
+    "506" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.014443249999999999,
+      "systemTime" : 0,
+      "id" : 506,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 14443,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223485
+      ]
+    },
+    "509" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.225678833,
+      "systemTime" : 0,
+      "id" : 509,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 225678,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227885
+      ]
+    },
+    "373" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000104625,
+      "systemTime" : 0,
+      "id" : 373,
+      "basePriority" : 81,
+      "name" : "RTBuddyV2",
+      "user_usec" : 104,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156898799053
+      ]
+    },
+    "419" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.7207999999999999e-05,
+      "systemTime" : 0,
+      "id" : 419,
+      "basePriority" : 81,
+      "name" : "AppleSmartIODMAController",
+      "user_usec" : 17,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222525
+      ]
+    },
+    "276" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.1333e-05,
+      "systemTime" : 0,
+      "id" : 276,
+      "basePriority" : 81,
+      "user_usec" : 11,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227485
+      ]
+    },
+    "507" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.049430500000000002,
+      "systemTime" : 0,
+      "id" : 507,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 49430,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223005
+      ]
+    },
+    "429" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.8750000000000001e-05,
+      "systemTime" : 0,
+      "id" : 429,
+      "basePriority" : 81,
+      "name" : "AppleD2449PMU",
+      "user_usec" : 28,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228125
+      ]
+    },
+    "179" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.5000000000000002e-06,
+      "systemTime" : 0,
+      "id" : 179,
+      "basePriority" : 81,
+      "name" : "AppleSamsungSPIController",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228925
+      ]
+    },
+    "607" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5829999999999999e-06,
+      "systemTime" : 0,
+      "id" : 607,
+      "basePriority" : 81,
+      "name" : "IOTimerEventSourceActionWrapper",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220685
+      ]
+    },
+    "508" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.013263875,
+      "systemTime" : 0,
+      "id" : 508,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 13263,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227085
+      ]
+    },
+    "285" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2625e-05,
+      "systemTime" : 0,
+      "id" : 285,
+      "basePriority" : 81,
+      "user_usec" : 12,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227965
+      ]
+    },
+    "349" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3916e-05,
+      "systemTime" : 0,
+      "id" : 349,
+      "basePriority" : 81,
+      "name" : "AppleSocHot",
+      "user_usec" : 13,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225565
+      ]
+    },
+    "374" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000166875,
+      "systemTime" : 0,
+      "id" : 374,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 166,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221565
+      ]
+    },
+    "612" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.0000000000000001e-06,
+      "systemTime" : 0,
+      "id" : 612,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753690317
+      ]
+    },
+    "366" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0077967499999999999,
+      "systemTime" : 0,
+      "id" : 366,
+      "basePriority" : 81,
+      "name" : "AppleGen0SPMIController",
+      "user_usec" : 7796,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230045
+      ]
+    },
+    "613" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2500000000000001e-06,
+      "systemTime" : 0,
+      "id" : 613,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753691997
+      ]
+    },
+    "621" : {
+      "continuation" : [
+        0,
+        86020673360
+      ],
+      "userTime" : 3.625e-06,
+      "systemTime" : 0,
+      "id" : 621,
+      "basePriority" : 81,
+      "name" : "dlil_input_en0",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744153038652005
+      ]
+    },
+    "608" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00052737499999999996,
+      "systemTime" : 0,
+      "id" : 608,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 527,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221725
+      ]
+    },
+    "197" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.3329999999999999e-06,
+      "systemTime" : 0,
+      "id" : 197,
+      "basePriority" : 81,
+      "name" : "AppleUSBHostResources",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223965
+      ]
+    },
+    "561" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00054266600000000003,
+      "systemTime" : 0,
+      "id" : 561,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 542,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231965
+      ]
+    },
+    "375" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00023945800000000001,
+      "systemTime" : 0,
+      "id" : 375,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 239,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225645
+      ]
+    },
+    "622" : {
+      "continuation" : [
+        0,
+        86020709608
+      ],
+      "userTime" : 1.1749999999999999e-05,
+      "systemTime" : 0,
+      "id" : 622,
+      "basePriority" : 82,
+      "name" : "ifnet_start_en0",
+      "user_usec" : 11,
+      "schedPriority" : 82,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744153038649901
+      ]
+    },
+    "630" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.048960416,
+      "systemTime" : 0,
+      "id" : 630,
+      "basePriority" : 81,
+      "name" : "AppleBCMWLANUart",
+      "user_usec" : 48960,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753694317
+      ]
+    },
+    "633" : {
+      "continuation" : [
+        0,
+        86023862772
+      ],
+      "userTime" : 0.054890665999999998,
+      "systemTime" : 0,
+      "id" : 633,
+      "basePriority" : 81,
+      "name" : "skywalk_fsw_reap_en0",
+      "user_usec" : 54890,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744149167919973
+      ]
+    },
+    "702" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00021658300000000001,
+      "systemTime" : 0,
+      "id" : 702,
+      "basePriority" : 81,
+      "name" : "AppleTrustedAccessoryManager",
+      "user_usec" : 216,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753682317
+      ]
+    },
+    "545" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4580000000000001e-06,
+      "systemTime" : 0,
+      "id" : 545,
+      "basePriority" : 81,
+      "name" : "AppleNubSynopsysOTGDevice",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228525
+      ]
+    },
+    "609" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.333e-06,
+      "systemTime" : 0,
+      "id" : 609,
+      "basePriority" : 81,
+      "name" : "IOAVHandlerInternalDisplay",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758226445
+      ]
+    },
+    "359" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.3915999999999999e-05,
+      "systemTime" : 0,
+      "id" : 359,
+      "basePriority" : 81,
+      "name" : "AppleSocHot",
+      "user_usec" : 23,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227645
+      ]
+    },
+    "537" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2079999999999999e-06,
+      "systemTime" : 0,
+      "id" : 537,
+      "basePriority" : 81,
+      "name" : "AppleSMCDockUSB_UFP",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227565
+      ]
+    },
+    "376" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00023837500000000001,
+      "systemTime" : 0,
+      "id" : 376,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 238,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231485
+      ]
+    },
+    "490" : {
+      "continuation" : [
+        0,
+        86019288872
+      ],
+      "userTime" : 0.091480583000000004,
+      "systemTime" : 0,
+      "id" : 490,
+      "basePriority" : 81,
+      "user_usec" : 91480,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026192552
+      ]
+    },
+    "279" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3541e-05,
+      "systemTime" : 0,
+      "id" : 279,
+      "basePriority" : 81,
+      "user_usec" : 13,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222125
+      ]
+    },
+    "368" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0036666250000000002,
+      "systemTime" : 0,
+      "id" : 368,
+      "basePriority" : 97,
+      "name" : "AppleH9CamIn",
+      "user_usec" : 3666,
+      "schedPriority" : 97,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758226845
+      ]
+    },
+    "482" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2500000000000001e-06,
+      "systemTime" : 0,
+      "id" : 482,
+      "basePriority" : 81,
+      "name" : "AppleEffaceableNOR",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224845
+      ]
+    },
+    "296" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 6.7500000000000001e-05,
+      "systemTime" : 0,
+      "id" : 296,
+      "basePriority" : 81,
+      "name" : "AppleT700XTempSensor",
+      "user_usec" : 67,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221405
+      ]
+    },
+    "618" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.333e-06,
+      "systemTime" : 0,
+      "id" : 618,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753691757
+      ]
+    },
+    "199" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.7080000000000002e-06,
+      "systemTime" : 0,
+      "id" : 199,
+      "basePriority" : 81,
+      "user_usec" : 2,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232925
+      ]
+    },
+    "538" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5e-06,
+      "systemTime" : 0,
+      "id" : 538,
+      "basePriority" : 81,
+      "name" : "AppleSmartBatteryManager",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230445
+      ]
+    },
+    "377" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00080500000000000005,
+      "systemTime" : 0,
+      "id" : 377,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 805,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758233805
+      ]
+    },
+    "491" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 15.791276041,
+      "systemTime" : 0,
+      "id" : 491,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwareBCE",
+      "user_usec" : 15791276,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224205
+      ]
+    },
+    "580" : {
+      "continuation" : [
+        0,
+        86020235780
+      ],
+      "userTime" : 1.708e-06,
+      "systemTime" : 0,
+      "id" : 580,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025940664
+      ]
+    },
+    "369" : {
+      "userTime" : 0.022356750000000002,
+      "systemTime" : 0,
+      "name" : "RTBuddyV2(AOP)",
+      "id" : 369,
+      "basePriority" : 81,
+      "user_usec" : 22356,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224605
+      ]
+    },
+    "634" : {
+      "userTime" : 0.112986291,
+      "systemTime" : 0,
+      "system_usec" : 0,
+      "id" : 634,
+      "basePriority" : 81,
+      "user_usec" : 112986,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86002575500
+        ],
+        [
+          0,
+          86002560112
+        ],
+        [
+          0,
+          86024749432
+        ],
+        [
+          0,
+          86002558984
+        ],
+        [
+          0,
+          86012415392
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744153024128221
+      ]
+    },
+    "703" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5e-06,
+      "systemTime" : 0,
+      "id" : 703,
+      "basePriority" : 81,
+      "name" : "AppleTrustedAccessoryAnalytics",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753683197
+      ]
+    },
+    "636" : {
+      "userTime" : 0.129408791,
+      "systemTime" : 0,
+      "name" : "AppleANS2NVMeController",
+      "id" : 636,
+      "basePriority" : 81,
+      "user_usec" : 129408,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753683677
+      ]
+    },
+    "475" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.375e-06,
+      "systemTime" : 0,
+      "id" : 475,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Controller_T8012",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235245
+      ]
+    },
+    "289" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 5.6875e-05,
+      "systemTime" : 0,
+      "id" : 289,
+      "basePriority" : 81,
+      "name" : "AppleT700XTempSensor",
+      "user_usec" : 56,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224685
+      ]
+    },
+    "378" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4625e-05,
+      "systemTime" : 0,
+      "id" : 378,
+      "basePriority" : 81,
+      "name" : "RTBuddyService",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758233885
+      ]
+    },
+    "492" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2079999999999999e-06,
+      "systemTime" : 0,
+      "id" : 492,
+      "basePriority" : 81,
+      "name" : "com_apple_AVEBridge",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229805
+      ]
+    },
+    "581" : {
+      "continuation" : [
+        0,
+        86020235956
+      ],
+      "userTime" : 1.5e-06,
+      "systemTime" : 0,
+      "id" : 581,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025940616
+      ]
+    },
+    "467" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 6.1924510000000001,
+      "systemTime" : 0,
+      "id" : 467,
+      "basePriority" : 81,
+      "name" : "IOEmbeddedBufferCopyController",
+      "user_usec" : 6192451,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223085
+      ]
+    },
+    "670" : {
+      "continuation" : [
+        0,
+        86019660744
+      ],
+      "userTime" : 7.5830000000000001e-06,
+      "systemTime" : 0,
+      "id" : 670,
+      "basePriority" : 91,
+      "name" : "VM_pageout_external_iothread",
+      "user_usec" : 7,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025780304
+      ]
+    },
+    "704" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00086054100000000004,
+      "systemTime" : 0,
+      "id" : 704,
+      "basePriority" : 81,
+      "name" : "AppleSEPSMC",
+      "user_usec" : 860,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753695837
+      ]
+    },
+    "637" : {
+      "userTime" : 1.708e-06,
+      "systemTime" : 0,
+      "name" : "AppleANS2NVMeController",
+      "id" : 637,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685997
+      ]
+    },
+    "709" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000176916,
+      "systemTime" : 0,
+      "id" : 709,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 176,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753695917
+      ]
+    },
+    "590" : {
+      "continuation" : [
+        0,
+        86020655396
+      ],
+      "userTime" : 7.4159999999999998e-06,
+      "systemTime" : 0,
+      "id" : 590,
+      "basePriority" : 81,
+      "user_usec" : 7,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026216592
+      ]
+    },
+    "710" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.010621833000000001,
+      "systemTime" : 0,
+      "id" : 710,
+      "basePriority" : 81,
+      "name" : "AppleSEPManager",
+      "user_usec" : 10621,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753696237
+      ]
+    },
+    "493" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.1659999999999999e-06,
+      "systemTime" : 0,
+      "id" : 493,
+      "basePriority" : 81,
+      "name" : "com_apple_AVEBridge",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230845
+      ]
+    },
+    "468" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2079999999999999e-06,
+      "systemTime" : 0,
+      "id" : 468,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Controller_T8012",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229565
+      ]
+    },
+    "671" : {
+      "continuation" : [
+        0,
+        86019658188
+      ],
+      "userTime" : 1.9999999999999999e-06,
+      "systemTime" : 0,
+      "id" : 671,
+      "basePriority" : 31,
+      "name" : "VM_pressure",
+      "user_usec" : 2,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86019658188
+      ]
+    },
+    "485" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.062596957999999994,
+      "systemTime" : 0,
+      "id" : 485,
+      "basePriority" : 81,
+      "name" : "AppleEffaceableBCE",
+      "user_usec" : 62596,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228685
+      ]
+    },
+    "713" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 7.8329999999999994e-06,
+      "systemTime" : 0,
+      "id" : 713,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 7,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901401717
+      ]
+    },
+    "717" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.916e-06,
+      "systemTime" : 0,
+      "id" : 717,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753683597
+      ]
+    },
+    "732" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 0.0023749159999999999,
+      "systemTime" : 0,
+      "id" : 732,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 2374,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901336181
+      ]
+    },
+    "591" : {
+      "continuation" : [
+        0,
+        86023045632
+      ],
+      "userTime" : 2.2079999999999999e-06,
+      "systemTime" : 0,
+      "id" : 591,
+      "basePriority" : 81,
+      "user_usec" : 2,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026257768
+      ]
+    },
+    "751" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.5583000000000001e-05,
+      "systemTime" : 0,
+      "id" : 751,
+      "basePriority" : 81,
+      "name" : "RTBuddyCrashlogEndpoint(AOP)",
+      "user_usec" : 35,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753684077
+      ]
+    },
+    "494" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5e-06,
+      "systemTime" : 0,
+      "id" : 494,
+      "basePriority" : 81,
+      "name" : "com_apple_AVEBridge",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231805
+      ]
+    },
+    "558" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0012481250000000001,
+      "systemTime" : 0,
+      "id" : 558,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayManager",
+      "user_usec" : 1248,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758233725
+      ]
+    },
+    "583" : {
+      "continuation" : [
+        0,
+        86023328996
+      ],
+      "userTime" : 1.4749999999999999e-05,
+      "systemTime" : 0,
+      "id" : 583,
+      "basePriority" : 81,
+      "user_usec" : 14,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026251784
+      ]
+    },
+    "672" : {
+      "continuation" : [
+        0,
+        86019597848
+      ],
+      "userTime" : 1.291e-06,
+      "systemTime" : 0,
+      "id" : 672,
+      "basePriority" : 91,
+      "name" : "VM_object_reaper_thread",
+      "user_usec" : 1,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026195920
+      ]
+    },
+    "736" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 0.001050416,
+      "systemTime" : 0,
+      "id" : 736,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 1050,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901270645
+      ]
+    },
+    "664" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.7079999999999999e-06,
+      "systemTime" : 0,
+      "id" : 664,
+      "basePriority" : 81,
+      "name" : "AppleImage4",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753697517
+      ]
+    },
+    "1034" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00066787499999999996,
+      "systemTime" : 0,
+      "id" : 1034,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 667,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681837
+      ]
+    },
+    "567" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00035979099999999998,
+      "systemTime" : 0,
+      "id" : 567,
+      "basePriority" : 81,
+      "name" : "AppleSSM",
+      "user_usec" : 359,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758219805
+      ]
+    },
+    "592" : {
+      "continuation" : [
+        0,
+        86023074460
+      ],
+      "userTime" : 5.0409999999999997e-06,
+      "systemTime" : 0,
+      "id" : 592,
+      "basePriority" : 95,
+      "name" : "VM_memorystatus_1",
+      "user_usec" : 5,
+      "schedPriority" : 95,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744140145448449
+      ]
+    },
+    "495" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.0410000000000001e-06,
+      "systemTime" : 0,
+      "id" : 495,
+      "basePriority" : 81,
+      "name" : "com_apple_AVEBridge",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222925
+      ]
+    },
+    "584" : {
+      "continuation" : [
+        0,
+        86022742556
+      ],
+      "userTime" : 1.2500000000000001e-06,
+      "systemTime" : 0,
+      "id" : 584,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025620512
+      ]
+    },
+    "673" : {
+      "continuation" : [
+        0,
+        86019383104
+      ],
+      "userTime" : 2.3750000000000001e-06,
+      "systemTime" : 0,
+      "id" : 673,
+      "basePriority" : 91,
+      "user_usec" : 2,
+      "system_usec" : 0,
+      "schedPriority" : 91,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025752452
+      ]
+    },
+    "487" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.375e-06,
+      "systemTime" : 0,
+      "id" : 487,
+      "basePriority" : 81,
+      "name" : "AppleTAS5770LAmp",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229645
+      ]
+    },
+    "1086" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 0.0021227910000000002,
+      "systemTime" : 0,
+      "id" : 1086,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 2122,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901246069
+      ]
+    },
+    "690" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 0.0010286659999999999,
+      "systemTime" : 0,
+      "id" : 690,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 1028,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901282933
+      ]
+    },
+    "2395" : {
+      "userTime" : 0.016906541000000001,
+      "systemTime" : 0,
+      "system_usec" : 0,
+      "id" : 2395,
+      "basePriority" : 81,
+      "user_usec" : 16906,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86018939296
+        ],
+        [
+          0,
+          86023044676
+        ],
+        [
+          0,
+          86010658304
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744149167048533
+      ]
+    },
+    "2460" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 0.010553541,
+      "systemTime" : 0,
+      "id" : 2460,
+      "basePriority" : 93,
+      "name" : "thread call high #15",
+      "user_usec" : 10553,
+      "schedPriority" : 93,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025587456
+      ]
+    },
+    "2480" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00068141600000000001,
+      "systemTime" : 0,
+      "id" : 2480,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 681,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753710381
+      ]
+    },
+    "771" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000315416,
+      "systemTime" : 0,
+      "id" : 771,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 315,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685037
+      ]
+    },
+    "585" : {
+      "continuation" : [
+        0,
+        86022742556
+      ],
+      "userTime" : 9.9999999999999995e-07,
+      "systemTime" : 0,
+      "id" : 585,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025620512
+      ]
+    },
+    "674" : {
+      "continuation" : [
+        0,
+        86019662688
+      ],
+      "userTime" : 6.083e-06,
+      "systemTime" : 0,
+      "id" : 674,
+      "basePriority" : 91,
+      "name" : "VM_compressor",
+      "user_usec" : 6,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025780392
+      ]
+    },
+    "488" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0012090409999999999,
+      "systemTime" : 0,
+      "id" : 488,
+      "basePriority" : 81,
+      "name" : "AppleCS42L83Audio",
+      "user_usec" : 1209,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220925
+      ]
+    },
+    "763" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000192583,
+      "systemTime" : 0,
+      "id" : 763,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 192,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753684237
+      ]
+    },
+    "666" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5409999999999999e-06,
+      "systemTime" : 0,
+      "id" : 666,
+      "basePriority" : 81,
+      "name" : "AppleMobileApNonce",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753695437
+      ]
+    },
+    "594" : {
+      "continuation" : [
+        0,
+        86021487060
+      ],
+      "userTime" : 5.75e-06,
+      "systemTime" : 0,
+      "id" : 594,
+      "basePriority" : 81,
+      "name" : "CFIL_STATS_REPORT",
+      "user_usec" : 5,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT"
+      ],
+      "waitEvent" : [
+        0,
+        86025971936
+      ]
+    },
+    "586" : {
+      "continuation" : [
+        0,
+        86023045632
+      ],
+      "userTime" : 0.00079712499999999998,
+      "systemTime" : 0,
+      "id" : 586,
+      "basePriority" : 81,
+      "user_usec" : 797,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026222744
+      ]
+    },
+    "675" : {
+      "continuation" : [
+        0,
+        86019414952
+      ],
+      "userTime" : 2.125e-06,
+      "systemTime" : 0,
+      "id" : 675,
+      "basePriority" : 91,
+      "name" : "VM_swapout",
+      "user_usec" : 2,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86019414952
+      ]
+    },
+    "739" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 0.0013060000000000001,
+      "systemTime" : 0,
+      "id" : 739,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 1306,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901258357
+      ]
+    },
+    "781" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00020904100000000001,
+      "systemTime" : 0,
+      "id" : 781,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 209,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685517
+      ]
+    },
+    "595" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0056254579999999998,
+      "systemTime" : 0,
+      "id" : 595,
+      "basePriority" : 81,
+      "name" : "IOSurfaceRoot",
+      "user_usec" : 5625,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758219965
+      ]
+    },
+    "773" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00046954100000000002,
+      "systemTime" : 0,
+      "id" : 773,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 469,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685117
+      ]
+    },
+    "587" : {
+      "continuation" : [
+        0,
+        86023045632
+      ],
+      "userTime" : 1.6249999999999999e-06,
+      "systemTime" : 0,
+      "id" : 587,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86021266460
+      ]
+    },
+    "676" : {
+      "continuation" : [
+        0,
+        86019418344
+      ],
+      "userTime" : 1.666e-06,
+      "systemTime" : 0,
+      "id" : 676,
+      "basePriority" : 91,
+      "name" : "VM_swapfile_create",
+      "user_usec" : 1,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025770560
+      ]
+    },
+    "765" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000200958,
+      "systemTime" : 0,
+      "id" : 765,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 200,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753684317
+      ]
+    },
+    "837" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0018012499999999999,
+      "systemTime" : 0,
+      "id" : 837,
+      "basePriority" : 81,
+      "name" : "AppleMultitouchHIDService",
+      "user_usec" : 1801,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753686317
+      ]
+    },
+    "693" : {
+      "continuation" : [
+        0,
+        86010171788
+      ],
+      "userTime" : 1.7082999999999999e-05,
+      "systemTime" : 0,
+      "id" : 693,
+      "basePriority" : 31,
+      "name" : "purgatory_cleaner",
+      "user_usec" : 17,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156901389429
+      ]
+    },
+    "2463" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 0.001917041,
+      "systemTime" : 0,
+      "id" : 2463,
+      "basePriority" : 92,
+      "name" : "thread call kernel-high #3",
+      "user_usec" : 1917,
+      "schedPriority" : 92,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025590016
+      ]
+    },
+    "588" : {
+      "continuation" : [
+        0,
+        86023045632
+      ],
+      "userTime" : 1.083e-06,
+      "systemTime" : 0,
+      "id" : 588,
+      "basePriority" : 81,
+      "user_usec" : 1,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025609536
+      ]
+    },
+    "677" : {
+      "continuation" : [
+        0,
+        86019419456
+      ],
+      "userTime" : 1.4580000000000001e-06,
+      "systemTime" : 0,
+      "id" : 677,
+      "basePriority" : 91,
+      "name" : "VM_swapfile_gc",
+      "user_usec" : 1,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025770564
+      ]
+    },
+    "775" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000111291,
+      "systemTime" : 0,
+      "id" : 775,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 111,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685197
+      ]
+    },
+    "589" : {
+      "continuation" : [
+        0,
+        86020676880
+      ],
+      "userTime" : 5.1660000000000002e-06,
+      "systemTime" : 0,
+      "id" : 589,
+      "basePriority" : 81,
+      "user_usec" : 5,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026216216
+      ]
+    },
+    "767" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00013291600000000001,
+      "systemTime" : 0,
+      "id" : 767,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 132,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753684397
+      ]
+    },
+    "1019" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0011453329999999999,
+      "systemTime" : 0,
+      "id" : 1019,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 1145,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681597
+      ]
+    },
+    "598" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.666e-06,
+      "systemTime" : 0,
+      "id" : 598,
+      "basePriority" : 81,
+      "name" : "IOHIDResourceDeviceUserClient",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220445
+      ]
+    },
+    "874" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4580000000000001e-06,
+      "systemTime" : 0,
+      "id" : 874,
+      "basePriority" : 81,
+      "name" : "AppleAOPVoiceTriggerController",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753696957
+      ]
+    },
+    "777" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00025704100000000001,
+      "systemTime" : 0,
+      "id" : 777,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 257,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685277
+      ]
+    },
+    "980" : {
+      "id" : 980,
+      "schedPriority" : 47,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "schedFlags" : [
+        "TH_SFLAG_EAGERPREEMPT"
+      ],
+      "user_usec" : 1373,
+      "basePriority" : 47,
+      "userTime" : 0.0013736659999999999,
+      "waitEvent" : [
+        0,
+        86025590656
+      ],
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "systemTime" : 0,
+      "name" : "thread call qos-ui #1"
+    },
+    "769" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00054600000000000004,
+      "systemTime" : 0,
+      "id" : 769,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 546,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753684477
+      ]
+    },
+    "2500" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.320167708,
+      "systemTime" : 0,
+      "id" : 2500,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 320167,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753692877
+      ]
+    },
+    "884" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0022628750000000001,
+      "systemTime" : 0,
+      "id" : 884,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayManager",
+      "user_usec" : 2262,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753686397
+      ]
+    },
+    "876" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.291e-06,
+      "systemTime" : 0,
+      "id" : 876,
+      "basePriority" : 81,
+      "name" : "AppleSPUProfileDriver",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681437
+      ]
+    },
+    "779" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00053708300000000005,
+      "systemTime" : 0,
+      "id" : 779,
+      "basePriority" : 81,
+      "name" : "AppleSPU",
+      "user_usec" : 537,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753685437
+      ]
+    },
+    "2466" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 0.00019374999999999999,
+      "systemTime" : 0,
+      "id" : 2466,
+      "basePriority" : 93,
+      "name" : "thread call high #18",
+      "user_usec" : 193,
+      "schedPriority" : 93,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025587456
+      ]
+    },
+    "878" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.7500000000000001e-06,
+      "systemTime" : 0,
+      "id" : 878,
+      "basePriority" : 81,
+      "name" : "AppleAOPAudioController",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681517
+      ]
+    },
+    "2467" : {
+      "id" : 2467,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT"
+      ],
+      "schedFlags" : [
+        "TH_SFLAG_EAGERPREEMPT"
+      ],
+      "user_usec" : 12252,
+      "basePriority" : 81,
+      "userTime" : 0.012252208000000001,
+      "waitEvent" : [
+        0,
+        86025588096
+      ],
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "systemTime" : 0,
+      "name" : "thread call kernel #2"
+    },
+    "1072" : {
+      "id" : 1072,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT"
+      ],
+      "schedFlags" : [
+        "TH_SFLAG_EAGERPREEMPT"
+      ],
+      "user_usec" : 43765,
+      "basePriority" : 31,
+      "userTime" : 0.043765166000000001,
+      "waitEvent" : [
+        0,
+        86025588736
+      ],
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "systemTime" : 0,
+      "name" : "thread call user #1"
+    },
+    "887" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00068370799999999999,
+      "systemTime" : 0,
+      "id" : 887,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 683,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753686477
+      ]
+    },
+    "2502" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000480416,
+      "systemTime" : 0,
+      "id" : 2502,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 480,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753693997
+      ]
+    },
+    "2493" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00058541599999999995,
+      "systemTime" : 0,
+      "id" : 2493,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 585,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753694237
+      ]
+    },
+    "995" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0011830409999999999,
+      "systemTime" : 0,
+      "id" : 995,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 1183,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753688397
+      ]
+    },
+    "101" : {
+      "id" : 101,
+      "schedPriority" : 4,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "schedFlags" : [
+        "TH_SFLAG_EAGERPREEMPT"
+      ],
+      "user_usec" : 138549,
+      "basePriority" : 4,
+      "userTime" : 0.13854983300000001,
+      "waitEvent" : [
+        0,
+        86025791120
+      ],
+      "continuation" : [
+        0,
+        86019655276
+      ],
+      "systemTime" : 0,
+      "name" : "VM_pageout_scan"
+    },
+    "110" : {
+      "id" : 110,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86018938780
+        ],
+        [
+          0,
+          86024607288
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "schedFlags" : [
+        "TH_SFLAG_UNKNOWN_0x80000"
+      ],
+      "user_usec" : 45765,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "basePriority" : 81,
+      "userTime" : 0.045765958000000002,
+      "waitEvent" : [
+        0,
+        86026259880
+      ],
+      "systemTime" : 0,
+      "name" : "IOServiceTerminateThread"
+    },
+    "102" : {
+      "continuation" : [
+        0,
+        86019030616
+      ],
+      "userTime" : 821.14061308299995,
+      "name" : "idle #0",
+      "id" : 102,
+      "basePriority" : 0,
+      "user_usec" : 821140613,
+      "system_usec" : 0,
+      "schedPriority" : 0,
+      "state" : [
+        "TH_RUN",
+        "TH_IDLE"
+      ],
+      "systemTime" : 0
+    },
+    "989" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00052087499999999996,
+      "systemTime" : 0,
+      "id" : 989,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 520,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753687517
+      ]
+    },
+    "2495" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.028886790999999998,
+      "systemTime" : 0,
+      "id" : 2495,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 28886,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753692717
+      ]
+    },
+    "200" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.001293125,
+      "systemTime" : 0,
+      "id" : 200,
+      "basePriority" : 81,
+      "name" : "AppleCredentialManager",
+      "user_usec" : 1293,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758233565
+      ]
+    },
+    "2446" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 0.300844,
+      "systemTime" : 0,
+      "id" : 2446,
+      "basePriority" : 93,
+      "name" : "thread call high #6",
+      "user_usec" : 300844,
+      "schedPriority" : 93,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025587456
+      ]
+    },
+    "103" : {
+      "continuation" : [
+        0,
+        86019014440
+      ],
+      "userTime" : 0.209241708,
+      "systemTime" : 0,
+      "id" : 103,
+      "basePriority" : 95,
+      "name" : "sched_maintenance_thread",
+      "user_usec" : 209241,
+      "schedPriority" : 95,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86019014440
+      ]
+    },
+    "104" : {
+      "continuation" : [
+        0,
+        86019031520
+      ],
+      "userTime" : 7.1659999999999997e-06,
+      "systemTime" : 0,
+      "id" : 104,
+      "basePriority" : 95,
+      "user_usec" : 7,
+      "system_usec" : 0,
+      "schedPriority" : 95,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86019031520
+      ]
+    },
+    "121" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.14112941600000001,
+      "systemTime" : 0,
+      "id" : 121,
+      "basePriority" : 95,
+      "name" : "IOPMrootDomain",
+      "user_usec" : 141129,
+      "schedPriority" : 95,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222765
+      ]
+    },
+    "1027" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0012374160000000001,
+      "systemTime" : 0,
+      "id" : 1027,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayManager",
+      "user_usec" : 1237,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681677
+      ]
+    },
+    "105" : {
+      "continuation" : [
+        0,
+        86018957916
+      ],
+      "userTime" : 0.110822,
+      "systemTime" : 0,
+      "id" : 105,
+      "basePriority" : 80,
+      "name" : "daemon.deferred-deallocation",
+      "user_usec" : 110822,
+      "schedPriority" : 80,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026074688
+      ]
+    },
+    "114" : {
+      "id" : 114,
+      "schedPriority" : 63,
+      "system_usec" : 0,
+      "kernelFrames" : [
+        [
+          0,
+          86019022988
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "user_usec" : 0,
+      "basePriority" : 63,
+      "userTime" : 0,
+      "waitEvent" : [
+        0,
+        86026065424
+      ],
+      "continuation" : [
+        0,
+        86018957916
+      ],
+      "systemTime" : 0,
+      "name" : "daemon.core-analytics-events"
+    },
+    "203" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4958e-05,
+      "systemTime" : 0,
+      "id" : 203,
+      "basePriority" : 81,
+      "name" : "AppleSSE",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222365
+      ]
+    },
+    "106" : {
+      "id" : 106,
+      "schedPriority" : 93,
+      "system_usec" : 0,
+      "kernelFrames" : [
+        [
+          0,
+          86019022988
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "user_usec" : 0,
+      "basePriority" : 93,
+      "userTime" : 0,
+      "waitEvent" : [
+        0,
+        86026076872
+      ],
+      "continuation" : [
+        0,
+        86018957916
+      ],
+      "systemTime" : 0,
+      "name" : "daemon.thread-stack"
+    },
+    "140" : {
+      "continuation" : [
+        0,
+        86019597428
+      ],
+      "userTime" : 3.0000000000000001e-06,
+      "systemTime" : 0,
+      "id" : 140,
+      "basePriority" : 95,
+      "name" : "VM_io_reprioritize_thread",
+      "user_usec" : 3,
+      "schedPriority" : 95,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025778072
+      ]
+    },
+    "115" : {
+      "continuation" : [
+        0,
+        86019708176
+      ],
+      "userTime" : 4.8749999999999999e-06,
+      "systemTime" : 0,
+      "id" : 115,
+      "basePriority" : 91,
+      "name" : "VM_reclaim",
+      "user_usec" : 4,
+      "schedPriority" : 91,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86017851048
+      ]
+    },
+    "107" : {
+      "continuation" : [
+        0,
+        86018957916
+      ],
+      "userTime" : 0.0029983750000000002,
+      "systemTime" : 0,
+      "id" : 107,
+      "basePriority" : 80,
+      "name" : "daemon.thread-exception",
+      "user_usec" : 2998,
+      "schedPriority" : 80,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026076696
+      ]
+    },
+    "310" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.8416000000000001e-05,
+      "systemTime" : 0,
+      "id" : 310,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 18,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221165
+      ]
+    },
+    "302" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4541e-05,
+      "systemTime" : 0,
+      "id" : 302,
+      "basePriority" : 81,
+      "name" : "AppleT700XTempSensor",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222205
+      ]
+    },
+    "116" : {
+      "continuation" : [
+        0,
+        86019640724
+      ],
+      "userTime" : 1.875e-06,
+      "systemTime" : 0,
+      "id" : 116,
+      "basePriority" : 31,
+      "name" : "VM_pageout_garbage_collect",
+      "user_usec" : 1,
+      "schedPriority" : 31,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86019640724
+      ]
+    },
+    "205" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 4.3749999999999996e-06,
+      "systemTime" : 0,
+      "id" : 205,
+      "basePriority" : 81,
+      "name" : "AppleS5L8940XI2CController",
+      "user_usec" : 4,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225165
+      ]
+    },
+    "108" : {
+      "id" : 108,
+      "schedPriority" : 80,
+      "system_usec" : 0,
+      "kernelFrames" : [
+        [
+          0,
+          86019022988
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "user_usec" : 0,
+      "basePriority" : 80,
+      "userTime" : 0,
+      "waitEvent" : [
+        0,
+        86026076744
+      ],
+      "continuation" : [
+        0,
+        86018957916
+      ],
+      "systemTime" : 0,
+      "name" : "daemon.thread-backtrace"
+    },
+    "311" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4583000000000001e-05,
+      "systemTime" : 0,
+      "id" : 311,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223325
+      ]
+    },
+    "1137" : {
+      "continuation" : [
+        0,
+        86020673360
+      ],
+      "userTime" : 6.9188296659999997,
+      "systemTime" : 0,
+      "id" : 1137,
+      "basePriority" : 81,
+      "name" : "dlil_input_en1",
+      "user_usec" : 6918829,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744153038639909
+      ]
+    },
+    "117" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.26609616600000002,
+      "systemTime" : 0,
+      "id" : 117,
+      "basePriority" : 81,
+      "name" : "AppleT8012IO",
+      "user_usec" : 266096,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235005
+      ]
+    },
+    "142" : {
+      "continuation" : [
+        0,
+        86023045632
+      ],
+      "userTime" : 3.2909999999999999e-06,
+      "systemTime" : 0,
+      "id" : 142,
+      "basePriority" : 81,
+      "user_usec" : 3,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86026207984
+      ]
+    },
+    "109" : {
+      "continuation" : [
+        0,
+        86019168624
+      ],
+      "userTime" : 0.0047599160000000003,
+      "systemTime" : 0,
+      "id" : 109,
+      "basePriority" : 94,
+      "name" : "thread_call_daemon",
+      "user_usec" : 4759,
+      "schedPriority" : 94,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025592576
+      ]
+    },
+    "1030" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0010744159999999999,
+      "systemTime" : 0,
+      "id" : 1030,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayService",
+      "user_usec" : 1074,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753681757
+      ]
+    },
+    "401" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00018929099999999999,
+      "systemTime" : 0,
+      "id" : 401,
+      "basePriority" : 81,
+      "name" : "RTBuddyCrashlogEndpoint(ANS2)",
+      "user_usec" : 189,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758234845
+      ]
+    },
+    "321" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.8416000000000001e-05,
+      "systemTime" : 0,
+      "id" : 321,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 18,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230765
+      ]
+    },
+    "410" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3583e-05,
+      "systemTime" : 0,
+      "id" : 410,
+      "basePriority" : 81,
+      "name" : "RTBuddyService",
+      "user_usec" : 13,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220365
+      ]
+    },
+    "313" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5458e-05,
+      "systemTime" : 0,
+      "id" : 313,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 15,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758234765
+      ]
+    },
+    "1138" : {
+      "continuation" : [
+        0,
+        86020709608
+      ],
+      "userTime" : 3.0218904160000002,
+      "systemTime" : 0,
+      "id" : 1138,
+      "basePriority" : 82,
+      "name" : "ifnet_start_en1",
+      "user_usec" : 3021890,
+      "schedPriority" : 82,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744153038637805
+      ]
+    },
+    "2451" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 0.00071795799999999999,
+      "systemTime" : 0,
+      "id" : 2451,
+      "basePriority" : 93,
+      "name" : "thread call high #11",
+      "user_usec" : 717,
+      "schedPriority" : 93,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025587456
+      ]
+    },
+    "170" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0052315,
+      "systemTime" : 0,
+      "id" : 170,
+      "basePriority" : 81,
+      "name" : "AppleS5L8940XI2CController",
+      "user_usec" : 5231,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231405
+      ]
+    },
+    "420" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.22948491600000001,
+      "systemTime" : 0,
+      "id" : 420,
+      "basePriority" : 81,
+      "name" : "AppleHIDTransportDeviceSPI",
+      "user_usec" : 229484,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220765
+      ]
+    },
+    "332" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.325e-05,
+      "systemTime" : 0,
+      "id" : 332,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Controller_T8012",
+      "user_usec" : 13,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221885
+      ]
+    },
+    "171" : {
+      "continuation" : [
+        0,
+        86019169456
+      ],
+      "userTime" : 3.1988482500000002,
+      "systemTime" : 0,
+      "id" : 171,
+      "basePriority" : 92,
+      "name" : "thread call kernel-high #1",
+      "user_usec" : 3198848,
+      "schedPriority" : 92,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        0,
+        86025590016
+      ]
+    },
+    "260" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.17731095799999999,
+      "systemTime" : 0,
+      "id" : 260,
+      "basePriority" : 81,
+      "name" : "AppleS5L8940XI2CController",
+      "user_usec" : 177310,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228045
+      ]
+    },
+    "324" : {
+      "userTime" : 0.026648666000000001,
+      "systemTime" : 0,
+      "name" : "RTBuddyV2(SMC)",
+      "id" : 324,
+      "basePriority" : 81,
+      "user_usec" : 26648,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221805
+      ]
+    },
+    "413" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.131931875,
+      "systemTime" : 0,
+      "id" : 413,
+      "basePriority" : 81,
+      "name" : "AppleSmartIO",
+      "user_usec" : 131931,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222445
+      ]
+    },
+    "421" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.1625e-05,
+      "systemTime" : 0,
+      "id" : 421,
+      "basePriority" : 81,
+      "name" : "MacEFIManager",
+      "user_usec" : 11,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220205
+      ]
+    },
+    "316" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4083000000000001e-05,
+      "systemTime" : 0,
+      "id" : 316,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221485
+      ]
+    },
+    "180" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.092185624999999993,
+      "systemTime" : 0,
+      "id" : 180,
+      "basePriority" : 81,
+      "name" : "AppleMobileADBE0",
+      "user_usec" : 92185,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231245
+      ]
+    },
+    "405" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00050820800000000001,
+      "systemTime" : 0,
+      "id" : 405,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XUSBArbitrator",
+      "user_usec" : 508,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235725
+      ]
+    },
+    "308" : {
+      "userTime" : 851.08111658300004,
+      "systemTime" : 0,
+      "system_usec" : 0,
+      "id" : 308,
+      "basePriority" : 0,
+      "user_usec" : 851081116,
+      "kernelFrames" : [
+        [
+          0,
+          86019030164
+        ],
+        [
+          0,
+          86019030684
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "schedPriority" : 0,
+      "name" : "idle #1",
+      "state" : [
+        "TH_RUN",
+        "TH_IDLE"
+      ]
+    },
+    "172" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.9579999999999999e-06,
+      "systemTime" : 0,
+      "id" : 172,
+      "basePriority" : 81,
+      "name" : "ApplePDMControllerT8012",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235165
+      ]
+    },
+    "261" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.23990054099999999,
+      "systemTime" : 0,
+      "id" : 261,
+      "basePriority" : 81,
+      "name" : "AppleSamsungSPIController",
+      "user_usec" : 239900,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231325
+      ]
+    },
+    "350" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4375e-05,
+      "systemTime" : 0,
+      "id" : 350,
+      "basePriority" : 81,
+      "name" : "AppleS5L8960XDART",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231165
+      ]
+    },
+    "414" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00081845799999999999,
+      "systemTime" : 0,
+      "id" : 414,
+      "basePriority" : 81,
+      "name" : "AppleSmartIO",
+      "user_usec" : 818,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232765
+      ]
+    },
+    "510" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.047077958000000003,
+      "systemTime" : 0,
+      "id" : 510,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 47077,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231885
+      ]
+    },
+    "317" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0067428749999999997,
+      "systemTime" : 0,
+      "id" : 317,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Controller_T8012",
+      "user_usec" : 6742,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232445
+      ]
+    },
+    "431" : {
+      "userTime" : 0.017592,
+      "systemTime" : 0,
+      "name" : "RTBuddyV2(PUP)",
+      "id" : 431,
+      "basePriority" : 81,
+      "user_usec" : 17592,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222605
+      ]
+    },
+    "511" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.060954957999999997,
+      "systemTime" : 0,
+      "id" : 511,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 60954,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235885
+      ]
+    },
+    "1141" : {
+      "continuation" : [
+        0,
+        86023862772
+      ],
+      "userTime" : 0.069798790999999999,
+      "systemTime" : 0,
+      "id" : 1141,
+      "basePriority" : 81,
+      "name" : "skywalk_fsw_reap_en1",
+      "user_usec" : 69798,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744149167939941
+      ]
+    },
+    "173" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.208e-06,
+      "systemTime" : 0,
+      "id" : 173,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Switch_T8012",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220605
+      ]
+    },
+    "512" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.022856333,
+      "systemTime" : 0,
+      "id" : 512,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 22856,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232525
+      ]
+    },
+    "601" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.9579999999999999e-06,
+      "systemTime" : 0,
+      "id" : 601,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220525
+      ]
+    },
+    "165" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 4.9579999999999998e-06,
+      "systemTime" : 0,
+      "id" : 165,
+      "basePriority" : 81,
+      "name" : "AppleARMBacklight",
+      "user_usec" : 4,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232685
+      ]
+    },
+    "326" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2583e-05,
+      "systemTime" : 0,
+      "id" : 326,
+      "basePriority" : 81,
+      "name" : "RTBuddyService",
+      "user_usec" : 12,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223405
+      ]
+    },
+    "318" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.0665999999999999e-05,
+      "systemTime" : 0,
+      "id" : 318,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Controller_T8012",
+      "user_usec" : 10,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758220045
+      ]
+    },
+    "182" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.4159999999999998e-06,
+      "systemTime" : 0,
+      "id" : 182,
+      "basePriority" : 81,
+      "name" : "AppleSynopsysMIPIDSIController",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222845
+      ]
+    },
+    "2477" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00072550000000000002,
+      "systemTime" : 0,
+      "id" : 2477,
+      "basePriority" : 81,
+      "name" : "IOHIDRelayManager",
+      "user_usec" : 725,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160753710301
+      ]
+    },
+    "610" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.375e-06,
+      "systemTime" : 0,
+      "id" : 610,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758221965
+      ]
+    },
+    "174" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.5000000000000002e-06,
+      "systemTime" : 0,
+      "id" : 174,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Cluster_T8012",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229005
+      ]
+    },
+    "513" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000105708,
+      "systemTime" : 0,
+      "id" : 513,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 105,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235085
+      ]
+    },
+    "602" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.666e-06,
+      "systemTime" : 0,
+      "id" : 602,
+      "basePriority" : 81,
+      "name" : "AVE_Drv",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224525
+      ]
+    },
+    "166" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.4580000000000002e-06,
+      "systemTime" : 0,
+      "id" : 166,
+      "basePriority" : 81,
+      "name" : "AppleM68Buttons",
+      "user_usec" : 3,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228605
+      ]
+    },
+    "263" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4625e-05,
+      "systemTime" : 0,
+      "id" : 263,
+      "basePriority" : 81,
+      "name" : "AppleT8010CLPC",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227005
+      ]
+    },
+    "352" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.4e-05,
+      "systemTime" : 0,
+      "id" : 352,
+      "basePriority" : 81,
+      "name" : "AppleT700XTempSensor",
+      "user_usec" : 14,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758224285
+      ]
+    },
+    "191" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0246175,
+      "systemTime" : 0,
+      "id" : 191,
+      "basePriority" : 81,
+      "name" : "AppleSandDollar",
+      "user_usec" : 24617,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223165
+      ]
+    },
+    "272" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3541e-05,
+      "systemTime" : 0,
+      "id" : 272,
+      "basePriority" : 81,
+      "name" : "AppleJPEGDriver",
+      "user_usec" : 13,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223565
+      ]
+    },
+    "611" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.5830000000000001e-06,
+      "systemTime" : 0,
+      "id" : 611,
+      "basePriority" : 81,
+      "name" : "IOAsynchronousScheduler",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227405
+      ]
+    },
+    "425" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2833000000000001e-05,
+      "systemTime" : 0,
+      "id" : 425,
+      "basePriority" : 81,
+      "name" : "AppleCT720",
+      "user_usec" : 12,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230285
+      ]
+    },
+    "514" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 9.9500000000000006e-05,
+      "systemTime" : 0,
+      "id" : 514,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 99,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228285
+      ]
+    },
+    "175" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.6249999999999999e-06,
+      "systemTime" : 0,
+      "id" : 175,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Cluster_T8012",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229085
+      ]
+    },
+    "264" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 3.9332999999999998e-05,
+      "systemTime" : 0,
+      "id" : 264,
+      "basePriority" : 81,
+      "name" : "AppleDieTempController",
+      "user_usec" : 39,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229405
+      ]
+    },
+    "256" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.9160000000000001e-06,
+      "systemTime" : 0,
+      "id" : 256,
+      "basePriority" : 81,
+      "name" : "AppleT8012PMGR",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231645
+      ]
+    },
+    "370" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.62796179100000005,
+      "systemTime" : 0,
+      "id" : 370,
+      "basePriority" : 81,
+      "name" : "AppleSMC",
+      "user_usec" : 627961,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232845
+      ]
+    },
+    "434" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.2082999999999999e-05,
+      "systemTime" : 0,
+      "id" : 434,
+      "basePriority" : 81,
+      "name" : "RTBuddyService",
+      "user_usec" : 12,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228365
+      ]
+    },
+    "184" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.5000000000000002e-06,
+      "systemTime" : 0,
+      "id" : 184,
+      "basePriority" : 81,
+      "user_usec" : 2,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229245
+      ]
+    },
+    "337" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.5832999999999999e-05,
+      "systemTime" : 0,
+      "id" : 337,
+      "basePriority" : 81,
+      "name" : "AppleT8015DART",
+      "user_usec" : 15,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225725
+      ]
+    },
+    "176" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.9160000000000001e-06,
+      "systemTime" : 0,
+      "id" : 176,
+      "basePriority" : 81,
+      "name" : "AppleMCA2Cluster_T8012",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229165
+      ]
+    },
+    "515" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00010866600000000001,
+      "systemTime" : 0,
+      "id" : 515,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 108,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230125
+      ]
+    },
+    "273" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3291e-05,
+      "systemTime" : 0,
+      "id" : 273,
+      "basePriority" : 81,
+      "name" : "AppleM2ScalerCSCDriver",
+      "user_usec" : 13,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225005
+      ]
+    },
+    "168" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.016539041000000001,
+      "systemTime" : 0,
+      "id" : 168,
+      "basePriority" : 81,
+      "name" : "AppleS5L8940XI2CController",
+      "user_usec" : 16539,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232285
+      ]
+    },
+    "193" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0054159159999999998,
+      "systemTime" : 0,
+      "id" : 193,
+      "basePriority" : 81,
+      "name" : "AppleKeyStore",
+      "user_usec" : 5415,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758229325
+      ]
+    },
+    "282" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.3208e-05,
+      "systemTime" : 0,
+      "id" : 282,
+      "basePriority" : 81,
+      "user_usec" : 13,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758226285
+      ]
+    },
+    "185" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 2.4159999999999998e-06,
+      "systemTime" : 0,
+      "id" : 185,
+      "basePriority" : 81,
+      "name" : "AppleARMPWMDevice",
+      "user_usec" : 2,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758231565
+      ]
+    },
+    "460" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 4.7833000000000001e-05,
+      "systemTime" : 0,
+      "id" : 460,
+      "basePriority" : 81,
+      "name" : "RTBuddyCrashlogEndpoint(PUP)",
+      "user_usec" : 47,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227805
+      ]
+    },
+    "409" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00014920800000000001,
+      "systemTime" : 0,
+      "id" : 409,
+      "basePriority" : 81,
+      "name" : "RTBuddyV2",
+      "user_usec" : 149,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744156898800589
+      ]
+    },
+    "177" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.617669708,
+      "systemTime" : 0,
+      "id" : 177,
+      "basePriority" : 81,
+      "name" : "AppleSamsungSPIController",
+      "user_usec" : 1617669,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758223245
+      ]
+    },
+    "516" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.000116416,
+      "systemTime" : 0,
+      "id" : 516,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 116,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758232125
+      ]
+    },
+    "541" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.708e-06,
+      "systemTime" : 0,
+      "id" : 541,
+      "basePriority" : 81,
+      "name" : "AppleSMCPMU",
+      "user_usec" : 1,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227245
+      ]
+    },
+    "169" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.016608999999999999,
+      "systemTime" : 0,
+      "id" : 169,
+      "basePriority" : 81,
+      "name" : "AppleS5L8940XI2CController",
+      "user_usec" : 16609,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758225965
+      ]
+    },
+    "328" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00014616600000000001,
+      "systemTime" : 0,
+      "id" : 328,
+      "basePriority" : 81,
+      "name" : "RTBuddyCrashlogEndpoint(SMC)",
+      "user_usec" : 146,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235405
+      ]
+    },
+    "380" : {
+      "userTime" : 0.0084016249999999994,
+      "systemTime" : 0,
+      "name" : "RTBuddyV2(ANS2)",
+      "id" : 380,
+      "basePriority" : 81,
+      "user_usec" : 8401,
+      "system_usec" : 0,
+      "schedPriority" : 81,
+      "kernelFrames" : [
+        [
+          0,
+          86019010488
+        ],
+        [
+          0,
+          86019003832
+        ],
+        [
+          0,
+          86024738224
+        ],
+        [
+          0,
+          86018639552
+        ]
+      ],
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758227165
+      ]
+    },
+    "505" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 8.3014258329999997,
+      "systemTime" : 0,
+      "id" : 505,
+      "basePriority" : 81,
+      "name" : "AppleUSBVHCIFirmwarePort",
+      "user_usec" : 8301425,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230525
+      ]
+    },
+    "275" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 13.641354625,
+      "systemTime" : 0,
+      "id" : 275,
+      "basePriority" : 81,
+      "name" : "AppleEmbeddedPCIeUpLinkMgmt",
+      "user_usec" : 13641354,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758230685
+      ]
+    },
+    "418" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 1.1671527500000001,
+      "systemTime" : 0,
+      "id" : 418,
+      "basePriority" : 81,
+      "name" : "AppleHIDTransportDeviceSPI",
+      "user_usec" : 1167152,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758228205
+      ]
+    },
+    "178" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.0021133329999999998,
+      "systemTime" : 0,
+      "id" : 178,
+      "basePriority" : 81,
+      "name" : "AppleSamsungSPIController",
+      "user_usec" : 2113,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758235805
+      ]
+    },
+    "267" : {
+      "continuation" : [
+        0,
+        86024738040
+      ],
+      "userTime" : 0.00013595799999999999,
+      "systemTime" : 0,
+      "id" : 267,
+      "basePriority" : 81,
+      "name" : "AppleT700XTempSensor",
+      "user_usec" : 135,
+      "schedPriority" : 81,
+      "system_usec" : 0,
+      "state" : [
+        "TH_WAIT",
+        "TH_UNINT"
+      ],
+      "waitEvent" : [
+        1,
+        2497744160758222045
+      ]
+    }
+  },
+  "userTimeTask" : 1747.3480131250001,
+  "pid" : 0,
+  "systemTimeTask" : 0,
+  "flags" : [
+    "sharedRegionNone"
+  ],
+  "residentMemoryBytes" : 9027584
+},
+    "1" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":313,"rawFlags":"0x40080001","timesDidThrottle":0,"csTrustLevel":0,"procname":"launchd","jetsamCoalition":3,"copyOnWriteFaults":87,"pageFaults":1048,"threadById":{"682":{"id":682,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":338,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.00033879100000000002,"waitEvent":[1,2497744156895091413],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"2528":{"id":2528,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":22,"basePriority":20,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_UTILITY","userTime":2.2583e-05,"waitEvent":[1,2497744153030486013],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20},"2517":{"id":2517,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":6593,"basePriority":37,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.0065929999999999999,"waitEvent":[1,2497744153042542901],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37},"2525":{"id":2525,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":6703,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.006703166,"waitEvent":[1,2497744153030456717],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":0.77823312499999997,"pid":1,"csFlags":570434305,"flags":["sharedRegionSystem"],"residentMemoryBytes":1376520},
+    "27" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":53,"rawFlags":"0x44084001","waitInfo":["thread 844: mach_msg receive on port set 0x22a9c512d5d78545","thread 948: mach_msg receive on port set 0x22a9c512d5d78575"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"UserEventAgent","jetsamCoalition":6,"copyOnWriteFaults":56,"pageFaults":464,"threadById":{"844":{"id":844,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":29564,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[3,4624],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.029564208000000002,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"2404":{"id":2404,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":466,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.000466541,"waitEvent":[1,2497744153042580877],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20},"948":{"id":948,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":3459,"basePriority":31,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[4,12932],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.003459958,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"949":{"id":949,"schedPriority":31,"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","state":["TH_WAIT"],"user_usec":1154,"basePriority":31,"userFrames":[[2,142666596],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0011546250000000001,"continuation":[0,86023045632],"systemTime":0,"name":"com.apple.CFSocket.private"}},"userTimeTask":0.20617158299999999,"pid":27,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":1327328},
+    "29" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":11,"rawFlags":"0x40084001","waitInfo":["thread 901: pthread condvar 0x1047c87f0","thread 930: mach_msg receive on port set 0x22a9c512d5d78515","thread 933: pthread condvar 0x123f8c040"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"fseventsd","jetsamCoalition":10,"copyOnWriteFaults":40,"pageFaults":692,"threadById":{"930":{"id":930,"schedPriority":31,"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","state":["TH_WAIT"],"user_usec":7458,"basePriority":31,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[5,30760],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0074587079999999997,"continuation":[0,86018725032],"systemTime":0,"name":"com.apple.fseventsd.volume"},"902":{"id":902,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":11,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":1.1625e-05,"waitEvent":[1,2497744156903722437],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"964":{"id":964,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":3864,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.003864541,"waitEvent":[1,2497744153043118077],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"932":{"id":932,"system_usec":0,"schedPriority":50,"kernelFrames":[[0,86019010488],[0,86019003832],[0,86023045024],[0,86020437456],[0,86023182784],[0,86023183188],[0,86024101504],[0,86020018008],[0,86018594300],[1,0]],"state":["TH_WAIT"],"user_usec":14212,"basePriority":50,"userFrames":[[2,142675320],[2,143413872],[2,143451120]],"userTime":0.014212791000000001,"waitEvent":[1,2497744173365150549],"systemTime":0,"name":"com.apple.fseventsd.dev.fsevents"},"933":{"id":933,"name":"com.apple.fseventsd.disklogger.29","state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","system_usec":0,"user_usec":6479,"basePriority":31,"userFrames":[[2,142665304],[5,56932],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0064799159999999996,"waitEvent":[1,2497744156890440277],"continuation":[0,86003803200],"systemTime":0,"schedPriority":31},"901":{"id":901,"schedPriority":49,"system_usec":0,"state":["TH_WAIT"],"user_usec":72968,"basePriority":49,"userFrames":[[2,142665304],[5,72228],[5,70496],[5,72780],[2,143413872],[2,143451120]],"userTime":0.072968332999999996,"waitEvent":[1,2497744156890440789],"continuation":[0,86003803200],"systemTime":0,"name":"com.apple.fseventsd.notify"}},"userTimeTask":0.117373375,"pid":29,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":1573168},
+    "33" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":349,"rawFlags":"0x44094001","timesDidThrottle":0,"csTrustLevel":0,"procname":"remoted","jetsamCoalition":18,"copyOnWriteFaults":55,"pageFaults":928,"threadById":{"928":{"id":928,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":12,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":1.2707999999999999e-05,"waitEvent":[1,2497744156903725781],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"2524":{"id":2524,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":34,"basePriority":31,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":3.4082999999999999e-05,"waitEvent":[1,2497744153030646381],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"2520":{"id":2520,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":2625,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0026252910000000001,"waitEvent":[1,2497744153039559277],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":2.1771898749999998,"pid":33,"csFlags":570434305,"flags":["isImpDonor","dirty","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":1671432},
+    "34" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":26,"rawFlags":"0x4C084001","waitInfo":["thread 847: mach_msg receive on port set 0x22a9c512d5d78485"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"keybagd","jetsamCoalition":20,"copyOnWriteFaults":45,"pageFaults":456,"threadById":{"847":{"id":847,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":6537,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[6,63680],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0065370000000000003,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"1087":{"id":1087,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":7586,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0075867909999999998,"waitEvent":[1,2497744153043088781],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.039671125000000002,"pid":34,"csFlags":570436361,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1229144},
+    "35" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":10,"rawFlags":"0x4C084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"amfid","jetsamCoalition":22,"copyOnWriteFaults":41,"pageFaults":266,"threadById":{"931":{"id":931,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":14,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":1.45e-05,"waitEvent":[1,2497744156903732469],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31}},"userTimeTask":0.0077938749999999996,"pid":35,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":753888},
+    "38" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":44,"rawFlags":"0x44084001","waitInfo":["thread 850: mach_msg receive on port set 0x22a9c512d5d78425","thread 925: semaphore port 0x22a9c512d51a3395 owned by pid 38"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"watchdogd","jetsamCoalition":28,"copyOnWriteFaults":41,"pageFaults":324,"threadById":{"850":{"id":850,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":14572,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[7,30552],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.014572165999999999,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"925":{"id":925,"schedPriority":97,"system_usec":0,"state":["TH_WAIT"],"user_usec":77922,"basePriority":97,"userFrames":[[2,142658716],[2,141002628],[7,36092],[7,35940],[2,143413872],[2,143451120]],"userTime":0.077922415999999994,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"name":"watchdogd service monitoring thread"},"2506":{"id":2506,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":644,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.00064495799999999995,"waitEvent":[1,2497744153042297141],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.12206175,"pid":38,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":885000},
+    "39" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":104,"rawFlags":"0x40084001","waitInfo":["thread 851: mach_msg receive on port set 0x22a9c512d5d787b5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"multiversed","jetsamCoalition":30,"copyOnWriteFaults":66,"pageFaults":804,"threadById":{"851":{"id":851,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":23430,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[8,13624],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.023430708000000001,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"2507":{"id":2507,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":21,"basePriority":31,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":2.1832999999999999e-05,"waitEvent":[1,2497744153042302349],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.86534254099999997,"pid":39,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":1458440},
+    "42" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":168,"rawFlags":"0x4C084001","waitInfo":["thread 853: mach_msg receive on port set 0x22a9c512d5d784b5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"containermanagerd","jetsamCoalition":36,"copyOnWriteFaults":49,"pageFaults":526,"threadById":{"853":{"id":853,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":15775,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[2,81357880],[9,16108],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.015775833,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"2032":{"id":2032,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":21,"basePriority":20,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_UTILITY","userTime":2.1625e-05,"waitEvent":[1,2497744153039561013],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":0.073697499999999999,"pid":42,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1294560},
+    "41" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":47,"rawFlags":"0x40084001","waitInfo":["thread 854: mach_msg receive on port set 0x22a9c512d5d78605","thread 976: mach_msg receive on port set 0x22a9c512d5d78635","thread 1143: mach_msg receive on port set 0x22a9c512d5d788d5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"AppleUVCCamera","jetsamCoalition":34,"copyOnWriteFaults":45,"pageFaults":920,"threadById":{"1143":{"continuation":[0,86018725032],"userTime":0.013095041,"system_usec":0,"id":1143,"basePriority":47,"user_usec":13095,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[10,135624],[2,143413872],[2,143451120]],"schedPriority":47,"state":["TH_WAIT"],"systemTime":0},"976":{"continuation":[0,86018725032],"userTime":0.001456583,"name":"H9ISPServicesThread","id":976,"basePriority":48,"user_usec":1456,"system_usec":0,"schedPriority":48,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[2,75716436],[2,143413872],[2,143451120]],"state":["TH_WAIT"],"systemTime":0},"854":{"id":854,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":76708,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[10,54148],[10,54416],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.076708790999999998,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"913":{"id":913,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":13228,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.013228916,"waitEvent":[1,2497744153030544605],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.104489333,"pid":41,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":1163568},
+    "44" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":2,"rawFlags":"0x44084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"notifyd","jetsamCoalition":40,"copyOnWriteFaults":34,"pageFaults":227,"threadById":{"899":{"id":899,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_BACKGROUND","user_usec":1178635,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":1.178635833,"waitEvent":[1,2497744153030610141],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"900":{"id":900,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":9,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":9.9159999999999996e-06,"waitEvent":[1,2497744156903689669],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31}},"userTimeTask":1.1975100830000001,"pid":44,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":770272},
+    "46" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":58,"rawFlags":"0x4C084001","waitInfo":["thread 857: mach_msg receive on port set 0x22a9c512d5d783f5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"usermanagerd","jetsamCoalition":44,"copyOnWriteFaults":48,"pageFaults":504,"threadById":{"857":{"id":857,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":11232,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[11,238024],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.01123275,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"1894":{"id":1894,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":790,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.00079091600000000001,"waitEvent":[1,2497744153043074133],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"2534":{"id":2534,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":6,"basePriority":31,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":6.7909999999999999e-06,"waitEvent":[1,2497744153042996445],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.080716125,"pid":46,"csFlags":570436361,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1343832},
+    "47" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":218,"rawFlags":"0x44084001","waitInfo":["thread 858: mach_msg receive on port set 0x22a9c512d5d786c5","thread 985: mach_msg receive on port set 0x22a9c512d5d786f5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"hidd","jetsamCoalition":46,"copyOnWriteFaults":53,"pageFaults":1173,"threadById":{"1011":{"continuation":[0,86022680364],"userTime":0.52629800000000004,"systemTime":0,"id":1011,"basePriority":63,"user_usec":526298,"system_usec":0,"schedPriority":63,"userFrames":[[2,142669000],[2,143451108]],"state":["TH_WAIT"],"waitEvent":[1,2497744153043075869]},"1014":{"id":1014,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":19,"basePriority":37,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":1.95e-05,"waitEvent":[1,2497744153043063717],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37},"985":{"continuation":[0,86018725032],"userTime":0.00010475,"name":"IOHIDService - RunLoopCompatibilityThread","id":985,"basePriority":63,"user_usec":104,"system_usec":0,"schedPriority":63,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[2,55436720],[2,143413872],[2,143451120]],"state":["TH_WAIT"],"systemTime":0},"1010":{"id":1010,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":994480,"basePriority":37,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.99448045799999996,"waitEvent":[1,2497744153043090517],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37},"858":{"id":858,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":52239,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[12,15196],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.052239374999999998,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31}},"userTimeTask":1.6497699159999999,"pid":47,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":2654512},
+    "48" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":73,"rawFlags":"0x44084001","waitInfo":["thread 859: mach_msg receive on port set 0x22a9c512d5d78695"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"corebrightnessd","jetsamCoalition":48,"copyOnWriteFaults":52,"pageFaults":1719,"threadById":{"1021":{"id":1021,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":692611,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.69261158300000003,"waitEvent":[1,2497744153043068925],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"859":{"id":859,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":469806,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[13,15300],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.469806583,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"938":{"id":938,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":578704,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.57870425000000003,"waitEvent":[1,2497744153042548109],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"1123":{"id":1123,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":69,"basePriority":37,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":6.8999999999999997e-05,"waitEvent":[1,2497744153043094749],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37}},"userTimeTask":1.741544041,"pid":48,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":1327368},
+    "30" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":437,"rawFlags":"0x44094001","waitInfo":["thread 861: mach_msg receive on port set 0x22a9c512d5d78755"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"corespeechd","jetsamCoalition":12,"copyOnWriteFaults":63,"pageFaults":2231,"threadById":{"861":{"id":861,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":41316,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[14,10948],[14,10636],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.041316458,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"991":{"id":991,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","kernelFrames":[[0,86019010488],[0,86019003832],[0,86002575500],[0,86002560112],[0,86024749432],[0,86002560576],[0,86002540592],[0,86020455904],[0,86020384516],[0,86020379412],[0,86023182784],[0,86023183188],[0,86024101504],[0,86020018008],[0,86018594300],[1,0]],"user_usec":1436,"basePriority":31,"dispatch_queue_label":"com.apple.lighthouse.read","userFrames":[[2,142675320],[2,84175192],[2,140993452],[2,140999740],[2,141027580],[2,141030356],[2,141071280],[2,143421036],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.001436458,"waitEvent":[1,2497744153024124285],"systemTime":0,"schedPriority":31},"2469":{"id":2469,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":419,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.000419083,"waitEvent":[1,2497744153043041365],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.63430916599999998,"pid":30,"csFlags":570434305,"flags":["isImpDonor","dirty","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":3703088},
+    "28" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":235,"rawFlags":"0x40084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"logd","jetsamCoalition":8,"copyOnWriteFaults":47,"pageFaults":2109,"threadById":{"934":{"id":934,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":9,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":9.6660000000000003e-06,"waitEvent":[1,2497744156895094757],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"2389":{"id":2389,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":56934,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.056934666000000002,"waitEvent":[1,2497744153042353237],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"2407":{"id":2407,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":925,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.0009255,"waitEvent":[1,2497744153043054277],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20},"2384":{"id":2384,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":67836,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.067836541,"waitEvent":[1,2497744153043059485],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":1.357755791,"pid":28,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":4833544},
+    "43" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":9,"rawFlags":"0x44084001","waitInfo":["thread 862: mach_msg receive on port set 0x22a9c512d5d783c5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"distnoted","jetsamCoalition":38,"copyOnWriteFaults":37,"pageFaults":251,"threadById":{"862":{"id":862,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":7743,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[15,16188],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0077432079999999997,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"951":{"id":951,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":926,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.00092612499999999997,"waitEvent":[1,2497744153042805045],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":0.0086693329999999996,"pid":43,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":704736},
+    "49" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":587,"rawFlags":"0x40084001","waitInfo":["thread 1006: semaphore port 0x22a9c512d47f3c95 owned by pid 49","thread 1007: semaphore port 0x22a9c512d47eccc5 owned by pid 49","thread 1016: semaphore port 0x22a9c512d47e6585 owned by pid 49","thread 2512: semaphore port 0x22a9c512d5191a45 owned by pid 49"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"bridgeaudiod","jetsamCoalition":50,"copyOnWriteFaults":61,"pageFaults":2231,"threadById":{"1007":{"id":1007,"name":"caulk.messenger.shared:17","state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","system_usec":0,"user_usec":276,"basePriority":19,"userFrames":[[2,142658692],[2,108184108],[2,108184224],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.00027670800000000002,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"schedPriority":19},"2512":{"id":2512,"schedPriority":55,"system_usec":0,"state":["TH_WAIT"],"user_usec":63,"basePriority":55,"userFrames":[[2,142658692],[2,108184108],[2,108184224],[2,143413872],[2,143451120]],"userTime":6.3291000000000001e-05,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"name":"AUToneMeister messenger"},"1053":{"id":1053,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":12,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":1.2415999999999999e-05,"waitEvent":[1,2497744156903706389],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"2522":{"id":2522,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":91,"basePriority":37,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":9.1207999999999998e-05,"waitEvent":[1,2497744153042555813],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37},"1006":{"id":1006,"name":"HAL Async Logger","state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","system_usec":0,"user_usec":1578,"basePriority":31,"userFrames":[[2,142658692],[2,30145032],[2,30145400],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0015781250000000001,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"schedPriority":31},"1016":{"id":1016,"schedPriority":55,"system_usec":0,"state":["TH_WAIT"],"user_usec":112,"basePriority":55,"userFrames":[[2,142658692],[2,108184108],[2,108184224],[2,143413872],[2,143451120]],"userTime":0.000112,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"name":"caulk.messenger.shared:high"},"2521":{"id":2521,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":1090,"basePriority":37,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.0010906659999999999,"waitEvent":[1,2497744153042495485],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37}},"userTimeTask":1.6859796250000001,"pid":49,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":7291264},
+    "32" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":39,"rawFlags":"0x44080041","timesDidThrottle":0,"csTrustLevel":0,"procname":"powerd","jetsamCoalition":16,"copyOnWriteFaults":43,"pageFaults":674,"threadById":{"997":{"id":997,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":10,"basePriority":4,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":1.075e-05,"waitEvent":[1,2497744156895114821],"continuation":[0,86023045632],"systemTime":0,"schedPriority":4},"2386":{"id":2386,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":17684,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.017684333,"waitEvent":[1,2497744153043003389],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.48617487500000001,"pid":32,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":1114336},
+    "50" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":11,"rawFlags":"0x44080041","timesDidThrottle":0,"csTrustLevel":0,"procname":"cfprefsd","jetsamCoalition":52,"copyOnWriteFaults":42,"pageFaults":398,"threadById":{"973":{"id":973,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":14,"basePriority":4,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":1.4583000000000001e-05,"waitEvent":[1,2497744156895108133],"continuation":[0,86023045632],"systemTime":0,"schedPriority":4},"2298":{"id":2298,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":6928,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0069280410000000002,"waitEvent":[1,2497744153042315261],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"2530":{"id":2530,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":0,"basePriority":4,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0,"waitEvent":[1,2497744153043081837],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.29063233300000002,"pid":50,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","sharedRegionSystem"],"residentMemoryBytes":983264},
+    "51" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":17,"rawFlags":"0x40084001","waitInfo":["thread 929: mach_msg receive on port set 0x22a9c512d5d78725","thread 992: mach_msg receive on port set 0x22a9c512d5d78785"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"dfrd","jetsamCoalition":54,"copyOnWriteFaults":47,"pageFaults":671,"threadById":{"929":{"id":929,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":154670,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[16,77664],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.154670583,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"992":{"id":992,"schedPriority":37,"system_usec":0,"qosRequested":"QOS_CLASS_USER_INTERACTIVE","state":["TH_WAIT"],"user_usec":230175,"basePriority":37,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[16,110248],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.23017537499999999,"continuation":[0,86018725032],"systemTime":0,"name":"com.apple.dfr.usb"},"2518":{"id":2518,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":97010,"basePriority":37,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.0970105,"waitEvent":[1,2497744153030622293],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37},"2391":{"id":2391,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_USER_INITIATED","user_usec":100319,"basePriority":37,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_USER_INITIATED","userTime":0.10031941599999999,"waitEvent":[1,2497744153042557549],"continuation":[0,86022680364],"systemTime":0,"schedPriority":37}},"userTimeTask":0.92896812500000003,"pid":51,"csFlags":570434305,"flags":["isImpDonor","sharedRegionSystem"],"residentMemoryBytes":6095152},
+    "52" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":80,"rawFlags":"0x4C090041","waitInfo":["thread 945: mach_msg receive on port set 0x22a9c512d5d78875"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"analyticsd","jetsamCoalition":56,"copyOnWriteFaults":48,"pageFaults":585,"threadById":{"945":{"id":945,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":68892,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[17,367020],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.068892124999999999,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"1661":{"id":1661,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_BACKGROUND","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":10393,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.010393166000000001,"waitEvent":[1,2497744153042546373],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.131441541,"pid":52,"csFlags":570434305,"flags":["darwinBG","dirty","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1458520},
+    "53" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":0,"rawFlags":"0x4C080041","waitInfo":["thread 959: mach_msg receive on port set 0x22a9c512d5d785d5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"apfs_iosd","jetsamCoalition":58,"copyOnWriteFaults":41,"pageFaults":262,"threadById":{"959":{"id":959,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":5236,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[18,7720],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0052364999999999998,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"963":{"id":963,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_BACKGROUND","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":129,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.00012899999999999999,"waitEvent":[1,2497744153043139669],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.0057367909999999998,"pid":53,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":803120},
+    "54" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":2,"rawFlags":"0x4C080041","waitInfo":["thread 960: mach_msg receive on port set 0x22a9c512d5d78665"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"powerchimed","jetsamCoalition":60,"copyOnWriteFaults":45,"pageFaults":350,"threadById":{"960":{"id":960,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":7545,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[19,14724],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0075455000000000001,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"1994":{"id":1994,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":7768,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0077688330000000002,"waitEvent":[1,2497744153042803309],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.034054415999999997,"pid":54,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1360176},
+    "55" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":41,"rawFlags":"0x4C080041","timesDidThrottle":0,"csTrustLevel":0,"procname":"com.apple.MobileSoftwareUpdate.","jetsamCoalition":62,"copyOnWriteFaults":90,"pageFaults":614,"threadById":{"1045":{"id":1045,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":120,"basePriority":4,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.000120083,"waitEvent":[1,2497744156895104789],"continuation":[0,86023045632],"systemTime":0,"schedPriority":4},"1046":{"id":1046,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_UTILITY","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":89459,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.089459166000000007,"waitEvent":[1,2497744153043032685],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.152650916,"pid":55,"csFlags":578824969,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1278176},
+    "61" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":37,"rawFlags":"0x4C080041","waitInfo":["thread 1069: mach_msg receive on port set 0x22a9c512d5d788a5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"mobileactivationd","jetsamCoalition":64,"copyOnWriteFaults":53,"pageFaults":531,"threadById":{"1069":{"id":1069,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":73833,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[20,129308],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.073833290999999995,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"2017":{"id":2017,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":46840,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.046840916000000003,"waitEvent":[1,2497744153042366149],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.50817141600000004,"pid":61,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":2506976},
+    "63" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":22,"rawFlags":"0x4C090041","waitInfo":["thread 1168: mach_msg receive on port set 0x22a9c512d5d78965"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"osanalyticshelper","jetsamCoalition":66,"copyOnWriteFaults":53,"pageFaults":772,"threadById":{"1168":{"id":1168,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":14389,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[21,41340],[21,19484],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.014389333000000001,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"1985":{"id":1985,"system_usec":0,"state":["TH_RUN"],"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":21296,"kernelFrames":[[0,86018655796],[0,86018654520],[0,86023166320],[0,86024101504],[0,86020018008],[0,86018594300],[1,0]],"basePriority":4,"dispatch_queue_label":"com.apple.root.default-qos.overcommit","userFrames":[[2,142668076],[2,101162480],[21,29764],[21,25296],[21,24856],[2,143743520],[2,143744512],[2,140999920],[2,141108708],[2,141027276],[2,141111728],[2,141071280],[2,143421036],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.021296958000000001,"systemTime":0,"schedPriority":4}},"userTimeTask":0.48325470799999998,"pid":63,"csFlags":570434305,"flags":["darwinBG","dirty","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":2048264},
+    "64" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":0,"rawFlags":"0x4C080041","waitInfo":["thread 1175: mach_msg receive on port set 0x22a9c512d5d78995"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"findmydeviced","jetsamCoalition":68,"copyOnWriteFaults":49,"pageFaults":405,"threadById":{"1973":{"id":1973,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":13974,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.013974291,"waitEvent":[1,2497744153042577405],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"1175":{"id":1175,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":13564,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[22,9836],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.013564125,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4}},"userTimeTask":0.070689625000000006,"pid":64,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1376520},
+    "65" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":4,"rawFlags":"0x4C084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"logd_helper","jetsamCoalition":70,"copyOnWriteFaults":39,"pageFaults":282,"threadById":{"1184":{"id":1184,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":23,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":2.3291000000000001e-05,"waitEvent":[1,2497744156903771925],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"1183":{"id":1183,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":20538,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.020538541,"waitEvent":[1,2497744153043111133],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":0.034130124999999997,"pid":65,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":737584},
+    "67" : {"timesThrottled":0,"turnstileInfo":["thread 1650: turnstile has unknown inheritor"],"pageIns":733,"systemTimeTask":0,"rawFlags":"0x4C084001","waitInfo":["thread 1210: mach_msg receive on port set 0x22a9c512d5d789f5","thread 1650: mach_msg receive on port 0x22a9c512d51bf305 name 0xc03"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"ReportCrash","jetsamCoalition":74,"copyOnWriteFaults":56,"pageFaults":48028,"threadById":{"1210":{"id":1210,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":8999,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[23,98468],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0089995830000000002,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"1650":{"id":1650,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":49,"basePriority":31,"userFrames":[[2,142658824],[2,142688320],[2,142689312],[23,89928],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":4.9750000000000003e-05,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31},"1635":{"id":1635,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_UTILITY","user_usec":112,"basePriority":20,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_UTILITY","userTime":0.000112625,"waitEvent":[1,2497744153042360941],"continuation":[0,86022680364],"systemTime":0,"schedPriority":20}},"userTimeTask":4.0210137079999999,"pid":67,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":2261296},
+    "68" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":6,"rawFlags":"0x4C080041","waitInfo":["thread 1228: mach_msg receive on port set 0x22a9c512d5d78a55"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"bridgeOSUpdated","jetsamCoalition":76,"copyOnWriteFaults":50,"pageFaults":447,"threadById":{"2083":{"id":2083,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":11544,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.011544624999999999,"waitEvent":[1,2497744153043061981],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"1228":{"id":1228,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":47834,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[24,14184],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.047834791000000002,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4}},"userTimeTask":0.097430083000000001,"pid":68,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1507592},
+    "69" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":287,"rawFlags":"0x4C080041","waitInfo":["thread 1238: mach_msg receive on port set 0x22a9c512d5d78a85","thread 2088: mach_msg receive on port set 0x22a9c512d5d78ea5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"softwareupdated","jetsamCoalition":26,"copyOnWriteFaults":56,"pageFaults":819,"threadById":{"1238":{"id":1238,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":10949,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[25,22636],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.010949875,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"2116":{"id":2116,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":8621,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0086216660000000001,"waitEvent":[1,2497744153043092253],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"2088":{"id":2088,"schedPriority":4,"system_usec":0,"state":["TH_WAIT"],"schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":1200,"basePriority":4,"userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,26998808],[2,51653144],[2,143413872],[2,143451120]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0012006250000000001,"continuation":[0,86018725032],"systemTime":0,"name":"com.apple.NSURLConnectionLoader"}},"userTimeTask":0.29114045799999999,"pid":69,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1786120},
+    "84" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":0,"rawFlags":"0x4C080041","waitInfo":["thread 1656: mach_msg receive on port set 0x22a9c512d5d78d25"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"recoverylogd","jetsamCoalition":72,"copyOnWriteFaults":41,"pageFaults":258,"threadById":{"1656":{"id":1656,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":6443,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[26,14936],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0064435409999999997,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"1658":{"id":1658,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_BACKGROUND","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":84,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":8.4875000000000003e-05,"waitEvent":[1,2497744153043008597],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.0065284160000000004,"pid":84,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":770352},
+    "85" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":57,"rawFlags":"0x4C080041","waitInfo":["thread 1851: mach_msg receive on port set 0x22a9c512d5d78d85"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"corekdld","jetsamCoalition":78,"copyOnWriteFaults":52,"pageFaults":516,"threadById":{"1851":{"id":1851,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":25002,"basePriority":4,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,51510020],[2,51510488],[27,15904],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0250025,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"2468":{"id":2468,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":530,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.00053087499999999999,"waitEvent":[1,2497744153043078365],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4}},"userTimeTask":0.13058375,"pid":85,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1605976},
+    "86" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":26,"rawFlags":"0x4C080041","timesDidThrottle":0,"csTrustLevel":0,"procname":"trustd","jetsamCoalition":80,"copyOnWriteFaults":46,"pageFaults":372,"threadById":{"2087":{"id":2087,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":28,"basePriority":4,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":2.8875000000000001e-05,"waitEvent":[1,2497744153043116341],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"1982":{"id":1982,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":150,"basePriority":4,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.00015024999999999999,"waitEvent":[1,2497744156895078709],"continuation":[0,86023045632],"systemTime":0,"schedPriority":4}},"userTimeTask":0.062205499999999997,"pid":86,"csFlags":570434305,"flags":["darwinBG","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1081648},
+    "87" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":9,"rawFlags":"0x4C084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"bkremoted","jetsamCoalition":82,"copyOnWriteFaults":46,"pageFaults":427,"threadById":{"1991":{"id":1991,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":36,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":3.6041000000000003e-05,"waitEvent":[1,2497744156903765237],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31},"2368":{"id":2368,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":6109,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.0061096659999999997,"waitEvent":[1,2497744153042554077],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31}},"userTimeTask":0.232440375,"pid":87,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1179952},
+    "88" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":12,"rawFlags":"0x4C084001","timesDidThrottle":0,"csTrustLevel":0,"procname":"nfcd_relay","jetsamCoalition":84,"copyOnWriteFaults":43,"pageFaults":317,"threadById":{"2024":{"id":2024,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":26671,"basePriority":31,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.026671957999999999,"waitEvent":[1,2497744153043005125],"continuation":[0,86022680364],"systemTime":0,"schedPriority":31},"2000":{"id":2000,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":32,"basePriority":31,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":3.2666000000000002e-05,"waitEvent":[1,2497744156903745845],"continuation":[0,86023045632],"systemTime":0,"schedPriority":31}},"userTimeTask":0.73129991599999999,"pid":88,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":983264},
+    "90" : {"timesThrottled":0,"systemTimeTask":0,"pageIns":31,"rawFlags":"0x4C084001","waitInfo":["thread 2300: mach_msg receive on port set 0x22a9c512d5d793e5"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"securityd","jetsamCoalition":88,"copyOnWriteFaults":52,"pageFaults":347,"threadById":{"2303":{"id":2303,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_BACKGROUND","user_usec":683,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.00068370799999999999,"waitEvent":[1,2497744153043001653],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"2300":{"id":2300,"system_usec":0,"state":["TH_WAIT"],"qosRequested":"QOS_CLASS_DEFAULT","user_usec":65697,"basePriority":31,"dispatch_queue_label":"com.apple.main-thread","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,37674612],[2,37651624],[2,37649340],[2,37653304],[28,15844],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_DEFAULT","userTime":0.065697208000000007,"continuation":[0,86018725032],"systemTime":0,"schedPriority":31}},"userTimeTask":0.066947415999999996,"pid":90,"csFlags":570434305,"flags":["isImpDonor","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1212640},
+    "91" : {"timesThrottled":0,"turnstileInfo":["thread 2529: blocked on 1985, hops: 2, priority: 4"],"pageIns":26,"systemTimeTask":0,"rawFlags":"0x4C090041","waitInfo":["thread 2527: semaphore port 0x22a9c512d47d6975 owned by pid 91","thread 2529: mach_msg receive on port 0x22a9c512d51b7305 name 0x2007"],"timesDidThrottle":0,"csTrustLevel":0,"procname":"sysdiagnose","jetsamCoalition":90,"copyOnWriteFaults":55,"pageFaults":509,"threadById":{"2533":{"id":2533,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":3,"basePriority":4,"userFrames":[[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":3.9160000000000003e-06,"waitEvent":[1,2497744153043010333],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"2531":{"id":2531,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":1360,"basePriority":4,"userFrames":[[2,142669000],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.0013604999999999999,"waitEvent":[1,2497744153043070661],"continuation":[0,86022680364],"systemTime":0,"schedPriority":4},"2529":{"id":2529,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":13115,"basePriority":4,"dispatch_queue_label":"com.apple.root.default-qos","userFrames":[[2,142658824],[2,142688320],[2,142687824],[2,141103608],[2,141104540],[2,143737732],[2,101156148],[29,146448],[29,289148],[29,204656],[29,179216],[29,164188],[2,140993452],[2,140999740],[2,141066696],[2,141068440],[2,143420976],[2,143451108]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.013115875000000001,"continuation":[0,86018725032],"systemTime":0,"schedPriority":4},"2527":{"id":2527,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":58873,"basePriority":4,"userFrames":[[2,142666876],[2,141771316],[2,141073336],[2,143448896],[2,143414136],[2,143417720],[2,141055236],[29,130368],[29,129744],[2,110253896],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":0.058873165999999998,"waitEvent":[0,86016828460],"continuation":[0,86019059080],"systemTime":0,"schedPriority":4},"2532":{"id":2532,"state":["TH_WAIT"],"system_usec":0,"qosRequested":"QOS_CLASS_DEFAULT","schedFlags":["TH_SFLAG_THROTTLED"],"user_usec":26,"basePriority":4,"userFrames":[[2,142667956],[2,141073528],[1,0]],"qosEffective":"QOS_CLASS_BACKGROUND","userTime":2.6125000000000001e-05,"waitEvent":[1,2497744156903761893],"continuation":[0,86023045632],"systemTime":0,"schedPriority":4}},"userTimeTask":0.073379582999999998,"pid":91,"csFlags":570434305,"flags":["darwinBG","dirty","isDirtyTracked","allowIdleExit","sharedRegionSystem"],"residentMemoryBytes":1687896}
+  },
+  "binaryImages" : [["898e82ab-b7b6-d9c4-7ba1-8414767f7655",18446743919090728960,"U"],["00000000-0000-0000-0000-000000000000",0,"A"],["215181d6-5c52-307e-ab71-e76e5b399ee5",6442450944,"S"],["2bf04534-8acd-3f16-85e3-b1fa7f3c122b",4330160128,"P"],["d6b84879-03e7-3043-b629-8fc83813df9e",4331094016,"P"],["8e438b2b-44b5-3702-96c3-7f3b35b9cc23",4370104320,"P"],["17191e3b-b775-3266-93fe-e11e1b52729d",4377690112,"P"],["f71c728d-2267-30ad-b29b-847924b0c398",4298031104,"P"],["cfb4e8d0-a372-394b-a7b5-ba793e745304",4376969216,"P"],["75d4bd1e-275a-378f-ad74-5353ce5124e4",4298735616,"P"],["23a5c9de-b3aa-38ae-81a8-b4524ff51722",4373102592,"P"],["7db6a3ab-b638-3c82-a6ca-590d030d3203",4368023552,"P"],["c285c9ad-1cd0-3d88-94f2-8b203f46566c",4308779008,"P"],["9508028c-366e-3469-beb3-305c5b457527",4374642688,"P"],["9d9daf5c-c904-361f-99a3-4f8b9a4af064",4332158976,"P"],["34194372-8325-3568-b78e-9372a47135e3",4336451584,"P"],["589f629a-e7a2-39ba-a47f-9a310cd44f5a",4371103744,"P"],["13a6d23e-6d2b-3d3e-a52f-bb98e0882f9a",4336205824,"P"],["f1b7adb8-4843-3a62-a90b-aef7fc27a120",4368564224,"P"],["c79622ba-e596-3780-85de-a7ef7d26c9d3",4298375168,"P"],["b3717774-192a-3fc3-a5d3-8aef0644d008",4369367040,"P"],["f4577203-a570-359b-b308-37f653151ef9",4333223936,"P"],["08954ada-fd26-3959-8f7f-628e6c792f21",4372889600,"P"],["db8cd763-7615-39a2-b1c1-70b45fb08aeb",4311711744,"P"],["4636141b-c098-3549-9426-38e14cd1d7f2",4303618048,"P"],["2f75329a-6487-3de2-8294-7d25379c7f68",4296540160,"P"],["a919f2b7-9cdf-32df-bcd8-15c081136761",4366417920,"P"],["24028710-2f4a-3d59-af2e-03f3385a21fc",4296032256,"P"],["1ca4dfb5-9ba2-3f25-b4d8-8adda63cb2c9",4295131136,"P"],["9221be50-7173-3ac7-a071-f223f1a2b48d",4336369664,"P"]],
+  "notes" : ["Requested by sysdiagnose"],
+  "additionalDetails" : {"stackshot_size_estimate_adj":40,"stackshot_size_estimate":212992,"stackshot_duration_prior_nsec":0,"system_state_flags":2,"stackshot_duration_nsec":662791,"stackshot_out_flags":19472391,"stackshot_in_pid":4294967295,"stackshot_duration_outer_nsec":695125,"stackshot_in_flags":19472391}
+}

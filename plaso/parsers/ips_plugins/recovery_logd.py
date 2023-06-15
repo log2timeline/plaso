@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """IPS file parser plugin for Apple crash recovery report."""
 
-import pyparsing
-
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import events
 from plaso.parsers import ips_parser
 from plaso.parsers.ips_plugins import interface
@@ -17,7 +13,7 @@ class AppleRecoveryLogdEvent(events.EventData):
     application_name (str): name of the application.
     application_version (str): version of the application.
     bug_type (str): type of bug.
-    crash_reporter_key (str):
+    crash_reporter_key (str): Key of the crash reporter.
     device_model (str): model of the device.
     event_time (dfdatetime.DateTimeValues): date and time of the crash report.
     exception_type (str): type of the exception that caused the crash.
@@ -54,82 +50,14 @@ class AppleRecoveryLogdEvent(events.EventData):
 class AppleRecoveryLogdIPSPlugin(interface.IPSPlugin):
   """Parses Apple Crash logs from IPS file."""
 
-  NAME = 'apple_crash_log'
-  DATA_FORMAT = 'IPS application crash log'
-
-  ENCODING = 'utf-8'
+  NAME = 'apple_recovery_ips'
+  DATA_FORMAT = 'IPS recovery logd crash log'
 
   REQUIRED_HEADER_KEYS = [
       'app_name', 'app_version', 'bug_type', 'incident_id', 'os_version',
       'timestamp']
   REQUIRED_CONTENT_KEYS = [
-      'captureTime', 'modelCode', 'os_version', 'pid', 'procLaunch', ]
-
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  TIMESTAMP_GRAMMAR = (
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
-      _FOUR_DIGITS.setResultsName('fraction') +
-      pyparsing.Word(
-          pyparsing.nums + '+' + '-').setResultsName('timezone_delta'))
-
-  def __init__(self):
-    """Initializes a text parser plugin."""
-    super(AppleRecoveryLogdIPSPlugin, self).__init__()
-    self._event_data = None
-
-  def _ParseTimestampValue(self, parser_mediator, timestamp_text):
-    """Parses a timestamp string.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      timestamp_text (str): the timestamp to parse.
-
-    Returns:
-       dfdatetime.TimeElements: date and time
-          or None if not available.
-    """
-    # dfDateTime takes the time zone offset as number of minutes relative from
-    # UTC. So for Easter Standard Time (EST), which is UTC-5:00 the sign needs
-    # to be converted, to +300 minutes.
-
-    parsed_timestamp = self.TIMESTAMP_GRAMMAR.parseString(timestamp_text)
-
-    try:
-      time_delta_hours = int(parsed_timestamp['timezone_delta'][:3], 10)
-      time_delta_minutes = int(parsed_timestamp['timezone_delta'][3:], 10)
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported timezone offset value')
-      return None
-
-    time_zone_offset = (time_delta_hours * -60) + time_delta_minutes
-
-    try:
-      milliseconds = round(parsed_timestamp['fraction']/10)
-
-      time_element_object = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=(
-              parsed_timestamp['year'], parsed_timestamp['month'],
-              parsed_timestamp['day'], parsed_timestamp['hours'],
-              parsed_timestamp['minutes'], parsed_timestamp['seconds'],
-              milliseconds),
-          time_zone_offset=time_zone_offset)
-
-    except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning('unsupported date time value')
-      return None
-
-    return time_element_object
+      'captureTime', 'modelCode', 'pid', 'procLaunch']
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
@@ -144,13 +72,11 @@ class AppleRecoveryLogdIPSPlugin(interface.IPSPlugin):
     if ips_file is None:
       raise ValueError('Missing ips_file value')
 
-    # This will raise if unhandled keyword arguments are passed.
-    super(AppleRecoveryLogdIPSPlugin, self).Process(parser_mediator)
-
     event_data = AppleRecoveryLogdEvent()
     event_data.application_name = ips_file.header.get('app_name')
     event_data.application_version = ips_file.header.get('app_version')
     event_data.bug_type = ips_file.header.get('bug_type')
+    event_data.crash_reporter_key = ips_file.content.get('crashReporterKey')
     event_data.device_model = ips_file.content.get('modelCode')
     event_data.exception_type = ips_file.content.get(
           'exception', {}).get('type')
