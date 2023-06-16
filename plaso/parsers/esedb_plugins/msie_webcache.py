@@ -29,7 +29,7 @@ class MsieWebCacheCookieData(events.EventData):
     request_domain (str): Request domain for which the cookie was set.
   """
 
-  DATA_TYPE = 'msie:cookie:entry'
+  DATA_TYPE = 'msie:webcache:cookie'
 
   def __init__(self):
     """Initializes event data."""
