@@ -330,8 +330,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Retrieves the binary string as a hex string
       
     Args:
-      record_values: esedb dict structure for a table entry
-      value_name: the name of the value we are converting
+      record_values (dict): esedb dict structure for a table entry
+      value_name (str): the name of the value we are converting
 
     Returns:
       optional(str): the value of value_name in record_values decoded to hex
@@ -384,7 +384,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           record_values, 'LastModified')
       event_data.request_domain = record_values.get('RDomain', None)
       parser_mediator.ProduceEventData(event_data)
-  
+
   def ParseContainersTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses a Containers table.
