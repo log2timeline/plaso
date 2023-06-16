@@ -847,7 +847,7 @@ attribute_mappings:
   description: 'Last Scavenge Time'
 place_holder_event: false
 ---
-data_type: 'msie:cookie:entry'
+data_type: 'msie:webcache:cookie'
 attribute_mappings:
 - name: 'modification_time'
   description: 'Modification Time'
