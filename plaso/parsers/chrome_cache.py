@@ -139,9 +139,9 @@ class ChromeCacheIndexFileParser(
 
     format_version = '{0:d}.{1:d}'.format(
         file_header.major_version, file_header.minor_version)
-    #if format_version not in ('2.0', '2.1'):
-    #  raise errors.ParseError(
-    #      'Unsupported index file format version: {0:s}'.format(format_version))
+    if format_version not in ('2.0', '2.1', '3.0'):
+      raise errors.ParseError(
+          'Unsupported index file format version: {0:s}'.format(format_version))
     self.creation_time = file_header.creation_time
 
   def _ParseIndexTable(self, file_object):
@@ -439,9 +439,7 @@ class ChromeCacheParser(interface.FileEntryParser):
                 '{1!s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionWarning(message)
             data_block_file_object = None
-
         data_block_files[cache_address.filename] = data_block_file_object
-
     self._ParseCacheEntries(parser_mediator, index_table, data_block_files)
 
   @classmethod
