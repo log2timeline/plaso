@@ -1,0 +1,50 @@
+# dtFabric format specification.
+---
+name: macos_open_directory
+type: format
+description: MacOS Open Directory
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: membership_details_with_identifier
+type: structure
+description: Open Directory membership details with an identifier
+attributes:
+  byte_order: little-endian
+members:
+- name: identifier
+  data_type: int32
+- name: domain
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+---
+name: membership_details_with_name
+type: structure
+description: Open Directory membership details with a name
+attributes:
+  byte_order: little-endian
+members:
+- name: name
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+- name: domain
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"

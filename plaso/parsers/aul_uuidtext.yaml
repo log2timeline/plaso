@@ -1,0 +1,78 @@
+# dtFabric format specification.
+---
+name: aul_uuidtext
+type: format
+description: Apple Unified Logging (AUL) uuidtext format
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: cstring
+type: string
+encoding: utf8
+element_data_type: char
+elements_terminator: "\x00"
+---
+name: uuidtext_entry_descriptor
+type: structure
+description: UUIDtext entry descriptor
+attributes:
+  byte_order: little-endian
+members:
+- name: offset
+  data_type: uint32
+- name: data_size
+  data_type: uint32
+---
+name: uuidtext_file_header
+type: structure
+description: UUIDtext file header.
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+  value: "\x99\x88\x77\x66"
+- name: major_format_version
+  data_type: uint32
+- name: minor_format_version
+  data_type: uint32
+- name: number_of_entries
+  data_type: uint32
+- name: entry_descriptors
+  type: sequence
+  element_data_type: uuidtext_entry_descriptor
+  number_of_elements: uuidtext_file_header.number_of_entries
+---
+name: uuidtext_file_footer
+type: structure
+description: UUIDtext file footer.
+attributes:
+  byte_order: little-endian
+members:
+- name: image_path
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"

@@ -1,0 +1,132 @@
+# dtFabric format specification.
+---
+name: aul_dsc
+type: format
+description: Apple Unified Logging (AUL) shared-cache strings (DSC) format
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Unified%20Logging%20and%20Activity%20Tracing%20formats.ascidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: cstring
+type: string
+encoding: utf8
+element_data_type: char
+elements_terminator: "\x00"
+---
+name: uuid_be
+type: uuid
+attributes:
+  byte_order: big-endian
+---
+name: dsc_range_descriptor_v1
+type: structure
+description: Shared-Cache strings (dsc) range descriptor version 1.
+attributes:
+  byte_order: little-endian
+members:
+- name: uuid_descriptor_index
+  data_type: uint32
+- name: range_offset
+  data_type: uint32
+- name: data_offset
+  data_type: uint32
+- name: range_size
+  data_type: uint32
+---
+name: dsc_range_descriptor_v2
+type: structure
+description: Shared-Cache strings (dsc) range descriptor version 2.
+attributes:
+  byte_order: little-endian
+members:
+- name: range_offset
+  data_type: uint64
+- name: data_offset
+  data_type: uint32
+- name: range_size
+  data_type: uint32
+- name: uuid_descriptor_index
+  data_type: uint64
+---
+name: dsc_uuid_descriptor_v1
+type: structure
+description: Shared-Cache strings (dsc) UUID descriptor version 1.
+attributes:
+  byte_order: little-endian
+members:
+- name: text_offset
+  data_type: uint32
+- name: text_size
+  data_type: uint32
+- name: image_identifier
+  data_type: uuid_be
+- name: path_offset
+  data_type: uint32
+---
+name: dsc_uuid_descriptor_v2
+type: structure
+description: Shared-Cache strings (dsc) UUID descriptor version 2.
+attributes:
+  byte_order: little-endian
+members:
+- name: text_offset
+  data_type: uint64
+- name: text_size
+  data_type: uint32
+- name: image_identifier
+  data_type: uuid_be
+- name: path_offset
+  data_type: uint32
+---
+name: dsc_file_header
+type: structure
+description: Shared-Cache strings (dsc) file header.
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+  value: "hcsd"
+- name: major_format_version
+  data_type: uint16
+- name: minor_format_version
+  data_type: uint16
+- name: number_of_ranges
+  data_type: uint32
+- name: number_of_uuids
+  data_type: uint32

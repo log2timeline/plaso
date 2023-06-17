@@ -68,8 +68,7 @@ class RestorePointLogParser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse file header with error: {0!s}'.format(
-              exception))
+          'Unable to parse file header with error: {0!s}'.format(exception))
 
     file_footer_map = self._GetDataTypeMap('rp_log_file_footer')
 

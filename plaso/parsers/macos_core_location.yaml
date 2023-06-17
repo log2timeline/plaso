@@ -1,0 +1,223 @@
+# dtFabric format specification.
+---
+name: macos_core_location
+type: format
+description: MacOS (locationd) Core Location (CL) format definitions
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: bool8
+type: boolean
+attributes:
+  size: 1
+  units: bytes
+  false_value: 0
+---
+name: bool32
+type: boolean
+attributes:
+  size: 4
+  units: bytes
+  false_value: 0
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: int64
+type: integer
+attributes:
+  format: signed
+  size: 8
+  units: bytes
+---
+name: float64
+type: floating-point
+attributes:
+  size: 8
+  units: bytes
+---
+name: location_daemon_status_state_tracker
+type: structure
+description: Daemon status state tracker (CLDaemonStatusStateTracker)
+attributes:
+  byte_order: little-endian
+members:
+- name: level
+  data_type: float64
+- name: is_charged
+  data_type: bool8
+- name: is_connected
+  data_type: bool8
+- name: charger_type
+  data_type: uint32
+- name: was_connected
+  data_type: bool8
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 9
+- name: reachability
+  data_type: uint32
+- name: thermal_level
+  data_type: int32
+- name: airplane_mode
+  data_type: bool8
+- name: battery_saver_mode
+  data_type: bool8
+- name: push_service
+  data_type: bool8
+- name: restricted_mode
+  data_type: bool8
+---
+name: client_manager_state_tracker_state
+type: structure
+description: Client manager (CLClientManager) state tracker state
+attributes:
+  byte_order: little-endian
+members:
+- name: location_enabled_status
+  data_type: uint32
+- name: location_restricted
+  data_type: bool32
+---
+name: location_manager_state_tracker_state_v1
+type: structure
+description: Location manager (CLLocationManager) state tracker state, 64 bytes version
+attributes:
+  byte_order: little-endian
+members:
+- name: distance_filter
+  data_type: float64
+- name: desired_accuracy
+  data_type: float64
+- name: updating_location
+  data_type: bool8
+- name: requesting_location
+  data_type: bool8
+- name: requesting_ranging
+  data_type: bool8
+- name: updating_ranging
+  data_type: bool8
+- name: updating_heading
+  data_type: bool8
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 3
+- name: heading_filter
+  data_type: float64
+- name: allows_location_prompts
+  data_type: bool8
+- name: allows_altered_accessory_location
+  data_type: bool8
+- name: dynamic_accuracy_reduction_enabled
+  data_type: bool8
+- name: previous_authorization_status_valid
+  data_type: bool8
+- name: previous_authorization_status
+  data_type: uint32
+- name: limits_precision
+  data_type: bool8
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  number_of_elements: 7
+- name: activity_type
+  data_type: int64
+- name: pauses_location_updates_automatially
+  data_type: int32
+- name: paused
+  data_type: bool8
+- name: allows_background_location_updates
+  data_type: bool8
+- name: shows_background_location_indicator
+  data_type: bool8
+- name: allows_map_correction
+  data_type: bool8
+---
+name: location_manager_state_tracker_state_v2
+type: structure
+description: Location manager (CLLocationManager) state tracker state, 72 bytes version
+attributes:
+  byte_order: little-endian
+members:
+- name: distance_filter
+  data_type: float64
+- name: desired_accuracy
+  data_type: float64
+- name: updating_location
+  data_type: bool8
+- name: requesting_location
+  data_type: bool8
+- name: requesting_ranging
+  data_type: bool8
+- name: updating_ranging
+  data_type: bool8
+- name: updating_heading
+  data_type: bool8
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 3
+- name: heading_filter
+  data_type: float64
+- name: allows_location_prompts
+  data_type: bool8
+- name: allows_altered_accessory_location
+  data_type: bool8
+- name: dynamic_accuracy_reduction_enabled
+  data_type: bool8
+- name: previous_authorization_status_valid
+  data_type: bool8
+- name: previous_authorization_status
+  data_type: uint32
+- name: limits_precision
+  data_type: bool8
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  number_of_elements: 7
+- name: activity_type
+  data_type: int64
+- name: pauses_location_updates_automatially
+  data_type: int32
+- name: paused
+  data_type: bool8
+- name: allows_background_location_updates
+  data_type: bool8
+- name: shows_background_location_indicator
+  data_type: bool8
+- name: allows_map_correction
+  data_type: bool8
+- name: batching_location
+  data_type: bool8
+- name: updating_vehicle_speed
+  data_type: bool8
+- name: updating_vehicle_heading
+  data_type: bool8
+- name: match_information_enabled
+  data_type: bool8
+- name: ground_altitude_enabled
+  data_type: bool8
+- name: fusion_information_enabled
+  data_type: bool8
+- name: courtesy_prompt_needed
+  data_type: bool8
+- name: is_authorized_for_widget_updates
+  data_type: bool8
