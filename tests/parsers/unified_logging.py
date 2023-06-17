@@ -2045,16 +2045,14 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         'activity_identifier': 0,
         'boot_identifier': 'DCA6F382-13F5-4A21-BF2B-4F1BE8B136BD',
         'data_type': 'macos:unified_logging:event',
-        # 'euid': 0,
         'event_message': (
             'initialize_screen: b=BE3A18000, w=00000280, h=00000470, '
             'r=00000A00, d=00000000\n'),
         'event_type': 'logEvent',
         'message_type': 'Default',
-        'pid': 0,
+        'process_identifier': 0,
         'process_image_identifier': 'D1CD0AAF-523E-312F-9299-6116B1D511FE',
         'process_image_path': '/kernel',
-        # 'recorded_time': '2023-01-12T01:35:35.240424704+00:00',
         'recorded_time': '2023-01-12T01:35:35.240424708+00:00',
         'sender_image_identifier': 'D1CD0AAF-523E-312F-9299-6116B1D511FE',
         'sender_image_path': '/kernel',
@@ -2091,7 +2089,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         'boot_identifier': 'DCA6F382-13F5-4A21-BF2B-4F1BE8B136BD',
         'category': 'Speed',
         'data_type': 'macos:unified_logging:event',
-        # 'euid': 0,
         'event_message': (
             'Kext com.apple.driver.KextExcludeList v17.0.0 in codeless kext '
             'bundle com.apple.driver.KextExcludeList at /Library/Apple/System/'
@@ -2099,10 +2096,9 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             'valid'),
         'event_type': 'signpostEvent',
         'message_type': None,
-        'pid': 50,
+        'process_identifier': 50,
         'process_image_identifier': '5FCEBDDD-0174-3777-BB92-E98174383008',
         'process_image_path': '/usr/libexec/kernelmanagerd',
-        # 'recorded_time': '2023-01-12T01:36:31.338352128+00:00',
         'recorded_time': '2023-01-12T01:36:31.338352250+00:00',
         'sender_image_identifier': '5FCEBDDD-0174-3777-BB92-E98174383008',
         'sender_image_path': '/usr/libexec/kernelmanagerd',
@@ -2140,16 +2136,14 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
         'activity_identifier': 0,
         'boot_identifier': 'DCA6F382-13F5-4A21-BF2B-4F1BE8B136BD',
         'data_type': 'macos:unified_logging:event',
-        # 'euid': 0,
         'event_message': (
             'Failed to look up the port for "com.apple.windowserver.active" '
             '(1102)'),
         'event_type': 'logEvent',
         'message_type': 'Default',
-        'pid': 24,
+        'process_identifier': 24,
         'process_image_identifier': '36B63A88-3FE7-30FC-B7BA-46C45DD6B7D8',
         'process_image_path': '/usr/libexec/UserEventAgent',
-        # 'recorded_time': '2023-01-12T01:36:27.111432704+00:00',
         'recorded_time': '2023-01-12T01:36:27.111432708+00:00',
         'sender_image_identifier': 'C0FDF86C-F960-37A3-A380-DB8700D43801',
         'sender_image_path': (

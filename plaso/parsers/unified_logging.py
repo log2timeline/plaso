@@ -33,11 +33,10 @@ class UnifiedLoggingEventData(events.EventData):
     activity_identifier (int): activity identifier.
     boot_identifier (str): boot identifier.
     category (str): event category.
-    euid (int): effective user identifier (UID)
     event_message (str): event message.
     event_type (str): event type.
     message_type (str): message type.
-    pid (int): process identifier (PID).
+    process_identifier (int): process identifier (PID).
     process_image_identifier (str): process image identifier.
     process_image_identifier (str): process image identifier, contains an UUID.
     recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
@@ -58,11 +57,10 @@ class UnifiedLoggingEventData(events.EventData):
     self.activity_identifier = None
     self.boot_identifier = None
     self.category = None
-    self.euid = None
     self.event_message = None
     self.event_type = None
     self.message_type = None
-    self.pid = None
+    self.process_identifier = None
     self.process_image_identifier = None
     self.process_image_path = None
     self.recorded_time = None
@@ -4451,11 +4449,10 @@ class UnifiedLoggingParser(interface.FileEntryParser):
             activity_identifier & tracev3_file.ACTIVITY_IDENTIFIER_BITMASK)
         event_data.boot_identifier = str(log_entry.boot_identifier).upper()
         event_data.category = log_entry.category
-        event_data.euid = None
         event_data.event_message = log_entry.event_message
         event_data.event_type = log_entry.event_type
         event_data.message_type = log_entry.message_type
-        event_data.pid = log_entry.process_identifier
+        event_data.process_identifier = log_entry.process_identifier
         event_data.process_image_identifier = str(
             log_entry.process_image_identifier).upper()
         event_data.process_image_path = log_entry.process_image_path
