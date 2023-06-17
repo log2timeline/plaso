@@ -47,6 +47,7 @@ systemd_journal | Parser for Systemd journal files.
 text | Parser for text-based log files.
 trendmicro_url | Parser for Trend Micro Office Web Reputation log files.
 trendmicro_vd | Parser for Trend Micro Office Scan Virus Detection log files.
+unified_logging | Parser for Apple Unified Logging (AUL) 64-bit tracev3 files.
 usnjrnl | Parser for NTFS USN change journal ($UsnJrnl:$J) file system metadata files.
 utmp | Parser for Linux libc6 utmp files.
 utmpx | Parser for Mac OS X 10.5 utmpx files.
@@ -110,6 +111,7 @@ Name | Description
 --- | ---
 airport | Parser for Airport plist files.
 apple_id | Parser for Apple account information plist files.
+io_identityservices_idstatuscache | Parser for Idstatuscache plist files.
 ios_carplay | Parser for Apple iOS Car Play application plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
@@ -140,12 +142,14 @@ chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files
 chrome_autofill | Parser for Google Chrome autofill SQLite database (Web Data) files.
 chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
 dropbox | Parser for Dropbox sync history database (sync_history.db) files.
-firefox_cookies | Parser for Mozilla Firefox cookies SQLite database files.
+firefox_10_cookies | Parser for Mozilla Firefox cookies SQLite database file version 10.
+firefox_2_cookies | Parser for Mozilla Firefox cookies SQLite database file version 2.
 firefox_downloads | Parser for Mozilla Firefox downloads SQLite database (downloads.sqlite) files.
 firefox_history | Parser for Mozilla Firefox history SQLite database (places.sqlite) files.
 google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
+ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
 ios_powerlog | Parser for iOS powerlog SQLite database (CurrentPowerlog.PLSQL) files.
 ios_screentime | Parser for iOS Screen Time SQLite database (RMAdminStore-Local.sqlite).
@@ -254,11 +258,11 @@ winreg_default | Parser for Windows Registry data.
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
-ios | jsonl/ios_application_privacy, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
+ios | jsonl/ios_application_privacy, plist/io_identityservices_idstatuscache, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
 linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
-webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
+webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_2_cookies, sqlite/firefox_10_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, text/powershell_transcript, winevtx, win_gen, winpca_db0, winpca_dic
 win7_slow | esedb, mft, win7
 win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/winfirewall, usnjrnl, webhist, winjob, winreg

@@ -374,6 +374,14 @@ plaso.parsers.trendmicroav module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.unified\_logging module
+-------------------------------------
+
+.. automodule:: plaso.parsers.unified_logging
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.utmp module
 -------------------------
 
