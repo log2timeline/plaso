@@ -1711,8 +1711,7 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
     """Tests the _ReadFirehoseChunkData function."""
     test_file = unified_logging.TraceV3File()
 
-    test_file._ReadFirehoseChunkData(
-        self._FIREHOSE_CHUNK_DATA, len(self._FIREHOSE_CHUNK_DATA), 0, {})
+    test_file._ReadFirehoseChunkData(self._FIREHOSE_CHUNK_DATA, 0, {})
 
   def testReadFirehoseTracepointActivityData(self):
     """Tests the _ReadFirehoseTracepointActivityData function."""

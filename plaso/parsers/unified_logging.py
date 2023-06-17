@@ -2636,7 +2636,8 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     if large_shared_cache_data:
       calculated_large_offset_data = large_shared_cache_data >> 1
-      if large_offset_data != calculated_large_offset_data:
+      if (large_offset_data and
+          large_offset_data != calculated_large_offset_data):
         load_address |= large_offset_data << 32
       else:
         load_address |= large_shared_cache_data << 31
@@ -2694,30 +2695,36 @@ class TraceV3File(BaseUnifiedLoggingFile):
     return strings_map
 
   def _GetDataItemsAndValuesData(
-      self, tracepoint_data_object, values_data, oversize_chunks):
+      self, proc_id, tracepoint_data_object, values_data, private_data,
+      oversize_chunks):
     """Retrieves the data items and values data.
 
     Args:
+      proc_id (str): firehose tracepoint proc_id value.
       tracepoint_data_object (object): firehose tracepoint data object.
       values_data (bytes): (public) values data.
-      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+      private_data (bytes): private data.
+      oversize_chunks (dict[str, oversize_chunk]): Oversize chunks per data
           reference.
 
     Returns:
-      tuple[list[tracev3_data_item], bytes]: data items and values data.
+      tuple[list[tracev3_data_item], bytes, bytes]: data items and values
+          data and private data.
     """
     data_reference = getattr(tracepoint_data_object, 'data_reference', None)
     if not data_reference:
       data_items = getattr(tracepoint_data_object, 'data_items', None)
-      return data_items, values_data
+      return data_items, values_data, private_data
 
-    oversize_chunk = oversize_chunks.get(data_reference, None)
+    lookup_key = f'{proc_id:s}:{data_reference:04x}'
+    oversize_chunk = oversize_chunks.get(lookup_key, None)
     if oversize_chunk:
-      return oversize_chunk.data_items, oversize_chunk.values_data
+      return (oversize_chunk.data_items, oversize_chunk.values_data,
+              oversize_chunk.private_data)
 
     # Seen in certain tracev3 files that oversize chunks can be missing.
     # TODO: issue warning.
-    return None, None
+    return None, values_data, private_data
 
   def _GetDSCFile(self, uuid_string):
     """Retrieves a specific shared-cache strings (DSC) file.
@@ -3117,7 +3124,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       file_offset (int): offset of the chunk set data relative to the start
           of the file.
       chunk_header (tracev3_chunk_header): the chunk header of the chunk set.
-      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+      oversize_chunks (dict[str, oversize_chunk]): Oversize chunks per data
           reference.
 
     Yields:
@@ -3165,13 +3172,16 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
       if chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_FIREHOSE:
         yield from self._ReadFirehoseChunkData(
-            chunkset_chunk_data, chunkset_chunk_header.chunk_data_size,
-            data_offset, oversize_chunks)
+            chunkset_chunk_data, data_offset, oversize_chunks)
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_OVERSIZE:
         oversize_chunk = self._ReadOversizeChunkData(
             chunkset_chunk_data, data_offset)
-        oversize_chunks[oversize_chunk.data_reference] = oversize_chunk
+
+        lookup_key = (f'{oversize_chunk.proc_id_upper:d}@'
+                      f'{oversize_chunk.proc_id_lower:d}:'
+                      f'{oversize_chunk.data_reference:04x}')
+        oversize_chunks[lookup_key] = oversize_chunk
 
       elif chunkset_chunk_header.chunk_tag == self._CHUNK_TAG_STATEDUMP:
         yield from self._ReadStateDumpChunkData(
@@ -3308,16 +3318,14 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     return values
 
-  def _ReadFirehoseChunkData(
-      self, chunk_data, chunk_data_size, data_offset, oversize_chunks):
+  def _ReadFirehoseChunkData(self, chunk_data, data_offset, oversize_chunks):
     """Reads firehose chunk data.
 
     Args:
       chunk_data (bytes): firehose chunk data.
-      chunk_data_size (int): size of the firehose chunk data.
       data_offset (int): offset of the firehose chunk relative to the start
           of the chunk set.
-      oversize_chunks (dict[int, oversize_chunk]): Oversize chunks per data
+      oversize_chunks (dict[str, oversize_chunk]): Oversize chunks per data
           reference.
 
     Yields:
@@ -3339,15 +3347,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
       raise errors.ParseError((
           f'Unable to retrieve process information entry: {proc_id:s} from '
           f'catalog'))
-
-    private_data_virtual_offset = (
-        firehose_header.private_data_virtual_offset & 0x0fff)
-    if not private_data_virtual_offset:
-      private_data_size = 0
-      private_data = b''
-    else:
-      private_data_size = 4096 - private_data_virtual_offset
-      private_data = chunk_data[-private_data_size:]
 
     chunk_data_offset = 32
     while chunk_data_offset < firehose_header.public_data_size:
@@ -3462,10 +3461,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
         values_data_offset = bytes_read
         values_data = firehose_tracepoint.data[values_data_offset:]
 
-        backtrace_frames = self._ReadBacktraceData(
-            firehose_tracepoint.flags, values_data,
-            tracepoint_data_offset + values_data_offset)
-
         string_reference, is_dynamic = self._CalculateFormatStringReference(
             tracepoint_data_object, firehose_tracepoint.format_string_reference)
 
@@ -3475,14 +3470,30 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
         string_formatter = image_values.GetStringFormatter()
 
+        backtrace_frames = []
         values = []
+
         if record_type == self._RECORD_TYPE_TRACE:
           values = self._ReadFirehoseTracepointTraceValuesData(
               tracepoint_data_object, values_data, string_formatter)
 
         else:
-          data_items, values_data = self._GetDataItemsAndValuesData(
-              tracepoint_data_object, values_data, oversize_chunks)
+          private_data_virtual_offset = (
+              firehose_header.private_data_virtual_offset & 0x0fff)
+          if not private_data_virtual_offset:
+            private_data = b''
+          else:
+            private_data_size = 4096 - private_data_virtual_offset
+            private_data = chunk_data[-private_data_size:]
+
+          data_items, values_data, private_data = (
+              self._GetDataItemsAndValuesData(
+                  proc_id, tracepoint_data_object, values_data, private_data,
+                  oversize_chunks))
+
+          backtrace_frames = self._ReadBacktraceData(
+              firehose_tracepoint.flags, values_data,
+              tracepoint_data_offset + values_data_offset)
 
           if data_items:
             private_data_range = getattr(
@@ -3588,9 +3599,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
         alignment = 8 - alignment
 
       chunk_data_offset += alignment
-
-    if private_data_size:
-      chunk_data_size -= private_data_size
 
   def _ReadFirehoseTracepointData(self, tracepoint_data, data_offset):
     """Reads firehose tracepoint data.
@@ -3875,12 +3883,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
     oversize_chunk = self._ReadStructureFromByteStream(
         chunk_data, data_offset, data_type_map, context=context)
 
-    if oversize_chunk.private_data_size:
-      raise errors.ParseError(
-          'Oversize chunk with private data is currently unsupported')
+    data_offset = context.byte_size
+    data_size = data_offset + oversize_chunk.data_size
+    oversize_chunk.values_data = chunk_data[data_offset:data_size]
 
-    data_size = 48 + oversize_chunk.data_size + oversize_chunk.private_data_size
-    oversize_chunk.values_data = chunk_data[context.byte_size:data_size]
+    data_offset += oversize_chunk.data_size
+    data_size = data_offset + oversize_chunk.private_data_size
+    oversize_chunk.private_data = chunk_data[data_offset:data_size]
 
     return oversize_chunk
 
