@@ -313,13 +313,13 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventData(event_data)
 
   def _CookieHexToAscii(self, raw_cookie):
-    """Translates a cookie from a bytestring to a string
+    """Translates a cookie from a binary string to a string.
 
     Args:
-      raw_cookie (bytes): the raw bytestring of a cookie field
+      raw_cookie (bytes): the raw binary string of a cookie field.
 
     Returns:
-      optional(str): the bytestring decoded and trimmed or None
+      str: the decoded binary string or None if not available.
     """
     if raw_cookie is not None:
       raw_cookie = raw_cookie.rstrip(b'\x00')
@@ -327,18 +327,19 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     return None
 
   def GetRawCookieValue(self, record_values, value_name):
-    """Retrieves the binary string as a hex string
+    """Retrieves the binary string as a hexadecimal formatted string.
       
     Args:
-      record_values (dict): esedb dict structure for a table entry
+      record_values (dict): esedb dict structure for a table entry.
       value_name (str): the name of the value we are converting
 
     Returns:
-      optional(str): the value of value_name in record_values decoded to hex
+      str: the hexadecimal formatted binary string or None if not available.
     """
     cookie_hash = record_values.get(value_name, None)
     if cookie_hash is not None:
-      return f"0x{cookie_hash.hex()}"
+      hash_string = cookie_hash.hex()
+      return f'0x{0:x}.format(hash_string)
     return None
 
   def _ParseCookieExTable(self, parser_mediator, table):
