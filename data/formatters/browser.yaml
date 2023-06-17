@@ -492,6 +492,19 @@ short_source: 'WEBHIST'
 source: 'MSIE WebCache containers record'
 ---
 type: 'conditional'
+data_type: 'msie:webcache:cookie'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flags}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache cookies record'
+---
+type: 'conditional'
 data_type: 'msie:webcache:leak_file'
 message:
 - 'Filename: {cached_filename}'
@@ -512,19 +525,6 @@ short_message:
 - 'Directory: {directory}'
 short_source: 'WEBHIST'
 source: 'MSIE WebCache partitions record'
----
-type: 'conditional'
-data_type: 'msie:cookie:entry'
-message:
-- '{url}'
-- '<{path}>'
-- '({cookie_name})'
-- 'Flags: {flags}'
-short_message:
-- '{url}'
-- '({cookie_name})'
-short_source: 'WEBHIST'
-source: 'MSIE WebCache Cookies'
 ---
 type: 'conditional'
 data_type: 'opera:history:entry'
