@@ -13,40 +13,6 @@ from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
 
-class MsieWebCacheCookieData(events.EventData):
-  """MSIE WebCache Container table event data.
-
-  Attributes:
-    container_identifier (int): container identifier.
-    cookie_hash (str): a similarity hash of the cookie contents
-    cookie_name (str): name of the cookie
-    cookie_value_raw (str): raw value of cookie in hex
-    cookie_value (str): value of the cookie encoded in ascii
-    entry_identifier (int): entry identifier.
-    expiration_time (dfdatetime.DateTimeValues): expiration date and time.
-    flags (int): an representation of cookie flags
-    modification_time (dfdatetime.DateTimeValues): modification date and time.
-    request_domain (str): Request domain for which the cookie was set.
-  """
-
-  DATA_TYPE = 'msie:webcache:cookie'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(MsieWebCacheCookieData, self).__init__(
-        data_type=self.DATA_TYPE)
-    self.container_identifier = None
-    self.cookie_hash = None
-    self.cookie_name = None
-    self.cookie_value_raw = None
-    self.cookie_value = None
-    self.entry_identifier = None
-    self.expiration_time = None
-    self.flags = None
-    self.modification_time = None
-    self.request_domain = None
-
-
 class MsieWebCacheContainersEventData(events.EventData):
   """MSIE WebCache Containers table event data.
 
@@ -122,6 +88,39 @@ class MsieWebCacheContainerEventData(events.EventData):
     self.synchronization_count = None
     self.synchronization_time = None
     self.url = None
+
+
+class MsieWebCacheCookieData(events.EventData):
+  """MSIE WebCache Container table event data.
+
+  Attributes:
+    container_identifier (int): container identifier.
+    cookie_hash (str): a similarity hash of the cookie contents
+    cookie_name (str): name of the cookie
+    cookie_value_raw (str): raw value of cookie in hex
+    cookie_value (str): value of the cookie encoded in ascii
+    entry_identifier (int): entry identifier.
+    expiration_time (dfdatetime.DateTimeValues): expiration date and time.
+    flags (int): an representation of cookie flags
+    modification_time (dfdatetime.DateTimeValues): modification date and time.
+    request_domain (str): Request domain for which the cookie was set.
+  """
+
+  DATA_TYPE = 'msie:webcache:cookie'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(MsieWebCacheCookieData, self).__init__(data_type=self.DATA_TYPE)
+    self.container_identifier = None
+    self.cookie_hash = None
+    self.cookie_name = None
+    self.cookie_value = None
+    self.cookie_value_raw = None
+    self.entry_identifier = None
+    self.expiration_time = None
+    self.flags = None
+    self.modification_time = None
+    self.request_domain = None
 
 
 class MsieWebCacheLeakFilesEventData(events.EventData):
@@ -219,7 +218,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Retrieves a date and time record value.
 
     Args:
-      record_values (dict[str,object]): values per column name.
+      record_values (dict[str, object]): values per column name.
       value_name (str): name of the record value.
 
     Returns:
@@ -322,15 +321,19 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       str: the decoded binary string or None if not available.
     """
     if raw_cookie is not None:
-      raw_cookie = raw_cookie.rstrip(b'\x00')
-      return raw_cookie.decode('utf-8')
+      try:
+        string_value = raw_cookie.decode('utf-8')
+        return string_value.rstrip('\x00')
+      except UnicodeDecodeError:
+        pass
+
     return None
 
   def GetRawCookieValue(self, record_values, value_name):
     """Retrieves the binary string as a hexadecimal formatted string.
       
     Args:
-      record_values (dict): esedb dict structure for a table entry.
+      record_values (dict[str, object]): values per column name.
       value_name (str): the name of the value we are converting
 
     Returns:
@@ -338,8 +341,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """
     cookie_hash = record_values.get(value_name, None)
     if cookie_hash is not None:
-      hash_string = cookie_hash.hex()
-      return f'0x{0:x}.format(hash_string)
+      return cookie_hash.hex()
     return None
 
   def _ParseCookieExTable(self, parser_mediator, table):
