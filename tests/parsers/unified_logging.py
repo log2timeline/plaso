@@ -1367,8 +1367,12 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
       0xce, 0x9a, 0x31, 0x07, 0x00, 0x00, 0x00, 0x00, 0x95, 0xaa, 0xef, 0x56,
       0x00, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
 
-  _FIREHOSE_TRACEPOINT_TRACE_DATA = bytes(bytearray([
+  _FIREHOSE_TRACEPOINT_TRACE_DATA1 = bytes(bytearray([
       0x2b, 0xf4, 0x03, 0x00, 0x00]))
+
+  _FIREHOSE_TRACEPOINT_TRACE_DATA2 = bytes(bytearray([
+      0xf6, 0x21, 0x01, 0x00, 0xb0, 0x60, 0xe1, 0x4b, 0xfb, 0x7f, 0x00, 0x00,
+      0xc8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x02]))
 
   _HEADER_CHUNK_DATA = bytes(bytearray([
       0x7d, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0xc2, 0x55, 0xe0, 0xb5,
@@ -1770,7 +1774,7 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
     test_file = unified_logging.TraceV3File()
 
     trace, _ = test_file._ReadFirehoseTracepointTraceData(
-        0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA, 0)
+        0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA1, 0)
 
     self.assertIsNotNone(trace)
     self.assertEqual(trace.load_address_lower, 0x0003f42b)
@@ -1778,7 +1782,32 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
 
     with self.assertRaises(errors.ParseError):
       test_file._ReadFirehoseTracepointTraceData(
-          0xffff, self._FIREHOSE_TRACEPOINT_TRACE_DATA, 0)
+          0xffff, self._FIREHOSE_TRACEPOINT_TRACE_DATA1, 0)
+
+    trace, _ = test_file._ReadFirehoseTracepointTraceData(
+        0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA2, 0)
+
+    self.assertIsNotNone(trace)
+    self.assertEqual(trace.load_address_lower, 0x000121f6)
+    self.assertEqual(trace.number_of_values, 2)
+
+  def testReadFirehoseTracepointTraceValuesData(self):
+    """Tests the _ReadFirehoseTracepointTraceValuesData function."""
+    test_file = unified_logging.TraceV3File()
+
+    trace, _ = test_file._ReadFirehoseTracepointTraceData(
+        0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA2, 0)
+
+    self.assertIsNotNone(trace)
+
+    string_formatter = unified_logging.StringFormatter()
+    string_formatter.ParseFormatString('%#x: %d')
+
+    values = test_file._ReadFirehoseTracepointTraceValuesData(
+        trace, self._FIREHOSE_TRACEPOINT_TRACE_DATA2[4:], string_formatter)
+
+    self.assertEqual(len(values), 2)
+    self.assertEqual(values, ['0x7ffb4be160b0', '200'])
 
   def testReadHeaderChunk(self):
     """Tests the _ReadHeaderChunk function."""

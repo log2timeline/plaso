@@ -3807,16 +3807,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
     if not trace.number_of_values:
       return []
 
-    # TODO: currently unknown if the value sizes are stored front-to-back or
-    # back-to-front.
-    if trace.number_of_values != 1:
-      raise errors.ParseError(
-          f'Unsupported number of values: {trace.number_of_values:d}')
-
     values = []
 
     value_data_offset = 0
-    value_size_offset = -2
+    value_size_offset = -(1 + trace.number_of_values)
 
     for value_index in range(trace.number_of_values):
       value_data_size = values_data[value_size_offset]
@@ -3832,7 +3826,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       values.append(value)
 
       value_data_offset += value_data_size
-      value_size_offset -= 1
+      value_size_offset += 1
 
     return values
 
