@@ -2343,6 +2343,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
   _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'aul_tracev3.yaml')
 
+  _RECORD_TYPE_UNUSED = 0x00
   _RECORD_TYPE_ACTIVITY = 0x02
   _RECORD_TYPE_TRACE = 0x03
   _RECORD_TYPE_LOG = 0x04
@@ -2359,19 +2360,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
       _RECORD_TYPE_SIGNPOST: 'signpostEvent',
       _RECORD_TYPE_TRACE: 'traceEvent'}
 
-  _RECORD_TYPE_DESCRIPTIONS = {
-      _RECORD_TYPE_ACTIVITY: 'Activity',
-      _RECORD_TYPE_LOG: 'Log',
-      _RECORD_TYPE_LOSS: 'Loss',
-      _RECORD_TYPE_SIGNPOST: 'Signpost',
-      _RECORD_TYPE_TRACE: 'Trace'}
-
-  _STREAM_TYPE_DESCRIPTIONS = {
-      0x00: 'persist',
-      0x01: 'special handling',
-      0x02: 'memory',
-      0x04: 'signpost'}
-
   _CHUNK_TAG_HEADER = 0x00001000
   _CHUNK_TAG_FIREHOSE = 0x00006001
   _CHUNK_TAG_OVERSIZE = 0x00006002
@@ -2379,17 +2367,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
   _CHUNK_TAG_SIMPLEDUMP = 0x00006004
   _CHUNK_TAG_CATALOG = 0x0000600b
   _CHUNK_TAG_CHUNK_SET = 0x0000600d
-
-  _CHUNK_TAG_DESCRIPTIONS = {
-      _CHUNK_TAG_HEADER: 'Header',
-      _CHUNK_TAG_FIREHOSE: 'Firehose',
-      _CHUNK_TAG_OVERSIZE: 'Oversize',
-      _CHUNK_TAG_STATEDUMP: 'StateDump',
-      _CHUNK_TAG_SIMPLEDUMP: 'SimpleDump',
-      _CHUNK_TAG_CATALOG: 'Catalog',
-      _CHUNK_TAG_CHUNK_SET: 'ChunkSet'}
-
-  _DATA_ITEM_VALUE_TYPE_DESCRIPTIONS = {}
 
   _DATA_ITEM_BINARY_DATA_VALUE_TYPES = (0x30, 0x32, 0xf2)
   _DATA_ITEM_NUMERIC_VALUE_TYPES = (0x00, 0x02)
@@ -2658,6 +2635,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Returns:
       str: decoded value.
     """
+    if not string_formatter:
+      return '<decode: missing string formatter>'
+
     decoder_names = string_formatter.GetDecoderNamesByIndex(value_index)
     if not decoder_names:
       return '<decode: missing decoder>'
@@ -2797,6 +2777,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
           image_text_offset = uuid_entry.load_address_lower | (
               uuid_entry.load_address_upper << 32)
           break
+
+      if not strings_file_identifier:
+        # ~~> no uuid found for absolute pc
+        return None
 
     elif strings_file_type == 0x000a:
       strings_file_identifier = tracepoint_data_object.uuidtext_file_identifier
@@ -3348,18 +3332,22 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
     chunk_data_offset = 32
     while chunk_data_offset < firehose_header.public_data_size:
-      firehose_tracepoint = self._ReadFirehoseTracepointData(
+      firehose_tracepoint, bytes_read = self._ReadFirehoseTracepointData(
           chunk_data[chunk_data_offset:], data_offset + chunk_data_offset)
-
-      chunk_data_offset += 24
 
       record_type = firehose_tracepoint.record_type
       if record_type not in (
-          0x00, self._RECORD_TYPE_ACTIVITY, self._RECORD_TYPE_TRACE,
-          self._RECORD_TYPE_LOG, self._RECORD_TYPE_SIGNPOST,
-          self._RECORD_TYPE_LOSS):
+          self._RECORD_TYPE_UNUSED, self._RECORD_TYPE_ACTIVITY,
+          self._RECORD_TYPE_TRACE, self._RECORD_TYPE_LOG,
+          self._RECORD_TYPE_SIGNPOST, self._RECORD_TYPE_LOSS):
         raise errors.ParseError(
             f'Unsupported record type: 0x{record_type:02x}.')
+
+      if record_type == self._RECORD_TYPE_UNUSED:
+        chunk_data_offset += bytes_read
+        continue
+
+      chunk_data_offset += 24
 
       tracepoint_data_offset = data_offset + chunk_data_offset
       tracepoint_data_object = None
@@ -3466,7 +3454,10 @@ class TraceV3File(BaseUnifiedLoggingFile):
             process_information_entry, firehose_tracepoint,
             tracepoint_data_object, string_reference, is_dynamic)
 
-        string_formatter = image_values.GetStringFormatter()
+        if image_values:
+          string_formatter = image_values.GetStringFormatter()
+        else:
+          string_formatter = None
 
         backtrace_frames = []
         values = []
@@ -3514,10 +3505,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
         category, sub_system = self._GetSubSystemStrings(
             process_information_entry, sub_system_identifier)
 
+        text_offset = getattr(image_values, 'text_offset', None) or 0
         program_counter = self._CalculateProgramCounter(
-            tracepoint_data_object, image_values.text_offset)
+            tracepoint_data_object, text_offset)
 
-        if not backtrace_frames:
+        if not backtrace_frames and image_values:
           backtrace_frame = BacktraceFrame()
           backtrace_frame.image_identifier = image_values.identifier
           backtrace_frame.image_offset = program_counter or 0
@@ -3526,12 +3518,13 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
         log_entry.backtrace_frames = backtrace_frames
         log_entry.category = category
-        log_entry.format_string = image_values.string
+        log_entry.format_string = getattr(image_values, 'string', None)
         log_entry.process_identifier = getattr(
             process_information_entry, 'process_identifier', None) or 0
         log_entry.process_image_path = process_image_path
-        log_entry.sender_image_identifier = image_values.identifier
-        log_entry.sender_image_path = image_values.path
+        log_entry.sender_image_identifier = getattr(
+            image_values, 'identifier', None)
+        log_entry.sender_image_path = getattr(image_values, 'path', None)
         log_entry.sender_program_counter = program_counter or 0
         log_entry.sub_system = sub_system
         log_entry.time_zone_name = None
@@ -3586,7 +3579,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
           log_entry.signpost_type = self._SIGNPOST_TYPE_DESCRIPTIONS.get(
               firehose_tracepoint.log_type & 0x0f, None)
 
-        log_entry.event_message = string_formatter.FormatString(values)
+        if string_formatter:
+          log_entry.event_message = string_formatter.FormatString(values)
+        else:
+          log_entry.event_message = (
+              '<compose failure [missing precomposed log]>')
 
       yield log_entry
 
@@ -3607,15 +3604,20 @@ class TraceV3File(BaseUnifiedLoggingFile):
           the start of the chunk set.
 
     Returns:
-      tracev3_firehose_tracepoint: firehose tracepoint.
+      tuple[tracev3_firehose_tracepoint, int]: firehose tracepoint and number
+          of bytes read.
 
     Raises:
       ParseError: if the firehose tracepoint cannot be read.
     """
     data_type_map = self._GetDataTypeMap('tracev3_firehose_tracepoint')
 
-    return self._ReadStructureFromByteStream(
-        tracepoint_data, data_offset, data_type_map)
+    context = dtfabric_data_maps.DataTypeMapContext()
+
+    firehose_tracepoint = self._ReadStructureFromByteStream(
+        tracepoint_data, data_offset, data_type_map, context=context)
+
+    return firehose_tracepoint, context.byte_size
 
   def _ReadFirehoseTracepointActivityData(
       self, log_type, flags, tracepoint_data, data_offset):
