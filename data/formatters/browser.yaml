@@ -492,6 +492,19 @@ short_source: 'WEBHIST'
 source: 'MSIE WebCache containers record'
 ---
 type: 'conditional'
+data_type: 'msie:webcache:cookie'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flags}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache cookies record'
+---
+type: 'conditional'
 data_type: 'msie:webcache:leak_file'
 message:
 - 'Filename: {cached_filename}'

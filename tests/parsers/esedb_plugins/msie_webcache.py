@@ -71,7 +71,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 978)
+    self.assertEqual(number_of_event_data, 1143)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -98,7 +98,40 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'synchronization_count': 0,
         'url': 'https://www.bing.com/rs/3R/kD/ic/878ca0cd/b83d57c0.svg'}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 199)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 211)
+    self.CheckEventData(event_data, expected_event_values)
+
+  def testProcessOnDatabaseWithCookiesExTable(self):
+    """Tests the Process function on database with a CookiesEx table."""
+    plugin = msie_webcache.MsieWebCacheESEDBPlugin()
+    storage_writer = self._ParseESEDBFileWithPlugin(
+        ['WebCacheV01_cookies.dat'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 276)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_event_values = {
+            'cookie_hash': '5b4342ed6e2b0ae16f7e2c4c',
+            'cookie_name': 'abid',
+            'cookie_value': 'fcc450d1-8674-1bd3-4074-a240cff5c5b1',
+            'cookie_value_raw': (
+                '66636334353064312d383637342d316264332d343037342d6132343063666'
+                '6356335623100'),
+            'data_type': 'msie:webcache:cookie',
+            'entry_identifier': 13,
+            'flags': 0x80082401,
+            'request_domain': 'com.associates-amazon' }
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 69)
     self.CheckEventData(event_data, expected_event_values)
 
 

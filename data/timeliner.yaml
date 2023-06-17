@@ -847,6 +847,14 @@ attribute_mappings:
   description: 'Last Scavenge Time'
 place_holder_event: false
 ---
+data_type: 'msie:webcache:cookie'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'modification_time'
+  description: 'Modification Time'
+place_holder_event: true
+---
 data_type: 'msiecf:leak'
 place_holder_event: true
 ---
