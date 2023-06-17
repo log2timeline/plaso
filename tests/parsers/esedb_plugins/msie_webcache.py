@@ -100,9 +100,9 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 211)
     self.CheckEventData(event_data, expected_event_values)
-  
+
   def testProcessOnDatabaseWithCookiesExTable(self):
-    """Tests the Process function on database with a PartitionsEx table."""
+    """Tests the Process function on database with a CookiesEx table."""
     plugin = msie_webcache.MsieWebCacheESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['WebCacheV01_cookies.dat'], plugin)
