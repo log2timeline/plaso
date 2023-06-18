@@ -20,7 +20,7 @@ name: ios
 description: Preset for iOS.
 parsers:
 - jsonl/ios_application_privacy
-- plist/io_identityservices_idstatuscache
+- plist/ios_identityservices
 - sqlite/imessage
 - sqlite/ios_netusage
 - sqlite/ios_powerlog

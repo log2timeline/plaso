@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   plaso.helpers.macos
    plaso.helpers.windows
 
 Submodules

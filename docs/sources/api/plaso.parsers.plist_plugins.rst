@@ -60,6 +60,14 @@ plaso.parsers.plist\_plugins.ios\_carplay module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.plist\_plugins.ios\_identityservices module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.ios_identityservices
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.plist\_plugins.ipod module
 ----------------------------------------
 

@@ -34,7 +34,7 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
   com.apple.identityservices.idstatuscache.plist
   """
 
-  NAME = 'io_identityservices_idstatuscache'
+  NAME = 'ios_identityservices'
   DATA_FORMAT = 'Idstatuscache plist file'
 
   PLIST_PATH_FILTERS = frozenset([interface.PlistPathFilter(
