@@ -13,7 +13,6 @@ from acstore.containers import interface as containers_interface
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.lib import errors
 from plaso.output import formatting_helper
 from plaso.output import logger
 from plaso.output import manager
@@ -181,17 +180,14 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     Returns:
       str: extra attributes field.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
     """
     message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
-      raise errors.NoFormatterFound((
-          'Unable to find message formatter event with data type: '
-          '{0:s}.').format(event_data.data_type))
+      logger.warning(
+          'Using default message formatter for data type: {0:s}'.format(
+              event_data.data_type))
+      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     formatted_attribute_names = (
         message_formatter.GetFormatStringAttributeNames())

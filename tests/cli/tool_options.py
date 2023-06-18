@@ -135,7 +135,8 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
-                       [--custom_fields CUSTOM_FIELDS] [--dynamic_time]
+                       [--custom_fields CUSTOM_FIELDS]
+                       [--custom_formatter_definitions PATH] [--dynamic_time]
                        [--output_time_zone TIME_ZONE]
 
 Test argument parser.
@@ -155,6 +156,12 @@ Test argument parser.
                         regular fields will are favoured above custom fields
                         with same name. Output formats that support this are:
                         dynamic, opensearch and xlsx.
+  --custom_formatter_definitions PATH, --custom-formatter-definitions PATH
+                        Path to a file containing custom event formatter
+                        definitions, which is a .yaml file. Custom event
+                        formatter definitions can be used to customize event
+                        messages and override the built-in event formatter
+                        definitions.
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
                         Output formats that support dynamic time are: dynamic

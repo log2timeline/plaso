@@ -169,7 +169,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     mediator.SetTimeZone(processing_configuration.preferred_time_zone)
 
     self._ReadMessageFormatters(
-        mediator, processing_configuration.data_location)
+        mediator, processing_configuration.data_location,
+        processing_configuration.custom_formatters_path)
 
     return mediator
 
@@ -372,13 +373,15 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       output_module.WriteFieldValuesOfMACBGroup(
           self._output_mediator, macb_group)
 
-  def _ReadMessageFormatters(self, output_mediator_object, data_location):
+  def _ReadMessageFormatters(
+      self, output_mediator_object, data_location, custom_formatters_path):
     """Reads the message formatters from a formatters file or directory.
 
     Args:
       output_mediator_object (OutputMediator): mediates interactions between
           output modules and other components, such as storage and dfVFS.
       data_location (str): path to the data files.
+      custom_formatters_path (str): path to custom formatter definitions file.
 
     Raises:
       BadConfigOption: if the message formatters file or directory cannot be
@@ -408,6 +411,15 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
     else:
       raise errors.BadConfigOption('Missing formatters file and directory.')
+
+    if custom_formatters_path:
+      try:
+        output_mediator_object.ReadMessageFormattersFromFile(
+            custom_formatters_path, override_existing=True)
+      except KeyError as exception:
+        raise errors.BadConfigOption((
+            'Unable to read custrom message formatters from file: {0:s} with '
+            'error: {1!s}').format(formatters_file, exception))
 
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""

@@ -10,7 +10,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import events
-from plaso.lib import errors
+from plaso.formatters import default
 from plaso.output import logger
 
 
@@ -37,6 +37,8 @@ class EventFormattingHelper(object):
 
 class FieldFormattingHelper(object):
   """Output module field formatting helper."""
+
+  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
 
   # Maps the name of a field to callback function that formats the field value.
   _FIELD_FORMAT_CALLBACKS = {}
@@ -300,17 +302,14 @@ class FieldFormattingHelper(object):
 
     Returns:
       str: message field.
-
-    Raises:
-      NoFormatterFound: if no message formatter can be found to match the data
-          type in the event data.
     """
     message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
-      raise errors.NoFormatterFound((
-          'Unable to find message formatter event with data type: '
-          '{0:s}.').format(event_data.data_type))
+      logger.warning(
+          'Using default message formatter for data type: {0:s}'.format(
+              event_data.data_type))
+      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     event_values = event_data.CopyToDict()
     message_formatter.FormatEventValues(output_mediator, event_values)
@@ -330,17 +329,14 @@ class FieldFormattingHelper(object):
 
     Returns:
       str: short message field.
-
-    Raises:
-      NoFormatterFound: if no message formatter can be found to match the data
-          type in the event data.
     """
     message_formatter = output_mediator.GetMessageFormatter(
         event_data.data_type)
     if not message_formatter:
-      raise errors.NoFormatterFound((
-          'Unable to find message formatter event with data type: '
-          '{0:s}.').format(event_data.data_type))
+      logger.warning(
+          'Using default message formatter for data type: {0:s}'.format(
+              event_data.data_type))
+      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     event_values = event_data.CopyToDict()
     message_formatter.FormatEventValues(output_mediator, event_values)
@@ -360,10 +356,6 @@ class FieldFormattingHelper(object):
 
     Returns:
       str: source field.
-
-    Raises:
-      NoFormatterFound: if no event formatter can be found to match the data
-          type in the event data.
     """
     data_type = getattr(event_data, 'data_type', None) or '-'
     _, source = output_mediator.GetSourceMapping(data_type)
@@ -382,10 +374,6 @@ class FieldFormattingHelper(object):
 
     Returns:
       str: short source field.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-          type in the event data.
     """
     data_type = getattr(event_data, 'data_type', None) or '-'
     source_short, _ = output_mediator.GetSourceMapping(data_type)

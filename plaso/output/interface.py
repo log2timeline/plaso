@@ -3,7 +3,6 @@
 
 import abc
 
-from plaso.lib import errors
 from plaso.output import logger
 
 
@@ -102,14 +101,8 @@ class OutputModule(object):
       event_data_stream (EventDataStream): event data stream.
       event_tag (EventTag): event tag.
     """
-    try:
-      field_values = self._GetFieldValues(
-          output_mediator, event, event_data, event_data_stream, event_tag)
-
-    except errors.NoFormatterFound as exception:
-      error_message = 'unable to retrieve formatter with error: {0!s}'.format(
-          exception)
-      self._ReportEventError(event, event_data, error_message)
+    field_values = self._GetFieldValues(
+        output_mediator, event, event_data, event_data_stream, event_tag)
 
     self._WriteFieldValues(output_mediator, field_values)
 
