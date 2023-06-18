@@ -191,6 +191,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     credentials (list[CredentialConfiguration]): credential configurations.
     custom_artifacts_path (str): path to custom artifact definitions
         directory or file.
+    custom_formatters_path (str): path to custom formatter definitions file.
     data_location (str): path to the data files.
     debug_output (bool): True if debug output should be enabled.
     dynamic_time (bool): True if date and time values should be represented
@@ -216,6 +217,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
         storage files.
     temporary_directory (str): path of the directory for temporary files.
   """
+
   CONTAINER_TYPE = 'processing_configuration'
 
   def __init__(self):
@@ -225,6 +227,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.artifact_filters = None
     self.credentials = []
     self.custom_artifacts_path = None
+    self.custom_formatters_path = None
     self.data_location = None
     self.debug_output = False
     self.dynamic_time = False

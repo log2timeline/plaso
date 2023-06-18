@@ -38,7 +38,6 @@ class SharedOpenSearchFieldFormattingHelper(
       'datetime': '_FormatDateTime',
       'display_name': '_FormatDisplayName',
       'inode': '_FormatInode',
-      'message': '_FormatMessage',
       'source_long': '_FormatSource',
       'source_short': '_FormatSourceShort',
       'tag': '_FormatTag',

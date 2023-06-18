@@ -7,7 +7,6 @@ from acstore.containers import interface as containers_interface
 
 from dfdatetime import interface as dfdatetime_interface
 
-from plaso.lib import errors
 from plaso.output import formatting_helper
 from plaso.output import text_file
 from plaso.serializer import json_serializer
@@ -170,13 +169,9 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
             event_tag)
         field_values[field_name] = field_value
 
-    try:
-      message = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'message', event, event_data, event_data_stream,
-          event_tag)
-      field_values['message'] = message
-    except errors.NoFormatterFound:
-      pass
+    field_values['message'] = self._field_formatting_helper.GetFormattedField(
+        output_mediator, 'message', event, event_data, event_data_stream,
+        event_tag)
 
     if event_tag:
       event_tag_values = {

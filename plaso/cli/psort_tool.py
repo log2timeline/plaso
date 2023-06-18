@@ -126,6 +126,7 @@ class PsortTool(
       ProcessingConfiguration: output and formatting processing configuration.
     """
     configuration = configurations.ProcessingConfiguration()
+    configuration.custom_formatters_path = self._output_custom_formatters_path
     configuration.data_location = self._data_location
     configuration.debug_output = self._debug_mode
     configuration.dynamic_time = self._output_dynamic_time

@@ -167,6 +167,13 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
       output_mediator.ReadMessageFormattersFromFile(test_file_path)
       self.assertEqual(len(output_mediator._message_formatters), 2)
 
+      with self.assertRaises(KeyError):
+        output_mediator.ReadMessageFormattersFromFile(test_file_path)
+
+      output_mediator.ReadMessageFormattersFromFile(
+          test_file_path, override_existing=True)
+      self.assertEqual(len(output_mediator._message_formatters), 2)
+
     finally:
       storage_writer.Close()
 

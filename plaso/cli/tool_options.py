@@ -5,10 +5,12 @@ import os
 import pytz
 
 from plaso.analysis import manager as analysis_manager
+from plaso.analyzers.hashers import manager as hashers_manager
+from plaso.cli import logger
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.cli.helpers import profiling
-from plaso.analyzers.hashers import manager as hashers_manager
+from plaso.formatters import yaml_formatters_file
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 
@@ -106,6 +108,7 @@ class OutputModuleOptions(object):
     super(OutputModuleOptions, self).__init__()
     self._output_additional_fields = []
     self._output_custom_fields = []
+    self._output_custom_formatters_path = None
     self._output_dynamic_time = None
     self._output_filename = None
     self._output_format = None
@@ -229,6 +232,24 @@ class OutputModuleOptions(object):
 
         self._output_custom_fields.append((name, value))
 
+    custom_formatters_path = self.ParseStringOption(
+        options, 'custom_formatter_definitions_path')
+
+    if custom_formatters_path and not os.path.isfile(custom_formatters_path):
+      raise errors.BadConfigOption((
+          'Unable to determine path to custom formatter definitions: '
+          '{0:s}.').format(custom_formatters_path))
+
+    if custom_formatters_path:
+      logger.info('Custom formatter definitions path: {0:s}'.format(
+          custom_formatters_path))
+
+    if custom_formatters_path:
+      message_formatters_file = yaml_formatters_file.YAMLFormattersFile()
+      message_formatters_file.ReadFromFile(custom_formatters_path)
+
+    self._output_custom_formatters_path = custom_formatters_path
+
     self._output_dynamic_time = getattr(options, 'dynamic_time', False)
 
     time_zone_string = self.ParseStringOption(options, 'output_time_zone')
@@ -284,6 +305,15 @@ class OutputModuleOptions(object):
             'separated values. Note that regular fields will are favoured '
             'above custom fields with same name. Output formats that support '
             'this are: dynamic, opensearch and xlsx.'))
+
+    argument_group.add_argument(
+        '--custom_formatter_definitions', '--custom-formatter-definitions',
+        dest='custom_formatter_definitions_path', type=str, metavar='PATH',
+        action='store', help=(
+            'Path to a file containing custom event formatter definitions, '
+            'which is a .yaml file. Custom event formatter definitions can '
+            'be used to customize event messages and override the built-in '
+            'event formatter definitions.'))
 
     argument_group.add_argument(
         '--dynamic_time', '--dynamic-time', dest='dynamic_time',

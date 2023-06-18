@@ -6,12 +6,10 @@ import os
 import pytz
 
 from plaso.engine import path_helper
-from plaso.formatters import default
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import yaml_formatters_file
 from plaso.helpers.windows import languages
 from plaso.lib import definitions
-from plaso.output import logger
 from plaso.output import winevt_rc
 
 
@@ -26,8 +24,6 @@ class OutputMediator(object):
 
   # The default LCID 0x0409, which represents en-US.
   _DEFAULT_LCID = 0x0409
-
-  _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
 
   _DEFAULT_TIME_ZONE = pytz.UTC
 
@@ -75,19 +71,27 @@ class OutputMediator(object):
     """datetime.tzinfo: time zone."""
     return self._time_zone or self._DEFAULT_TIME_ZONE
 
-  def _ReadMessageFormattersFile(self, path):
+  def _ReadMessageFormattersFile(self, path, override_existing=False):
     """Reads a message formatters configuration file.
 
     Args:
       path (str): path of file that contains the message formatters
-           configuration.
+          configuration.
+      override_existing (bool): True if existing message formatters should
+          be overridden.
 
     Raises:
       KeyError: if the message formatter is already set for the corresponding
-          data type.
+          data type and override existing is False.
     """
     message_formatters_file = yaml_formatters_file.YAMLFormattersFile()
     for message_formatter in message_formatters_file.ReadFromFile(path):
+      if (message_formatter.data_type in self._message_formatters and
+          not override_existing):
+        raise KeyError(
+            'Message formatter for data type: {0:s} already exists'.format(
+                message_formatter.data_type))
+
       for identifier in message_formatter.custom_helpers:
         custom_formatter_helper = (
              formatters_manager.FormattersManager.GetEventFormatterHelper(
@@ -283,14 +287,7 @@ class OutputMediator(object):
           formatter if not available.
     """
     data_type = data_type.lower()
-    message_formatter = self._message_formatters.get(data_type, None)
-    if not message_formatter:
-      logger.warning(
-          'Using default message formatter for data type: {0:s}'.format(
-              data_type))
-      message_formatter = self._DEFAULT_MESSAGE_FORMATTER
-
-    return message_formatter
+    return self._message_formatters.get(data_type, None)
 
   def GetRelativePathForPathSpec(self, path_spec):
     """Retrieves the relative path for a path specification.
@@ -372,18 +369,20 @@ class OutputMediator(object):
     for formatters_file_path in glob.glob(os.path.join(path, '*.yaml')):
       self._ReadMessageFormattersFile(formatters_file_path)
 
-  def ReadMessageFormattersFromFile(self, path):
+  def ReadMessageFormattersFromFile(self, path, override_existing=False):
     """Reads message formatters from a file.
 
     Args:
       path (str): path of file that contains the message formatters
           configuration.
+      override_existing (bool): True if existing message formatters should
+          be overridden.
 
     Raises:
       KeyError: if the message formatter is already set for the corresponding
           data type.
     """
-    self._ReadMessageFormattersFile(path)
+    self._ReadMessageFormattersFile(path, override_existing=override_existing)
 
   def SetPreferredLanguageIdentifier(self, language_tag):
     """Sets the preferred language identifier.

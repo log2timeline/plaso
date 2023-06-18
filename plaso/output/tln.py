@@ -43,10 +43,6 @@ class TLNFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     Returns:
       str: description field.
-
-    Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-          type in the event data.
     """
     date_time_string = self._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)

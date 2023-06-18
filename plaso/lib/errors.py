@@ -38,10 +38,6 @@ class MaximumRecursionDepth(Error):
   """Raised when the maximum recursion depth is reached."""
 
 
-class NoFormatterFound(Error):
-  """Raised when no formatter is found for a particular event object."""
-
-
 class ParseError(Error):
   """Raised when a parse error occurred."""
 
