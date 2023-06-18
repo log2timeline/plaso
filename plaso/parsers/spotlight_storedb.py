@@ -147,6 +147,93 @@ class SpotlightStoreDatabaseParser(
     self._metadata_types = {}
     self._metadata_values = {}
 
+  def _DecompressLZ4Block(
+      self, file_offset, compressed_data, previous_uncompressed_data):
+    """Decompresses LZ4 compressed block.
+
+    Args:
+      file_offset (int): file offset.
+      compressed_data (bytes): LZ4 compressed data.
+      previous_uncompressed_data (bytes): uncompressed data of the previous
+          (preceding) block.
+
+    Returns:
+      tuple[bytes, int]: uncompressed data and number of bytes read.
+
+    Raises:
+      ParseError: if the data cannot be decompressed.
+    """
+    data_type_map = self._GetDataTypeMap('spotlight_store_db_lz4_block_header')
+
+    try:
+      lz4_block_header = data_type_map.MapByteStream(compressed_data)
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError((
+          f'Unable to map LZ4 block header at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
+
+    if lz4_block_header.signature == b'bv41':
+      end_of_data_offset = 12 + lz4_block_header.compressed_data_size
+
+      uncompressed_data = lz4.block.decompress(
+          compressed_data[12:end_of_data_offset],
+          uncompressed_size=lz4_block_header.uncompressed_data_size,
+          dict=previous_uncompressed_data)
+
+    elif lz4_block_header.signature == b'bv4-':
+      end_of_data_offset = 8 + lz4_block_header.uncompressed_data_size
+      uncompressed_data = compressed_data[8:end_of_data_offset]
+
+    else:
+      raise errors.ParseError((
+          f'Unsupported start of LZ4 block marker at offset: '
+          f'0x{file_offset:08x}'))
+
+    return uncompressed_data, end_of_data_offset
+
+  def _DecompressLZ4PageData(self, compressed_page_data, file_offset):
+    """Decompresses LZ4 compressed page data.
+
+    Args:
+      compressed_page_data (bytes): LZ4 compressed page data.
+      file_offset (int): file offset.
+
+    Returns:
+      bytes: uncompressed page data.
+
+    Raises:
+      ParseError: if the page data cannot be decompressed.
+    """
+    compressed_data_offset = 0
+    compressed_data_size = len(compressed_page_data)
+
+    last_uncompressed_block = None
+
+    uncompressed_blocks = []
+    while compressed_data_offset < compressed_data_size:
+      lz4_block_marker = compressed_page_data[
+          compressed_data_offset:compressed_data_offset + 4]
+
+      if lz4_block_marker == b'bv4$':
+        break
+
+      uncompressed_data, bytes_read = self._DecompressLZ4Block(
+          file_offset, compressed_page_data[compressed_data_offset:],
+          last_uncompressed_block)
+
+      compressed_data_offset += bytes_read
+      file_offset += bytes_read
+
+      last_uncompressed_block = uncompressed_data
+
+      uncompressed_blocks.append(uncompressed_data)
+
+    if lz4_block_marker != b'bv4$':
+      raise errors.ParseError(
+          f'Unsupported end of LZ4 block marker at offset: 0x{file_offset:08x}')
+
+    return b''.join(uncompressed_blocks)
+
   def _GetDateTimeMetadataItemValue(self, metadata_item, name):
     """Retrieves a date and time value from a metadata item.
 
@@ -965,49 +1052,6 @@ class SpotlightStoreDatabaseParser(
 
     return metadata_item, data_offset
 
-  def _DecompressLZ4PageData(self, compressed_page_data, file_offset):
-    """Decompresses LZ4 compressed page data.
-
-    Args:
-      compressed_page_data (bytes): LZ4 compressed page data.
-      file_offset (int): file offset.
-
-    Returns:
-      bytes: uncompressed page data.
-
-    Raises:
-      ParseError: if the page data cannot be decompressed.
-    """
-    data_type_map = self._GetDataTypeMap(
-        'spotlight_store_db_lz4_block_header')
-    context = dtfabric_data_maps.DataTypeMapContext()
-
-    try:
-      lz4_block_header = data_type_map.MapByteStream(
-          compressed_page_data, context=context)
-    except dtfabric_errors.MappingError as exception:
-      raise errors.ParseError((
-          'Unable to map LZ4 block header at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
-
-    lz4_block_header_size = context.byte_size
-    end_of_compressed_data_offset = (
-        lz4_block_header_size + lz4_block_header.compressed_data_size)
-
-    page_data = lz4.block.decompress(
-        compressed_page_data[12:end_of_compressed_data_offset],
-        uncompressed_size=lz4_block_header.uncompressed_data_size)
-
-    end_of_compressed_data_identifier = compressed_page_data[
-        end_of_compressed_data_offset:end_of_compressed_data_offset + 4]
-
-    if end_of_compressed_data_identifier != b'bv4$':
-      raise errors.ParseError((
-          'Unsupported LZ4 end of compressed data marker at offset: '
-          '0x{0:08x}').format(file_offset + end_of_compressed_data_offset))
-
-    return page_data
-
   def _ReadRecordPage(self, file_object, file_offset):
     """Reads a record page.
 
@@ -1025,7 +1069,8 @@ class SpotlightStoreDatabaseParser(
     page_header, bytes_read = self._ReadPropertyPageHeader(
         file_object, file_offset)
 
-    if page_header.property_table_type not in (0x00000009, 0x00001009):
+    if page_header.property_table_type not in (
+        0x00000009, 0x00001009, 0x00005009):
       raise errors.ParseError(
           'Unsupported property table type: 0x{0:08x}'.format(
               page_header.property_table_type))
@@ -1037,14 +1082,13 @@ class SpotlightStoreDatabaseParser(
     if page_header.uncompressed_page_size > 0:
       compressed_page_data = page_data
 
-      if (page_header.property_table_type == 0x00000009 and
-          compressed_page_data[0] == 0x78):
-        page_data = zlib.decompress(compressed_page_data)
-
-      elif (page_header.property_table_type == 0x00001009 and
-            compressed_page_data[0:4] == b'bv41'):
+      if (page_header.property_table_type & 0x00001000 and
+          compressed_page_data[0:4] in (b'bv41', b'bv4-')):
         page_data = self._DecompressLZ4PageData(
             compressed_page_data, file_offset)
+
+      elif compressed_page_data[0] == 0x78:
+        page_data = zlib.decompress(compressed_page_data)
 
       else:
         raise errors.ParseError('Unsupported compression type')
