@@ -802,6 +802,10 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
     Returns:
       bool: True if the read was successful.
     """
+    test_definition.custom_formatter_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'custom_formatter_file'))
+
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
 
@@ -858,6 +862,18 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
       return False
 
     with TempDirectory() as temp_directory:
+      output_options = list(test_definition.output_options)
+
+      if test_definition.custom_formatter_file:
+        custom_formatter_file = os.path.join(
+            self._test_sources_path, test_definition.custom_formatter_file)
+        temp_path = os.path.join(temp_directory, os.path.basename(
+            custom_formatter_file))
+        shutil.copyfile(custom_formatter_file, temp_path)
+
+        output_options.append('--custom-formatter-definitions={0:s}'.format(
+            temp_path))
+
       storage_file = os.path.join(
           temp_directory, '{0:s}.plaso'.format(test_definition.name))
 
@@ -880,7 +896,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(
           test_definition, temp_directory, storage_file,
-          output_options=test_definition.output_options):
+          output_options=output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1000,6 +1016,10 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     Returns:
       bool: True if the read was successful.
     """
+    test_definition.custom_formatter_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'custom_formatter_file'))
+
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
 
@@ -1050,13 +1070,25 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
       return False
 
     with TempDirectory() as temp_directory:
+      output_options = list(test_definition.output_options)
+
+      if test_definition.custom_formatter_file:
+        custom_formatter_file = os.path.join(
+            self._test_sources_path, test_definition.custom_formatter_file)
+        temp_path = os.path.join(temp_directory, os.path.basename(
+            custom_formatter_file))
+        shutil.copyfile(custom_formatter_file, temp_path)
+
+        output_options.append('--custom-formatter-definitions={0:s}'.format(
+            temp_path))
+
       storage_file = os.path.join(
           temp_directory, '{0:s}.plaso'.format(test_definition.name))
 
       # Extract and output events with psteal.
       if not self._RunPsteal(
           test_definition, temp_directory, storage_file, source_path,
-          output_options=test_definition.output_options):
+          output_options=output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1692,6 +1724,10 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
     test_definition.analysis_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'analysis_options', default=[], split_string=True)
 
+    test_definition.custom_formatter_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'custom_formatter_file'))
+
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
 
@@ -1742,16 +1778,27 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
 
     with TempDirectory() as temp_directory:
       if 'backup' in test_definition.source_options:
-        temp_source_path = os.path.join(
-            temp_directory, os.path.basename(source_path))
-        shutil.copyfile(source_path, temp_source_path)
-        source_path = temp_source_path
+        temp_path = os.path.join(temp_directory, os.path.basename(source_path))
+        shutil.copyfile(source_path, temp_path)
+        source_path = temp_path
+
+      output_options = list(test_definition.output_options)
+
+      if test_definition.custom_formatter_file:
+        custom_formatter_file = os.path.join(
+            self._test_sources_path, test_definition.custom_formatter_file)
+        temp_path = os.path.join(temp_directory, os.path.basename(
+            custom_formatter_file))
+        shutil.copyfile(custom_formatter_file, temp_path)
+
+        output_options.append('--custom-formatter-definitions={0:s}'.format(
+            temp_path))
 
       # Run psort with both analysis and output options.
       if not self._RunPsort(
           test_definition, temp_directory, source_path,
           analysis_options=test_definition.analysis_options,
-          output_options=test_definition.output_options):
+          output_options=output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1790,6 +1837,10 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
         test_definition.name, 'analysis_options2', default=[],
         split_string=True)
 
+    test_definition.custom_formatter_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'custom_formatter_file'))
+
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
 
@@ -1836,6 +1887,18 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
       return False
 
     with TempDirectory() as temp_directory:
+      output_options = list(test_definition.output_options)
+
+      if test_definition.custom_formatter_file:
+        custom_formatter_file = os.path.join(
+            self._test_sources_path, test_definition.custom_formatter_file)
+        temp_path = os.path.join(temp_directory, os.path.basename(
+            custom_formatter_file))
+        shutil.copyfile(custom_formatter_file, temp_path)
+
+        output_options.append('--custom-formatter-definitions={0:s}'.format(
+            temp_path))
+
       # Run psort with the first set of analysis options.
       if not self._RunPsort(
           test_definition, temp_directory, source_path,
@@ -1851,105 +1914,7 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
       # Run psort with the output options.
       if not self._RunPsort(
           test_definition, temp_directory, source_path,
-          output_options=test_definition.output_options):
-        return False
-
-      # Compare output file with a reference output file.
-      if test_definition.output_file and test_definition.reference_output_file:
-        if not self._CompareOutputFile(test_definition, temp_directory):
-          return False
-
-    return True
-
-
-# TODO: This class is kept for backwards compatibility. For new tests use
-# AnalyzeAndOutputTestCase instead.
-class OutputTestCase(StorageFileTestCase):
-  """Output test case.
-
-  The output test case runs psort on a storage file to its various
-  output formats.
-  """
-
-  NAME = 'output'
-
-  def __init__(
-      self, tools_path, test_sources_path, test_references_path,
-      test_results_path, debug_output=False):
-    """Initializes a test case.
-
-    Args:
-      tools_path (str): path to the plaso tools.
-      test_sources_path (str): path to the test sources.
-      test_references_path (str): path to the test references.
-      test_results_path (str): path to store test results.
-      debug_output (Optional[bool]): True if debug output should be generated.
-    """
-    super(OutputTestCase, self).__init__(
-        tools_path, test_sources_path, test_references_path,
-        test_results_path, debug_output=debug_output)
-    self._InitializePsortPath()
-
-  def ReadAttributes(self, test_definition_reader, test_definition):
-    """Reads the test definition attributes into to the test definition.
-
-    Args:
-      test_definition_reader (TestDefinitionReader): test definition reader.
-      test_definition (TestDefinition): test definition.
-
-    Returns:
-      bool: True if the read was successful.
-    """
-    test_definition.logging_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'logging_options', default=[], split_string=True)
-
-    test_definition.output_file = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_file')
-
-    test_definition.output_filter = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_filter', default='')
-
-    test_definition.output_format = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_format')
-
-    test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_options', default=[], split_string=True)
-
-    test_definition.profiling_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'profiling_options', default=[],
-        split_string=True)
-
-    test_definition.reference_output_file = (
-        test_definition_reader.GetConfigValue(
-            test_definition.name, 'reference_output_file'))
-
-    test_definition.source = test_definition_reader.GetConfigValue(
-        test_definition.name, 'source')
-
-    return True
-
-  def Run(self, test_definition):
-    """Runs the test case with the parameters specified by the test definition.
-
-    Args:
-      test_definition (TestDefinition): test definition.
-
-    Returns:
-      bool: True if the test ran successfully.
-    """
-    source_path = test_definition.source
-    if self._test_sources_path:
-      source_path = os.path.join(self._test_sources_path, source_path)
-
-    if not os.path.exists(source_path):
-      logging.error('No such source: {0:s}'.format(source_path))
-      return False
-
-    with TempDirectory() as temp_directory:
-      # Run psort with the output options.
-      if not self._RunPsort(
-          test_definition, temp_directory, source_path,
-          output_options=test_definition.output_options):
+          output_options=output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1964,8 +1929,7 @@ TestCasesManager.RegisterTestCases([
     AnalyzeAndOutputTestCase, ExtractAndOutputTestCase,
     ExtractAndOutputWithPstealTestCase, ExtractAndAnalyzeTestCase,
     ExtractAndTagTestCase, ImageExportTestCase,
-    MultiAnalyzeAndOutputTestCase, MultiExtractAndOutputTestCase,
-    OutputTestCase])
+    MultiAnalyzeAndOutputTestCase, MultiExtractAndOutputTestCase])
 
 
 def Main():
