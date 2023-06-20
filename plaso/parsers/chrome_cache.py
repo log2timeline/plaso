@@ -362,11 +362,11 @@ class ChromeCacheParser(interface.FileEntryParser):
         event_data = ChromeCacheEntryEventData()
         event_data.creation_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=cache_entry.creation_time)
-        """
-        In Chrome Cache v3, doublekey-ing cache entries was introduced
-        This shows up as r"_dk_{domain}( {domain})* {url}"
-        https://chromium.googlesource.com/chromium/src/+/95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
-        """
+
+        # In Chrome Cache v3, doublekey-ing cache entries was introduced
+        # This shows up as r"_dk_{domain}( {domain})* {url}"
+        # https://chromium.googlesource.com/chromium/src/+/
+        # 95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
         if "_dk_" in cache_entry.original_url[:20]:
           parsed_url = cache_entry.original_url.strip().rsplit(' ', 1)[-1]
           event_data.original_url = parsed_url
