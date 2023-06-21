@@ -1,6 +1,7 @@
 """Parser for Google Chrome and Chromium Cache files."""
 
 import os
+import json
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -83,6 +84,7 @@ class CacheEntry:
     key (bytes): key.
     next (int): cache address of the next cache entry.
     original_url (str): original URL derived from the key.
+    payloads (str): A json list of filenames (and offsets) to find the cache payload 
     rankings_node (int): cache address of the rankings node.
   """
 
@@ -94,6 +96,7 @@ class CacheEntry:
     self.key = None
     self.next = None
     self.original_url = None
+    self.payloads = None
     self.rankings_node = None
 
 
@@ -253,6 +256,16 @@ class ChromeCacheDataBlockFileParser(
           f'error: {exception!s}'))
 
     cache_entry_object = CacheEntry()
+    payloads = []
+    for stream in list(cache_entry.data_stream_addresses):
+      data_stream = CacheAddress(stream)
+      if data_stream.filename is not None:
+        if data_stream.filename.startswith("f_"):
+          payloads.append(data_stream.filename)
+        else:
+          payloads.append(
+            f"{data_stream.filename} (offset: {hex(data_stream.block_offset)})")
+    cache_entry_object.payloads = json.dumps(payloads)
 
     cache_entry_object.hash = cache_entry.hash
     cache_entry_object.next = CacheAddress(cache_entry.next_address)
@@ -302,7 +315,7 @@ class ChromeCacheEntryEventData(events.EventData):
     super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.original_url = None
-
+    self.payloads = None
 
 class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
@@ -364,6 +377,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         else:
           event_data.original_url = cache_entry.original_url
 
+        event_data.payloads=cache_entry.payloads
         parser_mediator.ProduceEventData(event_data)
 
         cache_address = cache_entry.next
@@ -471,7 +485,6 @@ class ChromeCacheParser(interface.FileEntryParser):
           f'error: {exception!s}')
 
     # TODO: create event based on index file creation time.
-
     file_system = file_entry.GetFileSystem()
     self._ParseIndexTable(
         parser_mediator, file_system, file_entry, index_file_parser.index_table)
