@@ -85,7 +85,8 @@ class CacheEntry(object):
     key (bytes): key.
     next (int): cache address of the next cache entry.
     original_url (str): original URL derived from the key.
-    payloads (str): A json list of filenames (and offsets) to find the cache payload 
+    payloads (str): A json list of filenames (and offsets) 
+        to find the cache payload 
     rankings_node (int): cache address of the rankings node.
   """
 
@@ -169,7 +170,7 @@ class ChromeCacheIndexFileParser(
         raise errors.ParseError((
             'Unable to map cache address at offset: 0x{0:08x} with error: '
             '{1!s}').format(file_offset, exception))
-    
+
       if value:
         cache_address = CacheAddress(value)
         self.index_table.append(cache_address)
