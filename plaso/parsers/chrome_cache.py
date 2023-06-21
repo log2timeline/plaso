@@ -84,7 +84,8 @@ class CacheEntry:
     key (bytes): key.
     next (int): cache address of the next cache entry.
     original_url (str): original URL derived from the key.
-    payloads (str): A json list of filenames (and offsets) to find the cache payload 
+    payloads (str): A json list of filenames (and offsets) 
+        to find the cache payload 
     rankings_node (int): cache address of the rankings node.
   """
 
