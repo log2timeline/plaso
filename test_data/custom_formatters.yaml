@@ -1,0 +1,12 @@
+# Custom Plaso event formatters.
+---
+type: 'conditional'
+data_type: 'fs:stat'
+message:
+- '[{file_entry_type}]'
+- '{display_name}'
+short_message:
+- '[{file_entry_type}]'
+- '{display_name}'
+short_source: 'FILE'
+source: 'File stat'
