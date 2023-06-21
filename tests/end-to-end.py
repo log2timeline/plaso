@@ -865,8 +865,10 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
       output_options = list(test_definition.output_options)
 
       if test_definition.custom_formatter_file:
-        custom_formatter_file = os.path.join(
-            self._test_sources_path, test_definition.custom_formatter_file)
+        custom_formatter_file = test_definition.custom_formatter_file
+        if self._test_sources_path:
+          custom_formatter_file = os.path.join(
+              self._test_sources_path, custom_formatter_file)
         temp_path = os.path.join(temp_directory, os.path.basename(
             custom_formatter_file))
         shutil.copyfile(custom_formatter_file, temp_path)
@@ -1073,8 +1075,10 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
       output_options = list(test_definition.output_options)
 
       if test_definition.custom_formatter_file:
-        custom_formatter_file = os.path.join(
-            self._test_sources_path, test_definition.custom_formatter_file)
+        custom_formatter_file = test_definition.custom_formatter_file
+        if self._test_sources_path:
+          custom_formatter_file = os.path.join(
+              self._test_sources_path, custom_formatter_file)
         temp_path = os.path.join(temp_directory, os.path.basename(
             custom_formatter_file))
         shutil.copyfile(custom_formatter_file, temp_path)
@@ -1785,8 +1789,10 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
       output_options = list(test_definition.output_options)
 
       if test_definition.custom_formatter_file:
-        custom_formatter_file = os.path.join(
-            self._test_sources_path, test_definition.custom_formatter_file)
+        custom_formatter_file = test_definition.custom_formatter_file
+        if self._test_sources_path:
+          custom_formatter_file = os.path.join(
+              self._test_sources_path, custom_formatter_file)
         temp_path = os.path.join(temp_directory, os.path.basename(
             custom_formatter_file))
         shutil.copyfile(custom_formatter_file, temp_path)
@@ -1890,8 +1896,10 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
       output_options = list(test_definition.output_options)
 
       if test_definition.custom_formatter_file:
-        custom_formatter_file = os.path.join(
-            self._test_sources_path, test_definition.custom_formatter_file)
+        custom_formatter_file = test_definition.custom_formatter_file
+        if self._test_sources_path:
+          custom_formatter_file = os.path.join(
+              self._test_sources_path, custom_formatter_file)
         temp_path = os.path.join(temp_directory, os.path.basename(
             custom_formatter_file))
         shutil.copyfile(custom_formatter_file, temp_path)
