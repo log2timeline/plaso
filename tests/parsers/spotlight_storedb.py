@@ -19,12 +19,29 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
+    test_file_path = os.path.join(
+        shared_test_lib.TEST_DATA_PATH, 'spotlight.10.13.dmg')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_MODI, parent=test_path_spec)
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
+        parent=test_path_spec)
+
+    test_file_path = (
+        '/.Spotlight-V100/Store-V2/D980C3E8-1007-4F67-9911-9143A0B3427A/'
+        '.store.db')
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_HFS, location=test_file_path,
+        parent=test_path_spec)
+
     parser = spotlight_storedb.SpotlightStoreDatabaseParser()
-    storage_writer = self._ParseFile(['store.db'], parser)
+    storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 193192)
+    self.assertEqual(number_of_event_data, 3)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -35,25 +52,25 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'added_time': '2013-06-04T20:53:10.000000+00:00',
+        'added_time': '2023-06-22T18:34:06.000000+00:00',
         'attribute_change_time': None,
-        'content_creation_time': '2009-08-23T23:24:01.000000+00:00',
-        'content_modification_time': '2013-06-04T20:53:10.000000+00:00',
-        'content_type': 'com.apple.icns',
-        'creation_time': '2009-08-23T23:24:01.000000+00:00',
+        'content_creation_time': '2023-06-22T18:34:06.000000+00:00',
+        'content_modification_time': '2023-06-22T18:34:06.000000+00:00',
+        'content_type': 'public.data',
+        'creation_time': '2023-06-22T18:34:06.000000+00:00',
         'data_type': 'spotlight:metadata_item',
         'downloaded_time': None,
-        'file_name': 'CIJCanoScan9000F.icns',
-        'file_system_identifier': 41322,
-        'kind': 'Apple icon image',
-        'modification_time': '2013-06-04T20:53:10.000000+00:00',
-        'parent_file_system_identifier': 41320,
+        'file_name': 'LICENSE',
+        'file_system_identifier': 20,
+        'kind': 'Unknown document',
+        'modification_time': '2023-06-22T18:34:06.000000+00:00',
+        'parent_file_system_identifier': 2,
         'purchase_time': None,
         'snapshot_times': None,
-        'update_time': '2015-09-19T18:06:32.552596+00:00',
+        'update_time': '2023-06-22T18:34:08.287881+00:00',
         'used_times': None}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
   def testParseWithLZ4CompressedPage(self):
