@@ -2,7 +2,6 @@
 """Tests for the date-less log format helper mix-in."""
 
 import datetime
-
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
