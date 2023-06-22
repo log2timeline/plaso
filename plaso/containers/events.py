@@ -82,6 +82,57 @@ def CalculateEventValuesHash(event_data, event_data_stream):
   return md5_context.hexdigest()
 
 
+class DateLessLogHelper(interface.AttributeContainer):
+  """Date-less log helper attribute container.
+
+  Attributes:
+    earliest_date (datetime.datetime): earliest possible date the event data
+        stream was created.
+    latest_date (datetime.datetime): last relative date determined by the
+        date-less log helper.
+  """
+
+  CONTAINER_TYPE = 'date_less_log_helper'
+
+  SCHEMA = {
+    '_event_data_stream_identifier': 'AttributeContainerIdentifier',
+    'earliest_date': 'datetime.datetime',
+    'latest_date': 'datetime.datetime'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_data_stream_identifier']
+
+  def __init__(self):
+    """Initializes a date-less log helper attribute container."""
+    super(DateLessLogHelper, self).__init__()
+    self._event_data_stream_identifier = None
+    self.earliest_date = None
+    self.latest_date = None
+
+  def GetEventDataStreamIdentifier(self):
+    """Retrieves the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Returns:
+      AttributeContainerIdentifier: event data stream or None when not set.
+    """
+    return self._event_data_stream_identifier
+
+  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+    """Sets the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Args:
+      event_data_stream_identifier (AttributeContainerIdentifier): event data
+          stream identifier.
+    """
+    self._event_data_stream_identifier = event_data_stream_identifier
+
+
 class EventData(interface.AttributeContainer):
   """Event data attribute container.
 
@@ -439,4 +490,5 @@ class YearLessLogHelper(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventData, EventDataStream, EventObject, EventTag, YearLessLogHelper])
+    DateLessLogHelper, EventData, EventDataStream, EventObject, EventTag,
+    YearLessLogHelper])
