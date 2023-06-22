@@ -2,6 +2,7 @@
 """The date-less log format helper mix-in."""
 
 import datetime
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -37,7 +38,7 @@ class DateLessLogFormatHelper(object):
       date_time = getattr(file_entry, attribute_name, None)
       if date_time:
         year, month, day = date_time.GetDate()
-        new_date = datetime.datetime(year, month, day)
+        new_date = datetime.datetime(year=year, month=month, day=day)
         dates.add(new_date)
 
     return dates
@@ -67,7 +68,7 @@ class DateLessLogFormatHelper(object):
     if month not in self._VALID_MONTHS:
       raise ValueError('Invalid month: {0!s}'.format(month))
 
-    date = datetime.datetime(year, month, day)
+    date = datetime.datetime(year=year, month=month, day=day)
     self._date = date
 
   def _SetEstimatedDate(self, parser_mediator):

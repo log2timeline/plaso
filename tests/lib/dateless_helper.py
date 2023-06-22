@@ -2,6 +2,7 @@
 """Tests for the date-less log format helper mix-in."""
 
 import datetime
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -32,7 +33,7 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     dates = test_helper._GetDatesFromFileEntry(file_entry)
 
-    self.assertEqual(dates, {datetime.datetime(2012, 7, 28)})
+    self.assertEqual(dates, {datetime.datetime(year=2012, month=7, day=28)})
 
   def test_GetDate(self):
     """Tests the _GetDate function."""
@@ -41,7 +42,7 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     date = test_helper._GetDate()
 
-    self.assertEqual(date, datetime.datetime(2013, 7, 22))
+    self.assertEqual(date, datetime.datetime(year=2013, month=7, day=22))
 
     with self.assertRaises(ValueError):
       test_helper._SetDate(2013, 7, 32)
@@ -58,7 +59,7 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
     test_helper._SetDate(2013, 7, 22)
 
     self.assertEqual(
-        test_helper._date, datetime.datetime(2013, 7, 22))
+        test_helper._date, datetime.datetime(year=2013, month=7, day=22))
 
   def test_SetEstimatedDate(self):
     """Tests the _SetEstimatedDate function."""
