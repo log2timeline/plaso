@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the event data timeliner."""
 
+import datetime
 import unittest
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -55,12 +56,13 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   # pylint: disable=protected-access
 
   # pylint: disable=arguments-differ
-  def _CreateStorageWriter(self, event_data, base_year=None):
+  def _CreateStorageWriter(self, event_data, base_year=None, base_date=None):
     """Creates a storage writer object.
 
     Args:
       event_data (EventData): event data.
       base_year (Optional[int]): base year.
+      base_date (Optional[datetime.datetime]): base date.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -82,10 +84,51 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
           event_data_stream_identifier)
       storage_writer.AddAttributeContainer(year_less_log_helper)
 
+    elif base_date:
+      date_less_log_helper = events.DateLessLogHelper()
+      date_less_log_helper.earliest_date = base_date
+
+      date_less_log_helper.SetEventDataStreamIdentifier(
+          event_data_stream_identifier)
+      storage_writer.AddAttributeContainer(date_less_log_helper)
+
     event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
     storage_writer.AddAttributeContainer(event_data)
 
     return storage_writer
+
+  def testGetBaseDate(self):
+    """Tests the _GetBaseDate function."""
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        data_location=shared_test_lib.TEST_DATA_PATH)
+
+    current_date = event_data_timeliner._GetCurrentDate()
+
+    event_data = TestEventData1()
+    event_data.value = 'MyValue'
+
+    # Test with year-less log helper.
+    storage_writer = self._CreateStorageWriter(
+        event_data, base_date=datetime.datetime(2013, 3, 22))
+
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
+
+    base_date = event_data_timeliner._GetBaseDate(storage_writer, event_data)
+    self.assertEqual(base_date, datetime.datetime(2013, 3, 22))
+
+    # Test missing date-less log helper.
+    storage_writer = self._CreateStorageWriter(event_data)
+
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
+
+    base_date = event_data_timeliner._GetBaseDate(storage_writer, event_data)
+    self.assertEqual(base_date, current_date)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'timelining_warning')
+    self.assertEqual(number_of_warnings, 1)
 
   def testGetBaseYear(self):
     """Tests the _GetBaseYear function."""
@@ -124,6 +167,15 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     self.assertEqual(number_of_warnings, 1)
 
     # TODO: improve test coverage.
+
+  def testGetCurrentDate(self):
+    """Tests the _GetCurrentDate function."""
+    event_data_timeliner = timeliner.EventDataTimeliner(
+        data_location=shared_test_lib.TEST_DATA_PATH)
+
+    current_date = event_data_timeliner._GetCurrentDate()
+    print(current_date)
+    self.assertIsNotNone(current_date)
 
   def testGetCurrentYear(self):
     """Tests the _GetCurrentYear function."""
@@ -209,6 +261,25 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     self.assertIsNotNone(event.date_time)
     self.assertEqual(event.date_time.year, 4)
     self.assertEqual(event.timestamp, -62035818808570124)
+
+    # Test with the dateless helper
+    storage_writer = self._CreateStorageWriter(
+        event_data, base_date=datetime.datetime(2013, 7, 22))
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        is_delta=True,
+        time_elements_tuple=(0, 0, 0, 20, 6, 31, 429876))
+
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
+
+    event = event_data_timeliner._GetEvent(
+        storage_writer, event_data, None, date_time, 'Test Time')
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertFalse(event.date_time.is_delta)
+    self.assertEqual(event.timestamp, 1374523591429876)
+
 
   # TODO: add tests for _ProduceTimeliningWarning
   # TODO: add tests for _ReadConfigurationFile

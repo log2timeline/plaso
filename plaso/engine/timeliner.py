@@ -9,6 +9,7 @@ import pytz
 
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import warnings
@@ -46,7 +47,9 @@ class EventDataTimeliner(object):
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
+    self._base_dates = {}
     self._base_years = {}
+    self._current_date = self._GetCurrentDate()
     self._current_year = self._GetCurrentYear()
     self._data_location = data_location
     self._place_holder_event = set()
@@ -74,6 +77,74 @@ class EventDataTimeliner(object):
           if path_spec.parent:
             self._time_zone_per_path_spec[path_spec.parent] = (
                 system_configuration.time_zone)
+
+  def _GetBaseDate(self, storage_writer, event_data):
+    """Retrieves the base date.
+
+     Args:
+      storage_writer (StorageWriter): storage writer.
+      event_data (EventData): event data.
+
+    Returns:
+      datetime.datetime: base date.
+    """
+    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+    lookup_key = event_data_stream_identifier.CopyToString()
+
+    base_date = self._base_dates.get(lookup_key, None)
+    if base_date:
+      return base_date
+
+    filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
+        lookup_key)
+    date_less_log_helpers = list(storage_writer.GetAttributeContainers(
+        events.DateLessLogHelper.CONTAINER_TYPE,
+        filter_expression=filter_expression))
+    if not date_less_log_helpers:
+      message = (
+          'missing date-less log helper, defaulting to current date: '
+          '{0:d}').format(self._current_date)
+      self._ProduceTimeliningWarning(storage_writer, event_data, message)
+
+      base_date = self._current_date
+
+    else:
+      earliest_date = date_less_log_helpers[0].earliest_date
+      latest_date = date_less_log_helpers[0].latest_date
+
+      if earliest_date is None and latest_date is None:
+        message = (
+            'missing earliest and latest date in date-less log helper, '
+            'defaulting to current date: {0:d}').format(self._current_date)
+        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+
+        base_date = self._current_year
+
+      elif earliest_date < self._current_date:
+        base_date = earliest_date
+
+      elif latest_date < self._current_year:
+        message = (
+            'earliest date: {0:d} as base date would exceed current date: '
+            '{1:d}, using latest date: {2:d}').format(
+                earliest_date, self._current_year, latest_date)
+        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+
+        base_date = latest_date
+
+      else:
+        message = (
+            'earliest date: {0:d} and latest: date: {1:d} as base date '
+            'would exceed current date: {2:d}, using current '
+            'date').format(
+                earliest_date, latest_date, self._current_year)
+        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+
+        base_date = self._current_year
+
+    self._base_dates[lookup_key] = base_date
+
+    return base_date
 
   def _GetBaseYear(self, storage_writer, event_data):
     """Retrieves the base year.
@@ -156,6 +227,17 @@ class EventDataTimeliner(object):
 
     return base_year
 
+  def _GetCurrentDate(self):
+    """Retrieves the current date.
+
+    Returns:
+      datetime.datetime: the current date.
+    """
+    current_time = datetime.datetime.now()
+    current_date = datetime.datetime(*current_time.timetuple()[:3])
+    return current_date
+
+
   def _GetCurrentYear(self):
     """Retrieves current year.
 
@@ -183,16 +265,34 @@ class EventDataTimeliner(object):
     """
     timestamp = None
     if date_time.is_delta:
-      base_year = self._GetBaseYear(storage_writer, event_data)
+      if (
+          date_time.year == 0 and
+          date_time.month == 0 and
+          date_time.day_of_month == 0):
+        base_date = self._GetBaseDate(storage_writer, event_data)
+        base_year, base_month, base_day = base_date.timetuple()[:3]
+        hours = date_time.hours
+        minutes = date_time.minutes
+        seconds = date_time.seconds
+        fractions = date_time.fraction_of_second
 
-      try:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+            time_elements_tuple=(
+                base_year, base_month, base_day, hours, minutes, seconds, 0))
+        date_time.fraction_of_second = fractions
+
+      else:
+        base_year = self._GetBaseYear(storage_writer, event_data)
         date_time = date_time.NewFromDeltaAndYear(base_year)
-      except ValueError as exception:
-        self._ProduceTimeliningWarning(
-            storage_writer, event_data, str(exception))
 
-        date_time = dfdatetime_semantic_time.InvalidTime()
-        timestamp = 0
+        try:
+          date_time = date_time.NewFromDeltaAndYear(base_year)
+        except ValueError as exception:
+          self._ProduceTimeliningWarning(
+              storage_writer, event_data, str(exception))
+
+          date_time = dfdatetime_semantic_time.InvalidTime()
+          timestamp = 0
 
     if timestamp is None:
       timestamp = date_time.GetPlasoTimestamp()
