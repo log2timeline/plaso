@@ -1253,7 +1253,12 @@ class SpotlightStoreDatabaseParser(
       if index == 0:
         continue
 
-      _, data_offset = self._ReadVariableSizeInteger(stream_value)
+      data_size, data_offset = self._ReadVariableSizeInteger(stream_value)
+
+      if data_offset + data_size != len(stream_value):
+        # Stream values where the data size does not match appear to contain
+        # remnant data.
+        continue
 
       try:
         property_value = data_type_map.MapByteStream(stream_value[data_offset:])
