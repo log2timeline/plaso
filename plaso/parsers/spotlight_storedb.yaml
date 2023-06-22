@@ -1,8 +1,8 @@
 # dtFabric format specification.
 ---
-name: spotlight_store_db
+name: spotlight_store
 type: format
-description: Apple Spotlight store database file format
+description: Apple Spotlight store file formats
 urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Apple%20Spotlight%20store%20database%20file%20format.asciidoc"]
 ---
 name: byte
@@ -92,6 +92,73 @@ name: array_of_float64
 type: sequence
 element_data_type: float64
 elements_data_size: elements_data_size
+---
+name: array_of_uint32le
+type: sequence
+element_data_type: uint32le
+number_of_elements: number_of_elements
+---
+name: spotlight_database_streams_map_header
+type: structure
+description: Spotlight database streams map header file (dbStr-#.map.header) format.
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  number_of_elements: 8
+  value: "\x00PataD\x00\x00"
+- name: unknown1
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+- name: unknown3
+  data_type: uint32
+- name: unknown4
+  data_type: uint32
+- name: unknown5
+  data_type: uint32
+- name: unknown6
+  data_type: uint32
+- name: unknown7
+  data_type: uint32
+- name: unknown8
+  data_type: uint32
+- name: unknown9
+  data_type: uint32
+- name: unknown10
+  data_type: uint32
+- name: unknown11
+  data_type: uint32
+- name: unknown12
+  data_type: uint32
+---
+name: spotlight_metadata_attribute_type
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: value_type
+  data_type: uint8
+- name: property_type
+  data_type: uint8
+- name: key_name
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
+---
+name: spotlight_metadata_attribute_value
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: value_name
+  type: string
+  encoding: utf8
+  element_data_type: char
+  elements_terminator: "\x00"
 ---
 name: spotlight_store_db_file_header
 type: structure

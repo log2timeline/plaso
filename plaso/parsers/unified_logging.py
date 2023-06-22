@@ -1974,7 +1974,7 @@ class BaseUnifiedLoggingFile(dtfabric_helper.DtFabricHelper):
     self._file_object = None
 
   def Close(self):
-    """Closes an Apple Unified Logging (AUL) data file.
+    """Closes an Apple Unified Logging (AUL) file.
 
     Raises:
       IOError: if the file is not opened.
@@ -1987,7 +1987,7 @@ class BaseUnifiedLoggingFile(dtfabric_helper.DtFabricHelper):
     self._file_entry = None
 
   def Open(self, file_entry):
-    """Opens an Apple Unified Logging (AUL) data file.
+    """Opens an Apple Unified Logging (AUL) file.
 
     Args:
       file_entry (dfvfs.FileEntry): a file entry.

@@ -3,6 +3,7 @@
 
 from collections import abc as collections
 
+import abc
 import os
 import zlib
 
@@ -20,6 +21,21 @@ from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
+
+
+class SpotlightStoreIndexValue(object):
+  """Index value.
+
+  Attributes:
+    table_index (int): table index.
+    values_list (list[str]): values list.
+  """
+
+  def __init__(self):
+    """Initializes an index value."""
+    super(SpotlightStoreIndexValue, self).__init__()
+    self.table_index = None
+    self.values_list = []
 
 
 class SpotlightStoreMetadataItemEventData(events.EventData):
@@ -128,8 +144,238 @@ class SpotlightStoreMetadataItem(object):
     self.parent_identifier = 0
 
 
+class BaseSpotlightFile(dtfabric_helper.DtFabricHelper):
+  """Shared functionality for Apple Spotlight files."""
+
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'spotlight_storedb.yaml')
+
+  def __init__(self):
+    """Initializes a Apple Spotlight file."""
+    super(BaseSpotlightFile, self).__init__()
+    self._file_entry = None
+    self._file_object = None
+
+  def Close(self):
+    """Closes an Apple Spotlight file.
+
+    Raises:
+      IOError: if the file is not opened.
+      OSError: if the file is not opened.
+    """
+    if not self._file_object:
+      raise IOError('File not opened')
+
+    self._file_object = None
+    self._file_entry = None
+
+  def Open(self, file_entry):
+    """Opens an Apple Spotlight file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): a file entry.
+
+    Raises:
+      IOError: if the file is already opened.
+      OSError: if the file is already opened.
+    """
+    if self._file_object:
+      raise IOError('File already opened')
+
+    self._file_entry = file_entry
+
+    file_object = file_entry.GetFileObject()
+
+    self.ReadFileObject(file_object)
+
+    self._file_object = file_object
+
+  @abc.abstractmethod
+  def ReadFileObject(self, file_object):
+    """Reads an Apple Spotlight file-like object.
+
+    Args:
+      file_object (file): file-like object.
+    """
+
+
+class SpotlightStreamsMapDataFile(BaseSpotlightFile):
+  """Apple Spotlight database streams map data file (dbStr-#.map.data).
+
+  Attributes:
+    stream_values (list[bytes]): stream values.
+  """
+
+  def __init__(self, data_size, ranges):
+    """Initializes a database streams map data file.
+
+    Args:
+      data_size (int): data size.
+      ranges (list[tuple[int, int]]): offset and size pairs of the stream value
+          data ranges.
+    """
+    super(SpotlightStreamsMapDataFile, self).__init__()
+    self._data_size = data_size
+    self._ranges = ranges
+    self.stream_values = []
+
+  def _ReadVariableSizeInteger(self, data):
+    """Reads a variable size integer.
+
+    Args:
+      data (bytes): data.
+
+    Returns:
+      tuple[int, int]: integer value and number of bytes read.
+    """
+    byte_value = data[0]
+    bytes_read = 1
+
+    number_of_additional_bytes = 0
+    for bitmask in (0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff):
+      if byte_value & bitmask != bitmask:
+        break
+      number_of_additional_bytes += 1
+
+    if number_of_additional_bytes > 4:
+      byte_value = 0
+    elif number_of_additional_bytes > 0:
+      byte_value &= bitmask ^ 0xff
+
+    integer_value = int(byte_value)
+    while number_of_additional_bytes > 0:
+      integer_value <<= 8
+
+      integer_value += int(data[bytes_read])
+      bytes_read += 1
+
+      number_of_additional_bytes -= 1
+
+    return integer_value, bytes_read
+
+  def ReadFileObject(self, file_object):
+    """Reads a database streams map data file-like object.
+
+    Args:
+      file_object (file): file-like object.
+
+    Raises:
+      ParseError: if the file cannot be read.
+    """
+    data = file_object.read(self._data_size)
+
+    for value_range in self._ranges:
+      value_offset, value_size = value_range
+
+      stream_value = data[value_offset:value_offset + value_size]
+
+      self.stream_values.append(stream_value)
+
+
+class SpotlightStreamsMapHeaderFile(BaseSpotlightFile):
+  """Apple Spotlight database streams map header file (dbStr-#.map.header).
+
+  Attributes:
+    data_size (int): data size.
+    number_of_buckets (int): number of entries in the database streams map
+        buckets file (dbStr-#.map.buckets).
+    number_of_offsets (int): number of entries in the database streams map
+        offsets file (dbStr-#.map.offsets).
+  """
+
+  def __init__(self):
+    """Initializes a database streams map header file."""
+    super(SpotlightStreamsMapHeaderFile, self).__init__()
+    self.data_size = None
+    self.number_of_buckets = None
+    self.number_of_offsets = None
+
+  def ReadFileObject(self, file_object):
+    """Reads a database streams map header file-like object.
+
+    Args:
+      file_object (file): file-like object.
+
+    Raises:
+      ParseError: if the file cannot be read.
+    """
+    data_type_map = self._GetDataTypeMap(
+        'spotlight_database_streams_map_header')
+
+    streams_map_header, _ = self._ReadStructureFromFileObject(
+        file_object, 0, data_type_map)
+
+    self.data_size = streams_map_header.unknown4
+    self.number_of_buckets = streams_map_header.unknown5
+    self.number_of_offsets = streams_map_header.unknown6
+
+
+class SpotlightStreamsMapOffsetsFile(BaseSpotlightFile):
+  """Apple Spotlight database streams map offsets file (dbStr-#.map.offsets).
+
+  Attributes:
+    ranges (list[tuple[int, int]]): offset and size pairs of the stream value
+        data ranges.
+  """
+
+  def __init__(self, data_size, number_of_entries):
+    """Initializes a database streams map offsets file.
+
+    Args:
+      data_size (int): data size.
+      number_of_entries (int): number of entries in the offsets file.
+    """
+    super(SpotlightStreamsMapOffsetsFile, self).__init__()
+    self._data_size = data_size
+    self._number_of_entries = number_of_entries
+    self.ranges = []
+
+  def ReadFileObject(self, file_object):
+    """Reads a database streams map offsets file-like object.
+
+    Args:
+      file_object (file): file-like object.
+
+    Raises:
+      ParseError: if the file cannot be read.
+    """
+    data_size = self._number_of_entries * 4
+    data = file_object.read(data_size)
+
+    data_type_map = self._GetDataTypeMap('array_of_uint32le')
+
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'number_of_elements': self._number_of_entries})
+
+    try:
+      offsets_array = data_type_map.MapByteStream(data, context=context)
+
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError(
+          f'Unable to parse array of 32-bit offsets with error: {exception!s}')
+
+    index = 0
+    last_offset = 0
+
+    for index, offset in enumerate(offsets_array):
+      if index == 0:
+        last_offset = offsets_array[0]
+        continue
+
+      range_size = offset - last_offset
+
+      self.ranges.append((last_offset, range_size))
+
+      last_offset = offset
+
+    if last_offset:
+      range_size = self._data_size - last_offset
+
+      self.ranges.append((last_offset, range_size))
+
+
 class SpotlightStoreDatabaseParser(
-    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+    interface.FileEntryParser, dtfabric_helper.DtFabricHelper):
   """Parser for Apple Spotlight store database (store.db) files."""
 
   NAME = 'spotlight_storedb'
@@ -452,8 +698,8 @@ class SpotlightStoreDatabaseParser(
     Args:
       page_header (spotlight_store_db_property_page_header): page header.
       page_data (bytes): page data.
-      property_table (dict[int, object]): property table in which to store the
-          property page values.
+      property_table (dict[int, SpotlightStoreIndexValue]): property table in
+          which to store the property page values.
 
     Raises:
       ParseError: if the property page values cannot be read.
@@ -505,12 +751,72 @@ class SpotlightStoreDatabaseParser(
         value_string = getattr(metadata_value, 'value_name', '')
         values_list.append(value_string)
 
-      setattr(property_value, 'values_list', values_list)
+      index_value = SpotlightStoreIndexValue()
+      index_value.table_index = property_value.table_index
+      index_value.values_list = values_list
 
-      property_table[property_value.table_index] = property_value
+      property_table[index_value.table_index] = index_value
 
       page_data_offset += page_value_size
       page_value_index += 1
+
+  def _ReadIndexStreamsMap(
+      self, parent_file_entry, streams_map_number, property_table):
+    """Reads an index streams map.
+
+    Args:
+      parent_file_entry (dfvfs.FileEntry): parent of the Spotlight store.db
+          file entry.
+      streams_map_number (int): number of the streams map.
+      property_table (dict[int, SpotlightStoreIndexValue]): property table in
+          which to store the index values.
+
+    Raises:
+      ParseError: if the index streams map cannot be read.
+    """
+    stream_values = self._ReadStreamsMap(parent_file_entry, streams_map_number)
+
+    index_values_data_type_map = self._GetDataTypeMap(
+        'spotlight_store_db_index_values')
+
+    for index, stream_value in enumerate(stream_values):
+      if index == 0:
+        continue
+
+      _, data_offset = self._ReadVariableSizeInteger(stream_value)
+
+      index_size, bytes_read = self._ReadVariableSizeInteger(
+          stream_value[data_offset:])
+
+      data_offset += bytes_read
+
+      _, padding_size = divmod(index_size, 4)
+
+      index_size -= padding_size
+
+      context = dtfabric_data_maps.DataTypeMapContext(values={
+          'index_size': index_size})
+
+      try:
+        index_values = index_values_data_type_map.MapByteStream(
+            stream_value[data_offset + padding_size:], context=context)
+
+      except dtfabric_errors.MappingError as exception:
+        raise errors.ParseError((
+            f'Unable to map stream value: {index:d} data with error: '
+            f'{exception!s}'))
+
+      values_list = []
+      for metadata_value_index in index_values:
+        metadata_value = self._metadata_values.get(metadata_value_index, None)
+        value_string = getattr(metadata_value, 'value_name', '')
+        values_list.append(value_string)
+
+      index_value = SpotlightStoreIndexValue()
+      index_value.table_index = index
+      index_value.values_list = values_list
+
+      property_table[index] = index_value
 
   def _ReadMapPage(self, file_object, file_offset):
     """Reads a map page.
@@ -595,8 +901,8 @@ class SpotlightStoreDatabaseParser(
     property_type = getattr(metadata_type, 'property_type', None)
 
     if key_name == 'kMDStoreAccumulatedSizes':
-      bytes_read = 4 * 16
-      value = data[:bytes_read]
+      bytes_read = len(data)
+      value = data
 
     elif value_type in (0x00, 0x02, 0x06):
       value, bytes_read = self._ReadVariableSizeInteger(data)
@@ -658,10 +964,10 @@ class SpotlightStoreDatabaseParser(
     Raises:
       ParseError: if the metadata attribute byte value cannot be read.
     """
-    if property_type & 0x02 == 0x00:
-      data_size, bytes_read = 1, 0
-    else:
+    if property_type & 0x02:
       data_size, bytes_read = self._ReadVariableSizeInteger(data)
+    else:
+      data_size, bytes_read = 1, 0
 
     data_type_map = self._GetDataTypeMap('array_of_byte')
 
@@ -769,6 +1075,47 @@ class SpotlightStoreDatabaseParser(
     bytes_read += data_size
 
     return value, bytes_read
+
+  def _ReadMetadataAttributePageValues(
+      self, page_header, page_data, property_table):
+    """Reads the metadata atribute page values.
+
+    Args:
+      page_header (spotlight_store_db_property_page_header): page header.
+      page_data (bytes): page data.
+      property_table (dict[int, object]): property table in which to store the
+          property page values.
+
+    Raises:
+      ParseError: if the property page values cannot be read.
+    """
+    if page_header.property_table_type == 0x00000011:
+      data_type_map = self._GetDataTypeMap(
+          'spotlight_store_db_property_value11')
+
+    elif page_header.property_table_type == 0x00000021:
+      data_type_map = self._GetDataTypeMap(
+          'spotlight_store_db_property_value21')
+
+    page_data_offset = 12
+    page_data_size = page_header.used_page_size - 20
+    page_value_index = 0
+
+    while page_data_offset < page_data_size:
+      context = dtfabric_data_maps.DataTypeMapContext()
+
+      try:
+        property_value = data_type_map.MapByteStream(
+            page_data[page_data_offset:], context=context)
+      except dtfabric_errors.MappingError as exception:
+        raise errors.ParseError((
+            'Unable to map property value data at offset: 0x{0:08x} with '
+            'error: {1!s}').format(page_data_offset, exception))
+
+      property_table[property_value.table_index] = property_value
+
+      page_data_offset += context.byte_size
+      page_value_index += 1
 
   def _ReadMetadataAttributeReferenceValue(self, property_type, data):
     """Reads a metadata attribute reference value.
@@ -878,6 +1225,47 @@ class SpotlightStoreDatabaseParser(
 
     return array_of_values, bytes_read
 
+  def _ReadMetadataAttributeStreamsMap(
+      self, parent_file_entry, streams_map_number, property_table):
+    """Reads a metadata attribute streams map.
+
+    Args:
+      parent_file_entry (dfvfs.FileEntry): parent of the Spotlight store.db
+          file entry.
+      streams_map_number (int): number of the streams map.
+      property_table (dict[int, object]): property table in which to store the
+          metadata attribute values.
+
+    Raises:
+      ParseError: if the metadata attribute streams map cannot be read.
+    """
+    stream_values = self._ReadStreamsMap(parent_file_entry, streams_map_number)
+
+    if streams_map_number == 1:
+      data_type_map = self._GetDataTypeMap(
+          'spotlight_metadata_attribute_type')
+
+    elif streams_map_number == 2:
+      data_type_map = self._GetDataTypeMap(
+          'spotlight_metadata_attribute_value')
+
+    for index, stream_value in enumerate(stream_values):
+      if index == 0:
+        continue
+
+      _, data_offset = self._ReadVariableSizeInteger(stream_value)
+
+      try:
+        property_value = data_type_map.MapByteStream(stream_value[data_offset:])
+      except dtfabric_errors.MappingError as exception:
+        raise errors.ParseError((
+            f'Unable to map stream value: {index:d} data with error: '
+            f'{exception!s}'))
+
+      property_value.table_index = index
+
+      property_table[index] = property_value
+
   def _ReadPropertyPage(self, file_object, file_offset, property_table):
     """Reads a property page.
 
@@ -914,7 +1302,8 @@ class SpotlightStoreDatabaseParser(
         page_data, file_offset, data_type_map)
 
     if page_header.property_table_type in (0x00000011, 0x00000021):
-      self._ReadPropertyPageValues(page_header, page_data, property_table)
+      self._ReadMetadataAttributePageValues(
+          page_header, page_data, property_table)
 
     elif page_header.property_table_type == 0x00000081:
       self._ReadIndexPageValues(page_header, page_data, property_table)
@@ -959,46 +1348,6 @@ class SpotlightStoreDatabaseParser(
           file_object, file_offset, property_table)
 
       file_offset = next_block_number * 0x1000
-
-  def _ReadPropertyPageValues(self, page_header, page_data, property_table):
-    """Reads the property page values.
-
-    Args:
-      page_header (spotlight_store_db_property_page_header): page header.
-      page_data (bytes): page data.
-      property_table (dict[int, object]): property table in which to store the
-          property page values.
-
-    Raises:
-      ParseError: if the property page values cannot be read.
-    """
-    if page_header.property_table_type == 0x00000011:
-      data_type_map = self._GetDataTypeMap(
-          'spotlight_store_db_property_value11')
-
-    elif page_header.property_table_type == 0x00000021:
-      data_type_map = self._GetDataTypeMap(
-          'spotlight_store_db_property_value21')
-
-    page_data_offset = 12
-    page_data_size = page_header.used_page_size - 20
-    page_value_index = 0
-
-    while page_data_offset < page_data_size:
-      context = dtfabric_data_maps.DataTypeMapContext()
-
-      try:
-        property_value = data_type_map.MapByteStream(
-            page_data[page_data_offset:], context=context)
-      except dtfabric_errors.MappingError as exception:
-        raise errors.ParseError((
-            'Unable to map property value data at offset: 0x{0:08x} with '
-            'error: {1!s}').format(page_data_offset, exception))
-
-      property_table[property_value.table_index] = property_value
-
-      page_data_offset += context.byte_size
-      page_value_index += 1
 
   def _ReadRecordHeader(self, data, page_data_offset):
     """Reads a record header.
@@ -1095,6 +1444,54 @@ class SpotlightStoreDatabaseParser(
 
     return page_header, page_data
 
+  def _ReadStreamsMap(self, parent_file_entry, streams_map_number):
+    """Reads a streams map.
+
+    Args:
+      parent_file_entry (dfvfs.FileEntry): parent of the Spotlight store.db
+          file entry.
+      streams_map_number (int): number of the streams map.
+
+    Returns:
+      list[bytes]: stream values.
+
+    Raises:
+      ParseError: if the streams map cannot be read.
+    """
+    header_file_entry = parent_file_entry.GetSubFileEntryByName(
+        f'dbStr-{streams_map_number:d}.map.header')
+
+    streams_map_header = SpotlightStreamsMapHeaderFile()
+    streams_map_header.Open(header_file_entry)
+
+    data_size = streams_map_header.data_size
+    number_of_offsets = streams_map_header.number_of_offsets
+
+    streams_map_header.Close()
+
+    offsets_file_entry = parent_file_entry.GetSubFileEntryByName(
+        f'dbStr-{streams_map_number:d}.map.offsets')
+
+    streams_map_offsets = SpotlightStreamsMapOffsetsFile(
+        data_size, number_of_offsets)
+    streams_map_offsets.Open(offsets_file_entry)
+
+    ranges = streams_map_offsets.ranges
+
+    streams_map_offsets.Close()
+
+    data_file_entry = parent_file_entry.GetSubFileEntryByName(
+        f'dbStr-{streams_map_number:d}.map.data')
+
+    streams_map_data = SpotlightStreamsMapDataFile(data_size, ranges)
+    streams_map_data.Open(data_file_entry)
+
+    stream_values = streams_map_data.stream_values
+
+    streams_map_data.Close()
+
+    return stream_values
+
   def _ReadVariableSizeInteger(self, data):
     """Reads a variable size integer.
 
@@ -1164,17 +1561,21 @@ class SpotlightStoreDatabaseParser(
     format_specification.AddNewSignature(b'8tsd', offset=0)
     return format_specification
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an Apple Spotlight store database file-like object.
+  def ParseFileEntry(self, parser_mediator, file_entry):
+    """Parses an Apple Spotlight store database file entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): a file-like object.
+      file_entry (dfvfs.FileEntry): a file entry to parse.
 
     Raises:
       WrongParser: when the file cannot be parsed.
     """
+    parent_file_entry = file_entry.GetParentFileEntry()
+
+    file_object = file_entry.GetFileObject()
+
     try:
       file_header = self._ReadFileHeader(file_object)
     except (ValueError, errors.ParseError):
@@ -1186,28 +1587,46 @@ class SpotlightStoreDatabaseParser(
           file_object, file_header.map_offset, file_header.map_size)
 
       self._metadata_types = {}
-      self._ReadPropertyPages(
-          file_object, file_header.metadata_types_block_number,
-          self._metadata_types)
+      if not file_header.metadata_types_block_number:
+        self._ReadMetadataAttributeStreamsMap(
+            parent_file_entry, 1, self._metadata_types)
+      else:
+        self._ReadPropertyPages(
+            file_object, file_header.metadata_types_block_number,
+            self._metadata_types)
 
       self._metadata_values = {}
-      self._ReadPropertyPages(
-          file_object, file_header.metadata_values_block_number,
-          self._metadata_values)
+      if not file_header.metadata_values_block_number:
+        self._ReadMetadataAttributeStreamsMap(
+            parent_file_entry, 2, self._metadata_values)
+      else:
+        self._ReadPropertyPages(
+            file_object, file_header.metadata_values_block_number,
+            self._metadata_values)
 
       # Note that the content of this property page is currently unknown.
-      self._ReadPropertyPages(
-          file_object, file_header.unknown_values41_block_number, {})
+      if not file_header.unknown_values41_block_number:
+        self._ReadIndexStreamsMap(parent_file_entry, 3, {})
+      else:
+        self._ReadPropertyPages(
+            file_object, file_header.unknown_values41_block_number, {})
 
       self._metadata_lists = {}
-      self._ReadPropertyPages(
-          file_object, file_header.metadata_lists_block_number,
-          self._metadata_lists)
+      if not file_header.metadata_lists_block_number:
+        self._ReadIndexStreamsMap(parent_file_entry, 4, self._metadata_lists)
+      else:
+        self._ReadPropertyPages(
+            file_object, file_header.metadata_lists_block_number,
+            self._metadata_lists)
 
       self._metadata_localized_strings = {}
-      self._ReadPropertyPages(
-          file_object, file_header.metadata_localized_strings_block_number,
-          self._metadata_localized_strings)
+      if not file_header.metadata_localized_strings_block_number:
+        self._ReadIndexStreamsMap(
+            parent_file_entry, 5, self._metadata_localized_strings)
+      else:
+        self._ReadPropertyPages(
+            file_object, file_header.metadata_localized_strings_block_number,
+            self._metadata_localized_strings)
 
     except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
