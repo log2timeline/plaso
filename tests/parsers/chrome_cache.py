@@ -38,8 +38,8 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testParse_v3(self):
-    """Tests the Parse function."""
+  def testParseWithVersion3(self):
+    """Tests the Parse function with version 3 Chrome Cache."""
     parser = chrome_cache.ChromeCacheParser()
     storage_writer = self._ParseFile(['chrome_cache_v3', 'index'], parser)
 
@@ -60,11 +60,11 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
         'data_type': 'chrome:cache:entry',
         'original_url': ('https://m.media-amazon.com/images/'
             'G/01/gno/sprites/nav-sprite-global-1x-reorg-privacy'
-            '._CB587940754_.png')
-        }
+            '._CB587940754_.png')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
