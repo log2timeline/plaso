@@ -906,6 +906,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     command_line_arguments = session.command_line_arguments or 'N/A'
     parser_filter_expression = session.parser_filter_expression or 'N/A'
     preferred_encoding = session.preferred_encoding or 'N/A'
+    preferred_time_zone = session.preferred_time_zone or 'N/A'
 
     if session.artifact_filters:
       artifact_filters_string = ', '.join(session.artifact_filters)
@@ -925,6 +926,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     table_view.AddRow(['Parser filter expression', parser_filter_expression])
     table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
     table_view.AddRow(['Preferred encoding', preferred_encoding])
+    table_view.AddRow(['Preferred time zone', preferred_time_zone])
     table_view.AddRow(['Debug mode', session.debug_mode])
     table_view.AddRow(['Artifact filters', artifact_filters_string])
     table_view.AddRow(['Filter file', filter_file])
