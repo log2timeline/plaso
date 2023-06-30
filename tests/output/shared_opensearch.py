@@ -129,7 +129,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'display_name': 'FAKE:log/syslog.1',
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
-        'message': '-',
+        'message': '[',
         'my_number': 123,
         'path_spec': (
             '{"__type__": "PathSpec", "location": "log/syslog.1", '
