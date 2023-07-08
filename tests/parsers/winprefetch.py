@@ -344,6 +344,50 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
+  def testParse30Variant1Compressed(self):
+    """Tests the Parse function on a compressed version 30 variant 1 file."""
+    parser = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(['ONEDRIVE.EXE-7E152375.pf'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # Check the prefetch execution event data.
+    expected_event_values = {
+        'data_type': 'windows:prefetch:execution',
+        'executable': 'ONEDRIVE.EXE',
+        'last_run_time': '2015-05-14T22:11:05.4852771+00:00',
+        'prefetch_hash': 0x7e152375,
+        'previous_run_times': [
+            '2015-05-14T22:10:28.6747101+00:00'],
+        'run_count': 2,
+        'version': 30}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
+    self.assertEqual(len(event_data.mapped_files), 134)
+
+    # Check the volume creation event data.
+    expected_event_values = {
+        'creation_time': '2015-05-15T06:54:55.1392941+00:00',
+        'data_type': 'windows:volume:creation',
+        'device_path': '\\VOLUME{01d08edc0cbccaad-3e0d2d25}',
+        'origin': 'ONEDRIVE.EXE-7E152375.pf',
+        'serial_number': 0x3e0d2d25}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
   def testParse30Variant2Compressed(self):
     """Tests the Parse function on a compressed version 30 variant 2 file."""
     parser = winprefetch.WinPrefetchParser()
