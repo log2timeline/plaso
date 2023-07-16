@@ -64,8 +64,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'file_size': 3545,
         'link_target': '<Users Libraries> <UNKNOWN: 0x00>',
         'local_path': (
-            'C:\\Users\\nfury\\AppData\\Roaming\\Microsoft\\Windows\\'
-            'Libraries\\Documents.library-ms'),
+            'C:\\\\Users\\\\nfury\\\\AppData\\\\Roaming\\\\Microsoft\\\\'
+            'Windows\\\\Libraries\\\\Documents.library-ms'),
         'modification_time': '2010-11-10T07:51:23.1085000+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

@@ -43,15 +43,15 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'access_time': '2009-07-13T23:29:02.8491310+00:00',
         'data_type': 'windows:lnk:link',
-        'description': '@%windir%\\system32\\migwiz\\wet.dll,-590',
+        'description': '@%windir%\\\\system32\\\\migwiz\\\\wet.dll,-590',
         'creation_time': '2009-07-13T23:29:02.8491310+00:00',
-        'env_var_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'env_var_location': '%windir%\\\\system32\\\\migwiz\\\\migwiz.exe',
         'file_attribute_flags': 0x00000020,
         'file_size': 544768,
-        'icon_location': '%windir%\\system32\\migwiz\\migwiz.exe',
+        'icon_location': '%windir%\\\\system32\\\\migwiz\\\\migwiz.exe',
         'modification_time': '2009-07-14T01:39:18.2200000+00:00',
-        'relative_path': '.\\migwiz\\migwiz.exe',
-        'working_directory': '%windir%\\system32\\migwiz'}
+        'relative_path': '.\\\\migwiz\\\\migwiz.exe',
+        'working_directory': '%windir%\\\\system32\\\\migwiz'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -97,17 +97,18 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'file_attribute_flags': 0x00000020,
         'file_size': 4635160,
         'icon_location': (
-            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
+            'C:\\\\Program Files (x86)\\\\Nero\\\\Nero 9\\\\Nero InfoTool\\\\'
             'InfoTool.exe'),
         'local_path': (
-            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool\\'
+            'C:\\\\Program Files (x86)\\\\Nero\\\\Nero 9\\\\Nero InfoTool\\\\'
             'InfoTool.exe'),
         'relative_path': (
-            '..\\..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\'
-            'Nero\\Nero 9\\Nero InfoTool\\InfoTool.exe'),
+            '..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\'
+            'Program Files (x86)\\\\Nero\\\\Nero 9\\\\Nero InfoTool\\\\'
+            'InfoTool.exe'),
         'volume_label': 'OS',
         'working_directory': (
-            'C:\\Program Files (x86)\\Nero\\Nero 9\\Nero InfoTool')}
+            'C:\\\\Program Files (x86)\\\\Nero\\\\Nero 9\\\\Nero InfoTool')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
     self.CheckEventData(event_data, expected_event_values)
@@ -123,10 +124,59 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'name': 'InfoTool.exe',
         'origin': 'NeroInfoTool.lnk',
         'shell_item_path': (
-            '<My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
-            'Nero InfoTool\\InfoTool.exe')}
+            '<My Computer> C:\\\\Program Files (x86)\\\\Nero\\\\Nero 9\\\\'
+            'Nero InfoTool\\\\InfoTool.exe')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
+
+  def testParseUnpairedSurrogate(self):
+    """Tests the Parse function on an LNK with an unpaired surrogate."""
+    parser = winlnk.WinLnkParser()
+    storage_writer = self._ParseFile(['unpaired_surrogate.lnk'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 5)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # Test shortcut event data.
+    expected_event_values = {
+        'creation_time': '2023-07-10T04:01:20.7971076+00:00',
+        'data_type': 'windows:lnk:link',
+        'description': None,
+        'drive_serial_number': 0x2ca3d1ae,
+        'drive_type': 3,
+        'file_attribute_flags': 0x00000020,
+        'file_size': 11264,
+        'local_path': 'C:\\\\test\\\\unicode_U+0000d800_\\U0000d800.exe',
+        'relative_path': '.\\\\unicode_U+0000d800_\\U0000d800.exe',
+        'working_directory': 'C:\\\\test'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test shell item event data.
+    expected_event_values = {
+        'access_time': '2023-07-10T04:01:28+00:00',
+        'creation_time': '2023-07-10T04:01:22+00:00',
+        'data_type': 'windows:shell_item:file_entry',
+        'file_reference': '386618-63',
+        'long_name': 'unicode_U+0000d800_\\U0000d800.exe',
+        'modification_time': '2019-12-06T21:29:00+00:00',
+        'name': 'UNICOD~1.EXE',
+        'origin': 'unpaired_surrogate.lnk',
+        'shell_item_path': (
+            '<My Computer> C:\\\\test\\\\unicode_U+0000d800_\\U0000d800.exe')}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)
 
 
