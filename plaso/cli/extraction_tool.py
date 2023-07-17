@@ -502,10 +502,12 @@ class ExtractionTool(
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
+    user_accounts = list(storage_writer.GetAttributeContainers('user_account'))
 
     try:
       extraction_engine.BuildCollectionFilters(
-          environment_variables, artifact_filter_names=self._artifact_filters,
+          environment_variables, user_accounts,
+          artifact_filter_names=self._artifact_filters,
           filter_file_path=self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(

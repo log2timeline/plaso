@@ -340,10 +340,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
+    user_accounts = []
 
     try:
       extraction_engine.BuildCollectionFilters(
-          environment_variables, artifact_filter_names=artifact_filters,
+          environment_variables, user_accounts,
+          artifact_filter_names=artifact_filters,
           filter_file_path=filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(

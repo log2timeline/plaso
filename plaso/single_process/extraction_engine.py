@@ -361,10 +361,12 @@ class SingleProcessEngine(engine.BaseEngine):
       self._status_update_callback(self._processing_status)
 
   def _CreateParserMediator(
-      self, resolver_context, processing_configuration, system_configurations):
+      self, storage_writer, resolver_context, processing_configuration,
+      system_configurations):
     """Creates a parser mediator.
 
     Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
       processing_configuration (ProcessingConfiguration): processing
           configuration.
@@ -382,9 +384,11 @@ class SingleProcessEngine(engine.BaseEngine):
     if self.knowledge_base:
       environment_variables = self.knowledge_base.GetEnvironmentVariables()
 
+    user_accounts = list(storage_writer.GetAttributeContainers('user_account'))
+
     try:
       self.BuildCollectionFilters(
-          environment_variables,
+          environment_variables, user_accounts,
           artifact_filter_names=processing_configuration.artifact_filters,
           filter_file_path=processing_configuration.filter_file)
     except errors.InvalidFilter as exception:
@@ -437,7 +441,8 @@ class SingleProcessEngine(engine.BaseEngine):
           processing_configuration.custom_artifacts_path)
 
     parser_mediator = self._CreateParserMediator(
-        resolver_context, processing_configuration, system_configurations)
+        storage_writer, resolver_context, processing_configuration,
+        system_configurations)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(
