@@ -170,13 +170,14 @@ class BaseEngine(object):
     self._artifacts_registry = registry
 
   def BuildCollectionFilters(
-      self, environment_variables, artifact_filter_names=None,
+      self, environment_variables, user_accounts, artifact_filter_names=None,
       filter_file_path=None):
     """Builds collection filters from artifacts or filter file if available.
 
     Args:
       environment_variables (list[EnvironmentVariableArtifact]):
           environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
       artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
@@ -195,14 +196,16 @@ class BaseEngine(object):
       filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
           self._artifacts_registry)
       filters_helper.BuildFindSpecs(
-          artifact_filter_names, environment_variables=environment_variables)
+          artifact_filter_names, environment_variables=environment_variables,
+          user_accounts=user_accounts)
 
       # If the user selected Windows Registry artifacts we have to ensure
       # the Windows Registry files are parsed.
       if filters_helper.registry_find_specs:
         filters_helper.BuildFindSpecs(
             self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
-            environment_variables=environment_variables)
+            environment_variables=environment_variables,
+            user_accounts=user_accounts)
 
       if not filters_helper.file_system_find_specs:
         raise errors.InvalidFilter(
@@ -386,6 +389,8 @@ class BaseEngine(object):
       # TODO: kept for backwards compatibility.
       self.knowledge_base.ReadSystemConfigurationArtifact(
           system_configurations[0])
+      for environment_variable in system_configuration.environment_variables:
+        self.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     return system_configurations
 
