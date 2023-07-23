@@ -32,6 +32,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'macb': '_FormatMACB',
       'message': '_FormatMessage',
       'message_short': '_FormatMessageShort',
+      'parser': '_FormatParser',
       'source': '_FormatSourceShort',
       'sourcetype': '_FormatSource',
       'source_long': '_FormatSource',

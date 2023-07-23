@@ -425,13 +425,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         expression, event, event_data, None, event_tag, True)
 
     self._CheckIfExpressionMatches(
-        'parser is not \'Made\'', event, event_data, None, event_tag, True)
-
-    self._CheckIfExpressionMatches(
-        'parser is not \'test_parser\'', event, event_data, None, event_tag,
-        False)
-
-    self._CheckIfExpressionMatches(
         'tag contains \'browser_search\'', event, event_data, None, event_tag,
         True)
 

@@ -64,28 +64,25 @@ the keyword "not" a negative matching is performed.
 and are no longer expanded in the event filter.**
 
 **Note that as of 20230108 the 'parser' event attribute is considered an output
-field and is discouraged to be used in the event filter.**
+field and is discouraged to be used in the event filter. As of 20230724 the
+'parser' event attribute has been removed.**
 
 ## Example event filter expressions
 
 ```
-parser is 'syslog' and body contains 'root'
+data_type is 'syslog:line' and body contains 'root'
 ```
 
 This event filter applies to all events where:
 
-* the event was produced by the parser named 'syslog' (case sensitive) and;
+* the event has data type 'syslog:line' (case sensitive) and;
 * the body attribute contains the substring 'root' (case insensitive).
 
-Use "log2timeline --info" to retrieve a list of the names of all the available
-parsers. Or use the ```pinfo.py timeline.plaso``` to see a list of all parsers that
-were used to produce the output in the storage file.
-
 ```
-parser contains 'firefox' AND pathspec.vss_store_number > 0
+data_type contains 'firefox' AND pathspec.vss_store_number > 0
 ```
 
-* The parser name contains the word "firefox";
+* The data type contains the word "firefox";
 * The event was extracted from a Volume Shadow Snapshot (VSS).
 
 ## Value type helpers

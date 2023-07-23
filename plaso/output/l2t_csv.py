@@ -233,27 +233,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     return extra_attributes.replace('\n', '-').replace('\r', '')
 
-  def _FormatParser(
-      self, output_mediator, event, event_data, event_data_stream):
-    """Formats a parser field.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: parser field.
-    """
-    parser_chain = getattr(event_data, '_parser_chain', None)
-    if not parser_chain:
-      # Note that parser is kept for backwards compatibility.
-      parser_chain = getattr(event_data, 'parser', None) or '-'
-
-    return parser_chain
-
   def _FormatType(self, output_mediator, event, event_data, event_data_stream):
     """Formats a type field.
 
