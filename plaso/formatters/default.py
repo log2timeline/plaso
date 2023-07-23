@@ -15,30 +15,14 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
   FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_values}'
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_values}'
 
-  # TODO: remove attributes that are no longer considered reserved.
   _RESERVED_VARIABLE_NAMES = frozenset([
       '_event_values_hash',
       '_parser_chain',
-      'body',
       'data_type',
-      'display_name',
-      'filename',
-      'hostname',
-      'http_headers',
-      'inode',
-      'mapped_files',
-      'metadata',
-      'offset',
-      'parser',
-      'pathspec',
-      'query',
-      'source_long',
-      'source_short',
-      'tag',
+      'date_time',
+      'path_spec',
       'timestamp',
-      'timestamp_desc',
-      'timezone',
-      'username'])
+      'timestamp_desc'])
 
   def __init__(self):
     """Initializes a default event formatter."""
