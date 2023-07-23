@@ -129,13 +129,14 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
                        dfdatetime_interface.DateTimeValues)):
           continue
 
+        field_value = self._field_formatting_helper.GetFormattedField(
+            output_mediator, attribute_name, event, event_data,
+            event_data_stream, event_tag)
+
         # Output _parser_chain as parser for backwards compatibility.
         if attribute_name == '_parser_chain':
           attribute_name = 'parser'
 
-        field_value = self._field_formatting_helper.GetFormattedField(
-            output_mediator, attribute_name, event, event_data,
-            event_data_stream, event_tag)
         field_values[attribute_name] = field_value
 
     if event_data_stream:

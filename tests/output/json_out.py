@@ -29,7 +29,8 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd')))
 
   _TEST_EVENTS = [
-      {'data_type': 'test:event',
+      {'_parser_chain': 'test',
+       'data_type': 'test:event',
        'hostname': 'ubuntu',
        'path_spec': path_spec_factory.Factory.NewPathSpec(
            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
@@ -92,6 +93,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
             'message': (
                 'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
                 'session closed for user root)'),
+            'parser': 'test',
             'pathspec': {
                 '__type__': 'PathSpec',
                 'type_indicator': 'TSK',
