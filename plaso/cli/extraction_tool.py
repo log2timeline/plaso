@@ -88,6 +88,7 @@ class ExtractionTool(
     self._enable_sigsegv_handler = False
     self._expanded_parser_filter_expression = None
     self._extract_winevt_resources = True
+    self._extract_winreg_binary = True
     self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._preferred_codepage = None
@@ -194,6 +195,7 @@ class ExtractionTool(
         self._hasher_file_size_limit)
     configuration.extraction.extract_winevt_resources = (
         self._extract_winevt_resources)
+    configuration.extraction.extract_winreg_binary = self._extract_winreg_binary
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_compressed_streams = (
         self._process_compressed_streams)

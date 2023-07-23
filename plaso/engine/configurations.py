@@ -56,6 +56,8 @@ class ExtractionConfiguration(interface.AttributeContainer):
         file entries should be processed.
     extract_winevt_resources (bool): True if Windows EventLog resources should
         be extracted.
+    extract_winreg_binary (bool): True if Windows Registry binary values should
+        be extracted.
     hasher_file_size_limit (int): maximum file size that hashers
         should process, where 0 or None represents unlimited.
     hasher_names_string (str): comma separated names of hashers to use during
@@ -71,6 +73,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
     super(ExtractionConfiguration, self).__init__()
     self.archive_types_string = None
     self.extract_winevt_resources = True
+    self.extract_winreg_binary = False
     self.hasher_file_size_limit = None
     self.hasher_names_string = None
     self.process_compressed_streams = True
