@@ -18,10 +18,12 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = 'native (or "raw") Python output.'
 
-  # TODO: remove attributes that are no longer considered reserved.
-  _RESERVED_ATTRIBUTES = frozenset([
+  # Note that native Python output defines certain fields as part of the format.
+  _RESERVED_FIELDS = frozenset([
+      '_event_values_hash',
       'body',
       'data_type',
+      'date_time',
       'display_name',
       'filename',
       'hostname',
@@ -31,7 +33,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
       'metadata',
       'offset',
       'parser',
-      'pathspec',
+      'path_spec',
       'query',
       'source_long',
       'source_short',
@@ -143,7 +145,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
       field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
 
-      if field_name in self._RESERVED_ATTRIBUTES:
+      if field_name in self._RESERVED_FIELDS:
         reserved_attributes.append(field_string)
       else:
         additional_attributes.append(field_string)
