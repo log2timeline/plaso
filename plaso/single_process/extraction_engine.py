@@ -403,6 +403,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     parser_mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
+    parser_mediator.SetExtractWinRegBinaryValues(
+        processing_configuration.extraction.extract_winreg_binary)
     parser_mediator.SetPreferredCodepage(
         processing_configuration.preferred_codepage)
     parser_mediator.SetPreferredLanguage(

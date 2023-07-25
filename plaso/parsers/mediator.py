@@ -57,6 +57,7 @@ class ParserMediator(object):
     self._event_data_stream = None
     self._event_data_stream_identifier = None
     self._extract_winevt_resources = True
+    self._extract_winreg_binary_values = False
     self._file_entry = None
     self._format_checks_cpu_time_profiler = None
     self._language_tag = None
@@ -92,6 +93,11 @@ class ParserMediator(object):
   def extract_winevt_resources(self):
     """bool: extract Windows EventLog resources."""
     return self._extract_winevt_resources
+
+  @property
+  def extract_winreg_binary_values(self):
+    """bool: extract Windows Registry binary values."""
+    return self._extract_winreg_binary_values
 
   @property
   def number_of_produced_event_data(self):
@@ -590,13 +596,22 @@ class ParserMediator(object):
       self._parsers_cpu_time_profiler.StopTiming(parser_name)
 
   def SetExtractWinEvtResources(self, extract_winevt_resources):
-    """Sets value to indicate if Windows EventLog resources should be extracted.
+    """Sets value to extract Windows EventLog resources.
 
     Args:
       extract_winevt_resources (bool): True if Windows EventLog resources
           should be extracted.
     """
     self._extract_winevt_resources = extract_winevt_resources
+
+  def SetExtractWinRegBinaryValues(self, extract_winreg_binary_values):
+    """Sets value to extract Windows Registry binary values.
+
+    Args:
+      extract_winreg_binary_values (bool): True if Windows Registry binary
+          values should be extracted.
+    """
+    self._extract_winreg_binary_values = extract_winreg_binary_values
 
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.

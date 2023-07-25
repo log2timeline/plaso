@@ -18,12 +18,15 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--preferred_year YEAR] [--process_archives]
-                     [--skip_compressed_streams]
+usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
+                     [--process_archives] [--skip_compressed_streams]
 
 Test argument parser.
 
 {0:s}:
+  --extract_winreg_binary, --extract-winreg-binary
+                        Extract binary Windows Registry values. WARNING: This
+                        can make processing significantly slower.
   --preferred_year YEAR, --preferred-year YEAR
                         When a format\'s timestamp does not include a year,
                         e.g. syslog, use this as the initial year instead of

@@ -289,8 +289,11 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
                 registry_value.DataIsString()):
             value_string = '{0!s}'.format(value_object)
 
+          elif parser_mediator.extract_winreg_binary_values:
+            value_string = registry_value.data
+
           else:
-            # Represent remaining types like REG_BINARY and
+            # Add a place holder for remaining types such as REG_BINARY and
             # REG_RESOURCE_REQUIREMENT_LIST.
             value_string = '({0:d} bytes)'.format(len(value_object))
 
