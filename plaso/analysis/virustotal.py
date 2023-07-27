@@ -84,17 +84,16 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     if response_code == self._VIRUSTOTAL_RESPONSE_CODE_PRESENT:
       positives = hash_information['positives']
       if positives > 0:
-        return ['virustotal_detections_{0:d}'.format(positives)]
+        return [f'virustotal_detections_{positives:d}']
 
       return ['virustotal_no_detections']
 
     if response_code == self._VIRUSTOTAL_RESPONSE_CODE_ANALYSIS_PENDING:
       return ['virustotal_analysis_pending']
 
-    logger.error(
-        'VirusTotal returned unknown response code {0!s}'.format(
-            response_code))
-    return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]
+    logger.error(f'VirusTotal returned unknown response code {response_code!s}')
+
+    return [f'virustotal_unknown_response_code_{response_code:d}']
 
   def _QueryHashes(self, hashes):
     """Queries VirusTotal for a specific hashes.
@@ -112,8 +111,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
           self._VIRUSTOTAL_API_REPORT_URL, 'GET', params=url_parameters)
     except errors.ConnectionError as exception:
       json_response = None
-      logger.error('Unable to query VirusTotal with error: {0!s}.'.format(
-          exception))
+      logger.error(f'Unable to query VirusTotal with error: {exception!s}.')
 
     return json_response
 

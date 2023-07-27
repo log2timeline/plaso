@@ -75,29 +75,29 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     Returns:
       flor.BloomFilter: bloom filter object or None if not available.
     """
-    if self._bloom_filter_object:
-      return self._bloom_filter_object
+    bloom_filter = self._bloom_filter_object
+    if not bloom_filter:
+      logger.debug(
+          f'Opening bloom database file: {self._bloom_database_path:s}.')
 
-    logger.debug('Open bloom database file: {0:s}.'.format(
-        self._bloom_database_path))
+      if not flor:
+        logger.warning('Missing optional dependency: flor')
+        return None
 
-    if flor.BloomFilter is None:
-      logger.error('Missing optional dependency : flor')
-      return None
+      try:
+        bloom_filter = flor.BloomFilter()
+        with open(self._bloom_database_path, 'rb') as file_object:
+          bloom_filter.read(file_object)
 
-    try:
-      bloom_filter = flor.BloomFilter()
-      with open(self._bloom_database_path, 'rb') as file_object:
-        bloom_filter.read(file_object)
+      except IOError as exception:
+        bloom_filter = None
+        logger.warning((
+            f'Unable to open bloom database file: '
+            f'{self._bloom_database_path:s} with error: {exception!s}.'))
 
-    except IOError as exception:
-      bloom_filter = None
-      logger.error(('Unable to open bloom database file: {0:s} with error: '
-                    '{1!s}.').format(self._bloom_database_path, exception))
+      if cached:
+        self._bloom_filter_object = bloom_filter
 
-    if cached:
-      self._bloom_filter_object = bloom_filter
-      return self._bloom_filter_object
     return bloom_filter
 
   def _QueryHash(self, digest, bloom_filter):
@@ -110,7 +110,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     Returns:
       bool: True if the hash was found, False if not.
     """
-    value_to_test = digest.upper().encode()
+    value_to_test = digest.upper().encode('utf-8')
     return value_to_test in bloom_filter
 
   def SetBloomDatabasePath(self, bloom_database_path):

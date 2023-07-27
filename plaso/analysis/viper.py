@@ -102,8 +102,8 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
       dict[str, object]: JSON response or None on error.
     """
     if not self._url:
-      self._url = '{0:s}://{1:s}:{2:d}/file/find'.format(
-          self._protocol, self._host, self._port)
+      self._url = (
+          f'{self._protocol:s}://{self._host:s}:{self._port:d}/file/find')
 
     request_data = {self._lookup_hash: digest}
 
@@ -113,8 +113,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
     except errors.ConnectionError as exception:
       json_response = None
-      logger.error('Unable to query Viper with error: {0!s}.'.format(
-          exception))
+      logger.error(f'Unable to query Viper with error: {exception!s}.')
 
     return json_response
 
@@ -145,7 +144,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """
     protocol = protocol.lower().strip()
     if protocol not in self.SUPPORTED_PROTOCOLS:
-      raise ValueError('Unsupported protocol: {0!s}'.format(protocol))
+      raise ValueError(f'Unsupported protocol: {protocol!s}')
 
     self._protocol = protocol
 
@@ -155,8 +154,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     Returns:
       bool: True if the Viper server instance is reachable.
     """
-    url = '{0:s}://{1:s}:{2:d}/test'.format(
-        self._protocol, self._host, self._port)
+    url = f'{self._protocol:s}://{self._host:s}:{self._port:d}/test'
 
     try:
       json_response = self._MakeRequestAndDecodeJSON(url, 'GET')

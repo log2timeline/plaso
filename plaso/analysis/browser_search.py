@@ -292,8 +292,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       callback_method = getattr(self, method_name, None)
       if not callback_method:
         logger.warning(
-            'Missing callback method: {0:s} to parse search query'.format(
-                method_name))
+            f'Missing callback method: {method_name:s} to parse search query')
         continue
 
       match = url_expression.search(url)
@@ -302,9 +301,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
       search_query = callback_method(url)
       if not search_query:
-        analysis_mediator.ProduceAnalysisWarning(
-            'Unable to determine search query: {0:s} in URL: {1:s}'.format(
-                method_name, url), self.NAME)
+        analysis_mediator.ProduceAnalysisWarning((
+            f'Unable to determine search query: {method_name:s} in URL: '
+            f'{url:s}'), self.NAME)
         continue
 
       try:
@@ -314,14 +313,14 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
       if not search_query:
         analysis_mediator.ProduceAnalysisWarning(
-            'Unable to decode search query: {0:s} in URL: {1:s}'.format(
-                method_name, url), self.NAME)
+            f'Unable to decode search query: {method_name:s} in URL: {url:s}',
+            self.NAME)
         continue
 
       event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)
       analysis_mediator.ProduceEventTag(event_tag)
 
-      lookup_key = '{0:s}:{1:s}'.format(engine, search_query)
+      lookup_key = ':'.join([engine, search_query])
       self._analysis_counter[lookup_key] += 1
 
 
