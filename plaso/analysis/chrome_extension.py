@@ -47,8 +47,8 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     except (requests.ConnectionError, requests.HTTPError) as exception:
       logger.warning((
-          '[{0:s}] unable to retrieve URL: {1:s} with error: {2!s}').format(
-              self.NAME, web_store_url, exception))
+          f'[{self.NAME:s}] unable to retrieve URL: {web_store_url:s} with '
+          f'error: {exception!s}'))
       return None
 
     return response.text
@@ -90,9 +90,9 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     page_content = self._GetChromeWebStorePage(extension_identifier)
     if not page_content:
-      logger.warning(
-          '[{0:s}] no data returned for extension identifier: {1:s}'.format(
-              self.NAME, extension_identifier))
+      logger.warning((
+          f'[{self.NAME:s}] no data returned for extension identifier: '
+          f'{extension_identifier:s}'))
       return None
 
     first_line, _, _ = page_content.partition('\n')
@@ -173,9 +173,9 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     # manually deduce the username.
     if not username:
       if len(filename) > 25:
-        username = 'Not found ({0:s}...)'.format(filename[0:25])
+        username = f'Not found ({filename[:25]:s}...)'
       else:
-        username = 'Not found ({0:s})'.format(filename)
+        username = f'Not found ({filename:s})'
 
     extension_string = self._GetTitleFromChromeWebStore(extension_identifier)
     if not extension_string:

@@ -52,8 +52,10 @@ class AnalysisPlugin(object):
     event_tag.AddLabels(labels)
 
     event_identifier_string = event_identifier.CopyToString()
-    logger.debug('Tagged event: {0:s} with labels: {1:s}'.format(
-        event_identifier_string, ', '.join(labels)))
+    labels_string = ', '.join(labels)
+    logger.debug((
+        f'Tagged event: {event_identifier_string:s} with labels: '
+        f'{labels_string:s}'))
 
     return event_tag
 
