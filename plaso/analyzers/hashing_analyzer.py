@@ -49,7 +49,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """
     results = []
     for hasher in self._hashers:
-      logger.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
+      logger.debug(f'Processing results for hasher {hasher.NAME:s}')
       result = analyzer_result.AnalyzerResult()
       result.analyzer_name = self.NAME
       result.attribute_name = hasher.ATTRIBUTE_NAME
@@ -72,8 +72,8 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
 
-    debug_hasher_names = ', '.join(hasher_names)
-    logger.debug('Got hasher names: {0:s}'.format(debug_hasher_names))
+    hasher_names_string = ', '.join(hasher_names)
+    logger.debug(f'[SetHasherNames] hasher names: {hasher_names_string:s}')
 
     self._hashers = hashers_manager.HashersManager.GetHashers(hasher_names)
     self._hasher_names_string = hasher_names_string

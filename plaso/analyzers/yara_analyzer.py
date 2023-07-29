@@ -54,12 +54,11 @@ class YaraAnalyzer(interface.BaseAnalyzer):
       self._matches = self._rules.match(data=data, timeout=self._MATCH_TIMEOUT)
 
     except YaraTimeoutError:
-      logger.error('Could not process file within timeout: {0:d}'.format(
-          self._MATCH_TIMEOUT))
+      logger.error(
+          f'Could not process file within timeout: {self._MATCH_TIMEOUT:d}')
 
     except YaraError as exception:
-      logger.error('Error processing file with Yara: {0!s}.'.format(
-          exception))
+      logger.error(f'Error processing file with Yara: {exception!s}.')
 
   def GetResults(self):
     """Retrieves results of the most recent analysis.
