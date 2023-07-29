@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the image export CLI tool."""
 
-import io
 import json
 import os
 import unittest
@@ -23,6 +22,13 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   """Tests for the image export CLI tool."""
 
   # pylint: disable=protected-access
+
+  _FILTER_FILE_DATA = '\n'.join([
+      'description: Test filter.',
+      'type: include',
+      'path_separator: \'/\'',
+      'paths: [\'/a_directory/.+_file\']',
+      ''])
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.
@@ -416,9 +422,9 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      filter_file = os.path.join(temp_directory, 'filter.txt')
-      with io.open(filter_file, 'wt', encoding='utf-8') as file_object:
-        file_object.write('/a_directory/.+_file\n')
+      filter_file = os.path.join(temp_directory, 'filter_file.yaml')
+      with open(filter_file, 'wt', encoding='utf-8') as file_object:
+        file_object.write(self._FILTER_FILE_DATA)
 
       options.file_filter = filter_file
       options.path = temp_directory
@@ -428,10 +434,10 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSource()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, 'filter.txt'),
           os.path.join(temp_directory, 'a_directory'),
           os.path.join(temp_directory, 'a_directory', 'another_file'),
           os.path.join(temp_directory, 'a_directory', 'a_file'),
+          os.path.join(temp_directory, 'filter_file.yaml'),
           os.path.join(temp_directory, 'hashes.json')])
 
       extracted_files = self._RecursiveList(temp_directory)
