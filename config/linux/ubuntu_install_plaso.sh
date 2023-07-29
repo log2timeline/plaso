@@ -43,6 +43,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libsigscan-python3
                      libsmdev-python3
                      libsmraw-python3
+                     libssl-dev
                      libvhdi-python3
                      libvmdk-python3
                      libvsgpt-python3

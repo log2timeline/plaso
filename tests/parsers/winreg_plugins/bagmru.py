@@ -83,7 +83,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:bagmru',
         'entries': (
-            'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\'),
+            'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\\\'),
         'key_path': '{0:s}\\0'.format(key_path),
         'last_written_time': '2009-08-04T15:19:10.6696250+00:00'}
 

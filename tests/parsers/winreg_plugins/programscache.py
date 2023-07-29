@@ -83,12 +83,12 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         '10: Synchronize.lnk '
         '11: Tour Windows XP.lnk '
         '12: Windows Explorer.lnk '
-        '13: Programs Accessories\\Accessibility '
+        '13: Programs Accessories\\\\Accessibility '
         '14: Magnifier.lnk '
         '15: Narrator.lnk '
         '16: On-Screen Keyboard.lnk '
         '17: Utility Manager.lnk '
-        '18: Programs Accessories\\System Tools '
+        '18: Programs Accessories\\\\System Tools '
         '19: Internet Explorer (No Add-ons).lnk')
 
     expected_event_values = {

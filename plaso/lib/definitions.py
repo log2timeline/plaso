@@ -7,8 +7,25 @@ MICROSECONDS_PER_SECOND = 1000000
 MICROSECONDS_PER_MINUTE = 60000000
 NANOSECONDS_PER_SECOND = 1000000000
 
-SOURCE_TYPE_ARCHIVE = 'archive'
+# Characters that are considered non-printable Unicode characters.
+NON_PRINTABLE_CHARACTERS = {}
 
+# Escape C0 control characters as \x##
+NON_PRINTABLE_CHARACTERS.update({
+    value: f'\\x{value:02x}' for value in range(0, 0x20)})
+
+# Escape C1 control character as \x##
+NON_PRINTABLE_CHARACTERS.update({
+    value: f'\\x{value:02x}' for value in range(0x7f, 0xa0)})
+
+# Escape Unicode surrogate characters as \U########
+NON_PRINTABLE_CHARACTERS.update({
+    value: f'\\U{value:08x}' for value in range(0xd800, 0xe000)})
+
+NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE = str.maketrans(
+    NON_PRINTABLE_CHARACTERS)
+
+# Compression formats.
 COMPRESSION_FORMAT_NONE = 'none'
 COMPRESSION_FORMAT_ZLIB = 'zlib'
 
@@ -16,17 +33,7 @@ COMPRESSION_FORMATS = frozenset([
     COMPRESSION_FORMAT_NONE,
     COMPRESSION_FORMAT_ZLIB])
 
-# Default worker process memory limit of 2 GiB.
-DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
-
-# Consider a worker process inactive after 15 minutes of no status updates.
-DEFAULT_WORKER_TIMEOUT = 15.0 * 60.0
-
-FAILURE_MODE_EXHAUST_MEMORY = 'exhaust_memory'
-FAILURE_MODE_NOT_RESPONDING = 'not_responding'
-FAILURE_MODE_TERMINATED = 'terminated'
-FAILURE_MODE_TIME_OUT = 'time_out'
-
+# Operating system families.
 OPERATING_SYSTEM_FAMILY_LINUX = 'Linux'
 OPERATING_SYSTEM_FAMILY_MACOS = 'MacOS'
 OPERATING_SYSTEM_FAMILY_UNKNOWN = 'Unknown'
@@ -40,9 +47,46 @@ OPERATING_SYSTEM_FAMILIES = frozenset([
     OPERATING_SYSTEM_FAMILY_WINDOWS_9x,
     OPERATING_SYSTEM_FAMILY_WINDOWS_NT])
 
+# Serialization formats.
 SERIALIZER_FORMAT_JSON = 'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
+
+# Source types.
+SOURCE_TYPE_ARCHIVE = 'archive'
+
+# Storage formats.
+STORAGE_FORMAT_SQLITE = 'sqlite'
+STORAGE_FORMAT_REDIS = 'redis'
+
+SESSION_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
+TASK_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE, STORAGE_FORMAT_REDIS])
+
+DEFAULT_STORAGE_FORMAT = STORAGE_FORMAT_SQLITE
+
+# Storage types.
+
+# The session storage contains the results of one or more sessions.
+# A typical session is a single run of a tool (log2timeline.py).
+# The task storage contains the results of one or more tasks. Tasks
+# are used to split work within a session. A typical task is a single
+# run of a worker process.
+
+STORAGE_TYPE_SESSION = 'session'
+STORAGE_TYPE_TASK = 'task'
+
+STORAGE_TYPES = frozenset([STORAGE_TYPE_SESSION, STORAGE_TYPE_TASK])
+
+# Default worker process memory limit of 2 GiB.
+DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
+# Consider a worker process inactive after 15 minutes of no status updates.
+DEFAULT_WORKER_TIMEOUT = 15.0 * 60.0
+
+FAILURE_MODE_EXHAUST_MEMORY = 'exhaust_memory'
+FAILURE_MODE_NOT_RESPONDING = 'not_responding'
+FAILURE_MODE_TERMINATED = 'terminated'
+FAILURE_MODE_TIME_OUT = 'time_out'
 
 STATUS_INDICATOR_ABORTED = 'aborted'
 STATUS_INDICATOR_ANALYZING = 'analyzing'
@@ -69,23 +113,7 @@ ERROR_STATUS_INDICATORS = frozenset([
     STATUS_INDICATOR_NOT_RESPONDING,
     STATUS_INDICATOR_KILLED])
 
-STORAGE_FORMAT_SQLITE = 'sqlite'
-STORAGE_FORMAT_REDIS = 'redis'
-
-SESSION_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
-TASK_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE, STORAGE_FORMAT_REDIS])
-
-DEFAULT_STORAGE_FORMAT = STORAGE_FORMAT_SQLITE
-
-# The session storage contains the results of one or more sessions.
-# A typical session is a single run of a tool (log2timeline.py).
-# The task storage contains the results of one or more tasks. Tasks
-# are used to split work within a session. A typical task is a single
-# run of a worker process.
-STORAGE_TYPE_SESSION = 'session'
-STORAGE_TYPE_TASK = 'task'
-
-STORAGE_TYPES = frozenset([STORAGE_TYPE_SESSION, STORAGE_TYPE_TASK])
+# Time descriptions.
 
 TIME_DESCRIPTION_ADDED = 'Added Time'
 TIME_DESCRIPTION_BACKUP = 'Backup Time'

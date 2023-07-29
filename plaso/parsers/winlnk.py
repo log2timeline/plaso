@@ -9,6 +9,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import windows_events
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -36,7 +37,7 @@ class WinLnkLinkEventData(events.EventData):
         identifier.
     droid_volume_identifier (str): distributed link tracking droid volume
         identifier.
-    env_var_location (str): environment variables loction.
+    env_var_location (str): environment variables location.
     file_attribute_flags (int): file attribute flags of the linked item.
     file_size (int): size of the linked item.
     icon_location (str): icon location.
@@ -83,8 +84,16 @@ class WinLnkParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
+  _PATH_ESCAPE_CHARACTERS = {'\\': '\\\\'}
+  _PATH_ESCAPE_CHARACTERS.update(definitions.NON_PRINTABLE_CHARACTERS)
+
   NAME = 'lnk'
   DATA_FORMAT = 'Windows Shortcut (LNK) file'
+
+  def __init__(self):
+    """Initializes a Windows Shortcut (LNK) file parser."""
+    super(WinLnkParser, self).__init__()
+    self._path_escape_characters = str.maketrans(self._PATH_ESCAPE_CHARACTERS)
 
   def _GetDateTime(self, filetime):
     """Retrieves the date and time from a FILETIME timestamp.
@@ -99,6 +108,20 @@ class WinLnkParser(interface.FileObjectParser):
       return None
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
+
+  def _GetSanitizedPathString(self, path):
+    """Retrieves a sanitize path string.
+
+    Args:
+      path (str): path.
+
+    Returns:
+      str: sanitized path string.
+    """
+    if not path:
+      return None
+
+    return path.translate(self._path_escape_characters)
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -175,33 +198,41 @@ class WinLnkParser(interface.FileObjectParser):
 
       link_target = shell_items_parser.CopyToPath()
 
+    access_time = lnk_file.get_file_access_time_as_integer()
+    creation_time = lnk_file.get_file_creation_time_as_integer()
+    modification_time = lnk_file.get_file_modification_time_as_integer()
+
     event_data = WinLnkLinkEventData()
-    event_data.access_time = self._GetDateTime(
-        lnk_file.get_file_access_time_as_integer())
+    event_data.access_time = self._GetDateTime(access_time)
     event_data.birth_droid_file_identifier = (
         lnk_file.birth_droid_file_identifier)
     event_data.birth_droid_volume_identifier = (
         lnk_file.birth_droid_volume_identifier)
-    event_data.command_line_arguments = lnk_file.command_line_arguments
-    event_data.creation_time = self._GetDateTime(
-        lnk_file.get_file_creation_time_as_integer())
-    event_data.description = lnk_file.description
+    event_data.command_line_arguments = self._GetSanitizedPathString(
+        lnk_file.command_line_arguments)
+    event_data.creation_time = self._GetDateTime(creation_time)
+    event_data.description = self._GetSanitizedPathString(
+        lnk_file.description)
     event_data.drive_serial_number = lnk_file.drive_serial_number
     event_data.drive_type = lnk_file.drive_type
     event_data.droid_file_identifier = lnk_file.droid_file_identifier
     event_data.droid_volume_identifier = lnk_file.droid_volume_identifier
-    event_data.env_var_location = lnk_file.environment_variables_location
+    event_data.env_var_location = self._GetSanitizedPathString(
+        lnk_file.environment_variables_location)
     event_data.file_attribute_flags = lnk_file.file_attribute_flags
     event_data.file_size = lnk_file.file_size
-    event_data.icon_location = lnk_file.icon_location
+    event_data.icon_location = self._GetSanitizedPathString(
+        lnk_file.icon_location)
     event_data.link_target = link_target
-    event_data.local_path = lnk_file.local_path
-    event_data.modification_time = self._GetDateTime(
-        lnk_file.get_file_modification_time_as_integer())
-    event_data.network_path = lnk_file.network_path
-    event_data.relative_path = lnk_file.relative_path
+    event_data.local_path = self._GetSanitizedPathString(lnk_file.local_path)
+    event_data.modification_time = self._GetDateTime(modification_time)
+    event_data.network_path = self._GetSanitizedPathString(
+        lnk_file.network_path)
+    event_data.relative_path = self._GetSanitizedPathString(
+        lnk_file.relative_path)
     event_data.volume_label = lnk_file.volume_label
-    event_data.working_directory = lnk_file.working_directory
+    event_data.working_directory = self._GetSanitizedPathString(
+        lnk_file.working_directory)
 
     parser_mediator.ProduceEventData(event_data)
 

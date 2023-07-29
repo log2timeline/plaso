@@ -207,7 +207,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'data_type': 'windows:registry:mrulist',
         'entries': (
             'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
-            'C:\\Winnt\\Profiles\\Administrator\\Desktop'),
+            'C:\\\\Winnt\\\\Profiles\\\\Administrator\\\\Desktop'),
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
@@ -221,7 +221,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'modification_time': '2011-01-14T12:03:52+00:00',
         'name': 'Winnt',
         'origin': key_path,
-        'shell_item_path': '<My Computer> C:\\Winnt'}
+        'shell_item_path': '<My Computer> C:\\\\Winnt'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
