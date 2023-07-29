@@ -11,7 +11,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import artifacts
-from plaso.engine import filter_file
 from plaso.engine import path_filters
 from plaso.engine import yaml_filter_file
 
@@ -70,46 +69,6 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
       '- \'/test_data/.+evtx\'',
       '- \'/test_data/testdir/filter_.+.txt\'',
       ''])
-
-  def testBuildFindSpecs(self):
-    """Tests the BuildFindSpecs function."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    test_filter_file = filter_file.FilterFile()
-    test_path_filters = test_filter_file._ReadFromFileObject(
-        io.StringIO(self._FILTER_FILE_DATA))
-
-    environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
-
-    test_helper = path_filters.PathCollectionFiltersHelper()
-    test_helper.BuildFindSpecs(
-        test_path_filters, environment_variables=[environment_variable])
-
-    self.assertEqual(len(test_helper.included_file_system_find_specs), 5)
-
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system, path_spec)
-
-    path_spec_generator = searcher.Find(
-        find_specs=test_helper.included_file_system_find_specs)
-    self.assertIsNotNone(path_spec_generator)
-
-    path_specs = list(path_spec_generator)
-
-    # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
-    # total 6 path specifications.
-    self.assertEqual(len(path_specs), 6)
 
   def testBuildFindSpecsWithYAMLFilterFile(self):
     """Tests the BuildFindSpecs function with YAML filter file."""

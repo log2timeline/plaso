@@ -14,7 +14,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.engine import artifact_filters
-from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
 from plaso.engine import path_filters
@@ -221,13 +220,7 @@ class BaseEngine(object):
           'building find specification based on filter file: {0:s}'.format(
               filter_file_path))
 
-      filter_file_path_lower = filter_file_path.lower()
-      if (filter_file_path_lower.endswith('.yaml') or
-          filter_file_path_lower.endswith('.yml')):
-        filter_file_object = yaml_filter_file.YAMLFilterFile()
-      else:
-        filter_file_object = filter_file.FilterFile()
-
+      filter_file_object = yaml_filter_file.YAMLFilterFile()
       filter_file_path_filters = filter_file_object.ReadFromFile(
           filter_file_path)
 
