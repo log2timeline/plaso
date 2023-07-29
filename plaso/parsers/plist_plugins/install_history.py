@@ -32,7 +32,7 @@ class MacOSInstallHistoryEventData(events.EventData):
 class MacOSInstallHistoryPlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for MacOS install history plist files."""
 
-  NAME = 'macosx_install_history'
+  NAME = 'macos_install_history'
   DATA_FORMAT = 'MacOS installation history plist file'
 
   PLIST_PATH_FILTERS = frozenset([
