@@ -116,8 +116,8 @@ ios_identityservices | Parser for Idstatuscache plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
 macos_bluetooth | Parser for MacOS Bluetooth plist files.
+macos_install_history | Parser for MacOS installation history plist files.
 macos_software_update | Parser for MacOS software update plist files.
-macosx_install_history | Parser for MacOS installation history plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
 safari_downloads | Parser for Safari Downloads plist files.
