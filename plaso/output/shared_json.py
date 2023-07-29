@@ -2,6 +2,7 @@
 """Shared functionality for JSON based output modules."""
 
 import abc
+import base64
 
 from acstore.containers import interface as containers_interface
 
@@ -42,12 +43,22 @@ class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       list[dict[str, str]]: values field.
     """
-    values = event_data.values
-    if isinstance(values, list) and event_data.data_type in (
+    if isinstance(event_data.values, list) and event_data.data_type in (
         'windows:registry:key_value', 'windows:registry:service'):
-      values = [
-          {'data': data, 'data_type': data_type, 'name': name}
-          for name, data_type, data in sorted(values)]
+      values = []
+      for name, data_type, data in sorted(event_data.values):
+        if isinstance(data, bytes):
+          byte_stream = base64.urlsafe_b64encode(data)
+          data = {
+            '__encoding__': 'base64url',
+            '__type__': 'bytes',
+            'stream': byte_stream.decode('ascii')}
+
+        value_dict = {'data': data, 'data_type': data_type, 'name': name}
+        values.append(value_dict)
+
+    else:
+      values = event_data.values
 
     return values
 
