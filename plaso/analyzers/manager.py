@@ -21,8 +21,8 @@ class AnalyzersManager(object):
     """
     analyzer_name = analyzer_class.NAME.lower()
     if analyzer_name not in cls._analyzer_classes:
-      raise KeyError('analyzer class not set for name: {0:s}'.format(
-          analyzer_class.NAME))
+      raise KeyError(
+          f'analyzer class not set for name: {analyzer_class.NAME:s}')
 
     del cls._analyzer_classes[analyzer_name]
 
@@ -58,8 +58,7 @@ class AnalyzersManager(object):
     """
     analyzer_name = analyzer_name.lower()
     if analyzer_name not in cls._analyzer_classes:
-      raise KeyError(
-          'analyzer class not set for name: {0:s}.'.format(analyzer_name))
+      raise KeyError(f'analyzer class not set for name: {analyzer_name:s}.')
 
     analyzer_class = cls._analyzer_classes[analyzer_name]
     return analyzer_class()
@@ -117,7 +116,7 @@ class AnalyzersManager(object):
     """
     analyzer_name = analyzer_class.NAME.lower()
     if analyzer_name in cls._analyzer_classes:
-      raise KeyError('analyzer class already set for name: {0:s}.'.format(
-          analyzer_class.NAME))
+      raise KeyError(
+          f'analyzer class already set for name: {analyzer_class.NAME:s}.')
 
     cls._analyzer_classes[analyzer_name] = analyzer_class
