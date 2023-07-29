@@ -97,8 +97,6 @@ class ExtractionTool(
     self._preferred_year = None
     self._presets_file = None
     self._presets_manager = parsers_presets.ParserPresetsManager()
-    # Kept for backwards compatibility.
-    self._process_archives = False
     self._process_compressed_streams = True
     self._process_memory_limit = None
     self._queue_size = self._DEFAULT_QUEUE_SIZE
@@ -312,13 +310,6 @@ class ExtractionTool(
     """
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['codepage', 'language'])
-
-    if self._process_archives:
-      self._archive_types_string = 'tar,zip'
-
-      self._PrintUserWarning(
-          'The --process_archives option is deprecated use --archives=tar,zip '
-          'instead.')
 
     # TODO: add preferred encoding
 
