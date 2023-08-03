@@ -62,7 +62,7 @@ class SystemdJournalParser(
   _OBJECT_TYPE_ENTRY_ARRAY = 6
   _OBJECT_TYPE_TAG = 7
 
-  _SUPPORTED_FILE_HEADER_SIZES = frozenset([208, 224, 240])
+  _SUPPORTED_FILE_HEADER_SIZES = frozenset([208, 224, 240, 256])
 
   def __init__(self):
     """Initializes a parser."""
