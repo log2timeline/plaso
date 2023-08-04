@@ -89,18 +89,23 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Returns:
       ParserMediator: parser mediator.
     """
-    mediator = parsers_mediator.ParserMediator(
+    parser_mediator = parsers_mediator.ParserMediator(
         registry_find_specs=self._registry_find_specs,
         resolver_context=resolver_context,
         system_configurations=system_configurations)
 
-    mediator.SetExtractWinEvtResources(
+    parser_mediator.SetExtractWinEvtResources(
         processing_configuration.extraction.extract_winevt_resources)
-    mediator.SetPreferredCodepage(processing_configuration.preferred_codepage)
-    mediator.SetPreferredLanguage(processing_configuration.preferred_language)
-    mediator.SetTemporaryDirectory(processing_configuration.temporary_directory)
+    parser_mediator.SetExtractWinRegBinaryValues(
+        processing_configuration.extraction.extract_winreg_binary)
+    parser_mediator.SetPreferredCodepage(
+        processing_configuration.preferred_codepage)
+    parser_mediator.SetPreferredLanguage(
+        processing_configuration.preferred_language)
+    parser_mediator.SetTemporaryDirectory(
+        processing_configuration.temporary_directory)
 
-    return mediator
+    return parser_mediator
 
   def _GetStatus(self):
     """Retrieves status information.

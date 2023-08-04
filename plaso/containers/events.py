@@ -27,10 +27,9 @@ def CalculateEventValuesHash(event_data, event_data_stream):
   attributes = ['data_type: {0:s}'.format(event_data.data_type)]
 
   for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-    # Note that parser is kept for backwards compatibility.
     if attribute_value is None or attribute_name in (
         '_event_data_stream_identifier', '_event_values_hash', '_parser_chain',
-        'data_type', 'parser'):
+        'data_type'):
       continue
 
     # Ignore date and time values.
@@ -112,22 +111,6 @@ class EventData(interface.AttributeContainer):
     self._parser_chain = None
 
     self.data_type = data_type
-
-  # Setter and getter for backwards compatibility of older schema.
-
-  @property
-  def parser(self):
-    """str: string identifying the parser that produced the event data."""
-    return self._parser_chain
-
-  @parser.setter
-  def parser(self, parser):
-    """Sets the the parser chain.
-
-    Args:
-      parser (str): string identifying the parser that produced the event data.
-    """
-    self._parser_chain = parser
 
   def GetAttributeValuesString(self):
     """Retrieves a comparable string of the attribute values.

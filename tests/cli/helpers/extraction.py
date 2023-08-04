@@ -18,21 +18,19 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--preferred_year YEAR] [--process_archives]
+usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
                      [--skip_compressed_streams]
 
 Test argument parser.
 
 {0:s}:
+  --extract_winreg_binary, --extract-winreg-binary
+                        Extract binary Windows Registry values. WARNING: This
+                        can make processing significantly slower.
   --preferred_year YEAR, --preferred-year YEAR
                         When a format\'s timestamp does not include a year,
                         e.g. syslog, use this as the initial year instead of
                         attempting auto-detection.
-  --process_archives, --process-archives
-                        Process file entries embedded within archive files,
-                        such as archive.tar and archive.zip. This can make
-                        processing significantly slower. WARNING: this option
-                        is deprecated use --archives=tar,zip instead.
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.
@@ -58,7 +56,6 @@ Test argument parser.
     extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
 
     self.assertIsNone(test_tool._preferred_year)
-    self.assertFalse(test_tool._process_archives)
     self.assertTrue(test_tool._process_compressed_streams)
 
     with self.assertRaises(errors.BadConfigObject):

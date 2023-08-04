@@ -1089,10 +1089,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     # TODO: get environment_variables per system_configuration
     environment_variables = self.knowledge_base.GetEnvironmentVariables()
+    user_accounts = list(storage_writer.GetAttributeContainers('user_account'))
 
     try:
       self.BuildCollectionFilters(
-          environment_variables,
+          environment_variables, user_accounts,
           artifact_filter_names=processing_configuration.artifact_filters,
           filter_file_path=processing_configuration.filter_file)
     except errors.InvalidFilter as exception:

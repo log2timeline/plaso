@@ -39,7 +39,7 @@ class EntropyHasher(interface.BaseHasher):
       byte_probability = byte_frequency / self._file_length
       if byte_probability:
         entropy += - byte_probability * math.log(byte_probability, 2)
-    return '{0:.6f}'.format(entropy)
+    return f'{entropy:.6f}'
 
   def Update(self, data):
     """Updates the state of the entropy calculator with a new block of data.

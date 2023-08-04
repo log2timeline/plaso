@@ -7,7 +7,13 @@ import unittest
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
+from plaso.containers import events
 from plaso.engine import artifact_filters
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import winreg_parser
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
@@ -162,6 +168,46 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 3535)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+  def testParseSystemWithBinaryValues(self):
+    """Tests the Parse function on a SYSTEM file with binary values."""
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+
+    parser = winreg_parser.WinRegistryParser()
+    parser.EnablePlugins(parser.ALL_PLUGINS)
+
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    parser_mediator.SetFileEntry(file_entry)
+
+    parser_mediator.SetExtractWinRegBinaryValues(True)
+
+    event_data_stream = events.EventDataStream()
+    event_data_stream.path_spec = file_entry.path_spec
+    parser_mediator.ProduceEventDataStream(event_data_stream)
+
+    file_object = file_entry.GetFileObject()
+    parser.Parse(parser_mediator, file_object)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 31432)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

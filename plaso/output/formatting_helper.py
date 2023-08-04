@@ -343,6 +343,22 @@ class FieldFormattingHelper(object):
 
     return message_formatter.GetMessageShort(event_values)
 
+  def _FormatParser(
+      self, output_mediator, event, event_data, event_data_stream):
+    """Formats a parser field.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      str: parser field.
+    """
+    return getattr(event_data, '_parser_chain', None) or '-'
+
   def _FormatSource(
       self, output_mediator, event, event_data, event_data_stream):
     """Formats a source field.
@@ -539,11 +555,7 @@ class FieldFormattingHelper(object):
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
     display_name = getattr(event_data, 'display_name', None) or 'N/A'
-
-    parser_chain = getattr(event_data, '_parser_chain', None)
-    if not parser_chain:
-      # Note that parser is kept for backwards compatibility.
-      parser_chain = getattr(event_data, 'parser', None) or 'N/A'
+    parser_chain = getattr(event_data, '_parser_chain', None) or 'N/A'
 
     error_message = (
         'Event: {0!s} description: {1:s} data type: {2:s} display name: {3:s} '

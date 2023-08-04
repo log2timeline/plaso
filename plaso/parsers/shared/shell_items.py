@@ -7,12 +7,16 @@ from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
 from plaso.containers import windows_events
 from plaso.helpers.windows import shell_folders
+from plaso.lib import definitions
 
 
 class ShellItemsParser(object):
   """Parses for Windows NT shell items."""
 
   NAME = 'shell_items'
+
+  _PATH_ESCAPE_CHARACTERS = {'\\': '\\\\'}
+  _PATH_ESCAPE_CHARACTERS.update(definitions.NON_PRINTABLE_CHARACTERS)
 
   def __init__(self, origin):
     """Initializes the parser.
@@ -22,6 +26,7 @@ class ShellItemsParser(object):
     """
     super(ShellItemsParser, self).__init__()
     self._origin = origin
+    self._path_escape_characters = str.maketrans(self._PATH_ESCAPE_CHARACTERS)
     self._path_segments = []
 
   def _GetDateTime(self, fat_date_time):
@@ -37,6 +42,20 @@ class ShellItemsParser(object):
       return None
 
     return dfdatetime_fat_date_time.FATDateTime(fat_date_time=fat_date_time)
+
+  def _GetSanitizedPathString(self, path):
+    """Retrieves a sanitize path string.
+
+    Args:
+      path (str): path.
+
+    Returns:
+      str: sanitized path string.
+    """
+    if not path:
+      return None
+
+    return path.translate(self._path_escape_characters)
 
   def _ParseShellItem(self, parser_mediator, shell_item):
     """Parses a shell item.
@@ -54,7 +73,7 @@ class ShellItemsParser(object):
       event_data = windows_events.WindowsShellItemFileEntryEventData()
       event_data.modification_time = self._GetDateTime(
           shell_item.get_modification_time_as_integer())
-      event_data.name = shell_item.name
+      event_data.name = self._GetSanitizedPathString(shell_item.name)
       event_data.origin = self._origin
       event_data.shell_item_path = self.CopyToPath()
 
@@ -72,7 +91,8 @@ class ShellItemsParser(object):
               extension_block.get_creation_time_as_integer())
           event_data.file_reference = file_reference
           event_data.localized_name = extension_block.localized_name
-          event_data.long_name = extension_block.long_name
+          event_data.long_name = self._GetSanitizedPathString(
+              extension_block.long_name)
 
           # TODO: change to generate an event_data for each extension block.
           if (event_data.access_time or event_data.creation_time or
@@ -109,7 +129,7 @@ class ShellItemsParser(object):
 
     elif isinstance(shell_item, pyfwsi.volume):
       if shell_item.name:
-        path_segment = shell_item.name
+        path_segment = self._GetSanitizedPathString(shell_item.name)
       elif shell_item.identifier:
         path_segment = '{{{0:s}}}'.format(shell_item.identifier)
 
@@ -117,12 +137,12 @@ class ShellItemsParser(object):
       long_name = ''
       for extension_block in shell_item.extension_blocks:
         if isinstance(extension_block, pyfwsi.file_entry_extension):
-          long_name = extension_block.long_name
+          long_name = self._GetSanitizedPathString(extension_block.long_name)
 
       if long_name:
         path_segment = long_name
       elif shell_item.name:
-        path_segment = shell_item.name
+        path_segment = self._GetSanitizedPathString(shell_item.name)
 
     elif isinstance(shell_item, pyfwsi.network_location):
       if shell_item.location:
@@ -151,8 +171,8 @@ class ShellItemsParser(object):
     number_of_path_segments -= 1
     for path_segment in self._path_segments[1:]:
       # Remove a trailing \ except for the last path segment.
-      if path_segment.endswith('\\') and number_of_path_segments > 1:
-        path_segment = path_segment[:-1]
+      if path_segment.endswith('\\\\') and number_of_path_segments > 1:
+        path_segment = path_segment[:-2]
 
       if ((path_segment.startswith('<') and path_segment.endswith('>')) or
           len(strings) == 1):
@@ -160,7 +180,7 @@ class ShellItemsParser(object):
       elif path_segment.startswith('\\'):
         strings.append('{0:s}'.format(path_segment))
       else:
-        strings.append('\\{0:s}'.format(path_segment))
+        strings.append('\\\\{0:s}'.format(path_segment))
       number_of_path_segments -= 1
 
     return ''.join(strings)

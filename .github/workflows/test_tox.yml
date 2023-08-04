@@ -58,8 +58,8 @@ jobs:
     strategy:
       matrix:
         include:
-        - python-version: '3.8'
-          toxenv: 'py38,coverage'
+        - python-version: '3.11'
+          toxenv: 'py311,coverage'
     container:
       image: ubuntu:22.04
     steps:

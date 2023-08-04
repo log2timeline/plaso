@@ -24,22 +24,19 @@ from tests.analysis import test_lib
 class BloomTest(test_lib.AnalysisPluginTestCase):
   """Tests for the bloom database analysis plugin."""
 
-  _EVENT_1_HASH = (
-      '1e5f96de17b84a94f69e52a24b2942c4eca11bc9')
-
-  _EVENT_2_HASH = (
-      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  _EVENT_1_HASH = '1e5f96de17b84a94f69e52a24b2942c4eca11bc9'
+  _EVENT_2_HASH = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 
   _TEST_EVENTS = [
-      {'data_type': 'fs:stat',
-       'parser': 'filestat',
+      {'_parser_chain': 'filestat',
+       'data_type': 'fs:stat',
        'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\know.exe'),
        'sha256_hash': _EVENT_1_HASH,
        'timestamp': '2015-01-01 17:00:00',
        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
-      {'data_type': 'fs:stat:ntfs',
-       'parser': 'filestat',
+      {'_parser_chain': 'filestat',
+       'data_type': 'fs:stat:ntfs',
        'path_spec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\unknown.exe'),
        'sha256_hash': _EVENT_2_HASH,

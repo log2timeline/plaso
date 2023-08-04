@@ -26,7 +26,7 @@ class SHA1Hasher(interface.BaseHasher):
       str: string hash digest calculated over the data blocks passed to
           Update(). The string consists of printable Unicode characters.
     """
-    return '{0:s}'.format(self._sha1_context.hexdigest())
+    return self._sha1_context.hexdigest()
 
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.

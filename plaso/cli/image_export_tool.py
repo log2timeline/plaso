@@ -25,6 +25,7 @@ from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.lib import specification
+from plaso.storage.fake import writer as fake_writer
 
 
 class ImageExportTool(storage_media_tool.StorageMediaTool):
@@ -317,6 +318,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     extraction_engine.BuildArtifactsRegistry(
         artifact_definitions_path, custom_artifacts_path)
 
+    storage_writer = fake_writer.FakeStorageWriter()
+    storage_writer.Open()
+
     # If the source is a directory or a storage media image run pre-processing.
 
     system_configurations = []
@@ -327,7 +331,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         # Setting storage writer to None here since we do not want to store
         # preprocessing information.
         system_configurations = extraction_engine.PreprocessSource(
-            self._file_system_path_specs, None,
+            self._file_system_path_specs, storage_writer,
             resolver_context=self._resolver_context)
 
         logger.debug('Preprocessing done.')
@@ -340,10 +344,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
+    user_accounts = list(storage_writer.GetAttributeContainers('user_account'))
 
     try:
       extraction_engine.BuildCollectionFilters(
-          environment_variables, artifact_filter_names=artifact_filters,
+          environment_variables, user_accounts,
+          artifact_filter_names=artifact_filters,
           filter_file_path=filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(

@@ -73,10 +73,10 @@ Some event related terminology used in the context of Plaso:
 
 Events in Plaso consist of multiple parts:
 
-* [event data](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py#L10)
-* [event data stream](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py#L90)
-* [event](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py#L118)
-* [event tag](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py#L185)
+* [event data](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py)
+* [event data stream](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py)
+* [event](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py)
+* [event tag](https://github.com/log2timeline/plaso/blob/main/plaso/containers/events.py)
 
 ### Event (object)
 

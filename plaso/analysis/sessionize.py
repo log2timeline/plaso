@@ -39,7 +39,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
     self._session_end_timestamp = (
         event.timestamp + self._maximum_pause_microseconds)
 
-    label = 'session_{0:d}'.format(self._current_session_number)
+    label = f'session_{self._current_session_number:d}'
 
     event_tag = self._CreateEventTag(event, [label])
     analysis_mediator.ProduceEventTag(event_tag)

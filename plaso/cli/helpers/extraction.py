@@ -25,19 +25,17 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
+        '--extract_winreg_binary', '--extract-winreg-binary',
+        dest='extract_winreg_binary', action='store_true', default=False, help=(
+            'Extract binary Windows Registry values. WARNING: This can make '
+            'processing significantly slower.'))
+
+    argument_group.add_argument(
         '--preferred_year', '--preferred-year', dest='preferred_year',
         type=int, action='store', default=None, metavar='YEAR', help=(
             'When a format\'s timestamp does not include a year, e.g. '
             'syslog, use this as the initial year instead of attempting '
             'auto-detection.'))
-
-    argument_group.add_argument(
-        '--process_archives', '--process-archives', dest='process_archives',
-        action='store_true', default=False, help=(
-            'Process file entries embedded within archive files, such as '
-            'archive.tar and archive.zip. This can make processing '
-            'significantly slower. WARNING: this option is deprecated use '
-            '--archives=tar,zip instead.'))
 
     argument_group.add_argument(
         '--skip_compressed_streams', '--skip-compressed-streams',
@@ -64,15 +62,15 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
 
     preferred_year = cls._ParseNumericOption(options, 'preferred_year')
 
-    process_archives = getattr(options, 'process_archives', False)
+    extract_winreg_binary = getattr(options, 'extract_winreg_binary', False)
     process_compressed_streams = getattr(
         options, 'process_compressed_streams', True)
 
+    setattr(configuration_object, '_extract_winreg_binary',
+            extract_winreg_binary)
     setattr(configuration_object, '_preferred_year', preferred_year)
-    setattr(configuration_object, '_process_archives', process_archives)
-    setattr(
-        configuration_object, '_process_compressed_streams',
-        process_compressed_streams)
+    setattr(configuration_object, '_process_compressed_streams',
+            process_compressed_streams)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ExtractionArgumentsHelper)

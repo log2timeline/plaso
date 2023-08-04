@@ -116,14 +116,12 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       response.raise_for_status()
 
     except requests.ConnectionError as exception:
-      error_string = 'Unable to connect to {0:s} with error: {1!s}'.format(
-          url, exception)
-      raise errors.ConnectionError(error_string)
+      raise errors.ConnectionError(
+          f'Unable to connect to: {url:s} with error: {exception!s}')
 
     except requests.HTTPError as exception:
-      error_string = '{0:s} returned a HTTP error: {1!s}'.format(
-          url, exception)
-      raise errors.ConnectionError(error_string)
+      raise errors.ConnectionError(
+          f'Connect to: {url:s} returned a HTTP error: {exception!s}')
 
     return response.json()
 
@@ -147,8 +145,8 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     except KeyError:
       data_stream_identifiers = []
       logger.error((
-          'unable to retrieve data streams for digest hash: {0:s}').format(
-              hash_analysis.subject_hash))
+          f'unable to retrieve data streams for digest hash: '
+          f'{hash_analysis.subject_hash:s}'))
 
     for data_stream_identifier in data_stream_identifiers:
       event_identifiers = self._event_identifiers_by_data_stream.pop(
@@ -166,11 +164,11 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
         try:
           event_tag.AddLabels(labels)
         except (TypeError, ValueError):
-          error_label = 'error_{0:s}'.format(self.NAME)
+          error_label = f'error_{self.NAME:s}'
+          labels_string = ', '.join(labels)
           logger.error((
-              'unable to add labels: {0!s} for digest hash: {1:s} defaulting '
-              'to: {2:s}').format(
-                  labels, hash_analysis.subject_hash, error_label))
+              f'unable to add labels: {labels_string!s} for digest hash: '
+              f'{hash_analysis.subject_hash:s} defaulting to: {error_label:s}'))
           labels = [error_label]
           event_tag.AddLabels(labels)
 
@@ -217,15 +215,15 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     if data_stream_identifier not in self._data_stream_identifiers:
       self._data_stream_identifiers.add(data_stream_identifier)
 
-      lookup_hash = '{0:s}_hash'.format(self._lookup_hash)
+      lookup_hash = f'{self._lookup_hash:s}_hash'
       lookup_hash = getattr(event_data_stream, lookup_hash, None)
       if not lookup_hash:
         path_specification = getattr(event_data_stream, 'path_spec', None)
         display_name = analysis_mediator.GetDisplayNameForPathSpec(
             path_specification)
         logger.warning((
-            'Lookup hash attribute: {0:s}_hash missing from event data stream: '
-            '{1:s}.').format(self._lookup_hash, display_name))
+            f'Lookup hash attribute: {self._lookup_hash:s}_hash missing from '
+            f'event data stream: {display_name:s}.'))
 
       else:
         self._data_streams_by_hash[lookup_hash].add(data_stream_identifier)
@@ -253,6 +251,6 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       ValueError: if the lookup hash is not supported.
     """
     if lookup_hash not in self.SUPPORTED_HASHES:
-      raise ValueError('Unsupported lookup hash: {0!s}'.format(lookup_hash))
+      raise ValueError(f'Unsupported lookup hash: {lookup_hash!s}')
 
     self._lookup_hash = lookup_hash

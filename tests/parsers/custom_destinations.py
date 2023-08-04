@@ -34,20 +34,20 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         'access_time': '2009-07-13T23:55:56.2481035+00:00',
         'command_line_arguments': (
-            '{DE3895CB-077B-4C38-B6E3-F3DE1E0D84FC} %systemroot%\\system32\\'
-            'control.exe /name Microsoft.Display'),
+            '{DE3895CB-077B-4C38-B6E3-F3DE1E0D84FC} %systemroot%\\\\'
+            'system32\\\\control.exe /name Microsoft.Display'),
         'creation_time': '2009-07-13T23:55:56.2481035+00:00',
         'data_type': 'windows:lnk:link',
-        'description': '@%systemroot%\\system32\\oobefldr.dll,-1262',
+        'description': '@%systemroot%\\\\system32\\\\oobefldr.dll,-1262',
         'drive_serial_number': 0x24ba718b,
         'drive_type': 3,
-        'env_var_location': '%SystemRoot%\\system32\\GettingStarted.exe',
+        'env_var_location': '%SystemRoot%\\\\system32\\\\GettingStarted.exe',
         'file_attribute_flags': 0x00000020,
         'file_size': 11776,
-        'icon_location': '%systemroot%\\system32\\display.dll',
+        'icon_location': '%systemroot%\\\\system32\\\\display.dll',
         'link_target': (
-            '<My Computer> C:\\Windows\\System32\\GettingStarted.exe'),
-        'local_path': 'C:\\Windows\\System32\\GettingStarted.exe',
+            '<My Computer> C:\\\\Windows\\\\System32\\\\GettingStarted.exe'),
+        'local_path': 'C:\\\\Windows\\\\System32\\\\GettingStarted.exe',
         'modification_time': '2009-07-14T01:39:11.3880000+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 51)
@@ -74,7 +74,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'modification_time': '2010-11-10T07:41:04+00:00',
         'name': 'System32',
         'origin': '5afe4de1b92fc382.customDestinations-ms',
-        'shell_item_path': '<My Computer> C:\\Windows\\System32'}
+        'shell_item_path': '<My Computer> C:\\\\Windows\\\\System32'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 49)
     self.CheckEventData(event_data, expected_event_values)

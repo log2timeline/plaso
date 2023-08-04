@@ -88,6 +88,7 @@ class ExtractionTool(
     self._enable_sigsegv_handler = False
     self._expanded_parser_filter_expression = None
     self._extract_winevt_resources = True
+    self._extract_winreg_binary = True
     self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._preferred_codepage = None
@@ -96,8 +97,6 @@ class ExtractionTool(
     self._preferred_year = None
     self._presets_file = None
     self._presets_manager = parsers_presets.ParserPresetsManager()
-    # Kept for backwards compatibility.
-    self._process_archives = False
     self._process_compressed_streams = True
     self._process_memory_limit = None
     self._queue_size = self._DEFAULT_QUEUE_SIZE
@@ -194,6 +193,7 @@ class ExtractionTool(
         self._hasher_file_size_limit)
     configuration.extraction.extract_winevt_resources = (
         self._extract_winevt_resources)
+    configuration.extraction.extract_winreg_binary = self._extract_winreg_binary
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_compressed_streams = (
         self._process_compressed_streams)
@@ -310,13 +310,6 @@ class ExtractionTool(
     """
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['codepage', 'language'])
-
-    if self._process_archives:
-      self._archive_types_string = 'tar,zip'
-
-      self._PrintUserWarning(
-          'The --process_archives option is deprecated use --archives=tar,zip '
-          'instead.')
 
     # TODO: add preferred encoding
 
@@ -502,10 +495,12 @@ class ExtractionTool(
 
     environment_variables = (
         extraction_engine.knowledge_base.GetEnvironmentVariables())
+    user_accounts = list(storage_writer.GetAttributeContainers('user_account'))
 
     try:
       extraction_engine.BuildCollectionFilters(
-          environment_variables, artifact_filter_names=self._artifact_filters,
+          environment_variables, user_accounts,
+          artifact_filter_names=self._artifact_filters,
           filter_file_path=self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(

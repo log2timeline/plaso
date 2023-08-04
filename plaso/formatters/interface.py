@@ -240,14 +240,10 @@ class EventFormatter(object):
       message_string = format_string.format(**event_values)
 
     except KeyError as exception:
-      data_type = event_values.get('data_type', 'N/A')
-      display_name = event_values.get('display_name', 'N/A')
-      event_identifier = event_values.get('uuid', 'N/A')
-
-      parser_chain = event_values.get('_parser_chain', None)
-      if not parser_chain:
-        # Note that parser is kept for backwards compatibility.
-        parser_chain = event_values.get('parser', None) or 'N/A'
+      data_type = event_values.get('data_type', None) or 'N/A'
+      display_name = event_values.get('display_name', None) or 'N/A'
+      event_identifier = event_values.get('uuid', None) or 'N/A'
+      parser_chain = event_values.get('_parser_chain', None) or 'N/A'
 
       error_message = (
           'unable to format string: "{0:s}" missing required event '
@@ -266,14 +262,10 @@ class EventFormatter(object):
       message_string = ' '.join(attribute_values)
 
     except UnicodeDecodeError as exception:
-      data_type = event_values.get('data_type', 'N/A')
-      display_name = event_values.get('display_name', 'N/A')
-      event_identifier = event_values.get('uuid', 'N/A')
-
-      parser_chain = event_values.get('_parser_chain', None)
-      if not parser_chain:
-        # Note that parser is kept for backwards compatibility.
-        parser_chain = event_values.get('parser', None) or 'N/A'
+      data_type = event_values.get('data_type', None) or 'N/A'
+      display_name = event_values.get('display_name', None) or 'N/A'
+      event_identifier = event_values.get('uuid', None) or 'N/A'
+      parser_chain = event_values.get('_parser_chain', None) or 'N/A'
 
       error_message = 'Unicode decode error: {0!s}'.format(exception)
       error_message = (

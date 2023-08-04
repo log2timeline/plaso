@@ -14,7 +14,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import artifacts
 from plaso.containers import sessions
 from plaso.engine import artifact_filters
-from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
 from plaso.engine import path_filters
@@ -170,13 +169,14 @@ class BaseEngine(object):
     self._artifacts_registry = registry
 
   def BuildCollectionFilters(
-      self, environment_variables, artifact_filter_names=None,
+      self, environment_variables, user_accounts, artifact_filter_names=None,
       filter_file_path=None):
     """Builds collection filters from artifacts or filter file if available.
 
     Args:
       environment_variables (list[EnvironmentVariableArtifact]):
           environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
       artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
@@ -195,14 +195,16 @@ class BaseEngine(object):
       filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
           self._artifacts_registry)
       filters_helper.BuildFindSpecs(
-          artifact_filter_names, environment_variables=environment_variables)
+          artifact_filter_names, environment_variables=environment_variables,
+          user_accounts=user_accounts)
 
       # If the user selected Windows Registry artifacts we have to ensure
       # the Windows Registry files are parsed.
       if filters_helper.registry_find_specs:
         filters_helper.BuildFindSpecs(
             self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
-            environment_variables=environment_variables)
+            environment_variables=environment_variables,
+            user_accounts=user_accounts)
 
       if not filters_helper.file_system_find_specs:
         raise errors.InvalidFilter(
@@ -218,13 +220,7 @@ class BaseEngine(object):
           'building find specification based on filter file: {0:s}'.format(
               filter_file_path))
 
-      filter_file_path_lower = filter_file_path.lower()
-      if (filter_file_path_lower.endswith('.yaml') or
-          filter_file_path_lower.endswith('.yml')):
-        filter_file_object = yaml_filter_file.YAMLFilterFile()
-      else:
-        filter_file_object = filter_file.FilterFile()
-
+      filter_file_object = yaml_filter_file.YAMLFilterFile()
       filter_file_path_filters = filter_file_object.ReadFromFile(
           filter_file_path)
 
@@ -386,6 +382,8 @@ class BaseEngine(object):
       # TODO: kept for backwards compatibility.
       self.knowledge_base.ReadSystemConfigurationArtifact(
           system_configurations[0])
+      for environment_variable in system_configuration.environment_variables:
+        self.knowledge_base.AddEnvironmentVariable(environment_variable)
 
     return system_configurations
 

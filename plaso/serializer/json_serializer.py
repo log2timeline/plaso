@@ -73,6 +73,7 @@ class JSONAttributeContainerSerializer(object):
     encoded_value = binascii.b2a_qp(bytes_value)
     encoded_value = codecs.decode(encoded_value, 'ascii')
     return {
+        '__encoding__': 'base16',
         '__type__': 'bytes',
         'stream': '{0:s}'.format(encoded_value)}
 
@@ -175,8 +176,9 @@ class JSONAttributeContainerSerializer(object):
 
     The dictionary of the JSON serialized objects consists of:
     {
+        '__encoding__': encoding of stream, typically base16.
         '__type__': 'bytes'
-        'stream': an encoded bytes values.
+        'stream': encoded bytes value.
     }
 
     Args:
@@ -184,7 +186,15 @@ class JSONAttributeContainerSerializer(object):
 
     Returns:
       bytes: a bytes value.
+
+    Raises:
+      ValueError: if the encoding is not supported.
     """
+    encoding = json_dict.get('__encoding__', None) or 'base16'
+    if encoding != 'base16':
+      raise ValueError(
+          'Unsupported byte stream encoding: {0:s}'.format(encoding))
+
     return binascii.a2b_qp(json_dict['stream'])
 
   @classmethod

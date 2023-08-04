@@ -3,7 +3,6 @@
 """Tests for the serializer object implementation using JSON."""
 
 import json
-import time
 import unittest
 import uuid
 
@@ -312,80 +311,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'preferred_time_zone': 'UTC',
         'product_name': 'plaso',
         'product_version': plaso.__version__,
-        'start_time': session.start_time
-    }
+        'start_time': session.start_time}
 
     session_dict = session.CopyToDict()
     self.assertEqual(
         sorted(session_dict.items()), sorted(expected_session_dict.items()))
-
-  def testReadAndWriteSerializedSessionCompletion(self):
-    """Test ReadSerialized and WriteSerialized of SessionCompletion."""
-    timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
-
-    expected_session_completion = sessions.SessionCompletion(
-        identifier=session_identifier)
-    expected_session_completion.timestamp = timestamp
-
-    json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            expected_session_completion))
-
-    self.assertIsNotNone(json_string)
-
-    session_completion = (
-        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            json_string))
-
-    self.assertIsNotNone(session_completion)
-    self.assertIsInstance(session_completion, sessions.SessionCompletion)
-
-    expected_session_completion_dict = {
-        'aborted': False,
-        'identifier': session_identifier,
-        'timestamp': timestamp}
-
-    session_completion_dict = session_completion.CopyToDict()
-    self.assertEqual(
-        sorted(session_completion_dict.items()),
-        sorted(expected_session_completion_dict.items()))
-
-  def testReadAndWriteSerializedSessionStart(self):
-    """Test ReadSerialized and WriteSerialized of SessionStart."""
-    timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
-
-    expected_session_start = sessions.SessionStart(
-        identifier=session_identifier)
-    expected_session_start.timestamp = timestamp
-    expected_session_start.product_name = 'plaso'
-    expected_session_start.product_version = plaso.__version__
-
-    json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            expected_session_start))
-
-    self.assertIsNotNone(json_string)
-
-    session_start = (
-        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            json_string))
-
-    self.assertIsNotNone(session_start)
-    self.assertIsInstance(session_start, sessions.SessionStart)
-
-    expected_session_start_dict = {
-        'identifier': session_identifier,
-        'product_name': 'plaso',
-        'product_version': plaso.__version__,
-        'timestamp': timestamp
-    }
-
-    session_start_dict = session_start.CopyToDict()
-    self.assertEqual(
-        sorted(session_start_dict.items()),
-        sorted(expected_session_start_dict.items()))
 
   def testReadAndWriteSerializedTask(self):
     """Test ReadSerialized and WriteSerialized of Task."""

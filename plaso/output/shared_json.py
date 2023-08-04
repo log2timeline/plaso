@@ -2,6 +2,7 @@
 """Shared functionality for JSON based output modules."""
 
 import abc
+import base64
 
 from acstore.containers import interface as containers_interface
 
@@ -42,12 +43,22 @@ class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     Returns:
       list[dict[str, str]]: values field.
     """
-    values = event_data.values
-    if isinstance(values, list) and event_data.data_type in (
+    if isinstance(event_data.values, list) and event_data.data_type in (
         'windows:registry:key_value', 'windows:registry:service'):
-      values = [
-          {'data': data, 'data_type': data_type, 'name': name}
-          for name, data_type, data in sorted(values)]
+      values = []
+      for name, data_type, data in sorted(event_data.values):
+        if isinstance(data, bytes):
+          byte_stream = base64.urlsafe_b64encode(data)
+          data = {
+            '__encoding__': 'base64url',
+            '__type__': 'bytes',
+            'stream': byte_stream.decode('ascii')}
+
+        value_dict = {'data': data, 'data_type': data_type, 'name': name}
+        values.append(value_dict)
+
+    else:
+      values = event_data.values
 
     return values
 
@@ -129,13 +140,14 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
                        dfdatetime_interface.DateTimeValues)):
           continue
 
+        field_value = self._field_formatting_helper.GetFormattedField(
+            output_mediator, attribute_name, event, event_data,
+            event_data_stream, event_tag)
+
         # Output _parser_chain as parser for backwards compatibility.
         if attribute_name == '_parser_chain':
           attribute_name = 'parser'
 
-        field_value = self._field_formatting_helper.GetFormattedField(
-            output_mediator, attribute_name, event, event_data,
-            event_data_stream, event_tag)
         field_values[attribute_name] = field_value
 
     if event_data_stream:

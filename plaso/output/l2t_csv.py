@@ -87,12 +87,13 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'values': '_FormatValues',
       'version': '_FormatVersion'}
 
-  # Note that list is kept as-is for backwards compatibility.
+  # Note that L2T CSV defines certain fields as part of the format.
   _RESERVED_VARIABLE_NAMES = frozenset([
       '_event_values_hash',
       '_parser_chain',
       'body',
       'data_type',
+      'date_time',
       'display_name',
       'filename',
       'hostname',
@@ -101,8 +102,7 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       'mapped_files',
       'metadata',
       'offset',
-      'parser',
-      'pathspec',
+      'path_spec',
       'query',
       'source_long',
       'source_short',
@@ -232,27 +232,6 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     extra_attributes = '; '.join(sorted(extra_attributes))
 
     return extra_attributes.replace('\n', '-').replace('\r', '')
-
-  def _FormatParser(
-      self, output_mediator, event, event_data, event_data_stream):
-    """Formats a parser field.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-
-    Returns:
-      str: parser field.
-    """
-    parser_chain = getattr(event_data, '_parser_chain', None)
-    if not parser_chain:
-      # Note that parser is kept for backwards compatibility.
-      parser_chain = getattr(event_data, 'parser', None) or '-'
-
-    return parser_chain
 
   def _FormatType(self, output_mediator, event, event_data, event_data_stream):
     """Formats a type field.

@@ -26,7 +26,7 @@ class MD5Hasher(interface.BaseHasher):
       str: string hash digest calculated over the data blocks passed to
           Update(). The string consists of printable Unicode characters.
     """
-    return '{0:s}'.format(self._md5_context.hexdigest())
+    return self._md5_context.hexdigest()
 
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
