@@ -35,23 +35,23 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
         '--bloom-file', '--bloom_file', dest='bloom_file', type=str,
         action='store', default=cls._DEFAULT_BLOOM_DATABASE_PATH,
         metavar='PATH', help=(
-            'Path to the bloom database file, the default is: {0:s}').format(
-                cls._DEFAULT_BLOOM_DATABASE_PATH))
+            f'Path to the bloom database file, the default is: '
+            f'{cls._DEFAULT_BLOOM_DATABASE_PATH:s}'))
 
+    supported_hashes = ', '.join(cls._SUPPORTED_HASHES)
     argument_group.add_argument(
         '--bloom-hash', '--bloom_hash', dest='bloom_hash', type=str,
         action='store', choices=cls._SUPPORTED_HASHES,
         default=cls._DEFAULT_HASH, metavar='HASH', help=(
-            'Type of hash to use to query the bloom database file (note that '
-            'hash values must be stored in upper case), the default is: {0:s}. '
-            'Supported options: {1:s}.'.format(
-                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
+            f'Type of hash to use to query the bloom database file (note that '
+            f'hash values must be stored in upper case), the default is: '
+            f'{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}.'))
 
     argument_group.add_argument(
         '--bloom-label', '--bloom_label', dest='bloom_label', type=str,
         action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
-            'Label to apply to events, the default is: {0:s}.').format(
-                cls._DEFAULT_LABEL))
+            f'Label to apply to events, the default is: '
+            f'{cls._DEFAULT_LABEL:s}.'))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
@@ -84,7 +84,7 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
     analysis_plugin.SetBloomDatabasePath(bloom_file)
     if not analysis_plugin.TestLoading():
       raise errors.BadConfigOption(
-          'Unable to load bloom database: {0:s}'.format(bloom_file))
+          f'Unable to load bloom database: {bloom_file:s}')
 
 
 manager.ArgumentHelperManager.RegisterHelper(BloomAnalysisArgumentsHelper)

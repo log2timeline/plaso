@@ -31,32 +31,32 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): group
           to append arguments to.
     """
+    supported_hashes = ', '.join(cls._SUPPORTED_HASHES)
     argument_group.add_argument(
         '--nsrlsvr-hash', '--nsrlsvr_hash', dest='nsrlsvr_hash', type=str,
         action='store', choices=cls._SUPPORTED_HASHES,
         default=cls._DEFAULT_HASH, metavar='HASH', help=(
-            'Type of hash to use to query nsrlsvr instance, the default is: '
-            '{0:s}. Supported options: {1:s}'.format(
-                cls._DEFAULT_HASH, ', '.join(cls._SUPPORTED_HASHES))))
+            f'Type of hash to use to query nsrlsvr instance, the default is: '
+            f'{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}'))
 
     argument_group.add_argument(
         '--nsrlsvr-host', '--nsrlsvr_host', dest='nsrlsvr_host', type=str,
         action='store', default=cls._DEFAULT_HOST, metavar='HOST',
         help=(
-            'Hostname or IP address of the nsrlsvr instance to query, the '
-            'default is: {0:s}').format(cls._DEFAULT_HOST))
+            f'Hostname or IP address of the nsrlsvr instance to query, the '
+            f'default is: {cls._DEFAULT_HOST:s}'))
 
     argument_group.add_argument(
         '--nsrlsvr-label', '--nsrlsvr_label', dest='nsrlsvr_label', type=str,
         action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
-            'Label to apply to events, the default is: {0:s}.').format(
-                cls._DEFAULT_LABEL))
+            f'Label to apply to events, the default is: '
+            f'{cls._DEFAULT_LABEL:s}.'))
 
     argument_group.add_argument(
         '--nsrlsvr-port', '--nsrlsvr_port', dest='nsrlsvr_port', type=int,
         action='store', default=cls._DEFAULT_PORT, metavar='PORT', help=(
-            'Port number of the nsrlsvr instance to query, the default is: '
-            '{0:d}.').format(cls._DEFAULT_PORT))
+            f'Port number of the nsrlsvr instance to query, the default is: '
+            f'{cls._DEFAULT_PORT:d}.'))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
@@ -92,7 +92,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     if not analysis_plugin.TestConnection():
       raise errors.BadConfigOption(
-          'Unable to connect to nsrlsvr {0:s}:{1:d}'.format(host, port))
+          f'Unable to connect to nsrlsvr {host:s}:{port:d}')
 
 
 manager.ArgumentHelperManager.RegisterHelper(NsrlsvrAnalysisArgumentsHelper)

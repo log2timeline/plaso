@@ -53,7 +53,7 @@ class TemporaryDirectoryArgumentsHelper(interface.ArgumentsHelper):
     temporary_directory = getattr(options, 'temporary_directory', None)
     if temporary_directory and not os.path.isdir(temporary_directory):
       raise errors.BadConfigOption(
-          'No such temporary directory: {0:s}'.format(temporary_directory))
+          f'No such temporary directory: {temporary_directory:s}')
 
     setattr(configuration_object, '_temporary_directory', temporary_directory)
 

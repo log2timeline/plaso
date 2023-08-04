@@ -58,8 +58,8 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
         '--profiling_sample_rate', '--profiling-sample-rate',
         dest='profiling_sample_rate', action='store', metavar='SAMPLE_RATE',
         default=0, help=(
-            'Profiling sample rate (defaults to a sample every {0:d} '
-            'files).').format(cls.DEFAULT_PROFILING_SAMPLE_RATE))
+            f'Profiling sample rate (defaults to a sample every '
+            f'{cls.DEFAULT_PROFILING_SAMPLE_RATE:d} files).'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -91,12 +91,12 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
       if unsupported_profilers:
         unsupported_profilers = ', '.join(unsupported_profilers)
         raise errors.BadConfigOption(
-            'Unsupported profilers: {0:s}'.format(unsupported_profilers))
+            f'Unsupported profilers: {unsupported_profilers:s}')
 
     profiling_directory = getattr(options, 'profiling_directory', None)
     if profiling_directory and not os.path.isdir(profiling_directory):
       raise errors.BadConfigOption(
-          'No such profiling directory: {0:s}'.format(profiling_directory))
+          f'No such profiling directory: {profiling_directory:s}')
 
     profiling_sample_rate = getattr(options, 'profiling_sample_rate', None)
     if not profiling_sample_rate:
@@ -106,7 +106,7 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
         profiling_sample_rate = int(profiling_sample_rate, 10)
       except (TypeError, ValueError):
         raise errors.BadConfigOption(
-            'Invalid profile sample rate: {0!s}.'.format(profiling_sample_rate))
+            f'Invalid profile sample rate: {profiling_sample_rate!s}.')
 
     setattr(configuration_object, '_profilers', profilers)
     setattr(configuration_object, '_profiling_directory', profiling_directory)

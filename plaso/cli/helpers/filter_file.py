@@ -65,7 +65,7 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
 
     if filter_file and not os.path.isfile(filter_file):
       raise errors.BadConfigOption(
-          'No such collection filter file: {0:s}.'.format(filter_file))
+          f'No such collection filter file: {filter_file:s}')
 
     setattr(configuration_object, '_filter_file', filter_file)
 

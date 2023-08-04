@@ -59,9 +59,9 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
           yara_rules_string = rules_file.read()
 
       except IOError as exception:
-        raise errors.BadConfigOption(
-            'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
-                path, exception))
+        raise errors.BadConfigOption((
+            f'Unable to read Yara rules file: {path:s} with error: '
+            f'{exception!s}'))
 
       try:
         # We try to parse the rules here, to check that the definitions are
@@ -70,9 +70,9 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
         yara.compile(source=yara_rules_string)
 
       except yara.Error as exception:
-        raise errors.BadConfigOption(
-            'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
-                path, exception))
+        raise errors.BadConfigOption((
+            f'Unable to parse Yara rules in: {path:s} with error: '
+            f'{exception!s}'))
 
     setattr(configuration_object, '_yara_rules_string', yara_rules_string)
 

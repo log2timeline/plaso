@@ -95,7 +95,7 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(
           'Unable to determine location of data files.')
 
-    logger.info('Determined data location: {0:s}'.format(data_location))
+    logger.info(f'Determined data location: {data_location:s}')
 
     setattr(configuration_object, '_data_location', data_location)
 

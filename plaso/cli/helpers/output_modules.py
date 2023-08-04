@@ -82,7 +82,7 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
     if output_format != 'list':
       if not output_manager.OutputManager.HasOutputClass(output_format):
         raise errors.BadConfigOption(
-            'Unsupported output format: {0:s}.'.format(output_format))
+            f'Unsupported output format: {output_format:s}.')
 
     setattr(configuration_object, '_output_format', output_format)
     setattr(configuration_object, '_output_filename', output_filename)

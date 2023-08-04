@@ -169,8 +169,7 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     if not mappings_file_path or not os.path.isfile(mappings_file_path):
       raise errors.BadConfigOption(
-          'No such OpenSearch mappings file: {0!s}.'.format(
-              mappings_file_path))
+          f'No such OpenSearch mappings file: {mappings_file_path!s}')
 
     with open(mappings_file_path, 'r', encoding='utf-8') as file_object:
       mappings_json = json.load(file_object)
