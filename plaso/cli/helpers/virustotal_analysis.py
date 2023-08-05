@@ -46,8 +46,8 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
         '--virustotal-hash', '--virustotal_hash', dest='virustotal_hash',
         type=str, action='store', choices=['md5', 'sha1', 'sha256'],
         default=cls._DEFAULT_HASH, metavar='HASH', help=(
-            'Type of hash to query VirusTotal, the default is: {0:s}'.format(
-                cls._DEFAULT_HASH)))
+            f'Type of hash to query VirusTotal, the default is: '
+            f'{cls._DEFAULT_HASH:s}'))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed

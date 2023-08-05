@@ -45,8 +45,8 @@ class ArgumentsHelper(object):
 
     if not isinstance(argument_value, (float, int)):
       raise errors.BadConfigOption((
-          'Unsupported option: {0:s} floating-point or integer type '
-          'required.').format(argument_name))
+          f'Unsupported option: {argument_name:s} floating-point or integer '
+          f'type required.'))
 
     return argument_value
 
@@ -86,13 +86,12 @@ class ArgumentsHelper(object):
         argument_value = argument_value.decode(encoding)
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
-            'Unable to convert option: {0:s} to Unicode with error: '
-            '{1!s}.').format(argument_name, exception))
+            f'Unable to convert option: {argument_name:s} to Unicode with '
+            f'error: {exception!s}'))
 
     elif not isinstance(argument_value, str):
       raise errors.BadConfigOption(
-          'Unsupported option: {0:s} string type required.'.format(
-              argument_name))
+          f'Unsupported option: {argument_name:s} string type required.')
 
     return argument_value
 

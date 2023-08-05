@@ -49,8 +49,7 @@ class ArgumentHelperManager(object):
     """
     helper_name = helper_class.NAME.lower()
     if helper_name not in cls._helper_classes:
-      raise KeyError('Helper class not set for name: {0:s}.'.format(
-          helper_class.NAME))
+      raise KeyError(f'Helper class not set for name: {helper_class.NAME:s}.')
 
     del cls._helper_classes[helper_name]
 
@@ -92,8 +91,8 @@ class ArgumentHelperManager(object):
     """
     helper_name = helper_class.NAME.lower()
     if helper_name in cls._helper_classes:
-      raise KeyError('Helper class already set for name: {0:s}.'.format(
-          helper_class.NAME))
+      raise KeyError(
+          f'Helper class already set for name: {helper_class.NAME:s}.')
 
     cls._helper_classes[helper_name] = helper_class
 

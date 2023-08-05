@@ -77,7 +77,7 @@ class DateFiltersArgumentsHelper(interface.ArgumentsHelper):
       date_filter_pieces = date_filter.split(',')
       if len(date_filter_pieces) != 3:
         raise errors.BadConfigOption(
-            'Badly formed date filter: {0:s}'.format(date_filter))
+            f'Unsupported date filter: {date_filter:s}')
 
       time_value, start_time_string, end_time_string = date_filter_pieces
       time_value = time_value.strip()
@@ -90,7 +90,7 @@ class DateFiltersArgumentsHelper(interface.ArgumentsHelper):
             end_time_string=end_time_string)
       except ValueError:
         raise errors.BadConfigOption(
-            'Badly formed date filter: {0:s}'.format(date_filter))
+            f'Unsupported date date filter: {date_filter:s}')
 
     filter_collection.AddFilter(file_entry_filter)
 

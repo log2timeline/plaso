@@ -60,21 +60,19 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
         tagging_file_path = os.path.join(data_location, tagging_file)
 
     if not os.path.isfile(tagging_file_path):
-      raise errors.BadConfigOption(
-          'No such tagging file: {0:s}.'.format(tagging_file))
+      raise errors.BadConfigOption(f'No such tagging file: {tagging_file:s}')
 
     try:
       analysis_plugin.SetAndLoadTagFile(tagging_file_path)
 
     except UnicodeDecodeError:
       raise errors.BadConfigOption(
-          'Invalid tagging file: {0:s} encoding must be UTF-8.'.format(
-              tagging_file))
+          f'Invalid tagging file: {tagging_file:s} encoding must be UTF-8.')
 
     except errors.TaggingFileError as exception:
-      raise errors.BadConfigOption(
-          'Unable to read tagging file: {0:s} with error: {1!s}'.format(
-              tagging_file, exception))
+      raise errors.BadConfigOption((
+          f'Unable to read tagging file: {tagging_file:s} with error: '
+          f'{exception!s}'))
 
 
 manager.ArgumentHelperManager.RegisterHelper(TaggingAnalysisArgumentsHelper)

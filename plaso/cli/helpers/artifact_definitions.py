@@ -102,18 +102,17 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     if custom_artifacts_path and not os.path.exists(custom_artifacts_path):
       raise errors.BadConfigOption((
-          'Unable to determine path to custom artifact definitions: '
-          '{0:s}.').format(custom_artifacts_path))
+          f'Unable to determine path to custom artifact definitions: '
+          f'{custom_artifacts_path:s}'))
 
     if custom_artifacts_path:
-      logger.info('Custom artifact definitions path: {0:s}'.format(
-          custom_artifacts_path))
+      logger.info(
+          f'Custom artifact definitions path: {custom_artifacts_path:s}')
 
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
-    logger.info('Determined artifact definitions path: {0:s}'.format(
-        artifacts_path))
+    logger.info(f'Determined artifact definitions path: {artifacts_path:s}')
 
     try:
       if os.path.isdir(artifacts_path):
@@ -123,8 +122,8 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
-          'Unable to read artifact definitions from: {0:s} with error: '
-          '{1!s}').format(artifacts_path, exception))
+          f'Unable to read artifact definitions from: {artifacts_path:s} '
+          f'with error: {exception!s}'))
 
     if custom_artifacts_path:
       try:
@@ -135,8 +134,8 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
       except (KeyError, artifacts_errors.FormatError) as exception:
         raise errors.BadConfigOption((
-            'Unable to read custom artifact definitions from: {0:s} with '
-            'error: {1!s}').format(custom_artifacts_path, exception))
+            f'Unable to read custom artifact definitions from: '
+            f'{custom_artifacts_path:s} with error: {exception!s}'))
 
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
       artifact_definition = registry.GetDefinitionByName(name)
@@ -144,7 +143,7 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
         artifact_definition = registry.GetDefinitionByAlias(name)
       if not artifact_definition:
         raise errors.BadConfigOption(
-            'Missing required artifact definition: {0:s}'.format(name))
+            f'Missing required artifact definition: {name:s}')
 
     setattr(configuration_object, '_artifact_definitions_path', artifacts_path)
     setattr(configuration_object, '_custom_artifacts_path',

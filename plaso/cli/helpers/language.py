@@ -57,7 +57,7 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
     if (language_tag and language_tag != 'list' and
         not language_tags.LanguageTagHelper.IsLanguageTag(language_tag)):
       raise errors.BadConfigOption(
-          'Unsupported preferred language tag: {0!s}'.format(language_tag))
+          f'Unsupported preferred language tag: {language_tag!s}')
 
     setattr(configuration_object, '_preferred_language', language_tag)
 

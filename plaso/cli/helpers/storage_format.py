@@ -28,23 +28,23 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     session_storage_formats = sorted(definitions.SESSION_STORAGE_FORMATS)
     task_storage_formats = sorted(definitions.TASK_STORAGE_FORMATS)
 
+    storage_formats_string = ', '.join(session_storage_formats)
     argument_group.add_argument(
         '--storage_format', '--storage-format', action='store',
         choices=session_storage_formats, dest='storage_format', type=str,
         metavar='FORMAT', default=definitions.DEFAULT_STORAGE_FORMAT, help=(
-            'Format of the storage file, the default is: {0:s}. Supported '
-            'options: {1:s}'.format(
-                definitions.DEFAULT_STORAGE_FORMAT,
-                ', '.join(session_storage_formats))))
+            f'Format of the storage file, the default is: '
+            f'{definitions.DEFAULT_STORAGE_FORMAT:s}. Supported options: '
+            f'{storage_formats_string:s}'))
 
+    storage_formats_string = ', '.join(task_storage_formats)
     argument_group.add_argument(
         '--task_storage_format', '--task-storage-format', action='store',
         choices=task_storage_formats, dest='task_storage_format', type=str,
         metavar='FORMAT', default=definitions.DEFAULT_STORAGE_FORMAT, help=(
-            'Format for task storage, the default is: {0:s}. Supported '
-            'options: {1:s}'.format(
-                definitions.DEFAULT_STORAGE_FORMAT,
-                ', '.join(task_storage_formats))))
+            f'Format for task storage, the default is: '
+            f'{definitions.DEFAULT_STORAGE_FORMAT:s}. Supported options: '
+            f'{storage_formats_string:s}'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -70,7 +70,7 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
 
     if storage_format not in definitions.SESSION_STORAGE_FORMATS:
       raise errors.BadConfigOption(
-          'Unsupported storage format: {0:s}'.format(storage_format))
+          f'Unsupported storage format: {storage_format:s}')
 
     setattr(configuration_object, '_storage_format', storage_format)
 
@@ -80,7 +80,7 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
 
     if task_storage_format not in definitions.TASK_STORAGE_FORMATS:
       raise errors.BadConfigOption(
-          'Unsupported task storage format: {0:s}'.format(task_storage_format))
+          f'Unsupported task storage format: {task_storage_format:s}')
 
     setattr(configuration_object, '_task_storage_format', task_storage_format)
 

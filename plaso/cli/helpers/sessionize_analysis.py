@@ -51,9 +51,9 @@ class SessionizeAnalysisArgumentsHelper(interface.ArgumentsHelper):
         options, 'sessionize_maximumpause', default_value=10)
 
     if maximum_pause <= 0:
-      raise errors.BadConfigOption(
-          'Maximum pause value {0:d} is not supported. '
-          'Value must be greater than 0.'.format(maximum_pause))
+      raise errors.BadConfigOption((
+          f'Maximum pause value {maximum_pause:d} is not supported. Value '
+          f'must be greater than 0.'))
     analysis_plugin.SetMaximumPause(maximum_pause)
 
 

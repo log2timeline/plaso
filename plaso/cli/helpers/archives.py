@@ -64,7 +64,7 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
       for archive_type in archives.split(','):
         if archive_type not in cls._SUPPORTED_ARCHIVE_TYPES:
           raise errors.BadConfigOption(
-               'Unsupported archive types: {0:s}.'.format(archives))
+               f'Unsupported archive types: {archives:s}')
 
     setattr(configuration_object, '_archive_types_string', archives)
 

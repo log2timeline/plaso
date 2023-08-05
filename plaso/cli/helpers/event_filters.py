@@ -61,10 +61,9 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         'filter', nargs='?', action='store', metavar='FILTER', default=None,
         type=str, help=(
-            'A filter that can be used to filter the dataset before it '
-            'is written into storage. More information about the filters '
-            'and how to use them can be found here: {0:s}').format(
-                cls._DOCUMENTATION_URL))
+            f'A filter that can be used to filter the dataset before it is '
+            f'written into storage. More information about the filters and '
+            f'how to use them can be found here: {cls._DOCUMENTATION_URL:s}'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -92,9 +91,8 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
       try:
         filter_object.CompileFilter(filter_expression)
       except errors.ParseError as exception:
-        raise errors.BadConfigOption((
-            'Unable to compile filter expression with error: '
-            '{0!s}').format(exception))
+        raise errors.BadConfigOption(
+            f'Unable to compile filter expression with error: {exception!s}')
 
     time_slice_event_time_string = getattr(options, 'slice', None)
     time_slice_duration = getattr(options, 'slice_size', 5)
@@ -118,9 +116,10 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
         date_time.CopyFromStringISO8601(time_slice_event_time_string)
       except ValueError:
         raise errors.BadConfigOption((
-            'Unsupported time slice date and time: {0:s}. The date and time '
-            'must be defined in ISO 8601 format, for example: '
-            '2020-06-19T20:09:23+02:00').format(time_slice_event_time_string))
+            f'Unsupported time slice date and time: '
+            f'{time_slice_event_time_string:s}. The date and time must be '
+            f'defined in ISO 8601 format, for example: '
+            f'2020-06-19T20:09:23+02:00'))
 
       # TODO: directly use dfDateTime objects in time slice.
       time_slice_event_timestamp = date_time.GetPlasoTimestamp()
