@@ -233,7 +233,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write('ERROR: {0!s}\n'.format(exception))
+      self._output_writer.Write(f'ERROR: {exception!s}\n')
       self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
@@ -315,8 +315,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         options, 'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
     if serializer_format not in definitions.SERIALIZER_FORMATS:
       raise errors.BadConfigOption(
-          'Unsupported storage serializer format: {0:s}.'.format(
-              serializer_format))
+          f'Unsupported storage serializer format: {serializer_format:s}')
     self._storage_serializer_format = serializer_format
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -328,8 +327,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""
-    self._output_writer.Write(
-        '{0:=^80s}\n'.format(' log2timeline/plaso information '))
+    title = ' log2timeline/plaso information '
+    self._output_writer.Write(f'{title:=^80s}\n')
 
     plugin_list = self._GetPluginData()
     for header, data in plugin_list.items():

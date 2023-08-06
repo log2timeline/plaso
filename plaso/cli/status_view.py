@@ -91,23 +91,23 @@ class StatusView(object):
     events = ''
     if (process_status.number_of_consumed_events is not None and
         process_status.number_of_consumed_events_delta is not None):
-      events = '{0:d} ({1:d})'.format(
-          process_status.number_of_consumed_events,
-          process_status.number_of_consumed_events_delta)
+      events = (
+          f'{process_status.number_of_consumed_events:d} '
+          f'({process_status.number_of_consumed_events_delta:d})')
 
     event_tags = ''
     if (process_status.number_of_produced_event_tags is not None and
         process_status.number_of_produced_event_tags_delta is not None):
-      event_tags = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_event_tags,
-          process_status.number_of_produced_event_tags_delta)
+      event_tags = (
+          f'{process_status.number_of_produced_event_tags:d} '
+          f'({process_status.number_of_produced_event_tags_delta:d})')
 
     reports = ''
     if (process_status.number_of_produced_reports is not None and
         process_status.number_of_produced_reports_delta is not None):
-      reports = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_reports,
-          process_status.number_of_produced_reports_delta)
+      reports = (
+          f'{process_status.number_of_produced_reports:d} '
+          f'({process_status.number_of_produced_reports_delta:d})')
 
     table_view.AddRow([
         process_status.identifier, process_status.pid, process_status.status,
@@ -128,23 +128,23 @@ class StatusView(object):
     sources = ''
     if (process_status.number_of_produced_sources is not None and
         process_status.number_of_produced_sources_delta is not None):
-      sources = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_sources,
-          process_status.number_of_produced_sources_delta)
+      sources = (
+          f'{process_status.number_of_produced_sources:d} '
+          f'({process_status.number_of_produced_sources_delta:d})')
 
     events_or_event_data = ''
     if show_events:
       if (process_status.number_of_produced_events is not None and
           process_status.number_of_produced_events_delta is not None):
-        events_or_event_data = '{0:d} ({1:d})'.format(
-            process_status.number_of_produced_events,
-            process_status.number_of_produced_events_delta)
+        events_or_event_data = (
+            f'{process_status.number_of_produced_events:d} '
+            f'({process_status.number_of_produced_events_delta:d})')
     else:
       if (process_status.number_of_produced_event_data is not None and
           process_status.number_of_produced_event_data_delta is not None):
-        events_or_event_data = '{0:d} ({1:d})'.format(
-            process_status.number_of_produced_event_data,
-            process_status.number_of_produced_event_data_delta)
+        events_or_event_data = (
+            f'{process_status.number_of_produced_event_data:d} '
+            f'({process_status.number_of_produced_event_data_delta:d})')
 
     # TODO: shorten display name to fit in 80 chars and show the filename.
 
@@ -199,10 +199,10 @@ class StatusView(object):
       magnitude_1024 += 1
 
     if 0 < magnitude_1024 <= 7:
-      return '{0:.1f} {1:s}'.format(
-          used_memory_1024, self._UNITS_1024[magnitude_1024])
+      units = self._UNITS_1024[magnitude_1024]
+      return f'{used_memory_1024:.1f} {units:s}'
 
-    return '{0:d} B'.format(size)
+    return f'{size:d} B'
 
   def _FormatProcessingTime(self, processing_status):
     """Formats the processing time.
@@ -226,10 +226,9 @@ class StatusView(object):
     elif days == 1:
       days_string = '1 day, '
     else:
-      days_string = '{0:d} days, '.format(days)
+      days_string = f'{days:d} days, '
 
-    return '{0:s}{1:02d}:{2:02d}:{3:02d}'.format(
-        days_string, hours, minutes, seconds)
+    return f'{days_string:s}{hours:02d}:{minutes:02d}:{seconds:02d}'
 
   def _PrintAnalysisStatusHeader(self, processing_status):
     """Prints the analysis status header.
@@ -238,11 +237,10 @@ class StatusView(object):
       processing_status (ProcessingStatus): processing status.
     """
     self._output_writer.Write(
-        'Storage file\t\t: {0:s}\n'.format(self._storage_file_path))
+        f'Storage file\t\t: {self._storage_file_path:s}\n')
 
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(
-        'Processing time\t\t: {0:s}\n'.format(processing_time))
+    self._output_writer.Write(f'Processing time\t\t: {processing_time:s}\n')
 
     if processing_status and processing_status.events_status:
       self._PrintEventsStatus(processing_status.events_status)
@@ -278,15 +276,12 @@ class StatusView(object):
       events_status = processing_status.events_status
 
       with open(self._status_file, 'w', encoding='utf-8') as file_object:
-        status_line = (
-            'Events: Filtered: {0:d} In time slice: {1:d} Duplicates: {2:d} '
-            'MACB grouped: {3:d} Total: {4:d}\n').format(
-                events_status.number_of_filtered_events,
-                events_status.number_of_events_from_time_slice,
-                events_status.number_of_duplicate_events,
-                events_status.number_of_macb_grouped_events,
-                events_status.total_number_of_events)
-        file_object.write(status_line)
+        file_object.write((
+            f'Events: Filtered: {events_status.number_of_filtered_events:d} In '
+            f'time slice: {events_status.number_of_events_from_time_slice:d} '
+            f'Duplicates: {events_status.number_of_duplicate_events:d} MACB '
+            f'grouped: {events_status.number_of_macb_grouped_events:d} Total: '
+            f'{events_status.total_number_of_events:d}\n'))
 
   def _PrintAnalysisStatusUpdateLinear(self, processing_status):
     """Prints an analysis status update in linear mode.
@@ -295,23 +290,19 @@ class StatusView(object):
       processing_status (ProcessingStatus): processing status.
     """
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(
-        'Processing time: {0:s}\n'.format(processing_time))
+    self._output_writer.Write(f'Processing time: {processing_time:s}\n')
 
-    status_line = (
-        '{0:s} (PID: {1:d}) status: {2:s}, events consumed: {3:d}\n').format(
-            processing_status.foreman_status.identifier,
-            processing_status.foreman_status.pid,
-            processing_status.foreman_status.status,
-            processing_status.foreman_status.number_of_consumed_events)
-    self._output_writer.Write(status_line)
+    self._output_writer.Write((
+        f'{processing_status.foreman_status.identifier:s} (PID: '
+        f'{processing_status.foreman_status.pid:d}) status: '
+        f'{processing_status.foreman_status.status:s}, events consumed: '
+        f'{processing_status.foreman_status.number_of_consumed_events:d}\n'))
 
     for worker_status in processing_status.workers_status:
-      status_line = (
-          '{0:s} (PID: {1:d}) status: {2:s}, events consumed: {3:d}\n').format(
-              worker_status.identifier, worker_status.pid, worker_status.status,
-              worker_status.number_of_consumed_events)
-      self._output_writer.Write(status_line)
+      self._output_writer.Write((
+          f'{worker_status.identifier:s} (PID: {worker_status.pid:d}) status: '
+          f'{worker_status.status:s}, events consumed: '
+          f'{worker_status.number_of_consumed_events:d}\n'))
 
     self._output_writer.Write('\n')
 
@@ -324,9 +315,8 @@ class StatusView(object):
     if self._stdout_output_writer:
       self._ClearScreen()
 
-    output_text = 'plaso - {0:s} version {1:s}\n\n'.format(
-        self._tool_name, plaso.__version__)
-    self._output_writer.Write(output_text)
+    self._output_writer.Write(
+        f'plaso - {self._tool_name:s} version {plaso.__version__:s}\n\n')
 
     self._PrintAnalysisStatusHeader(processing_status)
 
@@ -361,15 +351,12 @@ class StatusView(object):
       tasks_status = processing_status.tasks_status
 
       with open(self._status_file, 'w', encoding='utf-8') as file_object:
-        status_line = (
-            'Tasks: Queued: {0:d} Processing: {1:d} Merging: {2:d} Abandoned: '
-            '{3:d} Total: {4:d}\n').format(
-                tasks_status.number_of_queued_tasks,
-                tasks_status.number_of_tasks_processing,
-                tasks_status.number_of_tasks_pending_merge,
-                tasks_status.number_of_abandoned_tasks,
-                tasks_status.total_number_of_tasks)
-        file_object.write(status_line)
+        file_object.write((
+            f'Tasks: Queued: {tasks_status.number_of_queued_tasks:d} '
+            f'Processing: {tasks_status.number_of_tasks_processing:d} '
+            f'Merging: {tasks_status.number_of_tasks_pending_merge:d} '
+            f'Abandoned: {tasks_status.number_of_abandoned_tasks:d} '
+            f'Total: {tasks_status.total_number_of_tasks:d}\n'))
 
   def _PrintExtractionStatusUpdateLinear(self, processing_status):
     """Prints an extraction status update in linear mode.
@@ -378,28 +365,23 @@ class StatusView(object):
       processing_status (ProcessingStatus): processing status.
     """
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(
-        'Processing time: {0:s}\n'.format(processing_time))
+    self._output_writer.Write(f'Processing time: {processing_time:s}\n')
 
-    status_line = (
-        '{0:s} (PID: {1:d}) status: {2:s}, event data produced: {3:d}, events '
-        'produced: {4:d}, file: {5:s}\n').format(
-            processing_status.foreman_status.identifier,
-            processing_status.foreman_status.pid,
-            processing_status.foreman_status.status,
-            processing_status.foreman_status.number_of_produced_event_data,
-            processing_status.foreman_status.number_of_produced_events,
-            processing_status.foreman_status.display_name)
-    self._output_writer.Write(status_line)
+    self._output_writer.Write((
+        f'{processing_status.foreman_status.identifier:s} (PID: '
+        f'{processing_status.foreman_status.pid:d}) status: '
+        f'{processing_status.foreman_status.status:s}, event data produced: '
+        f'{processing_status.foreman_status.number_of_produced_event_data:d}, '
+        f'events produced: '
+        f'{processing_status.foreman_status.number_of_produced_events:d}, '
+        f'file: {processing_status.foreman_status.display_name:s}\n'))
 
     for worker_status in processing_status.workers_status:
-      status_line = (
-          '{0:s} (PID: {1:d}) status: {2:s}, event data produced: {3:d}, file: '
-          '{4:s}\n').format(
-              worker_status.identifier, worker_status.pid, worker_status.status,
-              worker_status.number_of_produced_events,
-              worker_status.display_name)
-      self._output_writer.Write(status_line)
+      self._output_writer.Write((
+          f'{worker_status.identifier:s} (PID: {worker_status.pid:d}) status: '
+          f'{worker_status.status:s}, event data produced: '
+          f'{worker_status.number_of_produced_events:d}, file: '
+          f'{worker_status.display_name:s}\n'))
 
     self._output_writer.Write('\n')
 
@@ -418,9 +400,8 @@ class StatusView(object):
         processing_status.foreman_status.number_of_produced_events and
         not workers_status)
 
-    output_text = 'plaso - {0:s} version {1:s}\n\n'.format(
-        self._tool_name, plaso.__version__)
-    self._output_writer.Write(output_text)
+    self._output_writer.Write(
+        f'plaso - {self._tool_name:s} version {plaso.__version__:s}\n\n')
 
     self.PrintExtractionStatusHeader(processing_status)
 
@@ -543,22 +524,17 @@ class StatusView(object):
     Args:
       processing_status (ProcessingStatus): processing status.
     """
-    self._output_writer.Write(
-        'Source path\t\t: {0:s}\n'.format(self._source_path))
-    self._output_writer.Write(
-        'Source type\t\t: {0:s}\n'.format(self._source_type))
+    self._output_writer.Write(f'Source path\t\t: {self._source_path:s}\n')
+    self._output_writer.Write(f'Source type\t\t: {self._source_type:s}\n')
 
     if self._artifact_filters:
       artifacts_string = ', '.join(self._artifact_filters)
-      self._output_writer.Write('Artifact filters\t: {0:s}\n'.format(
-          artifacts_string))
+      self._output_writer.Write(f'Artifact filters\t: {artifacts_string:s}\n')
     if self._filter_file:
-      self._output_writer.Write('Filter file\t\t: {0:s}\n'.format(
-          self._filter_file))
+      self._output_writer.Write(f'Filter file\t\t: {self._filter_file:s}\n')
 
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(
-        'Processing time\t\t: {0:s}\n'.format(processing_time))
+    self._output_writer.Write(f'Processing time\t\t: {processing_time:s}\n')
 
     self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
@@ -584,8 +560,8 @@ class StatusView(object):
       if number_of_extraction_warnings:
         output_text = '\n'.join([
             '',
-            ('Number of warnings generated while extracting events: '
-             '{0:d}.').format(number_of_extraction_warnings),
+            (f'Number of warnings generated while extracting events: '
+             f'{number_of_extraction_warnings:d}.'),
             '',
             'Use pinfo to inspect warnings in more detail.',
             ''])

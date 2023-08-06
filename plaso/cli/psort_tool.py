@@ -90,32 +90,32 @@ class PsortTool(
 
     if not os.path.exists(storage_file_path):
       raise errors.BadConfigOption(
-          'No such storage file: {0:s}.'.format(storage_file_path))
+          f'No such storage file: {storage_file_path:s}')
 
     if not os.path.isfile(storage_file_path):
-      raise errors.BadConfigOption(
-          'Storage file: {0:s} already exists and is not a file.'.format(
-              storage_file_path))
+      raise errors.BadConfigOption((
+          f'Storage file: {storage_file_path:s} already exists and is not '
+          f'a file.'))
 
     if not check_readable_only:
       storage_file_directory = os.path.dirname(storage_file_path) or '.'
       if not os.access(storage_file_directory, os.W_OK):
         raise errors.BadConfigOption(
-            'Unable to write to storage file: {0:s}'.format(storage_file_path))
+            f'Unable to write to storage file: {storage_file_path:s}')
 
     storage_file = storage_factory.StorageFactory.CreateStorageFile(
         definitions.STORAGE_FORMAT_SQLITE)
     if not storage_file:
       raise errors.BadConfigOption(
-          'Unable to open storage file: {0:s}'.format(storage_file_path))
+          f'Unable to open storage file: {storage_file_path:s}')
 
     try:
       storage_file.Open(
           path=storage_file_path, read_only=check_readable_only)
     except IOError as exception:
-      raise errors.BadConfigOption(
-          'Unable to open storage file: {0:s} with error: {1!s}'.format(
-              storage_file_path, exception))
+      raise errors.BadConfigOption((
+          f'Unable to open storage file: {storage_file_path:s} with error: '
+          f'{exception!s}'))
 
     storage_file.Close()
 
@@ -185,9 +185,9 @@ class PsortTool(
     # Check to see if we are trying to load plugins that do not exist.
     difference = requested_plugin_names.difference(analysis_plugin_names)
     if difference:
+      difference_string = ' '.join(difference)
       raise errors.BadConfigOption(
-          'Non-existent analysis plugins specified: {0:s}'.format(
-              ' '.join(difference)))
+          f'Non-existent analysis plugins specified: {difference_string:s}')
 
     self._analysis_plugins = self._GetAnalysisPlugins(analysis_plugins)
 
@@ -229,15 +229,15 @@ class PsortTool(
 
     if worker_memory_limit and worker_memory_limit < 0:
       raise errors.BadConfigOption((
-          'Invalid worker memory limit: {0:d}, value must be 0 or '
-          'greater.').format(worker_memory_limit))
+          f'Invalid worker memory limit: {worker_memory_limit:d}, value must '
+          f'be 0 or greater.'))
 
     worker_timeout = getattr(options, 'worker_timeout', None)
 
     if worker_timeout is not None and worker_timeout <= 0.0:
       raise errors.BadConfigOption((
-          'Invalid worker timeout: {0:f}, value must be greater than '
-          '0.0 minutes.').format(worker_timeout))
+          f'Invalid worker timeout: {worker_timeout:f}, value must be greater '
+          f'than 0.0 minutes.'))
 
     self._worker_memory_limit = worker_memory_limit
     self._worker_timeout = worker_timeout
@@ -372,7 +372,7 @@ class PsortTool(
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write('ERROR: {0!s}\n'.format(exception))
+      self._output_writer.Write(f'ERROR: {exception!s}\n')
       self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_usage())
 

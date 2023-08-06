@@ -64,7 +64,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # Test when output file already exists.
       # Escape \ otherwise assertRaisesRegexp can error with:
       # error: bogus escape: '\\1'
-      expected_error = 'Output file already exists: {0:s}.'.format(
+      expected_error = 'Output file: {0:s} already exists.'.format(
           options.write.replace('\\', '\\\\'))
       with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
@@ -115,7 +115,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       # Test when output file already exists.
       # Escape \ otherwise assertRaisesRegexp can error with:
       # error: bogus escape: '\\1'
-      expected_error = 'Output file already exists: {0:s}.'.format(
+      expected_error = 'Output file: {0:s} already exists.'.format(
           options.write.replace('\\', '\\\\'))
       with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
