@@ -130,9 +130,9 @@ class ExtractionTool(
     """
     if os.path.exists(storage_file_path):
       if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
+        raise errors.BadConfigOption((
+            f'Storage file: {storage_file_path:s} already exists and is not '
+            f'a file.'))
 
       if warn_about_existing:
         logger.warning('Appending to an already existing storage file.')
@@ -146,7 +146,7 @@ class ExtractionTool(
 
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
-          'Unable to write to storage file: {0:s}'.format(storage_file_path))
+          f'Unable to write to storage file: {storage_file_path:s}')
 
   def _CreateExtractionEngine(self, single_process_mode):
     """Creates an extraction engine.
@@ -242,7 +242,7 @@ class ExtractionTool(
       # The user passed the filesystem's root as source
       source_name = 'ROOT'
 
-    return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
+    return f'{datetime_string:s}-{source_name:s}.plaso'
 
   def _GetExpandedParserFilterExpression(self, system_configuration):
     """Determines the expanded parser filter expression.
@@ -271,20 +271,21 @@ class ExtractionTool(
             preset_definition.name
             for preset_definition in preset_definitions])
 
-        logger.debug('Parser filter expression set to preset: {0:s}'.format(
-            self._parser_filter_expression))
+        logger.debug((
+            f'Parser filter expression set to preset: '
+            f'{self._parser_filter_expression:s}'))
 
     parser_filter_helper = parser_filter.ParserFilterExpressionHelper()
 
     try:
       parser_filter_expression = parser_filter_helper.ExpandPresets(
           self._presets_manager, self._parser_filter_expression)
-      logger.debug('Parser filter expression set to: {0:s}'.format(
-          parser_filter_expression or 'N/A'))
+      parser_filter_string = parser_filter_expression or 'N/A'
+      logger.debug(f'Parser filter expression set to: {parser_filter_string:s}')
     except RuntimeError as exception:
       raise errors.BadConfigOption((
-          'Unable to expand presets in parser filter expression with '
-          'error: {0!s}').format(exception))
+          f'Unable to expand presets in parser filter expression with '
+          f'error: {exception!s}'))
 
     parser_elements, invalid_parser_elements = (
         parsers_manager.ParsersManager.CheckFilterExpression(
@@ -292,10 +293,10 @@ class ExtractionTool(
 
     if invalid_parser_elements:
       invalid_parser_names_string = ','.join(invalid_parser_elements)
-      raise errors.BadConfigOption(
-          'Unknown parser or plugin names in element(s): "{0:s}" of '
-          'parser filter expression: {1:s}'.format(
-              invalid_parser_names_string, parser_filter_expression))
+      raise errors.BadConfigOption((
+          f'Unknown parser or plugin names in element(s): '
+          f'"{invalid_parser_names_string:s}" of parser filter expression: '
+          f'{parser_filter_expression:s}'))
 
     return ','.join(sorted(parser_elements))
 
@@ -328,7 +329,7 @@ class ExtractionTool(
           pytz.timezone(time_zone_string)
         except pytz.UnknownTimeZoneError:
           raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
+              f'Unknown time zone: {time_zone_string:s}')
 
         self._preferred_time_zone = time_zone_string
 
@@ -354,7 +355,7 @@ class ExtractionTool(
           self._buffer_size = int(self._buffer_size, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            'Invalid buffer size: {0!s}.'.format(self._buffer_size))
+            f'Invalid buffer size: {self._buffer_size!s}.')
 
     self._queue_size = self.ParseNumericOption(options, 'queue_size')
 
@@ -451,7 +452,7 @@ class ExtractionTool(
       except IOError as exception:
         system_configurations = []
 
-        logger.error('Unable to preprocess with error: {0!s}'.format(exception))
+        logger.error(f'Unable to preprocess with error: {exception!s}')
 
       # TODO: check if the source was processed previously and if system
       # configuration differs.
@@ -504,8 +505,7 @@ class ExtractionTool(
           filter_file_path=self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
-          'Unable to build collection filters with error: {0!s}'.format(
-              exception))
+          f'Unable to build collection filters with error: {exception!s}')
 
     session.artifact_filters = self._artifact_filters
     session.command_line_arguments = self._command_line_arguments
@@ -566,14 +566,13 @@ class ExtractionTool(
         self._data_location, self._PRESETS_FILE_NAME)
     if not os.path.isfile(self._presets_file):
       raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(self._presets_file))
+          f'No such parser presets file: {self._presets_file:s}')
 
     try:
       self._presets_manager.ReadFromFile(self._presets_file)
     except errors.MalformedPresetError as exception:
       raise errors.BadConfigOption(
-          'Unable to read parser presets from file with error: {0!s}'.format(
-              exception))
+          f'Unable to read parser presets from file with error: {exception!s}')
 
   def _ScanSourceForArchive(self, path_spec):
     """Determines if a path specification references an archive file.
@@ -671,8 +670,8 @@ class ExtractionTool(
     argument_group.add_argument(
         '--queue_size', '--queue-size', dest='queue_size', action='store',
         default=0, help=(
-            'The maximum number of queued items per worker '
-            '(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
+            f'The maximum number of queued items per worker (defaults to '
+            f'{self._DEFAULT_QUEUE_SIZE:d})'))
 
   def AddProcessingOptions(self, argument_group):
     """Adds the processing options to the argument group.
@@ -736,14 +735,13 @@ class ExtractionTool(
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format)
     if not storage_writer:
-      raise errors.BadConfigOption('Unsupported storage format: {0:s}'.format(
-          self._storage_format))
+      raise errors.BadConfigOption(
+          f'Unsupported storage format: {self._storage_format:s}')
 
     try:
       storage_writer.Open(path=self._storage_file_path)
     except IOError as exception:
-      raise IOError('Unable to open storage with error: {0!s}'.format(
-          exception))
+      raise IOError(f'Unable to open storage with error: {exception!s}')
 
     processing_status = None
     number_of_extraction_warnings = 0
@@ -761,8 +759,7 @@ class ExtractionTool(
                 'extraction_warning') - stored_number_of_extraction_warnings)
 
     except IOError as exception:
-      raise IOError('Unable to write to storage with error: {0!s}'.format(
-          exception))
+      raise IOError(f'Unable to write to storage with error: {exception!s}')
 
     finally:
       storage_writer.Close()
@@ -809,7 +806,7 @@ class ExtractionTool(
           parsers_manager.ParsersManager.GetParserPluginsInformation(
               parser_filter_expression=parser_name))
 
-      table_title = 'Parser plugins: {0:s}'.format(parser_name)
+      table_title = f'Parser plugins: {parser_name:s}'
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, column_names=['Name', 'Description'],
           title=table_title)
@@ -826,7 +823,7 @@ class ExtractionTool(
       if presets_file.startswith(source_path):
         presets_file = presets_file[len(source_path) + 1:]
 
-      title = '{0:s} ({1:s})'.format(title, presets_file)
+      title = f'{title:s} ({presets_file:s})'
 
     presets_information = self._presets_manager.GetPresetsInformation()
 

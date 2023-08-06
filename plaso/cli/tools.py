@@ -138,9 +138,9 @@ class CLITool(object):
         resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
       except ValueError:
         current_limit = resource.getrlimit(resource.RLIMIT_DATA)[0]
-        logger.warning(
-            'Unable to set memory limit to {0!s} '
-            'current limit is {1!s}.'.format(memory_limit, current_limit))
+        logger.warning((
+            f'Unable to set memory limit to {memory_limit!s} current limit '
+            f'is {current_limit!s}.'))
 
   def _GetPathSpecificationString(self, path_spec):
     """Retrieves a printable string representation of the path specification.
@@ -189,10 +189,9 @@ class CLITool(object):
     if not self._log_file:
       local_date_time = datetime.datetime.now()
       self._log_file = (
-          '{0:s}-{1:04d}{2:02d}{3:02d}T{4:02d}{5:02d}{6:02d}.log.gz').format(
-              self.NAME, local_date_time.year, local_date_time.month,
-              local_date_time.day, local_date_time.hour, local_date_time.minute,
-              local_date_time.second)
+          f'{self.NAME:s}-{local_date_time.year:04d}{local_date_time.month:02d}'
+          f'{local_date_time.day:02d}T{local_date_time.hour:02d}'
+          f'{local_date_time.minute:02d}{local_date_time.second:02d}.log.gz')
 
   def _PrintUserWarning(self, warning_text):
     """Prints a warning to the user.
@@ -200,8 +199,7 @@ class CLITool(object):
     Args:
       warning_text (str): text used to warn the user.
     """
-    warning_text = 'WARNING: {0:s}'.format(warning_text)
-    warning_text = textwrap.wrap(warning_text, 80)
+    warning_text = textwrap.wrap(f'WARNING: {warning_text:s}', 80)
     print('\n'.join(warning_text))
     print('')
 
@@ -216,7 +214,7 @@ class CLITool(object):
     Returns:
       str: input read from the user.
     """
-    self._output_writer.Write('{0:s}: '.format(input_text))
+    self._output_writer.Write(f'{input_text:s}: ')
     return self._input_reader.Read()
 
   def _WaitUserWarning(self):
@@ -277,10 +275,10 @@ class CLITool(object):
     argument_group.add_argument(
         '--logfile', '--log_file', '--log-file', action='store',
         metavar='FILENAME', dest='log_file', type=str, default='', help=(
-            'Path of the file in which to store log messages, by default '
-            'this file will be named: "{0:s}-YYYYMMDDThhmmss.log.gz". Note '
-            'that the file will be gzip compressed if the extension is '
-            '".gz".').format(self.NAME))
+            f'Path of the file in which to store log messages, by default '
+            f'this file will be named: "{self.NAME:s}-YYYYMMDDThhmmss.log.gz". '
+            f'Note that the file will be gzip compressed if the extension is '
+            f'".gz".'))
 
   def CheckOutDated(self):
     """Checks if the version of plaso is outdated and warns the user."""
@@ -336,39 +334,38 @@ class CLITool(object):
     Returns:
       str: version information.
     """
-    return 'plaso - {0:s} version {1:s}'.format(self.NAME, plaso.__version__)
+    return f'plaso - {self.NAME:s} version {plaso.__version__:s}'
 
   def ListTimeZones(self):
-    """Lists the timezones."""
+    """Lists the time zones."""
     max_length = 0
-    for timezone_name in pytz.all_timezones:
-      if len(timezone_name) > max_length:
-        max_length = len(timezone_name)
+    for time_zone_name in pytz.all_timezones:
+      if len(time_zone_name) > max_length:
+        max_length = len(time_zone_name)
 
     utc_date_time = datetime.datetime.utcnow()
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Timezone', 'UTC Offset'],
+        self._views_format_type, column_names=['Time zone', 'UTC Offset'],
         title='Zones')
-    for timezone_name in pytz.all_timezones:
+    for time_zone_name in pytz.all_timezones:
       try:
-        local_timezone = pytz.timezone(timezone_name)
+        local_time_zone = pytz.timezone(time_zone_name)
       except AssertionError as exception:
         logger.error((
-            'Unable to determine information about timezone: {0:s} with '
-            'error: {1!s}').format(timezone_name, exception))
+            f'Unable to determine information about time zone: '
+            f'{time_zone_name:s} with error: {exception!s}'))
         continue
 
-      local_date_string = '{0!s}'.format(
-          local_timezone.localize(utc_date_time))
+      local_date_string = str(local_time_zone.localize(utc_date_time))
       if '+' in local_date_string:
-        _, _, diff = local_date_string.rpartition('+')
-        diff_string = '+{0:s}'.format(diff)
+        _, _, utc_offset = local_date_string.rpartition('+')
+        utc_offset_string = f'+{utc_offset:s}'
       else:
-        _, _, diff = local_date_string.rpartition('-')
-        diff_string = '-{0:s}'.format(diff)
+        _, _, utc_offset = local_date_string.rpartition('-')
+        utc_offset_string = '-{utc_offset:s}'
 
-      table_view.AddRow([timezone_name, diff_string])
+      table_view.AddRow([time_zone_name, utc_offset_string])
 
     table_view.Write(self._output_writer)
 
@@ -399,8 +396,7 @@ class CLITool(object):
     except (TypeError, ValueError):
       name = name.replace('_', ' ')
       raise errors.BadConfigOption(
-          'Unsupported numeric value {0:s}: {1!s}.'.format(
-              name, numeric_value))
+          f'Unsupported numeric value {name:s}: {numeric_value!s}.')
 
   def ParseStringOption(self, options, argument_name, default_value=None):
     """Parses a string command line argument.
@@ -434,13 +430,12 @@ class CLITool(object):
         argument_value = codecs.decode(argument_value, encoding)
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
-            'Unable to convert option: {0:s} to Unicode with error: '
-            '{1!s}.').format(argument_name, exception))
+            f'Unable to convert option: {argument_name:s} to Unicode with '
+            f'error: {exception!s}.'))
 
     elif not isinstance(argument_value, str):
       raise errors.BadConfigOption(
-          'Unsupported option: {0:s} string type required.'.format(
-              argument_name))
+          f'Unsupported option: {argument_name:s} string type required.')
 
     return argument_value
 

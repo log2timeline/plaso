@@ -61,8 +61,7 @@ class AnalysisPluginOptions(object):
         title='Analysis Plugins')
     # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
-      description = '{0:s} [{1:s}]'.format(description, type_string)
-      table_view.AddRow([name, description])
+      table_view.AddRow([name, f'{description:s} [{type_string:s}]'])
     table_view.Write(self._output_writer)
 
 
@@ -132,11 +131,10 @@ class OutputModuleOptions(object):
     """
     if self._output_format in self._DEPRECATED_OUTPUT_FORMATS:
       self._PrintUserWarning((
-          'the output format: {0:s} has significant limitations such as '
-          'second-only date and time values and/or a limited predefined '
-          'set of output fields. It is strongly recommend to use an '
-          'alternative output format like: dynamic.').format(
-              self._output_format))
+          f'the output format: {self._output_format:s} has significant '
+          f'limitations such as second-only date and time values and/or '
+          f'a limited predefined set of output fields. It is strongly '
+          f'recommend to use an alternative output format like: dynamic.'))
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
@@ -144,18 +142,16 @@ class OutputModuleOptions(object):
 
     except (KeyError, ValueError) as exception:
       raise RuntimeError(
-          'Unable to create output module with error: {0!s}'.format(
-              exception))
+          f'Unable to create output module with error: {exception!s}')
 
     if output_module.WRITES_OUTPUT_FILE:
       if not self._output_filename:
         raise errors.BadConfigOption(
-            'Output format: {0:s} requires an output file'.format(
-                self._output_format))
+            f'Output format: {self._output_format:s} requires an output file')
 
       if os.path.exists(self._output_filename):
         raise errors.BadConfigOption(
-            'Output file already exists: {0:s}.'.format(self._output_filename))
+            f'Output file already exists: {self._output_filename:s}')
 
       output_module.Open(path=self._output_filename)
     else:
@@ -169,9 +165,9 @@ class OutputModuleOptions(object):
     missing_parameters = output_module.GetMissingArguments()
     if missing_parameters and self._unattended_mode:
       parameters_string = ', '.join(missing_parameters)
-      raise errors.BadConfigOption(
-          'Unable to create output module missing parameters: {0:s}'.format(
-              parameters_string))
+      raise errors.BadConfigOption((
+          f'Unable to create output module missing parameters: '
+          f'{parameters_string:s}'))
 
     while missing_parameters:
       self._PromptUserForMissingOutputModuleParameters(
@@ -183,16 +179,16 @@ class OutputModuleOptions(object):
     if output_module.SUPPORTS_ADDITIONAL_FIELDS:
       output_module.SetAdditionalFields(self._output_additional_fields)
     elif self._output_additional_fields:
-      self._PrintUserWarning(
-          'output module: {0:s} does not support additional fields'.format(
-              self._output_format))
+      self._PrintUserWarning((
+          f'output module: {self._output_format:s} does not support '
+          f'additional fields'))
 
     if output_module.SUPPORTS_CUSTOM_FIELDS:
       output_module.SetCustomFields(self._output_custom_fields)
     elif self._output_custom_fields:
-      self._PrintUserWarning(
-          'output module: {0:s} does not support custom fields'.format(
-              self._output_format))
+      self._PrintUserWarning((
+          f'output module: {self._output_format:s} does not support '
+          f'custom fields'))
 
     return output_module
 
@@ -228,7 +224,7 @@ class OutputModuleOptions(object):
           name, value = custom_field.split(':')
         except ValueError:
           raise errors.BadConfigOption(
-              'Unsupported custom field: {0:s}'.format(custom_field))
+              f'Unsupported custom field: {custom_field:s}')
 
         self._output_custom_fields.append((name, value))
 
@@ -237,12 +233,12 @@ class OutputModuleOptions(object):
 
     if custom_formatters_path and not os.path.isfile(custom_formatters_path):
       raise errors.BadConfigOption((
-          'Unable to determine path to custom formatter definitions: '
-          '{0:s}.').format(custom_formatters_path))
+          f'Unable to determine path to custom formatter definitions: '
+          f'{custom_formatters_path:s}'))
 
     if custom_formatters_path:
-      logger.info('Custom formatter definitions path: {0:s}'.format(
-          custom_formatters_path))
+      logger.info(
+          f'Custom formatter definitions path: {custom_formatters_path:s}')
 
     if custom_formatters_path:
       message_formatters_file = yaml_formatters_file.YAMLFormattersFile()
@@ -262,7 +258,7 @@ class OutputModuleOptions(object):
           pytz.timezone(time_zone_string)
         except pytz.UnknownTimeZoneError:
           raise errors.BadConfigOption(
-              'Unknown time zone: {0:s}'.format(time_zone_string))
+              f'Unknown time zone: {time_zone_string:s}')
 
         self._output_time_zone = time_zone_string
 
@@ -278,7 +274,7 @@ class OutputModuleOptions(object):
       value = None
       while not value:
         value = self._PromptUserForInput(
-            'Please specific a value for {0:s}'.format(parameter))
+            f'Please provide a value for {parameter:s}')
 
       setattr(options, parameter, value)
 

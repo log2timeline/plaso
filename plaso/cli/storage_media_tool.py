@@ -220,8 +220,8 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
         raise dfvfs_errors.ScannerError('No partitions found.')
 
       for partition_identifier in partition_identifiers:
-        location = '/{0:s}'.format(partition_identifier)
-        sub_scan_node = scan_node.GetSubNodeByLocation(location)
+        sub_scan_node = scan_node.GetSubNodeByLocation(
+            f'/{partition_identifier:s}')
         self._ScanVolume(scan_context, sub_scan_node, options, base_path_specs)
 
     return base_path_specs
@@ -324,16 +324,13 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
 
     else:
       raise dfvfs_errors.ScannerError(
-          'Unsupported volume system type: {0:s}.'.format(
-              scan_node.type_indicator))
+          f'Unsupported volume system type: {scan_node.type_indicator:s}.')
 
     for volume_identifier in volume_identifiers:
-      location = '/{0:s}'.format(volume_identifier)
-      sub_scan_node = scan_node.GetSubNodeByLocation(location)
+      sub_scan_node = scan_node.GetSubNodeByLocation(f'/{volume_identifier:s}')
       if not sub_scan_node:
         raise dfvfs_errors.ScannerError(
-            'Scan node missing for volume identifier: {0:s}.'.format(
-                volume_identifier))
+            f'Scan node missing for volume identifier: {volume_identifier:s}.')
 
       self._ScanVolume(scan_context, sub_scan_node, options, base_path_specs)
 
@@ -421,20 +418,18 @@ class StorageMediaTool(tools.CLITool):
       credential_type, _, credential_data = credential_string.partition(':')
       if not credential_type or not credential_data:
         raise errors.BadConfigOption(
-            'Badly formatted credential: {0:s}.'.format(credential_string))
+            f'Badly formatted credential: {credential_string:s}.')
 
       if credential_type not in self._SUPPORTED_CREDENTIAL_TYPES:
         raise errors.BadConfigOption(
-            'Unsupported credential type for: {0:s}.'.format(
-                credential_string))
+            f'Unsupported credential type for: {credential_string:s}.')
 
       if credential_type in self._BINARY_DATA_CREDENTIAL_TYPES:
         try:
           credential_data = codecs.decode(credential_data, 'hex')
         except TypeError:
           raise errors.BadConfigOption(
-              'Unsupported credential data for: {0:s}.'.format(
-                  credential_string))
+              f'Unsupported credential data for: {credential_string:s}.')
 
       self._credentials.append((credential_type, credential_data))
 
@@ -528,16 +523,17 @@ class StorageMediaTool(tools.CLITool):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
+    credential_types = ', '.join(self._SUPPORTED_CREDENTIAL_TYPES)
     argument_group.add_argument(
         '--credential', action='append', default=[], type=str,
         dest='credentials', metavar='TYPE:DATA', help=(
-            'Define a credentials that can be used to unlock encrypted '
-            'volumes e.g. BitLocker. The credential is defined as type:data '
-            'e.g. "password:BDE-test". Supported credential types are: '
-            '{0:s}. Binary key data is expected to be passed in BASE-16 '
-            'encoding (hexadecimal). WARNING credentials passed via command '
-            'line arguments can end up in logs, so use this option with '
-            'care.').format(', '.join(self._SUPPORTED_CREDENTIAL_TYPES)))
+            f'Define a credentials that can be used to unlock encrypted '
+            f'volumes e.g. BitLocker. The credential is defined as type:data '
+            f'e.g. "password:BDE-test". Supported credential types are: '
+            f'{credential_types:s}. Binary key data is expected to be passed '
+            f'in BASE-16 encoding (hexadecimal). WARNING credentials passed '
+            f'via command line arguments can end up in logs, so use this '
+            f'option with care.'))
 
   def AddStorageMediaImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.

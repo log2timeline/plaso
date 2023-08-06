@@ -63,7 +63,7 @@ class CLITableView(BaseTableView):
   # The standard width of Windows cmd.exe is 80 characters.
   _MAXIMUM_WIDTH = 80
 
-  _HEADER_FORMAT_STRING = '{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
+  _HEADER_FORMAT_STRING = f'{{0:*^{_MAXIMUM_WIDTH:d}}}\n'
 
   def __init__(self, column_names=None, title=None, title_level=3):
     """Initializes a command line table view.
@@ -86,9 +86,10 @@ class CLITableView(BaseTableView):
     Args:
       output_writer (OutputWriter): output writer.
     """
-    header_string = ''
     if self._title:
-      header_string = ' {0:s} '.format(self._title)
+      header_string = f' {self._title:s} '
+    else:
+      header_string = ''
 
     header_string = self._HEADER_FORMAT_STRING.format(header_string)
     output_writer.Write(header_string)
@@ -103,21 +104,20 @@ class CLITableView(BaseTableView):
     maximum_row_width = self._MAXIMUM_WIDTH - self._column_width - 3
 
     # The format string of the first line of the column value.
-    primary_format_string = '{{0:>{0:d}s}} : {{1:s}}\n'.format(
-        self._column_width)
+    primary_format_string = f'{{0:>{self._column_width:d}s}} : {{1:s}}\n'
 
     # The format string of successive lines of the column value.
-    secondary_format_string = '{{0:<{0:d}s}}{{1:s}}\n'.format(
-        self._column_width + 3)
+    column_width = self._column_width + 3
+    secondary_format_string = f'{{0:<{column_width:d}s}}{{1:s}}\n'
 
     if isinstance(values[1], str):
       value_string = values[1]
     else:
-      value_string = '{0!s}'.format(values[1])
+      value_string = str(values[1])
 
     if len(value_string) < maximum_row_width:
-      output_writer.Write(primary_format_string.format(
-          values[0], value_string))
+      output_text = primary_format_string.format(values[0], value_string)
+      output_writer.Write(output_text)
       return
 
     # Split the column value in words.
@@ -138,10 +138,11 @@ class CLITableView(BaseTableView):
     lines.append(' '.join(word_buffer))
 
     # Split the column value across multiple lines.
-    output_writer.Write(
-        primary_format_string.format(values[0], lines[0]))
+    output_text = primary_format_string.format(values[0], lines[0])
+    output_writer.Write(output_text)
     for line in lines[1:]:
-      output_writer.Write(secondary_format_string.format('', line))
+      output_text = secondary_format_string.format('', line)
+      output_writer.Write(output_text)
 
   def _WriteSeparatorLine(self, output_writer):
     """Writes a separator line.
@@ -182,8 +183,8 @@ class CLITableView(BaseTableView):
       raise RuntimeError('Title length out of bounds.')
 
     if self._number_of_columns not in (0, 2):
-      raise RuntimeError('Unsupported number of columns: {0:d}.'.format(
-          self._number_of_columns))
+      raise RuntimeError(
+          f'Unsupported number of columns: {self._number_of_columns:d}.')
 
     if self._column_width < 0 or self._column_width >= self._MAXIMUM_WIDTH:
       raise RuntimeError('Column width out of bounds.')
@@ -246,10 +247,9 @@ class CLITabularTableView(BaseTableView):
     if in_bold and not win32console:
       # TODO: for win32console get current color and set intensity,
       # write the header separately then reset intensity.
-      row_strings = '\x1b[1m{0:s}\x1b[0m'.format(row_strings)
+      row_strings = f'\x1b[1m{row_strings:s}\x1b[0m'
 
-    row_strings = '{0:s}\n'.format(row_strings)
-    output_writer.Write(row_strings)
+    output_writer.Write(f'{row_strings:s}\n')
 
   def AddRow(self, values):
     """Adds a row of values.
@@ -269,7 +269,7 @@ class CLITabularTableView(BaseTableView):
     value_strings = []
     for value_index, value_string in enumerate(values):
       if not isinstance(value_string, str):
-        value_string = '{0!s}'.format(value_string)
+        value_string = str(value_string)
       value_strings.append(value_string)
 
       self._column_sizes[value_index] = max(
@@ -311,8 +311,8 @@ class MarkdownTableView(BaseTableView):
       output_writer (OutputWriter): output writer.
     """
     if self._title:
-      output_writer.Write('{0:s} {1:s}\n\n'.format(
-          '#' * self._title_level, self._title))
+      heading_marker = '#' * self._title_level
+      output_writer.Write(f'{heading_marker:s} {self._title:s}\n\n')
 
     if self._columns:
       output_writer.Write(' | '.join(self._columns))
@@ -331,15 +331,15 @@ class MarkdownTableView(BaseTableView):
       values (list[object]): values.
     """
     if self._columns:
-      row_values = ['{0!s}'.format(value) for value in values]
+      row_values = [str(value) for value in values]
       output_writer.Write(' | '.join(row_values))
       output_writer.Write('\n')
     else:
-      row_values = ''.join([
-         '<td>{0!s}</td>'.format(value) for value in values[1:]])
+      first_value = values[0]
+      row_values = ''.join([f'<td>{value!s}</td>' for value in values[1:]])
       output_writer.Write((
-          '<tr><th nowrap style="text-align:left;vertical-align:top">{0!s}</th>'
-          '{1:s}</tr>\n').format(values[0], row_values))
+          f'<tr><th nowrap style="text-align:left;vertical-align:top">'
+          f'{first_value!s}</th>{row_values:s}</tr>\n'))
 
   def Write(self, output_writer):
     """Writes the table to the output writer.
@@ -388,7 +388,7 @@ class ViewsFactory(object):
     """
     view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type, None)
     if not view_class:
-      raise ValueError('Unsupported format type: {0:s}'.format(format_type))
+      raise ValueError(f'Unsupported format type: {format_type:s}')
 
     return view_class(
         column_names=column_names, title=title, title_level=title_level)

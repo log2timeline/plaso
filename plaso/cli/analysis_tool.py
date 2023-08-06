@@ -128,7 +128,7 @@ class AnalysisTool(
             timestamp=analysis_report.time_compiled)
         date_time_string = date_time.CopyToDateTimeStringISO8601()
 
-      title = 'Analysis report: {0:s}'.format(analysis_report.plugin_name)
+      title = f'Analysis report: {analysis_report.plugin_name:s}'
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
@@ -140,7 +140,7 @@ class AnalysisTool(
       else:
         text = 'Results'
         for key, value in sorted(analysis_report.analysis_counter.items()):
-          table_view.AddRow([text, '{0:s}: {1:d}'.format(key, value)])
+          table_view.AddRow([text, f'{key:s}: {value:d}'])
           text = ''
 
       table_view.Write(self._output_writer)
