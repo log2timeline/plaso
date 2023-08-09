@@ -48,4 +48,3 @@ config/vagrant/*.log
 
 # Python Virtual Environments
 venv/
-plasoenv/
