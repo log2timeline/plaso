@@ -322,8 +322,8 @@ enumeration_helpers:
     11: 'Video'
     12: 'Manifest'
     13: 'SpeculationRules'
-message: 
-- '{top_level_hostname}' 
+message:
+- '{top_level_hostname}'
 - 'loaded External Resource from: {resource_hostname}'
 - ' with type of {resource_type_loaded}'
 short_message:
@@ -645,4 +645,3 @@ short_message:
 - 'http_non_get: {was_http_non_get}'
 short_source: 'WEBHIST'
 source: 'Safari History Database'
-
