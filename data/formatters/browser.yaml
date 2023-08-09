@@ -301,6 +301,37 @@ short_source: 'WEBHIST'
 source: 'Google Analytics Cookies'
 ---
 type: 'conditional'
+data_type: 'edge:resources:load_statistics'
+enumeration_helpers:
+- input_attribute: 'resource_type'
+  output_attribute: 'resource_type_loaded'
+  default_value: 'UNKNOWN'
+  # Also see: https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/platform/loader/fetch/resource.h?q=ResourceType%20resource.h&ss=chromium
+  values:
+    0: 'MainResource'
+    1: 'Image'
+    2: 'CSSStyleSheet'
+    3: 'Script'
+    4: 'Font'
+    5: 'Raw'
+    6: 'SVGDocument'
+    7: 'XSLStyleSheet'
+    8: 'LinkPrefetch'
+    9: 'TextTrack'
+    10: 'Audio'
+    11: 'Video'
+    12: 'Manifest'
+    13: 'SpeculationRules'
+message: 
+- '{top_level_hostname}' 
+- 'loaded External Resource from: {resource_hostname}'
+- ' with type of {resource_type_loaded}'
+short_message:
+- 'External Resource loaded from: {resource_hostname}'
+short_source: 'WEBHIST'
+source: 'Edge Load Statistics'
+---
+type: 'conditional'
 data_type: 'firefox:cache:record'
 message:
 - 'Fetched {fetch_count} time(s)'
@@ -614,3 +645,4 @@ short_message:
 - 'http_non_get: {was_http_non_get}'
 short_source: 'WEBHIST'
 source: 'Safari History Database'
+
