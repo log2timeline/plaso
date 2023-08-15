@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Tests for edge load statistics plugin."""
+"""Tests for Microsoft Edge load statistics plugin."""
+
 import unittest
 
 from plaso.parsers.sqlite_plugins import edge_load_statistics
@@ -12,10 +13,9 @@ class EdgeLoadStatisticsTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on a Edge Load Statistics file."""
     plugin_object = edge_load_statistics.EdgeLoadStatisticsPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['load_statistics.db'],
-                                                       plugin_object)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        ['load_statistics.db'], plugin_object)
 
-    # TODO: Replace zero with an actual number.
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data , 1)
@@ -25,14 +25,15 @@ class EdgeLoadStatisticsTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-    'data_type': 'edge:resources:load_statistics',
-    'last_update': '2023-03-13T01:50:33.620419+00:00',
-    'resource_hostname': 'sb.scorecardresearch.com',
-    'resource_type': 4,
-    'top_level_hostname': 'ntp.msn.com'
-    }
+        'data_type': 'edge:resources:load_statistics',
+        'last_update': '2023-03-13T01:50:33.620419+00:00',
+        'resource_hostname': 'sb.scorecardresearch.com',
+        'resource_type': 4,
+        'top_level_hostname': 'ntp.msn.com'}
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
