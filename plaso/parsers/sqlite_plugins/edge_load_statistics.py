@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for edge load statistics database.
-
-SQLite database path: test_data/load_statistics.db
-SQLite database Name: load_statistics.db
-"""
+"""Parser for Microsoft Edge load statistics database."""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
@@ -13,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class EdgeLoadStatisticsResourceEventData(events.EventData):
-  """edge load statistics resource event data.
+  """Microsoft Edge load statistics resource event data.
 
   Attributes:
     top_level_hostname: Source domain that initiated resource load
@@ -37,27 +33,27 @@ class EdgeLoadStatisticsResourceEventData(events.EventData):
 
 
 class EdgeLoadStatisticsPlugin(interface.SQLitePlugin):
-  """Parser for EdgeLoadStatistics"""
+  """SQLite parser plugin for Microsoft Edge load statistics database."""
 
   NAME = 'edge_load_statistics'
-  DESCRIPTION = 'Parser for EdgeLoadStatistics'
+  DESCRIPTION = 'Parser for Microsoft Edge load_statistics.db'
 
   QUERIES = [
-    ('SELECT top_level_hostname, resource_hostname,resource_type,last_update '
-      'FROM load_statistics', 'ParseResourceRow')]
+      ('SELECT top_level_hostname, resource_hostname, resource_type, '
+       'last_update FROM load_statistics', 'ParseResourceRow')]
 
   REQUIRED_STRUCTURE = {
-          'load_statistics': frozenset([
-            'top_level_hostname', 'resource_hostname', 'resource_url_hash', 
-            'resource_type', 'last_update']),
-          'meta':frozenset([
-            'key','value']),
-          'redirect_statistics':frozenset([
-            'source_hostname','destination_hostname',
-            'is_top_level_document','last_update'])}
+      'load_statistics': frozenset([
+          'top_level_hostname', 'resource_hostname', 'resource_url_hash', 
+          'resource_type', 'last_update']),
+      'meta':frozenset([
+          'key','value']),
+      'redirect_statistics':frozenset([
+          'source_hostname','destination_hostname',
+          'is_top_level_document','last_update'])}
 
   SCHEMAS = [{
-      'load_statistics': (
+     'load_statistics': (
           'CREATE TABLE load_statistics(top_level_hostname TEXT,'
           'resource_hostname TEXT, resource_url_hash TEXT, resource_type'
           'INTEGER, last_update INTEGER NOT NULL,'
@@ -114,5 +110,6 @@ class EdgeLoadStatisticsPlugin(interface.SQLitePlugin):
     event_data.query = query
 
     parser_mediator.ProduceEventData(event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(EdgeLoadStatisticsPlugin)
