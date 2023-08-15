@@ -12,24 +12,24 @@ class EdgeLoadStatisticsResourceEventData(events.EventData):
   """Microsoft Edge load statistics resource event data.
 
   Attributes:
-    top_level_hostname: Source domain that initiated resource load
+    last_update: Last update time of resource, cached or not.
+    query (str): query that created the event data.
     resource_hostname: External domain of the resource that was loaded
     resource_type: Integer descriptor of resource type
-    last_update: Last update time of resource, cached or not.
-
+    top_level_hostname: Source domain that initiated resource load
   """
 
   DATA_TYPE = 'edge:resources:load_statistics'
 
   def __init__(self):
     """Initializes event data."""
-    super(EdgeLoadStatisticsResourceEventData,
-          self).__init__(data_type=self.DATA_TYPE)
+    super(EdgeLoadStatisticsResourceEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.last_update = None
+    self.query = None
     self.resource_hostname = None
     self.resource_type = None
     self.top_level_hostname = None
-    self.query = None
 
 
 class EdgeLoadStatisticsPlugin(interface.SQLitePlugin):
@@ -101,13 +101,13 @@ class EdgeLoadStatisticsPlugin(interface.SQLitePlugin):
     event_data = EdgeLoadStatisticsResourceEventData()
     event_data.last_update = self._GetWebKitDateTimeRowValue(
         query_hash, row, 'last_update')
-    event_data.resource_hostname = self._GetRowValue(
-      query_hash, row, 'resource_hostname')
-    event_data.resource_type = self._GetRowValue(
-      query_hash, row, 'resource_type')
-    event_data.top_level_hostname = self._GetRowValue(
-      query_hash, row, 'top_level_hostname')
     event_data.query = query
+    event_data.resource_hostname = self._GetRowValue(
+        query_hash, row, 'resource_hostname')
+    event_data.resource_type = self._GetRowValue(
+        query_hash, row, 'resource_type')
+    event_data.top_level_hostname = self._GetRowValue(
+        query_hash, row, 'top_level_hostname')
 
     parser_mediator.ProduceEventData(event_data)
 
