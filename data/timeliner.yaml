@@ -307,6 +307,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'edge:resources:load_statistics'
+attribute_mappings:
+- name: 'last_update'
+  description: 'Last Updated Time'
+place_holder_event: true
+---
 data_type: 'firefox:cache:record'
 attribute_mappings:
 - name: 'expiration_time'
