@@ -57,8 +57,8 @@ class VimInfoTextPlugin(interface.TextPlugin,):
 
   _HEADER_2 = (
       pyparsing.Literal('# You may edit it if ') + (
-          pyparsing.Literal('you\'re careful!') ^ 
-          pyparsing.Literal('you are careful!')) + _END_OF_LINE) 
+          pyparsing.Literal('you\'re careful!') ^
+          pyparsing.Literal('you are careful!')) + _END_OF_LINE)
 
   _VERSION_HEADER = (
       pyparsing.Literal('# Viminfo version') +
