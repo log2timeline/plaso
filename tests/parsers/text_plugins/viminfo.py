@@ -102,6 +102,16 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
 
     self.assertEqual(extraction_warnings[3].message, expected_message)
 
+  def testProcessAlternateHeader(self):
+    """Tests the Process function with the new header string."""
+    plugin = viminfo.VimInfoTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['.viminfo_alt'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
 
 if __name__ == '__main__':
   unittest.main()
