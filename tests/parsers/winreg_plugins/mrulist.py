@@ -111,10 +111,10 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulist',
-        'entries': (
-            'Index: 1 [MRU Value a]: Some random text here '
-            'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-            'Index: 3 [MRU Value b]: c:/evil.exe'),
+        'entries': [
+            'Index: 1 [MRU Value a]: Some random text here ',
+            'Index: 2 [MRU Value c]: C:/looks_legit.exe ',
+            'Index: 3 [MRU Value b]: c:/evil.exe'],
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -205,9 +205,9 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     # MRUList event data.
     expected_event_values = {
         'data_type': 'windows:registry:mrulist',
-        'entries': (
-            'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
-            'C:\\\\Winnt\\\\Profiles\\\\Administrator\\\\Desktop'),
+        'entries': [
+            'Index: 1 [MRU Value a]: Shell item path: <My Computer> ',
+            'C:\\\\Winnt\\\\Profiles\\\\Administrator\\\\Desktop'],
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
