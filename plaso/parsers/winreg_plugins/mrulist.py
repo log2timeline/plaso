@@ -164,7 +164,7 @@ class BaseMRUListWindowsRegistryPlugin(
       entries.append(value_text)
 
     event_data = MRUListEventData()
-    event_data.entries = ' '.join(entries)
+    event_data.entries = entries
     event_data.key_path = registry_key.path
     event_data.last_written_time = registry_key.last_written_time
 
