@@ -117,8 +117,8 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     # MRUListEx event data.
     expected_entries = [
-        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe ',
-        'Index: 2 [MRU Value 0]: Some random text here ',
+        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe',
+        'Index: 2 [MRU Value 0]: Some random text here',
         'Index: 3 [MRU Value 1]: c:\\evil.exe']
 
     expected_event_values = {
@@ -179,10 +179,10 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
 
     # MRUListEx event data.
     expected_entries = [
-        'Index: 1 [MRU Value 1]: Shell item path: <My Computer> ',
-        'P:\\\\Application Tools\\\\Firefox 6.0\\\\Firefox Setup 6.0.exe ',
-        'Index: 2 [MRU Value 0]: Shell item path: <Computers and ',
-        'Devices> <UNKNOWN: 0x00>\\\\controller\\WebDavShare\\\\Firefox ',
+        'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
+        'P:\\\\Application Tools\\\\Firefox 6.0\\\\Firefox Setup 6.0.exe',
+        'Index: 2 [MRU Value 0]: Shell item path: <Computers and '
+        'Devices> <UNKNOWN: 0x00>\\\\controller\\WebDavShare\\\\Firefox '
         'Setup 3.6.12.exe']
 
     expected_event_values = {
@@ -255,45 +255,45 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
 
     # MRUListEx event data.
     expected_entries = [
-        'Index: 1 [MRU Value 17]: Path: The SHIELD, ',
-        'Shell item: [The SHIELD.lnk] ',
-        'Index: 2 [MRU Value 18]: ',
-        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, ',
-        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] ',
-        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, ',
-        'Shell item: [captain-america-shield-front.lnk] ',
-        'Index: 4 [MRU Value 12]: Path: Leadership, ',
-        'Shell item: [Leadership.lnk] ',
-        'Index: 5 [MRU Value 15]: Path: followership.pdf, ',
-        'Shell item: [followership.lnk] ',
-        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, ',
-        'Shell item: [leaderqualities.lnk] ',
-        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, ',
-        'Shell item: [htlhtl.lnk] ',
-        'Index: 8 [MRU Value 8]: Path: StarFury, ',
-        'Shell item: [StarFury (2).lnk] ',
-        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, ',
-        'Shell item: [Earth_SA-26_Thunderbolt.lnk] ',
-        'Index: 10 [MRU Value 11]: Path: 5031RR_BalancedLeadership.pdf, ',
-        'Shell item: [5031RR_BalancedLeadership.lnk] ',
-        'Index: 11 [MRU Value 10]: ',
-        'Path: SA-23E Mitchell-Hyundyne Starfury.docx, ',
-        'Shell item: [SA-23E Mitchell-Hyundyne Starfury.lnk] ',
-        'Index: 12 [MRU Value 9]: Path: StarFury.docx, ',
-        'Shell item: [StarFury (3).lnk] ',
-        'Index: 13 [MRU Value 6]: Path: StarFury.zip, ',
-        'Shell item: [StarFury.lnk] ',
-        'Index: 14 [MRU Value 4]: Path: VIBRANIUM.docx, ',
-        'Shell item: [VIBRANIUM.lnk] ',
-        'Index: 15 [MRU Value 5]: Path: ADAMANTIUM-Background.docx, ',
-        'Shell item: [ADAMANTIUM-Background.lnk] ',
-        'Index: 16 [MRU Value 3]: Path: Pictures, ',
-        'Shell item: [Pictures.lnk] ',
-        'Index: 17 [MRU Value 2]: Path: nick_fury_77831.jpg, ',
-        'Shell item: [nick_fury_77831.lnk] ',
-        'Index: 18 [MRU Value 1]: Path: Downloads, ',
-        'Shell item: [Downloads.lnk] ',
-        'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, ',
+        'Index: 1 [MRU Value 17]: Path: The SHIELD, '
+        'Shell item: [The SHIELD.lnk]',
+        'Index: 2 [MRU Value 18]: '
+        'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
+        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk]',
+        'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
+        'Shell item: [captain-america-shield-front.lnk]',
+        'Index: 4 [MRU Value 12]: Path: Leadership, '
+        'Shell item: [Leadership.lnk]',
+        'Index: 5 [MRU Value 15]: Path: followership.pdf, '
+        'Shell item: [followership.lnk]',
+        'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
+        'Shell item: [leaderqualities.lnk]',
+        'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
+        'Shell item: [htlhtl.lnk]',
+        'Index: 8 [MRU Value 8]: Path: StarFury, '
+        'Shell item: [StarFury (2).lnk]',
+        'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
+        'Shell item: [Earth_SA-26_Thunderbolt.lnk]',
+        'Index: 10 [MRU Value 11]: Path: 5031RR_BalancedLeadership.pdf, '
+        'Shell item: [5031RR_BalancedLeadership.lnk]',
+        'Index: 11 [MRU Value 10]: '
+        'Path: SA-23E Mitchell-Hyundyne Starfury.docx, '
+        'Shell item: [SA-23E Mitchell-Hyundyne Starfury.lnk]',
+        'Index: 12 [MRU Value 9]: Path: StarFury.docx, '
+        'Shell item: [StarFury (3).lnk]',
+        'Index: 13 [MRU Value 6]: Path: StarFury.zip, '
+        'Shell item: [StarFury.lnk]',
+        'Index: 14 [MRU Value 4]: Path: VIBRANIUM.docx, '
+        'Shell item: [VIBRANIUM.lnk]',
+        'Index: 15 [MRU Value 5]: Path: ADAMANTIUM-Background.docx, '
+        'Shell item: [ADAMANTIUM-Background.lnk]',
+        'Index: 16 [MRU Value 3]: Path: Pictures, '
+        'Shell item: [Pictures.lnk]',
+        'Index: 17 [MRU Value 2]: Path: nick_fury_77831.jpg, '
+        'Shell item: [nick_fury_77831.lnk]',
+        'Index: 18 [MRU Value 1]: Path: Downloads, '
+        'Shell item: [Downloads.lnk]',
+        'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, '
         'Shell item: [wallpaper_medium.lnk]']
 
     expected_event_values = {
@@ -349,29 +349,29 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
 
     # MRUListEx event data.
     expected_entries = [
-        'Index: 1 [MRU Value 1]: Path: chrome.exe, ',
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> ',
-        '<UNKNOWN: 0x00> ',
-        'Index: 2 [MRU Value 7]: ',
-        'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, ',
-        'Shell item path: <Shared Documents Folder (Users Files)> ',
-        '<UNKNOWN: 0x00>\\\\Alloy Research ',
-        'Index: 3 [MRU Value 6]: ',
-        'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, ',
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> ',
-        'Index: 4 [MRU Value 5]: ',
-        'Path: {24B5C9BB-48B5-47FF-8343-40481DBA1E2B}, ',
-        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents ',
-        'Index: 5 [MRU Value 4]: ',
-        'Path: {0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}, ',
-        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents\\\\',
-        'Alloy Research ',
-        'Index: 6 [MRU Value 3]: ',
-        'Path: {D4F85F66-003D-4127-BCE9-CAD7A57B2857}, ',
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> ',
-        'Index: 7 [MRU Value 0]: Path: iexplore.exe, ',
-        'Shell item path: <My Computer> P:\\\\Application Tools\\\\Firefox 6.0 ',
-        'Index: 8 [MRU Value 2]: Path: Skype.exe, ',
+        'Index: 1 [MRU Value 1]: Path: chrome.exe, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        '<UNKNOWN: 0x00>',
+        'Index: 2 [MRU Value 7]: '
+        'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, '
+        'Shell item path: <Shared Documents Folder (Users Files)> '
+        '<UNKNOWN: 0x00>\\\\Alloy Research',
+        'Index: 3 [MRU Value 6]: '
+        'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00>',
+        'Index: 4 [MRU Value 5]: '
+        'Path: {24B5C9BB-48B5-47FF-8343-40481DBA1E2B}, '
+        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents',
+        'Index: 5 [MRU Value 4]: '
+        'Path: {0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}, '
+        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents\\\\'
+        'Alloy Research',
+        'Index: 6 [MRU Value 3]: '
+        'Path: {D4F85F66-003D-4127-BCE9-CAD7A57B2857}, '
+        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00>',
+        'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
+        'Shell item path: <My Computer> P:\\\\Application Tools\\\\Firefox 6.0',
+        'Index: 8 [MRU Value 2]: Path: Skype.exe, '
         'Shell item path: <Users Libraries> <UNKNOWN: 0x00>']
 
     expected_event_values = {
