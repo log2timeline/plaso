@@ -61,7 +61,8 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
         'data_type': 'chrome:cache:entry',
         'original_url': ('https://m.media-amazon.com/images/'
             'G/01/gno/sprites/nav-sprite-global-1x-reorg-privacy'
-            '._CB587940754_.png')}
+            '._CB587940754_.png'),
+        'payloads': '["data_3 (offset: 0x5c000)", "f_000010"]'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

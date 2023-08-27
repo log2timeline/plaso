@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
-import os
 import json
+import os
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -85,8 +85,8 @@ class CacheEntry(object):
     key (bytes): key.
     next (int): cache address of the next cache entry.
     original_url (str): original URL derived from the key.
-    payloads (str): A json list of filenames (and offsets) 
-        to find the cache payload 
+    payloads (str): A json list of filenames (and offsets)
+        to find the cache payload.
     rankings_node (int): cache address of the rankings node.
   """
 
@@ -266,11 +266,11 @@ class ChromeCacheDataBlockFileParser(
     for stream in list(cache_entry.data_stream_addresses):
       data_stream = CacheAddress(stream)
       if data_stream.filename is not None:
-        if data_stream.filename.startswith("f_"):
+        if data_stream.filename.startswith('f_'):
           payloads.append(data_stream.filename)
         else:
           payloads.append(
-            f"{data_stream.filename} (offset: {hex(data_stream.block_offset)})")
+            f'{data_stream.filename} (offset: {hex(data_stream.block_offset)})')
     cache_entry_object.payloads = json.dumps(payloads)
 
     cache_entry_object.hash = cache_entry.hash
@@ -377,7 +377,7 @@ class ChromeCacheParser(interface.FileEntryParser):
             timestamp=cache_entry.creation_time)
 
         # In Chrome Cache v3, doublekey-ing cache entries was introduced
-        # This shows up as r"_dk_{domain}( {domain})* {url}"
+        # This shows up as "_dk_{domain}( {domain})* {url}"
         # https://chromium.googlesource.com/chromium/src/+/
         # 95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
         if '_dk_' in cache_entry.original_url[:20]:
