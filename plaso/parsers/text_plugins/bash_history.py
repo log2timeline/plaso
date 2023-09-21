@@ -45,7 +45,11 @@ class BashHistoryTextPlugin(interface.TextPlugin):
   _COMMAND_LINE = (
       pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
 
-  _LOG_LINE = _TIMESTAMP_LINE + _COMMAND_LINE
+  _LOG_LINE_END = pyparsing.StringEnd() | (_TIMESTAMP_LINE)
+
+  _LOG_LINE = _TIMESTAMP_LINE + pyparsing.SkipTo(
+      _LOG_LINE_END).setResultsName('command') + pyparsing.ZeroOrMore(
+          _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 

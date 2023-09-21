@@ -26,7 +26,7 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     """
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 3)
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -42,6 +42,17 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
         'written_time': '2013-10-01T12:36:17+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test multiline
+    expected_event_values = {
+        'command':
+            ('binary argument1 "--params=\\\n'
+            'param1=foo,\nparam2=bar\n" argument2'),
+        'data_type': 'bash:history:entry',
+        'written_time': '2021-06-10T22:30:36+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
     self.CheckEventData(event_data, expected_event_values)
 
   def testCheckRequiredFormat(self):

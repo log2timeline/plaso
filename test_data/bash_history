@@ -4,3 +4,8 @@
 /bin/bash
 #1380630979
 /usr/local/bin/splunk -p 8080
+#1623364236
+binary argument1 "--params=\
+param1=foo,
+param2=bar
+" argument2
