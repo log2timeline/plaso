@@ -29,7 +29,7 @@ class BashHistoryEventData(events.EventData):
     self.written_time = None
 
 
-class BashHistoryTextPlugin(interface.TextPlugin):
+class BashHistoryTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for bash history files."""
 
   NAME = 'bash_history'
@@ -45,10 +45,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
   _COMMAND_LINE = (
       pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
 
-  # Note that timestamp line must be defined before command line.
-  _LINE_STRUCTURES = [
-      ('timestamp_line', _TIMESTAMP_LINE),
-      ('command_line', _COMMAND_LINE)]
+  _LINE_STRUCTURES = [('timestamp_line', _TIMESTAMP_LINE)]
 
   # A desynchronized bash history file will start with the command line
   # instead of the timestamp.
@@ -70,7 +67,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
-      self._event_data.command = '\n'.join(self._command_lines)
+      self._event_data.command = ' '.join(self._command_lines)
       self._command_lines = []
 
       parser_mediator.ProduceEventData(self._event_data)
@@ -88,19 +85,18 @@ class BashHistoryTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'command_line':
+    if key == '_line_continuation':
       # A desynchronized bash history file will start with the command line
       # instead of the timestamp.
       if not self._event_data:
         self._event_data = BashHistoryEventData()
 
-      command = self._GetValueFromStructure(structure, 'command')
+      command = structure.replace('\n', ' ').strip()
       self._command_lines.append(command)
 
     else:
       if self._event_data:
-        self._event_data.command = '\n'.join(self._command_lines)
-        self._command_lines = []
+        self._event_data.command = ' '.join(self._command_lines)
 
         parser_mediator.ProduceEventData(self._event_data)
 
@@ -109,6 +105,7 @@ class BashHistoryTextPlugin(interface.TextPlugin):
       self._event_data = BashHistoryEventData()
       self._event_data.written_time = dfdatetime_posix_time.PosixTime(
           timestamp=timestamp)
+      self._command_lines = []
 
   def _ResetState(self):
     """Resets stored values."""

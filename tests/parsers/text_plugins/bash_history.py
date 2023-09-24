@@ -82,8 +82,8 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     # Test multi line.
     expected_event_values = {
         'command': (
-            'binary argument1 "--params=\\\n'
-            'param1=foo,\nparam2=bar\n" argument2'),
+            'binary argument1 "--params=\\ '
+            'param1=foo, param2=bar " argument2'),
         'data_type': 'bash:history:entry',
         'written_time': '2021-06-10T22:30:36+00:00'}
 
@@ -123,8 +123,8 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     # Test multi line.
     expected_event_values = {
         'command': (
-            'binary argument1 "--params=\\\n'
-            'param1=foo,\nparam2=bar\n" argument2'),
+            'binary argument1 "--params=\\ '
+            'param1=foo, param2=bar " argument2'),
         'data_type': 'bash:history:entry',
         'written_time': '2021-06-10T22:30:36+00:00'}
 
