@@ -32,7 +32,7 @@ class IOSLockdowndLogData(events.EventData):
     self.written_time = None
 
 
-class IOSLockdowndLogTextPlugin(interface.TextPlugin):
+class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for iOS lockdown daemon log files."""
 
   NAME = 'ios_lockdownd'
@@ -67,19 +67,14 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
       _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
-
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
     super(IOSLockdowndLogTextPlugin, self).__init__()
+    self._body_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -90,6 +85,9 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.body = ' '.join(self._body_lines)
+      self._body_lines = None
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -104,15 +102,14 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
         structure, 'date_time')
 
     body = self._GetValueFromStructure(structure, 'body', default_value='')
-    body = body.strip()
 
     event_data = IOSLockdowndLogData()
-    event_data.body = body
     event_data.process_identifier = self._GetValueFromStructure(
         structure, 'process_identifier')
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     self._event_data = event_data
+    self._body_lines = [body.strip()]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -126,18 +123,17 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
+    if key == '_line_continuation':
+      body = structure.replace('\n', ' ').strip()
+      self._body_lines.append(body)
+
+    else:
       if self._event_data:
+        self._event_data.body = ' '.join(self._body_lines)
+
         parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
 
       self._ParseLogline(structure)
-
-    elif key == 'successive_log_line':
-      body = self._GetValueFromStructure(structure, 'body', default_value='')
-      body = body.strip()
-
-      self._event_data.body = ' '.join([self._event_data.body, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -168,6 +164,11 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._body_lines = None
+    self._event_data = None
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
@@ -192,7 +193,7 @@ class IOSLockdowndLogTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    self._event_data = None
+    self._ResetState()
 
     return True
 

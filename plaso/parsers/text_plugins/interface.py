@@ -386,3 +386,57 @@ class TextPlugin(plugins.BasePlugin):
 
     finally:
       self._parser_mediator = None
+
+
+class TextPluginWithLineContinuation(TextPlugin):
+  """The interface for text plugins with line continuation."""
+
+  # pylint: disable=abstract-method
+
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(TextPluginWithLineContinuation, self).__init__()
+    self._last_string_match = None
+
+  def _ParseString(self, string):
+    """Parses a string for known grammar.
+
+    Args:
+      string (str): string.
+
+    Returns:
+      tuple[str, pyparsing.ParseResults, int, int]: key, parsed tokens, start
+          and end offset.
+
+    Raises:
+      ParseError: when the string cannot be parsed by the grammar.
+    """
+    if self._last_string_match:
+      last_string_match = self._last_string_match
+      self._last_string_match = None
+      return last_string_match
+
+    try:
+      structure_generator = self._pyparsing_grammar.scanString(
+          string, maxMatches=1)
+      structure, start, end = next(structure_generator)
+
+    except StopIteration:
+      structure = None
+
+    except pyparsing.ParseException as exception:
+      raise errors.ParseError(exception)
+
+    if not structure:
+      return '_line_continuation', string, 0, len(string)
+
+    # Unwrap the line structure and retrieve its name (key).
+    keys = list(structure.keys())
+    if len(keys) != 1:
+      raise errors.ParseError('Missing key of line structructure.')
+
+    if start == 0:
+      return keys[0], structure[0], start, end
+
+    self._last_string_match = (keys[0], structure[0], 0, end - start)
+    return '_line_continuation', string[:start], 0, start

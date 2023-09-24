@@ -235,7 +235,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
     return True
 
 
-class SkyDriveLog2TextPlugin(interface.TextPlugin):
+class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for SkyDrive version 2 log files."""
 
   NAME = 'skydrive_log_v2'
@@ -306,20 +306,16 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       _LOG_LINE_V2_START + pyparsing.restOfLine.setResultsName('detail') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE_V2 = (
-      pyparsing.NotAny(_HEADER_LINE_V2_START ^ _LOG_LINE_V2_START) +
-      pyparsing.restOfLine().setResultsName('detail') + _END_OF_LINE)
-
   _LINE_STRUCTURES = [
       ('header_line_v2', _HEADER_LINE_V2),
-      ('log_line_v2', _LOG_LINE_V2),
-      ('successive_log_line_v2', _SUCCESSIVE_LOG_LINE_V2)]
+      ('log_line_v2', _LOG_LINE_V2)]
 
   VERIFICATION_GRAMMAR = _HEADER_LINE_V2
 
   def __init__(self):
     """Initializes a text parser plugin."""
     super(SkyDriveLog2TextPlugin, self).__init__()
+    self._detail_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -330,6 +326,9 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.detail = ' '.join(self._detail_lines)
+      self._detail_lines = None
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -414,13 +413,13 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
     event_data = SkyDriveLogEventData()
     event_data.added_time = self._ParseTimeElementsVersion2(
         time_elements_structure)
-    event_data.detail = detail
     event_data.log_level = self._GetValueFromStructure(structure, 'log_level')
     event_data.module = self._GetValueFromStructure(structure, 'module')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
 
     self._event_data = event_data
+    self._detail_lines = [detail]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -435,21 +434,20 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if self._event_data and key in ('header_line_v2', 'log_line_v2'):
+      self._event_data.detail = ' '.join(self._detail_lines)
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
     if key == 'header_line_v2':
       self._ParseHeaderLine(parser_mediator, structure)
 
-    elif key == 'log_line_v2':
+    elif key == '_line_continuation':
+      detail = structure.replace('\n', ' ').strip()
+      self._detail_lines.append(detail)
+
+    else:
       self._ParseLoglineVersion2(structure)
-
-    elif key == 'successive_log_line_v2':
-      detail = self._GetValueFromStructure(
-          structure, 'detail', default_value='')
-      detail = detail.strip()
-
-      self._event_data.detail = ' '.join([self._event_data.detail, detail])
 
   def _ParseTimeElementsVersion2(self, time_elements_structure):
     """Parses date and time elements of a version 2 log line.
@@ -487,6 +485,11 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._detail_lines = []
+    self._event_data = None
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
@@ -511,6 +514,8 @@ class SkyDriveLog2TextPlugin(interface.TextPlugin):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       return False
+
+    self._ResetState()
 
     return True
 

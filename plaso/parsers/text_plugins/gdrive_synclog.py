@@ -39,7 +39,7 @@ class GoogleDriveSyncLogEventData(events.EventData):
     self.thread = None
 
 
-class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
+class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for Google Drive Sync log files."""
 
   NAME = 'gdrive_synclog'
@@ -93,13 +93,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
-
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   # Using a regular expression here is faster on non-match than the log line
   # grammar.
@@ -113,6 +107,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(GoogleDriveSyncLogTextPlugin, self).__init__()
+    self._body_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -123,6 +118,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.message = ' '.join(self._body_lines)
+      self._body_lines = None
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -147,9 +145,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
-    event_data.message = body
 
     self._event_data = event_data
+    self._body_lines = [body]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -163,18 +161,17 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
+    if key == '_line_continuation':
+      body = structure.replace('\n', ' ').strip()
+      self._body_lines.append(body)
+
+    else:
       if self._event_data:
+        self._event_data.message = ' '.join(self._body_lines)
+
         parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
 
       self._ParseLogline(structure)
-
-    elif key == 'successive_log_line':
-      body = self._GetValueFromStructure(structure, 'body', default_value='')
-      body = body.strip()
-
-      self._event_data.message = ' '.join([self._event_data.message, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -215,6 +212,11 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     except (TypeError, ValueError):
       return None
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._body_lines = None
+    self._event_data = None
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
@@ -240,7 +242,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    self._event_data = None
+    self._ResetState()
 
     return True
 
