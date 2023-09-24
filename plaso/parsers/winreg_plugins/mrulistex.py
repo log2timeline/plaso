@@ -23,7 +23,7 @@ class MRUListExEventData(events.EventData):
   """MRUListEx event data attribute container.
 
   Attributes:
-    entries (str): most recently used (MRU) entries.
+    entries (list[str]): most recently used (MRU) entries.
     key_path (str): Windows Registry key path.
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
