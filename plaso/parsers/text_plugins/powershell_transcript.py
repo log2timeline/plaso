@@ -130,7 +130,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
   # TODO: handle footer with end time.
 
   def __init__(self):
-    """Initializes instance attributes needed for processing."""
+    """Initializes a text parser plugin."""
     super(PowerShellTranscriptLogTextPlugin, self).__init__()
     self._command_history = []
     self._event_data = None
