@@ -71,7 +71,8 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-six
                       python3-urllib3
                       python3-yara
-                      python3-zmq";
+                      python3-zmq
+                      python3-zstd";
 
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-fakeredis
