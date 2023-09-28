@@ -6,8 +6,8 @@ import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-import zstd
 from lz4 import block as lz4_block
+import zstd
 
 from plaso.containers import events
 from plaso.lib import dtfabric_helper
@@ -101,11 +101,11 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the data object cannot be parsed.
     """
-    if not self._compact:
-      data_object_map = self._GetDataTypeMap('systemd_journal_data_object')
-    else:
+    if self._compact:
       data_object_map = self._GetDataTypeMap(
-        'systemd_journal_data_object_compact')
+          'systemd_journal_data_object_compact')
+    else:
+      data_object_map = self._GetDataTypeMap('systemd_journal_data_object')
 
     try:
       data_object, data_object_header_size = self._ReadStructureFromFileObject(
@@ -141,8 +141,8 @@ class SystemdJournalParser(
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
             'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
-            'error: {1!s}').format(file_offset + data_object_header_size,
-                exception))
+            'error: {1!s}').format(
+                file_offset + data_object_header_size, exception))
 
       data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
 
@@ -170,12 +170,12 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the entry array object cannot be parsed.
     """
-    if not self._compact:
+    if self._compact:
       entry_array_object_map = self._GetDataTypeMap(
-        'systemd_journal_entry_array_object')
+          'systemd_journal_entry_array_object_compact')
     else:
       entry_array_object_map = self._GetDataTypeMap(
-        'systemd_journal_entry_array_object_compact')
+          'systemd_journal_entry_array_object')
 
     try:
       entry_array_object, _ = self._ReadStructureFromFileObject(
@@ -269,11 +269,11 @@ class SystemdJournalParser(
     entry_object = self._ParseEntryObject(file_object, file_offset)
 
     # The data is read separately for performance reasons.
-    if not self._compact:
-      entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
-    else:
+    if self._compact:
       entry_item_map = self._GetDataTypeMap(
-        'systemd_journal_entry_item_compact')
+          'systemd_journal_entry_item_compact')
+    else:
+      entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
 
     file_offset += 64
     data_end_offset = file_offset + entry_object.data_size - 64
