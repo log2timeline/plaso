@@ -77,7 +77,8 @@ PYTHON_DEPENDENCIES = {
     'xlsxwriter': ('__version__', '0.9.3', None, True),
     'yaml': ('__version__', '3.10', None, True),
     'yara': ('YARA_VERSION', '3.4.0', None, True),
-    'zmq': ('__version__', '2.1.11', None, True)}
+    'zmq': ('__version__', '2.1.11', None, True),
+    'zstd': ('version()', '1.3.0.2', None, True)}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
