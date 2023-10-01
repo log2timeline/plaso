@@ -85,7 +85,7 @@ class SystemdJournalParser(
     """Initializes a parser."""
     super(SystemdJournalParser, self).__init__()
     self._maximum_journal_file_offset = 0
-    self._compact = False
+    self._is_compact = False
 
   def _ParseDataObject(self, file_object, file_offset):
     """Parses a data object.
@@ -101,7 +101,7 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the data object cannot be parsed.
     """
-    if self._compact:
+    if self._is_compact:
       data_object_map = self._GetDataTypeMap(
           'systemd_journal_data_object_compact')
     else:
@@ -151,8 +151,8 @@ class SystemdJournalParser(
         data = zstd.decompress(data)
       except zstd.Error as exception:
         raise errors.ParseError((
-            'Unable to decompress ZSTD at offset: 0x{0:08x} with error: {1!s}'
-            ).format(file_offset + data_object_header_size, exception))
+            'Unable to decompress ZSTD at offset: 0x{0:08x} with error: '
+            '{1!s}'.format(file_offset + data_object_header_size, exception))
 
     return data
 
@@ -170,7 +170,7 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the entry array object cannot be parsed.
     """
-    if self._compact:
+    if self._is_compact:
       entry_array_object_map = self._GetDataTypeMap(
           'systemd_journal_entry_array_object_compact')
     else:
@@ -269,7 +269,7 @@ class SystemdJournalParser(
     entry_object = self._ParseEntryObject(file_object, file_offset)
 
     # The data is read separately for performance reasons.
-    if self._compact:
+    if self._is_compact:
       entry_item_map = self._GetDataTypeMap(
           'systemd_journal_entry_item_compact')
     else:
@@ -340,7 +340,7 @@ class SystemdJournalParser(
               file_header.header_size))
 
     if file_header.incompatible_flags & self._HEADER_INCOMPATIBLE_COMPACT:
-      self._compact = True
+      self._is_compact = True
 
     data_hash_table_end_offset = (
         file_header.data_hash_table_offset +
