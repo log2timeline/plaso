@@ -124,8 +124,10 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_body = 'Some large string: {0:s}'.format('A' * 512)
+
     expected_event_values = {
-        'body': 'Some large string: ' + 'A'*512,
+        'body': expected_body,
         'data_type': 'systemd:journal',
         'hostname': 'DESKTOP-QCDE2BT',
         'pid': '197',
