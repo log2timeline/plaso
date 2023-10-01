@@ -152,7 +152,7 @@ class SystemdJournalParser(
       except zstd.Error as exception:
         raise errors.ParseError((
             'Unable to decompress ZSTD at offset: 0x{0:08x} with error: '
-            '{1!s}'.format(file_offset + data_object_header_size, exception))
+            '{1!s}').format(file_offset + data_object_header_size, exception))
 
     return data
 
