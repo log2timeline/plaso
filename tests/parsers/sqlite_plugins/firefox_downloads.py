@@ -79,7 +79,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
             )
     }
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
 
