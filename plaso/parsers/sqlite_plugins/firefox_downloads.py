@@ -3,7 +3,6 @@
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 import json
-import logging
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -53,8 +52,12 @@ class Firefox118DownloadEventData(events.EventData):
   """Firefox download event data.
 
   Attributes:
+    deleted (int): Firefox-tracked deleted state
+    download_state (int): Firefox State of the download
     end_time (dfdatetime.DateTimeValues): date and time the download was
         finished.
+    expiration (int): Firefox (potentially deprecrated) expiration field
+    flags (int): Firefox flags associated with this download
     full_path (str): full path of the target of the download.
     mime_type (str): mime type of the download.
     name (str): name of the download.
@@ -67,6 +70,7 @@ class Firefox118DownloadEventData(events.EventData):
         started.
     temporary_location (str): temporary location of the download.
     total_bytes (int): total number of bytes of the download.
+    type (int): Firefox (potentially deprecrated) type field
     url (str): source URL of the download.
   """
 
@@ -75,20 +79,20 @@ class Firefox118DownloadEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(Firefox118DownloadEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.deleted = None
+    self.download_state = None
     self.end_time = None
+    self.expiration = None
+    self.flags = None
     self.full_path = None
     self.name = None
     self.query = None
     self.received_bytes = None
     self.start_time = None
     self.total_bytes = None
+    self.type = None
     self.url = None
 
-    self.download_state = None
-    self.deleted = None
-    self.flags = None
-    self.expiration = None
-    self.type = None
 
 class Firefox118DownloadsPlugin(interface.SQLitePlugin):
   NAME = 'firefox_118_downloads'
@@ -168,11 +172,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
     content = self._GetRowValue(query_hash,row,'content')
     content_data = json.loads(content)
 
-    print("content successfully parsed")
-    logging.error("content successfully parsed")
-
     event_data = Firefox118DownloadEventData()
-    
 
     event_data.deleted = content_data.get('deleted', None)
     event_data.download_state = content_data.get('state', None)
