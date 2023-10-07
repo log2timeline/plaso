@@ -277,5 +277,5 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(FirefoxDownloadsPlugin)
-sqlite.SQLiteParser.RegisterPlugin(Firefox118DownloadsPlugin)
+sqlite.SQLiteParser.RegisterPlugins([
+    FirefoxDownloadsPlugin, Firefox118DownloadsPlugin])
