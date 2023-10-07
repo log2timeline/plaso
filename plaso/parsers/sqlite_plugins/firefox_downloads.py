@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Mozilla Firefox downloads database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 import json
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
