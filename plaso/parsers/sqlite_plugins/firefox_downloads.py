@@ -96,6 +96,12 @@ class Firefox118DownloadEventData(events.EventData):
 
 
 class Firefox118DownloadsPlugin(interface.SQLitePlugin):
+  """SQLite parser plugin for Mozilla Firefox file downloads as of version 118.
+  Likely, this will apply to versions earlier than 118, but this was built on
+  version 118.
+
+  In this version of Firefox Downloads, the files are in a table in places.sql
+  """
   NAME = 'firefox_118_downloads'
   DATA_FORMAT = (
       'Mozilla Firefox 118 downloads SQLite database (downloads.sqlite) file')
