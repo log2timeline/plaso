@@ -57,7 +57,7 @@ class Firefox118DownloadEventData(events.EventData):
     download_state (int): Firefox State of the download
     end_time (dfdatetime.DateTimeValues): date and time the download was
         finished.
-    expiration (int): Firefox (potentially deprecrated) expiration field
+    expiration (int): Firefox (potentially deprecated) expiration field
     flags (int): Firefox flags associated with this download
     full_path (str): full path of the target of the download.
     mime_type (str): mime type of the download.
@@ -71,7 +71,7 @@ class Firefox118DownloadEventData(events.EventData):
         started.
     temporary_location (str): temporary location of the download.
     total_bytes (int): total number of bytes of the download.
-    type (int): Firefox (potentially deprecrated) type field
+    type (int): Firefox (potentially deprecated) type field
     url (str): source URL of the download.
   """
 
