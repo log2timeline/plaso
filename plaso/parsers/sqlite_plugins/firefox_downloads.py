@@ -119,7 +119,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
         'annos2.dateAdded, annos2.lastModified, annos2.content as dest_fpath, '
         'places.url, places.title, places.last_visit_date '
         'from moz_annos annos1, moz_annos annos2, moz_places places '
-        'WHERE annos1.anno_attribute_id == annos2.anno_attribute_id+1 ' 
+        'WHERE annos1.anno_attribute_id == annos2.anno_attribute_id+1 '
         'AND annos1.place_id == annos2.place_id '
         'AND annos1.place_id == places.id'),
        'ParseDownloadsRow')]
@@ -131,7 +131,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
        'content LONGVARCHAR, flags INTEGER DEFAULT 0, '
        'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, '
        'dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'},
-      {'moz_places': 
+      {'moz_places':
        'CREATE TABLE moz_places (id INTEGER PRIMARY KEY, url LONGVARCHAR, '
        'title LONGVARCHAR, rev_host LONGVARCHAR, '
        'visit_count INTEGER DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, '
@@ -142,7 +142,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
        'preview_image_url TEXT, site_name TEXT, '
        'origin_id INTEGER REFERENCES moz_origins(id), '
        'recalc_frecency INTEGER NOT NULL DEFAULT 0, alt_frecency INTEGER, '
-       'recalc_alt_frecency INTEGER NOT NULL DEFAULT 0)'} 
+       'recalc_alt_frecency INTEGER NOT NULL DEFAULT 0)'}
         ]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
@@ -185,7 +185,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
     event_data.download_state = content_data.get('state', None)
     event_data.end_time = content_data.get('endTime', None)
     event_data.expiration = self._GetRowValue(query_hash, row, 'expiration')
-    event_data.flags = self._GetRowValue(query_hash, row, 'flags') 
+    event_data.flags = self._GetRowValue(query_hash, row, 'flags')
     event_data.full_path = self._GetRowValue(query_hash, row, 'dest_fpath')
     event_data.name = self._GetRowValue(query_hash, row, 'title')
     event_data.query = query
@@ -195,7 +195,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
     event_data.total_bytes = content_data.get('fileSize', 0)
     event_data.type = self._GetRowValue(query_hash, row, 'type')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
-    
+
     parser_mediator.ProduceEventData(event_data)
 
 
