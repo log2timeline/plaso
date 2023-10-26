@@ -67,7 +67,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
         'data_type': 'firefox:downloads:download',
         'download_state': 1,
         'end_time': 1689722429974,
-        'full_path': 'file:///C:/Users/factdevteam/Downloads/VSCodeUserSetup-x64-1.80.1.exe',
+        'full_path':
+        'file:///C:/Users/factdevteam/'
+        'Downloads/VSCodeUserSetup-x64-1.80.1.exe',
         'name': 'VSCodeUserSetup-x64-1.80.1.exe',
         'received_bytes': 93176792,
         'start_time': "2023-07-18T23:20:28.452000+00:00",
