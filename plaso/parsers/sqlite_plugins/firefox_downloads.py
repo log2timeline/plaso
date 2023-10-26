@@ -143,7 +143,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
        'origin_id INTEGER REFERENCES moz_origins(id), '
        'recalc_frecency INTEGER NOT NULL DEFAULT 0, alt_frecency INTEGER, '
        'recalc_alt_frecency INTEGER NOT NULL DEFAULT 0)'}
-        ]
+    ]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
@@ -176,7 +176,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    content = self._GetRowValue(query_hash,row,'content')
+    content = self._GetRowValue(query_hash, row, 'content')
     content_data = json.loads(content)
 
     event_data = Firefox118DownloadEventData()
