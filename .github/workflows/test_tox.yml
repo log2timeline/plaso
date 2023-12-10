@@ -15,15 +15,17 @@ jobs:
       matrix:
         include:
         - python-version: '3.7'
-          toxenv: 'py37'
+          toxenv: 'py37,wheel'
         - python-version: '3.8'
-          toxenv: 'py38'
+          toxenv: 'py38,wheel'
         - python-version: '3.9'
-          toxenv: 'py39'
+          toxenv: 'py39,wheel'
         - python-version: '3.10'
-          toxenv: 'py310'
+          toxenv: 'py310,wheel'
         - python-version: '3.11'
-          toxenv: 'py311'
+          toxenv: 'py311,wheel'
+        - python-version: '3.12'
+          toxenv: 'py312,wheel'
     container:
       image: ubuntu:22.04
     steps:
@@ -58,8 +60,8 @@ jobs:
     strategy:
       matrix:
         include:
-        - python-version: '3.11'
-          toxenv: 'py311,coverage'
+        - python-version: '3.10'
+          toxenv: 'coverage'
     container:
       image: ubuntu:22.04
     steps:

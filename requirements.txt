@@ -1,4 +1,3 @@
-pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 acstore >= 20230519
