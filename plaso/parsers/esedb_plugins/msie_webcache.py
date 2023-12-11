@@ -443,12 +443,10 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       if esedb_table:
         self._ParseContainerTable(parser_mediator, esedb_table, container_name)
 
-      cookie_table_name = 'CookieEntryEx_{0:d}'.format(container_identifier)
-      esedb_cookie_table = database.GetTableByName(cookie_table_name)
-      esedb_cookie_table_name = getattr(esedb_cookie_table, 'name', None)
-
-      if esedb_cookie_table_name == cookie_table_name:
-        self._ParseCookieExTable(parser_mediator, esedb_cookie_table)
+      table_name = 'CookieEntryEx_{0:d}'.format(container_identifier)
+      esedb_table = database.GetTableByName(table_name)
+      if esedb_table:
+        self._ParseCookieExTable(parser_mediator, esedb_table)
 
   def ParseLeakFilesTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
