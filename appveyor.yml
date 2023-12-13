@@ -38,7 +38,7 @@ build_script:
 
 test_script:
 - cmd: IF [%TARGET%]==[tests] (
-    "%PYTHON%\\python.exe run_tests.py" &&
+    "%PYTHON%\\python.exe" run_tests.py &&
     IF EXIST "tests\\end-to-end.py" (
         set PYTHONPATH=. &&
         "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
