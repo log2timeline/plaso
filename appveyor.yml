@@ -6,12 +6,21 @@ environment:
     PYTHON: "C:\\Python311"
     PYTHON_VERSION: "3.11"
     L2TBINARIES_TRACK: "dev"
+    TARGET: tests
   - DESCRIPTION: "Windows with 64-bit Python 3.11"
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     PYTHON: "C:\\Python311-x64"
     PYTHON_VERSION: "3.11"
     L2TBINARIES_TRACK: "dev"
+    TARGET: tests
+  - DESCRIPTION: "Wheel 64-bit"
+    MACHINE_TYPE: "amd64"
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    PYTHON: "C:\\Python311-x64"
+    PYTHON_VERSION: "3.11"
+    L2TBINARIES_TRACK: "dev"
+    TARGET: wheel
   - DESCRIPTION: "Mac OS with Python 3.11"
     APPVEYOR_BUILD_WORKER_IMAGE: macos-monterey
     HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -24,13 +33,15 @@ install:
 - sh: config/appveyor/install.sh
 
 build_script:
-- cmd: "%PYTHON%\\python.exe setup.py bdist_wheel"
+- cmd: IF [%TARGET%]==[wheel] (
+    "%PYTHON%\\python.exe setup.py bdist_wheel" )
 
 test_script:
-- cmd: "%PYTHON%\\python.exe run_tests.py"
-- cmd: IF EXIST "tests\\end-to-end.py" (
-    set PYTHONPATH=. &&
-    "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" )
+- cmd: IF [%TARGET%]==[tests] (
+    "%PYTHON%\\python.exe run_tests.py" &&
+    IF EXIST "tests\\end-to-end.py" (
+        set PYTHONPATH=. &&
+        "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
 - sh: config/appveyor/runtests.sh
 
 artifacts:
