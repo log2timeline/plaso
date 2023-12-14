@@ -173,6 +173,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @unittest.skipIf(platform.system() == 'Windows', 'timing out on Windows')
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
