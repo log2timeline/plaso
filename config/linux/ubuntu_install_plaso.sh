@@ -46,6 +46,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libssl-dev
                      libvhdi-python3
                      libvmdk-python3
+                     libvsapm-python3
                      libvsgpt-python3
                      libvshadow-python3
                      libvslvm-python3
@@ -154,6 +155,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvhdi-python3-dbg
                     libvmdk-dbg
                     libvmdk-python3-dbg
+                    libvsapm-dbg
+                    libvsapm-python3-dbg
                     libvsgpt-dbg
                     libvsgpt-python3-dbg
                     libvshadow-dbg
