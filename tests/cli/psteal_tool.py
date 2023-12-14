@@ -3,6 +3,7 @@
 """Tests for the psteal CLI tool."""
 
 import os
+import platform
 import unittest
 
 from dfvfs.resolver import resolver as dfvfs_resolver
