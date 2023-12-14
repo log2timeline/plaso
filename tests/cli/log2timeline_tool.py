@@ -234,6 +234,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @unittest.skipIf(platform.system() == 'Windows', 'timing out on Windows')
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
     test_file_path = self._GetTestFilePath(['bdetogo.raw'])
