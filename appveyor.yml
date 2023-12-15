@@ -34,7 +34,7 @@ install:
 
 build_script:
 - cmd: IF [%TARGET%]==[wheel] (
-    "%PYTHON%\\python.exe" python -m build --wheel )
+    "%PYTHON%\\python.exe" -m build --wheel )
 
 test_script:
 - cmd: IF [%TARGET%]==[tests] (
