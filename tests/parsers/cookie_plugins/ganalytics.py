@@ -18,7 +18,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin = firefox_cookies.FirefoxCookie2Plugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['firefox_cookies.sqlite'], plugin)
+        ['firefox_2_cookies.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
