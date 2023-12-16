@@ -38,6 +38,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libsmraw-python3
                       libvhdi-python3
                       libvmdk-python3
+                      libvsapm-python3
                       libvsgpt-python3
                       libvshadow-python3
                       libvslvm-python3
@@ -55,6 +56,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-dfvfs
                       python3-dfwinreg
                       python3-dtfabric
+                      python3-flor
                       python3-future
                       python3-idna
                       python3-lz4
@@ -144,6 +146,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvhdi-python3-debuginfo
                     libvmdk-debuginfo
                     libvmdk-python3-debuginfo
+                    libvsapm-debuginfo
+                    libvsapm-python3-debuginfo
                     libvsgpt-debuginfo
                     libvsgpt-python3-debuginfo
                     libvshadow-debuginfo

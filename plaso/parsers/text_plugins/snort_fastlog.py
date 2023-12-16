@@ -15,7 +15,7 @@ The following variants are known:
     SOURCE_IP:SOURCE_PORT -> DESTINATION_IP:DESTINATION_PORT
 
 Also see:
-  https://suricata.readthedocs.io/en/suricata-6.0.0/configuration/suricata-yaml.html#line-based-alerts-log-fast-log
+  https://docs.suricata.io/en/suricata-6.0.0/configuration/suricata-yaml.html#line-based-alerts-log-fast-log
 """
 
 import pyparsing

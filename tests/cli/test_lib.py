@@ -48,6 +48,10 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
     self._read_offset = 0
 
+  def Flush(self):
+    """Flushes buffered data to the output."""
+    return
+
   def Write(self, string):
     """Writes a string to the output.
 
