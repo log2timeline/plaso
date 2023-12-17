@@ -155,8 +155,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       ParseError: when the header cannot be parsed.
     """
     try:
-      structure_generator = self._HEADER_GRAMMAR.scanString(
-          text_reader.lines, maxMatches=1)
+      structure_generator = self._HEADER_GRAMMAR.scan_string(
+          text_reader.lines, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:

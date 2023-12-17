@@ -252,8 +252,8 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the string cannot be parsed by the grammar.
     """
     try:
-      structure_generator = self._pyparsing_grammar.scanString(
-          string, maxMatches=1)
+      structure_generator = self._pyparsing_grammar.scan_string(
+          string, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
@@ -417,8 +417,8 @@ class TextPluginWithLineContinuation(TextPlugin):
       return last_string_match
 
     try:
-      structure_generator = self._pyparsing_grammar.scanString(
-          string, maxMatches=1)
+      structure_generator = self._pyparsing_grammar.scan_string(
+          string, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
