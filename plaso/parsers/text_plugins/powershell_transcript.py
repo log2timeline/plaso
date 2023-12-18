@@ -195,7 +195,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
         structure, 'date_time')
 
     try:
-      time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
+      time_elements_structure = self._DATE_TIME.parse_string(
+          date_time_structure)
     except pyparsing.ParseException:
       raise errors.ParseError('Unable to parse date time.')
 
