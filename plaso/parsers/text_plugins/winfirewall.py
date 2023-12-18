@@ -67,10 +67,10 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   # A Windows Firewall is encoded using the system codepage.
   ENCODING = None
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE = pyparsing.Group(
@@ -91,11 +91,11 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
       pyparsing.pyparsing_common.ipv6_address | pyparsing.Suppress('-'))
 
   _PORT_NUMBER_OR_BLANK = (
-      pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+      pyparsing.Word(pyparsing.nums, max=6).set_parse_action(
           lambda tokens: int(tokens[0], 10)) | pyparsing.Suppress('-'))
 
   _INTEGER_OR_BLANK = (
-      pyparsing.Word(pyparsing.nums).setParseAction(
+      pyparsing.Word(pyparsing.nums).set_parse_action(
           lambda tokens: int(tokens[0], 10)) | pyparsing.Suppress('-'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())

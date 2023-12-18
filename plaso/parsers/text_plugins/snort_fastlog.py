@@ -70,13 +70,13 @@ class SnortFastLogTextPlugin(
   NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_MONTH_DAY = (

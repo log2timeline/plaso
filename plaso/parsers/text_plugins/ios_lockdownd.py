@@ -38,13 +38,13 @@ class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
   NAME = 'ios_lockdownd'
   DATA_FORMAT = 'iOS lockdown daemon log'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())

@@ -43,7 +43,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPluginWithLineContinuation):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())

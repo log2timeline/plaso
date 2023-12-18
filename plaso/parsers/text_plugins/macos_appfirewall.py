@@ -47,10 +47,10 @@ class MacOSAppFirewallTextPlugin(
 
   ENCODING = 'utf-8'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -69,7 +69,7 @@ class MacOSAppFirewallTextPlugin(
   _REPORTER_CHARACTERS = ''.join(
       [c for c in pyparsing.printables if c not in [':', '[', '<']])
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _AGENT = pyparsing.Combine(

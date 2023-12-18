@@ -149,7 +149,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _UNICODE_PRINTABLES = ''.join(

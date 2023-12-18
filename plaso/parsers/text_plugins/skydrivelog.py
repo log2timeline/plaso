@@ -45,16 +45,16 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Format version 1 date and time values are formatted as:
@@ -243,13 +243,13 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Format version 2 header date and time values are formatted as:

@@ -41,17 +41,17 @@ class SCCMTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _TWO_OR_THREE_DIGITS = pyparsing.Word(
-      pyparsing.nums, min=2, max=3).setParseAction(
+      pyparsing.nums, min=2, max=3).set_parse_action(
           lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Date formatted as: date="M-D-YYYY"

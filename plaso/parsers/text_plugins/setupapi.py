@@ -46,13 +46,13 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())

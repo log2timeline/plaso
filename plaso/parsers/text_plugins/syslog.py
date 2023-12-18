@@ -318,16 +318,16 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
       r':\d{2}\s))')
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_TIME_RFC3339 = (
@@ -341,7 +341,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       _TWO_DIGITS + pyparsing.Optional(
           pyparsing.Suppress(':') + _TWO_DIGITS))
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
@@ -578,10 +578,10 @@ class TraditionalSyslogTextPlugin(
       r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
       r':\d{2}\s))')
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -594,7 +594,7 @@ class TraditionalSyslogTextPlugin(
           pyparsing.Suppress('.') +
           pyparsing.Word(pyparsing.nums)))
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)

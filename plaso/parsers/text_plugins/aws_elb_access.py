@@ -177,20 +177,20 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _UNSIGNED_INTEGER = _INTEGER | _BLANK
@@ -204,7 +204,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
-  _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+  _PORT = pyparsing.Word(pyparsing.nums, max=6).set_parse_action(
       lambda tokens: int(tokens[0], 10)) | _BLANK
 
   _SOURCE_IP_ADDRESS_AND_PORT = pyparsing.Group(
@@ -234,13 +234,13 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _TWO_DIGITS)
 
   _REQUEST = pyparsing.quotedString.setResultsName(
-      'request').setParseAction(pyparsing.removeQuotes)
+      'request').set_parse_action(pyparsing.removeQuotes)
 
   _USER_AGENT = pyparsing.quotedString.setResultsName(
-      'user_agent').setParseAction(pyparsing.removeQuotes)
+      'user_agent').set_parse_action(pyparsing.removeQuotes)
 
   _ALPN_CLIENT_PREFERENCE_LIST = pyparsing.quotedString.setResultsName(
-      'alpn_client_preference_list').setParseAction(pyparsing.removeQuotes)
+      'alpn_client_preference_list').set_parse_action(pyparsing.removeQuotes)
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -264,28 +264,28 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _WORD.setResultsName('ssl_protocol') +
       _WORD.setResultsName('destination_group_arn') +
       pyparsing.quotedString.setResultsName(
-          'trace_identifier').setParseAction(pyparsing.removeQuotes) +
+          'trace_identifier').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'domain_name').setParseAction(pyparsing.removeQuotes) +
+          'domain_name').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'chosen_cert_arn').setParseAction(pyparsing.removeQuotes) +
+          'chosen_cert_arn').set_parse_action(pyparsing.removeQuotes) +
       _SIGNED_INTEGER.setResultsName('matched_rule_priority') +
       _DATE_TIME_ISOFORMAT_STRING.setResultsName('request_time') +
       pyparsing.quotedString.setResultsName(
-          'actions_executed').setParseAction(pyparsing.removeQuotes) +
+          'actions_executed').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'redirect_url').setParseAction(pyparsing.removeQuotes) +
+          'redirect_url').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'error_reason').setParseAction(pyparsing.removeQuotes) +
+          'error_reason').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'destination_list').setParseAction(pyparsing.removeQuotes) +
+          'destination_list').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'destination_status_code_list').setParseAction(
+          'destination_status_code_list').set_parse_action(
               pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'classification').setParseAction(pyparsing.removeQuotes) +
+          'classification').set_parse_action(pyparsing.removeQuotes) +
       pyparsing.quotedString.setResultsName(
-          'classification_reason').setParseAction(pyparsing.removeQuotes) +
+          'classification_reason').set_parse_action(pyparsing.removeQuotes) +
       _END_OF_LINE)
 
   _NETWORK_LOG_LINE = (
