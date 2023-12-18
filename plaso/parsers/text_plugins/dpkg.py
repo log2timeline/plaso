@@ -70,7 +70,7 @@ class DpkgTextPlugin(interface.TextPlugin):
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS).set_results_name('date_time')
 
   _DPKG_STARTUP_TYPE = pyparsing.oneOf([
       'archives',
@@ -119,7 +119,7 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (_DATE_TIME + pyparsing.MatchFirst([
       _DPKG_STARTUP_BODY, _DPKG_STATUS_BODY, _DPKG_ACTION_BODY,
-      _DPKG_CONFFILE_BODY]).setResultsName('body') +
+      _DPKG_CONFFILE_BODY]).set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

@@ -288,7 +288,7 @@ class TextPlugin(plugins.BasePlugin):
       # Wrap the line structures in groups with a result name to build a single
       # pyparsing grammar.
       if not isinstance(expression, pyparsing.Group):
-        expression = pyparsing.Group(expression).setResultsName(key)
+        expression = pyparsing.Group(expression).set_results_name(key)
 
       if not self._pyparsing_grammar:
         self._pyparsing_grammar = expression

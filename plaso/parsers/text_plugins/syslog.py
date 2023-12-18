@@ -139,64 +139,64 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
   _CRON_USERNAME = (
       pyparsing.Literal('(') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('username') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('username') +
       pyparsing.Literal(')'))
 
   _CRON_COMMAND_END = pyparsing.Literal(')') + pyparsing.StringEnd()
 
   _CRON_COMMAND = (
       pyparsing.Literal('CMD') + pyparsing.Literal('(') +
-      pyparsing.SkipTo(_CRON_COMMAND_END).setResultsName('command') +
+      pyparsing.SkipTo(_CRON_COMMAND_END).set_results_name('command') +
       _CRON_COMMAND_END)
 
   _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
 
-  _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).setResultsName('task_run')
+  _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).set_results_name('task_run')
 
   _SSHD_AUTHENTICATION_METHOD = (
       pyparsing.Keyword('password') | pyparsing.Keyword('publickey'))
 
   _SSHD_FINGER_PRINT = pyparsing.Combine(
       pyparsing.Literal('RSA ') +
-      pyparsing.Word(':' + pyparsing.hexnums)).setResultsName('fingerprint')
+      pyparsing.Word(':' + pyparsing.hexnums)).set_results_name('fingerprint')
 
-  _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).setResultsName('username')
+  _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name('username')
 
   _SSH_IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
-  _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).setResultsName('port')
+  _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name('port')
 
   _SSHD_FAILED_CONNECTION = (
       pyparsing.Literal('Failed') +
-      _SSHD_AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
       pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') + _SSH_IP_ADDRESS.setResultsName('ip_address') +
+      pyparsing.Literal('from') + _SSH_IP_ADDRESS.set_results_name('ip_address') +
       pyparsing.Literal('port') + _SSH_PORT +
       pyparsing.StringEnd())
 
   _SSHD_LOGIN = (
       pyparsing.Literal('Accepted') +
-      _SSHD_AUTHENTICATION_METHOD.setResultsName('authentication_method') +
+      _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
       pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') + _SSH_IP_ADDRESS.setResultsName('ip_address') +
+      pyparsing.Literal('from') + _SSH_IP_ADDRESS.set_results_name('ip_address') +
       pyparsing.Literal('port') + _SSH_PORT +
-      pyparsing.Literal('ssh2').setResultsName('protocol') +
+      pyparsing.Literal('ssh2').set_results_name('protocol') +
       pyparsing.Optional(pyparsing.Literal(':') + _SSHD_FINGER_PRINT) +
       pyparsing.StringEnd())
 
   _SSHD_OPENED_CONNECTION = (
       pyparsing.Literal('Connection from') +
-      _SSH_IP_ADDRESS.setResultsName('ip_address') +
+      _SSH_IP_ADDRESS.set_results_name('ip_address') +
       pyparsing.Literal('port') + _SSH_PORT +
       pyparsing.StringEnd())
 
   _SSHD_MESSAGE = (
-      pyparsing.Group(_SSHD_FAILED_CONNECTION).setResultsName(
+      pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name(
           'failed_connection') ^
-      pyparsing.Group(_SSHD_LOGIN).setResultsName('login') ^
-      pyparsing.Group(_SSHD_OPENED_CONNECTION).setResultsName(
+      pyparsing.Group(_SSHD_LOGIN).set_results_name('login') ^
+      pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name(
           'opened_connection'))
 
   def _ParseCronMessageBody(self, body):
@@ -358,11 +358,11 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # 2016-10-25T12:37:23.297265-07:00 INFO
 
   _CHROMEOS_SYSLOG_LINE_BODY = (
-      pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity') +
-      _REPORTER.setResultsName('reporter') +
+      pyparsing.oneOf(_SYSLOG_SEVERITY).set_results_name('severity') +
+      _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
           pyparsing.Suppress(']')))
 
   # The rsyslog file format (RSYSLOG_FileFormat) consists of:
@@ -372,21 +372,21 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # 2020-05-31T00:00:45.698463+00:00
 
   _RSYSLOG_LINE_BODY = (
-      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      _REPORTER.setResultsName('reporter') +
+      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
+      _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
           pyparsing.Suppress('<') +
-          pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
+          pyparsing.Word(_FACILITY_CHARACTERS).set_results_name('facility') +
           pyparsing.Suppress('>')))
 
   _LOG_LINE = (
-      _DATE_TIME_RFC3339.setResultsName('date_time') +
+      _DATE_TIME_RFC3339.set_results_name('date_time') +
       (_CHROMEOS_SYSLOG_LINE_BODY ^ _RSYSLOG_LINE_BODY) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body') +
       _END_OF_LINE)
 
   # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
@@ -400,18 +400,18 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
   _RSYSLOG_PROTOCOL_23_LINE = (
-      pyparsing.Suppress('<') + _ONE_OR_TWO_DIGITS.setResultsName('priority') +
+      pyparsing.Suppress('<') + _ONE_OR_TWO_DIGITS.set_results_name('priority') +
       pyparsing.Suppress('>') + pyparsing.Suppress(
           pyparsing.Word(pyparsing.nums, max=1)) +
-      _DATE_TIME_RFC3339.setResultsName('date_time') +
-      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      _REPORTER.setResultsName('reporter') +
+      _DATE_TIME_RFC3339.set_results_name('date_time') +
+      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
+      _REPORTER.set_results_name('reporter') +
       pyparsing.Or([
-          pyparsing.Suppress('-'), _PROCESS_IDENTIFIER.setResultsName('pid')]) +
-      pyparsing.Word(pyparsing.printables).setResultsName(
+          pyparsing.Suppress('-'), _PROCESS_IDENTIFIER.set_results_name('pid')]) +
+      pyparsing.Word(pyparsing.printables).set_results_name(
           'message_identifier') +
-      pyparsing.Word(pyparsing.printables).setResultsName('structured_data') +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body') +
+      pyparsing.Word(pyparsing.printables).set_results_name('structured_data') +
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
@@ -609,32 +609,32 @@ class TraditionalSyslogTextPlugin(
   # Jan 22 07:54:32
 
   _RSYSLOG_BODY = (
-      pyparsing.Word(pyparsing.printables).setResultsName('hostname') +
-      _REPORTER.setResultsName('reporter') +
+      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
+      _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.setResultsName('pid') +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
           pyparsing.Suppress('<') +
-          pyparsing.Word(_FACILITY_CHARACTERS).setResultsName('facility') +
+          pyparsing.Word(_FACILITY_CHARACTERS).set_results_name('facility') +
           pyparsing.Suppress('>')) +
       pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'))
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body'))
 
   _SYSLOG_COMMENT_END = pyparsing.Suppress('---') + _END_OF_LINE
 
   _SYSLOG_COMMENT_BODY = (
       pyparsing.Suppress(': ---') +
-      pyparsing.SkipTo(_SYSLOG_COMMENT_END).setResultsName('body') +
+      pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name('body') +
       pyparsing.Suppress('---'))
 
   _KERNEL_SYSLOG_BODY = (
-      pyparsing.Literal('kernel').setResultsName('reporter') +
+      pyparsing.Literal('kernel').set_results_name('reporter') +
       pyparsing.Suppress(':') +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).setResultsName('body'))
+      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body'))
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') + (
+      _DATE_TIME.set_results_name('date_time') + (
           _KERNEL_SYSLOG_BODY ^ _RSYSLOG_BODY ^ _SYSLOG_COMMENT_BODY) +
       _END_OF_LINE)
 

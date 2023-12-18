@@ -98,25 +98,25 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (
       pyparsing.NotAny(_SEPARATOR) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
+      pyparsing.restOfLine().set_results_name('body') + _END_OF_LINE)
 
   _HEADER_GRAMMAR = (
       _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE +
-      _METADATA_LINE.setResultsName('date_time') +
-      _METADATA_LINE.setResultsName('username') +
-      _METADATA_LINE.setResultsName('runas_user') +
-      _METADATA_LINE.setResultsName('configuration_name') +
-      _METADATA_LINE.setResultsName('machine') +
-      _METADATA_LINE.setResultsName('host_application') +
-      _METADATA_LINE.setResultsName('process_identifier') +
-      _METADATA_LINE.setResultsName('version') +
-      _METADATA_LINE.setResultsName('edition') +
-      _METADATA_LINE.setResultsName('compatible_versions') +
-      _METADATA_LINE.setResultsName('build_version') +
-      _METADATA_LINE.setResultsName('clr_version') +
-      _METADATA_LINE.setResultsName('ws_man_stack_version') +
-      _METADATA_LINE.setResultsName('remoting_protocol_version') +
-      _METADATA_LINE.setResultsName('serialization_version') +
+      _METADATA_LINE.set_results_name('date_time') +
+      _METADATA_LINE.set_results_name('username') +
+      _METADATA_LINE.set_results_name('runas_user') +
+      _METADATA_LINE.set_results_name('configuration_name') +
+      _METADATA_LINE.set_results_name('machine') +
+      _METADATA_LINE.set_results_name('host_application') +
+      _METADATA_LINE.set_results_name('process_identifier') +
+      _METADATA_LINE.set_results_name('version') +
+      _METADATA_LINE.set_results_name('edition') +
+      _METADATA_LINE.set_results_name('compatible_versions') +
+      _METADATA_LINE.set_results_name('build_version') +
+      _METADATA_LINE.set_results_name('clr_version') +
+      _METADATA_LINE.set_results_name('ws_man_stack_version') +
+      _METADATA_LINE.set_results_name('remoting_protocol_version') +
+      _METADATA_LINE.set_results_name('serialization_version') +
       _SEPARATOR_LINE)
 
   _LINE_STRUCTURES = [

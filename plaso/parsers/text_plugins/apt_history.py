@@ -61,7 +61,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS).set_results_name('date_time')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 

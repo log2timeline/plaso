@@ -49,12 +49,12 @@ class ZshExtendedHistoryTextPlugin(interface.TextPluginWithLineContinuation):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_START = (
-      pyparsing.Literal(':') + _INTEGER.setResultsName('timestamp') +
-      pyparsing.Literal(':') + _INTEGER.setResultsName('elapsed_seconds') +
+      pyparsing.Literal(':') + _INTEGER.set_results_name('timestamp') +
+      pyparsing.Literal(':') + _INTEGER.set_results_name('elapsed_seconds') +
       pyparsing.Literal(';'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('command') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('command') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

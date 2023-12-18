@@ -61,9 +61,9 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.nums) + pyparsing.Literal(']'))
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      _LOGGER.setResultsName('logger') + pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
+      _DATE_TIME.set_results_name('date_time') +
+      _LOGGER.set_results_name('logger') + pyparsing.Suppress(': ') +
+      pyparsing.restOfLine().set_results_name('body') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_entry', _LOG_LINE)]
 

@@ -115,11 +115,11 @@ class AndroidLogcatTextPlugin(
       pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
 
   _PID_AND_THREAD_IDENTIFIER = (
-      _INTEGER.setResultsName('pid') +
-      _INTEGER.setResultsName('thread_identifier'))
+      _INTEGER.set_results_name('pid') +
+      _INTEGER.set_results_name('thread_identifier'))
 
   _USER_PID_AND_THREAD_IDENTIFIER = (
-      _INTEGER.setResultsName('user_identifier') +
+      _INTEGER.set_results_name('user_identifier') +
       _PID_AND_THREAD_IDENTIFIER)
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
@@ -132,28 +132,28 @@ class AndroidLogcatTextPlugin(
   _THREADTIME_LINE_BODY = (
       pyparsing.Or([
           _USER_PID_AND_THREAD_IDENTIFIER, _PID_AND_THREAD_IDENTIFIER]) +
-      pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+      pyparsing.Word('VDIWEFS', exact=1).set_results_name('priority') +
       pyparsing.Optional(pyparsing.Word(
-          pyparsing.printables + ' ', excludeChars=':').setResultsName('tag')))
+          pyparsing.printables + ' ', excludeChars=':').set_results_name('tag')))
 
   _TIME_LINE_BODY = (
-      pyparsing.Word('VDIWEFS', exact=1).setResultsName('priority') +
+      pyparsing.Word('VDIWEFS', exact=1).set_results_name('priority') +
       pyparsing.Suppress('/') +
       pyparsing.Word(
-          pyparsing.printables + ' ', excludeChars='(').setResultsName('tag') +
+          pyparsing.printables + ' ', excludeChars='(').set_results_name('tag') +
       pyparsing.Suppress('(') +
       pyparsing.Or([
-          _INTEGER.setResultsName('pid'),
-          (_INTEGER.setResultsName('user_identifier') +
-           pyparsing.Suppress(':') + _INTEGER.setResultsName('pid'))]) +
+          _INTEGER.set_results_name('pid'),
+          (_INTEGER.set_results_name('user_identifier') +
+           pyparsing.Suppress(':') + _INTEGER.set_results_name('pid'))]) +
       pyparsing.Suppress(')'))
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Optional(_TIME_ZONE_OFFSET).setResultsName('time_zone_offset') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.Optional(_TIME_ZONE_OFFSET).set_results_name('time_zone_offset') +
       (_THREADTIME_LINE_BODY ^ _TIME_LINE_BODY) +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('message') +
+      pyparsing.restOfLine().set_results_name('message') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [

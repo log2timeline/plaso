@@ -52,8 +52,8 @@ class SophosAVLogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.restOfLine().setResultsName('text') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

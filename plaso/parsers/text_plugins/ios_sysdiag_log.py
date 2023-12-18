@@ -87,20 +87,20 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('[') +
-      _INTEGER.setResultsName('process_identifier') + pyparsing.Suppress(']') +
+      _INTEGER.set_results_name('process_identifier') + pyparsing.Suppress(']') +
       pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('severity') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('severity') +
       pyparsing.Suppress('>') +
       pyparsing.Suppress('(') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('id') +
       pyparsing.Suppress(')') +
-      _ORIGINATING_CALL.setResultsName('originating_call') +
+      _ORIGINATING_CALL.set_results_name('originating_call') +
       pyparsing.Suppress(': '))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

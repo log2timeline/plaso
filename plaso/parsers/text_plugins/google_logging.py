@@ -81,20 +81,20 @@ class GoogleLogTextPlugin(
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Optional(
-          pyparsing.Suppress('.') + _SIX_DIGITS)).setResultsName('date_time')
+          pyparsing.Suppress('.') + _SIX_DIGITS)).set_results_name('date_time')
 
-  _PRIORITY = pyparsing.oneOf(['E', 'F', 'I', 'W']).setResultsName('priority')
+  _PRIORITY = pyparsing.oneOf(['E', 'F', 'I', 'W']).set_results_name('priority')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
       _PRIORITY + _DATE_TIME +
-      pyparsing.Word(pyparsing.nums).setResultsName('thread_identifier') +
-      pyparsing.Word(pyparsing.printables.replace(':', '')).setResultsName(
+      pyparsing.Word(pyparsing.nums).set_results_name('thread_identifier') +
+      pyparsing.Word(pyparsing.printables.replace(':', '')).set_results_name(
           'file_name') + pyparsing.Suppress(':') +
-      pyparsing.Word(pyparsing.nums).setResultsName('line_number') +
+      pyparsing.Word(pyparsing.nums).set_results_name('line_number') +
       pyparsing.Suppress('] ') +
-      pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).setResultsName(
+      pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).set_results_name(
           'message') + _END_OF_LINE)
 
   # Header date and time values are formatted as: 2019/07/18 06:07:40

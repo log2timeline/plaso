@@ -59,12 +59,12 @@ class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
       pyparsing.Word('.,', exact=1).suppress() + _SIX_DIGITS)
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('pid=') +
-      _INTEGER.setResultsName('process_identifier'))
+      _INTEGER.set_results_name('process_identifier'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

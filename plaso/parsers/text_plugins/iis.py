@@ -128,12 +128,12 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   _DATE_TIME_METADATA = (
       pyparsing.Suppress('Date: ') +
-      _DATE.setResultsName('date') +
-      _TIME.setResultsName('time'))
+      _DATE.set_results_name('date') +
+      _TIME.set_results_name('time'))
 
   _FIELDS_METADATA = (
       pyparsing.Suppress('Fields: ') +
-      pyparsing.restOfLine().setResultsName('fields'))
+      pyparsing.restOfLine().set_results_name('fields'))
 
   _METADATA = (
       _DATE_TIME_METADATA | _FIELDS_METADATA | pyparsing.restOfLine())
@@ -147,20 +147,20 @@ class WinIISTextPlugin(interface.TextPlugin):
   # sc-substatus sc-win32-status
 
   _IIS_6_0_LOG_LINE = (
-      _DATE.setResultsName('date') +
-      _TIME.setResultsName('time') +
-      _URI.setResultsName('s_sitename') +
-      _IP_ADDRESS.setResultsName('dest_ip') +
-      _HTTP_METHOD.setResultsName('http_method') +
-      _URI.setResultsName('cs_uri_stem') +
-      _URI.setResultsName('cs_uri_query') +
-      PORT.setResultsName('dest_port') +
-      _USERNAME.setResultsName('cs_username') +
-      _IP_ADDRESS.setResultsName('source_ip') +
-      _URI.setResultsName('user_agent') +
-      _INTEGER.setResultsName('sc_status') +
-      _INTEGER.setResultsName('sc_substatus') +
-      _INTEGER.setResultsName('sc_win32_status') +
+      _DATE.set_results_name('date') +
+      _TIME.set_results_name('time') +
+      _URI.set_results_name('s_sitename') +
+      _IP_ADDRESS.set_results_name('dest_ip') +
+      _HTTP_METHOD.set_results_name('http_method') +
+      _URI.set_results_name('cs_uri_stem') +
+      _URI.set_results_name('cs_uri_query') +
+      PORT.set_results_name('dest_port') +
+      _USERNAME.set_results_name('cs_username') +
+      _IP_ADDRESS.set_results_name('source_ip') +
+      _URI.set_results_name('user_agent') +
+      _INTEGER.set_results_name('sc_status') +
+      _INTEGER.set_results_name('sc_substatus') +
+      _INTEGER.set_results_name('sc_win32_status') +
       _END_OF_LINE)
 
   # IIS 7.x fields: date time s-ip cs-method cs-uri-stem cs-uri-query
@@ -172,35 +172,35 @@ class WinIISTextPlugin(interface.TextPlugin):
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
 
-  _LOG_LINE_STRUCTURES['date'] = _DATE.setResultsName('date')
-  _LOG_LINE_STRUCTURES['time'] = _TIME.setResultsName('time')
-  _LOG_LINE_STRUCTURES['s-sitename'] = _URI.setResultsName('s_sitename')
-  _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.setResultsName('dest_ip')
-  _LOG_LINE_STRUCTURES['cs-method'] = _HTTP_METHOD.setResultsName('http_method')
-  _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI_STEM.setResultsName(
+  _LOG_LINE_STRUCTURES['date'] = _DATE.set_results_name('date')
+  _LOG_LINE_STRUCTURES['time'] = _TIME.set_results_name('time')
+  _LOG_LINE_STRUCTURES['s-sitename'] = _URI.set_results_name('s_sitename')
+  _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.set_results_name('dest_ip')
+  _LOG_LINE_STRUCTURES['cs-method'] = _HTTP_METHOD.set_results_name('http_method')
+  _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI_STEM.set_results_name(
       'requested_uri_stem')
-  _LOG_LINE_STRUCTURES['cs-uri-query'] = _QUERY.setResultsName('cs_uri_query')
-  _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.setResultsName('cs_username')
-  _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.setResultsName('source_ip')
-  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _URI.setResultsName('user_agent')
-  _LOG_LINE_STRUCTURES['sc-status'] = _INTEGER.setResultsName('http_status')
-  _LOG_LINE_STRUCTURES['sc-substatus'] = _INTEGER.setResultsName(
+  _LOG_LINE_STRUCTURES['cs-uri-query'] = _QUERY.set_results_name('cs_uri_query')
+  _LOG_LINE_STRUCTURES['s-port'] = PORT.set_results_name('dest_port')
+  _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.set_results_name('cs_username')
+  _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.set_results_name('source_ip')
+  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _URI.set_results_name('user_agent')
+  _LOG_LINE_STRUCTURES['sc-status'] = _INTEGER.set_results_name('http_status')
+  _LOG_LINE_STRUCTURES['sc-substatus'] = _INTEGER.set_results_name(
       'sc_substatus')
-  _LOG_LINE_STRUCTURES['sc-win32-status'] = _INTEGER.setResultsName(
+  _LOG_LINE_STRUCTURES['sc-win32-status'] = _INTEGER.set_results_name(
       'sc_win32_status')
 
   # Less common fields.
 
-  _LOG_LINE_STRUCTURES['s-computername'] = _URI.setResultsName('s_computername')
-  _LOG_LINE_STRUCTURES['sc-bytes'] = _INTEGER.setResultsName('sent_bytes')
-  _LOG_LINE_STRUCTURES['cs-bytes'] = _INTEGER.setResultsName('received_bytes')
-  _LOG_LINE_STRUCTURES['time-taken'] = _INTEGER.setResultsName('time_taken')
-  _LOG_LINE_STRUCTURES['cs-version'] = _URI.setResultsName('protocol_version')
-  _LOG_LINE_STRUCTURES['cs-host'] = _URI.setResultsName('cs_host')
-  _LOG_LINE_STRUCTURES['cs(Cookie)'] = _URI.setResultsName('cs_cookie')
-  _LOG_LINE_STRUCTURES['cs(Referrer)'] = _URI.setResultsName('cs_referrer')
-  _LOG_LINE_STRUCTURES['cs(Referer)'] = _URI.setResultsName('cs_referrer')
+  _LOG_LINE_STRUCTURES['s-computername'] = _URI.set_results_name('s_computername')
+  _LOG_LINE_STRUCTURES['sc-bytes'] = _INTEGER.set_results_name('sent_bytes')
+  _LOG_LINE_STRUCTURES['cs-bytes'] = _INTEGER.set_results_name('received_bytes')
+  _LOG_LINE_STRUCTURES['time-taken'] = _INTEGER.set_results_name('time_taken')
+  _LOG_LINE_STRUCTURES['cs-version'] = _URI.set_results_name('protocol_version')
+  _LOG_LINE_STRUCTURES['cs-host'] = _URI.set_results_name('cs_host')
+  _LOG_LINE_STRUCTURES['cs(Cookie)'] = _URI.set_results_name('cs_cookie')
+  _LOG_LINE_STRUCTURES['cs(Referrer)'] = _URI.set_results_name('cs_referrer')
+  _LOG_LINE_STRUCTURES['cs(Referer)'] = _URI.set_results_name('cs_referrer')
 
   # Define the available log line structures. Default to the IIS v. 6.0
   # common format.

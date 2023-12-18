@@ -102,11 +102,11 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   _FIELDS_METADATA = (
       pyparsing.Suppress('Fields: ') +
-      pyparsing.restOfLine().setResultsName('fields'))
+      pyparsing.restOfLine().set_results_name('fields'))
 
   _TIME_FORMAT_METADATA = (
       pyparsing.Suppress('Time Format: ') +
-      pyparsing.restOfLine().setResultsName('time_format'))
+      pyparsing.restOfLine().set_results_name('time_format'))
 
   _METADATA = (
       _FIELDS_METADATA | _TIME_FORMAT_METADATA | pyparsing.restOfLine())
@@ -118,46 +118,46 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
   # tcpsyn tcpack tcpwin icmptype icmpcode info path
 
   _LOG_LINE_1_5 = (
-      _DATE.setResultsName('date') +
-      _TIME.setResultsName('time') +
-      _ACTION.setResultsName('action') +
-      _WORD_OR_BLANK.setResultsName('protocol') +
-      _IP_ADDRESS_OR_BLANK.setResultsName('source_ip') +
-      _IP_ADDRESS_OR_BLANK.setResultsName('destination_ip') +
-      _PORT_NUMBER_OR_BLANK.setResultsName('source_port') +
-      _PORT_NUMBER_OR_BLANK.setResultsName('destination_port') +
-      _INTEGER_OR_BLANK.setResultsName('packet_size') +
-      _WORD_OR_BLANK.setResultsName('tcp_flags') +
-      _INTEGER_OR_BLANK.setResultsName('tcp_sequence_number') +
-      _INTEGER_OR_BLANK.setResultsName('tcp_ack') +
-      _INTEGER_OR_BLANK.setResultsName('tcp_window_size') +
-      _INTEGER_OR_BLANK.setResultsName('icmp_type') +
-      _INTEGER_OR_BLANK.setResultsName('icmp_code') +
-      _WORD_OR_BLANK.setResultsName('information') +
-      _WORD_OR_BLANK.setResultsName('path') +
+      _DATE.set_results_name('date') +
+      _TIME.set_results_name('time') +
+      _ACTION.set_results_name('action') +
+      _WORD_OR_BLANK.set_results_name('protocol') +
+      _IP_ADDRESS_OR_BLANK.set_results_name('source_ip') +
+      _IP_ADDRESS_OR_BLANK.set_results_name('destination_ip') +
+      _PORT_NUMBER_OR_BLANK.set_results_name('source_port') +
+      _PORT_NUMBER_OR_BLANK.set_results_name('destination_port') +
+      _INTEGER_OR_BLANK.set_results_name('packet_size') +
+      _WORD_OR_BLANK.set_results_name('tcp_flags') +
+      _INTEGER_OR_BLANK.set_results_name('tcp_sequence_number') +
+      _INTEGER_OR_BLANK.set_results_name('tcp_ack') +
+      _INTEGER_OR_BLANK.set_results_name('tcp_window_size') +
+      _INTEGER_OR_BLANK.set_results_name('icmp_type') +
+      _INTEGER_OR_BLANK.set_results_name('icmp_code') +
+      _WORD_OR_BLANK.set_results_name('information') +
+      _WORD_OR_BLANK.set_results_name('path') +
       _END_OF_LINE)
 
   # Common fields. Set results name with underscores, not hyphens because regex
   # will not pick them up.
 
   _LOG_LINE_STRUCTURES = {
-      'action': _ACTION.setResultsName('action'),
-      'date': _DATE.setResultsName('date'),
-      'dst-ip': _IP_ADDRESS_OR_BLANK.setResultsName('destination_ip'),
-      'dst-port': _PORT_NUMBER_OR_BLANK.setResultsName('destination_port'),
-      'icmpcode': _INTEGER_OR_BLANK.setResultsName('icmp_code'),
-      'icmptype': _INTEGER_OR_BLANK.setResultsName('icmp_type'),
-      'info': _WORD_OR_BLANK.setResultsName('information'),
-      'path': _WORD_OR_BLANK.setResultsName('path'),
-      'protocol': _WORD_OR_BLANK.setResultsName('protocol'),
-      'size': _INTEGER_OR_BLANK.setResultsName('packet_size'),
-      'src-ip': _IP_ADDRESS_OR_BLANK.setResultsName('source_ip'),
-      'src-port': _PORT_NUMBER_OR_BLANK.setResultsName('source_port'),
-      'tcpack': _INTEGER_OR_BLANK.setResultsName('tcp_ack'),
-      'tcpflags': _WORD_OR_BLANK.setResultsName('tcp_flags'),
-      'tcpsyn': _INTEGER_OR_BLANK.setResultsName('tcp_sequence_number'),
-      'tcpwin': _INTEGER_OR_BLANK.setResultsName('tcp_window_size'),
-      'time': _TIME.setResultsName('time')}
+      'action': _ACTION.set_results_name('action'),
+      'date': _DATE.set_results_name('date'),
+      'dst-ip': _IP_ADDRESS_OR_BLANK.set_results_name('destination_ip'),
+      'dst-port': _PORT_NUMBER_OR_BLANK.set_results_name('destination_port'),
+      'icmpcode': _INTEGER_OR_BLANK.set_results_name('icmp_code'),
+      'icmptype': _INTEGER_OR_BLANK.set_results_name('icmp_type'),
+      'info': _WORD_OR_BLANK.set_results_name('information'),
+      'path': _WORD_OR_BLANK.set_results_name('path'),
+      'protocol': _WORD_OR_BLANK.set_results_name('protocol'),
+      'size': _INTEGER_OR_BLANK.set_results_name('packet_size'),
+      'src-ip': _IP_ADDRESS_OR_BLANK.set_results_name('source_ip'),
+      'src-port': _PORT_NUMBER_OR_BLANK.set_results_name('source_port'),
+      'tcpack': _INTEGER_OR_BLANK.set_results_name('tcp_ack'),
+      'tcpflags': _WORD_OR_BLANK.set_results_name('tcp_flags'),
+      'tcpsyn': _INTEGER_OR_BLANK.set_results_name('tcp_sequence_number'),
+      'tcpwin': _INTEGER_OR_BLANK.set_results_name('tcp_window_size'),
+      'time': _TIME.set_results_name('time')}
 
   _HEADER_GRAMMAR = pyparsing.OneOrMore(_COMMENT_LOG_LINE)
 

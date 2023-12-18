@@ -68,7 +68,7 @@ class SCCMTextPlugin(interface.TextPlugin):
            _TWO_DIGITS + pyparsing.Suppress('.') + pyparsing.Regex(r'\d{3,7}') +
            pyparsing.Optional(_TIME_ZONE_OFFSET))
 
-  _DATE_TIME = (_TIME + _DATE).setResultsName('date_time')
+  _DATE_TIME = (_TIME + _DATE).set_results_name('date_time')
 
   _LOG_MESSAGE_START = pyparsing.Suppress('<![LOG[')
 
@@ -78,12 +78,12 @@ class SCCMTextPlugin(interface.TextPlugin):
   _LOG_MESSAGE_END = pyparsing.Suppress(']LOG]!><')
 
   _LOG_MESSAGE = (
-      _LOG_MESSAGE_START + _LOG_MESSAGE_TEXT.setResultsName('text') +
+      _LOG_MESSAGE_START + _LOG_MESSAGE_TEXT.set_results_name('text') +
       _LOG_MESSAGE_END)
 
   _COMPONENT = (
       pyparsing.Suppress('" component="') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('component'))
+      pyparsing.Word(pyparsing.alphanums).set_results_name('component'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
