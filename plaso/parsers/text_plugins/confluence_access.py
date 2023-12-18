@@ -128,8 +128,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.alphanums + '-' + '.')).set_results_name(
           'remote_name')
 
-  _HTTP_VERSION = (
-      pyparsing.Word(pyparsing.alphanums + '/.').set_results_name('http_version'))
+  _HTTP_VERSION = pyparsing.Word(pyparsing.alphanums + '/.').set_results_name(
+      'http_version')
 
   _REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 

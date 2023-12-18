@@ -89,8 +89,8 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
   _LOG_LINE_START = (
       _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('[') +
-      _INTEGER.set_results_name('process_identifier') + pyparsing.Suppress(']') +
-      pyparsing.Suppress('<') +
+      _INTEGER.set_results_name('process_identifier') +
+      pyparsing.Suppress(']') + pyparsing.Suppress('<') +
       pyparsing.Word(pyparsing.alphanums).set_results_name('severity') +
       pyparsing.Suppress('>') +
       pyparsing.Suppress('(') +

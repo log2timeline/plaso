@@ -134,13 +134,15 @@ class AndroidLogcatTextPlugin(
           _USER_PID_AND_THREAD_IDENTIFIER, _PID_AND_THREAD_IDENTIFIER]) +
       pyparsing.Word('VDIWEFS', exact=1).set_results_name('priority') +
       pyparsing.Optional(pyparsing.Word(
-          pyparsing.printables + ' ', excludeChars=':').set_results_name('tag')))
+          pyparsing.printables + ' ', excludeChars=':').set_results_name(
+              'tag')))
 
   _TIME_LINE_BODY = (
       pyparsing.Word('VDIWEFS', exact=1).set_results_name('priority') +
       pyparsing.Suppress('/') +
       pyparsing.Word(
-          pyparsing.printables + ' ', excludeChars='(').set_results_name('tag') +
+          pyparsing.printables + ' ', excludeChars='(').set_results_name(
+              'tag') +
       pyparsing.Suppress('(') +
       pyparsing.Or([
           _INTEGER.set_results_name('pid'),
@@ -150,7 +152,8 @@ class AndroidLogcatTextPlugin(
 
   _LOG_LINE = (
       _DATE_TIME.set_results_name('date_time') +
-      pyparsing.Optional(_TIME_ZONE_OFFSET).set_results_name('time_zone_offset') +
+      pyparsing.Optional(_TIME_ZONE_OFFSET).set_results_name(
+          'time_zone_offset') +
       (_THREADTIME_LINE_BODY ^ _TIME_LINE_BODY) +
       pyparsing.Suppress(': ') +
       pyparsing.restOfLine().set_results_name('message') +

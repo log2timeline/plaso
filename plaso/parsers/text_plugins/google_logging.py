@@ -94,8 +94,9 @@ class GoogleLogTextPlugin(
           'file_name') + pyparsing.Suppress(':') +
       pyparsing.Word(pyparsing.nums).set_results_name('line_number') +
       pyparsing.Suppress('] ') +
-      pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).set_results_name(
-          'message') + _END_OF_LINE)
+      pyparsing.Regex(
+          '.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).set_results_name(
+              'message') + _END_OF_LINE)
 
   # Header date and time values are formatted as: 2019/07/18 06:07:40
   _HEADER_DATE_TIME = (

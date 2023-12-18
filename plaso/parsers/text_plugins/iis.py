@@ -176,12 +176,14 @@ class WinIISTextPlugin(interface.TextPlugin):
   _LOG_LINE_STRUCTURES['time'] = _TIME.set_results_name('time')
   _LOG_LINE_STRUCTURES['s-sitename'] = _URI.set_results_name('s_sitename')
   _LOG_LINE_STRUCTURES['s-ip'] = _IP_ADDRESS.set_results_name('dest_ip')
-  _LOG_LINE_STRUCTURES['cs-method'] = _HTTP_METHOD.set_results_name('http_method')
+  _LOG_LINE_STRUCTURES['cs-method'] = _HTTP_METHOD.set_results_name(
+      'http_method')
   _LOG_LINE_STRUCTURES['cs-uri-stem'] = _URI_STEM.set_results_name(
       'requested_uri_stem')
   _LOG_LINE_STRUCTURES['cs-uri-query'] = _QUERY.set_results_name('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.set_results_name('dest_port')
-  _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.set_results_name('cs_username')
+  _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.set_results_name(
+      'cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.set_results_name('source_ip')
   _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _URI.set_results_name('user_agent')
   _LOG_LINE_STRUCTURES['sc-status'] = _INTEGER.set_results_name('http_status')
@@ -192,7 +194,8 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   # Less common fields.
 
-  _LOG_LINE_STRUCTURES['s-computername'] = _URI.set_results_name('s_computername')
+  _LOG_LINE_STRUCTURES['s-computername'] = _URI.set_results_name(
+      's_computername')
   _LOG_LINE_STRUCTURES['sc-bytes'] = _INTEGER.set_results_name('sent_bytes')
   _LOG_LINE_STRUCTURES['cs-bytes'] = _INTEGER.set_results_name('received_bytes')
   _LOG_LINE_STRUCTURES['time-taken'] = _INTEGER.set_results_name('time_taken')

@@ -65,8 +65,8 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress('-') + _FOUR_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS).set_results_name(
-          'date_time')
+      pyparsing.Word('.,', exact=1).suppress() +
+                     _THREE_DIGITS).set_results_name('date_time')
 
   _SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(':') + pyparsing.Literal(':') + _INTEGER +
@@ -282,7 +282,8 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
       pyparsing.Literal('Version=').set_results_name('version_string') +
       pyparsing.Word(pyparsing.nums + '.').set_results_name('version_number') +
       pyparsing.Suppress('StartSystemTime:') + _HEADER_DATE_TIME_V2 +
-      pyparsing.Literal('StartLocalTime:').set_results_name('local_time_string'))
+      pyparsing.Literal('StartLocalTime:').set_results_name(
+          'local_time_string'))
 
   _HEADER_LINE_V2 = (
       _HEADER_LINE_V2_START + pyparsing.restOfLine.set_results_name('detail') +

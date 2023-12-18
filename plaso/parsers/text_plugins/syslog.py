@@ -160,7 +160,8 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('RSA ') +
       pyparsing.Word(':' + pyparsing.hexnums)).set_results_name('fingerprint')
 
-  _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name('username')
+  _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name(
+      'username')
 
   _SSH_IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
@@ -172,7 +173,8 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('Failed') +
       _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
       pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') + _SSH_IP_ADDRESS.set_results_name('ip_address') +
+      pyparsing.Literal('from') +
+      _SSH_IP_ADDRESS.set_results_name('ip_address') +
       pyparsing.Literal('port') + _SSH_PORT +
       pyparsing.StringEnd())
 
@@ -180,7 +182,8 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('Accepted') +
       _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
       pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') + _SSH_IP_ADDRESS.set_results_name('ip_address') +
+      pyparsing.Literal('from') +
+      _SSH_IP_ADDRESS.set_results_name('ip_address') +
       pyparsing.Literal('port') + _SSH_PORT +
       pyparsing.Literal('ssh2').set_results_name('protocol') +
       pyparsing.Optional(pyparsing.Literal(':') + _SSHD_FINGER_PRINT) +
@@ -362,7 +365,8 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
+          pyparsing.Suppress('[') +
+          _PROCESS_IDENTIFIER.set_results_name('pid') +
           pyparsing.Suppress(']')))
 
   # The rsyslog file format (RSYSLOG_FileFormat) consists of:
@@ -375,7 +379,8 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
       _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
+          pyparsing.Suppress('[') +
+          _PROCESS_IDENTIFIER.set_results_name('pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
           pyparsing.Suppress('<') +
@@ -400,14 +405,15 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # TODO: Add proper support for %STRUCTURED-DATA%:
   # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
   _RSYSLOG_PROTOCOL_23_LINE = (
-      pyparsing.Suppress('<') + _ONE_OR_TWO_DIGITS.set_results_name('priority') +
+      pyparsing.Suppress('<') +
+      _ONE_OR_TWO_DIGITS.set_results_name('priority') +
       pyparsing.Suppress('>') + pyparsing.Suppress(
           pyparsing.Word(pyparsing.nums, max=1)) +
       _DATE_TIME_RFC3339.set_results_name('date_time') +
       pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
       _REPORTER.set_results_name('reporter') +
-      pyparsing.Or([
-          pyparsing.Suppress('-'), _PROCESS_IDENTIFIER.set_results_name('pid')]) +
+      pyparsing.Or([pyparsing.Suppress('-'),
+                    _PROCESS_IDENTIFIER.set_results_name('pid')]) +
       pyparsing.Word(pyparsing.printables).set_results_name(
           'message_identifier') +
       pyparsing.Word(pyparsing.printables).set_results_name('structured_data') +
@@ -612,7 +618,8 @@ class TraditionalSyslogTextPlugin(
       pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
       _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name('pid') +
+          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name(
+              'pid') +
           pyparsing.Suppress(']')) +
       pyparsing.Optional(
           pyparsing.Suppress('<') +

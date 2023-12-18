@@ -78,7 +78,8 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
           _THREE_DIGITS.set_results_name('milliseconds'))).set_results_name(
               'date_time')
 
-  _TIME_ZONE = pyparsing.Word(pyparsing.printables).set_results_name('time_zone')
+  _TIME_ZONE = pyparsing.Word(pyparsing.printables).set_results_name(
+      'time_zone')
 
   _PID = (
       pyparsing.Suppress('[') + pyparsing.OneOrMore(_INTEGER) +

@@ -222,7 +222,8 @@ class SantaTextPlugin(interface.TextPlugin):
   _BSD_NAME = (pyparsing.Suppress('|bsdname=') +
                _SKIP_TO_SEPARATOR.set_results_name('bsd_name'))
 
-  _BUS = pyparsing.Suppress('|bus=') + _SKIP_TO_SEPARATOR.set_results_name('bus')
+  _BUS = pyparsing.Suppress('|bus=') + _SKIP_TO_SEPARATOR.set_results_name(
+      'bus')
 
   _CERT_CN = (pyparsing.Suppress('|cert_cn=') +
               _SKIP_TO_SEPARATOR.set_results_name('cert_cn'))
