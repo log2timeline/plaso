@@ -119,7 +119,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.alphanums) |
       pyparsing.Literal('-')).set_results_name('user_name')
 
-  _HTTP_METHOD = pyparsing.oneOf([
+  _HTTP_METHOD = pyparsing.one_of([
       'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
       'TRACE'])
 

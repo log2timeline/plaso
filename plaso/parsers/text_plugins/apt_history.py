@@ -70,7 +70,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('Start-Date:') + _DATE_TIME + _END_OF_LINE)
 
   _RECORD_BODY_LINE = (
-      pyparsing.oneOf([
+      pyparsing.one_of([
           'Commandline:',
           'Downgrade:',
           'Error:',

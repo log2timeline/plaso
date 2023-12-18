@@ -126,7 +126,7 @@ class AndroidLogcatTextPlugin(
 
   _BEGINNING_LINE = (
       pyparsing.Suppress('--------- beginning of ') +
-      pyparsing.oneOf(['events', 'kernel', 'main', 'radio', 'system']) +
+      pyparsing.one_of(['events', 'kernel', 'main', 'radio', 'system']) +
       _END_OF_LINE)
 
   _THREADTIME_LINE_BODY = (

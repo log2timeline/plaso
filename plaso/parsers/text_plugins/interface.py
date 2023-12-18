@@ -297,10 +297,10 @@ class TextPlugin(plugins.BasePlugin):
 
     # Override Pyparsing's default replacement of tabs with spaces to
     # SkipAhead() the correct number of bytes after a match.
-    self._pyparsing_grammar.parseWithTabs()
+    self._pyparsing_grammar.parse_with_tabs()
 
     # Override Pyparsing's whitespace characters to spaces only.
-    self._pyparsing_grammar.setDefaultWhitespaceChars(' ')
+    self._pyparsing_grammar.set_default_whitespace_chars(' ')
 
   def _VerifyString(self, string):
     """Checks a string for known grammar.

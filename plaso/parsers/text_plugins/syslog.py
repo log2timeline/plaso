@@ -361,7 +361,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   # 2016-10-25T12:37:23.297265-07:00 INFO
 
   _CHROMEOS_SYSLOG_LINE_BODY = (
-      pyparsing.oneOf(_SYSLOG_SEVERITY).set_results_name('severity') +
+      pyparsing.one_of(_SYSLOG_SEVERITY).set_results_name('severity') +
       _REPORTER.set_results_name('reporter') +
       pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(

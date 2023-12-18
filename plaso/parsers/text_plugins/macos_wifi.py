@@ -94,7 +94,7 @@ class MacOSWiFiLogTextPlugin(
   # Log line with a known function name.
   _KNOWN_FUNCTION_LOG_LINE = (
       _DATE_TIME.set_results_name('date_time') + _AGENT +
-      pyparsing.oneOf(_KNOWN_FUNCTIONS).set_results_name('function') +
+      pyparsing.one_of(_KNOWN_FUNCTIONS).set_results_name('function') +
       pyparsing.Literal(':') +
       pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
@@ -103,7 +103,7 @@ class MacOSWiFiLogTextPlugin(
   _LOG_LINE = (
       _DATE_TIME.set_results_name('date_time') + pyparsing.NotAny(
           _AGENT +
-          pyparsing.oneOf(_KNOWN_FUNCTIONS) +
+          pyparsing.one_of(_KNOWN_FUNCTIONS) +
           pyparsing.Literal(':')) +
       pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)

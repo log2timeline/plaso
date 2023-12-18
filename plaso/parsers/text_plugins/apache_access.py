@@ -95,7 +95,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _TWO_DIGITS +
       _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).set_results_name('date_time')
 
-  _HTTP_METHOD = pyparsing.oneOf([
+  _HTTP_METHOD = pyparsing.one_of([
       'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
       'TRACE'])
 

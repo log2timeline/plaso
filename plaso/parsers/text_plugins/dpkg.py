@@ -72,11 +72,11 @@ class DpkgTextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS).set_results_name('date_time')
 
-  _DPKG_STARTUP_TYPE = pyparsing.oneOf([
+  _DPKG_STARTUP_TYPE = pyparsing.one_of([
       'archives',
       'packages'])
 
-  _DPKG_STARTUP_COMMAND = pyparsing.oneOf([
+  _DPKG_STARTUP_COMMAND = pyparsing.one_of([
       'unpack',
       'install',
       'configure',
@@ -93,7 +93,7 @@ class DpkgTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
 
-  _DPKG_ACTION = pyparsing.oneOf([
+  _DPKG_ACTION = pyparsing.one_of([
       'install',
       'upgrade',
       'configure',
@@ -107,7 +107,7 @@ class DpkgTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
 
-  _DPKG_CONFFILE_DECISION = pyparsing.oneOf([
+  _DPKG_CONFFILE_DECISION = pyparsing.one_of([
       'install',
       'keep'])
 
