@@ -71,13 +71,13 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -93,9 +93,9 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress(':') + _TWO_DIGITS +
-      _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).setResultsName('date_time')
+      _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).set_results_name('date_time')
 
-  _HTTP_METHOD = pyparsing.oneOf([
+  _HTTP_METHOD = pyparsing.one_of([
       'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
       'TRACE'])
 
@@ -103,7 +103,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('HTTP/') + pyparsing.Word(pyparsing.nums + '.'))
 
   _HTTP_REQUEST = pyparsing.Suppress('"') + pyparsing.Group(
-      _HTTP_METHOD + pyparsing.Regex(r'\S*') + _HTTP_VERSION).setResultsName(
+      _HTTP_METHOD + pyparsing.Regex(r'\S*') + _HTTP_VERSION).set_results_name(
           'http_request') + pyparsing.Suppress('"')
 
   _IP_ADDRESS = (
@@ -112,50 +112,50 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
 
   _REMOTE_NAME = (
       pyparsing.Word(pyparsing.alphanums) |
-      pyparsing.Literal('-')).setResultsName('remote_name')
+      pyparsing.Literal('-')).set_results_name('remote_name')
 
   _RESPONSE_BYTES = (
-      pyparsing.Literal('-') | _INTEGER).setResultsName('response_bytes')
+      pyparsing.Literal('-') | _INTEGER).set_results_name('response_bytes')
 
   _SERVER_NAME = (
-      pyparsing.Word(pyparsing.alphanums + '-' + '.').setResultsName(
+      pyparsing.Word(pyparsing.alphanums + '-' + '.').set_results_name(
           'server_name'))
 
   _USER_AGENT = (
       pyparsing.Suppress('"') +
-      pyparsing.CharsNotIn('"').setResultsName('user_agent') +
+      pyparsing.CharsNotIn('"').set_results_name('user_agent') +
       pyparsing.Suppress('"'))
 
   _USER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '@' + pyparsing.alphanums + '.') |
       pyparsing.Word(pyparsing.alphanums) |
-      pyparsing.Literal('-')).setResultsName('user_name')
+      pyparsing.Literal('-')).set_results_name('user_name')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b"
   _COMMON_LOG_FORMAT_LINE = (
-      _IP_ADDRESS.setResultsName('ip_address') +
+      _IP_ADDRESS.set_results_name('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +
       _HTTP_REQUEST +
-      _INTEGER.setResultsName('response_code') +
+      _INTEGER.set_results_name('response_code') +
       _RESPONSE_BYTES +
       _END_OF_LINE)
 
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
   _COMBINED_LOG_FORMAT_LINE = (
-      _IP_ADDRESS.setResultsName('ip_address') +
+      _IP_ADDRESS.set_results_name('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +
       _HTTP_REQUEST +
-      _INTEGER.setResultsName('response_code') +
+      _INTEGER.set_results_name('response_code') +
       _RESPONSE_BYTES +
-      pyparsing.QuotedString('"').setResultsName('referer') +
+      pyparsing.QuotedString('"').set_results_name('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 
@@ -164,15 +164,15 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
   _VHOST_COMBINED_LOG_FORMAT_LINE = (
       _SERVER_NAME +
       pyparsing.Suppress(':') +
-      _INTEGER.setResultsName('port_number') +
-      _IP_ADDRESS.setResultsName('ip_address') +
+      _INTEGER.set_results_name('port_number') +
+      _IP_ADDRESS.set_results_name('ip_address') +
       _REMOTE_NAME +
       _USER_NAME +
       _DATE_TIME +
       _HTTP_REQUEST +
-      _INTEGER.setResultsName('response_code') +
+      _INTEGER.set_results_name('response_code') +
       _RESPONSE_BYTES +
-      pyparsing.QuotedString('"').setResultsName('referer') +
+      pyparsing.QuotedString('"').set_results_name('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 

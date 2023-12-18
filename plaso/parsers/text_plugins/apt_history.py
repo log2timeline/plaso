@@ -49,10 +49,10 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_TIME = pyparsing.Group(
@@ -61,7 +61,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS).set_results_name('date_time')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -70,7 +70,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('Start-Date:') + _DATE_TIME + _END_OF_LINE)
 
   _RECORD_BODY_LINE = (
-      pyparsing.oneOf([
+      pyparsing.one_of([
           'Commandline:',
           'Downgrade:',
           'Error:',

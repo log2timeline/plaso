@@ -55,16 +55,16 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
       'nov': 11,
       'dec': 12}
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -87,20 +87,20 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('[') +
-      _INTEGER.setResultsName('process_identifier') + pyparsing.Suppress(']') +
-      pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('severity') +
+      _INTEGER.set_results_name('process_identifier') +
+      pyparsing.Suppress(']') + pyparsing.Suppress('<') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('severity') +
       pyparsing.Suppress('>') +
       pyparsing.Suppress('(') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('id') +
       pyparsing.Suppress(')') +
-      _ORIGINATING_CALL.setResultsName('originating_call') +
+      _ORIGINATING_CALL.set_results_name('originating_call') +
       pyparsing.Suppress(': '))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

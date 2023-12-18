@@ -47,16 +47,16 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _FRACTION_OF_SECOND = pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS
@@ -69,11 +69,11 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
       _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      _FRACTION_OF_SECOND + _TIME_ZONE_OFFSET).setResultsName('date_time')
+      _FRACTION_OF_SECOND + _TIME_ZONE_OFFSET).set_results_name('date_time')
 
   _PROCESS_IDENTIFIER = (
       pyparsing.Suppress('pid=') +
-      _INTEGER.setResultsName('process_identifier'))
+      _INTEGER.set_results_name('process_identifier'))
 
   _THREAD = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums) + pyparsing.Literal(':') +
@@ -83,14 +83,14 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
 
   _LOG_LINE_START = (
       _DATE_TIME +
-      pyparsing.Word(pyparsing.alphas).setResultsName('level') +
+      pyparsing.Word(pyparsing.alphas).set_results_name('level') +
       _PROCESS_IDENTIFIER +
       # TODO: consider stripping thread identifier/cleaning up thread name?
-      _THREAD.setResultsName('thread') +
-      pyparsing.Word(pyparsing.printables).setResultsName('source_code'))
+      _THREAD.set_results_name('thread') +
+      pyparsing.Word(pyparsing.printables).set_results_name('source_code'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
@@ -235,7 +235,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
 
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
-    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+    time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
 
     try:
       self._ParseTimeElements(time_elements_structure)

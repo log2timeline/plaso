@@ -49,16 +49,16 @@ class MacOSWiFiLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -77,56 +77,56 @@ class MacOSWiFiLogTextPlugin(
       pyparsing.Literal('<') +
       pyparsing.Combine(
           pyparsing.Literal('airportd') + pyparsing.CharsNotIn('>'),
-          joinString='', adjacent=True).setResultsName('agent') +
+          joinString='', adjacent=True).set_results_name('agent') +
       pyparsing.Literal('>'))
 
   _DATE_TIME = pyparsing.Group(
-      _THREE_LETTERS.setResultsName('weekday') +
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
-      _THREE_DIGITS.setResultsName('milliseconds'))
+      _THREE_LETTERS.set_results_name('weekday') +
+      _THREE_LETTERS.set_results_name('month') +
+      _ONE_OR_TWO_DIGITS.set_results_name('day_of_month') +
+      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('seconds') + pyparsing.Suppress('.') +
+      _THREE_DIGITS.set_results_name('milliseconds'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # Log line with a known function name.
   _KNOWN_FUNCTION_LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') + _AGENT +
-      pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName('function') +
+      _DATE_TIME.set_results_name('date_time') + _AGENT +
+      pyparsing.one_of(_KNOWN_FUNCTIONS).set_results_name('function') +
       pyparsing.Literal(':') +
-      pyparsing.restOfLine().setResultsName('text') +
+      pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
 
   # Log line with an unknown function name.
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') + pyparsing.NotAny(
+      _DATE_TIME.set_results_name('date_time') + pyparsing.NotAny(
           _AGENT +
-          pyparsing.oneOf(_KNOWN_FUNCTIONS) +
+          pyparsing.one_of(_KNOWN_FUNCTIONS) +
           pyparsing.Literal(':')) +
-      pyparsing.restOfLine().setResultsName('text') +
+      pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
 
   _HEADER_LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Literal('***Starting Up***').setResultsName('text') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.Literal('***Starting Up***').set_results_name('text') +
       _END_OF_LINE)
 
   _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds'))
+      _THREE_LETTERS.set_results_name('month') +
+      _ONE_OR_TWO_DIGITS.set_results_name('day_of_month') +
+      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('seconds'))
 
   _TURNED_OVER_HEADER_LOG_LINE = (
-      _DATE_TIME_TURNED_OVER_HEADER.setResultsName('date_time') +
+      _DATE_TIME_TURNED_OVER_HEADER.set_results_name('date_time') +
       pyparsing.Combine(
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Literal('logfile turned over'),
-          joinString=' ', adjacent=False).setResultsName('text') +
+          joinString=' ', adjacent=False).set_results_name('text') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [

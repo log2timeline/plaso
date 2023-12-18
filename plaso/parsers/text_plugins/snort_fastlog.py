@@ -70,13 +70,13 @@ class SnortFastLogTextPlugin(
   NAME = 'snort_fastlog'
   DATA_FORMAT = 'Snort3/Suricata fast-log alert log (fast.log) file'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_MONTH_DAY = (
@@ -103,7 +103,7 @@ class SnortFastLogTextPlugin(
       pyparsing.Optional(pyparsing.Suppress('"')) +
       pyparsing.Combine(pyparsing.OneOrMore(
           pyparsing.Word(pyparsing.printables, excludeChars='["') |
-          pyparsing.White(' ', max=2))).setResultsName('message') +
+          pyparsing.White(' ', max=2))).set_results_name('message') +
       pyparsing.Optional(pyparsing.Suppress('"')))
 
   _RULE = (
@@ -111,33 +111,33 @@ class SnortFastLogTextPlugin(
       pyparsing.Combine(
           _INTEGER + pyparsing.Literal(':') +
           _INTEGER + pyparsing.Literal(':') +
-          _INTEGER).setResultsName('rule_identifier') +
+          _INTEGER).set_results_name('rule_identifier') +
       pyparsing.Suppress(']'))
 
   _CLASSIFICATION = (
       pyparsing.Suppress('[Classification:') +
-      pyparsing.Regex('[^]]*').setResultsName('classification') +
+      pyparsing.Regex('[^]]*').set_results_name('classification') +
       pyparsing.Suppress(']'))
 
   _PRIORITY = (
       pyparsing.Suppress('[Priority:') +
-      _INTEGER.setResultsName('priority') +
+      _INTEGER.set_results_name('priority') +
       pyparsing.Suppress(']'))
 
   _SOURCE_IP_ADDRESS_AND_PORT = (
-      _IP_ADDRESS.setResultsName('source_ip_address') +
+      _IP_ADDRESS.set_results_name('source_ip_address') +
       pyparsing.Suppress(':') +
-      _INTEGER.setResultsName('source_port'))
+      _INTEGER.set_results_name('source_port'))
 
   _DESTINATION_IP_ADDRESS_AND_PORT = (
-      _IP_ADDRESS.setResultsName('destination_ip_address') +
+      _IP_ADDRESS.set_results_name('destination_ip_address') +
       pyparsing.Suppress(':') +
-      _INTEGER.setResultsName('destination_port'))
+      _INTEGER.set_results_name('destination_port'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('[**]') +
       _RULE +
       _MESSAGE +
@@ -145,12 +145,12 @@ class SnortFastLogTextPlugin(
       pyparsing.Optional(_CLASSIFICATION) +
       pyparsing.Optional(_PRIORITY) +
       pyparsing.Suppress('{') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('protocol') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('protocol') +
       pyparsing.Suppress('}') + (
-          _IP_ADDRESS.setResultsName('source_ip_address') ^
+          _IP_ADDRESS.set_results_name('source_ip_address') ^
           _SOURCE_IP_ADDRESS_AND_PORT) +
       pyparsing.Suppress('->') + (
-          _IP_ADDRESS.setResultsName('destination_ip_address') ^
+          _IP_ADDRESS.set_results_name('destination_ip_address') ^
           _DESTINATION_IP_ADDRESS_AND_PORT) +
       _END_OF_LINE)
 

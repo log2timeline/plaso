@@ -252,8 +252,8 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the string cannot be parsed by the grammar.
     """
     try:
-      structure_generator = self._pyparsing_grammar.scanString(
-          string, maxMatches=1)
+      structure_generator = self._pyparsing_grammar.scan_string(
+          string, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
@@ -288,7 +288,7 @@ class TextPlugin(plugins.BasePlugin):
       # Wrap the line structures in groups with a result name to build a single
       # pyparsing grammar.
       if not isinstance(expression, pyparsing.Group):
-        expression = pyparsing.Group(expression).setResultsName(key)
+        expression = pyparsing.Group(expression).set_results_name(key)
 
       if not self._pyparsing_grammar:
         self._pyparsing_grammar = expression
@@ -297,10 +297,10 @@ class TextPlugin(plugins.BasePlugin):
 
     # Override Pyparsing's default replacement of tabs with spaces to
     # SkipAhead() the correct number of bytes after a match.
-    self._pyparsing_grammar.parseWithTabs()
+    self._pyparsing_grammar.parse_with_tabs()
 
     # Override Pyparsing's whitespace characters to spaces only.
-    self._pyparsing_grammar.setDefaultWhitespaceChars(' ')
+    self._pyparsing_grammar.set_default_whitespace_chars(' ')
 
   def _VerifyString(self, string):
     """Checks a string for known grammar.
@@ -315,7 +315,7 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the string cannot be parsed by the grammar.
     """
     try:
-      structure = self.VERIFICATION_GRAMMAR.parseString(string)
+      structure = self.VERIFICATION_GRAMMAR.parse_string(string)
     except pyparsing.ParseException as exception:
       raise errors.ParseError(exception)
 
@@ -417,8 +417,8 @@ class TextPluginWithLineContinuation(TextPlugin):
       return last_string_match
 
     try:
-      structure_generator = self._pyparsing_grammar.scanString(
-          string, maxMatches=1)
+      structure_generator = self._pyparsing_grammar.scan_string(
+          string, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:

@@ -43,7 +43,7 @@ class BashHistoryTextPlugin(interface.TextPluginWithLineContinuation):
   _TIMESTAMP_LINE = pyparsing.Regex(r'#(?P<timestamp>[1-9][0-9]{8,9})\n')
 
   _COMMAND_LINE = (
-      pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
+      pyparsing.restOfLine().set_results_name('command') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('timestamp_line', _TIMESTAMP_LINE)]
 
