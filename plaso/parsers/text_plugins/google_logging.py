@@ -83,7 +83,8 @@ class GoogleLogTextPlugin(
       _TWO_DIGITS + pyparsing.Optional(
           pyparsing.Suppress('.') + _SIX_DIGITS)).set_results_name('date_time')
 
-  _PRIORITY = pyparsing.one_of(['E', 'F', 'I', 'W']).set_results_name('priority')
+  _PRIORITY = pyparsing.one_of(['E', 'F', 'I', 'W']).set_results_name(
+      'priority')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
