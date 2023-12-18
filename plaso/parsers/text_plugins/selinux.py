@@ -107,7 +107,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
       body = body.strip()
 
       try:
-        body_structure = self._KEY_VALUE_DICT.parseString(body)
+        body_structure = self._KEY_VALUE_DICT.parse_string(body)
 
         process_identifier = self._GetValueFromStructure(
             body_structure, 'pid')

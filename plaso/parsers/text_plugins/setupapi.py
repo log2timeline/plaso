@@ -192,7 +192,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           structure, 'start_time')
 
       try:
-        time_elements_structure = self._DATE_TIME.parseString(
+        time_elements_structure = self._DATE_TIME.parse_string(
             start_time_structure)
       except pyparsing.ParseException as exception:
         raise errors.ParseError(
@@ -206,7 +206,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           structure, 'end_time')
 
       try:
-        time_elements_structure = self._DATE_TIME.parseString(
+        time_elements_structure = self._DATE_TIME.parse_string(
             end_time_structure)
       except pyparsing.ParseException as exception:
         raise errors.ParseError(

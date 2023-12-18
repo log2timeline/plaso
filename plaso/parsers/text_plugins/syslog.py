@@ -212,7 +212,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       SyslogCronTaskRunEventData: event data or None if not available.
     """
     try:
-      structure = self._CRON_MESSAGE.parseString(body)
+      structure = self._CRON_MESSAGE.parse_string(body)
     except pyparsing.ParseException as exception:
       logger.debug(
           'Unable to parse cron message body with error: {0!s}'.format(
@@ -250,7 +250,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       SyslogCronTaskRunEventData: event data or None if not available.
     """
     try:
-      structure = self._SSHD_MESSAGE.parseString(body)
+      structure = self._SSHD_MESSAGE.parse_string(body)
     except pyparsing.ParseException as exception:
       logger.debug(
           'Unable to parse sshd message body with error: {0!s}'.format(
@@ -753,7 +753,7 @@ class TraditionalSyslogTextPlugin(
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      time_elements_structure = self._DATE_TIME.parseString(
+      time_elements_structure = self._DATE_TIME.parse_string(
           date_time_structure)
     except pyparsing.ParseException:
       return False

@@ -155,7 +155,7 @@ class GoogleLogTextPlugin(
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+      time_elements_structure = self._HEADER_DATE_TIME.parse_string(
           date_time_structure)
     except pyparsing.ParseException:
       raise errors.ParseError('Unable to parser header date time.')
@@ -269,7 +269,7 @@ class GoogleLogTextPlugin(
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+      time_elements_structure = self._HEADER_DATE_TIME.parse_string(
           date_time_structure)
     except pyparsing.ParseException:
       return False

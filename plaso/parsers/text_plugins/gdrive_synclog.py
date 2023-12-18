@@ -235,7 +235,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
 
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
-    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+    time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
 
     try:
       self._ParseTimeElements(time_elements_structure)

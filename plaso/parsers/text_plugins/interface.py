@@ -315,7 +315,7 @@ class TextPlugin(plugins.BasePlugin):
       ParseError: when the string cannot be parsed by the grammar.
     """
     try:
-      structure = self.VERIFICATION_GRAMMAR.parseString(string)
+      structure = self.VERIFICATION_GRAMMAR.parse_string(string)
     except pyparsing.ParseException as exception:
       raise errors.ParseError(exception)
 

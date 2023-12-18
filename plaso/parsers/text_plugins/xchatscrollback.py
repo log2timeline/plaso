@@ -111,7 +111,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
     """
     try:
       stripped_text = self._STRIPPER.transformString(raw_text)
-      structure = self._MESSAGE.parseString(stripped_text)
+      structure = self._MESSAGE.parse_string(stripped_text)
     except pyparsing.ParseException as exception:
       raise errors.ParseError(
           'Unable to parse raw text with error: {0!s}'.format(exception))
