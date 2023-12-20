@@ -5,7 +5,6 @@
 import argparse
 import io
 import os
-import platform
 import unittest
 
 try:
@@ -893,7 +892,6 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.PREFERRED_NTFS_BACK_END)
 
-  @unittest.skipIf(platform.system() == 'Windows', 'timing out on Windows')
   def testScanEncryptedVolumeOnBDE(self):
     """Tests the _ScanEncryptedVolume function on a BDE image."""
     test_file_path = self._GetTestFilePath(['bdetogo.raw'])
