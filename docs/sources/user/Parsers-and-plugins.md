@@ -142,7 +142,9 @@ chrome_8_history | Parser for Google Chrome 8 - 25 history SQLite database files
 chrome_autofill | Parser for Google Chrome autofill SQLite database (Web Data) files.
 chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
 dropbox | Parser for Dropbox sync history database (sync_history.db) files.
+edge_load_statistics | Parser for SQLite database files.
 firefox_10_cookies | Parser for Mozilla Firefox cookies SQLite database file version 10.
+firefox_118_downloads | Parser for Mozilla Firefox 118 downloads SQLite database (downloads.sqlite) files.
 firefox_2_cookies | Parser for Mozilla Firefox cookies SQLite database file version 2.
 firefox_downloads | Parser for Mozilla Firefox downloads SQLite database (downloads.sqlite) files.
 firefox_history | Parser for Mozilla Firefox history SQLite database (places.sqlite) files.
