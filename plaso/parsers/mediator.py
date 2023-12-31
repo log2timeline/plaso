@@ -363,9 +363,11 @@ class ParserMediator(object):
     if not path_spec:
       return None
 
-    if (self._windows_event_log_providers_per_path is None and
-        self._storage_writer):
+    if (self._windows_event_log_providers_per_filename is None and
+        self._windows_event_log_providers_per_path is None):
       environment_variables = self._GetEnvironmentVariablesByPathSpec(path_spec)
+      if not environment_variables:
+        return None
 
       self._windows_event_log_providers_per_filename = {}
       self._windows_event_log_providers_per_path = {}
