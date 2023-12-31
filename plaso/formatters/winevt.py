@@ -36,12 +36,8 @@ class WindowsEventLogMessageFormatterHelper(
       message_string_template = self._winevt_resources_helper.GetMessageString(
           provider_identifier, source_name, message_identifier, event_version)
       if message_string_template:
-        string_values = []
-        for string_value in event_values.get('strings', []):
-          if string_value is None:
-            string_value = ''
-
-          string_values.append(string_value)
+        string_values = [
+            string or '' for string in event_values.get('strings', [])]
 
         try:
           message_string = message_string_template.format(*string_values)
