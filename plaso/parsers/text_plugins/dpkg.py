@@ -58,10 +58,10 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_TIME = pyparsing.Group(
@@ -70,13 +70,13 @@ class DpkgTextPlugin(interface.TextPlugin):
       _TWO_DIGITS +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+      _TWO_DIGITS).set_results_name('date_time')
 
-  _DPKG_STARTUP_TYPE = pyparsing.oneOf([
+  _DPKG_STARTUP_TYPE = pyparsing.one_of([
       'archives',
       'packages'])
 
-  _DPKG_STARTUP_COMMAND = pyparsing.oneOf([
+  _DPKG_STARTUP_COMMAND = pyparsing.one_of([
       'unpack',
       'install',
       'configure',
@@ -93,7 +93,7 @@ class DpkgTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
 
-  _DPKG_ACTION = pyparsing.oneOf([
+  _DPKG_ACTION = pyparsing.one_of([
       'install',
       'upgrade',
       'configure',
@@ -107,7 +107,7 @@ class DpkgTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables)), joinString=' ', adjacent=False)
 
-  _DPKG_CONFFILE_DECISION = pyparsing.oneOf([
+  _DPKG_CONFFILE_DECISION = pyparsing.one_of([
       'install',
       'keep'])
 
@@ -119,7 +119,7 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (_DATE_TIME + pyparsing.MatchFirst([
       _DPKG_STARTUP_BODY, _DPKG_STATUS_BODY, _DPKG_ACTION_BODY,
-      _DPKG_CONFFILE_BODY]).setResultsName('body') +
+      _DPKG_CONFFILE_BODY]).set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

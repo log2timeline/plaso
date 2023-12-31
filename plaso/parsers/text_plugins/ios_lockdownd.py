@@ -38,13 +38,13 @@ class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
   NAME = 'ios_lockdownd'
   DATA_FORMAT = 'iOS lockdown daemon log'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
@@ -59,12 +59,12 @@ class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
       pyparsing.Word('.,', exact=1).suppress() + _SIX_DIGITS)
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('pid=') +
-      _INTEGER.setResultsName('process_identifier'))
+      _INTEGER.set_results_name('process_identifier'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

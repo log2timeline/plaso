@@ -149,37 +149,37 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _UNICODE_PRINTABLES = ''.join(
       chr(character) for character in range(65536)
       if not chr(character).isspace())
 
-  _MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mru')
-  _TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
+  _MRU = pyparsing.Word(_UNICODE_PRINTABLES).set_results_name('mru')
+  _TAG = pyparsing.QuotedString('<', endQuoteChar='>').set_results_name('tag')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _HEADER_LINE = (
       pyparsing.Suppress('POPULARITY-CONTEST-') +
-      _INTEGER.setResultsName('session') +
-      pyparsing.Suppress('TIME:') + _INTEGER.setResultsName('timestamp') +
+      _INTEGER.set_results_name('session') +
+      pyparsing.Suppress('TIME:') + _INTEGER.set_results_name('timestamp') +
       pyparsing.Suppress('ID:') +
-      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
-      pyparsing.restOfLine().setResultsName('details') +
+      pyparsing.Word(pyparsing.alphanums, exact=32).set_results_name('id') +
+      pyparsing.restOfLine().set_results_name('details') +
       _END_OF_LINE)
 
   _FOOTER_LINE = (
       pyparsing.Suppress('END-POPULARITY-CONTEST-') +
-      _INTEGER.setResultsName('session') +
-      pyparsing.Suppress('TIME:') + _INTEGER.setResultsName('timestamp') +
+      _INTEGER.set_results_name('session') +
+      pyparsing.Suppress('TIME:') + _INTEGER.set_results_name('timestamp') +
       _END_OF_LINE)
 
   _LOG_LINE = (
-      _INTEGER.setResultsName('atime') +
-      _INTEGER.setResultsName('ctime') +
-      pyparsing.Word(pyparsing.printables).setResultsName('package') +
+      _INTEGER.set_results_name('atime') +
+      _INTEGER.set_results_name('ctime') +
+      pyparsing.Word(pyparsing.printables).set_results_name('package') +
       (_TAG ^ (_MRU + _TAG) ^ _MRU) +
       _END_OF_LINE)
 

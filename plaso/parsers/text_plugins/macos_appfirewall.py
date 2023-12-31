@@ -47,10 +47,10 @@ class MacOSAppFirewallTextPlugin(
 
   ENCODING = 'utf-8'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -69,7 +69,7 @@ class MacOSAppFirewallTextPlugin(
   _REPORTER_CHARACTERS = ''.join(
       [c for c in pyparsing.printables if c not in [':', '[', '<']])
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _AGENT = pyparsing.Combine(
@@ -77,20 +77,20 @@ class MacOSAppFirewallTextPlugin(
       _PROCESS_IDENTIFIER + pyparsing.Literal(']'))
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
-      _AGENT.setResultsName('agent'))
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.Word(pyparsing.printables).set_results_name('computer_name') +
+      _AGENT.set_results_name('agent'))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
       _LOG_LINE_START +
       pyparsing.Suppress('<') +
-      pyparsing.CharsNotIn('>').setResultsName('status') +
+      pyparsing.CharsNotIn('>').set_results_name('status') +
       pyparsing.Suppress('>:') +
-      pyparsing.CharsNotIn(':').setResultsName('process_name') +
+      pyparsing.CharsNotIn(':').set_results_name('process_name') +
       pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('action') + _END_OF_LINE)
+      pyparsing.restOfLine().set_results_name('action') + _END_OF_LINE)
 
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
@@ -98,7 +98,7 @@ class MacOSAppFirewallTextPlugin(
   _REPEATED_LOG_LINE_END = pyparsing.Suppress('---') + _END_OF_LINE
 
   _REPEATED_LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('---') + pyparsing.SkipTo(_REPEATED_LOG_LINE_END) +
       _REPEATED_LOG_LINE_END)
 

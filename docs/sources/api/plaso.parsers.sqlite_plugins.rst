@@ -100,6 +100,14 @@ plaso.parsers.sqlite\_plugins.dropbox module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.edge\_load\_statistics module
+-----------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.edge_load_statistics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.firefox\_cookies module
 -----------------------------------------------------
 

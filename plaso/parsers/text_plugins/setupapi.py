@@ -46,13 +46,13 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
   NAME = 'setupapi'
   DATA_FORMAT = 'Windows SetupAPI log file'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
@@ -155,8 +155,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
       ParseError: when the header cannot be parsed.
     """
     try:
-      structure_generator = self._HEADER_GRAMMAR.scanString(
-          text_reader.lines, maxMatches=1)
+      structure_generator = self._HEADER_GRAMMAR.scan_string(
+          text_reader.lines, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
@@ -192,7 +192,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           structure, 'start_time')
 
       try:
-        time_elements_structure = self._DATE_TIME.parseString(
+        time_elements_structure = self._DATE_TIME.parse_string(
             start_time_structure)
       except pyparsing.ParseException as exception:
         raise errors.ParseError(
@@ -206,7 +206,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
           structure, 'end_time')
 
       try:
-        time_elements_structure = self._DATE_TIME.parseString(
+        time_elements_structure = self._DATE_TIME.parse_string(
             end_time_structure)
       except pyparsing.ParseException as exception:
         raise errors.ParseError(

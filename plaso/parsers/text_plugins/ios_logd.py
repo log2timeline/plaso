@@ -37,10 +37,10 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
   NAME = 'ios_logd'
   DATA_FORMAT = 'iOS sysdiagnose logd file'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _TIME_ZONE_OFFSET = (
@@ -61,9 +61,9 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.nums) + pyparsing.Literal(']'))
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      _LOGGER.setResultsName('logger') + pyparsing.Suppress(': ') +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
+      _DATE_TIME.set_results_name('date_time') +
+      _LOGGER.set_results_name('logger') + pyparsing.Suppress(': ') +
+      pyparsing.restOfLine().set_results_name('body') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_entry', _LOG_LINE)]
 

@@ -36,14 +36,6 @@ plaso.engine.extractors module
    :undoc-members:
    :show-inheritance:
 
-plaso.engine.filter\_file module
---------------------------------
-
-.. automodule:: plaso.engine.filter_file
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 plaso.engine.knowledge\_base module
 -----------------------------------
 

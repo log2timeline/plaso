@@ -91,13 +91,13 @@ class XChatLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -133,8 +133,8 @@ class XChatLogTextPlugin(
       pyparsing.Word(pyparsing.printables))
 
   _SECTION_HEADER_LINE = (
-      pyparsing.Suppress('****') + _LOG_ACTION.setResultsName('log_action') +
-      _SECTION_HEADER_DATE_TIME.setResultsName('date_time') +
+      pyparsing.Suppress('****') + _LOG_ACTION.set_results_name('log_action') +
+      _SECTION_HEADER_DATE_TIME.set_results_name('date_time') +
       _END_OF_LINE)
 
   # Body (nickname, text and/or service messages) pyparsing structures.
@@ -146,13 +146,13 @@ class XChatLogTextPlugin(
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS)
 
-  _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
+  _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').set_results_name(
       'nickname')
 
   _CHAT_HISTORY_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Optional(_NICKNAME) +
-      pyparsing.restOfLine().setResultsName('text') +
+      pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [

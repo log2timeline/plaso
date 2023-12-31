@@ -2,7 +2,7 @@
 """Analysis plugin to look up files in VirusTotal and tag events.
 
 Also see:
-  https://developers.virustotal.com/reference/overview
+  https://docs.virustotal.com/reference/overview
 """
 
 from plaso.analysis import hash_tagging

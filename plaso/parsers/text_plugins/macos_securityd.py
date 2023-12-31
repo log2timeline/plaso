@@ -55,53 +55,53 @@ class MacOSSecuritydLogTextPlugin(
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   _DATE_TIME = pyparsing.Group(
-      _THREE_LETTERS.setResultsName('month') +
-      _ONE_OR_TWO_DIGITS.setResultsName('day') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds'))
+      _THREE_LETTERS.set_results_name('month') +
+      _ONE_OR_TWO_DIGITS.set_results_name('day') +
+      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('seconds'))
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).setParseAction(
+  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.CharsNotIn('[').setResultsName('sender') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.CharsNotIn('[').set_results_name('sender') +
       pyparsing.Suppress('[') +
-      _PROCESS_IDENTIFIER.setResultsName('sender_pid') +
+      _PROCESS_IDENTIFIER.set_results_name('sender_pid') +
       pyparsing.Suppress(']') +
       pyparsing.Suppress('<') +
-      pyparsing.CharsNotIn('>').setResultsName('level') +
+      pyparsing.CharsNotIn('>').set_results_name('level') +
       pyparsing.Suppress('>') +
       pyparsing.Suppress('[') +
-      pyparsing.CharsNotIn('{').setResultsName('facility') +
+      pyparsing.CharsNotIn('{').set_results_name('facility') +
       pyparsing.Suppress('{') +
       pyparsing.Optional(pyparsing.CharsNotIn(
-          '}').setResultsName('security_api')) +
+          '}').set_results_name('security_api')) +
       pyparsing.Suppress('}') +
-      pyparsing.Optional(pyparsing.CharsNotIn(']:').setResultsName(
+      pyparsing.Optional(pyparsing.CharsNotIn(']:').set_results_name(
           'caller')) + pyparsing.Suppress(']:') +
-      pyparsing.restOfLine().setResultsName('message') +
+      pyparsing.restOfLine().set_results_name('message') +
       _END_OF_LINE)
 
   _REPEATED_LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('--- last message repeated') +
-      _INTEGER.setResultsName('times') +
+      _INTEGER.set_results_name('times') +
       pyparsing.Suppress('time ---') +
       _END_OF_LINE)
 
