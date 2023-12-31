@@ -594,7 +594,7 @@ class WinevtResourcesHelper(object):
     if not message_file_identifiers:
       logger.warning((
           f'No message file for message: 0x{message_identifier:08x} '
-          f'(0x{original_message_identifier:08x}) '
+          f'(original: 0x{original_message_identifier:08x}) '
           f'of provider: {lookup_key:s}'))
       return None
 
@@ -615,7 +615,7 @@ class WinevtResourcesHelper(object):
     if not message_strings:
       logger.warning((
           f'No message string for message: 0x{message_identifier:08x} '
-          f'(0x{original_message_identifier:08x}) '
+          f'(original: 0x{original_message_identifier:08x}) '
           f'of provider: {lookup_key:s}'))
       return None
 
