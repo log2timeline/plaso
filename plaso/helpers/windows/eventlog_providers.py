@@ -6,7 +6,7 @@ class WindowsEventLogProvidersHelper(object):
   """Windows EventLog providers helper."""
 
   def _GetNormalizedPath(self, path):
-    """Retrieves a normalized variant of a message file path.
+    """"Retrieves a normalized variant of a path.
 
     Args:
       path (str): path of a message file.
