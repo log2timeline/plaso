@@ -76,6 +76,8 @@ class ParserMediator(object):
     self._resolver_context = resolver_context
     self._storage_writer = None
     self._temporary_directory = None
+    self._windows_event_log_providers = None
+    self._windows_event_log_providers_per_filename = None
     self._windows_event_log_providers_per_path = None
 
     self.registry_find_specs = registry_find_specs
@@ -298,7 +300,7 @@ class ParserMediator(object):
 
     data_stream = getattr(self._file_entry.path_spec, 'data_stream', None)
     if data_stream:
-      return '{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
+      return f'{self._file_entry.name:s}:{data_stream:s}'
 
     return self._file_entry.name
 
@@ -358,15 +360,17 @@ class ParserMediator(object):
           found.
     """
     path_spec = getattr(self._file_entry, 'path_spec', None)
+    if not path_spec:
+      return None
 
     if (self._windows_event_log_providers_per_path is None and
         self._storage_writer):
       environment_variables = self._GetEnvironmentVariablesByPathSpec(path_spec)
 
+      self._windows_event_log_providers_per_filename = {}
       self._windows_event_log_providers_per_path = {}
 
-      for provider in self._storage_writer.GetAttributeContainers(
-          'windows_eventlog_provider'):
+      for provider in self._windows_event_log_providers:
         for windows_path in provider.event_message_files or []:
           path, filename = path_helper.PathHelper.GetWindowsSystemPath(
               windows_path, environment_variables)
@@ -379,33 +383,44 @@ class ParserMediator(object):
             self._windows_event_log_providers_per_path[path] = {}
 
           # Note that multiple providers can share EventLog message files.
+          self._windows_event_log_providers_per_filename[filename] = provider
           self._windows_event_log_providers_per_path[path][filename] = provider
 
+    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
+    lookup_path = relative_path.lower()
+
+    path_segment_separator = path_helper.PathHelper.GetPathSegmentSeparator(
+        path_spec)
+
+    lookup_path, _, lookup_filename = lookup_path.rpartition(
+        path_segment_separator)
+
+    # Language specific EventLog message file paths contain a language tag
+    # such as "en-US".
+    base_lookup_path, _, last_path_segment = lookup_path.rpartition(
+        path_segment_separator)
+    if language_tags.LanguageTagHelper.IsLanguageTag(last_path_segment):
+      lookup_path = base_lookup_path
+
     message_file = None
-    if path_spec:
-      relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
-          path_spec)
-      lookup_path = relative_path.lower()
 
-      path_segment_separator = path_helper.PathHelper.GetPathSegmentSeparator(
-          path_spec)
+    if (lookup_path == '\\windows\\systemresources' and
+        lookup_filename[-4:] == '.mun'):
+      lookup_filename = lookup_filename[:-4]
 
-      lookup_path, _, lookup_filename = lookup_path.rpartition(
-          path_segment_separator)
+      provider = self._windows_event_log_providers_per_filename.get(
+          lookup_filename, None)
+      if provider:
+        windows_path = '\\'.join(['', 'Windows', 'System32', lookup_filename])
+        message_file = artifacts.WindowsEventLogMessageFileArtifact(
+            path=relative_path, windows_path=windows_path)
 
-      # Language specific EventLog message file paths contain a language tag
-      # such as "en-US".
-      base_lookup_path, _, last_path_segment = lookup_path.rpartition(
-          path_segment_separator)
-      if language_tags.LanguageTagHelper.IsLanguageTag(last_path_segment):
-        lookup_path = base_lookup_path
-
+    else:
       providers_per_filename = self._windows_event_log_providers_per_path.get(
           lookup_path, {})
 
       for filename, provider in providers_per_filename.items():
-        mui_filename = '{0:s}.mui'.format(filename)
-        if lookup_filename in (filename, mui_filename):
+        if lookup_filename in (filename, f'{filename:s}.mui'):
           windows_path = '\\'.join([lookup_path, filename])
           message_file = artifacts.WindowsEventLogMessageFileArtifact(
               path=relative_path, windows_path=windows_path)
@@ -545,6 +560,15 @@ class ParserMediator(object):
 
     self.last_activity_timestamp = time.time()
 
+  def SetWindowsEventLogProviders(self, windows_event_log_providers):
+    """Sets the Windows EventLog providers.
+
+    Rags:
+      windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
+          Windows EventLog providers.
+    """
+    self._windows_event_log_providers = windows_event_log_providers
+
   def ResetFileEntry(self):
     """Resets the active file entry."""
     self._file_entry = None
@@ -649,8 +673,7 @@ class ParserMediator(object):
     if language_tag:
       lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(language_tag)
       if not lcid:
-        raise ValueError('No LCID found for language tag: {0:s}.'.format(
-            language_tag))
+        raise ValueError(f'No LCID found for language tag: {language_tag:s}.')
 
       language_tag = language_tag.lower()
 
@@ -694,14 +717,14 @@ class ParserMediator(object):
       return
 
     if configuration.HaveProfileFormatChecks():
-      identifier = '{0:s}-format_checks'.format(identifier)
+      identifier = f'{identifier:s}-format_checks'
 
       self._format_checks_cpu_time_profiler = profilers.CPUTimeProfiler(
           identifier, configuration)
       self._format_checks_cpu_time_profiler.Start()
 
     if configuration.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(identifier)
+      identifier = f'{identifier:s}-parsers'
 
       self._parsers_cpu_time_profiler = profilers.CPUTimeProfiler(
           identifier, configuration)
