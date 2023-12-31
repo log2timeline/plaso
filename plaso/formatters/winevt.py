@@ -42,12 +42,13 @@ class WindowsEventLogMessageFormatterHelper(
         try:
           message_string = message_string_template.format(*string_values)
         except (IndexError, TypeError) as exception:
+          provider_identifier = provider_identifier or ''
+          strings = ', '.join(string_values)
           logger.error((
-              'Unable to format message: 0x{0:08x} of provider: {1:s} '
-              'template: "{2:s}" and strings: "{3:s}" with error: '
-              '{4!s}').format(
-                  message_identifier, provider_identifier or '',
-                  message_string_template, ', '.join(string_values), exception))
+              f'Unable to format message: 0x{message_identifier:08x} of '
+              f'provider: {provider_identifier:s} template: '
+              f'"{message_string_template:s}" and strings: "{strings:s}" '
+              f'with error: {exception!s}'))
           # Unable to create the message string.
           # TODO: consider returning the unformatted message string.
 

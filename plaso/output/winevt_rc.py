@@ -87,10 +87,15 @@ class Sqlite3DatabaseFile(object):
       raise RuntimeError('Cannot retrieve values database not opened.')
 
     if condition:
-      condition = ' WHERE {0:s}'.format(condition)
+      condition = f' WHERE {condition:s}'
+    else:
+      condition = ''
 
-    sql_query = 'SELECT {1:s} FROM {0:s}{2:s}'.format(
-        ', '.join(table_names), ', '.join(column_names), condition)
+    table_names_string = ', '.join(table_names)
+    column_names_string = ', '.join(column_names)
+    sql_query = (
+        f'SELECT {column_names_string:s} FROM {table_names_string:s}'
+        f'{condition:s}')
 
     self._cursor.execute(sql_query)
 
@@ -161,7 +166,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     """
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
-    condition = 'log_source == "{0:s}"'.format(log_source)
+    condition = f'log_source == "{log_source:s}"'
 
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -190,14 +195,14 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     Raises:
       RuntimeError: if more than one value is found in the database.
     """
-    table_name = 'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
+    table_name = f'message_table_{message_file_key:d}_0x{lcid:08x}'
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       return None
 
     column_names = ['message_string']
-    condition = 'message_identifier == "0x{0:08x}"'.format(message_identifier)
+    condition = f'message_identifier == "0x{message_identifier:08x}"'
 
     values = list(self._database_file.GetValues(
         [table_name], column_names, condition))
@@ -222,8 +227,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     """
     table_names = ['message_file_per_event_log_provider']
     column_names = ['message_file_key']
-    condition = 'event_log_provider_key == {0:d}'.format(
-        event_log_provider_key)
+    condition = f'event_log_provider_key == {event_log_provider_key:d}'
 
     generator = self._database_file.GetValues(
         table_names, column_names, condition)
@@ -286,7 +290,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
       return None
 
     column_names = ['value']
-    condition = 'name == "{0:s}"'.format(attribute_name)
+    condition = f'name == "{attribute_name:s}"'
 
     values = list(self._database_file.GetValues(
         [table_name], column_names, condition))
@@ -318,15 +322,14 @@ class WinevtResourcesSqlite3DatabaseReader(object):
 
     version = self.GetMetadataAttribute('version')
     if not version or version != '20150315':
-      raise RuntimeError('Unsupported version: {0:s}'.format(version))
+      raise RuntimeError(f'Unsupported version: {version:s}')
 
     string_format = self.GetMetadataAttribute('string_format')
     if not string_format:
       string_format = 'wrc'
 
     if string_format not in ('pep3101', 'wrc'):
-      raise RuntimeError('Unsupported string format: {0:s}'.format(
-          string_format))
+      raise RuntimeError(f'Unsupported string format: {string_format:s}')
 
     self._string_format = string_format
     return True
@@ -381,17 +384,16 @@ class WinevtResourcesHelper(object):
       self._message_string_cache.popitem(last=True)
 
     if provider_identifier:
-      lookup_key = '{0:s}:0x{1:08x}'.format(
-          provider_identifier, message_identifier)
+      lookup_key = f'{provider_identifier:s}:0x{message_identifier:08x}'
       if event_version is not None:
-        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
+        lookup_key = f'{lookup_key:s}:{event_version:d}'
       self._message_string_cache[lookup_key] = message_string
       self._message_string_cache.move_to_end(lookup_key, last=False)
 
     if log_source:
-      lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+      lookup_key = f'{log_source:s}:0x{message_identifier:08x}'
       if event_version is not None:
-        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
+        lookup_key = f'{lookup_key:s}:{event_version:d}'
       self._message_string_cache[lookup_key] = message_string
       self._message_string_cache.move_to_end(lookup_key, last=False)
 
@@ -412,16 +414,15 @@ class WinevtResourcesHelper(object):
     message_string = None
 
     if provider_identifier:
-      lookup_key = '{0:s}:0x{1:08x}'.format(
-          provider_identifier, message_identifier)
+      lookup_key = f'{provider_identifier:s}:0x{message_identifier:08x}'
       if event_version is not None:
-        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
+        lookup_key = f'{lookup_key:s}:{event_version:d}'
       message_string = self._message_string_cache.get(lookup_key, None)
 
     if not message_string and log_source:
-      lookup_key = '{0:s}:0x{1:08x}'.format(log_source, message_identifier)
+      lookup_key = f'{log_source:s}:0x{message_identifier:08x}'
       if event_version is not None:
-        lookup_key = '{0:s}:{1:d}'.format(lookup_key, event_version)
+        lookup_key = f'{lookup_key:s}:{event_version:d}'
       message_string = self._message_string_cache.get(lookup_key, None)
 
     if message_string:
@@ -438,9 +439,9 @@ class WinevtResourcesHelper(object):
     """
     if not self._winevt_database_reader and self._data_location:
       logger.warning((
-          'Falling back to {0:s}. Please make sure the Windows EventLog '
-          'message strings in the database correspond to those in the '
-          'EventLog files.').format(self._WINEVT_RC_DATABASE))
+          f'Falling back to {self._WINEVT_RC_DATABASE:s}. Please make sure '
+          f'the Windows EventLog message strings in the database correspond '
+          f'to those in the EventLog files.'))
 
       database_path = os.path.join(
           self._data_location, self._WINEVT_RC_DATABASE)
@@ -547,24 +548,26 @@ class WinevtResourcesHelper(object):
         'windows_eventlog_message_string'):
       return None
 
+    original_message_identifier = message_identifier
+
     # Map the event identifier to a message identifier as defined by the
     # WEVT_TEMPLATE event definition.
     if provider_identifier and storage_reader.HasAttributeContainers(
         'windows_wevt_template_event'):
       # TODO: add message_file_identifiers to filter_expression
       filter_expression = (
-          'provider_identifier == "{0:s}" and identifier == {1:d}').format(
-              provider_identifier, message_identifier)
+          f'provider_identifier == "{provider_identifier:s}" and '
+          f'identifier == {message_identifier:d}')
       if event_version is not None:
-        filter_expression = '{0:s} and version == {1:d}'.format(
-            filter_expression, event_version)
+        filter_expression = (
+            f'{filter_expression:s} and version == {event_version:d}')
 
       for event_definition in storage_reader.GetAttributeContainers(
           'windows_wevt_template_event', filter_expression=filter_expression):
-        logger.debug(
-            'Message: 0x{0:08x} of provider: {1:s} maps to: 0x{2:08x}'.format(
-                message_identifier, provider_identifier,
-                event_definition.message_identifier))
+        logger.debug((
+            f'Message: 0x{message_identifier:08x} of provider: '
+            f'{provider_identifier:s} maps to: '
+            f'0x{event_definition.message_identifier:08x}'))
         message_identifier = event_definition.message_identifier
         break
 
@@ -580,7 +583,7 @@ class WinevtResourcesHelper(object):
         message_file_identifier = message_file_identifier.CopyToString()
         message_file_identifiers.append(message_file_identifier)
 
-      mui_filename = '{0:s}.mui'.format(filename)
+      mui_filename = f'{filename:s}.mui'
       lookup_path = '\\'.join([path, self._language_tag, mui_filename]).lower()
       message_file_identifier = self._windows_eventlog_message_files.get(
           lookup_path, None)
@@ -589,17 +592,17 @@ class WinevtResourcesHelper(object):
         message_file_identifiers.append(message_file_identifier)
 
     if not message_file_identifiers:
-      logger.warning(
-          'No message file for message: 0x{0:08x} of provider: {1:s}'.format(
-              message_identifier, lookup_key))
+      logger.warning((
+          f'No message file for message: 0x{message_identifier:08x} '
+          f'(original: 0x{original_message_identifier:08x}) '
+          f'of provider: {lookup_key:s}'))
       return None
 
     message_strings = []
     # TODO: add message_file_identifiers to filter_expression
     filter_expression = (
-        'language_identifier == {0:d} and '
-        'message_identifier == {1:d}').format(
-            self._lcid, message_identifier)
+        f'language_identifier == {self._lcid:d} and '
+        f'message_identifier == {message_identifier:d}')
 
     for message_string in storage_reader.GetAttributeContainers(
         'windows_eventlog_message_string',
@@ -611,8 +614,9 @@ class WinevtResourcesHelper(object):
 
     if not message_strings:
       logger.warning((
-          'No message string for message: 0x{0:08x} of provider: '
-          '{1:s}').format(message_identifier, lookup_key))
+          f'No message string for message: 0x{message_identifier:08x} '
+          f'(original: 0x{original_message_identifier:08x}) '
+          f'of provider: {lookup_key:s}'))
       return None
 
     return message_strings[0].string
