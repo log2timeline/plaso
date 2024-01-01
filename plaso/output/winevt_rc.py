@@ -341,6 +341,10 @@ class WinevtResourcesHelper(object):
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
+  _DEFAULT_PARAMETER_MESSAGE_FILES = (
+      '%SystemRoot%\\System32\\MsObjs.dll',
+      '%SystemRoot%\\System32\\kernel32.dll')
+
   # The maximum number of cached message strings
   _MAXIMUM_CACHED_MESSAGE_STRINGS = 64 * 1024
 
@@ -717,13 +721,15 @@ class WinevtResourcesHelper(object):
         'windows_eventlog_message_string'):
       return None
 
+    message_files = provider.parameter_message_files
+    if not message_files:
+      # If no parameter message files are defined fallback to the event
+      # message files and default parameter message files.
+      message_files = list(provider.event_message_files)
+      message_files.extend(self._DEFAULT_PARAMETER_MESSAGE_FILES)
+
     message_file_identifiers = self._GetEventMessageFileIdentifiers(
-        provider.parameter_message_files)
-
-    if not message_file_identifiers:
-      message_file_identifiers = self._GetEventMessageFileIdentifiers(
-          provider.event_message_files)
-
+        message_files)
     if not message_file_identifiers:
       logger.warning((
           f'No parameter message file for identifier: '
@@ -746,7 +752,6 @@ class WinevtResourcesHelper(object):
     Args:
       storage_reader (StorageReader): storage reader.
     """
-    # TODO: get windows eventlog providers to the source.
     self._windows_eventlog_providers = {}
     if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
       for provider in storage_reader.GetAttributeContainers(
