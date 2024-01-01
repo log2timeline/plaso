@@ -141,6 +141,51 @@ class ParserMediator(object):
             self._environment_variables_per_path_spec[path_spec.parent] = (
                 system_configuration.environment_variables)
 
+  def _CreateEventLogMessageFileLookupTables(self, environment_variables):
+    """Creates the Windows EventLog message file lookup tables.
+
+    Args:
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+    """
+    self._windows_event_log_providers_per_filename = {}
+    self._windows_event_log_providers_per_path = {}
+
+    for provider in self._windows_event_log_providers:
+      self._FillEventLogMessageFileLookupTablesWithMessageFiles(
+          environment_variables, provider, provider.event_message_files)
+
+      self._FillEventLogMessageFileLookupTablesWithMessageFiles(
+          environment_variables, provider, provider.parameter_message_files)
+
+  def _FillEventLogMessageFileLookupTablesWithMessageFiles(
+      self, environment_variables, event_log_provider, message_files):
+    """Fills the Windows EventLog message file lookup tables with message files.
+
+    Args:
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+      event_log_provider (WindowsEventLogProviderArtifact): Windows EventLog
+          provider.
+      message_files (list[str]): message file paths.
+    """
+    for windows_path in message_files or []:
+      path, filename = path_helper.PathHelper.GetWindowsSystemPath(
+          windows_path, environment_variables)
+      path = path.lower()
+      filename = filename.lower()
+
+      # Use the path prefix as the key to handle language specific EventLog
+      # message files.
+      if path not in self._windows_event_log_providers_per_path:
+        self._windows_event_log_providers_per_path[path] = {}
+
+      # Note that multiple providers can share EventLog message files.
+      self._windows_event_log_providers_per_filename[filename] = (
+          event_log_provider)
+      self._windows_event_log_providers_per_path[path][filename] = (
+          event_log_provider)
+
   def _GetEnvironmentVariablesByPathSpec(self, path_spec):
     """Retrieves the environment variables for a specific path specification.
 
@@ -365,28 +410,12 @@ class ParserMediator(object):
 
     if (self._windows_event_log_providers_per_filename is None and
         self._windows_event_log_providers_per_path is None):
+      # TODO: improve this by building lookup tables per volume path spec
       environment_variables = self._GetEnvironmentVariablesByPathSpec(path_spec)
       if not environment_variables:
         return None
 
-      self._windows_event_log_providers_per_filename = {}
-      self._windows_event_log_providers_per_path = {}
-
-      for provider in self._windows_event_log_providers:
-        for windows_path in provider.event_message_files or []:
-          path, filename = path_helper.PathHelper.GetWindowsSystemPath(
-              windows_path, environment_variables)
-          path = path.lower()
-          filename = filename.lower()
-
-          # Use the path prefix as the key to handle language specific EventLog
-          # message files.
-          if path not in self._windows_event_log_providers_per_path:
-            self._windows_event_log_providers_per_path[path] = {}
-
-          # Note that multiple providers can share EventLog message files.
-          self._windows_event_log_providers_per_filename[filename] = provider
-          self._windows_event_log_providers_per_path[path][filename] = provider
+      self._CreateEventLogMessageFileLookupTables(environment_variables)
 
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(path_spec)
     lookup_path = relative_path.lower()

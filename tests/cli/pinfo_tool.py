@@ -419,8 +419,9 @@ Storage files are different.
       storage_reader.Close()
 
     expected_output = [
-        'Identifier | Log source(s) | Log type(s) | Event message file(s)',
-        '--- | --- | --- | ---',
+        ('Identifier | Log source(s) | Log type(s) | Event message file(s) | '
+         'Parameter message file(s)'),
+        '--- | --- | --- | --- | ---',
         '']
 
     output = output_writer.ReadOutput()
@@ -446,7 +447,8 @@ Storage files are different.
       storage_reader.Close()
 
     expected_output = [
-        'Identifier\tLog source(s)\tLog type(s)\tEvent message file(s)',
+        ('Identifier\tLog source(s)\tLog type(s)\tEvent message file(s)\t'
+         'Parameter message file(s)'),
         '']
 
     output = output_writer.ReadOutput()
