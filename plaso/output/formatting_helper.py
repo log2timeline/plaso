@@ -532,7 +532,7 @@ class FieldFormattingHelper(object):
     Returns:
       str: values field.
     """
-    values = event_data.values
+    values = getattr(event_data, 'values', None)
     if isinstance(values, list) and event_data.data_type in (
         'windows:registry:key_value', 'windows:registry:service'):
       values = ' '.join([
