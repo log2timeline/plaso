@@ -59,8 +59,8 @@ class ArtifactDefinitionsFiltersHelper(object):
 
     Args:
       definition (artifacts.ArtifactDefinition): artifact definition.
-      environment_variables (list[EnvironmentVariableArtifact]):
-          environment variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
@@ -95,8 +95,8 @@ class ArtifactDefinitionsFiltersHelper(object):
         key_paths_string = ', '.join(key_paths)
 
         logger.warning((
-            'Windows Registry values are not supported, extracting keys: '
-            '"{0!s}"').format(key_paths_string))
+            f'Windows Registry values are not supported, extracting keys: '
+            f'"{key_paths_string!s}"'))
 
         for key_path in key_paths:
           if ArtifactDefinitionsFiltersHelper.CheckKeyCompatibility(key_path):
@@ -112,9 +112,9 @@ class ArtifactDefinitionsFiltersHelper(object):
           find_specs.extend(specifications)
 
       else:
-        logger.warning(
-            'Unsupported artifact definition source type: "{0:s}"'.format(
-                source.type_indicator))
+        logger.warning((
+            f'Unsupported artifact definition source type: '
+            f'"{source.type_indicator:s}"'))
 
     return find_specs
 
@@ -124,8 +124,8 @@ class ArtifactDefinitionsFiltersHelper(object):
 
     Args:
       group_name (str): artifact group name.
-      environment_variables (list[EnvironmentVariableArtifact]):
-          environment variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
@@ -153,18 +153,17 @@ class ArtifactDefinitionsFiltersHelper(object):
     """
     find_specs = []
     for key_path_glob in path_helper.PathHelper.ExpandGlobStars(key_path, '\\'):
-      logger.debug('building find spec from key path glob: {0:s}'.format(
-          key_path_glob))
+      logger.debug(f'building find spec from key path glob: {key_path_glob:s}')
 
       key_path_glob_upper = key_path_glob.upper()
       if key_path_glob_upper.startswith(
           'HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTCONTROLSET'):
         # Rewrite CurrentControlSet to ControlSet* for Windows NT.
-        key_path_glob = 'HKEY_LOCAL_MACHINE\\System\\ControlSet*{0:s}'.format(
-            key_path_glob[43:])
+        key_path_glob = ''.join([
+            'HKEY_LOCAL_MACHINE\\System\\ControlSet*', key_path_glob[43:]])
 
       elif key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
-        key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
+        key_path_glob = ''.join(['HKEY_CURRENT_USER', key_path_glob[26:]])
 
       find_spec = dfwinreg_registry_searcher.FindSpec(
           key_path_glob=key_path_glob)
@@ -179,8 +178,8 @@ class ArtifactDefinitionsFiltersHelper(object):
     Args:
       source_path (str): file system path defined by the source.
       path_separator (str): file system path segment separator.
-      environment_variables (list[EnvironmentVariableArtifact]):
-          environment variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
@@ -189,23 +188,21 @@ class ArtifactDefinitionsFiltersHelper(object):
     find_specs = []
     for path_glob in path_helper.PathHelper.ExpandGlobStars(
         source_path, path_separator):
-      logger.debug('building find spec from path glob: {0:s}'.format(
-          path_glob))
+      logger.debug(f'building find spec from path glob: {path_glob:s}')
 
       for path in path_helper.PathHelper.ExpandUsersVariablePath(
           path_glob, path_separator, user_accounts):
-        logger.debug('building find spec from path: {0:s}'.format(path))
+        logger.debug(f'building find spec from path: {path:s}')
 
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(
               path, environment_variables)
-          logger.debug('building find spec from expanded path: {0:s}'.format(
-              path))
+          logger.debug(f'building find spec from expanded path: {path:s}')
 
         if not path.startswith(path_separator):
           logger.warning((
-              'The path filter must be defined as an absolute path: '
-              '"{0:s}"').format(path))
+              f'The path filter must be defined as an absolute path: '
+              f'"{path:s}"'))
           continue
 
         try:
@@ -214,8 +211,8 @@ class ArtifactDefinitionsFiltersHelper(object):
               location_separator=path_separator)
         except ValueError as exception:
           logger.error((
-              'Unable to build find specification for path: "{0:s}" with '
-              'error: {1!s}').format(path, exception))
+              f'Unable to build find specification for path: "{path:s}" with '
+              f'error: {exception!s}'))
           continue
 
         find_specs.append(find_spec)
@@ -230,8 +227,8 @@ class ArtifactDefinitionsFiltersHelper(object):
     Args:
       artifact_filter_names (list[str]): names of artifact definitions that are
           used for filtering file system and Windows Registry key paths.
-      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
-          environment variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
       user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
     """
     find_specs = []
@@ -240,11 +237,10 @@ class ArtifactDefinitionsFiltersHelper(object):
       if not definition:
         definition = self._artifacts_registry.GetDefinitionByAlias(name)
       if not definition:
-        logger.debug('undefined artifact definition: {0:s}'.format(name))
+        logger.debug(f'undefined artifact definition: {name:s}')
         continue
 
-      logger.debug('building find spec from artifact definition: {0:s}'.format(
-          name))
+      logger.debug(f'building find spec from artifact definition: {name:s}')
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
           definition, environment_variables, user_accounts)
       find_specs.extend(artifact_find_specs)
@@ -257,8 +253,8 @@ class ArtifactDefinitionsFiltersHelper(object):
         self.registry_find_specs.append(find_spec)
 
       else:
-        logger.warning('Unsupported find specification type: {0!s}'.format(
-            type(find_spec)))
+        type_string = type(find_spec)
+        logger.warning(f'Unsupported find specification type: {type_string!s}')
 
   @classmethod
   def CheckKeyCompatibility(cls, key_path):
@@ -275,6 +271,5 @@ class ArtifactDefinitionsFiltersHelper(object):
       if key_path_upper.startswith(key_path_prefix):
         return True
 
-    logger.warning('Key path: "{0:s}" is currently not supported'.format(
-        key_path))
+    logger.warning(f'Key path: "{key_path:s}" is currently not supported')
     return False
