@@ -754,6 +754,9 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'macos:loginitems:entry'
+place_holder_event: true
+---
 data_type: 'macos:login_window:entry'
 # Note that the Mac OS login window entry has no date and time values.
 place_holder_event: true

@@ -50,6 +50,7 @@ libvslvm-python >= 20160109
 lz4 >= 0.10.0
 opensearch-py
 pefile >= 2021.5.24
+plistutils >= 1.0.0
 psutil >= 5.4.3
 pyparsing >= 3.0.0
 python-dateutil >= 1.5

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>SessionItems</key>
+        <dict>
+                <key>Controller</key>
+                <string>CustomListItems</string>
+                <key>CustomListItems</key>
+                <array>
+                        <dict>
+                                <key>Alias</key>
+                                <data>
+                                AAAAAADYAAMAAQAA1Y90iAAASCsAAAAAAAEJOwABCT4A
+                                ANU3Q24AAAAACSD//gAAAAAAAAAA/////wABABAAAQk7
+                                AAEJJQABCSQAAABHAA4AIgAQAGkAVAB1AG4AZQBzAEgA
+                                ZQBsAHAAZQByAC4AYQBwAHAADwAaAAwATQBhAGMAaQBu
+                                AHQAbwBzAGgAIABIAEQAEgA3QXBwbGljYXRpb25zL2lU
+                                dW5lcy5hcHAvQ29udGVudHMvTWFjT1MvaVR1bmVzSGVs
+                                cGVyLmFwcAAAEwABLwD//wAA
+                                </data>
+                                <key>CustomItemProperties</key>
+                                <dict>
+                                        <key>com.apple.LSSharedFileList.Binding</key>
+                                        <data>
+                                        ZG5pYgAAAAACAAAAAAAAAAAAAAAAAAAAAAAA
+                                        AEAAAAAAAAAAZmlsZTovLy9BcHBsaWNhdGlv
+                                        bnMvaVR1bmVzLmFwcC9Db250ZW50cy9NYWNP
+                                        Uy9pVHVuZXNIZWxwZXIuYXBwLxYAAAAAAAAA
+                                        Y29tLmFwcGxlLmlUdW5lc0hlbHBlcgIA4AAA
+                                        MAAAjgAQAAIAAABuysEe
+                                        </data>
+                                        <key>com.apple.LSSharedFileList.ItemIsHidden</key>
+                                        <true/>
+                                </dict>
+                                <key>Flags</key>
+                                <integer>1</integer>
+                                <key>Name</key>
+                                <string>iTunesHelper</string>
+                        </dict>
+                </array>
+        </dict>
+</dict>
+</plist>

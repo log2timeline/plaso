@@ -360,6 +360,21 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
+data_type: 'macos:loginitems:entry'
+message:
+- 'Login item: {name}'
+- 'Points to: {target_path}'
+- 'CNID path: {cnid_path}'
+- 'Volume name: {volume_name}'
+- 'Volume mount point: {volume_mount_point}'
+- 'Creation date: {creation_date}'
+- 'Volume creation date: {volume_creation_date}'
+- 'Volume flags: {volume_flags}'
+short_message: 'Login item {name} points to {target_path}'
+short_source: 'PLIST'
+source: 'MacOS login items plist'
+---
+type: 'conditional'
 data_type: 'macos:login_window:entry'
 message:
 - 'Login hook: {login_hook}'
@@ -386,20 +401,6 @@ short_source: 'PLIST'
 source: 'Mac OS login window plist'
 ---
 type: 'conditional'
-data_type: 'macos:startup_item:entry'
-message:
-- 'Startup item: [{description}]'
-- 'Provides: {provides}'
-- 'Order Preference: {order_preference}'
-- 'Requires: {requires}'
-- 'Uses: {uses}'
-short_message:
-- 'Startup item: [{description}]'
-- 'Provides: {provides}'
-short_source: 'PLIST'
-source: 'MacOS startup item plist'
----
-type: 'conditional'
 data_type: 'macos:securityd_log:entry'
 message:
 - 'Sender: {sender}'
@@ -422,6 +423,20 @@ short_message:
 - 'Recommended updates: {recommended_updates}'
 short_source: 'PLIST'
 source: 'MacOS software update plist'
+---
+type: 'conditional'
+data_type: 'macos:startup_item:entry'
+message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+- 'Order Preference: {order_preference}'
+- 'Requires: {requires}'
+- 'Uses: {uses}'
+short_message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+short_source: 'PLIST'
+source: 'MacOS startup item plist'
 ---
 type: 'basic'
 data_type: 'macos:time_machine:backup'
