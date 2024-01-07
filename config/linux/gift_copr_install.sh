@@ -66,12 +66,12 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-pyparsing
                       python3-pytsk3
                       python3-pytz
-                      python3-pyxattr
                       python3-pyyaml
                       python3-redis
                       python3-requests
                       python3-six
                       python3-urllib3
+                      python3-xattr
                       python3-yara
                       python3-zmq
                       python3-zstd";
