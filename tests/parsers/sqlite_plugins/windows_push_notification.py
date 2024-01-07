@@ -43,11 +43,13 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'arrival_time': '2020-12-11T19:11:35.9025799+00:00',
+        'boot_time': '2020-12-11T19:08:54.1636157+00:00',
         'data_type': 'windows:wpndatabase:notification',
         'expiration_time': '2020-12-11T19:12:35.9025799+00:00',
         'handler_identifier': (
             'windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.'
             'immersivecontrolpanel'),
+        'notification_type': 'toast',
         'payload': (
             '<toast activationType=\'protocol\' '
             'launch=\'ms-settings:connecteddevices\'><visual><binding '

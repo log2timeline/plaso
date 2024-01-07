@@ -12,10 +12,12 @@ class WindowsPushNotificationEventData(events.EventData):
   Attributes:
     arrival_time (dfdatetime.DateTimeValues): date and time the push
         notification was received.
+    boot_time (dfdatetime.DateTimeValues): date and time the of the last boot.
     expiration_time (dfdatetime.DateTimeValues): date and time the push
         notification expires.
     handler_identifier (str): identifier of the corresponding notification
         handler.
+    notification_type (str): notification type.
     payload (dfdatetime.DateTimeValues): payload.
   """
 
@@ -26,8 +28,10 @@ class WindowsPushNotificationEventData(events.EventData):
     super(WindowsPushNotificationEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.arrival_time = None
+    self.boot_time = None
     self.expiration_time = None
     self.handler_identifier = None
+    self.notification_type = None
     self.payload = None
 
 
@@ -188,18 +192,28 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    payload = self._GetRowValue(query_hash, row, 'Payload')
+    payload = None
+    payload_type = self._GetRowValue(query_hash, row, 'PayloadType')
+
+    if payload_type.lower() == 'xml':
+      payload = self._GetRowValue(query_hash, row, 'Payload')
+      payload = payload.decode('utf-8')
+      # TODO: parse payload
+    else:
+      parser_mediator.ProduceExtractionWarning(
+          f'unsupported payload type: {payload_type:s}')
 
     event_data = WindowsPushNotificationEventData()
     event_data.arrival_time = self._GeFiletimeRowValue(
         query_hash, row, 'ArrivalTime')
+    event_data.boot_time = self._GeFiletimeRowValue(
+        query_hash, row, 'BootId')
     event_data.expiration_time = self._GeFiletimeRowValue(
         query_hash, row, 'ExpiryTime')
     event_data.handler_identifier = self._GetRowValue(
         query_hash, row, 'PrimaryId')
-    event_data.payload = payload.decode('utf-8')
-
-    # TODO: parse payload
+    event_data.notification_type = self._GetRowValue(query_hash, row, 'Type')
+    event_data.payload = payload
 
     parser_mediator.ProduceEventData(event_data)
 
