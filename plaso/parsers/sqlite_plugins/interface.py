@@ -3,6 +3,9 @@
 
 import sqlite3
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
@@ -39,6 +42,44 @@ class SQLitePlugin(plugins.BasePlugin):
     """Initializes a SQLite parser plugin."""
     super(SQLitePlugin, self).__init__()
     self._keys_per_query = {}
+
+  def _GetDateTimeStringRowValue(self, query_hash, row, value_name):
+    """Retrieves a date and time string value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value or None if not available.
+    """
+    date_time_string = self._GetRowValue(query_hash, row, value_name)
+    if date_time_string is None:
+      return None
+
+    date_time = dfdatetime_time_elements.TimeElements()
+    date_time.CopyFromDateTimeString(date_time_string)
+    return date_time
+
+  def _GeFiletimeRowValue(self, query_hash, row, value_name):
+    """Retrieves a FILETIME date and time value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.Filetime: date and time value or None if not available.
+    """
+    timestamp = self._GetRowValue(query_hash, row, value_name)
+    if timestamp is None:
+      return None
+
+    return dfdatetime_filetime.Filetime(timestamp=timestamp)
 
   def _GetRowValue(self, query_hash, row, value_name):
     """Retrieves a value from the row.
