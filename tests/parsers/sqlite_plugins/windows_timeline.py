@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Timeline SQLite database plugin."""
+"""Tests for the Windows 10 timeline SQLite database plugin."""
 
 import unittest
 
@@ -9,11 +9,11 @@ from plaso.parsers.sqlite_plugins import windows_timeline
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Windows Timeline plugin."""
+class WindowsTimelinePluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Windows 10 timeline SQLite database plugin."""
 
   def testProcess(self):
-    """Tests the Process function on a Windows Timeline SQLite database."""
+    """Tests the Process function."""
     plugin = windows_timeline.WindowsTimelinePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['windows_timeline_ActivitiesCache.db'], plugin)
