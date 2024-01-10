@@ -1014,10 +1014,10 @@ type: 'conditional'
 data_type: 'm365:defenderah:firewallinboundconnectiontoappblocked'
 message:
 - 'FW - Inbound connection to an app was blocked:'
-- '{initiatingprocessfolderpath}' 
+- '{initiatingprocessfolderpath}'
 short_message:
 - 'FW - Inbound connection to an app was blocked:'
-- '{initiatingprocessfolderpath}' 
+- '{initiatingprocessfolderpath}'
 short_source: 'MD-AH'
 source: 'M365 Defender - Advanced Hunting'
 ---
