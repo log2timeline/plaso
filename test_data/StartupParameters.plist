@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+    <dict>
+        <key>Description</key>
+        <string>Apple Serial Terminal Support</string>
+        <key>OrderPreference</key>
+        <string>Late</string>
+        <key>Provides</key>
+        <array>
+                <string>Serial Terminal Support</string>
+        </array>
+        <key>Uses</key>
+        <array>
+                <string>SystemLog</string>
+        </array>
+    </dict>
+</plist>

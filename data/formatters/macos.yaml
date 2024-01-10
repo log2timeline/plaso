@@ -349,6 +349,20 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
+data_type: 'macos:startupitem:entry'
+message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+- 'Order Preference: {order_preference}'
+- 'Requires: {requires}'
+- 'Uses: {uses}'
+short_message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+short_source: 'PLIST'
+source: 'MacOS startup item plist'
+---
+type: 'conditional'
 data_type: 'macos:securityd_log:entry'
 message:
 - 'Sender: {sender}'
