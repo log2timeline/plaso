@@ -1,0 +1,151 @@
+# Tags application execution events.
+application_execution
+  data_type is 'm365:defenderah:processcreated'
+  data_type is 'm365:defenderah:imageloaded'
+  data_type is 'm365:defenderah:openprocess'
+  data_type is 'm365:defenderah:processcreatedusingwmiquery'
+
+# Tags file created events.
+file_created
+  data_type is 'm365:defenderah:filecreated'
+
+# Tags file deleted events.
+file_deleted
+  data_type is 'm365:defenderah:filedeleted'
+
+# Tags file modified events.
+file_modified
+  data_type is 'm365:defenderah:filemodified'
+
+# Tags file renamed events.
+file_renamed
+  data_type is 'm365:defenderah:filerenamed'
+
+# Tags failed log-in events.
+login_failed
+  data_type is 'm365:defenderah:logonfailed'
+
+# Tags log-in attempt events.
+login_attempt
+  data_type is 'm365:defenderah:logonattempted'
+
+# Tags log-in success events.
+login_success
+  data_type is 'm365:defenderah:logonsuccess'
+
+# Tags Windows Registry modification events.
+registry_modified
+  data_type is 'm365:defenderah:registrykeycreated'
+  data_type is 'm365:defenderah:registrykeydeleted'
+  data_type is 'm365:defenderah:registrykeyrenamed'
+  data_type is 'm365:defenderah:registryvaluedeleted'
+  data_type is 'm365:defenderah:registryvalueset'
+
+# Tags failed connection
+connection_failed
+  data_type is 'm365:defenderah:connectionfailed'
+
+# Tags sucessfull connection
+connection_success
+  data_type is 'm365:defenderah:connectionsuccess'
+
+# Tags DNS connection
+dns_connection
+  data_type is 'm365:defenderah:dnsconnectioninspected'
+
+# Tags FTP connection
+ftp_connection
+  data_type is 'm365:defenderah:ftpconnectioninspected'
+
+# Tags HTTP connection
+http_connection
+  data_type is 'm365:defenderah:httpconnectioninspected'
+
+# Tags ICMP connection
+icmp_connection
+  data_type is 'm365:defenderah:icmpconnectioninspected'
+
+# Tags Inbound connection
+inbound_connection
+  data_type is 'm365:defenderah:inboundconnectionaccepted'
+
+# Tags Listening port
+open_port
+  data_type is 'm365:defenderah:listeningconnectioncreated'
+
+# Tags SMTP connection
+smtp_connection
+  data_type is 'm365:defenderah:smtpconnectioninspected'
+
+# Tags SSH connection
+ssh_connection
+  data_type is 'm365:defenderah:sshconnectioninspected'
+
+# Tags SSL connection
+ssl_connection
+  data_type is 'm365:defenderah:sslconnectioninspected'
+
+# Tags Threat detection
+threat_detection
+  data_type is 'm365:defenderah:antivirusdetection'
+  data_type is 'm365:defenderah:antiviruserror'
+  data_type is 'm365:defenderah:antivirusmalwareactionfailed'
+  data_type is 'm365:defenderah:antivirusmalwareblocked'
+  data_type is 'm365:defenderah:antivirusreport'
+
+# Tags ASR blocking
+asr_block
+  data_type is 'm365:defenderah:asradobereaderchildprocessblocked'
+  data_type is 'm365:defenderah:asrexecutableemailcontentblocked'
+  data_type is 'm365:defenderah:asrexecutableofficecontentblocked'
+  data_type is 'm365:defenderah:asrlsasscredentialtheftblocked'
+  data_type is 'm365:defenderah:asrobfuscatedscriptblocked'
+  data_type is 'm365:defenderah:asrofficechildprocessblocked'
+  data_type is 'm365:defenderah:asrofficecommappchildprocessblocked'
+  data_type is 'm365:defenderah:asrofficemacrowin32apicallsblocked'
+  data_type is 'm365:defenderah:asrofficeprocessinjectionblocked'
+  data_type is 'm365:defenderah:asrpersistencethroughwmiblocked'
+  data_type is 'm365:defenderah:asrpsexecwmichildprocessblocked'
+  data_type is 'm365:defenderah:asrransomwareblocked'
+  data_type is 'm365:defenderah:asrscriptexecutabledownloadblocked'
+  data_type is 'm365:defenderah:asruntrustedexecutableblocked'
+  data_type is 'm365:defenderah:asruntrustedusbprocessblocked'
+  data_type is 'm365:defenderah:asrvulnerablesigneddriverblocked'
+
+# Tags firewall blocking connection
+firewall_block
+  data_type is 'm365:defenderah:firewallinboundconnectionblocked'
+  data_type is 'm365:defenderah:firewallinboundconnectiontoappblocked'
+  data_type is 'm365:defenderah:firewalloutboundconnectionblocked'
+
+# Tags Windows Firewall With Advanced Security change events 
+firewall_change
+  data_type is 'm365:defenderah:firewallservicestopped'
+
+# Tags Remote desktop connection
+rdp_connection
+  data_type is 'm365:defenderah:remotedesktopconnection'
+
+# Tags scheduled task creation events.
+task_schedule
+  data_type is 'm365:defenderah:scheduledtaskcreated'
+
+# Tags Security group created
+group_created
+  data_type is 'm365:defenderah:securitygroupcreated'
+
+# Tags security log cleared events
+eventlog_cleared
+  data_type is 'm365:defenderah:securitylogcleared'
+
+# Tags Windows service creation events.
+service_new
+  data_type is 'm365:defenderah:serviceinstalled'
+
+# Tags user was added to a security-enabled local group
+group_added_account
+  data_type is 'm365:defenderah:useraccountaddedtolocalgroup'
+
+# Tags local SAM account or a domain account was created
+account_created
+  data_type is 'm365:defenderah:useraccountcreated'

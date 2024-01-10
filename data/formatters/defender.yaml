@@ -1,0 +1,1312 @@
+# Plaso Defender related event formatters.
+---
+# M365 Defender Activity Log
+type: 'conditional'
+data_type: 'm365:activitylog:event'
+message:
+- '{description}'
+short_message:
+- '{description}'
+short_source: 'MD-ACT'
+source: 'M365 Defender - Activity Log'
+---
+# M365 Defender Advanced Hunting - ImageLoaded
+type: 'conditional'
+data_type: 'm365:defenderah:imageloaded'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Image {filename} loaded'
+- 'from path {folderpath}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Image {filename} loaded'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ProcessCreated
+type: 'conditional'
+data_type: 'm365:defenderah:processcreated'
+message:
+- '[PID #{processid}]'
+- 'Process {filename} created by process'
+- '[PPID #{initiatingprocessid}]'
+- '{initiatingprocessfilename}'
+short_message:
+- '[PID #{processid}]'
+- 'Process {filename} created by process'
+- '[PPID #{initiatingprocessid}]'
+- '{initiatingprocessfilename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - OpenProcess
+type: 'conditional'
+data_type: 'm365:defenderah:openprocess'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Attempt to open process {filename}'
+- 'from path {folderpath}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Attempt to open process {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FileCreated
+type: 'conditional'
+data_type: 'm365:defenderah:filecreated'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} created'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} created'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FileDeleted
+type: 'conditional'
+data_type: 'm365:defenderah:filedeleted'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} deleted'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} deleted'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FileModified
+type: 'conditional'
+data_type: 'm365:defenderah:filemodified'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} modified'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {filename} modified'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FileRenamed
+type: 'conditional'
+data_type: 'm365:defenderah:filerenamed'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {previousfilename} renamed to'
+- '{filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{requestprotocol}:'
+- 'File {previousfilename} renamed to'
+- '{filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - LogonAttempted
+type: 'conditional'
+data_type: 'm365:defenderah:logonattempted'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login attempted for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login attempted for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - LogonFailed
+type: 'conditional'
+data_type: 'm365:defenderah:logonfailed'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login failed for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+- 'with reason {failurereason}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login failed for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - LogonSuccess
+type: 'conditional'
+data_type: 'm365:defenderah:logonsuccess'
+message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login success for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- '{logontype}:'
+- 'Login success for user:'
+- '{accountdomain}'
+- '\'
+- '{accountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RegistryKeyCreated
+type: 'conditional'
+data_type: 'm365:defenderah:registrykeycreated'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{registrykey}'
+- 'created'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{registrykey}'
+- 'created'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RegistryKeyDeleted
+type: 'conditional'
+data_type: 'm365:defenderah:registrykeydeleted'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{previousregistrykey}'
+- 'deleted'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{previousregistrykey}'
+- 'deleted'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RegistryKeyRenamed
+type: 'conditional'
+data_type: 'm365:defenderah:registrykeyrenamed'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{previousregistrykey}'
+- 'renamed'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry key'
+- '{previousregistrykey}'
+- 'renamed'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RegistryValueDeleted
+type: 'conditional'
+data_type: 'm365:defenderah:registryvaluedeleted'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry value'
+- '{previousregistryvaluename}'
+- 'at {previousregistrykey}'
+- 'deleted'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry value'
+- '{previousregistryvaluename}'
+- 'at {previousregistrykey}'
+- 'deleted'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RegistryValueSet
+type: 'conditional'
+data_type: 'm365:defenderah:registryvalueset'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry value'
+- '{previousregistryvaluename}'
+- 'at {registrykey}'
+- 'changed'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Registry value'
+- '{previousregistryvaluename}'
+- 'at {registrykey}'
+- 'changed'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ClickAllowed
+type: 'conditional'
+data_type: 'm365:defenderah:clickallowed'
+message:
+- '{workload} -'
+- 'Click allowed:'
+- '{url}'
+short_message:
+- '{workload} -'
+- 'Click allowed:'
+- '{url}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ClickBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:clickblocked'
+message:
+- '{workload} -'
+- 'Click blocked:'
+- '[Threat types: {threattypes}]'
+- '{url}'
+short_message:
+- '{workload} -'
+- 'Click blocked:'
+- '[Threat types: {threattypes}]'
+- '{url}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ClickBlockedByTenantPolicy
+type: 'conditional'
+data_type: 'm365:defenderah:clickblockedbytenantpolicy'
+message:
+- '{workload} -'
+- 'Click blocked by policy:'
+- '{url}'
+short_message:
+- '{workload} -'
+- 'Click blocked by policy:'
+- '{url}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - UrlErrorPage
+type: 'conditional'
+data_type: 'm365:defenderah:urlerrorpage'
+message:
+- '{workload} -'
+- 'URL error:'
+- '{url}'
+short_message:
+- '{workload} -'
+- 'URL error:'
+- '{url}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - UrlScanInProgress
+type: 'conditional'
+data_type: 'm365:defenderah:urlscaninprogress'
+message:
+- '{workload} -'
+- 'URL scanning in progress:'
+- '{url}'
+short_message:
+- '{workload} -'
+- 'URL scanning in progress:'
+- '{url}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ConnectionFailed
+type: 'conditional'
+data_type: 'm365:defenderah:connectionfailed'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection failed for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+- 'URL: {remoteurl}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection failed for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ConnectionFound
+type: 'conditional'
+data_type: 'm365:defenderah:connectionfound'
+message:
+- 'Connection found for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+- 'URL: {remoteurl}'
+short_message:
+- 'Connection found for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ConnectionRequest
+type: 'conditional'
+data_type: 'm365:defenderah:connectionrequest'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection request for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+- 'URL: {remoteurl}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection request for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ConnectionSuccess
+type: 'conditional'
+data_type: 'm365:defenderah:connectionsuccess'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection success for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+- 'URL: {remoteurl}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Connection success for process {initiatingprocessfilename}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '-> {remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - DnsConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:dnsconnectioninspected'
+message:
+- 'DNS query inspected: {dnsquery}'
+short_message:
+- 'DNS query inspected: {dnsquery}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FtpConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:ftpconnectioninspected'
+message:
+- 'FTP connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'FTP connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - HttpConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:httpconnectioninspected'
+message:
+- 'HTTP connection inspected: {host}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'HTTP connection inspected: {host}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - IcmpConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:icmpconnectioninspected'
+message:
+- 'ICMP connection inspected'
+- '[{protocol}]'
+- '{localip}'
+- '{direction}'
+- '{remoteip}'
+short_message:
+- 'ICMP connection inspected'
+- '[{protocol}]'
+- '{localip}'
+- '{direction}'
+- '{remoteip}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - InboundConnectionAccepted
+type: 'conditional'
+data_type: 'm365:defenderah:inboundconnectionaccepted'
+message:
+- 'Inbound connection accepted:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '<-'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'Inbound connection accepted:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '<-'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - InboundInternetScanInspected
+type: 'conditional'
+data_type: 'm365:defenderah:inboundinternetscaninspected'
+message:
+- 'Microsoft Defender External Attack Surface Management scan was inspected:'
+- '[{protocol}]'
+- '{remoteip}'
+- ': {remoteport}'
+- '<-'
+- '{localip}'
+- ': {localport}'
+short_message:
+- 'Microsoft Defender External Attack Surface Management scan was inspected:'
+- '[{protocol}]'
+- '{remoteip}'
+- ': {remoteport}'
+- '<-'
+- '{localip}'
+- ': {localport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ListeningConnectionCreated
+type: 'conditional'
+data_type: 'm365:defenderah:listeningconnectioncreated'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Process {initiatingprocessfilename} listening on port'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Process {initiatingprocessfilename} listening on port'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - NetworkSignatureInspected
+type: 'conditional'
+data_type: 'm365:defenderah:networksignatureinspected'
+message:
+- 'A packet content was inspected:'
+- '{remoteip}'
+- ': {remoteport}'
+- '-'
+- '{localip}'
+- ': {localport}'
+short_message:
+- 'A packet content was inspected:'
+- '{remoteip}'
+- ': {remoteport}'
+- '-'
+- '{localip}'
+- ': {localport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - NtlmAuthenticationInspected
+type: 'conditional'
+data_type: 'm365:defenderah:ntlmauthenticationinspected'
+message:
+- 'NTLM authentication inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'NTLM authentication inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SmtpConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:smtpconnectioninspected'
+message:
+- 'SMTP connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'SMTP connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SshConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:sshconnectioninspected'
+message:
+- 'SSH connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'SSH connection inspected:'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SslConnectionInspected
+type: 'conditional'
+data_type: 'm365:defenderah:sslconnectioninspected'
+message:
+- 'SSL authentication inspected: {server_name}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- 'SSL authentication inspected: {server_name}'
+- '[{protocol}]'
+- '{localip}'
+- ': {localport}'
+- '{direction}'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdated
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusdefinitionsupdated'
+message:
+- 'AV - Security intelligence updates for Windows Defender Antivirus were applied successfully'
+short_message:
+- 'AV - Security intelligence updates for Windows Defender Antivirus were applied successfully'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdateFailed
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusdefinitionsupdatefailed'
+message:
+- 'AV - Security intelligence updates for Windows Defender Antivirus were not applied'
+short_message:
+- 'AV - Security intelligence updates for Windows Defender Antivirus were not applied'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusDetection
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusdetection'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus detected a threat at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus detected a threat at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusEmergencyUpdatesInstalled
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusemergencyupdatesinstalled'
+message:
+- 'AV - Emergency security intelligence updates for Windows Defender Antivirus were applied'
+short_message:
+- 'AV - Emergency security intelligence updates for Windows Defender Antivirus were applied'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusError
+type: 'conditional'
+data_type: 'm365:defenderah:antiviruserror'
+message:
+- 'AV - Windows Defender Antivirus encountered an error while taking action on malware or a potentially unwanted application'
+short_message:
+- 'AV - Windows Defender Antivirus encountered an error while taking action on malware or a potentially unwanted application'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusMalwareActionFailed
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusmalwareactionfailed'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus attempted to take action on malware or a potentially unwanted application but the action failed at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus attempted to take action on malware or a potentially unwanted application but the action failed at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusMalwareBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusmalwareblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus blocked files or activity involving malware potentially unwanted applications or suspicious behavior at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Windows Defender Antivirus blocked files or activity involving malware potentially unwanted applications or suspicious behavior at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusReport
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusreport'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Microsoft Defender Antivirus reported a threat, which can either be a memory, boot sector, or rootkit threat'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'AV - Microsoft Defender Antivirus reported a threat, which can either be a memory, boot sector, or rootkit threat'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusScanCancelled
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusscancancelled'
+message:
+- 'AV - A Windows Defender Antivirus scan was cancelled'
+short_message:
+- 'AV - A Windows Defender Antivirus scan was cancelled'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AntivirusScanCompleted
+type: 'conditional'
+data_type: 'm365:defenderah:antivirusscancompleted'
+message:
+- 'AV - A Windows Defender Antivirus scan completed successfully'
+short_message:
+- 'AV - A Windows Defender Antivirus scan completed successfully'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrAdobeReaderChildProcessBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asradobereaderchildprocessblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked Adobe Reader from creating a child process at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked Adobe Reader from creating a child process at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrExecutableEmailContentBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrexecutableemailcontentblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked executable content from an email client and or webmail at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked executable content from an email client and or webmail at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrExecutableOfficeContentBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrexecutableofficecontentblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from creating executable content at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from creating executable content at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrLsassCredentialTheftBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrlsasscredentialtheftblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked possible credential theft from lsass.exe at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked possible credential theft from lsass.exe at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrObfuscatedScriptBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrobfuscatedscriptblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of scripts that appear obfuscated at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of scripts that appear obfuscated at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrOfficeChildProcessBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrofficechildprocessblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from creating child processes at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from creating child processes at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrOfficeCommAppChildProcessBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrofficecommappchildprocessblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office communication app from spawning a child process at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office communication app from spawning a child process at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrOfficeMacroWin32ApiCallsBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrofficemacrowin32apicallsblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked Win32 API calls from Office macros at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked Win32 API calls from Office macros at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrOfficeProcessInjectionBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrofficeprocessinjectionblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from injecting code into other processes at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an Office application from injecting code into other processes at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrPersistenceThroughWmiBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrpersistencethroughwmiblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an attempt to establish persistence through WMI event subscription at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked an attempt to establish persistence through WMI event subscription at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrPsexecWmiChildProcessBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrpsexecwmichildprocessblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the use of PsExec or WMI commands to spawn a child process at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the use of PsExec or WMI commands to spawn a child process at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrRansomwareBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrransomwareblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked ransomware activity at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked ransomware activity at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrScriptExecutableDownloadBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrscriptexecutabledownloadblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked JavaScript or VBScript code from launching downloaded executable content at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked JavaScript or VBScript code from launching downloaded executable content at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrUntrustedExecutableBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asruntrustedexecutableblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of an untrusted file that does not meet criteria for age or prevalence at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of an untrusted file that does not meet criteria for age or prevalence at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrUntrustedUsbProcessBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asruntrustedusbprocessblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of an untrusted and unsigned processes from a USB device at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked the execution of an untrusted and unsigned processes from a USB device at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - AsrVulnerableSignedDriverBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:asrvulnerablesigneddriverblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked a signed driver that has known vulnerabilities at file {filename}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'ASR - rule blocked a signed driver that has known vulnerabilities at file {filename}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - BrowserLaunchedToOpenUrl
+type: 'conditional'
+data_type: 'm365:defenderah:browserlaunchedtoopenurl'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A web browser opened a URL that originated as a link in another application'
+- 'URL: {remoteurl}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A web browser opened a URL that originated as a link in another application'
+- 'URL: {remoteurl}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - DnsQueryResponse
+type: 'conditional'
+data_type: 'm365:defenderah:dnsqueryresponse'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A response to a DNS query was sent'
+- 'Query: {dnsquery}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A response to a DNS query was sent'
+- 'Query: {dnsquery}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FirewallInboundConnectionBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:firewallinboundconnectionblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'FW - Inbound connection was blocked:'
+- '{localip}'
+- ': {localport}'
+- '<-'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'FW - Inbound connection was blocked:'
+- '{localip}'
+- ': {localport}'
+- '<-'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FirewallInboundConnectionToAppBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:firewallinboundconnectiontoappblocked'
+message:
+- 'FW - Inbound connection to an app was blocked:'
+- '{initiatingprocessfolderpath}' 
+short_message:
+- 'FW - Inbound connection to an app was blocked:'
+- '{initiatingprocessfolderpath}' 
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FirewallOutboundConnectionBlocked
+type: 'conditional'
+data_type: 'm365:defenderah:firewalloutboundconnectionblocked'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'FW - Outbound connection was blocked:'
+- '{localip}'
+- ': {localport}'
+- '->'
+- '{remoteip}'
+- ': {remoteport}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'FW - Outbound connection was blocked:'
+- '{localip}'
+- ': {localport}'
+- '->'
+- '{remoteip}'
+- ': {remoteport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - FirewallServiceStopped
+type: 'conditional'
+data_type: 'm365:defenderah:firewallservicestopped'
+message:
+- 'FW - Service stopped'
+short_message:
+- 'FW - Service stopped'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - GetClipboardData
+type: 'conditional'
+data_type: 'm365:defenderah:getclipboarddata'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'The GetClipboardData function was called'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'The GetClipboardData function was called'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - NetworkProtectionUserBypassEvent
+type: 'conditional'
+data_type: 'm365:defenderah:networkprotectionuserbypassevent'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A user has bypassed network protection and accessed a blocked IP address, domain, or URL'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A user has bypassed network protection and accessed a blocked IP address, domain, or URL'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - NetworkShareObjectAdded
+type: 'conditional'
+data_type: 'm365:defenderah:networkshareobjectadded'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A file or folder was shared on the network'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A file or folder was shared on the network'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - PowerShellCommand
+type: 'conditional'
+data_type: 'm365:defenderah:powershellcommand'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'PowerShell command executed: {pscommand}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'PowerShell command executed: {pscommand}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ProcessCreatedUsingWmiQuery
+type: 'conditional'
+data_type: 'm365:defenderah:processcreatedusingwmiquery'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A process was created using Windows Management Instrumentation (WMI)'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A process was created using Windows Management Instrumentation (WMI)'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RemoteDesktopConnection
+type: 'conditional'
+data_type: 'm365:defenderah:remotedesktopconnection'
+message:
+- 'Inbound Remote Desktop connection was established from'
+- '{localip}'
+- ': {localport}'
+short_message:
+- 'Inbound Remote Desktop connection was established from'
+- '{localip}'
+- ': {localport}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - RemoteWmiOperation
+type: 'conditional'
+data_type: 'm365:defenderah:remotewmioperation'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A Windows Management Instrumentation (WMI) operation was initiated from a remote device'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A Windows Management Instrumentation (WMI) operation was initiated from a remote device'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ScheduledTaskCreated
+type: 'conditional'
+data_type: 'm365:defenderah:scheduledtaskcreated'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A scheduled task {taskname} was created'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A scheduled task {taskname} was created'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ScreenshotTaken
+type: 'conditional'
+data_type: 'm365:defenderah:screenshottaken'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A screenshot was taken'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A screenshot was taken'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ScriptContent
+type: 'conditional'
+data_type: 'm365:defenderah:scriptcontent'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'The content of script'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'The content of script'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SecurityGroupCreated
+type: 'conditional'
+data_type: 'm365:defenderah:securitygroupcreated'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'A security group {groupname} was created by'
+- '{initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'A security group {groupname} was created by'
+- '{initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SecurityLogCleared
+type: 'conditional'
+data_type: 'm365:defenderah:securitylogcleared'
+message:
+- 'The security log was cleared by'
+- '{initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_message:
+- 'The security log was cleared by'
+- '{initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - ServiceInstalled
+type: 'conditional'
+data_type: 'm365:defenderah:serviceinstalled'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'Service {servicename} installed'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'Service {servicename} installed'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SmartScreenAppWarning
+type: 'conditional'
+data_type: 'm365:defenderah:smartscreenappwarning'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about running a downloaded application {filename} that is untrusted or malicious'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about running a downloaded application {filename} that is untrusted or malicious'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SmartScreenExploitWarning
+type: 'conditional'
+data_type: 'm365:defenderah:smartscreenexploitwarning'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about opening a web page {remoteurl} that contains an exploit'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about opening a web page {remoteurl} that contains an exploit'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - SmartScreenUrlWarning
+type: 'conditional'
+data_type: 'm365:defenderah:smartscreenurlwarning'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about opening a low-reputation URL {remoteurl} that might be hosting malware or is a phishing site'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'SmartScreen warned about opening a low-reputation URL {remoteurl} that might be hosting malware or is a phishing site'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - TamperingAttempt
+type: 'conditional'
+data_type: 'm365:defenderah:tamperingattempt'
+message:
+- '[PID #{initiatingprocessid}]'
+- 'An attempt to change Microsoft Defender 365 settings was made'
+short_message:
+- '[PID #{initiatingprocessid}]'
+- 'An attempt to change Microsoft Defender 365 settings was made'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - UntrustedWifiConnection
+type: 'conditional'
+data_type: 'm365:defenderah:untrustedwificonnection'
+message:
+- 'A connection was established to an open Wi-Fi access point'
+short_message:
+- 'A connection was established to an open Wi-Fi access point'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - UserAccountAddedToLocalGroup
+type: 'conditional'
+data_type: 'm365:defenderah:useraccountaddedtolocalgroup'
+message:
+- 'A user was added to a security-enabled local group'
+- '{groupdomainname}'
+- '\ {groupname}'
+- 'by {initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_message:
+- 'A user was added to a security-enabled local group'
+- '{groupdomainname}'
+- '\ {groupname}'
+- 'by {initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
+---
+# M365 Defender Advanced Hunting - UserAccountCreated
+type: 'conditional'
+data_type: 'm365:defenderah:useraccountcreated'
+message:
+- 'A local SAM account or a domain account'
+- '{accountdomain}'
+- '\ {accountname} was created'
+- 'by {initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_message:
+- 'A local SAM account or a domain account'
+- '{accountdomain}'
+- '\ {accountname} was created'
+- 'by {initiatingprocessaccountdomain}'
+- '\ {initiatingprocessaccountname}'
+short_source: 'MD-AH'
+source: 'M365 Defender - Advanced Hunting'
