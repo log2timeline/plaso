@@ -747,6 +747,12 @@ place_holder_event: true
 data_type: 'macos:launchd:entry'
 place_holder_event: true
 ---
+data_type: 'macos:login_window:auto_launched_application'
+place_holder_event: true
+---
+data_type: 'macos:login_window:hook'
+place_holder_event: true
+---
 data_type: 'macos:lsquarantine:entry'
 attribute_mappings:
 - name: 'downloaded_time'

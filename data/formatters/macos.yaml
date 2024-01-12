@@ -348,6 +348,24 @@ short_message: 'Launchd service config {name} points to {program} with user:{use
 short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
+type: 'basic'
+data_type: 'macos:login_window:auto_launched_application'
+message: 'Auto-launched application: {path}'
+short_message: 'Auto-launched application: {path}'
+short_source: 'PLIST'
+source: 'MacOS login window plist'
+---
+type: 'conditional'
+data_type: 'macos:login_window:hook'
+message:
+- 'Path: {path}'
+- 'Hook type: {hook_type}'
+short_message:
+- 'Path: {path}'
+- 'Hook type: {hook_type}'
+short_source: 'PLIST'
+source: 'MacOS login window plist'
+---
 type: 'conditional'
 data_type: 'macos:startup_item:entry'
 message:
