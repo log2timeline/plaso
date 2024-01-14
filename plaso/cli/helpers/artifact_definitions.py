@@ -4,6 +4,8 @@
 import os
 import sys
 
+import artifacts
+
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
@@ -70,10 +72,14 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     artifacts_path = getattr(options, 'artifact_definitions_path', None)
 
-    if (not artifacts_path or not os.path.exists(artifacts_path)) and (
-        configuration_object.data_location):
-      artifacts_path = os.path.dirname(configuration_object.data_location)
-      artifacts_path = os.path.join(artifacts_path, 'artifacts')
+    if not artifacts_path or not os.path.exists(artifacts_path):
+      artifacts_path = os.path.join(
+          os.path.dirname(artifacts.__file__), 'data')
+
+      if (not os.path.exists(artifacts_path) and
+          configuration_object.data_location):
+        artifacts_path = os.path.dirname(configuration_object.data_location)
+        artifacts_path = os.path.join(artifacts_path, 'artifacts')
 
       if not os.path.exists(artifacts_path) and 'VIRTUAL_ENV' in os.environ:
         artifacts_path = os.path.join(
