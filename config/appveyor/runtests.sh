@@ -9,7 +9,7 @@ export LDFLAGS="-L/usr/local/lib -L/usr/local/opt/gettext/lib ${LDFLAGS}";
 export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include ${CPPFLAGS}";
 export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}";
 
-# Set the following environment variables to ensure tox can find Python 3.11.
-export PATH="/usr/local/opt/python@3.11/bin:${PATH}";
+# Set the following environment variables to ensure tox can find Python 3.12.
+export PATH="/usr/local/opt/python@3.12/bin:${PATH}";
 
-tox -e py311
+tox -e py312

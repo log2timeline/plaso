@@ -171,7 +171,7 @@ tango_android_tc | Parser for Tango on Android TC SQLite database files.
 twitter_android | Parser for Twitter on Android SQLite database files.
 twitter_ios | Parser for Twitter on iOS 8 and later SQLite database (twitter.db) files.
 windows_eventtranscript | Parser for Windows diagnosis EventTranscript SQLite database (EventTranscript.db) files.
-windows_timeline | Parser for Windows 10 Timeline SQLite database (ActivitiesCache.db) files.
+windows_timeline | Parser for Windows 10 timeline SQLite database (ActivitiesCache.db) files.
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
 ### Parser plugins: text
