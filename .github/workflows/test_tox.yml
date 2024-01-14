@@ -98,7 +98,7 @@ jobs:
     strategy:
       matrix:
         include:
-        - python-version: '3.11'
+        - python-version: '3.12'
           toxenv: 'lint'
     container:
       image: ubuntu:22.04
