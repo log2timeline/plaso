@@ -22,6 +22,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libevt-python3
                      libevtx-python3
                      libewf-python3
+                     libfcrypto-python3
                      libfsapfs-python3
                      libfsext-python3
                      libfsfat-python3
@@ -56,7 +57,6 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-certifi
                      python3-cffi-backend
                      python3-chardet
-                     python3-cryptography
                      python3-dateutil
                      python3-defusedxml
                      python3-dfdatetime
@@ -109,6 +109,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libevtx-python3-dbg
                     libewf-dbg
                     libewf-python3-dbg
+                    libfcrypto-dbg
+                    libfcrypto-python3-dbg
                     libfsapfs-dbg
                     libfsapfs-python3-dbg
                     libfsext-dbg
