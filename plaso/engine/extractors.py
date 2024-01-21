@@ -490,8 +490,9 @@ class PathSpecExtractor(object):
     Returns:
       str: printable string representation of the path specification.
     """
-    return path_spec.comparable.translate(
-        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+    return '\n'.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,

@@ -152,8 +152,9 @@ class CLITool(object):
     if not path_spec:
       return 'N/A'
 
-    return path_spec.comparable.translate(
-        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+    return '\n'.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
