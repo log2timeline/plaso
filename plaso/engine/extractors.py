@@ -2,7 +2,6 @@
 """Extractor classes, used to extract information from sources."""
 
 import copy
-import re
 
 import pysigscan
 
@@ -12,6 +11,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import logger
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
@@ -349,8 +349,6 @@ class PathSpecExtractor(object):
 
   _MAXIMUM_DEPTH = 255
 
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
-
   def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
     """Extracts path specification from a directory.
 
@@ -492,15 +490,8 @@ class PathSpecExtractor(object):
     Returns:
       str: printable string representation of the path specification.
     """
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
+    return path_spec.comparable.translate(
+        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
 
   def ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,
