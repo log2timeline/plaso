@@ -253,8 +253,9 @@ class StatusView(object):
     Returns:
       str: printable string representation of the path specification.
     """
-    return path_spec.comparable.translate(
-        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+    return '\n'.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def _PrintAnalysisStatusUpdateFile(self, processing_status):
     """Prints an analysis status update in file mode.

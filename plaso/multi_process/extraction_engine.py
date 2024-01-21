@@ -363,8 +363,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     Returns:
       str: printable string representation of the path specification.
     """
-    return path_spec.comparable.translate(
-        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+    return ', '.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
     """Merges an attribute container from a task store into the storage writer.
@@ -708,7 +709,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           else:
             path_spec_string = self._GetPathSpecificationString(task.path_spec)
-            path_spec_string = path_spec_string.replace('\n', ' ')
             logger.debug((
                 f'Scheduled task: {task.identifier:s} for path specification: '
                 f'{path_spec_string:s}'))
