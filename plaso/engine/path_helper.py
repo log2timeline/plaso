@@ -2,20 +2,15 @@
 """The path helper."""
 
 import os
-import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.engine import logger
+from plaso.lib import definitions
 
 
 class PathHelper(object):
   """Class that implements the path helper."""
-
-  _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
-  _ESCAPE_CHARACTERS = str.maketrans({
-      value: '\\x{0:02x}'.format(value)
-      for value in _NON_PRINTABLE_CHARACTERS})
 
   _RECURSIVE_GLOB_LIMIT = 10
 
@@ -30,8 +25,6 @@ class PathHelper(object):
           ['%%users.userprofile%%', 'AppData', 'LocalLow']],
       '%%users.temp%%': [
           ['%%users.localappdata%%', 'Temp']]}
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   @classmethod
   def _ExpandUsersHomeDirectoryPathSegments(
@@ -180,20 +173,20 @@ class PathHelper(object):
             recursion_depth = int(path_segment[2:], 10)
           except (TypeError, ValueError):
             logger.warning((
-                'Globstar with suffix "{0:s}" in path "{1:s}" not '
-                'supported.').format(path_segment, path))
+                f'Globstar with suffix "{path_segment:s}" in path "{path:s}" '
+                f'not supported.'))
 
       elif '**' in path_segment:
         logger.warning((
-            'Globstar with prefix "{0:s}" in path "{1:s}" not '
-            'supported.').format(path_segment, path))
+            f'Globstar with prefix "{path_segment:s}" in path "{path:s}" not '
+            f'supported.'))
 
       if recursion_depth is not None:
         if recursion_depth <= 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
           logger.warning((
-              'Globstar "{0:s}" in path "{1:s}" exceed recursion maximum '
-              'recursion depth, limiting to: {2:d}.').format(
-                  path_segment, path, cls._RECURSIVE_GLOB_LIMIT))
+              f'Globstar "{path_segment:s}" in path "{path:s}" exceed '
+              f'recursion maximum recursion depth, limiting to: '
+              f'{cls._RECURSIVE_GLOB_LIMIT:d}.'))
           recursion_depth = cls._RECURSIVE_GLOB_LIMIT
 
         next_segment_index = segment_index + 1
@@ -323,18 +316,16 @@ class PathHelper(object):
       elif path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
         parent_path_spec = parent_path_spec.parent
 
+    display_name = ':'.join([path_type_indicator, relative_path])
+    display_name = display_name.translate(
+        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+
     if parent_path_spec and parent_path_spec.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
       store_index = getattr(path_spec.parent, 'store_index', None)
       if store_index is not None:
-        return 'VSS{0:d}:{1:s}:{2:s}'.format(
-            store_index + 1, path_spec.type_indicator, relative_path)
-
-    display_name = '{0:s}:{1:s}'.format(path_type_indicator, relative_path)
-
-    if cls._UNICODE_SURROGATES_RE.search(display_name):
-      display_name = display_name.encode('utf-8', errors='surrogateescape')
-      display_name = display_name.decode('utf-8', errors='backslashreplace')
+        store_index += 1
+        return f'VSS{store_index:d}:{display_name:s}'
 
     return display_name
 
@@ -364,12 +355,12 @@ class PathHelper(object):
     if not location:
       return None
 
-    location = location.translate(cls._ESCAPE_CHARACTERS)
-
     data_stream = getattr(path_spec, 'data_stream', None)
     if data_stream:
-      data_stream = data_stream.translate(cls._ESCAPE_CHARACTERS)
-      location = '{0:s}:{1:s}'.format(location, data_stream)
+      location = ':'.join([location, data_stream])
+
+    location = location.translate(
+        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
 
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
       return location

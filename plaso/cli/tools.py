@@ -5,7 +5,6 @@ import abc
 import codecs
 import datetime
 import locale
-import re
 import sys
 import time
 import textwrap
@@ -21,6 +20,7 @@ import plaso
 
 from plaso.cli import logger
 from plaso.cli import views
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -41,8 +41,6 @@ class CLITool(object):
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = 'utf-8'
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes a command line interface tool.
@@ -154,15 +152,8 @@ class CLITool(object):
     if not path_spec:
       return 'N/A'
 
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
+    return path_spec.comparable.translate(
+        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

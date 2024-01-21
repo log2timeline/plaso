@@ -6,7 +6,6 @@ import heapq
 import logging
 import multiprocessing
 import os
-import re
 import time
 import traceback
 
@@ -105,8 +104,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
   _TASK_QUEUE_TIMEOUT_SECONDS = 2
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 99
@@ -366,15 +363,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     Returns:
       str: printable string representation of the path specification.
     """
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
+    return path_spec.comparable.translate(
+        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
 
   def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
     """Merges an attribute container from a task store into the storage writer.
