@@ -1523,6 +1523,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageOptions(argument_parser)
+    self.AddLogFileOptions(argument_parser)
 
     if self._CanEnforceProcessMemoryLimit():
       helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -1607,6 +1608,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       BadConfigOption: if the options are invalid.
     """
     self._ParseInformationalOptions(options)
+
+    self._ParseLogFileOptions(options)
 
     self._verbose = getattr(options, 'verbose', False)
 
