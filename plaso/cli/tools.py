@@ -192,8 +192,8 @@ class CLITool(object):
       warning_text (str): text used to warn the user.
     """
     warning_text = textwrap.wrap(f'WARNING: {warning_text:s}', 80)
-    print('\n'.join(warning_text))
-    print('')
+    print('\n'.join(warning_text), file=sys.stderr)
+    print('', file=sys.stderr)
 
     self._has_user_warning = True
 
@@ -281,7 +281,9 @@ class CLITool(object):
     date_time_delta = datetime.datetime.utcnow() - version_date_time
 
     if date_time_delta.days > 180:
-      logger.warning('This version of plaso is more than 6 months old.')
+      logger.warning((
+          'This version of plaso is more than 6 months old. We strongly '
+          'recommend to update it.'))
 
       self._PrintUserWarning((
           'the version of plaso you are using is more than 6 months old. We '
