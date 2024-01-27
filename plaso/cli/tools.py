@@ -289,8 +289,9 @@ class CLITool(object):
     date_time_delta = datetime.datetime.utcnow() - version_date_time
 
     if date_time_delta.days > 180:
-      logger.warning('This version of plaso is more than 6 months old. '
-                     'We strongly recommend to update it.')
+      logger.warning((
+          'This version of plaso is more than 6 months old. We strongly '
+          'recommend to update it.'))
 
       self._PrintUserWarning((
           'the version of plaso you are using is more than 6 months old. We '
