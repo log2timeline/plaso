@@ -1739,3 +1739,626 @@ attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
+---
+# M365 Defender Activity Log
+data_type: 'm365:activitylog:event'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ImageLoaded
+data_type: 'm365:defenderah:imageloaded'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ProcessCreated
+data_type: 'm365:defenderah:processcreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - OpenProcess
+data_type: 'm365:defenderah:openprocess'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FileCreated
+data_type: 'm365:defenderah:filecreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FileDeleted
+data_type: 'm365:defenderah:filedeleted'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FileModified
+data_type: 'm365:defenderah:filemodified'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FileRenamed
+data_type: 'm365:defenderah:filerenamed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - LogonAttempted
+data_type: 'm365:defenderah:logonattempted'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - LogonFailed
+data_type: 'm365:defenderah:logonfailed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - LogonSuccess
+data_type: 'm365:defenderah:logonsuccess'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RegistryKeyCreated
+data_type: 'm365:defenderah:registrykeycreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RegistryKeyDeleted
+data_type: 'm365:defenderah:registrykeydeleted'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RegistryKeyRenamed
+data_type: 'm365:defenderah:registrykeyrenamed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RegistryValueDeleted
+data_type: 'm365:defenderah:registryvaluedeleted'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RegistryValueSet
+data_type: 'm365:defenderah:registryvalueset'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ClickAllowed
+data_type: 'm365:defenderah:clickallowed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ClickBlocked
+data_type: 'm365:defenderah:clickblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ClickBlockedByTenantPolicy
+data_type: 'm365:defenderah:clickblockedbytenantpolicy'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - UrlErrorPage
+data_type: 'm365:defenderah:urlerrorpage'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - UrlScanInProgress
+data_type: 'm365:defenderah:urlscaninprogress'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ConnectionFailed
+data_type: 'm365:defenderah:connectionfailed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ConnectionFound
+data_type: 'm365:defenderah:connectionfound'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ConnectionRequest
+data_type: 'm365:defenderah:connectionrequest'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ConnectionSuccess
+data_type: 'm365:defenderah:connectionsuccess'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - DnsConnectionInspected
+data_type: 'm365:defenderah:dnsconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FtpConnectionInspected
+data_type: 'm365:defenderah:ftpconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - HttpConnectionInspected
+data_type: 'm365:defenderah:httpconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - IcmpConnectionInspected
+data_type: 'm365:defenderah:icmpconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - InboundConnectionAccepted
+data_type: 'm365:defenderah:inboundconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - InboundInternetScanInspected
+data_type: 'm365:defenderah:inboundinternetscaninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ListeningConnectionCreated
+data_type: 'm365:defenderah:listeningconnectioncreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - NetworkSignatureInspected
+data_type: 'm365:defenderah:networksignatureinspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - NtlmAuthenticationInspected
+data_type: 'm365:defenderah:ntlmauthenticationinspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SmtpConnectionInspected
+data_type: 'm365:defenderah:smtpconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SshConnectionInspected
+data_type: 'm365:defenderah:sshconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SslConnectionInspected
+data_type: 'm365:defenderah:sslconnectioninspected'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdated
+data_type: 'm365:defenderah:antivirusdefinitionsupdated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdateFailed
+data_type: 'm365:defenderah:antivirusdefinitionsupdatefailed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusDetection
+data_type: 'm365:defenderah:antivirusdetection'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusEmergencyUpdatesInstalled
+data_type: 'm365:defenderah:antivirusemergencyupdatesinstalled'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusError
+data_type: 'm365:defenderah:antiviruserror'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusMalwareActionFailed
+data_type: 'm365:defenderah:antivirusmalwareactionfailed'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusMalwareBlocked
+data_type: 'm365:defenderah:antivirusmalwareblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusReport
+data_type: 'm365:defenderah:antivirusreport'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusScanCancelled
+data_type: 'm365:defenderah:antivirusscancancelled'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AntivirusScanCompleted
+data_type: 'm365:defenderah:antivirusscancompleted'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrAdobeReaderChildProcessBlocked
+data_type: 'm365:defenderah:asradobereaderchildprocessblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrExecutableEmailContentBlocked
+data_type: 'm365:defenderah:asrexecutableemailcontentblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrExecutableOfficeContentBlocked
+data_type: 'm365:defenderah:asrexecutableofficecontentblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrLsassCredentialTheftBlocked
+data_type: 'm365:defenderah:asrlsasscredentialtheftblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrObfuscatedScriptBlocked
+data_type: 'm365:defenderah:asrobfuscatedscriptblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrOfficeChildProcessBlocked
+data_type: 'm365:defenderah:asrofficechildprocessblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrOfficeCommAppChildProcessBlocked
+data_type: 'm365:defenderah:asrofficecommappchildprocessblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrOfficeMacroWin32ApiCallsBlocked
+data_type: 'm365:defenderah:asrofficemacrowin32apicallsblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrOfficeProcessInjectionBlocked
+data_type: 'm365:defenderah:asrofficeprocessinjectionblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrPersistenceThroughWmiBlocked
+data_type: 'm365:defenderah:asrpersistencethroughwmiblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrPsexecWmiChildProcessBlocked
+data_type: 'm365:defenderah:asrpsexecwmichildprocessblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrRansomwareBlocked
+data_type: 'm365:defenderah:asrransomwareblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrScriptExecutableDownloadBlocked
+data_type: 'm365:defenderah:asrscriptexecutabledownloadblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrUntrustedExecutableBlocked
+data_type: 'm365:defenderah:asruntrustedexecutableblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrUntrustedUsbProcessBlocked
+data_type: 'm365:defenderah:asruntrustedusbprocessblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - AsrVulnerableSignedDriverBlocked
+data_type: 'm365:defenderah:asrvulnerablesigneddriverblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - BrowserLaunchedToOpenUrl
+data_type: 'm365:defenderah:browserlaunchedtoopenurl'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - DnsQueryResponse
+data_type: 'm365:defenderah:dnsqueryresponse'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FirewallInboundConnectionBlocked
+data_type: 'm365:defenderah:firewallinboundconnectionblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FirewallInboundConnectionToAppBlocked
+data_type: 'm365:defenderah:firewallinboundconnectiontoappblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FirewallOutboundConnectionBlocked
+data_type: 'm365:defenderah:firewalloutboundconnectionblocked'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - FirewallServiceStopped
+data_type: 'm365:defenderah:firewallservicestopped'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - GetClipboardData
+data_type: 'm365:defenderah:getclipboarddata'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - NetworkProtectionUserBypassEvent
+data_type: 'm365:defenderah:networkprotectionuserbypassevent'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - NetworkShareObjectAdded
+data_type: 'm365:defenderah:networkshareobjectadded'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - PowerShellCommand
+data_type: 'm365:defenderah:powershellcommand'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ProcessCreatedUsingWmiQuery
+data_type: 'm365:defenderah:processcreatedusingwmiquery'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RemoteDesktopConnection
+data_type: 'm365:defenderah:remotedesktopconnection'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - RemoteWmiOperation
+data_type: 'm365:defenderah:remotewmioperation'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ScheduledTaskCreated
+data_type: 'm365:defenderah:scheduledtaskcreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ScreenshotTaken
+data_type: 'm365:defenderah:screenshottaken'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ScriptContent
+data_type: 'm365:defenderah:scriptcontent'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SecurityGroupCreated
+data_type: 'm365:defenderah:securitygroupcreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SecurityLogCleared
+data_type: 'm365:defenderah:securitylogcleared'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - ServiceInstalled
+data_type: 'm365:defenderah:serviceinstalled'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SmartScreenAppWarning
+data_type: 'm365:defenderah:smartscreenappwarning'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SmartScreenExploitWarning
+data_type: 'm365:defenderah:smartscreenexploitwarning'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - SmartScreenUrlWarning
+data_type: 'm365:defenderah:smartscreenurlwarning'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - TamperingAttempt
+data_type: 'm365:defenderah:tamperingattempt'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - UntrustedWifiConnection
+data_type: 'm365:defenderah:untrustedwificonnection'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - UserAccountAddedToLocalGroup
+data_type: 'm365:defenderah:useraccountaddedtolocalgroup'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true
+---
+# M365 Defender Advanced Hunting - UserAccountCreated
+data_type: 'm365:defenderah:useraccountcreated'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Event Time'
+place_holder_event: true

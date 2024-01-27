@@ -11,6 +11,7 @@ from plaso.parsers import chrome_preferences
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
 from plaso.parsers import czip
+from plaso.parsers import dah_device
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
@@ -19,6 +20,7 @@ from plaso.parsers import fseventsd
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
 from plaso.parsers import locate
+from plaso.parsers import m365_activitylog
 from plaso.parsers import macos_keychain
 from plaso.parsers import mcafeeav
 from plaso.parsers import msiecf
