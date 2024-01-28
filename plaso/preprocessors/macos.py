@@ -15,8 +15,8 @@ class PlistFileArtifactPreprocessorPlugin(
     interface.FileArtifactPreprocessorPlugin):
   """Plist file artifact preprocessor plugin interface.
 
-  Retrieves values from a plist file artifact using names of keys defined
-  in _PLIST_KEYS.
+  Retrieves values from a plist file artifact using names of keys defined in
+  _PLIST_KEYS.
   """
 
   # The key that's value should be returned back. It is an ordered list

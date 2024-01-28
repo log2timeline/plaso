@@ -186,7 +186,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(key_paths), 8)
 
   def testCheckKeyCompatibility(self):
-    """Tests the CheckKeyCompatibility function"""
+    """Tests the CheckKeyCompatibility function."""
     test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper()
 
     # Compatible Key.

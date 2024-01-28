@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains basic interface for plugins within Plaso.
 
-This library serves a basis for all plugins in Plaso, whether that are
-Windows Registry plugins, SQLite plugins or any other parsing plugins.
+This library serves a basis for all plugins in Plaso, whether that are Windows
+Registry plugins, SQLite plugins or any other parsing plugins.
 
 This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
@@ -20,14 +20,14 @@ class BasePlugin(object):
 
   An example of this is a SQLite database. A plugin can be written that has
   knowledge of certain database, such as Chrome history, or Skype history, etc.
-  This can be done without needing to write a fully-fledged parser that needs
-  to re-implement the data structure knowledge. A single parser can be created
-  that calls the plugins to see if it knows that particular database.
+  This can be done without needing to write a fully-fledged parser that needs to
+  re-implement the data structure knowledge. A single parser can be created that
+  calls the plugins to see if it knows that particular database.
 
-  Another example is Windows Registry, there a single parser that can parse
-  the Registry can be made and the job of a single plugin is to parse a
-  particular Registry key. The parser can then read a Registry key and compare
-  it to a list of available plugins to see if it can be parsed.
+  Another example is Windows Registry, there a single parser that can parse the
+  Registry can be made and the job of a single plugin is to parse a particular
+  Registry key. The parser can then read a Registry key and compare it to a list
+  of available plugins to see if it can be parsed.
   """
 
   # The name of the plugin. This is the name that is used in the registration

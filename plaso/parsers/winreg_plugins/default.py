@@ -10,8 +10,8 @@ class DefaultPlugin(interface.WindowsRegistryPlugin):
 
   The default plugin will parse every Registry key that is passed to it and
   extract minimum information, such as a list of available values and if
-  possible content of those values. The timestamp used is the timestamp
-  when the Registry key was last modified.
+  possible content of those values. The timestamp used is the timestamp when the
+  Registry key was last modified.
   """
 
   NAME = 'winreg_default'

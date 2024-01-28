@@ -210,8 +210,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess59ExtraColumn(self):
     """Tests the Process function on a Google Chrome 59 History database,
-    manually modified to have an unexpected column.
-    """
+    manually modified to have an unexpected column."""
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59_added-fake-column'], plugin)

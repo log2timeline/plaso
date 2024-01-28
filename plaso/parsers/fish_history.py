@@ -51,7 +51,7 @@ class FishHistoryParser(interface.FileObjectParser):
   _YAML_FORMAT_RE_2 = re.compile(r'  when: [0-9]{9}')
 
   def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a fish history file from a file-like object
+    """Parses a fish history file from a file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

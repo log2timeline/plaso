@@ -11,8 +11,8 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   """A plugin to generate a list all domains visited.
 
   This plugin will extract domains from browser history events extracted by
-  Plaso. The list produced can be used to quickly determine if there has been
-  a visit to a site of interest, for example, a known phishing site.
+  Plaso. The list produced can be used to quickly determine if there has been a
+  visit to a site of interest, for example, a known phishing site.
   """
 
   NAME = 'unique_domains_visited'

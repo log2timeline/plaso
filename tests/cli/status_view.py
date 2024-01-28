@@ -26,7 +26,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     """Mock function to simulate time.time()
 
     Returns:
-      int: stored time via self._mocked_time"""
+      int: stored time via self._mocked_time
+    """
     return self._mocked_time
 
   def setUp(self):

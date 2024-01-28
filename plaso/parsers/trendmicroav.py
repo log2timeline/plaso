@@ -88,8 +88,8 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   """Common code for parsing Trend Micro log files.
 
   The file format is reminiscent of CSV, but is not quite the same; the
-  delimiter is a three-character sequence and there is no provision for
-  quoting or escaping.
+  delimiter is a three-character sequence and there is no provision for quoting
+  or escaping.
   """
   # pylint: disable=abstract-method
 

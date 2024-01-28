@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSPowerlogApplicationUsageEventData(events.EventData):
-  """iOS powerlog file application usage event data.
+  """IOS powerlog file application usage event data.
 
   Attributes:
     background_time (str): Number of seconds that the application ran in the

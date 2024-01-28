@@ -9,7 +9,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 class IOSIdstatusacheEventData(events.EventData):
-  """iOS identity services status cache event data.
+  """IOS identity services status cache event data.
 
   Attributes:
     apple_identifier (str): type and value of the identifier.
@@ -29,7 +29,7 @@ class IOSIdstatusacheEventData(events.EventData):
 
 class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for identity services status cache files.
-  
+
   Identity services status cache plist files are typically named:
   com.apple.identityservices.idstatuscache.plist
   """

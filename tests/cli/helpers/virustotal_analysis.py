@@ -17,7 +17,7 @@ class TestVirusTotalAnalysisPlugin(virustotal.VirusTotalAnalysisPlugin):
   """VirusTotal analysis plugin for testing."""
 
   def TestConnection(self):
-    """Tests the connection to VirusTotal
+    """Tests the connection to VirusTotal.
 
     Returns:
       bool: True if VirusTotal is reachable.

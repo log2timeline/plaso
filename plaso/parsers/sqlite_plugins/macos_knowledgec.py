@@ -541,7 +541,7 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
     return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
   def KnowledgeCRow(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses KnowledgeC application activity
+    """Parses KnowledgeC application activity.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

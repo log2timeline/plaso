@@ -12,8 +12,8 @@ from plaso.parsers import plugins
 class BaseCookiePlugin(plugins.BasePlugin):
   """A browser cookie plugin for Plaso.
 
-  This is a generic cookie parsing interface that can handle parsing
-  cookies from all browsers.
+  This is a generic cookie parsing interface that can handle parsing cookies
+  from all browsers.
   """
   NAME = 'cookie_plugin'
   DATA_FORMAT = 'Browser cookie data'

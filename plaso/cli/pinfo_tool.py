@@ -766,7 +766,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           table_view.Write(self._output_writer)
 
   def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
-    """Prints the parsers counter
+    """Prints the parsers counter.
 
     Args:
       parsers_counter (collections.Counter): number of events per parser or

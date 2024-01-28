@@ -12,7 +12,7 @@ from plaso.parsers.text_plugins import interface
 
 
 class IOSSysdiagLogEventData(events.EventData):
-  """iOS sysdiagnose log event data.
+  """IOS sysdiagnose log event data.
 
   Attributes:
     body (str): body of the event line.

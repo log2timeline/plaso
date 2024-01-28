@@ -154,7 +154,7 @@ class ImportCheckTestCase(BaseTestCase):
   _FILENAME_REGEXP = re.compile(r'^[^_].*\.py$')
 
   def _AssertFilesImportedInInit(self, path, ignorable_files):
-    """Checks that files in path are imported in __init__.py
+    """Checks that files in path are imported in __init__.py.
 
     Args:
       path (str): path to directory containing an __init__.py file and other

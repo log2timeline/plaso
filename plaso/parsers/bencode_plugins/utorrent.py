@@ -9,7 +9,7 @@ from plaso.parsers.bencode_plugins import interface
 
 
 class UTorrentEventData(events.EventData):
-  """uTorrent active torrent event data.
+  """UTorrent active torrent event data.
 
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the torrent was
@@ -39,13 +39,12 @@ class UTorrentEventData(events.EventData):
 class UTorrentBencodePlugin(interface.BencodePlugin):
   """Plugin to extract parse uTorrent active torrent files.
 
-  uTorrent creates a file, resume.dat, and a backup, resume.dat.old, to
-  for all active torrents. This is typically stored in the user's
-  application data folder.
+  uTorrent creates a file, resume.dat, and a backup, resume.dat.old, to for all
+  active torrents. This is typically stored in the user's application data
+  folder.
 
-  These files, at a minimum, contain a '.fileguard' key and a dictionary
-  with a key name for a particular download with a '.torrent' file
-  extension.
+  These files, at a minimum, contain a '.fileguard' key and a dictionary with a
+  key name for a particular download with a '.torrent' file extension.
   """
 
   NAME = 'bencode_utorrent'

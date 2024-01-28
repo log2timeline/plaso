@@ -14,8 +14,8 @@ from plaso.lib import errors
 class ArtifactPreprocessorPlugin(object):
   """The artifact preprocessor plugin interface.
 
-  The artifact preprocessor determines preprocessing attributes based on
-  an artifact definition defined by ARTIFACT_DEFINITION_NAME.
+  The artifact preprocessor determines preprocessing attributes based on an
+  artifact definition defined by ARTIFACT_DEFINITION_NAME.
   """
 
   ARTIFACT_DEFINITION_NAME = None
@@ -193,8 +193,8 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
 class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
   """Windows Registry key artifact preprocessor plugin interface.
 
-  Shared functionality for preprocessing attributes based on a Windows
-  Registry artifact definition, such as Windows Registry key or value.
+  Shared functionality for preprocessing attributes based on a Windows Registry
+  artifact definition, such as Windows Registry key or value.
   """
 
   @abc.abstractmethod
@@ -268,8 +268,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     WindowsRegistryKeyArtifactPreprocessorPlugin):
   """Windows Registry value artifact preprocessor plugin interface.
 
-  Shared functionality for preprocessing attributes based on a Windows
-  Registry value artifact definition.
+  Shared functionality for preprocessing attributes based on a Windows Registry
+  value artifact definition.
   """
 
   def _ParseKey(self, mediator, registry_key, value_name):

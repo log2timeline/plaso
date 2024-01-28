@@ -11,7 +11,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IMessageEventData(events.EventData):
-  """iMessage and SMS event data.
+  """IMessage and SMS event data.
 
   Attributes:
     attachment_location (str): location of the attachment.
