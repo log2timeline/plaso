@@ -25,8 +25,8 @@ class TestProcess(base_process.MultiProcessBaseProcess):
   def _Main(self):
     """The process main loop.
 
-    This method is called when the process is ready to start. A sub class
-    should override this method to do the necessary actions in the main loop.
+    This method is called when the process is ready to start. A sub class should
+    override this method to do the necessary actions in the main loop.
     """
     # TODO: implement.
     return

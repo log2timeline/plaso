@@ -182,9 +182,9 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
 
 class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
   """SQLite parser plugin for Mozilla Firefox cookies schema 10 databases.
-  
+
   In schema 10 baseDomain was removed.
-  
+
   Also see:
     https://searchfox.org/mozilla-central/source/netwerk/cookie/CookiePersistentStorage.cpp
   """

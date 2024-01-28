@@ -133,7 +133,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     self._api_key = api_key
 
   def TestConnection(self):
-    """Tests the connection to VirusTotal
+    """Tests the connection to VirusTotal.
 
     Returns:
       bool: True if VirusTotal is reachable.

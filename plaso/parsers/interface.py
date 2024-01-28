@@ -79,12 +79,12 @@ class BaseParser(object):
   def __init__(self):
     """Initializes a parser.
 
-    By default all plugins will be enabled. To only enable specific plugins
-    use the EnablePlugins method and pass it a list of strings containing
-    the names of the plugins to enable.
+    By default all plugins will be enabled. To only enable specific plugins use
+    the EnablePlugins method and pass it a list of strings containing the names
+    of the plugins to enable.
 
-    The default plugin, named "{self.NAME:s}_default", if it exists,
-    is always enabled and cannot be disabled.
+    The default plugin, named "{self.NAME:s}_default", if it exists, is always
+    enabled and cannot be disabled.
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None

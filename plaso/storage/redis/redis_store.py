@@ -20,9 +20,9 @@ from plaso.storage import logger
 class RedisStore(interface.AttributeContainerStore):
   """Redis store.
 
-  Attribute containers are stored as Redis Hashes.
-  All keys are prefixed with the session identifier to avoid collisions.
-  Event identifiers are also stored in an index to enable sorting.
+  Attribute containers are stored as Redis Hashes. All keys are prefixed with
+  the session identifier to avoid collisions. Event identifiers are also stored
+  in an index to enable sorting.
   """
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
@@ -97,9 +97,9 @@ class RedisStore(interface.AttributeContainerStore):
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
 
-     Raises:
-       IOError: if the store cannot be read from.
-       OSError: if the store cannot be read from.
+    Raises:
+      IOError: if the store cannot be read from.
+      OSError: if the store cannot be read from.
     """
     if not self._redis_client:
       raise IOError('Unable to read, client not connected.')
@@ -346,7 +346,7 @@ class RedisStore(interface.AttributeContainerStore):
     return attribute_container
 
   def GetAttributeContainers(self, container_type, filter_expression=None):
-    """Retrieves attribute containers
+    """Retrieves attribute containers.
 
     Args:
       container_type (str): container type attribute of the container being

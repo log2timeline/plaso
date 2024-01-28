@@ -32,7 +32,7 @@ PYTHONPATH=. ./tools/log2timeline.py --parsers list --use-markdown > docs/source
 # PYTHONPATH=. ./utils/export_supported_formats.py > docs/sources/Supported-formats.md
 
 # Regenerate the API documentation.
-tox -edocs
+tox -edocformatter,docs
 
 exit ${EXIT_SUCCESS};
 

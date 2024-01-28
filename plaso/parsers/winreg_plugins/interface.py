@@ -14,7 +14,7 @@ class BaseWindowsRegistryKeyFilter(object):
 
   @property
   def key_paths(self):
-    """list[str]: key paths defined by the filter."""
+    """List[str]: key paths defined by the filter."""
     return []
 
   # pylint: disable=redundant-returns-doc

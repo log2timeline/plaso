@@ -31,7 +31,7 @@ class WindowsTimelineGenericEventData(events.EventData):
   DATA_TYPE = 'windows:timeline:generic'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsTimelineGenericEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.application_display_name = None
@@ -61,7 +61,7 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
   DATA_TYPE = 'windows:timeline:user_engaged'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsTimelineUserEngagedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.active_duration_seconds = None
@@ -214,7 +214,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a generic Windows timeline row.
 
-      Args:
+    Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       query (str): query that created the row.

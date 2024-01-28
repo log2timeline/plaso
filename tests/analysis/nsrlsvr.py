@@ -45,11 +45,11 @@ class _MockNsrlsvrSocket(object):
     return b'OK 0'
 
   def sendall(self, data):
-    """Mocks the socket.sendall method"""
+    """Mocks the socket.sendall method."""
     self._data = data
 
   def close(self):
-    """Mocks the socket.close method"""
+    """Mocks the socket.close method."""
     return
 
 
@@ -80,7 +80,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   # pylint: disable=unused-argument
   def _MockCreateConnection(self, connection_information, timeout):
-    """Mocks the socket create_connection call
+    """Mocks the socket create_connection call.
 
     Args:
       connection_information (object): unused connection information.

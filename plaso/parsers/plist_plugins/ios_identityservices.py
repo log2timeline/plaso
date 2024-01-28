@@ -29,7 +29,7 @@ class IOSIdstatusacheEventData(events.EventData):
 
 class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
   """Plist parser plugin for identity services status cache files.
-  
+
   Identity services status cache plist files are typically named:
   com.apple.identityservices.idstatuscache.plist
   """

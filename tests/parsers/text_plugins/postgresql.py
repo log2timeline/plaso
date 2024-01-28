@@ -10,7 +10,7 @@ from tests.parsers.text_plugins import test_lib
 
 
 class PostgreSQLTextPluginTest(test_lib.TextPluginTestCase):
-  """the PostgreSQL application log file text parser plugin."""
+  """The PostgreSQL application log file text parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""

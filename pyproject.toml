@@ -1,3 +1,10 @@
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.docformatter]
+black = false
+non-cap = ["dfDateTime", "dfImageTools", "dfVFS", "dfWinReg", "dtFabric", "iMessage", "iOS", "iPod", "mDNS"]
+non-strict = false
+wrap-summaries = 80
+wrap-descriptions = 80

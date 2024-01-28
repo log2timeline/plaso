@@ -121,7 +121,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
         test_tool.ParseOptions(options)
 
   def testParseArguments(self):
-    """Tests the ParseArguments function"""
+    """Tests the ParseArguments function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
@@ -391,7 +391,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       self._CheckOutput(output, expected_output)
 
   def testProcessStorage(self):
-    """Test the ProcessStorage function"""
+    """Test the ProcessStorage function."""
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 

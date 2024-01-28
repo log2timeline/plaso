@@ -2,11 +2,11 @@
 """Interface for plist parser plugins.
 
 Plist files are only one example of a type of object that the Plaso tool is
-expected to encounter and process. There can be and are many other parsers
-which are designed to process specific data types.
+expected to encounter and process. There can be and are many other parsers which
+are designed to process specific data types.
 
-PlistPlugin defines the attributes necessary for registration, discovery
-and operation of plugins for plist files which will be used by PlistParser.
+PlistPlugin defines the attributes necessary for registration, discovery and
+operation of plugins for plist files which will be used by PlistParser.
 """
 
 import abc

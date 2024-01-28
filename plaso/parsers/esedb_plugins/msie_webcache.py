@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for the Microsoft Internet Explorer WebCache ESE database.
 
-The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE
-as of version 10.
+The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE as
+of version 10.
 """
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -331,7 +331,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
   def GetRawCookieValue(self, record_values, value_name):
     """Retrieves the binary string as a hexadecimal formatted string.
-      
+
     Args:
       record_values (dict[str, object]): values per column name.
       value_name (str): the name of the value we are converting

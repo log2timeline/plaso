@@ -12,7 +12,7 @@ from plaso.parsers.text_plugins import interface
 
 
 class VsftpdLogEventData(events.EventData):
-  """vsftpd log event data.
+  """Vsftpd log event data.
 
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the log entry

@@ -88,7 +88,7 @@ class BencodeFile(object):
 
   @property
   def keys(self):
-    """set[str]: names of all the keys."""
+    """Set[str]: names of all the keys."""
     return self._key_names
 
   def Close(self):

@@ -20,7 +20,7 @@ class BaseAnalyzer(object):
 
   @abc.abstractmethod
   def Analyze(self, data):
-    """Analyzes a block of data, updating the state of the analyzer
+    """Analyzes a block of data, updating the state of the analyzer.
 
     Args:
       data(bytes): block of data to process.

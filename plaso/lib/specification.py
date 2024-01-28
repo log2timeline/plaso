@@ -5,9 +5,9 @@
 class Signature(object):
   """The format specification signature.
 
-  The signature consists of a byte string pattern, an optional
-  offset relative to the start of the data, and a value to indicate
-  if the pattern is bound to the offset.
+  The signature consists of a byte string pattern, an optional offset relative
+  to the start of the data, and a value to indicate if the pattern is bound to
+  the offset.
   """
   def __init__(self, pattern, offset=None):
     """Initializes a format specification signature.
