@@ -293,13 +293,11 @@ class BaseEngine(object):
       resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      tuple: containing:
-
-        dfvfs.FileSystem: file system
-        path.PathSpec: mount point path specification. The mount point path
-            specification refers to either a directory or a volume on a storage
-            media device or image. It is needed by the dfVFS file system
-            to indicate the base location of the file system.
+      tuple[dfvfs.FileSystem, path.PathSpec]: file system and mount point path
+          specification. The mount point path specification refers to either a
+          directory or a volume on a storage media device or image. It is
+          needed by the dfVFS file system to indicate the base location of the
+          file system.
 
     Raises:
       RuntimeError: if source file system path specification is not set.
