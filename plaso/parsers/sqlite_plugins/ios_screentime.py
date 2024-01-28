@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSScreenTimeEventData(events.EventData):
-  """IOS Screen Time file usage event data.
+  """iOS Screen Time file usage event data.
 
   Attributes:
     bundle_identifier (str): Bundle Identifier of the application.

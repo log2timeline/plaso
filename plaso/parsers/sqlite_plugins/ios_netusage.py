@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSNetusageProcessEventData(events.EventData):
-  """IOS netusage process event data.
+  """iOS netusage process event data.
 
   Attributes:
     process_name (str): name of the process.
@@ -38,7 +38,7 @@ class IOSNetusageProcessEventData(events.EventData):
 
 
 class IOSNetusageRouteEventData(events.EventData):
-  """IOS netusage connection event data.
+  """iOS netusage connection event data.
 
   Attributes:
     bytes_in (int): number of bytes received.

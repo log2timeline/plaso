@@ -739,7 +739,7 @@ class MaskHashFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 
 
 class MDNSDNSCountersFormatStringDecoderTest(shared_test_lib.BaseTestCase):
-  """MDNS DNS counters format string decoder tests."""
+  """mDNS DNS counters format string decoder tests."""
 
   _VALUE_DATA = bytes(bytearray([
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00]))
@@ -753,7 +753,7 @@ class MDNSDNSCountersFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 
 
 class MDNSDNSHeaderFormatStringDecoderTest(shared_test_lib.BaseTestCase):
-  """MDNS DNS header format string decoder tests."""
+  """mDNS DNS header format string decoder tests."""
 
   _VALUE_DATA = bytes(bytearray([
       0x00, 0x00, 0x81, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
@@ -770,7 +770,7 @@ class MDNSDNSHeaderFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 
 class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
     shared_test_lib.BaseTestCase):
-  """MDNS DNS header format string decoder tests."""
+  """mDNS DNS header format string decoder tests."""
 
   _VALUE_DATA = bytes(bytearray([
       0x00, 0x01, 0xe9, 0x62, 0x00, 0x00, 0x00, 0x00]))
@@ -786,7 +786,7 @@ class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
 
 
 class MDNSProtocolFormatStringDecoderTest(shared_test_lib.BaseTestCase):
-  """MDNS protocol format string decoder tests."""
+  """mDNS protocol format string decoder tests."""
 
   def testFormatValue(self):
     """Tests the FormatValue function."""
@@ -797,7 +797,7 @@ class MDNSProtocolFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 
 
 class MDNSReasonFormatStringDecoder(shared_test_lib.BaseTestCase):
-  """MDNS reason format string decoder tests."""
+  """mDNS reason format string decoder tests."""
 
   def testFormatValue(self):
     """Tests the FormatValue function."""
@@ -809,7 +809,7 @@ class MDNSReasonFormatStringDecoder(shared_test_lib.BaseTestCase):
 
 class MDNSResourceRecordTypeFormatStringDecoderTest(
     shared_test_lib.BaseTestCase):
-  """MDNS resource record type format string decoder tests."""
+  """mDNS resource record type format string decoder tests."""
 
   def testFormatValue(self):
     """Tests the FormatValue function."""

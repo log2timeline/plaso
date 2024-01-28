@@ -12,7 +12,7 @@ from plaso.parsers.text_plugins import interface
 
 
 class IOSLockdowndLogData(events.EventData):
-  """IOS lockdown daemon (lockdownd) log event data.
+  """iOS lockdown daemon (lockdownd) log event data.
 
   Attributes:
     body (str): body of the log entry.

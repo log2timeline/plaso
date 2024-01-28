@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSDatausageEventData(events.EventData):
-  """IOS datausage event data.
+  """iOS datausage event data.
 
   Attributes:
     bundle_identifier (str): bundle identifier.

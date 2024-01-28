@@ -1126,7 +1126,7 @@ class BaseMDNSDNSStructureFormatStringDecoder(
 
 class MDNSDNSCountersFormatStringDecoder(
     BaseMDNSDNSStructureFormatStringDecoder):
-  """MDNS DNS counters format string decoder."""
+  """mDNS DNS counters format string decoder."""
 
   def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS counters value.
@@ -1153,7 +1153,7 @@ class MDNSDNSCountersFormatStringDecoder(
 
 
 class MDNSDNSHeaderFormatStringDecoder(BaseMDNSDNSStructureFormatStringDecoder):
-  """MDNS DNS header format string decoder."""
+  """mDNS DNS header format string decoder."""
 
   def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS header value.
@@ -1187,7 +1187,7 @@ class MDNSDNSHeaderFormatStringDecoder(BaseMDNSDNSStructureFormatStringDecoder):
 
 class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
     BaseMDNSDNSStructureFormatStringDecoder):
-  """MDNS DNS identifier and flags string decoder."""
+  """mDNS DNS identifier and flags string decoder."""
 
   def FormatValue(self, value, format_string_operator=None):
     """Formats a mDNS DNS identifier and flags value.
@@ -1217,7 +1217,7 @@ class MDNSDNSIdentifierAndFlagsFormatStringDecoder(
 
 
 class MDNSProtocolFormatStringDecoder(BaseFormatStringDecoder):
-  """MDNS protocol format string decoder."""
+  """mDNS protocol format string decoder."""
 
   _PROTOCOLS = {
       1: 'UDP',
@@ -1245,7 +1245,7 @@ class MDNSProtocolFormatStringDecoder(BaseFormatStringDecoder):
 
 
 class MDNSReasonFormatStringDecoder(BaseFormatStringDecoder):
-  """MDNS reason format string decoder."""
+  """mDNS reason format string decoder."""
 
   _REASONS = {
       1: 'no-data',
@@ -1275,7 +1275,7 @@ class MDNSReasonFormatStringDecoder(BaseFormatStringDecoder):
 
 
 class MDNSResourceRecordTypeFormatStringDecoder(BaseFormatStringDecoder):
-  """MDNS resource record type format string decoder."""
+  """mDNS resource record type format string decoder."""
 
   _RECORD_TYPES = {
       1: 'A',

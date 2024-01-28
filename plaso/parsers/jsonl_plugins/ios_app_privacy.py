@@ -9,7 +9,7 @@ from plaso.parsers.jsonl_plugins import interface
 
 
 class IOSAppPrivacyAccessEvent(events.EventData):
-  """IOS application privacy report event of type access.
+  """iOS application privacy report event of type access.
 
   Attributes:
     accessor_identifier (str): identifier of process accessing the resource
@@ -33,7 +33,7 @@ class IOSAppPrivacyAccessEvent(events.EventData):
 
 
 class IOSAppPrivacyNetworkEvent(events.EventData):
-  """IOS application privacy report event of type network activity.
+  """iOS application privacy report event of type network activity.
 
   Attributes:
     bundle_identifier (str): bundle identifier that accesssed the resource
