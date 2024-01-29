@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""CSV parser plugin for M365 Activity log."""
+"""M365 Activity log (CSV) file parser."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -7,17 +7,18 @@ from plaso.containers import events
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
+
 class M365ActivityLogEventData(events.EventData):
-  """M365 Activity log event data
+  """M365 Activity log event data.
 
   Attributes:
-		timestamp (dfdatetime.DateTimeValues): Date and time when
-  		the event was recorded
-    description (str): Description of event
-    application (str): Application of event
-    userprincipalname (str): User Principle Name of event
-    useragent (str): User agent of event
-    ipaddress (str): IP address request come from
+    application (str): application of the activity.
+    description (str): description of the activity..
+    ipaddress (str): IP address request originated from.
+    timestamp (dfdatetime.DateTimeValues): date and time when
+       the activity. was recorded.
+    useragent (str): User agent of the activity..
+    userprincipalname (str): User Principle Name of the activity..
   """
 
   DATA_TYPE = 'm365:activitylog:event'
@@ -25,54 +26,52 @@ class M365ActivityLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(M365ActivityLogEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.timestamp = None
-    self.description = None
     self.application = None
-    self.userprincipalname = None
-    self.useragent = None
+    self.description = None
     self.ipaddress = None
+    self.timestamp = None
+    self.useragent = None
+    self.userprincipalname = None
+
 
 class M365ActivityLogParser(dsv_parser.DSVParser):
-  """Parse M365 Activity log from CSV files."""  
+  """M365 Activity log (CSV) file parser."""
 
   NAME = 'm365_activitylog'
   DATA_FORMAT = 'M365 Activity log'
 
   COLUMNS = (
-            'Event ID',
-            'Category',
-            'Description',
-            'User',
-            'User Principle Name',
-            'App',
-            'Device',
-            'Location',
-            'Date',
-            'IP address',
-            'User agent',
-            'Organizations'
-  )
+      'Event ID',
+      'Category',
+      'Description',
+      'User',
+      'User Principle Name',
+      'App',
+      'Device',
+      'Location',
+      'Date',
+      'IP address',
+      'User agent',
+      'Organizations')
 
-  # List of accepted activities ...
-  _ACTIVITIES = frozenset([
-                          'Access file',
-                          'Create folder',
-                          'Download file',
-                          'Failed log on',
-                          'Log on',
-                          'Modify file',
-                          'Modify folder',
-                          'Move file',
-                          'Rename file',
-                          'Rename folder',
-                          'Share file',
-                          'Sync file download',
-                          'Sync file upload',
-                          'Trash file',
-                          'Trash folder',
-                          'Unspecified',
-                          'Upload file',
-  ])
+  _SUPPORTED_ACTIVITIES = frozenset([
+      'Access file',
+      'Create folder',
+      'Download file',
+      'Failed log on',
+      'Log on',
+      'Modify file',
+      'Modify folder',
+      'Move file',
+      'Rename file',
+      'Rename folder',
+      'Share file',
+      'Sync file download',
+      'Sync file upload',
+      'Trash file',
+      'Trash folder',
+      'Unspecified',
+      'Upload file'])
 
   _MINIMUM_NUMBER_OF_COLUMNS = 12
 
@@ -87,19 +86,20 @@ class M365ActivityLogParser(dsv_parser.DSVParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    timestamp = row.get('Date', None)
-    if timestamp == 'Date':
+    date_value = row.get('Date', None)
+    if date_value == 'Date':
       return
 
     activity = row.get('Category', None)
-    if activity not in self._ACTIVITIES:
+    if activity not in self._SUPPORTED_ACTIVITIES:
       return
 
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromDateTimeString(timestamp)
+      date_time.CopyFromDateTimeString(date_value)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning('invalid date time value')
+      parser_mediator.ProduceExtractionWarning(
+              f'unsupported date time value: {date_value!s}')
       date_time = None
 
     event_data = M365ActivityLogEventData()
@@ -126,16 +126,15 @@ class M365ActivityLogParser(dsv_parser.DSVParser):
     if len(row) != self._MINIMUM_NUMBER_OF_COLUMNS:
       return False
 
-    # Check the date format
-    # If it doesn't parse, then this isn't a M365 Activity log file.
-    timestamp_value = row.get('Date', None)
-    if timestamp_value != 'Date':
+    date_value = row.get('Date', None)
+    if date_value != 'Date':
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-        date_time.CopyFromDateTimeString(timestamp_value)
+        date_time.CopyFromDateTimeString(date_value)
       except (TypeError, ValueError):
         return False
 
     return True
+
 
 manager.ParsersManager.RegisterParser(M365ActivityLogParser)
