@@ -8,6 +8,7 @@ from plaso.parsers import m365_activitylog
 
 from tests.parsers import test_lib
 
+
 class M365ActivityLogTest(test_lib.ParserTestCase):
   """Tests for the M365 Activity log table parser."""
 
@@ -39,6 +40,7 @@ class M365ActivityLogTest(test_lib.ParserTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()

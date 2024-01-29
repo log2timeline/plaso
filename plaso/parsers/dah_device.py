@@ -18,101 +18,101 @@ class DefenderAHDeviceEventData(events.EventData):
 
   Attributes:
     timestamp (dfdatetime.DateTimeValues): Date and time when
-        the event was recorded
-    accountdomain (str): Domain of the account
-    accountname (str): User name of the account
+        the event was recorded.
+    accountdomain (str): Domain of the account.
+    accountname (str): User name of the account.
     additionalfields (str): Additional information about the entity or event
     detectionmethods (str): Detection technology that was used to identify
-        the threat at the time of click
-    dnsquery (str): Inspected DNS query
-    failurereason (str): Information explaining why the recorded action failed
-    filename (str): Name of the file that the recorded action was applied to
-    fileoriginip (str): IP address where the file was downloaded from
+        the threat at the time of click.
+    dnsquery (str): Inspected DNS query.
+    failurereason (str): Information explaining why the recorded action failed.
+    filename (str): Name of the file that the recorded action was applied to.
+    fileoriginip (str): IP address where the file was downloaded from.
     fileoriginreferrerurl (str): URL of the web page that links
-        to the downloaded file
-    fileoriginurl (str): URL where the file was downloaded from
+        to the downloaded file.
+    fileoriginurl (str): URL where the file was downloaded from.
     folderpath (str): Folder containing the file that the recorded action
-        was applied to
+        was applied to.
     initiatingprocessaccountdomain (str): Domain of the account
-        that ran the process responsible for the event
+        that ran the process responsible for the event.
     initiatingprocessaccountname (str): User name of the account
-        that ran the process responsible for the event
+        that ran the process responsible for the event.
     initiatingprocesscommandline (str): Command line used to run the process
-        that initiated the event
+        that initiated the event.
     initiatingprocesscreationtime (str): Date and time when the process
-        that initiated the event was started
+        that initiated the event was started.
     initiatingprocessfilename (str): Name of the process
-        that initiated the event
+        that initiated the event.
     initiatingprocessfolderpath (str): Folder containing the process
-        (image file) that initiated the event
+        (image file) that initiated the event.
     initiatingprocessid (str): Process ID (PPID) of the process
-        that initiated the event
+        that initiated the event.
     initiatingprocessparentcreationtime (str): Date and time when the parent
-        of the process responsible for the event was started
+        of the process responsible for the event was started.
     initiatingprocessparentfilename (str): Name of the parent process
-        that spawned the process responsible for the event
+        that spawned the process responsible for the event.
     initiatingprocessparentid (str): Process ID (PPPID) of the parent process
-        that spawned the process responsible for the event
+        that spawned the process responsible for the event.
     initiatingprocesssha1 (str): SHA-1 of the process (image file)
-        that initiated the event
+        that initiated the event.
     initiatingprocesssha256 (str): SHA-256 of the process (image file)
-        that initiated the event
+        that initiated the event.
     ipaddress (str): Public IP address of the device from which
-        the user clicked on the link
+        the user clicked on the link.
     localip (str): Source IP, or the IP address where
-        the communication came from
-    localport (str): TCP port on the local machine used during communication
-    logontype (str): Type of logon session
+        the communication came from.
+    localport (str): TCP port on the local machine used during communication.
+    logontype (str): Type of logon session.
     previousfilename (str): Original name of the file that was renamed as
-        a result of the action
+        a result of the action.
     previousfolderpath (str): Original folder containing the file before
-        the recorded action was applied
+        the recorded action was applied.
     previousregistrykey (str): Original registry key of the registry
-        value before it was modified
+        value before it was modified.
     previousregistryvaluedata (str): Original data of the registry
-        value before it was modified
+        value before it was modified.
     previousregistryvaluename (str): Original name of the registry
-        value before it was modified
-    processid (str): Process ID (PID) of the newly created process
-    processcommandline (str): Command line used to create the new process
-    processcreationtime (str): Date and time the process was created
-    protocol (str): Protocol used during the communication
-    pscommand (str): Executed command
-    registrykey (str): Registry key that the recorded action was applied to
+        value before it was modified.
+    processid (str): Process ID (PID) of the newly created process.
+    processcommandline (str): Command line used to create the new process.
+    processcreationtime (str): Date and time the process was created.
+    protocol (str): Protocol used during the communication.
+    pscommand (str): Executed command.
+    registrykey (str): Registry key that the recorded action was applied to.
     registryvaluedata (str): Data of the registry value that
-        the recorded action was applied to
+        the recorded action was applied to.
     registryvaluename (str): Name of the registry value that
-        the recorded action was applied to
+        the recorded action was applied to.
     remotedevicename (str): Name of the machine that performed a remote
-        operation on the affected machine. Depending on the event being reported,
-        this name could be a fully-qualified domain name (FQDN), a NetBIOS name
-        or a host name without domain information
-    remoteip (str): IP address that was being connected to
-    remoteport (str): TCP port on the remote device that was being connected to
+        operation on the affected machine. Depending on the event being
+        reported, this name could be a fully-qualified domain name (FQDN),
+        a NetBIOS name or a host name without domain information.
+    remoteip (str): IP address that was being connected to.
+    remoteport (str): TCP port on the remote device that was being connected to.
     remoteurl (str): URL or fully qualified domain name (FQDN)
-        that was being connected to
+        that was being connected to.
     requestaccountdomain (str): Domain of the account used to remotely
-        initiate the activity
+        initiate the activity.
     requestaccountname (str): User name of account used to remotely
-        initiate the activity
+        initiate the activity.
     requestprotocol (str): Network protocol, if applicable, used to initiate
-        the activity: Unknown, Local, SMB, or NFS
+        the activity: Unknown, Local, SMB, or NFS.
     requestsourceip (str): IPv4 or IPv6 address of the remote device
-        that initiated the activity
+        that initiated the activity.
     requestsourceport (str): Source port on the remote device
-        that initiated the activity
-    server_name (str): Server hostname
-    sha1 (str): SHA-1 of the file that the recorded action was applied to
-    sha256 (str): SHA-256 of the file that the recorded action was applied to
-    sharename (str): Name of shared folder containing the file
-    taskname (str): Name of scheduled task
+        that initiated the activity.
+    server_name (str): Server hostname.
+    sha1 (str): SHA-1 of the file that the recorded action was applied to.
+    sha256 (str): SHA-256 of the file that the recorded action was applied to.
+    sharename (str): Name of shared folder containing the file.
+    taskname (str): Name of scheduled task.
     threattypes (str): Verdict at the time of click, which tells whether
-        the URL led to malware, phish or other threats
-    url (str): The full URL that was clicked on by the user
+        the URL led to malware, phish or other threats.
+    url (str): The full URL that was clicked on by the user.
     urlchain (str): For scenarios involving redirections, it includes URLs
-        present in the redirection chain
+        present in the redirection chain.
     workload (str): The application from which the user clicked on the link,
-        with the values being Email, Office, and Teams
+        with the values being Email, Office, and Teams.
   """
 
   DATA_TYPE = 'm365:defenderah:event-action'
@@ -120,9 +120,7 @@ class DefenderAHDeviceEventData(events.EventData):
   def __init__(self, actiontype='event-action'):
     """Initializes event data."""
     self.DATA_TYPE = f'm365:defenderah:{actiontype}' # pylint: disable=invalid-name
-    super(
-          DefenderAHDeviceEventData,
-          self).__init__(data_type=self.DATA_TYPE)
+    super(DefenderAHDeviceEventData, self).__init__(data_type=self.DATA_TYPE)
     self.timestamp = None
 
     self.accountdomain = None

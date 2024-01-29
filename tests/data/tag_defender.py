@@ -553,4 +553,3 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
 
 if __name__ == '__main__':
   unittest.main()
-  

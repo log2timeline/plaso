@@ -8,6 +8,7 @@ from plaso.parsers import dah_device
 
 from tests.parsers import test_lib
 
+
 class DefenderAHDeviceEventsTest(test_lib.ParserTestCase):
   """Tests for the M365 Defender device events parser."""
 
@@ -46,11 +47,11 @@ class DefenderAHDeviceEventsTest(test_lib.ParserTestCase):
         'initiatingprocessid': '15440',
         'initiatingprocessfilename': 'msedge.exe',
         'initiatingprocessparentid': '11760',
-        'initiatingprocessparentfilename': 
-            '\\Device\\HarddiskVolume3\\Windows\\explorer.exe',
+        'initiatingprocessparentfilename': (
+            '\\Device\\HarddiskVolume3\\Windows\\explorer.exe'),
         'remoteurl': 'https://tiktok.com/@pheromania.co',
-        'additionalfields': 
-            '{"Experience":"CustomBlockList","ApplicationName":"TikTok"}'}
+        'additionalfields': (
+            '{"Experience":"CustomBlockList","ApplicationName":"TikTok"}')}
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 58)
     self.CheckEventData(event_data, expected_event_values)
 
@@ -89,6 +90,7 @@ class DefenderAHDeviceEventsTest(test_lib.ParserTestCase):
         'additionalfields': '{"FileType":"Zip"}'}
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 110)
     self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
