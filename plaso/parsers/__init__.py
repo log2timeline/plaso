@@ -11,7 +11,7 @@ from plaso.parsers import chrome_preferences
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
 from plaso.parsers import czip
-from plaso.parsers import dah_device
+from plaso.parsers import defender_device
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache

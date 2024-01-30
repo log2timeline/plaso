@@ -1,4 +1,4 @@
-# Plaso Defender related event formatters.
+# Plaso M365 Defender related event formatters.
 ---
 # M365 Defender Activity Log
 type: 'conditional'

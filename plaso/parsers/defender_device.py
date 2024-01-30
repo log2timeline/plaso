@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""M365 Defender DeviceFileEvents table (CSV) parser."""
+"""Defender DeviceFileEvents CSV parser.
+
+Also see:
+https://learn.microsoft.com/en-us/microsoft-365/security/defender/advanced-hunting-devicefileevents-table
+"""
 
 import csv
 import json
@@ -13,8 +17,8 @@ from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
 
-class DefenderAHDeviceEventData(events.EventData):
-  """M365 Defender event data.
+class DefenderDeviceEventData(events.EventData):
+  """Defender DeviceFileEvents event data.
 
   Attributes:
     timestamp (dfdatetime.DateTimeValues): Date and time when
@@ -120,7 +124,7 @@ class DefenderAHDeviceEventData(events.EventData):
   def __init__(self, actiontype='event-action'):
     """Initializes event data."""
     self.DATA_TYPE = f'm365:defenderah:{actiontype}' # pylint: disable=invalid-name
-    super(DefenderAHDeviceEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(DefenderDeviceEventData, self).__init__(data_type=self.DATA_TYPE)
     self.timestamp = None
 
     self.accountdomain = None
@@ -183,11 +187,11 @@ class DefenderAHDeviceEventData(events.EventData):
     self.workload = None
 
 
-class DefenderAHDeviceEventsParser(dsv_parser.DSVParser):
-  """Parse Device events from DSV files."""  
+class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
+  """Defender DeviceFileEvents CSV parser."""
 
-  NAME = 'dah_device'
-  DATA_FORMAT = 'M365 Defender device events'
+  NAME = 'defender_xdr'
+  DATA_FORMAT = 'Defender DeviceFileEvents CSV'
 
   COLUMNS = (
       'Timestamp',
@@ -205,7 +209,6 @@ class DefenderAHDeviceEventsParser(dsv_parser.DSVParser):
       'InitiatingProcessParentFileName',
       'InitiatingProcessParentCreationTime')
 
-  # List of accepted activities ...
   _ACTIVITIES = {
       'antivirusdefinitionsupdated': [],
       'antivirusdefinitionsupdatefailed': [],
@@ -1639,7 +1642,7 @@ class DefenderAHDeviceEventsParser(dsv_parser.DSVParser):
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
       date_time.CopyFromStringISO8601(timestamp)
 
-      event_data = DefenderAHDeviceEventData(tmp_action)
+      event_data = DefenderDeviceEventData(tmp_action)
       event_data.timestamp = date_time
 
       for attribute_name in self._ACTIVITIES[tmp_action]:
@@ -1690,4 +1693,4 @@ class DefenderAHDeviceEventsParser(dsv_parser.DSVParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(DefenderAHDeviceEventsParser)
+manager.ParsersManager.RegisterParser(DefenderDeviceFileEventsParser)

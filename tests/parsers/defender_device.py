@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the M365 Defender device events parser."""
+"""Tests for the Defender DeviceFileEvents CSV parser."""
 
 import unittest
 
-from plaso.parsers import dah_device
+from plaso.parsers import defender_device
 
 from tests.parsers import test_lib
 
 
-class DefenderAHDeviceEventsTest(test_lib.ParserTestCase):
-  """Tests for the M365 Defender device events parser."""
+class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
+  """Tests for the Defender DeviceFileEvents CSV parser."""
 
   # pylint: disable=protected-access
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser =  dah_device.DefenderAHDeviceEventsParser()
+    parser =  defender_device.DefenderDeviceFileEventsParser()
     storage_writer = self._ParseFile(
         ['advanced_hunting_test_002.csv'], parser)
 

@@ -4,9 +4,10 @@
 
 import unittest
 
-from plaso.parsers import dah_device
+from plaso.parsers import defender_device
 
 from tests.data import test_lib
+
 
 class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
   """Tests the tag_defender.txt tagging file.
@@ -23,7 +24,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:processcreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['application_execution'])
 
@@ -31,7 +32,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:imageloaded']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['application_execution'])
 
@@ -39,7 +40,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:openprocess']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['application_execution'])
 
@@ -47,7 +48,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:processcreatedusingwmiquery']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['application_execution'])
 
@@ -57,7 +58,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:filecreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['file_created'])
 
@@ -67,7 +68,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:filedeleted']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['file_deleted'])
 
@@ -77,7 +78,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:filemodified']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['file_modified'])
 
@@ -87,7 +88,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:filerenamed']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['file_renamed'])
 
@@ -97,7 +98,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:logonfailed']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['login_failed'])
 
@@ -107,7 +108,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:logonattempted']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['login_attempt'])
 
@@ -117,7 +118,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:logonsuccess']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['login_success'])
 
@@ -127,7 +128,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:registrykeycreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['registry_modified'])
 
@@ -135,7 +136,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:registrykeydeleted']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['registry_modified'])
 
@@ -143,7 +144,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:registrykeyrenamed']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['registry_modified'])
 
@@ -151,7 +152,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:registryvaluedeleted']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['registry_modified'])
 
@@ -159,7 +160,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:registryvalueset']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['registry_modified'])
 
@@ -169,7 +170,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:connectionfailed']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['connection_failed'])
 
@@ -179,7 +180,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:connectionsuccess']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['connection_success'])
 
@@ -189,7 +190,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:dnsconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['dns_connection'])
 
@@ -199,7 +200,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:ftpconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['ftp_connection'])
 
@@ -209,7 +210,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:httpconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['http_connection'])
 
@@ -219,7 +220,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:icmpconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['icmp_connection'])
 
@@ -229,7 +230,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:inboundconnectionaccepted']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['inbound_connection'])
 
@@ -239,7 +240,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:listeningconnectioncreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['open_port'])
 
@@ -249,7 +250,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:smtpconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['smtp_connection'])
 
@@ -259,7 +260,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:sshconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['ssh_connection'])
 
@@ -269,7 +270,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:sslconnectioninspected']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['ssl_connection'])
 
@@ -279,7 +280,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:antivirusdetection']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['threat_detection'])
 
@@ -287,7 +288,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:antiviruserror']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['threat_detection'])
 
@@ -295,7 +296,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:antivirusmalwareactionfailed']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['threat_detection'])
 
@@ -303,7 +304,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:antivirusmalwareblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['threat_detection'])
 
@@ -311,7 +312,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:antivirusreport']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['threat_detection'])
 
@@ -321,7 +322,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asradobereaderchildprocessblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -329,7 +330,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrexecutableemailcontentblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -337,7 +338,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrexecutableofficecontentblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -345,7 +346,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrlsasscredentialtheftblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -353,7 +354,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrobfuscatedscriptblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -361,7 +362,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrofficechildprocessblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -369,7 +370,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrofficecommappchildprocessblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -377,7 +378,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrofficemacrowin32apicallsblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -385,7 +386,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrofficeprocessinjectionblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -393,7 +394,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrpersistencethroughwmiblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -401,7 +402,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrpsexecwmichildprocessblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -409,7 +410,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrransomwareblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -417,7 +418,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrscriptexecutabledownloadblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -425,7 +426,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asruntrustedexecutableblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -433,7 +434,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asruntrustedusbprocessblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -441,7 +442,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:asrvulnerablesigneddriverblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['asr_block'])
 
@@ -451,7 +452,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:firewallinboundconnectionblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['firewall_block'])
 
@@ -459,7 +460,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:firewallinboundconnectiontoappblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['firewall_block'])
 
@@ -467,7 +468,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:firewalloutboundconnectionblocked']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['firewall_block'])
 
@@ -477,7 +478,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:firewallservicestopped']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['firewall_change'])
 
@@ -487,7 +488,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:remotedesktopconnection']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['rdp_connection'])
 
@@ -497,7 +498,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:scheduledtaskcreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['task_schedule'])
 
@@ -507,7 +508,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:securitygroupcreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['group_created'])
 
@@ -517,7 +518,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:securitylogcleared']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['eventlog_cleared'])
 
@@ -527,7 +528,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:serviceinstalled']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['service_new'])
 
@@ -537,7 +538,7 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:useraccountaddedtolocalgroup']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['group_added_account'])
 
@@ -547,9 +548,10 @@ class DefenderTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'data_type': ['m365:defenderah:useraccountcreated']}
     self._CheckTaggingRule(
-        dah_device.DefenderAHDeviceEventData,
+        defender_device.DefenderDeviceEventData,
         attribute_values_per_name,
         ['account_created'])
+
 
 if __name__ == '__main__':
   unittest.main()
