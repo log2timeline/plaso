@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Defender DeviceFileEvents CSV parser."""
+"""Tests for the Defender Advanced Hunting CSV parser."""
 
 import unittest
 
-from plaso.parsers import defender_device
+from plaso.parsers import defender_hunting
 
 from tests.parsers import test_lib
 
 
-class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
-  """Tests for the Defender DeviceFileEvents CSV parser."""
+class DefenderAdvancedHuntingCSVParserTest(test_lib.ParserTestCase):
+  """Tests for the Defender Advanced Hunting CSV parser."""
 
   # pylint: disable=protected-access
 
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser =  defender_device.DefenderDeviceFileEventsParser()
-    storage_writer = self._ParseFile(
-        ['advanced_hunting_test_002.csv'], parser)
+    parser = defender_hunting.DefenderAdvancedHuntingCSVParser()
+    storage_writer = self._ParseFile(['advanced_hunting_test_002.csv'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -33,7 +32,7 @@ class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'm365:defenderah:powershellcommand',
+        'data_type': 'defender:hunting:powershellcommand',
         'initiatingprocessid': '36112',
         'initiatingprocessfilename': 'a180powershellcollector.exe',
         'initiatingprocessparentid': '27456',
@@ -43,7 +42,7 @@ class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'data_type': 'm365:defenderah:smartscreenurlwarning',
+        'data_type': 'defender:hunting:smartscreenurlwarning',
         'initiatingprocessid': '15440',
         'initiatingprocessfilename': 'msedge.exe',
         'initiatingprocessparentid': '11760',
@@ -56,7 +55,7 @@ class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'data_type': 'm365:defenderah:useraccountaddedtolocalgroup',
+        'data_type': 'defender:hunting:useraccountaddedtolocalgroup',
         'initiatingprocessaccountdomain': 'workgroup',
         'initiatingprocessaccountname': 'test-hostname$',
         'groupdomainname': 'Builtin',
@@ -65,7 +64,7 @@ class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'data_type': 'm365:defenderah:connectionrequest',
+        'data_type': 'defender:hunting:connectionrequest',
         'initiatingprocessfilename': 'Microsoft Word',
         'initiatingprocessid': '62399',
         'initiatingprocessparentid': '62399',
@@ -80,7 +79,7 @@ class DefenderDeviceFileEventsParserTest(test_lib.ParserTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'data_type': 'm365:defenderah:filerenamed',
+        'data_type': 'defender:hunting:filerenamed',
         'filename': 'geo-20231221-195543-982-982725.zip',
         'sha1': 'fc98c75eec53f4ab6dc0be9559b1000276c22ffb',
         'previousfilename': 'geo-20231221-195543-982-982725.zip',

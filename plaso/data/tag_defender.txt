@@ -1,151 +1,151 @@
 # Tags application execution events.
 application_execution
-  data_type is 'm365:defenderah:processcreated'
-  data_type is 'm365:defenderah:imageloaded'
-  data_type is 'm365:defenderah:openprocess'
-  data_type is 'm365:defenderah:processcreatedusingwmiquery'
+  data_type is 'defender:hunting:processcreated'
+  data_type is 'defender:hunting:imageloaded'
+  data_type is 'defender:hunting:openprocess'
+  data_type is 'defender:hunting:processcreatedusingwmiquery'
 
 # Tags file created events.
 file_created
-  data_type is 'm365:defenderah:filecreated'
+  data_type is 'defender:hunting:filecreated'
 
 # Tags file deleted events.
 file_deleted
-  data_type is 'm365:defenderah:filedeleted'
+  data_type is 'defender:hunting:filedeleted'
 
 # Tags file modified events.
 file_modified
-  data_type is 'm365:defenderah:filemodified'
+  data_type is 'defender:hunting:filemodified'
 
 # Tags file renamed events.
 file_renamed
-  data_type is 'm365:defenderah:filerenamed'
+  data_type is 'defender:hunting:filerenamed'
 
 # Tags failed log-in events.
 login_failed
-  data_type is 'm365:defenderah:logonfailed'
+  data_type is 'defender:hunting:logonfailed'
 
 # Tags log-in attempt events.
 login_attempt
-  data_type is 'm365:defenderah:logonattempted'
+  data_type is 'defender:hunting:logonattempted'
 
 # Tags log-in success events.
 login_success
-  data_type is 'm365:defenderah:logonsuccess'
+  data_type is 'defender:hunting:logonsuccess'
 
 # Tags Windows Registry modification events.
 registry_modified
-  data_type is 'm365:defenderah:registrykeycreated'
-  data_type is 'm365:defenderah:registrykeydeleted'
-  data_type is 'm365:defenderah:registrykeyrenamed'
-  data_type is 'm365:defenderah:registryvaluedeleted'
-  data_type is 'm365:defenderah:registryvalueset'
+  data_type is 'defender:hunting:registrykeycreated'
+  data_type is 'defender:hunting:registrykeydeleted'
+  data_type is 'defender:hunting:registrykeyrenamed'
+  data_type is 'defender:hunting:registryvaluedeleted'
+  data_type is 'defender:hunting:registryvalueset'
 
 # Tags failed connection
 connection_failed
-  data_type is 'm365:defenderah:connectionfailed'
+  data_type is 'defender:hunting:connectionfailed'
 
 # Tags sucessfull connection
 connection_success
-  data_type is 'm365:defenderah:connectionsuccess'
+  data_type is 'defender:hunting:connectionsuccess'
 
 # Tags DNS connection
 dns_connection
-  data_type is 'm365:defenderah:dnsconnectioninspected'
+  data_type is 'defender:hunting:dnsconnectioninspected'
 
 # Tags FTP connection
 ftp_connection
-  data_type is 'm365:defenderah:ftpconnectioninspected'
+  data_type is 'defender:hunting:ftpconnectioninspected'
 
 # Tags HTTP connection
 http_connection
-  data_type is 'm365:defenderah:httpconnectioninspected'
+  data_type is 'defender:hunting:httpconnectioninspected'
 
 # Tags ICMP connection
 icmp_connection
-  data_type is 'm365:defenderah:icmpconnectioninspected'
+  data_type is 'defender:hunting:icmpconnectioninspected'
 
 # Tags Inbound connection
 inbound_connection
-  data_type is 'm365:defenderah:inboundconnectionaccepted'
+  data_type is 'defender:hunting:inboundconnectionaccepted'
 
 # Tags Listening port
 open_port
-  data_type is 'm365:defenderah:listeningconnectioncreated'
+  data_type is 'defender:hunting:listeningconnectioncreated'
 
 # Tags SMTP connection
 smtp_connection
-  data_type is 'm365:defenderah:smtpconnectioninspected'
+  data_type is 'defender:hunting:smtpconnectioninspected'
 
 # Tags SSH connection
 ssh_connection
-  data_type is 'm365:defenderah:sshconnectioninspected'
+  data_type is 'defender:hunting:sshconnectioninspected'
 
 # Tags SSL connection
 ssl_connection
-  data_type is 'm365:defenderah:sslconnectioninspected'
+  data_type is 'defender:hunting:sslconnectioninspected'
 
 # Tags Threat detection
 threat_detection
-  data_type is 'm365:defenderah:antivirusdetection'
-  data_type is 'm365:defenderah:antiviruserror'
-  data_type is 'm365:defenderah:antivirusmalwareactionfailed'
-  data_type is 'm365:defenderah:antivirusmalwareblocked'
-  data_type is 'm365:defenderah:antivirusreport'
+  data_type is 'defender:hunting:antivirusdetection'
+  data_type is 'defender:hunting:antiviruserror'
+  data_type is 'defender:hunting:antivirusmalwareactionfailed'
+  data_type is 'defender:hunting:antivirusmalwareblocked'
+  data_type is 'defender:hunting:antivirusreport'
 
 # Tags ASR blocking
 asr_block
-  data_type is 'm365:defenderah:asradobereaderchildprocessblocked'
-  data_type is 'm365:defenderah:asrexecutableemailcontentblocked'
-  data_type is 'm365:defenderah:asrexecutableofficecontentblocked'
-  data_type is 'm365:defenderah:asrlsasscredentialtheftblocked'
-  data_type is 'm365:defenderah:asrobfuscatedscriptblocked'
-  data_type is 'm365:defenderah:asrofficechildprocessblocked'
-  data_type is 'm365:defenderah:asrofficecommappchildprocessblocked'
-  data_type is 'm365:defenderah:asrofficemacrowin32apicallsblocked'
-  data_type is 'm365:defenderah:asrofficeprocessinjectionblocked'
-  data_type is 'm365:defenderah:asrpersistencethroughwmiblocked'
-  data_type is 'm365:defenderah:asrpsexecwmichildprocessblocked'
-  data_type is 'm365:defenderah:asrransomwareblocked'
-  data_type is 'm365:defenderah:asrscriptexecutabledownloadblocked'
-  data_type is 'm365:defenderah:asruntrustedexecutableblocked'
-  data_type is 'm365:defenderah:asruntrustedusbprocessblocked'
-  data_type is 'm365:defenderah:asrvulnerablesigneddriverblocked'
+  data_type is 'defender:hunting:asradobereaderchildprocessblocked'
+  data_type is 'defender:hunting:asrexecutableemailcontentblocked'
+  data_type is 'defender:hunting:asrexecutableofficecontentblocked'
+  data_type is 'defender:hunting:asrlsasscredentialtheftblocked'
+  data_type is 'defender:hunting:asrobfuscatedscriptblocked'
+  data_type is 'defender:hunting:asrofficechildprocessblocked'
+  data_type is 'defender:hunting:asrofficecommappchildprocessblocked'
+  data_type is 'defender:hunting:asrofficemacrowin32apicallsblocked'
+  data_type is 'defender:hunting:asrofficeprocessinjectionblocked'
+  data_type is 'defender:hunting:asrpersistencethroughwmiblocked'
+  data_type is 'defender:hunting:asrpsexecwmichildprocessblocked'
+  data_type is 'defender:hunting:asrransomwareblocked'
+  data_type is 'defender:hunting:asrscriptexecutabledownloadblocked'
+  data_type is 'defender:hunting:asruntrustedexecutableblocked'
+  data_type is 'defender:hunting:asruntrustedusbprocessblocked'
+  data_type is 'defender:hunting:asrvulnerablesigneddriverblocked'
 
 # Tags firewall blocking connection
 firewall_block
-  data_type is 'm365:defenderah:firewallinboundconnectionblocked'
-  data_type is 'm365:defenderah:firewallinboundconnectiontoappblocked'
-  data_type is 'm365:defenderah:firewalloutboundconnectionblocked'
+  data_type is 'defender:hunting:firewallinboundconnectionblocked'
+  data_type is 'defender:hunting:firewallinboundconnectiontoappblocked'
+  data_type is 'defender:hunting:firewalloutboundconnectionblocked'
 
 # Tags Windows Firewall With Advanced Security change events 
 firewall_change
-  data_type is 'm365:defenderah:firewallservicestopped'
+  data_type is 'defender:hunting:firewallservicestopped'
 
 # Tags Remote desktop connection
 rdp_connection
-  data_type is 'm365:defenderah:remotedesktopconnection'
+  data_type is 'defender:hunting:remotedesktopconnection'
 
 # Tags scheduled task creation events.
 task_schedule
-  data_type is 'm365:defenderah:scheduledtaskcreated'
+  data_type is 'defender:hunting:scheduledtaskcreated'
 
 # Tags Security group created
 group_created
-  data_type is 'm365:defenderah:securitygroupcreated'
+  data_type is 'defender:hunting:securitygroupcreated'
 
 # Tags security log cleared events
 eventlog_cleared
-  data_type is 'm365:defenderah:securitylogcleared'
+  data_type is 'defender:hunting:securitylogcleared'
 
 # Tags Windows service creation events.
 service_new
-  data_type is 'm365:defenderah:serviceinstalled'
+  data_type is 'defender:hunting:serviceinstalled'
 
 # Tags user was added to a security-enabled local group
 group_added_account
-  data_type is 'm365:defenderah:useraccountaddedtolocalgroup'
+  data_type is 'defender:hunting:useraccountaddedtolocalgroup'
 
 # Tags local SAM account or a domain account was created
 account_created
-  data_type is 'm365:defenderah:useraccountcreated'
+  data_type is 'defender:hunting:useraccountcreated'

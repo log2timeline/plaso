@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Defender DeviceFileEvents CSV parser.
+"""Defender Advanced Hunting CSV parser.
 
 Also see:
-https://learn.microsoft.com/en-us/microsoft-365/security/defender/advanced-hunting-devicefileevents-table
+https://learn.microsoft.com/en-us/microsoft-365/security/defender/advanced-hunting-schema-tables
 """
 
 import csv
@@ -14,14 +14,15 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.lib import errors
 from plaso.parsers import dsv_parser
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class DefenderDeviceEventData(events.EventData):
-  """Defender DeviceFileEvents event data.
+class DefenderAdvancedHuntingEventData(events.EventData):
+  """Defender Advanced Hunting event data.
 
   Attributes:
-    timestamp (dfdatetime.DateTimeValues): Date and time when
+    recorded_time (dfdatetime.DateTimeValues): date and time when
         the event was recorded.
     accountdomain (str): Domain of the account.
     accountname (str): User name of the account.
@@ -119,14 +120,13 @@ class DefenderDeviceEventData(events.EventData):
         with the values being Email, Office, and Teams.
   """
 
-  DATA_TYPE = 'm365:defenderah:event-action'
+  DATA_TYPE = 'defender:hunting:event-action'
 
   def __init__(self, actiontype='event-action'):
     """Initializes event data."""
-    self.DATA_TYPE = f'm365:defenderah:{actiontype}' # pylint: disable=invalid-name
-    super(DefenderDeviceEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.timestamp = None
-
+    self.DATA_TYPE = f'defender:hunting:{actiontype}' # pylint: disable=invalid-name
+    super(DefenderAdvancedHuntingEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.accountdomain = None
     self.accountname = None
     self.additionalfields = None
@@ -159,11 +159,12 @@ class DefenderDeviceEventData(events.EventData):
     self.previousregistrykey = None
     self.previousregistryvaluedata = None
     self.previousregistryvaluename = None
-    self.processid = None
     self.processcommandline = None
     self.processcreationtime = None
+    self.processid = None
     self.protocol = None
     self.pscommand = None
+    self.recorded_time = None
     self.registrykey = None
     self.registryvaluedata = None
     self.registryvaluename = None
@@ -182,13 +183,52 @@ class DefenderDeviceEventData(events.EventData):
     self.sharename = None
     self.taskname = None
     self.threattypes = None
-    self.url = None
     self.urlchain = None
+    self.url = None
     self.workload = None
 
 
-class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
-  """Defender DeviceFileEvents CSV parser."""
+class DefenderAdvancedHuntingURLClickEventData(events.EventData):
+  """Defender Advanced Hunting UrlClickEvents event data.
+
+  Also see:
+    https://learn.microsoft.com/en-us/microsoft-365/security/defender/advanced-hunting-urlclickevents-table
+
+  Attributes:
+    action_type (str): action type.
+    application (str): application in which the URL was visited, such as:
+        "Email", "Office", or "Teams".
+    detection_methods (str): methods used to detect threat typed.
+    ip_address (str): source (or client) IP address.
+    last_visited_time (dfdatetime.DateTimeValues): date and time when
+        the URL was last visited (clicked) by the user.
+    threat_types (str): type of threats detected.
+        the URL led to malware, phish or other threats.
+    url (str): URL that was visited.
+    url_chain (str): chain of URLs.
+  """
+
+  DATA_TYPE = 'defender:hunting:url_click'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(DefenderAdvancedHuntingURLClickEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.application = None
+    self.action_type = None
+    self.detection_methods = None
+    self.ip_address = None
+    self.last_visited_time = None
+    self.threat_types = None
+    self.url = None
+    self.url_chain = None
+
+    # TODO: add support for: AccountUpn, NetworkMessageId, IsClickedThrough,
+    # ReportId
+
+
+class DefenderAdvancedHuntingCSVParser(dsv_parser.DSVParser):
+  """Defender Advanced Hunting CSV parser."""
 
   NAME = 'defender_xdr'
   DATA_FORMAT = 'Defender DeviceFileEvents CSV'
@@ -209,7 +249,7 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
       'InitiatingProcessParentFileName',
       'InitiatingProcessParentCreationTime')
 
-  _ACTIVITIES = {
+  _ACTION_TYPES = {
       'antivirusdefinitionsupdated': [],
       'antivirusdefinitionsupdatefailed': [],
       'antivirusdetection': [
@@ -624,106 +664,6 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
           'initiatingprocessparentfilename',
           'initiatingprocessparentcreationtime',
           'remoteurl'],
-    'clickallowed': [
-          'url',
-          'workload',
-          'ipaddress',
-          'urlchain'],
-    'clickblocked': [
-          'url',
-          'workload',
-          'ipaddress',
-          'urlchain',
-          'threattypes',
-          'detectionmethods'],
-    'clickblockedbytenantpolicy': [
-          'url',
-          'workload',
-          'ipaddress',
-          'urlchain'],
-    'connectionfailed': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'initiatingprocesssha1',
-          'initiatingprocesssha256',
-          'initiatingprocessfilename',
-          'initiatingprocessid',
-          'initiatingprocesscommandline',
-          'initiatingprocesscreationtime',
-          'initiatingprocessfolderpath',
-          'initiatingprocessparentid',
-          'initiatingprocessparentfilename',
-          'initiatingprocessparentcreationtime',
-          'remoteip',
-          'remoteport',
-          'remoteurl',
-          'localip',
-          'localport',
-          'protocol'],
-    'connectionfound': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'initiatingprocesssha1',
-          'initiatingprocesssha256',
-          'initiatingprocessfilename',
-          'initiatingprocessid',
-          'initiatingprocesscommandline',
-          'initiatingprocesscreationtime',
-          'initiatingprocessfolderpath',
-          'initiatingprocessparentid',
-          'initiatingprocessparentfilename',
-          'initiatingprocessparentcreationtime',
-          'remoteip',
-          'remoteport',
-          'remoteurl',
-          'localip',
-          'localport',
-          'protocol'],
-    'connectionrequest': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'initiatingprocesssha1',
-          'initiatingprocesssha256',
-          'initiatingprocessfilename',
-          'initiatingprocessid',
-          'initiatingprocesscommandline',
-          'initiatingprocesscreationtime',
-          'initiatingprocessfolderpath',
-          'initiatingprocessparentid',
-          'initiatingprocessparentfilename',
-          'initiatingprocessparentcreationtime',
-          'remoteip',
-          'remoteport',
-          'remoteurl',
-          'localip',
-          'localport',
-          'protocol'],
-    'connectionsuccess': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'initiatingprocesssha1',
-          'initiatingprocesssha256',
-          'initiatingprocessfilename',
-          'initiatingprocessid',
-          'initiatingprocesscommandline',
-          'initiatingprocesscreationtime',
-          'initiatingprocessfolderpath',
-          'initiatingprocessparentid',
-          'initiatingprocessparentfilename',
-          'initiatingprocessparentcreationtime',
-          'remoteip',
-          'remoteport',
-          'remoteurl',
-          'localip',
-          'localport',
-          'protocol'],
-    'dnsconnectioninspected': [
-          'remoteip',
-          'remoteport',
-          'localip',
-          'localport',
-          'protocol',
-          'additionalfields'],
     'dnsqueryresponse': [
           'initiatingprocessaccountdomain',
           'initiatingprocessaccountname',
@@ -1385,6 +1325,117 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
           'additionalfields'],
     'untrustedwificonnection': [
           'additionalfields'],
+    'useraccountaddedtolocalgroup': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'additionalfields'],
+    'useraccountcreated': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'accountdomain',
+          'accountname'],
+    # DeviceNetworkEvents
+    'connectionfailed': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'initiatingprocesssha1',
+          'initiatingprocesssha256',
+          'initiatingprocessfilename',
+          'initiatingprocessid',
+          'initiatingprocesscommandline',
+          'initiatingprocesscreationtime',
+          'initiatingprocessfolderpath',
+          'initiatingprocessparentid',
+          'initiatingprocessparentfilename',
+          'initiatingprocessparentcreationtime',
+          'remoteip',
+          'remoteport',
+          'remoteurl',
+          'localip',
+          'localport',
+          'protocol'],
+    'connectionfound': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'initiatingprocesssha1',
+          'initiatingprocesssha256',
+          'initiatingprocessfilename',
+          'initiatingprocessid',
+          'initiatingprocesscommandline',
+          'initiatingprocesscreationtime',
+          'initiatingprocessfolderpath',
+          'initiatingprocessparentid',
+          'initiatingprocessparentfilename',
+          'initiatingprocessparentcreationtime',
+          'remoteip',
+          'remoteport',
+          'remoteurl',
+          'localip',
+          'localport',
+          'protocol'],
+    'connectionrequest': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'initiatingprocesssha1',
+          'initiatingprocesssha256',
+          'initiatingprocessfilename',
+          'initiatingprocessid',
+          'initiatingprocesscommandline',
+          'initiatingprocesscreationtime',
+          'initiatingprocessfolderpath',
+          'initiatingprocessparentid',
+          'initiatingprocessparentfilename',
+          'initiatingprocessparentcreationtime',
+          'remoteip',
+          'remoteport',
+          'remoteurl',
+          'localip',
+          'localport',
+          'protocol'],
+    'connectionsuccess': [
+          'initiatingprocessaccountdomain',
+          'initiatingprocessaccountname',
+          'initiatingprocesssha1',
+          'initiatingprocesssha256',
+          'initiatingprocessfilename',
+          'initiatingprocessid',
+          'initiatingprocesscommandline',
+          'initiatingprocesscreationtime',
+          'initiatingprocessfolderpath',
+          'initiatingprocessparentid',
+          'initiatingprocessparentfilename',
+          'initiatingprocessparentcreationtime',
+          'remoteip',
+          'remoteport',
+          'remoteurl',
+          'localip',
+          'localport',
+          'protocol'],
+    'dnsconnectioninspected': [
+          'remoteip',
+          'remoteport',
+          'localip',
+          'localport',
+          'protocol',
+          'additionalfields'],
+    # UrlClickEvents
+    'clickallowed': [
+          'url',
+          'workload',
+          'ipaddress',
+          'urlchain'],
+    'clickblocked': [
+          'url',
+          'workload',
+          'ipaddress',
+          'urlchain',
+          'threattypes',
+          'detectionmethods'],
+    'clickblockedbytenantpolicy': [
+          'url',
+          'workload',
+          'ipaddress',
+          'urlchain'],
     'urlerrorpage': [
           'url',
           'workload',
@@ -1395,15 +1446,15 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
           'workload',
           'ipaddress',
           'urlchain'],
-    'useraccountaddedtolocalgroup': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'additionalfields'],
-    'useraccountcreated': [
-          'initiatingprocessaccountdomain',
-          'initiatingprocessaccountname',
-          'accountdomain',
-          'accountname']}
+  }
+
+  _CALLBACK_PER_ACTION_TYPE = {
+      'ClickAllowed': '_ParserUrlClickEvent',
+      'ClickBlocked': '_ParserUrlClickEvent',
+      'ClickBlockedByTenantPolicy': '_ParserUrlClickEvent',
+      'UrlErrorPage': '_ParserUrlClickEvent',
+      'UrlScanInProgress': '_ParserUrlClickEvent',
+  }
 
   _ADDITIONALFIELDS = {
       'dnsconnectioninspected': {
@@ -1444,28 +1495,6 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
 
   _ENCODING = 'utf-8'
 
-  def _ParseDataFromAdditionalFields(self, additionalfields, dataname):
-    """Parses data from additionalfields.
-
-    Args:
-      additionalfields (str): Additional information about
-          the event in JSON array format.
-
-    Returns:
-      str: data.
-    """
-    result = ''
-
-    try:
-      if len(additionalfields) > 0 and dataname in additionalfields:
-        addjson = json.loads(additionalfields)
-        result = addjson[dataname]
-
-    finally:
-      pass
-
-    return result
-
   def _CreateDictReader(self, line_reader):
     """Returns a reader that processes each row and yields dictionaries.
 
@@ -1493,12 +1522,76 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
 
     return csv_dict_reader
 
+  def _GetDateTimeRowValue(self, row, value_name):
+    """Retrieves a date and time value from the row.
+
+    Args:
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+      value_name (str): name of the value.
+
+    Returns:
+      dfdatetime.TimeElementsInMicroseconds: date and time value or None if
+          not available.
+    """
+    timestamp = row.get(value_name, None)
+    if not timestamp:
+      return None
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+    date_time.CopyFromStringISO8601(timestamp)
+    return date_time
+
+  def _ParseDataFromAdditionalFields(self, additionalfields, dataname):
+    """Parses data from additionalfields.
+
+    Args:
+      additionalfields (str): Additional information about
+          the event in JSON array format.
+
+    Returns:
+      str: data.
+    """
+    result = ''
+
+    try:
+      if len(additionalfields) > 0 and dataname in additionalfields:
+        addjson = json.loads(additionalfields)
+        result = addjson[dataname]
+
+    finally:
+      pass
+
+    return result
+
+  def _ParserUrlClickEvent(self, parser_mediator, row):
+    """Parses an UrlClickEvent.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+    """
+    event_data = DefenderAdvancedHuntingURLClickEventData()
+    event_data.action_type = row.get('ActionType', None)
+    event_data.application = row.get('Workload', None)
+    event_data.detection_methods = row.get('DetectionMethods', None)
+    event_data.ip_address = row.get('IPAddress', None)
+    event_data.last_visited_time = self._GetDateTimeRowValue(row, 'Timestamp')
+    event_data.threat_types = row.get('ThreatTypes', None)
+    event_data.url = row.get('Url', None)
+    event_data.url_chain = row.get('UrlChain', None)
+
+    # TODO: add support for: AccountUpn, NetworkMessageId, IsClickedThrough,
+    # ReportId
+
+    parser_mediator.ProduceEventData(event_data)
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a DSV text file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
@@ -1631,47 +1724,60 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:
-      tmp_row = dict((k.lower().strip(), v) for k,v in row.items())
-      tmp_action = tmp_row['actiontype'].lower().strip()
+      action_type = row.get('ActionType', None)
 
-      if not tmp_action in self._ACTIVITIES:
+      callback_method = self._CALLBACK_PER_ACTION_TYPE.get(action_type, None)
+      if callback_method:
+        callback = getattr(self, callback_method, None)
+        if callback is None:
+          logger.warning((
+              f'[{self.NAME:s}] missing callback method: {callback_method:s} '
+              f'for action type: {action_type:s}'))
+          return
+
+        try:
+          callback(parser_mediator, row)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionWarning((
+              f'unable to parse row: {row_offset:d} with callback: '
+              f'{callback_method:s} with error: {exception!s}'))
+
         return
 
-      # pylint: disable=line-too-long
-      timestamp = tmp_row['timestamp']
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-      date_time.CopyFromStringISO8601(timestamp)
+      tmp_row = dict((k.lower().strip(), v) for k, v in row.items())
+      action_type = tmp_row['actiontype'].lower().strip()
 
-      event_data = DefenderDeviceEventData(tmp_action)
-      event_data.timestamp = date_time
+      if not action_type in self._ACTION_TYPES:
+        return
 
-      for attribute_name in self._ACTIVITIES[tmp_action]:
+      event_data = DefenderAdvancedHuntingEventData(action_type)
+      event_data.recorded_time = self._GetDateTimeRowValue(row, 'Timestamp')
+
+      for attribute_name in self._ACTION_TYPES.get(action_type, []):
         if attribute_name in tmp_row:
           setattr(event_data, attribute_name, tmp_row[attribute_name])
 
       if 'additionalfields' in tmp_row:
-        if tmp_action in self._ADDITIONALFIELDS:
-          for key, value in self._ADDITIONALFIELDS[tmp_action].items():
-            setattr(
-                event_data,
-                value,
-                self._ParseDataFromAdditionalFields(
-                    tmp_row['additionalfields'],
-                    key))
+        if action_type in self._ADDITIONALFIELDS:
+          for key, value in self._ADDITIONALFIELDS[action_type].items():
+            additional_value = self._ParseDataFromAdditionalFields(
+                tmp_row['additionalfields'], key)
+            setattr(event_data, value, additional_value)
 
       parser_mediator.ProduceEventData(event_data)
 
     except (TypeError, ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning(
           'Unable to parse page record with error: {0!s}'.format(
-          exception))
+              exception))
 
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
@@ -1680,8 +1786,6 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
     if len(row) < self._MINIMUM_NUMBER_OF_COLUMNS:
       return False
 
-    # Check the date format
-    # If it doesn't parse, then this isn't a M365 Defender export.
     timestamp_value = row.get('Timestamp', None)
     if timestamp_value != 'Timestamp':
       try:
@@ -1693,4 +1797,4 @@ class DefenderDeviceFileEventsParser(dsv_parser.DSVParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(DefenderDeviceFileEventsParser)
+manager.ParsersManager.RegisterParser(DefenderAdvancedHuntingCSVParser)

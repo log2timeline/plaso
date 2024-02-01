@@ -1,6 +1,6 @@
-# Plaso M365 Defender related event formatters.
+# Plaso Microsoft Defender related event formatters.
 ---
-# M365 Defender Activity Log
+# M365 Activity Log
 type: 'conditional'
 data_type: 'm365:activitylog:event'
 message:
@@ -8,11 +8,11 @@ message:
 short_message:
 - '{description}'
 short_source: 'MD-ACT'
-source: 'M365 Defender - Activity Log'
+source: 'M365 - Activity Log'
 ---
-# M365 Defender Advanced Hunting - ImageLoaded
+# Microsoft Defender Advanced Hunting - ImageLoaded
 type: 'conditional'
-data_type: 'm365:defenderah:imageloaded'
+data_type: 'defender:hunting:imageloaded'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Image {filename} loaded'
@@ -21,11 +21,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'Image {filename} loaded'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ProcessCreated
+# Microsoft Defender Advanced Hunting - ProcessCreated
 type: 'conditional'
-data_type: 'm365:defenderah:processcreated'
+data_type: 'defender:hunting:processcreated'
 message:
 - '[PID #{processid}]'
 - 'Process {filename} created by process'
@@ -37,11 +37,11 @@ short_message:
 - '[PPID #{initiatingprocessid}]'
 - '{initiatingprocessfilename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - OpenProcess
+# Microsoft Defender Advanced Hunting - OpenProcess
 type: 'conditional'
-data_type: 'm365:defenderah:openprocess'
+data_type: 'defender:hunting:openprocess'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Attempt to open process {filename}'
@@ -50,11 +50,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'Attempt to open process {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FileCreated
+# Microsoft Defender Advanced Hunting - FileCreated
 type: 'conditional'
-data_type: 'm365:defenderah:filecreated'
+data_type: 'defender:hunting:filecreated'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{requestprotocol}:'
@@ -64,11 +64,11 @@ short_message:
 - '{requestprotocol}:'
 - 'File {filename} created'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FileDeleted
+# Microsoft Defender Advanced Hunting - FileDeleted
 type: 'conditional'
-data_type: 'm365:defenderah:filedeleted'
+data_type: 'defender:hunting:filedeleted'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{requestprotocol}:'
@@ -78,11 +78,11 @@ short_message:
 - '{requestprotocol}:'
 - 'File {filename} deleted'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FileModified
+# Microsoft Defender Advanced Hunting - FileModified
 type: 'conditional'
-data_type: 'm365:defenderah:filemodified'
+data_type: 'defender:hunting:filemodified'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{requestprotocol}:'
@@ -92,11 +92,11 @@ short_message:
 - '{requestprotocol}:'
 - 'File {filename} modified'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FileRenamed
+# Microsoft Defender Advanced Hunting - FileRenamed
 type: 'conditional'
-data_type: 'm365:defenderah:filerenamed'
+data_type: 'defender:hunting:filerenamed'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{requestprotocol}:'
@@ -108,11 +108,11 @@ short_message:
 - 'File {previousfilename} renamed to'
 - '{filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - LogonAttempted
+# Microsoft Defender Advanced Hunting - LogonAttempted
 type: 'conditional'
-data_type: 'm365:defenderah:logonattempted'
+data_type: 'defender:hunting:logonattempted'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{logontype}:'
@@ -128,11 +128,11 @@ short_message:
 - '\'
 - '{accountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - LogonFailed
+# Microsoft Defender Advanced Hunting - LogonFailed
 type: 'conditional'
-data_type: 'm365:defenderah:logonfailed'
+data_type: 'defender:hunting:logonfailed'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{logontype}:'
@@ -149,11 +149,11 @@ short_message:
 - '\'
 - '{accountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - LogonSuccess
+# Microsoft Defender Advanced Hunting - LogonSuccess
 type: 'conditional'
-data_type: 'm365:defenderah:logonsuccess'
+data_type: 'defender:hunting:logonsuccess'
 message:
 - '[PID #{initiatingprocessid}]'
 - '{logontype}:'
@@ -169,11 +169,11 @@ short_message:
 - '\'
 - '{accountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RegistryKeyCreated
+# Microsoft Defender Advanced Hunting - RegistryKeyCreated
 type: 'conditional'
-data_type: 'm365:defenderah:registrykeycreated'
+data_type: 'defender:hunting:registrykeycreated'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Registry key'
@@ -185,11 +185,11 @@ short_message:
 - '{registrykey}'
 - 'created'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RegistryKeyDeleted
+# Microsoft Defender Advanced Hunting - RegistryKeyDeleted
 type: 'conditional'
-data_type: 'm365:defenderah:registrykeydeleted'
+data_type: 'defender:hunting:registrykeydeleted'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Registry key'
@@ -201,11 +201,11 @@ short_message:
 - '{previousregistrykey}'
 - 'deleted'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RegistryKeyRenamed
+# Microsoft Defender Advanced Hunting - RegistryKeyRenamed
 type: 'conditional'
-data_type: 'm365:defenderah:registrykeyrenamed'
+data_type: 'defender:hunting:registrykeyrenamed'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Registry key'
@@ -217,11 +217,11 @@ short_message:
 - '{previousregistrykey}'
 - 'renamed'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RegistryValueDeleted
+# Microsoft Defender Advanced Hunting - RegistryValueDeleted
 type: 'conditional'
-data_type: 'm365:defenderah:registryvaluedeleted'
+data_type: 'defender:hunting:registryvaluedeleted'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Registry value'
@@ -235,11 +235,11 @@ short_message:
 - 'at {previousregistrykey}'
 - 'deleted'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RegistryValueSet
+# Microsoft Defender Advanced Hunting - RegistryValueSet
 type: 'conditional'
-data_type: 'm365:defenderah:registryvalueset'
+data_type: 'defender:hunting:registryvalueset'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Registry value'
@@ -253,11 +253,11 @@ short_message:
 - 'at {registrykey}'
 - 'changed'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ClickAllowed
+# Microsoft Defender Advanced Hunting - ClickAllowed
 type: 'conditional'
-data_type: 'm365:defenderah:clickallowed'
+data_type: 'defender:hunting:clickallowed'
 message:
 - '{workload} -'
 - 'Click allowed:'
@@ -267,11 +267,11 @@ short_message:
 - 'Click allowed:'
 - '{url}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ClickBlocked
+# Microsoft Defender Advanced Hunting - ClickBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:clickblocked'
+data_type: 'defender:hunting:clickblocked'
 message:
 - '{workload} -'
 - 'Click blocked:'
@@ -283,11 +283,11 @@ short_message:
 - '[Threat types: {threattypes}]'
 - '{url}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ClickBlockedByTenantPolicy
+# Microsoft Defender Advanced Hunting - ClickBlockedByTenantPolicy
 type: 'conditional'
-data_type: 'm365:defenderah:clickblockedbytenantpolicy'
+data_type: 'defender:hunting:clickblockedbytenantpolicy'
 message:
 - '{workload} -'
 - 'Click blocked by policy:'
@@ -297,11 +297,11 @@ short_message:
 - 'Click blocked by policy:'
 - '{url}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - UrlErrorPage
+# Microsoft Defender Advanced Hunting - UrlErrorPage
 type: 'conditional'
-data_type: 'm365:defenderah:urlerrorpage'
+data_type: 'defender:hunting:urlerrorpage'
 message:
 - '{workload} -'
 - 'URL error:'
@@ -311,11 +311,11 @@ short_message:
 - 'URL error:'
 - '{url}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - UrlScanInProgress
+# Microsoft Defender Advanced Hunting - UrlScanInProgress
 type: 'conditional'
-data_type: 'm365:defenderah:urlscaninprogress'
+data_type: 'defender:hunting:urlscaninprogress'
 message:
 - '{workload} -'
 - 'URL scanning in progress:'
@@ -325,11 +325,11 @@ short_message:
 - 'URL scanning in progress:'
 - '{url}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ConnectionFailed
+# Microsoft Defender Advanced Hunting - ConnectionFailed
 type: 'conditional'
-data_type: 'm365:defenderah:connectionfailed'
+data_type: 'defender:hunting:connectionfailed'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Connection failed for process {initiatingprocessfilename}'
@@ -348,11 +348,11 @@ short_message:
 - '-> {remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ConnectionFound
+# Microsoft Defender Advanced Hunting - ConnectionFound
 type: 'conditional'
-data_type: 'm365:defenderah:connectionfound'
+data_type: 'defender:hunting:connectionfound'
 message:
 - 'Connection found for process {initiatingprocessfilename}'
 - '[{protocol}]'
@@ -369,11 +369,11 @@ short_message:
 - '-> {remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ConnectionRequest
+# Microsoft Defender Advanced Hunting - ConnectionRequest
 type: 'conditional'
-data_type: 'm365:defenderah:connectionrequest'
+data_type: 'defender:hunting:connectionrequest'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Connection request for process {initiatingprocessfilename}'
@@ -392,11 +392,11 @@ short_message:
 - '-> {remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ConnectionSuccess
+# Microsoft Defender Advanced Hunting - ConnectionSuccess
 type: 'conditional'
-data_type: 'm365:defenderah:connectionsuccess'
+data_type: 'defender:hunting:connectionsuccess'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Connection success for process {initiatingprocessfilename}'
@@ -415,21 +415,21 @@ short_message:
 - '-> {remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - DnsConnectionInspected
+# Microsoft Defender Advanced Hunting - DnsConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:dnsconnectioninspected'
+data_type: 'defender:hunting:dnsconnectioninspected'
 message:
 - 'DNS query inspected: {dnsquery}'
 short_message:
 - 'DNS query inspected: {dnsquery}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FtpConnectionInspected
+# Microsoft Defender Advanced Hunting - FtpConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:ftpconnectioninspected'
+data_type: 'defender:hunting:ftpconnectioninspected'
 message:
 - 'FTP connection inspected:'
 - '[{protocol}]'
@@ -447,11 +447,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - HttpConnectionInspected
+# Microsoft Defender Advanced Hunting - HttpConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:httpconnectioninspected'
+data_type: 'defender:hunting:httpconnectioninspected'
 message:
 - 'HTTP connection inspected: {host}'
 - '[{protocol}]'
@@ -469,11 +469,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - IcmpConnectionInspected
+# Microsoft Defender Advanced Hunting - IcmpConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:icmpconnectioninspected'
+data_type: 'defender:hunting:icmpconnectioninspected'
 message:
 - 'ICMP connection inspected'
 - '[{protocol}]'
@@ -487,11 +487,11 @@ short_message:
 - '{direction}'
 - '{remoteip}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - InboundConnectionAccepted
+# Microsoft Defender Advanced Hunting - InboundConnectionAccepted
 type: 'conditional'
-data_type: 'm365:defenderah:inboundconnectionaccepted'
+data_type: 'defender:hunting:inboundconnectionaccepted'
 message:
 - 'Inbound connection accepted:'
 - '[{protocol}]'
@@ -509,11 +509,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - InboundInternetScanInspected
+# Microsoft Defender Advanced Hunting - InboundInternetScanInspected
 type: 'conditional'
-data_type: 'm365:defenderah:inboundinternetscaninspected'
+data_type: 'defender:hunting:inboundinternetscaninspected'
 message:
 - 'Microsoft Defender External Attack Surface Management scan was inspected:'
 - '[{protocol}]'
@@ -531,11 +531,11 @@ short_message:
 - '{localip}'
 - ': {localport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ListeningConnectionCreated
+# Microsoft Defender Advanced Hunting - ListeningConnectionCreated
 type: 'conditional'
-data_type: 'm365:defenderah:listeningconnectioncreated'
+data_type: 'defender:hunting:listeningconnectioncreated'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Process {initiatingprocessfilename} listening on port'
@@ -549,11 +549,11 @@ short_message:
 - '{localip}'
 - ': {localport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - NetworkSignatureInspected
+# Microsoft Defender Advanced Hunting - NetworkSignatureInspected
 type: 'conditional'
-data_type: 'm365:defenderah:networksignatureinspected'
+data_type: 'defender:hunting:networksignatureinspected'
 message:
 - 'A packet content was inspected:'
 - '{remoteip}'
@@ -569,11 +569,11 @@ short_message:
 - '{localip}'
 - ': {localport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - NtlmAuthenticationInspected
+# Microsoft Defender Advanced Hunting - NtlmAuthenticationInspected
 type: 'conditional'
-data_type: 'm365:defenderah:ntlmauthenticationinspected'
+data_type: 'defender:hunting:ntlmauthenticationinspected'
 message:
 - 'NTLM authentication inspected:'
 - '[{protocol}]'
@@ -591,11 +591,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SmtpConnectionInspected
+# Microsoft Defender Advanced Hunting - SmtpConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:smtpconnectioninspected'
+data_type: 'defender:hunting:smtpconnectioninspected'
 message:
 - 'SMTP connection inspected:'
 - '[{protocol}]'
@@ -613,11 +613,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SshConnectionInspected
+# Microsoft Defender Advanced Hunting - SshConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:sshconnectioninspected'
+data_type: 'defender:hunting:sshconnectioninspected'
 message:
 - 'SSH connection inspected:'
 - '[{protocol}]'
@@ -635,11 +635,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SslConnectionInspected
+# Microsoft Defender Advanced Hunting - SslConnectionInspected
 type: 'conditional'
-data_type: 'm365:defenderah:sslconnectioninspected'
+data_type: 'defender:hunting:sslconnectioninspected'
 message:
 - 'SSL authentication inspected: {server_name}'
 - '[{protocol}]'
@@ -657,31 +657,31 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdated
+# Microsoft Defender Advanced Hunting - AntivirusDefinitionsUpdated
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusdefinitionsupdated'
+data_type: 'defender:hunting:antivirusdefinitionsupdated'
 message:
 - 'AV - Security intelligence updates for Windows Defender Antivirus were applied successfully'
 short_message:
 - 'AV - Security intelligence updates for Windows Defender Antivirus were applied successfully'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusDefinitionsUpdateFailed
+# Microsoft Defender Advanced Hunting - AntivirusDefinitionsUpdateFailed
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusdefinitionsupdatefailed'
+data_type: 'defender:hunting:antivirusdefinitionsupdatefailed'
 message:
 - 'AV - Security intelligence updates for Windows Defender Antivirus were not applied'
 short_message:
 - 'AV - Security intelligence updates for Windows Defender Antivirus were not applied'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusDetection
+# Microsoft Defender Advanced Hunting - AntivirusDetection
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusdetection'
+data_type: 'defender:hunting:antivirusdetection'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus detected a threat at file {filename}'
@@ -689,31 +689,31 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus detected a threat at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusEmergencyUpdatesInstalled
+# Microsoft Defender Advanced Hunting - AntivirusEmergencyUpdatesInstalled
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusemergencyupdatesinstalled'
+data_type: 'defender:hunting:antivirusemergencyupdatesinstalled'
 message:
 - 'AV - Emergency security intelligence updates for Windows Defender Antivirus were applied'
 short_message:
 - 'AV - Emergency security intelligence updates for Windows Defender Antivirus were applied'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusError
+# Microsoft Defender Advanced Hunting - AntivirusError
 type: 'conditional'
-data_type: 'm365:defenderah:antiviruserror'
+data_type: 'defender:hunting:antiviruserror'
 message:
 - 'AV - Windows Defender Antivirus encountered an error while taking action on malware or a potentially unwanted application'
 short_message:
 - 'AV - Windows Defender Antivirus encountered an error while taking action on malware or a potentially unwanted application'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusMalwareActionFailed
+# Microsoft Defender Advanced Hunting - AntivirusMalwareActionFailed
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusmalwareactionfailed'
+data_type: 'defender:hunting:antivirusmalwareactionfailed'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus attempted to take action on malware or a potentially unwanted application but the action failed at file {filename}'
@@ -721,11 +721,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus attempted to take action on malware or a potentially unwanted application but the action failed at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusMalwareBlocked
+# Microsoft Defender Advanced Hunting - AntivirusMalwareBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusmalwareblocked'
+data_type: 'defender:hunting:antivirusmalwareblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus blocked files or activity involving malware potentially unwanted applications or suspicious behavior at file {filename}'
@@ -733,11 +733,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Windows Defender Antivirus blocked files or activity involving malware potentially unwanted applications or suspicious behavior at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusReport
+# Microsoft Defender Advanced Hunting - AntivirusReport
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusreport'
+data_type: 'defender:hunting:antivirusreport'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Microsoft Defender Antivirus reported a threat, which can either be a memory, boot sector, or rootkit threat'
@@ -745,31 +745,31 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'AV - Microsoft Defender Antivirus reported a threat, which can either be a memory, boot sector, or rootkit threat'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusScanCancelled
+# Microsoft Defender Advanced Hunting - AntivirusScanCancelled
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusscancancelled'
+data_type: 'defender:hunting:antivirusscancancelled'
 message:
 - 'AV - A Windows Defender Antivirus scan was cancelled'
 short_message:
 - 'AV - A Windows Defender Antivirus scan was cancelled'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AntivirusScanCompleted
+# Microsoft Defender Advanced Hunting - AntivirusScanCompleted
 type: 'conditional'
-data_type: 'm365:defenderah:antivirusscancompleted'
+data_type: 'defender:hunting:antivirusscancompleted'
 message:
 - 'AV - A Windows Defender Antivirus scan completed successfully'
 short_message:
 - 'AV - A Windows Defender Antivirus scan completed successfully'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrAdobeReaderChildProcessBlocked
+# Microsoft Defender Advanced Hunting - AsrAdobeReaderChildProcessBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asradobereaderchildprocessblocked'
+data_type: 'defender:hunting:asradobereaderchildprocessblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked Adobe Reader from creating a child process at file {filename}'
@@ -777,11 +777,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked Adobe Reader from creating a child process at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrExecutableEmailContentBlocked
+# Microsoft Defender Advanced Hunting - AsrExecutableEmailContentBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrexecutableemailcontentblocked'
+data_type: 'defender:hunting:asrexecutableemailcontentblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked executable content from an email client and or webmail at file {filename}'
@@ -789,11 +789,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked executable content from an email client and or webmail at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrExecutableOfficeContentBlocked
+# Microsoft Defender Advanced Hunting - AsrExecutableOfficeContentBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrexecutableofficecontentblocked'
+data_type: 'defender:hunting:asrexecutableofficecontentblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from creating executable content at file {filename}'
@@ -801,11 +801,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from creating executable content at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrLsassCredentialTheftBlocked
+# Microsoft Defender Advanced Hunting - AsrLsassCredentialTheftBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrlsasscredentialtheftblocked'
+data_type: 'defender:hunting:asrlsasscredentialtheftblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked possible credential theft from lsass.exe at file {filename}'
@@ -813,11 +813,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked possible credential theft from lsass.exe at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrObfuscatedScriptBlocked
+# Microsoft Defender Advanced Hunting - AsrObfuscatedScriptBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrobfuscatedscriptblocked'
+data_type: 'defender:hunting:asrobfuscatedscriptblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of scripts that appear obfuscated at file {filename}'
@@ -825,11 +825,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of scripts that appear obfuscated at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrOfficeChildProcessBlocked
+# Microsoft Defender Advanced Hunting - AsrOfficeChildProcessBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrofficechildprocessblocked'
+data_type: 'defender:hunting:asrofficechildprocessblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from creating child processes at file {filename}'
@@ -837,11 +837,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from creating child processes at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrOfficeCommAppChildProcessBlocked
+# Microsoft Defender Advanced Hunting - AsrOfficeCommAppChildProcessBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrofficecommappchildprocessblocked'
+data_type: 'defender:hunting:asrofficecommappchildprocessblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office communication app from spawning a child process at file {filename}'
@@ -849,11 +849,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office communication app from spawning a child process at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrOfficeMacroWin32ApiCallsBlocked
+# Microsoft Defender Advanced Hunting - AsrOfficeMacroWin32ApiCallsBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrofficemacrowin32apicallsblocked'
+data_type: 'defender:hunting:asrofficemacrowin32apicallsblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked Win32 API calls from Office macros at file {filename}'
@@ -861,11 +861,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked Win32 API calls from Office macros at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrOfficeProcessInjectionBlocked
+# Microsoft Defender Advanced Hunting - AsrOfficeProcessInjectionBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrofficeprocessinjectionblocked'
+data_type: 'defender:hunting:asrofficeprocessinjectionblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from injecting code into other processes at file {filename}'
@@ -873,11 +873,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an Office application from injecting code into other processes at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrPersistenceThroughWmiBlocked
+# Microsoft Defender Advanced Hunting - AsrPersistenceThroughWmiBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrpersistencethroughwmiblocked'
+data_type: 'defender:hunting:asrpersistencethroughwmiblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an attempt to establish persistence through WMI event subscription at file {filename}'
@@ -885,11 +885,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked an attempt to establish persistence through WMI event subscription at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrPsexecWmiChildProcessBlocked
+# Microsoft Defender Advanced Hunting - AsrPsexecWmiChildProcessBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrpsexecwmichildprocessblocked'
+data_type: 'defender:hunting:asrpsexecwmichildprocessblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the use of PsExec or WMI commands to spawn a child process at file {filename}'
@@ -897,11 +897,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the use of PsExec or WMI commands to spawn a child process at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrRansomwareBlocked
+# Microsoft Defender Advanced Hunting - AsrRansomwareBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrransomwareblocked'
+data_type: 'defender:hunting:asrransomwareblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked ransomware activity at file {filename}'
@@ -909,11 +909,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked ransomware activity at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrScriptExecutableDownloadBlocked
+# Microsoft Defender Advanced Hunting - AsrScriptExecutableDownloadBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrscriptexecutabledownloadblocked'
+data_type: 'defender:hunting:asrscriptexecutabledownloadblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked JavaScript or VBScript code from launching downloaded executable content at file {filename}'
@@ -921,11 +921,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked JavaScript or VBScript code from launching downloaded executable content at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrUntrustedExecutableBlocked
+# Microsoft Defender Advanced Hunting - AsrUntrustedExecutableBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asruntrustedexecutableblocked'
+data_type: 'defender:hunting:asruntrustedexecutableblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of an untrusted file that does not meet criteria for age or prevalence at file {filename}'
@@ -933,11 +933,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of an untrusted file that does not meet criteria for age or prevalence at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrUntrustedUsbProcessBlocked
+# Microsoft Defender Advanced Hunting - AsrUntrustedUsbProcessBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asruntrustedusbprocessblocked'
+data_type: 'defender:hunting:asruntrustedusbprocessblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of an untrusted and unsigned processes from a USB device at file {filename}'
@@ -945,11 +945,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked the execution of an untrusted and unsigned processes from a USB device at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - AsrVulnerableSignedDriverBlocked
+# Microsoft Defender Advanced Hunting - AsrVulnerableSignedDriverBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:asrvulnerablesigneddriverblocked'
+data_type: 'defender:hunting:asrvulnerablesigneddriverblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked a signed driver that has known vulnerabilities at file {filename}'
@@ -957,11 +957,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'ASR - rule blocked a signed driver that has known vulnerabilities at file {filename}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - BrowserLaunchedToOpenUrl
+# Microsoft Defender Advanced Hunting - BrowserLaunchedToOpenUrl
 type: 'conditional'
-data_type: 'm365:defenderah:browserlaunchedtoopenurl'
+data_type: 'defender:hunting:browserlaunchedtoopenurl'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A web browser opened a URL that originated as a link in another application'
@@ -971,11 +971,11 @@ short_message:
 - 'A web browser opened a URL that originated as a link in another application'
 - 'URL: {remoteurl}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - DnsQueryResponse
+# Microsoft Defender Advanced Hunting - DnsQueryResponse
 type: 'conditional'
-data_type: 'm365:defenderah:dnsqueryresponse'
+data_type: 'defender:hunting:dnsqueryresponse'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A response to a DNS query was sent'
@@ -985,11 +985,11 @@ short_message:
 - 'A response to a DNS query was sent'
 - 'Query: {dnsquery}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FirewallInboundConnectionBlocked
+# Microsoft Defender Advanced Hunting - FirewallInboundConnectionBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:firewallinboundconnectionblocked'
+data_type: 'defender:hunting:firewallinboundconnectionblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'FW - Inbound connection was blocked:'
@@ -1007,11 +1007,11 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FirewallInboundConnectionToAppBlocked
+# Microsoft Defender Advanced Hunting - FirewallInboundConnectionToAppBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:firewallinboundconnectiontoappblocked'
+data_type: 'defender:hunting:firewallinboundconnectiontoappblocked'
 message:
 - 'FW - Inbound connection to an app was blocked:'
 - '{initiatingprocessfolderpath}'
@@ -1019,11 +1019,11 @@ short_message:
 - 'FW - Inbound connection to an app was blocked:'
 - '{initiatingprocessfolderpath}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FirewallOutboundConnectionBlocked
+# Microsoft Defender Advanced Hunting - FirewallOutboundConnectionBlocked
 type: 'conditional'
-data_type: 'm365:defenderah:firewalloutboundconnectionblocked'
+data_type: 'defender:hunting:firewalloutboundconnectionblocked'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'FW - Outbound connection was blocked:'
@@ -1041,21 +1041,21 @@ short_message:
 - '{remoteip}'
 - ': {remoteport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - FirewallServiceStopped
+# Microsoft Defender Advanced Hunting - FirewallServiceStopped
 type: 'conditional'
-data_type: 'm365:defenderah:firewallservicestopped'
+data_type: 'defender:hunting:firewallservicestopped'
 message:
 - 'FW - Service stopped'
 short_message:
 - 'FW - Service stopped'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - GetClipboardData
+# Microsoft Defender Advanced Hunting - GetClipboardData
 type: 'conditional'
-data_type: 'm365:defenderah:getclipboarddata'
+data_type: 'defender:hunting:getclipboarddata'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'The GetClipboardData function was called'
@@ -1063,11 +1063,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'The GetClipboardData function was called'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - NetworkProtectionUserBypassEvent
+# Microsoft Defender Advanced Hunting - NetworkProtectionUserBypassEvent
 type: 'conditional'
-data_type: 'm365:defenderah:networkprotectionuserbypassevent'
+data_type: 'defender:hunting:networkprotectionuserbypassevent'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A user has bypassed network protection and accessed a blocked IP address, domain, or URL'
@@ -1075,11 +1075,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A user has bypassed network protection and accessed a blocked IP address, domain, or URL'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - NetworkShareObjectAdded
+# Microsoft Defender Advanced Hunting - NetworkShareObjectAdded
 type: 'conditional'
-data_type: 'm365:defenderah:networkshareobjectadded'
+data_type: 'defender:hunting:networkshareobjectadded'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A file or folder was shared on the network'
@@ -1087,11 +1087,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A file or folder was shared on the network'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - PowerShellCommand
+# Microsoft Defender Advanced Hunting - PowerShellCommand
 type: 'conditional'
-data_type: 'm365:defenderah:powershellcommand'
+data_type: 'defender:hunting:powershellcommand'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'PowerShell command executed: {pscommand}'
@@ -1099,11 +1099,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'PowerShell command executed: {pscommand}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ProcessCreatedUsingWmiQuery
+# Microsoft Defender Advanced Hunting - ProcessCreatedUsingWmiQuery
 type: 'conditional'
-data_type: 'm365:defenderah:processcreatedusingwmiquery'
+data_type: 'defender:hunting:processcreatedusingwmiquery'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A process was created using Windows Management Instrumentation (WMI)'
@@ -1111,11 +1111,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A process was created using Windows Management Instrumentation (WMI)'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RemoteDesktopConnection
+# Microsoft Defender Advanced Hunting - RemoteDesktopConnection
 type: 'conditional'
-data_type: 'm365:defenderah:remotedesktopconnection'
+data_type: 'defender:hunting:remotedesktopconnection'
 message:
 - 'Inbound Remote Desktop connection was established from'
 - '{localip}'
@@ -1125,11 +1125,11 @@ short_message:
 - '{localip}'
 - ': {localport}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - RemoteWmiOperation
+# Microsoft Defender Advanced Hunting - RemoteWmiOperation
 type: 'conditional'
-data_type: 'm365:defenderah:remotewmioperation'
+data_type: 'defender:hunting:remotewmioperation'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A Windows Management Instrumentation (WMI) operation was initiated from a remote device'
@@ -1137,11 +1137,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A Windows Management Instrumentation (WMI) operation was initiated from a remote device'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ScheduledTaskCreated
+# Microsoft Defender Advanced Hunting - ScheduledTaskCreated
 type: 'conditional'
-data_type: 'm365:defenderah:scheduledtaskcreated'
+data_type: 'defender:hunting:scheduledtaskcreated'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A scheduled task {taskname} was created'
@@ -1149,11 +1149,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A scheduled task {taskname} was created'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ScreenshotTaken
+# Microsoft Defender Advanced Hunting - ScreenshotTaken
 type: 'conditional'
-data_type: 'm365:defenderah:screenshottaken'
+data_type: 'defender:hunting:screenshottaken'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A screenshot was taken'
@@ -1161,11 +1161,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'A screenshot was taken'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ScriptContent
+# Microsoft Defender Advanced Hunting - ScriptContent
 type: 'conditional'
-data_type: 'm365:defenderah:scriptcontent'
+data_type: 'defender:hunting:scriptcontent'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'The content of script'
@@ -1173,11 +1173,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'The content of script'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SecurityGroupCreated
+# Microsoft Defender Advanced Hunting - SecurityGroupCreated
 type: 'conditional'
-data_type: 'm365:defenderah:securitygroupcreated'
+data_type: 'defender:hunting:securitygroupcreated'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'A security group {groupname} was created by'
@@ -1189,11 +1189,11 @@ short_message:
 - '{initiatingprocessaccountdomain}'
 - '\ {initiatingprocessaccountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SecurityLogCleared
+# Microsoft Defender Advanced Hunting - SecurityLogCleared
 type: 'conditional'
-data_type: 'm365:defenderah:securitylogcleared'
+data_type: 'defender:hunting:securitylogcleared'
 message:
 - 'The security log was cleared by'
 - '{initiatingprocessaccountdomain}'
@@ -1203,11 +1203,11 @@ short_message:
 - '{initiatingprocessaccountdomain}'
 - '\ {initiatingprocessaccountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - ServiceInstalled
+# Microsoft Defender Advanced Hunting - ServiceInstalled
 type: 'conditional'
-data_type: 'm365:defenderah:serviceinstalled'
+data_type: 'defender:hunting:serviceinstalled'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'Service {servicename} installed'
@@ -1215,11 +1215,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'Service {servicename} installed'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SmartScreenAppWarning
+# Microsoft Defender Advanced Hunting - SmartScreenAppWarning
 type: 'conditional'
-data_type: 'm365:defenderah:smartscreenappwarning'
+data_type: 'defender:hunting:smartscreenappwarning'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about running a downloaded application {filename} that is untrusted or malicious'
@@ -1227,11 +1227,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about running a downloaded application {filename} that is untrusted or malicious'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SmartScreenExploitWarning
+# Microsoft Defender Advanced Hunting - SmartScreenExploitWarning
 type: 'conditional'
-data_type: 'm365:defenderah:smartscreenexploitwarning'
+data_type: 'defender:hunting:smartscreenexploitwarning'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about opening a web page {remoteurl} that contains an exploit'
@@ -1239,11 +1239,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about opening a web page {remoteurl} that contains an exploit'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - SmartScreenUrlWarning
+# Microsoft Defender Advanced Hunting - SmartScreenUrlWarning
 type: 'conditional'
-data_type: 'm365:defenderah:smartscreenurlwarning'
+data_type: 'defender:hunting:smartscreenurlwarning'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about opening a low-reputation URL {remoteurl} that might be hosting malware or is a phishing site'
@@ -1251,11 +1251,11 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'SmartScreen warned about opening a low-reputation URL {remoteurl} that might be hosting malware or is a phishing site'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - TamperingAttempt
+# Microsoft Defender Advanced Hunting - TamperingAttempt
 type: 'conditional'
-data_type: 'm365:defenderah:tamperingattempt'
+data_type: 'defender:hunting:tamperingattempt'
 message:
 - '[PID #{initiatingprocessid}]'
 - 'An attempt to change Microsoft Defender 365 settings was made'
@@ -1263,21 +1263,21 @@ short_message:
 - '[PID #{initiatingprocessid}]'
 - 'An attempt to change Microsoft Defender 365 settings was made'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - UntrustedWifiConnection
+# Microsoft Defender Advanced Hunting - UntrustedWifiConnection
 type: 'conditional'
-data_type: 'm365:defenderah:untrustedwificonnection'
+data_type: 'defender:hunting:untrustedwificonnection'
 message:
 - 'A connection was established to an open Wi-Fi access point'
 short_message:
 - 'A connection was established to an open Wi-Fi access point'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - UserAccountAddedToLocalGroup
+# Microsoft Defender Advanced Hunting - UserAccountAddedToLocalGroup
 type: 'conditional'
-data_type: 'm365:defenderah:useraccountaddedtolocalgroup'
+data_type: 'defender:hunting:useraccountaddedtolocalgroup'
 message:
 - 'A user was added to a security-enabled local group'
 - '{groupdomainname}'
@@ -1291,11 +1291,11 @@ short_message:
 - 'by {initiatingprocessaccountdomain}'
 - '\ {initiatingprocessaccountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
 ---
-# M365 Defender Advanced Hunting - UserAccountCreated
+# Microsoft Defender Advanced Hunting - UserAccountCreated
 type: 'conditional'
-data_type: 'm365:defenderah:useraccountcreated'
+data_type: 'defender:hunting:useraccountcreated'
 message:
 - 'A local SAM account or a domain account'
 - '{accountdomain}'
@@ -1309,4 +1309,4 @@ short_message:
 - 'by {initiatingprocessaccountdomain}'
 - '\ {initiatingprocessaccountname}'
 short_source: 'MD-AH'
-source: 'M365 Defender - Advanced Hunting'
+source: 'Microsoft Defender - Advanced Hunting'
