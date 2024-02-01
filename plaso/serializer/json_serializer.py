@@ -75,7 +75,7 @@ class JSONAttributeContainerSerializer(object):
     return {
         '__encoding__': 'base16',
         '__type__': 'bytes',
-        'stream': '{0:s}'.format(encoded_value)}
+        'stream': '{encoded_value:s}'}
 
   @classmethod
   def _ConvertCollectionsCounterToJSON(cls, counter_value):
@@ -144,8 +144,8 @@ class JSONAttributeContainerSerializer(object):
 
         if attribute_name not in ('__container_type__', '__type__'):
           logger.debug((
-              '[_ConvertJSONToAttributeContainer] unsupported attribute name: '
-              '{0:s}.{1:s}').format(container_type, attribute_name))
+              f'[_ConvertJSONToAttributeContainer] unsupported attribute name: '
+              f'{container_type:s}.{attribute_name:s}'))
 
         continue
 
@@ -158,13 +158,13 @@ class JSONAttributeContainerSerializer(object):
       if container_type == 'event_data':
         if isinstance(attribute_value, bytes):
           raise ValueError((
-              'Event data attribute value: {0:s} of type bytes is not '
-              'supported.').format(attribute_name))
+              f'Event data attribute value: {attribute_name:s} of type bytes '
+              f'is not supported.'))
 
         if isinstance(attribute_value, dict):
           raise ValueError((
-              'Event data attribute value: {0:s} of type dict is not '
-              'supported.').format(attribute_name))
+              f'Event data attribute value: {attribute_name:s} of type dict '
+              f'is not supported.'))
 
       setattr(attribute_container, attribute_name, attribute_value)
 
@@ -192,8 +192,7 @@ class JSONAttributeContainerSerializer(object):
     """
     encoding = json_dict.get('__encoding__', None) or 'base16'
     if encoding != 'base16':
-      raise ValueError(
-          'Unsupported byte stream encoding: {0:s}'.format(encoding))
+      raise ValueError(f'Unsupported byte stream encoding: {encoding:s}')
 
     return binascii.a2b_qp(json_dict['stream'])
 
@@ -288,8 +287,7 @@ class JSONAttributeContainerSerializer(object):
 
     convert_function = cls._convert_json_to_value.get(json_dict_type, None)
     if not convert_function:
-      raise ValueError('Unsupported JSON dictionary type: {0:s}'.format(
-          json_dict_type))
+      raise ValueError(f'Unsupported JSON dictionary type: {json_dict_type:s}')
 
     return convert_function(json_dict)
 
@@ -523,8 +521,9 @@ class JSONAttributeContainerSerializer(object):
       return json_object
 
     if not isinstance(json_object, containers_interface.AttributeContainer):
-      raise TypeError('{0!s} is not an attribute container type.'.format(
-          type(json_object)))
+      json_object_type = type(json_object)
+      raise TypeError(
+          f'{json_object_type!s} is not an attribute container type.')
 
     return json_object
 
