@@ -1,108 +1,182 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for MacOS login items plist files."""
+"""Plist parser plugin for Mac OS login items plist files."""
+
+import os
+
 from datetime import datetime
 
 from dfdatetime import hfs_time as dfdatetime_hfs_time
-from plistutils.alias import AliasParser
-from plistutils.bookmark import BookmarkParser
+
+from dtfabric import errors as dtfabric_errors
+from dtfabric.runtime import data_maps as dtfabric_data_maps
+
+# from plistutils.bookmark import BookmarkParser
 
 from plaso.containers import events
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class MacOSLoginItemsEventData(events.EventData):
-  """MacOS login items event data.
+class MacOSLoginItemEventData(events.EventData):
+  """Mac OS login item event data.
 
   Attributes:
-    name (str): name.
+    cnid_path (str): a "/" delimited string representing an array of CNIDs.
     hidden (bool): whether this login item is hidden.
-    cnid_path: a "/" delimited string representing an array of CNIDs.
-    volume_name: the name of the volume containing the target.
-    target_path: the full filesystem path to the target.
-    volume_mount_point: the location the volume is mounted on the filesystem.
-    creation_date: creation date of the login item alias data.
-    volume_creation_date: creation date of the volume.
-    volume_flags: a string containing ", "-separated names of volume flags.
+    name (str): name.
+    target_creation_time (dfdatetime.DateTimeValues): date and time the target
+        was created.
+    target_path (str): path of the target.
+    volume_creation_time (dfdatetime.DateTimeValues): date and time the (target)
+        volume was created.
+    volume_flags (int): volume flags.
+    volume_mount_point (str): location the volume is mounted on the file system.
+    volume_name (str): name of the volume containing the target.
   """
 
-  DATA_TYPE = 'macos:loginitems:entry'
+  DATA_TYPE = 'macos:login_item:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLoginItemsEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.name = None
-    self.hidden = None
+    super(MacOSLoginItemEventData, self).__init__(data_type=self.DATA_TYPE)
     self.cnid_path = None
-    self.volume_name = None
+    self.hidden = None
+    self.name = None
+    self.target_creation_time = None
     self.target_path = None
-    self.volume_mount_point = None
-    self.creation_date = None
-    self.volume_creation_date = None
+    self.volume_creation_time = None
     self.volume_flags = None
+    self.volume_mount_point = None
+    self.volume_name = None
 
 
-def _ConvertHFSDate(alias_date: datetime) -> dfdatetime_hfs_time.HFSTime:
-  hfs_epoch = dfdatetime_hfs_time.HFSTimeEpoch()
-  hfs_epoch_datetime = datetime(
-    year=hfs_epoch.year,
-    month=hfs_epoch.month,
-    day=hfs_epoch.day_of_month,
-  )
-  hfs_epoch_timedelta = alias_date - hfs_epoch_datetime
-  return dfdatetime_hfs_time.HFSTime(
-    timestamp=hfs_epoch_timedelta.total_seconds()
-  )
+class MacOSLoginItemsAliasDataPlistPlugin(
+    interface.PlistPlugin, dtfabric_helper.DtFabricHelper):
+  """Plist parser plugin for Mac OS login items with AliasData."""
 
-
-def _ParseBookmark(
-  parser_mediator,
-  filename: str,
-  idx: int,
-  bookmark_data: bytes
-):
-  """Extracts login item information from bookmark data.
-
-  Args:
-    parser_mediator (ParserMediator): mediates interactions between parsers
-      and other components, such as storage and dfVFS.
-    filename (str): filename of the plist file being processed.
-    idx (int): index of the bookmark data in the plist file.
-    bookmark_data (bytes): MacOS bookmark struct data.
-  """
-  bookmarks = BookmarkParser.parse_bookmark(
-    filename, idx, '$objects', bookmark_data
-  )
-  for bookmark in bookmarks:
-    event_data = MacOSLoginItemsEventData()
-    event_data.name = bookmark.get('display_name')
-    event_data.cnid_path = bookmark.get('inode_path')
-    event_data.volume_name = bookmark.get('volume_name')
-    event_data.target_path = bookmark.get('path')
-    event_data.volume_mount_point = bookmark.get('volume_path')
-    creation_date = bookmark.get('creation_date')
-    if creation_date is not None:
-      event_data.creation_date = _ConvertHFSDate(creation_date)
-    volume_creation_date = bookmark.get('volume_creation_date')
-    if volume_creation_date is not None:
-      event_data.volume_creation_date = _ConvertHFSDate(
-        volume_creation_date
-      )
-    event_data.volume_flags = bookmark.get('volume_props')
-    parser_mediator.ProduceEventData(event_data)
-
-
-class MacOS1012LoginItemsPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS login items plist files.
-  """
-
-  NAME = 'macos_1012_login_items_plist'
-  DATA_FORMAT = 'MacOS Sierra 10.12 and lower LoginItems plist file'
+  NAME = 'macos_login_items_plist_with_alias_data'
+  DATA_FORMAT = 'Mac OS com.apple.loginitems.plist file with AliasData'
 
   PLIST_PATH_FILTERS = frozenset([
-    interface.PlistPathFilter('com.apple.loginitems.plist'),
-  ])
+    interface.PlistPathFilter('com.apple.loginitems.plist')])
+
   PLIST_KEYS = frozenset(['SessionItems'])
+
+  _DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'alias_data.yaml')
+
+  def _ParseAliasData(self, alias_data, event_data):
+    """Parses an AliasData value.
+
+    Args:
+      alias_data (bytes): AliasData value.
+      event_data (MacOSLoginItemEventData): event data.
+
+    Raises:
+      ParseError: if the value cannot be parsed.
+    """
+    data_type_map = self._GetDataTypeMap('alias_data_record_header')
+
+    try:
+      record_header = data_type_map.MapByteStream(alias_data)
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError(
+          f'Unable to parse AliasData record header with error: {exception!s}')
+
+    # TODO: add format version 2 support, but need test data.
+    if record_header.format_version != 3:
+      raise errors.ParseError((
+          f'Unsupported AliasData format version: '
+          f'{record_header.format_version:d}'))
+
+    if record_header.application_information != b'\x00\x00\x00\x00':
+      raise errors.ParseError('Unsupported AliasData application information')
+
+    if record_header.record_size != len(alias_data):
+      raise errors.ParseError('Unsupported AliasData record size')
+
+    data_offset = 8
+
+    data_type_map = self._GetDataTypeMap('alias_data_record_v3')
+
+    try:
+      record_data = data_type_map.MapByteStream(alias_data[8:])
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError((
+          f'Unable to parse AliasData record data at offset: '
+          f'0x{data_offset:08x} with error: {exception!s}'))
+
+    data_offset += 50
+
+    hfs_timestamp, _ = divmod(record_data.target_creation_time, 65536)
+    event_data.target_creation_time = dfdatetime_hfs_time.HFSTime(
+        timestamp=hfs_timestamp)
+
+    event_data.volume_flags = record_data.volume_flags
+
+    hfs_timestamp, _ = divmod(record_data.volume_creation_time, 65536)
+    event_data.volume_creation_time = dfdatetime_hfs_time.HFSTime(
+        timestamp=hfs_timestamp)
+
+    relative_target_path = None
+
+    while data_offset < record_header.record_size:
+      # TODO: change tagged value to structure-group
+      data_type_map = self._GetDataTypeMap('alias_data_tagged_value')
+
+      context = dtfabric_data_maps.DataTypeMapContext()
+
+      try:
+        tagged_value = data_type_map.MapByteStream(
+            alias_data[data_offset:], context=context)
+      except dtfabric_errors.MappingError as exception:
+        raise errors.ParseError((
+            f'Unable to parse AliasData tagged value at offset: '
+            f'0x{data_offset:08x} with error: {exception!s}'))
+
+      data_offset += context.byte_size
+
+      if tagged_value.value_tag == 0xffff:
+        break
+
+      if tagged_value.value_tag == 0x000f:
+        event_data.volume_name = tagged_value.value_data[2:].decode('utf-16-be')
+
+      elif tagged_value.value_tag == 0x0012:
+        relative_target_path = tagged_value.value_data.decode('utf8')
+
+      elif tagged_value.value_tag == 0x0013:
+        volume_mount_point = tagged_value.value_data.decode('utf8')
+        if relative_target_path:
+          relative_target_path = ''.join([
+              volume_mount_point, relative_target_path])
+
+        event_data.volume_mount_point = volume_mount_point
+
+      elif tagged_value.value_tag == 0x0001:
+        # TODO: determine if this value useful to extract.
+        data_type_map = self._GetDataTypeMap('array_of_uint32be')
+
+        context = dtfabric_data_maps.DataTypeMapContext(values={
+            'elements_data_size': tagged_value.value_data_size})
+
+        try:
+          cnids_array = data_type_map.MapByteStream(
+              tagged_value.value_data, context=context)
+
+        except dtfabric_errors.MappingError as exception:
+          raise errors.ParseError((
+              f'Unable to parse array of 32-bit CNIDs with error: '
+              f'{exception!s}'))
+
+        event_data.cnid_path = '/'.join([f'{cnid:d}' for cnid in cnids_array])
+
+    if relative_target_path:
+      event_data.target_path = relative_target_path
+
+    return record_data
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
@@ -110,51 +184,88 @@ class MacOS1012LoginItemsPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfVFS.
+          and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     session_items = top_level.get('SessionItems')
-    if session_items:
-      custom_list_items = session_items.get('CustomListItems')
-      for i, custom_list_item in enumerate(custom_list_items):
-        event_data = MacOSLoginItemsEventData()
-        event_data.name = custom_list_item.get('Name')
-        properties = custom_list_item.get('CustomItemProperties', {})
-        event_data.hidden = properties.get(
-          'com.apple.LSSharedFileList.ItemIsHidden',
-          False,
-        )
-        alias_data = custom_list_item.get('Alias')
-        if alias_data is not None:
-          try:
-            alias = next(AliasParser.parse(
-              parser_mediator.GetFilename(), i, alias_data
-            ))
-            event_data.cnid_path = alias.get('cnid_path')
-            event_data.volume_name = alias.get('volume_name')
-            event_data.target_path = alias.get('path')
-            event_data.volume_mount_point = alias.get('volume_mount_point')
-            creation_date = alias.get('creation_date')
-            if creation_date is not None:
-              event_data.creation_date = _ConvertHFSDate(creation_date)
-            volume_creation_date = alias.get('volume_creation_date')
-            if volume_creation_date is not None:
-              event_data.volume_creation_date = _ConvertHFSDate(
-                volume_creation_date
-              )
-            event_data.volume_flags = alias.get('volume_flags')
-          except StopIteration:
-            pass
-        parser_mediator.ProduceEventData(event_data)
+    if not session_items:
+      return
+
+    for custom_list_item in session_items.get('CustomListItems'):
+      alias_data = custom_list_item.get('Alias')
+      properties = custom_list_item.get('CustomItemProperties', {})
+
+      event_data = MacOSLoginItemEventData()
+      event_data.name = custom_list_item.get('Name')
+      event_data.hidden = properties.get(
+          'com.apple.LSSharedFileList.ItemIsHidden', False)
+
+      if alias_data is not None:
+        self._ParseAliasData(alias_data, event_data)
+
+      parser_mediator.ProduceEventData(event_data)
 
 
-class MacOS1013LoginItemsPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS backgrounditems.btm plist files.
-  """
+class MacOSLoginItemsPlistPlugin(interface.PlistPlugin):
+  """Base plist parser plugin for Mac OS login items wth bookmark data."""
+
+  # pylint: disable=abstract-method
+
+  def _ConvertHFSDate(self, alias_date):
+    hfs_epoch = dfdatetime_hfs_time.HFSTimeEpoch()
+    hfs_epoch_datetime = datetime(
+      year=hfs_epoch.year,
+      month=hfs_epoch.month,
+      day=hfs_epoch.day_of_month,
+    )
+    hfs_epoch_timedelta = alias_date - hfs_epoch_datetime
+
+    return dfdatetime_hfs_time.HFSTime(
+      timestamp=hfs_epoch_timedelta.total_seconds()
+    )
+
+  def _ParseBookmark(
+      self, parser_mediator, filename, bookmark_index, bookmark_data):
+    """Extracts login item information from bookmark data.
+
+      Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+        and other components, such as storage and dfVFS.
+      filename (str): filename of the plist file being processed.
+      bookmark_index (int): index of the bookmark data in the plist file.
+      bookmark_data (bytes): Mac OS bookmark struct data.
+    """
+    bookmarks = BookmarkParser.parse_bookmark(
+        filename, bookmark_index, '$objects', bookmark_data)
+
+    for bookmark in bookmarks:
+      event_data = MacOSLoginItemEventData()
+      event_data.name = bookmark.get('display_name')
+      event_data.cnid_path = bookmark.get('inode_path')
+      event_data.volume_name = bookmark.get('volume_name')
+      event_data.target_path = bookmark.get('path')
+      event_data.volume_mount_point = bookmark.get('volume_path')
+
+      creation_date = bookmark.get('creation_date')
+      if creation_date is not None:
+        event_data.target_creation_time = self._ConvertHFSDate(creation_date)
+
+      volume_creation_date = bookmark.get('volume_creation_date')
+      if volume_creation_date is not None:
+        event_data.volume_creation_time = self._ConvertHFSDate(
+          volume_creation_date)
+
+      event_data.volume_flags = bookmark.get('volume_props')
+
+      parser_mediator.ProduceEventData(event_data)
+
+
+class MacOS1013LoginItemsPlugin(MacOSLoginItemsPlistPlugin):
+  """Plist parser plugin for Mac OS backgrounditems.btm files."""
 
   NAME = 'macos_1013_login_items_plist'
   # From High Sierra to Ventura.
-  DATA_FORMAT = 'MacOS 10.13 thru 12.x login items plist file'
+  DATA_FORMAT = 'Mac OS 10.13 thru 12.x login items plist file'
 
   PLIST_PATH_FILTERS = frozenset([
     interface.PlistPathFilter('backgrounditems.btm'),
@@ -173,15 +284,14 @@ class MacOS1013LoginItemsPlugin(interface.PlistPlugin):
     for i, obj in enumerate(top_level['$objects']):
       if isinstance(obj, bytes):
         filename = parser_mediator.GetFilename()
-        _ParseBookmark(parser_mediator, filename, i, obj)
+        self._ParseBookmark(parser_mediator, filename, i, obj)
 
 
-class MacOS13LoginItemsPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS 13 BackgroundItems-v*.btm plist files.
-  """
+class MacOS13LoginItemsPlugin(MacOSLoginItemsPlistPlugin):
+  """Plist parser plugin for Mac OS BackgroundItems-v4.btm files."""
 
   NAME = 'macos_13_login_items_plist'
-  DATA_FORMAT = 'MacOS 13+ login items plist file'
+  DATA_FORMAT = 'Mac OS 13+ login items plist file'
 
   PLIST_PATH_FILTERS = frozenset([
     interface.PrefixPlistPathFilter('BackgroundItems-v'),
@@ -200,9 +310,9 @@ class MacOS13LoginItemsPlugin(interface.PlistPlugin):
     for i, obj in enumerate(top_level['$objects']):
       if isinstance(obj, bytes):
         filename = parser_mediator.GetFilename()
-        _ParseBookmark(parser_mediator, filename, i, obj)
+        self._ParseBookmark(parser_mediator, filename, i, obj)
 
 
-plist.PlistParser.RegisterPlugin(MacOS1012LoginItemsPlugin)
-plist.PlistParser.RegisterPlugin(MacOS1013LoginItemsPlugin)
-plist.PlistParser.RegisterPlugin(MacOS13LoginItemsPlugin)
+plist.PlistParser.RegisterPlugins([
+    MacOSLoginItemsAliasDataPlistPlugin, MacOS1013LoginItemsPlugin,
+    MacOS13LoginItemsPlugin])

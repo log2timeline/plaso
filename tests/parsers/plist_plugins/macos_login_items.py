@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MacOS login items plist plugin."""
+"""Tests for the Mac OS login items plist plugin."""
+
 import unittest
 
 from plaso.parsers.plist_plugins import macos_login_items
@@ -8,14 +9,14 @@ from plaso.parsers.plist_plugins import macos_login_items
 from tests.parsers.plist_plugins import test_lib
 
 
-class MacOS1012LoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the MacOS launchd plist plugin."""
+class MacOSLoginItemsAliasDataPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the Mac OS login items with AliasData plist parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
     plist_name = 'com.apple.loginitems.plist'
 
-    plugin = macos_login_items.MacOS1012LoginItemsPlugin()
+    plugin = macos_login_items.MacOSLoginItemsAliasDataPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -31,24 +32,23 @@ class MacOS1012LoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    expected_path = '/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app'
     expected_event_values = {
-        'data_type': 'macos:loginitems:entry',
+        'cnid_path': '67899/67877/67876/71',
+        'data_type': 'macos:login_item:entry',
         'name': 'iTunesHelper',
         'hidden': True,
-        'cnid_path': '67899/67877/67876/71',
-        'volume_name': 'Macintosh HD',
-        'target_path': expected_path,
+        'target_path': (
+            '/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app'),
+        'volume_flags': 0x920,
         'volume_mount_point': '/',
-        'volume_flags': 'IsBootVolume, HasPersistentFileIds'
-    }
+        'volume_name': 'Macintosh HD'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
 
 class MacOS1013LoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the MacOS launchd plist plugin."""
+  """Tests for the Mac OS backgrounditems.btm plist parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
@@ -85,7 +85,7 @@ class MacOS1013LoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
 
 
 class MacOS13LoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the MacOS launchd plist plugin."""
+  """Tests for the Mac OS BackgroundItems-v4.btm plist parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""

@@ -1,0 +1,106 @@
+# dtFabric format specification.
+---
+name: alias_data
+type: format
+description: Mac OS com.apple.loginitem.legacyprefs AliasData
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20com.apple.loginitem.legacyprefs%20AliasData%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: uint32be
+type: integer
+attributes:
+  byte_order: big-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: array_of_uint32be
+type: sequence
+element_data_type: uint32be
+elements_data_size: elements_data_size
+---
+name: alias_data_record_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: application_information
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: record_size
+  data_type: uint16
+- name: format_version
+  data_type: uint16
+---
+name: alias_data_record_v3
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: alias_type
+  data_type: uint16
+- name: volume_creation_time
+  data_type: uint64
+- name: file_system_type
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: disk_type
+  data_type: uint16
+- name: parent_fsid
+  data_type: uint32
+- name: target_fsid
+  data_type: uint32
+- name: target_creation_time
+  data_type: uint64
+- name: volume_flags
+  data_type: uint32
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  elements_data_size: 14
+---
+name: alias_data_tagged_value
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+- name: value_data_size
+  data_type: uint16
+- name: value_data
+  type: stream
+  element_data_type: byte
+  elements_data_size: alias_data_tagged_value.value_data_size
+- name: alignment_padding
+  type: padding
+  alignment_size: 2

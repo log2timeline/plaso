@@ -755,6 +755,10 @@ attribute_mappings:
 place_holder_event: true
 ---
 data_type: 'macos:loginitems:entry'
+- name: 'target_creation_time'
+  description: 'Target Creation Time'
+- name: 'volume_creation_time'
+  description: 'Volume Creation Time'
 place_holder_event: true
 ---
 data_type: 'macos:login_window:entry'
