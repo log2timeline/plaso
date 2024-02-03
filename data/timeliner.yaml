@@ -754,7 +754,7 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
-data_type: 'macos:loginitems:entry'
+data_type: 'macos:login_item:entry'
 - name: 'target_creation_time'
   description: 'Target Creation Time'
 - name: 'volume_creation_time'

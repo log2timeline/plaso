@@ -60,7 +60,7 @@ class MacOSLoginItemsAliasDataPlistPlugin(
   DATA_FORMAT = 'Mac OS com.apple.loginitems.plist file with AliasData'
 
   PLIST_PATH_FILTERS = frozenset([
-    interface.PlistPathFilter('com.apple.loginitems.plist')])
+      interface.PlistPathFilter('com.apple.loginitems.plist')])
 
   PLIST_KEYS = frozenset(['SessionItems'])
 
@@ -79,17 +79,9 @@ class MacOSLoginItemsAliasDataPlistPlugin(
     """
     data_type_map = self._GetDataTypeMap('alias_data_record_header')
 
-    try:
-      record_header = data_type_map.MapByteStream(alias_data)
-    except dtfabric_errors.MappingError as exception:
-      raise errors.ParseError(
-          f'Unable to parse AliasData record header with error: {exception!s}')
-
-    # TODO: add format version 2 support, but need test data.
-    if record_header.format_version != 3:
-      raise errors.ParseError((
-          f'Unsupported AliasData format version: '
-          f'{record_header.format_version:d}'))
+    record_header = self._ReadStructureFromByteStream(
+        alias_data, 0, data_type_map)
+    data_offset = 8
 
     if record_header.application_information != b'\x00\x00\x00\x00':
       raise errors.ParseError('Unsupported AliasData application information')
@@ -97,17 +89,11 @@ class MacOSLoginItemsAliasDataPlistPlugin(
     if record_header.record_size != len(alias_data):
       raise errors.ParseError('Unsupported AliasData record size')
 
-    data_offset = 8
-
+    # TODO: add format version 2 support, but need test data.
     data_type_map = self._GetDataTypeMap('alias_data_record_v3')
 
-    try:
-      record_data = data_type_map.MapByteStream(alias_data[8:])
-    except dtfabric_errors.MappingError as exception:
-      raise errors.ParseError((
-          f'Unable to parse AliasData record data at offset: '
-          f'0x{data_offset:08x} with error: {exception!s}'))
-
+    record_data = self._ReadStructureFromByteStream(
+        alias_data[data_offset:], data_offset, data_type_map)
     data_offset += 50
 
     hfs_timestamp, _ = divmod(record_data.target_creation_time, 65536)
@@ -123,55 +109,36 @@ class MacOSLoginItemsAliasDataPlistPlugin(
     relative_target_path = None
 
     while data_offset < record_header.record_size:
-      # TODO: change tagged value to structure-group
       data_type_map = self._GetDataTypeMap('alias_data_tagged_value')
 
       context = dtfabric_data_maps.DataTypeMapContext()
 
-      try:
-        tagged_value = data_type_map.MapByteStream(
-            alias_data[data_offset:], context=context)
-      except dtfabric_errors.MappingError as exception:
-        raise errors.ParseError((
-            f'Unable to parse AliasData tagged value at offset: '
-            f'0x{data_offset:08x} with error: {exception!s}'))
-
+      tagged_value = self._ReadStructureFromByteStream(
+          alias_data[data_offset:], data_offset, data_type_map,
+          context=context)
       data_offset += context.byte_size
 
       if tagged_value.value_tag == 0xffff:
         break
 
-      if tagged_value.value_tag == 0x000f:
-        event_data.volume_name = tagged_value.value_data[2:].decode('utf-16-be')
+      if tagged_value.value_tag == 0x0001:
+        # TODO: determine if this value useful to extract.
+        event_data.cnid_path = '/'.join([
+            f'{cnid:d}' for cnid in tagged_value.integers])
+
+      elif tagged_value.value_tag == 0x000f:
+        event_data.volume_name = tagged_value.string
 
       elif tagged_value.value_tag == 0x0012:
-        relative_target_path = tagged_value.value_data.decode('utf8')
+        relative_target_path = tagged_value.string
 
       elif tagged_value.value_tag == 0x0013:
-        volume_mount_point = tagged_value.value_data.decode('utf8')
+        volume_mount_point = tagged_value.string
         if relative_target_path:
           relative_target_path = ''.join([
               volume_mount_point, relative_target_path])
 
         event_data.volume_mount_point = volume_mount_point
-
-      elif tagged_value.value_tag == 0x0001:
-        # TODO: determine if this value useful to extract.
-        data_type_map = self._GetDataTypeMap('array_of_uint32be')
-
-        context = dtfabric_data_maps.DataTypeMapContext(values={
-            'elements_data_size': tagged_value.value_data_size})
-
-        try:
-          cnids_array = data_type_map.MapByteStream(
-              tagged_value.value_data, context=context)
-
-        except dtfabric_errors.MappingError as exception:
-          raise errors.ParseError((
-              f'Unable to parse array of 32-bit CNIDs with error: '
-              f'{exception!s}'))
-
-        event_data.cnid_path = '/'.join([f'{cnid:d}' for cnid in cnids_array])
 
     if relative_target_path:
       event_data.target_path = relative_target_path
@@ -268,8 +235,8 @@ class MacOS1013LoginItemsPlugin(MacOSLoginItemsPlistPlugin):
   DATA_FORMAT = 'Mac OS 10.13 thru 12.x login items plist file'
 
   PLIST_PATH_FILTERS = frozenset([
-    interface.PlistPathFilter('backgrounditems.btm'),
-  ])
+      interface.PlistPathFilter('backgrounditems.btm')])
+
   PLIST_KEYS = frozenset(['$objects'])
 
   # pylint: disable=arguments-differ
@@ -294,8 +261,8 @@ class MacOS13LoginItemsPlugin(MacOSLoginItemsPlistPlugin):
   DATA_FORMAT = 'Mac OS 13+ login items plist file'
 
   PLIST_PATH_FILTERS = frozenset([
-    interface.PrefixPlistPathFilter('BackgroundItems-v'),
-  ])
+      interface.PrefixPlistPathFilter('BackgroundItems-v')])
+
   PLIST_KEYS = frozenset(['$objects'])
 
   # pylint: disable=arguments-differ

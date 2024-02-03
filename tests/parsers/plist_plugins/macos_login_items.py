@@ -33,7 +33,7 @@ class MacOSLoginItemsAliasDataPlistPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'cnid_path': '67899/67877/67876/71',
+        'cnid_path': '3203382/3203360/3203359/85',
         'data_type': 'macos:login_item:entry',
         'name': 'iTunesHelper',
         'hidden': True,
