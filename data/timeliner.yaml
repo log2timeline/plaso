@@ -748,9 +748,11 @@ data_type: 'macos:launchd:entry'
 place_holder_event: true
 ---
 data_type: 'macos:login_window:auto_launched_application'
+# TODO: add attribute_mappings
 place_holder_event: true
 ---
 data_type: 'macos:login_window:hook'
+# TODO: add attribute_mappings
 place_holder_event: true
 ---
 data_type: 'macos:lsquarantine:entry'
