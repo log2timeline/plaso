@@ -781,6 +781,10 @@ attribute_mappings:
   description: 'Update Time'
 place_holder_event: true
 ---
+data_type: 'macos:startupitem:entry'
+# TODO: add attribute_mappings
+place_holder_event: true
+---
 data_type: 'macos:tcc_entry'
 attribute_mappings:
 - name: 'modification_time'
