@@ -3,7 +3,7 @@
 name: alias_data
 type: format
 description: Mac OS com.apple.loginitems.plist Alias and AliasData values data format
-urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20com.apple.loginitem.legacyprefs%20AliasData%20format.asciidoc"]
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20login%20item%20alias%20data%20format.asciidoc"]
 ---
 name: byte
 type: integer

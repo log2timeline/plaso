@@ -182,6 +182,27 @@ short_source: 'LOG'
 source: 'MacOS ASL Log'
 ---
 type: 'conditional'
+data_type: 'macos:background_items:entry'
+flags_helpers:
+- input_attribute: 'volume_flags'
+  output_attribute: 'volume_flag_values'
+  values:
+    0x00000002: 'IsEjectable'
+    0x00000020: 'IsBootVolume'
+    0x00000080: 'IsAutomounted'
+    0x00000100: 'HasPersistentFileIds'
+message:
+- 'Login item: {name}'
+- 'Points to: {target_path}'
+- 'CNID path: {cnid_path}'
+- 'Volume name: {volume_name}'
+- 'Volume mount point: {volume_mount_point}'
+- 'Volume flags: {volume_flag_values}'
+short_message: 'Login item {name} points to {target_path}'
+short_source: 'PLIST'
+source: 'MacOS background items plist'
+---
+type: 'conditional'
 data_type: 'macos:bluetooth:entry'
 message:
 - 'Identifier: {device_identifier}'
@@ -360,7 +381,7 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
-data_type: 'macos:login_item:entry'
+data_type: 'macos:login_items:entry'
 flags_helpers:
 - input_attribute: 'volume_flags'
   output_attribute: 'volume_flag_values'
