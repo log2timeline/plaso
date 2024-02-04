@@ -45,9 +45,17 @@ class MacOSBackgroundItemEventData(events.EventData):
 
 class MacOSBackgroundItemsPlistPlugin(
     interface.PlistPlugin, dtfabric_helper.DtFabricHelper):
-  """Base plist parser plugin for Mac OS background items."""
+  """Plist parser plugin for Mac OS background items."""
 
-  # pylint: disable=abstract-method
+  NAME = 'macos_background_items_plist'
+  DATA_FORMAT = (
+      'Mac OS backgrounditems.btm or BackgroundItems-v plist file')
+
+  PLIST_PATH_FILTERS = frozenset([
+      interface.PlistPathFilter('backgrounditems.btm'),
+      interface.PrefixPlistPathFilter('BackgroundItems-v')])
+
+  PLIST_KEYS = frozenset(['$objects'])
 
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'bookmark_data.yaml')
@@ -210,18 +218,6 @@ class MacOSBackgroundItemsPlistPlugin(
 
     return strings_array
 
-
-class MacOS1013BackgroundItemsPlugin(MacOSBackgroundItemsPlistPlugin):
-  """Plist parser plugin for Mac OS backgrounditems.btm files."""
-
-  NAME = 'macos_1013_background_items_plist'
-  DATA_FORMAT = 'Mac OS backgrounditems.btm plist file'
-
-  PLIST_PATH_FILTERS = frozenset([
-      interface.PlistPathFilter('backgrounditems.btm')])
-
-  PLIST_KEYS = frozenset(['$objects'])
-
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts background item information from the plist.
@@ -240,34 +236,4 @@ class MacOS1013BackgroundItemsPlugin(MacOSBackgroundItemsPlistPlugin):
         parser_mediator.ProduceEventData(event_data)
 
 
-class MacOS13BackgroundItemsPlugin(MacOSBackgroundItemsPlistPlugin):
-  """Plist parser plugin for Mac OS BackgroundItems-v4.btm files."""
-
-  NAME = 'macos_13_background_items_plist'
-  DATA_FORMAT = 'Mac OS BackgroundItems-v*.btm plist file'
-
-  PLIST_PATH_FILTERS = frozenset([
-      interface.PrefixPlistPathFilter('BackgroundItems-v')])
-
-  PLIST_KEYS = frozenset(['$objects'])
-
-  # pylint: disable=arguments-differ
-  def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
-    """Extracts background item information from the plist.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      top_level (Optional[dict[str, object]]): plist top-level item.
-    """
-    for list_element in top_level['$objects']:
-      if isinstance(list_element, bytes):
-        event_data = MacOSBackgroundItemEventData()
-
-        self._ParseBookmarkData(list_element, event_data)
-
-        parser_mediator.ProduceEventData(event_data)
-
-
-plist.PlistParser.RegisterPlugins([
-    MacOS1013BackgroundItemsPlugin, MacOS13BackgroundItemsPlugin])
+plist.PlistParser.RegisterPlugin(MacOSBackgroundItemsPlistPlugin)

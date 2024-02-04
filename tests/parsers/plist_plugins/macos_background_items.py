@@ -9,14 +9,14 @@ from plaso.parsers.plist_plugins import macos_background_items
 from tests.parsers.plist_plugins import test_lib
 
 
-class MacOS1013BackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the Mac OS backgrounditems.btm plist parser plugin."""
+class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
+  """Tests for the Mac OS background items plist parser plugin."""
 
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessWithBackgroundItemsBtm(self):
+    """Tests the Process function with a backgrounditems.btm file."""
     plist_name = 'backgrounditems.btm'
 
-    plugin = macos_background_items.MacOS1013BackgroundItemsPlugin()
+    plugin = macos_background_items.MacOSBackgroundItemsPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
@@ -33,10 +33,13 @@ class MacOS1013BackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'cnid_path': '/103/706090',
+        'cnid_path': '/101/59153/59154/59176/59179',
         'data_type': 'macos:background_items:entry',
-        'name': 'Syncthing',
-        'target_path': '/Applications/Syncthing.app',
+        'name': 'iTunesHelper',
+        'target_creation_time': '2017-07-12T18:29:32.000000+00:00',
+        'target_path': (
+            '/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app'),
+        'volume_creation_time': '2017-10-20T07:52:27.000000+00:00',
         'volume_flags': 0x100000081,
         'volume_mount_point': '/',
         'volume_name': 'Macintosh HD'}
@@ -45,15 +48,11 @@ class MacOS1013BackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-
-class MacOS13BackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the Mac OS BackgroundItems-v4.btm plist parser plugin."""
-
-  def testProcess(self):
-    """Tests the Process function."""
+  def testProcessWithBackgroundItemsV4Btm(self):
+    """Tests the Process function with a BackgroundItems-v4.btm file."""
     plist_name = 'BackgroundItems-v4.btm'
 
-    plugin = macos_background_items.MacOS13BackgroundItemsPlugin()
+    plugin = macos_background_items.MacOSBackgroundItemsPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
