@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS startup item plist files."""
+
 from plaso.containers import events
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
@@ -20,9 +21,7 @@ class MacOSStartupItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSStartupItemEventData, self).__init__(
-      data_type=self.DATA_TYPE
-    )
+    super(MacOSStartupItemEventData, self).__init__(data_type=self.DATA_TYPE)
     self.description = None
     self.order_preference = None
     self.provides = None
@@ -31,15 +30,14 @@ class MacOSStartupItemEventData(events.EventData):
 
 
 class MacOSStartupItemPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS startup item plist files.
-  """
+  """Plist parser plugin for MacOS startup item plist files."""
 
   NAME = 'macos_startup_item_plist'
   DATA_FORMAT = 'MacOS startup item plist file'
 
   PLIST_PATH_FILTERS = frozenset([
-    interface.PlistPathFilter('StartupParameters.plist')]
-  )
+      interface.PlistPathFilter('StartupParameters.plist')])
+
   PLIST_KEYS = frozenset([])
 
   # pylint: disable=arguments-differ
@@ -48,7 +46,7 @@ class MacOSStartupItemPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfVFS.
+          and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     event_data = MacOSStartupItemEventData()
