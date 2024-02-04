@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS login window plist files."""
+
 from plaso.containers import events
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
@@ -18,8 +19,7 @@ class MacOSLoginWindowAutoLaunchApplicationEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MacOSLoginWindowAutoLaunchApplicationEventData, self).__init__(
-      data_type=self.DATA_TYPE
-    )
+        data_type=self.DATA_TYPE)
     self.hidden = None
     self.path = None
 
@@ -37,23 +37,21 @@ class MacOSLoginWindowHookEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MacOSLoginWindowHookEventData, self).__init__(
-      data_type=self.DATA_TYPE
-    )
+        data_type=self.DATA_TYPE)
     self.path = None
     self.hook_type = None
 
 
 class MacOSLoginWindowPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS login window plist files.
-  """
+  """Plist parser plugin for MacOS login window plist files."""
 
   NAME = 'macos_login_window_plist'
   DATA_FORMAT = 'MacOS login window plist file'
 
   PLIST_PATH_FILTERS = frozenset([
     interface.PlistPathFilter('loginwindow.plist'),
-    interface.PlistPathFilter('com.apple.loginwindow.plist'),
-  ])
+    interface.PlistPathFilter('com.apple.loginwindow.plist')])
+
   PLIST_KEYS = frozenset([])
 
   # pylint: disable=arguments-differ
@@ -62,7 +60,7 @@ class MacOSLoginWindowPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfVFS.
+          and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     for app_dict in top_level.get('AutoLaunchedApplicationDictionary', []):
