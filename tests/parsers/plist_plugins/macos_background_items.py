@@ -43,7 +43,6 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
         'volume_flags': 0x100000081,
         'volume_mount_point': '/',
         'volume_name': 'Macintosh HD'}
-    # TODO: 'volume_flags': 'IsLocal, IsInternal, SupportsPersistentIDs'
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -71,11 +70,12 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     expected_event_values = {
         'cnid_path': '/14578/55377',
         'data_type': 'macos:background_items:entry',
+        'target_creation_time': '2022-07-05T17:06:15.000000+00:00',
         'target_path': '/Applications/Syncthing.app',
+        'volume_creation_time': '2022-07-06T06:27:36.000000+00:00',
         'volume_flags': 0x100000081,
         'volume_mount_point': '/',
         'volume_name': 'Macintosh HD'}
-    # TODO: 'volume_flags': 'IsLocal, IsInternal, SupportsPersistentIDs'
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

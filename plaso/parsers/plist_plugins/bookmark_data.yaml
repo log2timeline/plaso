@@ -97,7 +97,6 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: 4
-  values: ["alis", "book"]
 - name: size
   data_type: uint32
 - name: unknown1

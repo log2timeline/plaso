@@ -49,7 +49,7 @@ class MacOSBackgroundItemsPlistPlugin(
 
   NAME = 'macos_background_items_plist'
   DATA_FORMAT = (
-      'Mac OS backgrounditems.btm or BackgroundItems-v plist file')
+      'Mac OS backgrounditems.btm or BackgroundItems-v[1-9].btm plist file')
 
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('backgrounditems.btm'),
@@ -67,6 +67,9 @@ class MacOSBackgroundItemsPlistPlugin(
       bookmark_data (bytes): bookmark data.
       event_data (MacOSLoginItemEventData): event data.
 
+    Returns:
+      bool: True if data contains a bookmark, False otherwise.
+
     Raises:
       ParseError: if the value cannot be parsed.
     """
@@ -74,6 +77,9 @@ class MacOSBackgroundItemsPlistPlugin(
 
     header = self._ReadStructureFromByteStream(
         bookmark_data, 0, data_type_map)
+
+    if header.signature not in (b'alis', b'book'):
+      return False
 
     if header.size != len(bookmark_data):
       raise errors.ParseError('Unsupported bookmark size')
@@ -164,6 +170,8 @@ class MacOSBackgroundItemsPlistPlugin(
     if relative_target_path:
       event_data.target_path = relative_target_path
 
+    return True
+
   def _ParseIntegersArray(
       self, bookmark_data, data_area_offset, data_record_offsets):
     """Parses an integers array.
@@ -227,13 +235,20 @@ class MacOSBackgroundItemsPlistPlugin(
           and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
+    archiver = top_level['$archiver']
+    version = top_level['$version']
+    if (archiver not in ('NRKeyedArchiver', 'NSKeyedArchiver') or
+        version != 100000):
+      parser_mediator.ProduceExtractionWarning(
+          f'unsupported background items plist: {archiver!s} {version!s}')
+      return
+
     for list_element in top_level['$objects']:
       if isinstance(list_element, bytes):
         event_data = MacOSBackgroundItemEventData()
 
-        self._ParseBookmarkData(list_element, event_data)
-
-        parser_mediator.ProduceEventData(event_data)
+        if self._ParseBookmarkData(list_element, event_data):
+          parser_mediator.ProduceEventData(event_data)
 
 
 plist.PlistParser.RegisterPlugin(MacOSBackgroundItemsPlistPlugin)
