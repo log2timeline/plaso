@@ -235,7 +235,6 @@ flags_helpers:
 message:
 - 'Login item: {name}'
 - 'Points to: {target_path}'
-- 'CNID path: {cnid_path}'
 - 'Volume name: {volume_name}'
 - 'Volume mount point: {volume_mount_point}'
 - 'Volume flags: {volume_flag_values}'
@@ -434,7 +433,6 @@ flags_helpers:
 message:
 - 'Login item: {name}'
 - 'Points to: {target_path}'
-- 'CNID path: {cnid_path}'
 - 'Volume name: {volume_name}'
 - 'Volume mount point: {volume_mount_point}'
 - 'Volume flags: {volume_flag_values}'

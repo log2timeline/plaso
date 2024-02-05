@@ -18,7 +18,6 @@ class MacOSLoginItemEventData(events.EventData):
   """Mac OS login item event data.
 
   Attributes:
-    cnid_path (str): a "/" delimited string representing an array of CNIDs.
     hidden (bool): whether this login item is hidden.
     name (str): name.
     target_creation_time (dfdatetime.DateTimeValues): date and time the target
@@ -36,7 +35,6 @@ class MacOSLoginItemEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MacOSLoginItemEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.cnid_path = None
     self.hidden = None
     self.name = None
     self.target_creation_time = None
@@ -115,11 +113,6 @@ class MacOSLoginItemsPlistPlugin(
 
       if tagged_value.value_tag == 0xffff:
         break
-
-      if tagged_value.value_tag == 0x0001:
-        # TODO: determine if this value useful to extract.
-        event_data.cnid_path = '/'.join([
-            f'{cnid:d}' for cnid in tagged_value.integers])
 
       elif tagged_value.value_tag == 0x000f:
         event_data.volume_name = tagged_value.string

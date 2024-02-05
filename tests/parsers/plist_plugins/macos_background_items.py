@@ -33,7 +33,6 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'cnid_path': '/101/59153/59154/59176/59179',
         'data_type': 'macos:background_items:entry',
         'name': 'iTunesHelper',
         'target_creation_time': '2017-07-12T18:29:32.000000+00:00',
@@ -68,7 +67,6 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'cnid_path': '/14578/55377',
         'data_type': 'macos:background_items:entry',
         'target_creation_time': '2022-07-05T17:06:15.000000+00:00',
         'target_path': '/Applications/Syncthing.app',

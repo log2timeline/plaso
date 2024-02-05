@@ -16,7 +16,6 @@ class MacOSBackgroundItemEventData(events.EventData):
   """Mac OS background item event data.
 
   Attributes:
-    cnid_path (str): a "/" delimited string representing an array of CNIDs.
     name (str): name.
     target_creation_time (dfdatetime.DateTimeValues): date and time the target
         was created.
@@ -33,7 +32,6 @@ class MacOSBackgroundItemEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(MacOSBackgroundItemEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.cnid_path = None
     self.name = None
     self.target_creation_time = None
     self.target_path = None
@@ -119,15 +117,6 @@ class MacOSBackgroundItemsPlistPlugin(
             bookmark_data, header.data_area_offset, data_record.integers)
 
         relative_target_path = '/'.join(strings_array)
-
-      elif tagged_value.value_tag == 0x00001005:
-        integers_array = self._ParseIntegersArray(
-            bookmark_data, header.data_area_offset, data_record.integers)
-
-        # TODO: determine if this value useful to extract.
-        cnid_path = '/'.join([
-            f'{cnid:d}' for cnid in integers_array])
-        event_data.cnid_path = f'/{cnid_path:s}'
 
       elif tagged_value.value_tag == 0x00001040:
         data_type_map = self._GetDataTypeMap('float64be')
