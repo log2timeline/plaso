@@ -63,7 +63,7 @@ class MacOSBackgroundItemsPlistPlugin(
 
     Args:
       bookmark_data (bytes): bookmark data.
-      event_data (MacOSLoginItemEventData): event data.
+      event_data (MacOSBackgroundItemEventData): event data.
 
     Returns:
       bool: True if data contains a bookmark, False otherwise.

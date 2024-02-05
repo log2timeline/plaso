@@ -114,7 +114,7 @@ class MacOSLoginItemsPlistPlugin(
       if tagged_value.value_tag == 0xffff:
         break
 
-      elif tagged_value.value_tag == 0x000f:
+      if tagged_value.value_tag == 0x000f:
         event_data.volume_name = tagged_value.string
 
       elif tagged_value.value_tag == 0x0012:
