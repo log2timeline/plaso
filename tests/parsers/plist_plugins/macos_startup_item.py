@@ -33,11 +33,10 @@ class MacOSStartupItemPlistPluginTest(test_lib.PlistPluginTestCase):
 
     expected_event_values = {
         'data_type': 'macos:startupitem:entry',
-        'description': 'Apple Serial Terminal Support',
-        'order_preference': 'Late',
-        'provides': ['Serial Terminal Support'],
-        'uses': ['SystemLog'],
-    }
+        'description': 'My Awesome Service',
+        'order_preference': 'None',
+        'provides': ['The best service ever'],
+        'uses': ['Network', 'SystemLog']}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
