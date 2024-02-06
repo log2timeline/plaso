@@ -3,6 +3,7 @@
 """Tests for the Mac OS background items plist plugin."""
 
 import unittest
+import sys
 
 from plaso.parsers.plist_plugins import macos_background_items
 
@@ -15,6 +16,10 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
   def testProcessWithBackgroundItemsBtm(self):
     """Tests the Process function with a backgrounditems.btm file."""
     plist_name = 'backgrounditems.btm'
+
+    if sys.version_info < (3, 8):
+      # Test requires plistlib UID support added in python 3.8.
+      return
 
     plugin = macos_background_items.MacOSBackgroundItemsPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
