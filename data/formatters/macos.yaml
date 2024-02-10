@@ -349,6 +349,32 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
+data_type: 'macos:login_window:entry'
+message:
+- 'Login hook: {login_hook}'
+- 'Logout hook: {logout_hook}'
+short_message:
+- 'Login hook: {login_hook}'
+- 'Logout hook: {logout_hook}'
+short_source: 'PLIST'
+source: 'Mac OS login window plist'
+---
+type: 'conditional'
+data_type: 'macos:login_window:managed_login_item'
+boolean_helpers:
+- input_attribute: 'is_hidden'
+  output_attribute: 'is_hidden_string'
+  value_if_true: '(Hidden in Users & Groups items list)'
+message:
+- 'Auto-launched application: {path}'
+- '{is_hidden_string}'
+short_message:
+- 'Auto-launched application: {path}'
+- '{is_hidden_string}'
+short_source: 'PLIST'
+source: 'Mac OS login window plist'
+---
+type: 'conditional'
 data_type: 'macos:startup_item:entry'
 message:
 - 'Startup item: [{description}]'
