@@ -349,7 +349,7 @@ short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
 type: 'conditional'
-data_type: 'macos:startupitem:entry'
+data_type: 'macos:startup_item:entry'
 message:
 - 'Startup item: [{description}]'
 - 'Provides: {provides}'

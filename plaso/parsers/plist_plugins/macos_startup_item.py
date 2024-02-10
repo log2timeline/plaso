@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plist parser plugin for MacOS startup item plist files."""
+"""Plist parser plugin for Mac OS startup item plist files."""
 
 from plaso.containers import events
 from plaso.parsers import plist
@@ -7,17 +7,17 @@ from plaso.parsers.plist_plugins import interface
 
 
 class MacOSStartupItemEventData(events.EventData):
-  """MacOS startup item event data.
+  """Mac OS startup item event data.
 
   Attributes:
-    description (str): a short description of the startup item.
-    order_preference (str): string representing startup order preference.
+    description (str): description of the startup item.
+    order_preference (str): startup order preference.
     provides (list[str]): names of services provided by the startup item.
     requires (list[str]): services required prior to this startup item.
     uses (list[str]): services that should be started before this startup item.
   """
 
-  DATA_TYPE = 'macos:startupitem:entry'
+  DATA_TYPE = 'macos:startup_item:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -30,10 +30,10 @@ class MacOSStartupItemEventData(events.EventData):
 
 
 class MacOSStartupItemPlugin(interface.PlistPlugin):
-  """Plist parser plugin for MacOS startup item plist files."""
+  """Plist parser plugin for Mac OS startup item plist files."""
 
   NAME = 'macos_startup_item_plist'
-  DATA_FORMAT = 'MacOS startup item plist file'
+  DATA_FORMAT = 'Mac OS startup item plist file'
 
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('StartupParameters.plist')])

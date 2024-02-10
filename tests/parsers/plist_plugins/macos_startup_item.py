@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MacOS startup item plist plugin."""
+"""Tests for the Mac OS startup item plist plugin."""
+
 import unittest
 
 from plaso.parsers.plist_plugins import macos_startup_item
@@ -9,7 +10,7 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class MacOSStartupItemPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the MacOS startup item plist plugin."""
+  """Tests for the Mac OS startup item plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
@@ -31,8 +32,9 @@ class MacOSStartupItemPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    # Note that the startup item event data has no date and time attribute.
     expected_event_values = {
-        'data_type': 'macos:startupitem:entry',
+        'data_type': 'macos:startup_item:entry',
         'description': 'My Awesome Service',
         'order_preference': 'None',
         'provides': ['The best service ever'],
