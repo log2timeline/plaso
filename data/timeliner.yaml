@@ -781,6 +781,10 @@ attribute_mappings:
   description: 'Update Time'
 place_holder_event: true
 ---
+data_type: 'macos:startup_item:entry'
+# Note that the Mac OS startup item has no date and time values.
+place_holder_event: true
+---
 data_type: 'macos:tcc_entry'
 attribute_mappings:
 - name: 'modification_time'
