@@ -747,12 +747,12 @@ place_holder_event: true
 data_type: 'macos:launchd:entry'
 place_holder_event: true
 ---
-data_type: 'macos:login_window:auto_launched_application'
-# TODO: add attribute_mappings
+data_type: 'macos:login_window:entry'
+# Note that the Mac OS login window entry has no date and time values.
 place_holder_event: true
 ---
-data_type: 'macos:login_window:hook'
-# TODO: add attribute_mappings
+data_type: 'macos:login_window:managed_login_item'
+# Note that the Mac OS login window managed login item has no date and time values.
 place_holder_event: true
 ---
 data_type: 'macos:lsquarantine:entry'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the MacOS login window plist plugin."""
+"""Tests for the Mac OS login window plist plugin."""
 import unittest
 
 from plaso.parsers.plist_plugins import macos_login_window
@@ -9,7 +9,7 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the MacOS login window plist plugin."""
+  """Tests for the Mac OS login window plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
@@ -21,7 +21,7 @@ class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 3)
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -31,29 +31,21 @@ class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    expected_autolaunch_event = {
-        'data_type': 'macos:login_window:auto_launched_application',
-        'hidden': True,
-        'path': '/Applications/SafeConnect.app',
-    }
+    expected_event_values = {
+        'data_type': 'macos:login_window:managed_login_item',
+        'is_hidden': True,
+        'path': '/Applications/SafeConnect.app'}
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_autolaunch_event)
+    self.CheckEventData(event_data, expected_event_values)
 
-    expected_login_hook_event = {
-        'data_type': 'macos:login_window:hook',
-        'path': '/Users/matthew/login.sh',
-        'hook_type': 'login',
-    }
+    expected_event_values = {
+        'data_type': 'macos:login_window:entry',
+        'login_hook': '/Users/matthew/login.sh',
+        'logout_hook': '/Users/matthew/logout.sh'}
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
-    self.CheckEventData(event_data, expected_login_hook_event)
-
-    expected_logout_hook_event = {
-        'data_type': 'macos:login_window:hook',
-        'path': '/Users/matthew/logout.sh',
-        'hook_type': 'logout',
-    }
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
-    self.CheckEventData(event_data, expected_logout_hook_event)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
