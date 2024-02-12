@@ -56,12 +56,7 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
   # /Library/LaunchAgents/*.plist
   # ~/Library/LaunchAgents
 
-  PLIST_KEYS = frozenset([
-      'GroupName',
-      'Label',
-      'Program',
-      'ProgramArguments',
-      'UserName'])
+  PLIST_KEYS = frozenset(['Label'])
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
@@ -74,8 +69,12 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
     """
     program = top_level.get('Program', None)
     program_arguments = top_level.get('ProgramArguments', None)
+    if not (program or program_arguments):
+      return
     if program and program_arguments:
       program = ' '.join([program, ' '.join(program_arguments)])
+    elif program_arguments:
+      program = ' '.join(program_arguments)
 
     event_data = MacOSLaunchdEventData()
     event_data.group_name = top_level.get('GroupName')
