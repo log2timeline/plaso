@@ -73,7 +73,7 @@ short_source: 'PLIST'
 source: 'MacOS Airport plist'
 ---
 type: 'conditional'
-data_type: 'macos:appfirewall_log:e:ntry'
+data_type: 'macos:appfirewall_log:entry'
 message:
 - 'Computer: {computer_name}'
 - 'Agent: {agent}'
