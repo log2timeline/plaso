@@ -10,7 +10,7 @@ from tests.parsers.ips_plugins import test_lib
 
 
 class AppleRecoveryLogdIPSPluginTest(test_lib.IPSPluginTestCase):
-  """Tests for the Apple stacks crash IPS file parser"""
+  """Tests for the Apple stacks crash IPS file parser."""
 
   def testProcess(self):
     """Tests for the Process function."""
