@@ -20,24 +20,24 @@ class IPSPlugin(plugins.BasePlugin):
   REQUIRED_HEADER_KEYS = []
   REQUIRED_CONTENT_KEYS = []
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _VARYING_DIGITS = pyparsing.Word(pyparsing.nums)
 
   TIMESTAMP_GRAMMAR = (
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') + pyparsing.Suppress('.') +
-      _VARYING_DIGITS.setResultsName('fraction') +
+      _FOUR_DIGITS.set_results_name('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.set_results_name('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.set_results_name('day') +
+      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('seconds') + pyparsing.Suppress('.') +
+      _VARYING_DIGITS.set_results_name('fraction') +
       pyparsing.Word(
-          pyparsing.nums + '+' + '-').setResultsName('timezone_delta'))
+          pyparsing.nums + '+' + '-').set_results_name('timezone_delta'))
 
   def _ParseTimestampValue(self, parser_mediator, timestamp_text):
     """Parses a timestamp string.
