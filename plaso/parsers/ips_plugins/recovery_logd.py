@@ -61,8 +61,9 @@ class AppleRecoveryLogdIPSPlugin(interface.IPSPlugin):
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an IPS log file.
-    This is the main method that an IPS plugin needs to implement.
+    """Extracts information from an IPS log file. This is the main method that
+    an IPS plugin needs to implement.
+
     Args:
       parser_mediator (ParserMediator): parser mediator.
       ips_file (Optional[IpsFile]): database.
