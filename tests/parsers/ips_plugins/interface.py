@@ -19,14 +19,15 @@ class TestIPSPlugin(interface.IPSPlugin):
   REQUIRED_CONTENT_KEYS = ['procName', 'parentPid']
 
   def __int__(self):
-    """Initializes"""
+    """Initializes."""
     super(TestIPSPlugin, self).__init__()
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an IPS log file.
-    This is the main method that an IPS plugin needs to implement.
+    """Extracts information from an IPS log file. This is the main method that
+    an IPS plugin needs to implement.
+
     Args:
       parser_mediator (ParserMediator): parser mediator.
       ips_file (Optional[IPSFile]): database.
@@ -36,7 +37,7 @@ class TestIPSPlugin(interface.IPSPlugin):
 
 
 class IPSInterfaceTest(test_lib.IPSPluginTestCase):
-  """Tests for the IPS plugin interface"""
+  """Tests for the IPS plugin interface."""
 
   def testCheckRequiredKeys(self):
     """Tests the CheckRequiredKeys function."""

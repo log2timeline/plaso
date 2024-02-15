@@ -85,8 +85,9 @@ class IPSPlugin(plugins.BasePlugin):
     return time_element_object
 
   def CheckRequiredKeys(self, ips_file):
-    """Checks if the ips file's header and content have the keys required by
-    the plugin.
+    """Checks if the ips file's header and content have the keys required by the
+    plugin.
+
     Args:
       ips_file (IPSFile): the file for which the structure is checked.
     Returns:
@@ -114,8 +115,9 @@ class IPSPlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an ips log file.
-    This is the main method that an ips plugin needs to implement.
+    """Extracts information from an ips log file. This is the main method that
+    an ips plugin needs to implement.
+
     Args:
       parser_mediator (ParserMediator): parser mediator.
       ips_file (Optional[IPSFile]): database.
