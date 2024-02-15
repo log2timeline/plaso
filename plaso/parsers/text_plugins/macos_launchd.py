@@ -39,13 +39,13 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
   NAME = 'macos_launchd_log'
   DATA_FORMAT = 'MacOS launchd log file'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _DATE_TIME = (
@@ -61,7 +61,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress('(') +
       pyparsing.OneOrMore(
           pyparsing.Word(pyparsing.printables, excludeChars=')'), stop_on=')') +
-      pyparsing.Suppress(')')).setParseAction(' '.join)
+      pyparsing.Suppress(')')).set_parse_action(' '.join)
 
   _SEVERITY = pyparsing.Combine(
       pyparsing.Suppress('<') +
@@ -69,12 +69,12 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress('>'))
 
   _LOG_LINE = (
-    _DATE_TIME.setResultsName('date_time') +
-    pyparsing.Optional(_PROCESS_NAME.setResultsName('process_name')) +
-    _SEVERITY.setResultsName('severity') +
+    _DATE_TIME.set_results_name('date_time') +
+    pyparsing.Optional(_PROCESS_NAME.set_results_name('process_name')) +
+    _SEVERITY.set_results_name('severity') +
     pyparsing.Suppress(': ') +
 
-    pyparsing.restOfLine().setResultsName('body') +
+    pyparsing.restOfLine().set_results_name('body') +
     pyparsing.Suppress(pyparsing.LineEnd()))
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
