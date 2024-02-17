@@ -300,6 +300,17 @@ short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'conditional'
+data_type: 'macos:launchd_log:entry'
+message:
+- 'Body: {body}'
+- 'Process Name: {process_name}'
+- 'Severity: {severity}'
+short_message:
+- 'Body: {body}'
+short_source: 'Launchd'
+source: 'MacOS Laucnhd'
+---
+type: 'conditional'
 data_type: 'macos:lsquarantine:entry'
 message:
 - '[{agent}]'
