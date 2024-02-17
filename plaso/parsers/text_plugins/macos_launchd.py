@@ -39,43 +39,20 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
   NAME = 'macos_launchd_log'
   DATA_FORMAT = 'Mac OS launchd log file'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+  _DATE_TIME = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}) ')
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+  _PROCESS_NAME = pyparsing.Regex(r'[(](?P<process_name>[^)]+)[)] ')
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+  _SEVERITY = pyparsing.Regex(r'[<](?P<severity>[^>]+)[>]: ')
 
-  _DATE_TIME = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress('.') +
-      _SIX_DIGITS)
-
-  _PROCESS_NAME = (
-      pyparsing.Suppress('(') +
-      pyparsing.OneOrMore(pyparsing.Word(
-          pyparsing.printables, exclude_chars=')'), stop_on=')') +
-      pyparsing.Suppress(')')).set_parse_action(' '.join)
-
-  _SEVERITY = pyparsing.Combine(
-      pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.printables, exclude_chars='>') +
-      pyparsing.Suppress('>'))
+  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.set_results_name('date_time') +
-      pyparsing.Optional(_PROCESS_NAME.set_results_name('process_name')) +
-      _SEVERITY.set_results_name('severity') +
-      pyparsing.Suppress(': ') +
-
-    pyparsing.restOfLine().set_results_name('body') +
-    pyparsing.Suppress(pyparsing.LineEnd()))
+      _DATE_TIME + pyparsing.Optional(_PROCESS_NAME) +
+      _SEVERITY + pyparsing.restOfLine().set_results_name('body') +
+      _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
@@ -98,9 +75,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
     event_data.process_name = self._GetValueFromStructure(
         structure, 'process_name')
     event_data.severity = self._GetValueFromStructure(structure, 'severity')
-    event_data.written_time = (
-        dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_structure))
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -118,6 +93,31 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
     """
     if key == 'log_line':
       self._ParseLogline(parser_mediator, structure)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
+      date_time.CopyFromDateTimeString(time_elements_structure)
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          'Unable to parse time elements with error: {0!s}'.format(exception))
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -139,8 +139,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
         structure, 'date_time')
 
     try:
-      dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_structure)
+      self._ParseTimeElements(time_elements_structure)
     except errors.ParseError:
       return False
 
