@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for MacOS launchd log files."""
+"""Text parser plugin for Mac OS launchd log files."""
 
 import pyparsing
 
@@ -12,11 +12,11 @@ from plaso.parsers.text_plugins import interface
 
 
 class MacOSLaunchdEventData(events.EventData):
-  """MacOS launchd log event data.
+  """Mac OS launchd log event data.
 
   Attributes:
-    body (str): Content of the log event.
-    process_name (str): Name of the process that created the record.
+    body (str): content of the log event.
+    process_name (str): name of the process that created the record.
     severity (str): severity of the message.
     written_time (dfdatetime.DateTimeValues): date and time the log entry was
         written.
@@ -34,10 +34,10 @@ class MacOSLaunchdEventData(events.EventData):
 
 
 class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
-  """Text parser plugin for MacOS launchd log files."""
+  """Text parser plugin for Mac OS launchd log files."""
 
   NAME = 'macos_launchd_log'
-  DATA_FORMAT = 'MacOS launchd log file'
+  DATA_FORMAT = 'Mac OS launchd log file'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
@@ -59,20 +59,20 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
 
   _PROCESS_NAME = (
       pyparsing.Suppress('(') +
-      pyparsing.OneOrMore(
-          pyparsing.Word(pyparsing.printables, excludeChars=')'), stop_on=')') +
+      pyparsing.OneOrMore(pyparsing.Word(
+          pyparsing.printables, exclude_chars=')'), stop_on=')') +
       pyparsing.Suppress(')')).set_parse_action(' '.join)
 
   _SEVERITY = pyparsing.Combine(
       pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.printables, excludeChars='>') +
+      pyparsing.Word(pyparsing.printables, exclude_chars='>') +
       pyparsing.Suppress('>'))
 
   _LOG_LINE = (
-    _DATE_TIME.set_results_name('date_time') +
-    pyparsing.Optional(_PROCESS_NAME.set_results_name('process_name')) +
-    _SEVERITY.set_results_name('severity') +
-    pyparsing.Suppress(': ') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.Optional(_PROCESS_NAME.set_results_name('process_name')) +
+      _SEVERITY.set_results_name('severity') +
+      pyparsing.Suppress(': ') +
 
     pyparsing.restOfLine().set_results_name('body') +
     pyparsing.Suppress(pyparsing.LineEnd()))
@@ -81,26 +81,12 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _LOG_LINE
 
-  def __init__(self):
-    """Initializes a text parser plugin."""
-    super(MacOSLaunchdLogTextPlugin, self).__init__()
-    self._event_data = None
-
-  def _ParseFinalize(self, parser_mediator):
-    """Finalizes parsing.
+  def _ParseLogline(self, parser_mediator, structure):
+    """Parses a log line.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-    """
-    if self._event_data:
-      parser_mediator.ProduceEventData(self._event_data)
-      self._event_data = None
-
-  def _ParseLogline(self, structure):
-    """Parses a log line.
-
-    Args:
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
@@ -116,7 +102,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
         dfdatetime_time_elements.TimeElementsInMicroseconds(
             time_elements_tuple=time_elements_structure))
 
-    self._event_data = event_data
+    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -131,11 +117,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key == 'log_line':
-      if self._event_data:
-        parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
-
-      self._ParseLogline(structure)
+      self._ParseLogline(parser_mediator, structure)
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -161,8 +143,6 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
           time_elements_tuple=time_elements_structure)
     except errors.ParseError:
       return False
-
-    self._event_data = None
 
     return True
 
