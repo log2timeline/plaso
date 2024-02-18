@@ -425,9 +425,8 @@ $ psort.py --data /where/my/data/is/stored timeline.plaso
 If during the runtime of **psort** the tool encounters an unexpected exception
 the debug mode can be used. To invoke debug mode use the ``-d`` parameter. What
 that will do is that instead of exiting the tool when an unexpected exception
-is raised it prints the traceback of the exception and drops into a
-[Python debug shell](https://stackoverflow.com/questions/4228637/getting-started-with-the-python-debugger-pdb).
-This can be used to debug the problem and fix the issue.
+is raised it prints the traceback of the exception and drops into [pdb](https://docs.python.org/3/library/pdb.html),
+which can be used to debug the problem and fix the issue.
 
 ## How do I?
 
