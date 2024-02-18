@@ -177,15 +177,6 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
   _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
@@ -216,22 +207,16 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _PORT.set_results_name('destination_port') |
       _BLANK)
 
-  _DATE_TIME_ISOFORMAT_STRING = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('T') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress('.') +
-      _SIX_DIGITS + pyparsing.Suppress('Z'))
+  # Date and time values are formatted as:
+  # 2020-01-11T16:56:05.917294Z
+  _DATE_TIME_ISOFORMAT_STRING = pyparsing.Regex(
+      r'([0-9]{4}-[0-9]{2}-[0-9]{2}T'
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6})Z')
 
-  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('T') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS)
+  # Date and time values are formatted as:
+  # 2022-12-20T02:59:40
+  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = pyparsing.Regex(
+      r'([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})')
 
   _REQUEST = pyparsing.quotedString.set_results_name(
       'request').set_parse_action(pyparsing.removeQuotes)
@@ -518,35 +503,20 @@ class AWSELBTextPlugin(interface.TextPlugin):
           the time elements.
     """
     try:
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-      # overriding __getattr__ with a function that returns an empty string
-      # when named token does not exist.
-
-      if len(time_elements_structure) == 7:
-        year, month, day_of_month, hours, minutes, seconds, microseconds = (
-            time_elements_structure)
-
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds, microseconds)
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple)
+      if len(time_elements_structure) == 27:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(time_elements_structure)
       else:
-        year, month, day_of_month, hours, minutes, seconds = (
-            time_elements_structure)
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromStringISO8601(time_elements_structure)
 
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds)
-        date_time = dfdatetime_time_elements.TimeElements(
-            time_elements_tuple=time_elements_tuple)
         date_time.is_local_time = True
 
       return date_time
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

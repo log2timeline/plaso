@@ -104,6 +104,10 @@ class AndroidLogcatTextPlugin(
       pyparsing.Word(pyparsing.nums, exact=3) ^
       pyparsing.Word(pyparsing.nums, exact=6))
 
+  # Date and time values are formatted as:
+  # 01-02 01:02:04.156 (yearless)
+  # 2022-01-02 01:20:03.171
+  # 2022-01-02 11:44:23.183801
   _DATE_TIME = (
       pyparsing.Or([_YEAR_MONTH_DAY, _MONTH_DAY]) +
       _TWO_DIGITS + pyparsing.Suppress(':') +
@@ -254,7 +258,7 @@ class AndroidLogcatTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
