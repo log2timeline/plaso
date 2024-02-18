@@ -592,7 +592,7 @@ class NSKeyedArchiverDecoder(object):
         raise RuntimeError(
             f'Missing $top["{name:s}"] with UID: {value_plist_uid:d}.')
 
-      decoded_object[name] = self._DecodeNSObject(
+      decoded_object[name] = self._DecodeObject(
           value_referenced_property, objects_array, [value_plist_uid])
 
     # The root $top appears to be internal only to the NSKeyedArchiver encoded
