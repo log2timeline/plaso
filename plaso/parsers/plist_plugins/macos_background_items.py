@@ -47,7 +47,7 @@ class MacOSBackgroundItemsPlistPlugin(
 
   NAME = 'macos_background_items_plist'
   DATA_FORMAT = (
-      'Mac OS backgrounditems.btm or BackgroundItems-v[1-9].btm plist file')
+      'Mac OS backgrounditems.btm or BackgroundItems-v[3-9].btm plist file')
 
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('backgrounditems.btm'),
@@ -58,15 +58,17 @@ class MacOSBackgroundItemsPlistPlugin(
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'bookmark_data.yaml')
 
+  def __init__(self):
+    """Initializes a plist parser plugin for Mac OS background items."""
+    super(MacOSBackgroundItemsPlistPlugin, self).__init__()
+    self._decoder = interface.NSKeyedArchiverDecoder()
+
   def _ParseBookmarkData(self, bookmark_data, event_data):
     """Parses bookmark data.
 
     Args:
       bookmark_data (bytes): bookmark data.
       event_data (MacOSBackgroundItemEventData): event data.
-
-    Returns:
-      bool: True if data contains a bookmark, False otherwise.
 
     Raises:
       ParseError: if the value cannot be parsed.
@@ -77,7 +79,7 @@ class MacOSBackgroundItemsPlistPlugin(
         bookmark_data, 0, data_type_map)
 
     if header.signature not in (b'alis', b'book'):
-      return False
+      raise errors.ParseError('Unsupported bookmark signature')
 
     if header.size != len(bookmark_data):
       raise errors.ParseError('Unsupported bookmark size')
@@ -159,8 +161,6 @@ class MacOSBackgroundItemsPlistPlugin(
     if relative_target_path:
       event_data.target_path = relative_target_path
 
-    return True
-
   def _ParseIntegersArray(
       self, bookmark_data, data_area_offset, data_record_offsets):
     """Parses an integers array.
@@ -224,19 +224,55 @@ class MacOSBackgroundItemsPlistPlugin(
           and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
-    archiver = top_level['$archiver']
-    version = top_level['$version']
-    if (archiver not in ('NRKeyedArchiver', 'NSKeyedArchiver') or
-        version != 100000):
+    if not self._decoder.IsEncoded(top_level):
       parser_mediator.ProduceExtractionWarning(
-          f'unsupported background items plist: {archiver!s} {version!s}')
+          'unsupported background items plist - unsupported encoding.')
       return
 
-    for list_element in top_level['$objects']:
-      if isinstance(list_element, bytes):
+    decoded_plist = self._decoder.Decode(top_level)
+
+    # Format version 2 is known to use the "backgroundItems" property.
+    background_items = decoded_plist.get('backgroundItems', None)
+
+    # Format version 4, 7 and 8 are known to use the "store" property.
+    store = decoded_plist.get('store', None)
+
+    if not background_items and not store:
+      parser_mediator.ProduceExtractionWarning(
+          'unsupported background items plist - missing items.')
+      return
+
+    if background_items:
+      for container in background_items.get('allContainers', None) or []:
         event_data = MacOSBackgroundItemEventData()
 
-        if self._ParseBookmarkData(list_element, event_data):
+        internal_items = container.get('internalItems', None) or {}
+
+        bookmark = internal_items.get('bookmark', None) or {}
+        bookmark_data = bookmark.get('data', None)
+        if bookmark_data:
+          try:
+            self._ParseBookmarkData(bookmark_data, event_data)
+          except errors.ParseError as exception:
+            parser_mediator.ProduceExtractionWarning(
+                f'unable to parse bookmark data with error: {exception!s}.')
+
+        parser_mediator.ProduceEventData(event_data)
+
+    else:
+      items_by_user_identifier = store.get('itemsByUserIdentifier', None) or {}
+      for container in items_by_user_identifier.values():
+        for internal_item in container:
+          event_data = MacOSBackgroundItemEventData()
+
+          bookmark_data = internal_item.get('bookmark', None)
+          if bookmark_data:
+            try:
+              self._ParseBookmarkData(bookmark_data, event_data)
+            except errors.ParseError as exception:
+              parser_mediator.ProduceExtractionWarning(
+                  f'unable to parse bookmark data with error: {exception!s}.')
+
           parser_mediator.ProduceEventData(event_data)
 
 

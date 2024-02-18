@@ -56,7 +56,7 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 1)
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -75,7 +75,7 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
         'volume_mount_point': '/',
         'volume_name': 'Macintosh HD'}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
 
