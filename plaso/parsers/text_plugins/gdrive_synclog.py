@@ -50,26 +50,11 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
   _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _FRACTION_OF_SECOND = pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS
-
-  _TIME_ZONE_OFFSET = pyparsing.Group(
-      pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
-
-  _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      _FRACTION_OF_SECOND + _TIME_ZONE_OFFSET).set_results_name('date_time')
+  # Date and time values are formatted as:
+  # 2018-03-01 12:48:14,224 -0800
+  _DATE_TIME = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}[,.][0-9]{3} [+-][0-9]{4}) ')
 
   _PROCESS_IDENTIFIER = (
       pyparsing.Suppress('pid=') +
@@ -187,30 +172,25 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exist.
     try:
-      (year, month, day_of_month, hours, minutes, seconds, milliseconds,
-       time_zone_group) = time_elements_structure
+      date_time_string = time_elements_structure[:23].replace(',', '.')
 
-      time_zone_sign, time_zone_hours, time_zone_minutes = time_zone_group
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+      date_time.CopyFromDateTimeString(date_time_string)
 
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, milliseconds)
-
-      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
-      if time_zone_sign == '-':
+      time_zone_offset = int(time_elements_structure[-4:-2], 10) * 60
+      time_zone_offset += int(time_elements_structure[-2:], 10)
+      if time_elements_structure[-5] == '-':
         time_zone_offset *= -1
 
-      return dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple,
-          time_zone_offset=time_zone_offset)
+      date_time.time_zone_offset = time_zone_offset
+      date_time.is_local_time = False
 
-    except (TypeError, ValueError):
-      return None
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          f'Unable to parse time elements with error: {exception!s}')
 
   def _ResetState(self):
     """Resets stored values."""
@@ -233,9 +213,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
     except errors.ParseError:
       return False
 
-    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
-
-    time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)
