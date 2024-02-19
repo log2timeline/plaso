@@ -11,6 +11,7 @@ application_execution
   data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
   data_type is 'windows:registry:userassist' AND value_name contains '.exe'
   data_type is 'windows:tasks:job'
+  parser is 'winreg/amcache' AND data_type is 'windows:registry:key_value' AND key_path contains 'InventoryApplicationFile\\'
 
 # Tags Windows application installation events.
 application_install

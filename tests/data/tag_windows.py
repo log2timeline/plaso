@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers import winevt
@@ -165,6 +166,18 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     self._CheckTaggingRule(
         winjob.WinJobEventData, attribute_values_per_name,
         ['application_execution'])
+
+    # Test: parser is 'winreg/amcache' AND
+    #       data_type is 'windows:registry:key_value' AND
+    #       key_path contains 'InventoryApplicationFile\\'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_MODIFICATION
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = '\\Root\\InventoryApplicationFile\\7z.exe|afe683e0fa522625'
+    event_data.parser = 'winreg/amcache'
+    storage_writer = self._TagEvent(event, event_data, None)
+    self._CheckLabels(storage_writer, ['application_execution'])
 
   def testApplicationInstall(self):
     """Tests the application_install tagging rule."""
