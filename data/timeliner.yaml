@@ -678,6 +678,14 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'macos:background_items:entry'
+attribute_mappings:
+- name: 'target_creation_time'
+  description: 'Target Creation Time'
+- name: 'volume_creation_time'
+  description: 'Volume Creation Time'
+place_holder_event: true
+---
 data_type: 'macos:bluetooth:entry'
 attribute_mappings:
 - name: 'inquiry_time'
@@ -752,6 +760,14 @@ data_type: 'macos:launchd_log:entry'
 attribute_mappings:
 - name: 'written_time'
   description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'macos:login_items:entry'
+attribute_mappings:
+- name: 'target_creation_time'
+  description: 'Target Creation Time'
+- name: 'volume_creation_time'
+  description: 'Volume Creation Time'
 place_holder_event: true
 ---
 data_type: 'macos:login_window:entry'

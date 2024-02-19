@@ -1,0 +1,308 @@
+# dtFabric format specification.
+---
+name: bookmark_data
+type: format
+description: Mac OS backgrounditems.btm bookmakr data format
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20background%20item%20bookmark%20data%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: float32
+type: floating-point
+attributes:
+  size: 4
+  units: bytes
+---
+name: float64
+type: floating-point
+attributes:
+  size: 8
+  units: bytes
+---
+name: int8
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: int16
+type: integer
+attributes:
+  format: signed
+  size: 2
+  units: bytes
+---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
+name: int64
+type: integer
+attributes:
+  format: signed
+  size: 8
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: float64be
+type: floating-point
+attributes:
+  byte_order: big-endian
+  size: 8
+  units: bytes
+---
+name: uint32le
+type: integer
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: bookmark_data_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: size
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: data_area_offset
+  data_type: uint32
+- name: unknown3
+  type: stream
+  element_data_type: byte
+  elements_data_size: 32
+---
+name: bookmark_data_property_flags
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: flags
+  data_type: uint64
+- name: valid_flags_bitmask
+  data_type: uint64
+- name: unknown1
+  data_type: uint64
+---
+name: bookmark_data_record_base
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+# TODO: change dtFabric and _ReadStructureFromFileObject to support
+# base structure without data
+- name: data
+  type: stream
+  element_data_type: byte
+  elements_data_size: bookmark_data_record_base.data_size
+---
+name: bookmark_data_record_with_data
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+- name: data
+  type: stream
+  element_data_type: byte
+  elements_data_size: bookmark_data_record_with_data.data_size
+---
+name: bookmark_data_record_with_float32
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000305
+- name: floating_point
+  data_type: float32
+---
+name: bookmark_data_record_with_float64
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000306
+- name: floating_point
+  data_type: float64
+---
+name: bookmark_data_record_with_int8
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000301
+- name: integer
+  data_type: int8
+---
+name: bookmark_data_record_with_int16
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000302
+- name: integer
+  data_type: int16
+---
+name: bookmark_data_record_with_int32
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000303
+- name: integer
+  data_type: int32
+---
+name: bookmark_data_record_with_int64
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000304
+- name: integer
+  data_type: int64
+---
+name: bookmark_data_record_with_uint32_array
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000601
+- name: integers
+  type: sequence
+  element_data_type: uint32
+  elements_data_size: bookmark_data_record_with_uint32_array.data_size
+---
+name: bookmark_data_record_with_utf8_string
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: data_type
+  data_type: uint32
+  value: 0x00000101
+- name: string
+  type: string
+  encoding: utf8
+  element_data_type: byte
+  elements_data_size: bookmark_data_record_with_utf8_string.data_size
+---
+name: bookmark_data_record
+type: structure-group
+base: bookmark_data_record_base
+identifier: data_type
+default: bookmark_data_record_with_data
+members:
+- bookmark_data_record_with_float32
+- bookmark_data_record_with_float64
+- bookmark_data_record_with_int8
+- bookmark_data_record_with_int16
+- bookmark_data_record_with_int32
+- bookmark_data_record_with_int64
+- bookmark_data_record_with_uint32_array
+- bookmark_data_record_with_utf8_string
+---
+name: bookmark_data_tagged_value
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: value_tag
+  data_type: uint32
+- name: value_data_record_offset
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+---
+name: bookmark_data_toc
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: entries_data_size
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+  value: 0xfffffffe
+- name: identifier
+  data_type: uint32
+- name: next_toc_offset
+  data_type: uint32
+- name: number_of_tagged_values
+  data_type: uint32
+- name: tagged_values
+  type: sequence
+  element_data_type: bookmark_data_tagged_value
+  number_of_elements: bookmark_data_toc.number_of_tagged_values

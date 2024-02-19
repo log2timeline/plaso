@@ -10,6 +10,8 @@ from plaso.parsers.plist_plugins import ios_carplay
 from plaso.parsers.plist_plugins import ios_identityservices
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.plist_plugins import launchd
+from plaso.parsers.plist_plugins import macos_background_items
+from plaso.parsers.plist_plugins import macos_login_items
 from plaso.parsers.plist_plugins import macos_login_window
 from plaso.parsers.plist_plugins import macos_startup_item
 from plaso.parsers.plist_plugins import macos_user
