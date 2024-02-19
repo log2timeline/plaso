@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers import winevt
@@ -13,8 +14,11 @@ from plaso.parsers import winlnk
 from plaso.parsers import winjob
 from plaso.parsers import winprefetch
 from plaso.parsers.bencode_plugins import utorrent
+from plaso.parsers.esedb_plugins import srum
 from plaso.parsers.olecf_plugins import summary
 from plaso.parsers.sqlite_plugins import chrome_history
+from plaso.parsers.sqlite_plugins import windows_timeline
+from plaso.parsers.winreg_plugins import amcache
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import lfu
@@ -55,12 +59,83 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         winevt.WinEvtRecordEventData, attribute_values_per_name,
         ['application_execution'])
 
+    # Test: data_type is 'windows:evt:record'
+    #       AND source_name is
+    #       'Microsoft-Windows-Program-Compatibility-Assistant'
+    #       AND event_identifier is 17
+    attribute_values_per_name = {
+        'event_identifier': [17],
+        'source_name': ['Microsoft-Windows-Program-Compatibility-Assistant']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing' AND
+    #       event_identifier is 4673
+    attribute_values_per_name = {
+        'event_identifier': [4673],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
     # Test: data_type is 'windows:evtx:record' AND
     #       source_name is 'Microsoft-Windows-Security-Auditing' AND
     #       event_identifier is 4688
     attribute_values_per_name = {
         'event_identifier': [4688],
         'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing' AND
+    #       event_identifier is 4798
+    attribute_values_per_name = {
+        'event_identifier': [4798],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Security-Auditing' AND
+    #       event_identifier is 4799
+    attribute_values_per_name = {
+        'event_identifier': [4799],
+        'source_name': ['Microsoft-Windows-Security-Auditing']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Sysmon' AND
+    #       event_identifier is 1
+    attribute_values_per_name = {
+        'event_identifier': [1],
+        'source_name': ['Microsoft-Windows-Sysmon']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Application-Experience' AND
+    #       event_identifier is 500
+    attribute_values_per_name = {
+        'event_identifier': [500],
+        'source_name': ['Microsoft-Windows-Application-Experience']}
+    self._CheckTaggingRule(
+        winevtx.WinEvtxRecordEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:evtx:record' AND
+    #       source_name is 'Microsoft-Windows-Application-Experience' AND
+    #       event_identifier is 505
+    attribute_values_per_name = {
+        'event_identifier': [505],
+        'source_name': ['Microsoft-Windows-Application-Experience']}
     self._CheckTaggingRule(
         winevtx.WinEvtxRecordEventData, attribute_values_per_name,
         ['application_execution'])
@@ -102,6 +177,18 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {}
     self._CheckTaggingRule(
         winprefetch.WinPrefetchExecutionEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:srum:application_usage'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        srum.SRUMApplicationResourceUsageEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:registry:amcache'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        amcache.AMCacheFileEventData, attribute_values_per_name,
         ['application_execution'])
 
     # Test: data_type is 'windows:registry:appcompatcache'
@@ -160,10 +247,178 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
         userassist.UserAssistWindowsRegistryEventData,
         attribute_values_per_name, ['application_execution'])
 
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Compatibility Assistant\\Store'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKCU\\Software\\Microsoft\\Windows NT\\' + \
+                          'CurrentVersion\\AppCompatFlags\\' + \
+                          'Compatibility Assistant\\Store'
+    event_data.values = 'SIGN.MEDIA=XXX setup.exe: [REG_BINARY] (108 bytes)'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Explorer\\FeatureUsage\\AppSwitched'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKCU\\Software\\Microsoft\\CurrentVersion\\' + \
+                          'Explorer\\FeatureUsage\\AppSwitched'
+    event_data.values = '{00000000-0000-0000-0000-000000000000}\\' + \
+                        'zzzzzzzz.exe: [REG_DWORD_LE] 1 ' + \
+                        '{00000000-0000-0000-0000-000000000000}\\yyyy\\' + \
+                        'xxxxxxxx.exe: [REG_DWORD_LE] 7'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Explorer\\FeatureUsage\\AppLauch'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKCU\\Software\\Microsoft\\CurrentVersion\\' + \
+                          'Explorer\\FeatureUsage\\AppLauch'
+    event_data.values = 'Chrome: [REG_DWORD_LE] 2'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Explorer\\FeatureUsage\\AppBadgeUpdated'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKCU\\Software\\Microsoft\\CurrentVersion\\' + \
+                          'Explorer\\FeatureUsage\\AppBadgeUpdated'
+    event_data.values = 'Chrome: [REG_DWORD_LE] 2'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Explorer\\FeatureUsage\\ShowJumpView'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKCU\\Software\\Microsoft\\CurrentVersion\\' + \
+                          'Explorer\\FeatureUsage\\ShowJumpView'
+    event_data.values = 'Microsoft.AutoGenerated.{00000000-0000-0000-' + \
+                        '0000-000000000000}: [REG_DWORD_LE] 1 Microsoft' + \
+                        '.Windows.RemoteDesktop: [REG_DWORD_LE] 1'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Search\\RecentApps\\'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows' + \
+                          '\\CurrentVersion\\Search\\RecentApps\\' + \
+                          '{00000000-0000-0000-0000-000000000000}'
+    event_data.values = 'AppId: [REG_SZ] C:\\xxxx.exe LastAccessedTime: ' + \
+                        '[REG_QWORD] 131581731096750000 LaunchCount:' + \
+                        '[REG_DWORD_LE] 1'
+    event_data.parser = 'winreg/winreg_default'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains '\\Services\\bam\\UserSettings\\'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet' + \
+                          '\\Services\\bam\\UserSettings\\S-1-5-18'
+    event_data.values = 'SequenceNumber: [REG_DWORD_LE] 8 Version: ' + \
+                        '[REG_DWORD_LE] 1 \\Device\\HarddiskVolume4\\' + \
+                        'Program Files\\uvnc bvba\\UltraVNC\\winvnc.exe: ' + \
+                        '[REG_BINARY] (24 bytes) \\Device\\HarddiskVolume4' + \
+                        '\\Windows\\System32\\csrss.exe:' + \
+                        ' [REG_BINARY] (24 bytes)'
+    event_data.parser = 'winreg/winreg_default'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains 'WinClient\\SoftwareMonitoring\\MonitorLog\\'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\' + \
+                          'LANDesk\\ManagementSuite\\WinClient\\' + \
+                          'SoftwareMonitoring\\MonitorLog\\' + \
+                          'C:/Program Files (x86)/Google/Temp/' + \
+                          'GUMEFD7.tmp/GoogleUpdate.exe'
+    event_data.values = 'Current Duration: [REG_BINARY] (8 bytes) ' + \
+                        'Current User: [REG_SZ] Système First Started:' + \
+                        ' [REG_BINARY] (8 bytes) Last Duration: ' + \
+                        '[REG_BINARY] (8 bytes) Last Started: ' + \
+                        '[REG_BINARY] (8 bytes) Total Duration: ' + \
+                        '[REG_BINARY] (8 bytes) Total Runs: [REG_DWORD_LE] 1'
+    event_data.parser = 'winreg/winreg_default'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
+    # Test: data_type is 'windows:registry:key_value' AND
+    #       key_path contains
+    #       'Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications\\'
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\' + \
+                          'RADAR\\HeapLeakDetection\\DiagnosedApplications' + \
+                          '\\java.exe'
+    event_data.values = 'LastDetectionTime: [REG_QWORD] 131581732255493203'
+    event_data.parser = 'winreg/winreg_default'
+
+    storage_writer = self._TagEvent(event, event_data, None)
+
+    self._CheckLabels(storage_writer, ['application_execution'])
+
     # Test: data_type is 'windows:tasks:job'
     attribute_values_per_name = {}
     self._CheckTaggingRule(
         winjob.WinJobEventData, attribute_values_per_name,
+        ['application_execution'])
+
+    # Test: data_type is 'windows:timeline:user_engaged'
+    attribute_values_per_name = {}
+    self._CheckTaggingRule(
+        windows_timeline.WindowsTimelineUserEngagedEventData,
+        attribute_values_per_name,
         ['application_execution'])
 
   def testApplicationInstall(self):

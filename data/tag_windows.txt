@@ -2,15 +2,30 @@
 application_execution
   data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 592
-  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Program-Compatibility-Assistant' AND event_identifier is 17
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND (event_identifier is 4673 OR event_identifier is 4688 OR event_identifier is 4798 OR event_identifier is 4799)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Sysmon' AND event_identifier is 1
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 500 OR event_identifier is 505)
   data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
   data_type is 'windows:lnk:link' AND filename contains 'Recent' AND (local_path contains '.exe' OR network_path contains '.exe' OR relative_path contains '.exe')
   data_type is 'windows:prefetch:execution'
+  data_type is 'windows:srum:application_usage'
+  data_type is 'windows:registry:amcache'
   data_type is 'windows:registry:appcompatcache'
   data_type is 'windows:registry:mrulist' AND entries contains '.exe'
   data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
   data_type is 'windows:registry:userassist' AND value_name contains '.exe'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Compatibility Assistant\\Store'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Explorer\\FeatureUsage\\AppSwitched'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Explorer\\FeatureUsage\\AppLauch'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Explorer\\FeatureUsage\\AppBadgeUpdated'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Explorer\\FeatureUsage\\ShowJumpView'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Search\\RecentApps\\'
+  data_type is 'windows:registry:key_value' AND key_path contains '\\Services\\bam\\UserSettings\\'
+  data_type is 'windows:registry:key_value' AND key_path contains 'WinClient\\SoftwareMonitoring\\MonitorLog\\'
+  data_type is 'windows:registry:key_value' AND key_path contains 'Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications\\'
   data_type is 'windows:tasks:job'
+  data_type is 'windows:timeline:user_engaged'
 
 # Tags Windows application installation events.
 application_install
