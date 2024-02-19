@@ -189,6 +189,8 @@ data_type: 'chrome:cache:entry'
 attribute_mappings:
 - name: 'creation_time'
   description: 'Creation Time'
+- name: 'payloads'
+  description: 'Json-encoded list of file (with offset) of the cache payload'
 place_holder_event: true
 ---
 data_type: 'chrome:cookie:entry'

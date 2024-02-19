@@ -17,8 +17,10 @@ type: 'conditional'
 data_type: 'chrome:cache:entry'
 message:
 - 'Original URL: {original_url}'
+- 'Payloads: {payloads}'
 short_message:
 - 'Original URL: {original_url}'
+- 'Payloads: {payloads}'
 short_source: 'WEBHIST'
 source: 'Chrome Cache'
 ---
