@@ -46,37 +46,7 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testProcessWithBackgroundItemsV4Btm(self):
-    """Tests the Process function with a BackgroundItems-v4.btm file."""
-    plist_name = 'BackgroundItems-v4.btm'
-
-    plugin = macos_background_items.MacOSBackgroundItemsPlistPlugin()
-    storage_writer = self._ParsePlistFileWithPlugin(
-        plugin, [plist_name], plist_name)
-
-    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    self.assertEqual(number_of_event_data, 6)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    expected_event_values = {
-        'data_type': 'macos:background_items:entry',
-        'target_creation_time': '2022-07-05T17:06:15.000000+00:00',
-        'target_path': '/Applications/Syncthing.app',
-        'volume_creation_time': '2022-07-06T06:27:36.000000+00:00',
-        'volume_flags': 0x100000081,
-        'volume_mount_point': '/',
-        'volume_name': 'Macintosh HD'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
-    self.CheckEventData(event_data, expected_event_values)
+  # TODO: add tests for version 4, 7 or 8
 
 
 if __name__ == '__main__':

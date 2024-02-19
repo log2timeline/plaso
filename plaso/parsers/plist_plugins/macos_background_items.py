@@ -246,6 +246,20 @@ class MacOSBackgroundItemsPlistPlugin(
       for container in background_items.get('allContainers', None) or []:
         event_data = MacOSBackgroundItemEventData()
 
+        bookmark = container.get('bookmark', None) or {}
+        bookmark_data = bookmark.get('data', None)
+        if bookmark_data:
+          try:
+            self._ParseBookmarkData(bookmark_data, event_data)
+          except errors.ParseError as exception:
+            parser_mediator.ProduceExtractionWarning(
+                f'unable to parse bookmark data with error: {exception!s}.')
+
+          # For now generate an additional event data container if container
+          # level bookmark data is present.
+          parser_mediator.ProduceEventData(event_data)
+          event_data = MacOSBackgroundItemEventData()
+
         internal_items = container.get('internalItems', None) or {}
 
         bookmark = internal_items.get('bookmark', None) or {}
@@ -254,8 +268,9 @@ class MacOSBackgroundItemsPlistPlugin(
           try:
             self._ParseBookmarkData(bookmark_data, event_data)
           except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f'unable to parse bookmark data with error: {exception!s}.')
+            parser_mediator.ProduceExtractionWarning((
+                f'unable to parse internal items bookmark data with error: '
+                f'{exception!s}.'))
 
         parser_mediator.ProduceEventData(event_data)
 
