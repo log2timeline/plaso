@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Psort (Plaso Síar Og Raðar Þessu) - Makes output from Plaso Storage files.
+"""Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
+
+Psteal combines the log2timeline and psort tools into a single tool.
+Currently doesn't support any of the two tools flags.
 
 Sample Usage:
-  psort.py /tmp/mystorage.dump "date > '01-06-2012'"
+  psteal.py --source=/tmp/mystorage.dump --write=/tmp/mystorage_timeline.csv
 
 See additional details here:
-  https://plaso.readthedocs.io/en/latest/sources/user/Using-psort.html
+  https://plaso.readthedocs.io/en/latest/sources/user/Creating-a-timeline.html#using-psteal
 """
 
 import multiprocessing
@@ -15,18 +18,20 @@ import os
 import sys
 
 from plaso import dependencies
-from plaso.cli import tools as cli_tools
-from plaso.cli import psort_tool
+from plaso.cli import psteal_tool
 from plaso.lib import errors
 
 
 def Main():
-  """The main function."""
-  input_reader = cli_tools.StdinInputReader()
-  tool = psort_tool.PsortTool(input_reader=input_reader)
+  """Entry point of console script to extract and output events.
+
+  Returns:
+    int: exit code that is provided to sys.exit().
+  """
+  tool = psteal_tool.PstealTool()
 
   if not tool.ParseArguments(sys.argv[1:]):
-    return False
+    return 1
 
   if tool.show_troubleshooting:
     print('Using Python version {0!s}'.format(sys.version))
@@ -39,16 +44,20 @@ def Main():
 
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
-    return True
+    return 0
 
   try:
     tool.CheckOutDated()
   except KeyboardInterrupt:
-    return False
+    return 1
 
   have_list_option = False
-  if tool.list_analysis_plugins:
-    tool.ListAnalysisPlugins()
+  if tool.list_archive_types:
+    tool.ListArchiveTypes()
+    have_list_option = True
+
+  if tool.list_hashers:
+    tool.ListHashers()
     have_list_option = True
 
   if tool.list_language_tags:
@@ -59,8 +68,8 @@ def Main():
     tool.ListOutputModules()
     have_list_option = True
 
-  if tool.list_profilers:
-    tool.ListProfilers()
+  if tool.list_parsers_and_plugins:
+    tool.ListParsersAndPlugins()
     have_list_option = True
 
   if tool.list_time_zones:
@@ -68,9 +77,14 @@ def Main():
     have_list_option = True
 
   if have_list_option:
-    return True
+    return 0
+
+  if tool.dependencies_check and not dependencies.CheckDependencies(
+      verbose_output=False):
+    return 1
 
   try:
+    tool.ExtractEventsFromSources()
     tool.ProcessStorage()
 
   # Writing to stdout and stderr will raise BrokenPipeError if it
@@ -80,17 +94,13 @@ def Main():
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
-    return False
+    return 1
 
-  except RuntimeError as exception:
-    print(exception)
-    return False
-
-  except errors.BadConfigOption as exception:
+  except errors.SourceScannerError as exception:
     logging.warning(exception)
-    return False
+    return 1
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
@@ -98,7 +108,4 @@ if __name__ == '__main__':
   # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
   multiprocessing.freeze_support()
 
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

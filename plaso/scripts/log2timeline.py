@@ -13,11 +13,15 @@ from plaso.lib import errors
 
 
 def Main():
-  """The main function."""
+  """Entry point of console script to extract events.
+
+  Returns:
+    int: exit code that is provided to sys.exit().
+  """
   tool = log2timeline_tool.Log2TimelineTool()
 
   if not tool.ParseArguments(sys.argv[1:]):
-    return False
+    return 1
 
   if tool.show_troubleshooting:
     print('Using Python version {0!s}'.format(sys.version))
@@ -30,16 +34,16 @@ def Main():
 
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
-    return True
+    return 0
 
   try:
     tool.CheckOutDated()
   except KeyboardInterrupt:
-    return False
+    return 1
 
   if tool.show_info:
     tool.ShowInfo()
-    return True
+    return 0
 
   have_list_option = False
   if tool.list_archive_types:
@@ -67,11 +71,11 @@ def Main():
     have_list_option = True
 
   if have_list_option:
-    return True
+    return 0
 
   if tool.dependencies_check and not dependencies.CheckDependencies(
       verbose_output=False):
-    return False
+    return 1
 
   try:
     tool.ExtractEventsFromSources()
@@ -83,16 +87,16 @@ def Main():
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
-    return False
+    return 1
 
   except (IOError, errors.BadConfigOption,
           errors.SourceScannerError) as exception:
     # Display message on stdout as well as the log file.
     print(exception)
     logging.error(exception)
-    return False
+    return 1
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
@@ -100,7 +104,4 @@ if __name__ == '__main__':
   # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
   multiprocessing.freeze_support()
 
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())
