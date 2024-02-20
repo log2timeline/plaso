@@ -2001,7 +2001,7 @@ def Main():
   tools_path = options.tools_directory
   if not tools_path:
     tools_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 'tools')
+        os.path.dirname(os.path.dirname(__file__)), 'plaso', 'scripts')
 
   test_sources_path = options.sources_directory
   if test_sources_path and not os.path.isdir(test_sources_path):
