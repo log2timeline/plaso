@@ -78,7 +78,10 @@ def Main():
     logging.warning(exception)
     return 1
 
-  return result
+  if not result:
+    return 1
+
+  return 0
 
 
 if __name__ == '__main__':
