@@ -69,7 +69,7 @@ do
 	# Note that output is mapped to /home/test/plaso/plaso-out to ensure files
 	# created by the end-to-end.py script are stored outside the container.
 
-	COMMAND="./tests/end-to-end.py --config /config/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --tools-directory ./tools";
+	COMMAND="./tests/end-to-end.py --config /config/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /sources --scripts-directory plaso/scripts";
 
 	# TODO: move custom test setup and teardown scripts to configuration parameter?
 
@@ -81,7 +81,7 @@ do
 
 	if [[ ${TEST_NAME} == "acserver-mounted" ]];
 	then
-		COMMAND="mkdir -p /mnt/acserver_mount && mount -o ro,noload,noacl,loop,offset=1048576 /sources/acserver.dd /mnt/acserver_mount && ./tests/end-to-end.py --config /config/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /mnt --tools-directory ./tools && umount /mnt/acserver_mount && rmdir /mnt/acserver_mount";
+		COMMAND="mkdir -p /mnt/acserver_mount && mount -o ro,noload,noacl,loop,offset=1048576 /sources/acserver.dd /mnt/acserver_mount && ./tests/end-to-end.py --config /config/${TEST_NAME}.ini --references-directory test_data/end_to_end --results-directory plaso-out --sources-directory /mnt --scripts-directory plaso/scripts && umount /mnt/acserver_mount && rmdir /mnt/acserver_mount";
 
 	elif [[ ${TEST_NAME} == *\-nsrlsvr ]];
 	then

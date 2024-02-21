@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""The log2timeline command line tool."""
+"""A simple dump information gathered from a plaso storage container.
+
+pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
+"""
 
 import logging
 import multiprocessing
@@ -8,16 +11,20 @@ import os
 import sys
 
 from plaso import dependencies
-from plaso.cli import log2timeline_tool
+from plaso.cli import pinfo_tool
 from plaso.lib import errors
 
 
 def Main():
-  """The main function."""
-  tool = log2timeline_tool.Log2TimelineTool()
+  """Entry point of console script to provide information about extracted data.
+
+  Returns:
+    int: exit code that is provided to sys.exit().
+  """
+  tool = pinfo_tool.PinfoTool()
 
   if not tool.ParseArguments(sys.argv[1:]):
-    return False
+    return 1
 
   if tool.show_troubleshooting:
     print('Using Python version {0!s}'.format(sys.version))
@@ -30,51 +37,33 @@ def Main():
 
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
-    return True
+    return 0
 
   try:
     tool.CheckOutDated()
   except KeyboardInterrupt:
-    return False
-
-  if tool.show_info:
-    tool.ShowInfo()
-    return True
+    return 1
 
   have_list_option = False
-  if tool.list_archive_types:
-    tool.ListArchiveTypes()
+  if tool.list_reports:
+    tool.ListReports()
     have_list_option = True
 
-  if tool.list_hashers:
-    tool.ListHashers()
-    have_list_option = True
-
-  if tool.list_language_tags:
-    tool.ListLanguageTags()
-    have_list_option = True
-
-  if tool.list_parsers_and_plugins:
-    tool.ListParsersAndPlugins()
-    have_list_option = True
-
-  if tool.list_profilers:
-    tool.ListProfilers()
-    have_list_option = True
-
-  if tool.list_time_zones:
-    tool.ListTimeZones()
+  if tool.list_sections:
+    tool.ListSections()
     have_list_option = True
 
   if have_list_option:
-    return True
+    return 0
 
-  if tool.dependencies_check and not dependencies.CheckDependencies(
-      verbose_output=False):
-    return False
-
+  result = True
   try:
-    tool.ExtractEventsFromSources()
+    if tool.compare_storage_information:
+      result = tool.CompareStores()
+    elif tool.generate_report:
+      tool.GenerateReport()
+    else:
+      tool.PrintStorageInformation()
 
   # Writing to stdout and stderr will raise BrokenPipeError if it
   # receives a SIGPIPE.
@@ -83,16 +72,16 @@ def Main():
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
-    return False
+    return 1
 
-  except (IOError, errors.BadConfigOption,
-          errors.SourceScannerError) as exception:
-    # Display message on stdout as well as the log file.
-    print(exception)
-    logging.error(exception)
-    return False
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return 1
 
-  return True
+  if not result:
+    return 1
+
+  return 0
 
 
 if __name__ == '__main__':
@@ -100,7 +89,4 @@ if __name__ == '__main__':
   # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
   multiprocessing.freeze_support()
 
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())
