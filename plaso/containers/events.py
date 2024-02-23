@@ -95,9 +95,9 @@ class DateLessLogHelper(interface.AttributeContainer):
   CONTAINER_TYPE = 'date_less_log_helper'
 
   SCHEMA = {
-    '_event_data_stream_identifier': 'AttributeContainerIdentifier',
-    'earliest_date': 'datetime.datetime',
-    'latest_date': 'datetime.datetime'}
+      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
+      'earliest_date': 'datetime.datetime',
+      'latest_date': 'datetime.datetime'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
       '_event_data_stream_identifier']

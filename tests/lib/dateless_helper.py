@@ -43,6 +43,12 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(date, datetime.datetime(2013, 7, 22))
 
+    with self.assertRaises(ValueError):
+      test_helper._SetDate(2013, 7, 32)
+
+    with self.assertRaises(ValueError):
+      test_helper._SetDate(2013, 13, 1)
+
   def test_SetDate(self):
     """Tests the _SetDate function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()

@@ -118,7 +118,7 @@ class EventDataTimeliner(object):
             'defaulting to current date: {0:d}').format(self._current_date)
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_date = self._current_year
+        base_date = self._current_date
 
       elif earliest_date < self._current_date:
         base_date = earliest_date
@@ -236,7 +236,6 @@ class EventDataTimeliner(object):
     current_time = datetime.datetime.now()
     current_date = datetime.datetime(*current_time.timetuple()[:3])
     return current_date
-
 
   def _GetCurrentYear(self):
     """Retrieves current year.
