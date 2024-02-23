@@ -150,6 +150,7 @@ parsers:
 - text/setupapi
 - text/skydrive_log_v1
 - text/skydrive_log_v2
+- text/teamviewer
 - text/winfirewall
 - usnjrnl
 - webhist
