@@ -94,6 +94,7 @@ parsers:
 - text/mac_appfirewall_log
 - text/mac_securityd
 - text/mac_wifi
+- text/macos_launchd_log
 - text/syslog
 - text/syslog_traditional
 - text/zsh_extended_history
