@@ -13,6 +13,8 @@ import abc
 import plistlib
 import uuid
 
+import pytz
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -710,6 +712,9 @@ class PlistPlugin(plugins.BasePlugin):
     datetime_value = plist_key.get(plist_value_name, None)
     if not datetime_value:
       return None
+
+    # dfDateTime relies on the time zone but since plistlib does not set one.
+    datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
     date_time.CopyFromDatetime(datetime_value)
