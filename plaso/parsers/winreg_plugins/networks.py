@@ -21,6 +21,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
     default_gateway_mac (str): MAC address for the default gateway.
     description (str): description of the wireless connection.
     dns_suffix (str): DNS suffix.
+    key_path (str): Windows Registry key path.
     last_connected_time (dfdatetime.DateTimeValues): last connected date and
         time.
     ssid (str): SSID of the connection.
@@ -37,6 +38,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
     self.default_gateway_mac = None
     self.description = None
     self.dns_suffix = None
+    self.key_path = None
     self.last_connected_time = None
     self.ssid = None
 
@@ -171,6 +173,7 @@ class NetworksWindowsRegistryPlugin(
         event_data.default_gateway_mac = default_gateway_mac
         event_data.description = self._GetValueFromKey(subkey, 'Description')
         event_data.dns_suffix = dns_suffix
+        event_data.key_path = subkey.path
         event_data.last_connected_time = self._ParseSystemTime(
             parser_mediator, subkey, 'DateLastConnected')
         event_data.ssid = self._GetValueFromKey(subkey, 'ProfileName')

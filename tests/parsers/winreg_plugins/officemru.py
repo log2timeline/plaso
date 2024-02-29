@@ -16,47 +16,31 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = officemru.OfficeMRUPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Access\\File MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Access\\File MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Access\\Place MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Access\\Place MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Excel\\File MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Excel\\File MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Excel\\Place MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'PowerPoint\\File MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'PowerPoint\\Place MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Word\\File MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Word\\File MRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-        'Word\\Place MRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Word\\Place MRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
