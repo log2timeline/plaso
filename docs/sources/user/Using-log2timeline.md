@@ -1,10 +1,9 @@
 # Using log2timeline.py
 
-**log2timeline** is a command line tool to extract
-[events](Scribbles-about-events.md#what-is-an-event) from individual files,
-recursing a directory, for example a mount point, or storage media image or
-device. log2timeline creates a plaso storage file which can be analyzed with
-the pinfo and psort tools.
+**log2timeline** is a command line tool to extract [events](Scribbles-about-events.md#what-is-an-event)
+from individual files, recursing a directory, for example a mount point, or
+storage media image or device. log2timeline creates a Plaso storage file which
+can be analyzed with the pinfo and psort tools.
 
 The Plaso storage file contains the extracted events and various metadata about
 the collection process alongside information collected from the source data. It
@@ -24,8 +23,8 @@ any additional parameters, only defining the output and input. The output is
 the path and filename of the storage file while the input is the location of
 the source, whether that is a single file, a storage media image or a directory
 such as a mount point. log2timeline.py will go through the entire data set and
-produce a "*kitchen sink*" timeline, containing information extracted from all
-discovered files.
+produce a timeline with a predefined set of parsers, containing information
+extracted from all discovered file entries and supported file formats.
 
 ```bash
 $ log2timeline.py --storage-file OUTPUT INPUT
@@ -73,9 +72,9 @@ Processing completed.
 The status window includes information, such as:
 
 * how many workers were started up;
-* what the process identifier (PID) fo the worker processes is;
+* what the process identifier (PID) of the worker processes are;
 * how many events in total and each one of the workers has extracted;
-* what the last was a worker was extracting events from.
+* what the last file entry was a worker was extracting events from.
 
 The input in the previous example was a storage media image with a single
 partition, which was running a Windows XP system on it. The first thing the
@@ -95,6 +94,7 @@ p2              368050176 (0x15f00000)  148.7GiB / 159.7GB (159671910400 B)
 Please specify the identifier of the partition that should be processed.
 All partitions can be defined as: "all". Note that you can abort with Ctrl^C.
 p2
+
 Found a BitLocker encrypted volume.
 Supported credentials:
 
@@ -112,9 +112,9 @@ Note that there are various options that can be used to prevent
 log2timeline.py from prompting the user to select VSS stores or
 partitions.
 
- + **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: ```---partitions 2``` will pick the second partition on the disk.
- + **--vss_stores**: Selects the VSS stores to include, eg: ```---vss_stores all``` will select all available VSS stores, or ```--vss_stores 1,4,5``` (only first, fourth and fifth), or ```--vss_stores 1..3``` (first three stores) or ```--vss_stores=none``` will ignore available VSS stores.
- + **--unattended**: log2timeline.py will error instead of prompting the user.
+* **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: `---partitions 2` will pick the second partition on the disk.
+* **--vss_stores**: Selects the VSS stores to include, eg: `---vss_stores all` will select all available VSS stores, or `--vss_stores 1,4,5` (only first, fourth and fifth), or `--vss_stores 1..3` (first three stores) or `--vss_stores=none` will ignore available VSS stores.
+* **--unattended**: log2timeline.py will error instead of prompting the user.
 
 After finding a partition to process log2timeline.py will start the
 pre-processing stage, where it collects information from the storage media.
@@ -127,13 +127,17 @@ That is evident by the entries like:
 Here log2timeline.py detected that the hostname from the Windows installation
 in this partition is: **N-1A9ODN6ZXK4LQ**.
 
+Note that the pre-processing will also determine the most appropriate [parser preset](https://plaso.readthedocs.io/en/latest/sources/user/Parsers-and-plugins.html#parser-presets-plaso-data-presets-yaml).
+The parser preset defines which parser are enabled. The auto-detection can be
+overwritten with the `--parsers` option.
+
 After that the tool spins up several workers (the actual number differs depends
 on number of CPU's on the system running the tool), a collector and a storage
 process.
 
 ## The info option
 
-The first option is the ``--info`` which prints out information about all
+The first option is the `--info` which prints out information about all
 supported plugins, parsers, output modules, etc.
 
 ```bash
@@ -157,8 +161,8 @@ $ log2timeline.py --info
 
 ## The logfile option
 
-Another useful option to use is the ```--logfile```. This will redirect all log
-messages from log2timeline.py to a file. This can be coupled with ```-d``` if
+Another useful option to use is the `--logfile`. This will redirect all log
+messages from log2timeline.py to a file. This can be coupled with `-d` if
 you wish to get more detailed debug information.
 
 ```bash
