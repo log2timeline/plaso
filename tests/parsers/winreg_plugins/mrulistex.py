@@ -173,7 +173,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
         'P:\\\\Application Tools\\\\Firefox 6.0\\\\Firefox Setup 6.0.exe',
         'Index: 2 [MRU Value 0]: Shell item path: <Computers and '
-        'Devices> <UNKNOWN: 0x00>\\\\controller\\WebDavShare\\\\Firefox '
+        'Devices> <Users property view>\\\\controller\\WebDavShare\\\\Firefox '
         'Setup 3.6.12.exe']
 
     expected_event_values = {
@@ -197,7 +197,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'origin': f'{key_path:s}\\*',
         'shell_item_path': (
             '<Shared Documents Folder (Users Files)> '
-            '<UNKNOWN: 0x00>\\\\Alloy Research')}
+            '<Users property view>\\\\Alloy Research')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -338,15 +338,16 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     # MRUListEx event data.
     expected_entries = [
         'Index: 1 [MRU Value 1]: Path: chrome.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
-        '<UNKNOWN: 0x00>',
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view> <Users property view>',
         'Index: 2 [MRU Value 7]: '
         'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, '
         'Shell item path: <Shared Documents Folder (Users Files)> '
-        '<UNKNOWN: 0x00>\\\\Alloy Research',
+        '<Users property view>\\\\Alloy Research',
         'Index: 3 [MRU Value 6]: '
         'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00>',
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view>',
         'Index: 4 [MRU Value 5]: '
         'Path: {24B5C9BB-48B5-47FF-8343-40481DBA1E2B}, '
         'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents',
@@ -356,11 +357,12 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         'Alloy Research',
         'Index: 6 [MRU Value 3]: '
         'Path: {D4F85F66-003D-4127-BCE9-CAD7A57B2857}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00>',
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view>',
         'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
         'Shell item path: <My Computer> P:\\\\Application Tools\\\\Firefox 6.0',
         'Index: 8 [MRU Value 2]: Path: Skype.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00>']
+        'Shell item path: <Users Libraries> <Users property view>']
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
