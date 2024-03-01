@@ -93,15 +93,14 @@ class USBStorPlugin(
     elif value_type == 0x00000012:
       data_type_map = self._GetDataTypeMap('utf16le_string')
     else:
-      raise errors.ParseError('Unsupported value type: 0x{0:08x}'.format(
-          value_type))
+      raise errors.ParseError(f'Unsupported value type: 0x{value_type:08x}')
 
     try:
       value_data = self._ReadStructureFromByteStream(
           binary_data, 0, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse value: Data with error: {0!s}'.format(exception))
+          f'Unable to parse value: Data with error: {exception!s}')
 
     if value_type == 0x00000010:
       value_data = dfdatetime_filetime.Filetime(timestamp=value_data)
@@ -129,7 +128,7 @@ class USBStorPlugin(
       return self._ReadStructureFromByteStream(binary_data, 0, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse value: Type with error: {0!s}'.format(exception))
+          f'Unable to parse value: Type with error: {exception!s}')
 
   def _ParseDeviceKey(self, parser_mediator, device_key):
     """Parses an USB storage device key.
@@ -207,7 +206,7 @@ class USBStorPlugin(
         self._ParseDeviceKey(parser_mediator, device_key)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse device key with error: {0!s}'.format(exception))
+            f'unable to parse device key with error: {exception!s}')
         continue
 
     self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)

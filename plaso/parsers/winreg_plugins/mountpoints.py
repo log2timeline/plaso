@@ -70,7 +70,8 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       elif name.startswith('##'):
         source_type = 'Remote Drive'
         server_name, _, share_name = name[2:].partition('#')
-        share_name = '\\{0:s}'.format(share_name.replace('#', '\\'))
+        share_name = share_name.replace('#', '\\')
+        share_name = f'\\{share_name:s}'
 
       label_value = subkey.GetValueByName('_LabelFromReg')
       if label_value:

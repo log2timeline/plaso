@@ -124,8 +124,8 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
         timestamp = int(values[0][0], 16)
       except ValueError:
         parser_mediator.ProduceExtractionWarning((
-            'unable to convert filetime string to an integer for '
-            'value: {0:s}.').format(registry_value.name))
+            f'unable to convert filetime string to an integer for '
+            f'value: {registry_value.name:s}.'))
         continue
 
       event_data = OfficeMRUWindowsRegistryEventData()
@@ -139,7 +139,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
       parser_mediator.ProduceEventData(event_data)
 
-      entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
+      entries.append(f'{registry_value.name:s}: {value_string:s}')
 
     event_data = OfficeMRUListWindowsRegistryEventData()
     event_data.entries = ' '.join(entries) or None
