@@ -80,7 +80,7 @@ class WinLnkLinkEventData(events.EventData):
 
 
 class WinLnkParser(interface.FileObjectParser):
-  """Parses Windows Shortcut (LNK) files."""
+  """Windows Shortcut (LNK) file parser."""
 
   _INITIAL_FILE_OFFSET = None
 
