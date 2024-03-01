@@ -259,10 +259,10 @@ What this does is:
 + Uses the file "tag_windows.txt" as a source of all tags to apply.
 
 The filter file that is passed on is searched for using the provided path as an
-absolute, relative path or relative to the [data](https://github.com/log2timeline/plaso/tree/main/data)
+absolute, relative path or relative to the [data](https://github.com/log2timeline/plaso/tree/main/plaso/data)
 directory.
 
-The file [tag_windows.txt](https://github.com/log2timeline/plaso/blob/main/data/tag_windows.txt)
+The file [tag_windows.txt](https://github.com/log2timeline/plaso/blob/main/plaso/data/tag_windows.txt)
 for instance is a file that is found inside the data directory and can thus be
 used without creating any file.
 
@@ -406,11 +406,11 @@ $ psort.py --slice_size 15 --slicer -q timeline.plaso "cached_file_size is 43"
 
 ### Other options
 
-The [data](https://github.com/log2timeline/plaso/tree/main/data) folder was
-[previously mentioned](Using-psort.md#automatic-analysis). The location of this
-folder is automatically determined, depending on how the tool got installed on
-the system and the OS platform. This data path is used by **psort** to find the
-location of filter files, Event Log message database, etc.
+The [data](https://github.com/log2timeline/plaso/tree/main/plaso/data) folder
+was [previously mentioned](Using-psort.md#automatic-analysis). The location of
+this folder is automatically determined, depending on how the tool got installed
+on the system and the OS platform. This data path is used by **psort** to find
+the location of filter files, Event Log message database, etc.
 
 This data path can be changed from the default location, for instance if you
 have your own *winevt-rc.db* database or set of filter files. This can be

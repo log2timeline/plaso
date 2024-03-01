@@ -4,7 +4,7 @@ Plaso provides various configuration files for the [tagging analysis plugin](Ana
 
 ## Linux tagging rules
 
-The Linux tagging rules are stored in the file: [tag_linux.txt](https://github.com/log2timeline/plaso/blob/main/data/tag_linux.txt)
+The Linux tagging rules are stored in the file: [tag_linux.txt](https://github.com/log2timeline/plaso/blob/main/plaso/data/tag_linux.txt)
 
 The sections below provide more context regarding specific tagging rules.
 
@@ -55,7 +55,7 @@ Mar 11 00:00:00 ubuntu2015 CRON[3]: (root) CMD (touch /tmp/afile.txt)
 
 ## MacOS tagging rules
 
-The MacOS tagging rules are stored in the file: [tag_macos.txt](https://github.com/log2timeline/plaso/blob/main/data/tag_macos.txt)
+The MacOS tagging rules are stored in the file: [tag_macos.txt](https://github.com/log2timeline/plaso/blob/main/plaso/data/tag_macos.txt)
 
 The sections below provide more context regarding specific tagging rules.
 
@@ -73,7 +73,7 @@ The sections below provide more context regarding specific tagging rules.
 
 ## Windows tagging rules
 
-The Windows tagging rules are stored in the file: [tag_windows.txt](https://github.com/log2timeline/plaso/blob/main/data/tag_windows.txt)
+The Windows tagging rules are stored in the file: [tag_windows.txt](https://github.com/log2timeline/plaso/blob/main/plaso/data/tag_windows.txt)
 
 The sections below provide more context regarding specific tagging rules.
 

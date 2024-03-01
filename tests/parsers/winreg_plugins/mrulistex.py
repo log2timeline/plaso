@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUListEx plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRUlist', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=1456)
+        'MRUlist', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'))
 
     # The order is: 201
     value_data = (
@@ -64,11 +61,9 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRUlist')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRUlist', key_path=key_path)
+        'MRUlist', key_path_prefix='HKEY_CURRENT_USER', relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'))
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
@@ -82,23 +77,18 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
-    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\Shell\\BagMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\OpenSavePidlMRU')
-    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'OpenSavePidlMRU'))
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRUlist')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -121,10 +111,14 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'Index: 2 [MRU Value 0]: Some random text here',
         'Index: 3 [MRU Value 1]: c:\\evil.exe']
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRUlist')
+
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -139,17 +133,14 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExShellItemListWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\OpenSavePidlMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'OpenSavePidlMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\StreamMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -188,7 +179,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
-        'key_path': '{0:s}\\exe'.format(key_path),
+        'key_path': f'{key_path:s}\\exe',
         'last_written_time': '2011-08-28T22:48:28.1593086+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
@@ -203,7 +194,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'long_name': 'Alloy Research',
         'name': 'ALLOYR~1',
         'modification_time': '2012-03-12T20:50:00+00:00',
-        'origin': '{0:s}\\*'.format(key_path),
+        'origin': f'{key_path:s}\\*',
         'shell_item_path': (
             '<Shared Documents Folder (Users Files)> '
             '<UNKNOWN: 0x00>\\\\Alloy Research')}
@@ -220,12 +211,10 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringAndShellItemWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\RecentDocs')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -314,12 +303,11 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringAndShellItemListWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\LastVisitedPidlMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'LastVisitedPidlMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

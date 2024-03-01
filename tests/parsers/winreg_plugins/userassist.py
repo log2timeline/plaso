@@ -31,12 +31,11 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     plugin = userassist.UserAssistPlugin()
 
     for guid in self._TEST_GUIDS:
-      key_path = (
-          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          'Explorer\\UserAssist\\{0:s}').format(guid)
-      self._AssertFiltersOnKeyPath(plugin, key_path)
+      self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+          f'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+          f'UserAssist\\{guid:s}'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
@@ -66,7 +65,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:userassist',
-        'key_path': '{0:s}\\Count'.format(key_path),
+        'key_path': f'{key_path:s}\\Count',
         'last_execution_time': '2009-08-04T15:11:22.8110676+00:00',
         'number_of_executions': 14,
         'value_name': 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'}
@@ -104,7 +103,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         'application_focus_count': 21,
         'application_focus_duration': 420000,
         'data_type': 'windows:registry:userassist',
-        'key_path': '{0:s}\\Count'.format(key_path),
+        'key_path': f'{key_path:s}\\Count',
         'last_execution_time': '2010-11-10T07:49:37.0780676+00:00',
         'number_of_executions': 14,
         'value_name': 'Microsoft.Windows.GettingStarted'}

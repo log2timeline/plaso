@@ -18,10 +18,11 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = ccleaner.CCleanerPlugin()
 
-    key_path = 'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_CURRENT_USER\\Software', 'Piriform\\CCleaner')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\Software', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

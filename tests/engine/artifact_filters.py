@@ -169,8 +169,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     file_entry = self._GetTestFileEntry(['SYSTEM'])
     file_object = file_entry.GetFileObject()
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
     registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()
