@@ -68,8 +68,7 @@ class BackgroundActivityModeratorWindowsRegistryPlugin(
           registry_value, 0, self._GetDataTypeMap('filetime'))
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse timestamp with error: {0!s}'.format(
-              exception))
+          f'Unable to parse timestamp with error: {exception!s}')
 
     return timestamp
 

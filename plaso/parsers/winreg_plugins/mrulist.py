@@ -131,7 +131,7 @@ class BaseMRUListWindowsRegistryPlugin(
       mrulist = self._ParseMRUListValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse MRUList value with error: {0!s}'.format(exception))
+          f'unable to parse MRUList value with error: {exception!s}')
       return
 
     if not mrulist:
@@ -146,8 +146,8 @@ class BaseMRUListWindowsRegistryPlugin(
 
       if found_terminator:
         parser_mediator.ProduceExtractionWarning((
-            'found additional MRUList entries after terminator in key: '
-            '{0:s}.').format(registry_key.path))
+            f'found additional MRUList entries after terminator in key: '
+            f'{registry_key.path:s}.'))
 
         # Only create one parser error per terminator.
         found_terminator = False
@@ -158,10 +158,10 @@ class BaseMRUListWindowsRegistryPlugin(
           parser_mediator, registry_key, entry_index, entry_letter,
           codepage=codepage)
 
-      value_text = 'Index: {0:d} [MRU Value {1:s}]: {2:s}'.format(
-          entry_index + 1, entry_letter, value_string)
-
-      entries.append(value_text)
+      display_entry_index = entry_index + 1
+      entries.append((
+          f'Index: {display_entry_index:d} [MRU Value {entry_letter:s}]: '
+          f'{value_string:s}'))
 
     event_data = MRUListEventData()
     event_data.entries = entries
@@ -196,19 +196,19 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
     """
     value_string = ''
 
-    value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
+    value = registry_key.GetValueByName(entry_letter)
     if value is None:
-      parser_mediator.ProduceExtractionWarning(
-          'missing MRUList value: {0:s} in key: {1:s}.'.format(
-              entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionWarning((
+          f'missing MRUList value: {entry_letter:s} in key: '
+          f'{registry_key.path:s}'))
 
     elif value.DataIsString():
       value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
       logger.debug((
-          '[{0:s}] Non-string MRUList entry value: {1:s} parsed as string '
-          'in key: {2:s}.').format(self.NAME, entry_letter, registry_key.path))
+          f'[{self.NAME:s}] Non-string MRUList entry value: {entry_letter:s} '
+          f'parsed as string in key: {registry_key.path:s}.'))
 
       utf16le_string_map = self._GetDataTypeMap('utf16le_string')
 
@@ -217,8 +217,8 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
             value.data, 0, utf16le_string_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse MRUList entry value: {0:s} with error: '
-            '{1!s}').format(entry_letter, exception))
+            f'unable to parse MRUList entry value: {entry_letter:s} with '
+            f'error: {exception!s}'))
 
       value_string = value_string.rstrip('\x00')
 
@@ -270,16 +270,16 @@ class MRUListShellItemListWindowsRegistryPlugin(
     """
     value_string = ''
 
-    value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
+    value = registry_key.GetValueByName(entry_letter)
     if value is None:
-      parser_mediator.ProduceExtractionWarning(
-          'missing MRUList value: {0:s} in key: {1:s}.'.format(
-              entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionWarning((
+          f'missing MRUList value: {entry_letter:s} in key: '
+          f'{registry_key.path:s}'))
 
     elif not value.DataIsBinaryData():
-      parser_mediator.ProduceExtractionWarning(
-          'Non-binary MRUList entry value: {1:s} in key: {2:s}.'.format(
-              entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionWarning((
+          f'Non-binary MRUList entry value: {entry_letter:s} in key: '
+          f'{registry_key.path:s}'))
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
@@ -287,7 +287,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
           parser_mediator, value.data, codepage=codepage)
 
       shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
-      value_string = 'Shell item path: {0:s}'.format(shell_item_path)
+      value_string = f'Shell item path: {shell_item_path:s}'
 
     return value_string
 

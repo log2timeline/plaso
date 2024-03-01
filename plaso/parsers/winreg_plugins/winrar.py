@@ -64,7 +64,7 @@ class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
         continue
 
       value_string = registry_value.GetDataAsObject()
-      entries.append('{0:s}: {1:s}'.format(registry_value.name, value_string))
+      entries.append(f'{registry_value.name:s}: {value_string:s}')
 
     event_data = WinRARHistoryEventData()
     event_data.entries = ' '.join(entries) or None

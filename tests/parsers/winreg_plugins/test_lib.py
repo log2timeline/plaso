@@ -102,8 +102,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     if not file_object:
       return None
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
     registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()

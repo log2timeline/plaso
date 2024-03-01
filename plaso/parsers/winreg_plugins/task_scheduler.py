@@ -104,8 +104,7 @@ class TaskCacheWindowsRegistryPlugin(
         id_value_data_size = len(id_value.data)
         if id_value_data_size != 78:
           parser_mediator.ProduceExtractionWarning(
-              'unsupported Id value data size: {0:d}.'.format(
-                  id_value_data_size))
+              f'unsupported "Id" value data size: {id_value_data_size:d}.')
           continue
 
         guid_string = id_value.GetDataAsObject()
@@ -127,9 +126,9 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record_map = dynamic_info2_map
       else:
         if not dynamic_info_size_error_reported:
-          parser_mediator.ProduceExtractionWarning(
-              'unsupported DynamicInfo value data size: {0:d}.'.format(
-                  dynamic_info_value_data_size))
+          parser_mediator.ProduceExtractionWarning((
+              f'unsupported "DynamicInfo" value data size: '
+              f'{dynamic_info_value_data_size:d}.'))
           dynamic_info_size_error_reported = True
         continue
 
@@ -139,8 +138,7 @@ class TaskCacheWindowsRegistryPlugin(
       except (ValueError, errors.ParseError) as exception:
         dynamic_info_record = None
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse DynamicInfo record with error: {0!s}.'.format(
-                exception))
+            f'unable to parse DynamicInfo record with error: {exception!s}.')
 
       name = task_guids.get(sub_key.name, sub_key.name)
 

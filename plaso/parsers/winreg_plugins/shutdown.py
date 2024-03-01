@@ -68,8 +68,7 @@ class ShutdownWindowsRegistryPlugin(
           byte_stream, 0, filetime_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse FILETIME value with error: {0!s}'.format(
-              exception))
+          f'Unable to parse FILETIME value with error: {exception!s}')
 
     if filetime == 0:
       return dfdatetime_semantic_time.NotSet()
@@ -77,8 +76,7 @@ class ShutdownWindowsRegistryPlugin(
     try:
       return dfdatetime_filetime.Filetime(timestamp=filetime)
     except ValueError:
-      raise errors.ParseError('Invalid FILETIME value: 0x{0:08x}'.format(
-          filetime))
+      raise errors.ParseError(f'Invalid FILETIME value: 0x{filetime:08x}')
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a ShutdownTime Windows Registry value.
@@ -98,8 +96,7 @@ class ShutdownWindowsRegistryPlugin(
         event_data.last_shutdown_time = self._ParseFiletime(shutdown_value.data)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to determine shutdown timestamp with error: {0!s}'.format(
-                exception))
+            f'unable to determine shutdown timestamp with error: {exception!s}')
 
       parser_mediator.ProduceEventData(event_data)
 
