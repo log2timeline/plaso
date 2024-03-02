@@ -51,8 +51,8 @@ snapshots to process is obtained from the user if needed.
 The next part of the collection operation can be divided into two different
 approaches:
 
-* "kitchen sink", which recursively goes through a storage media image or directory and collects data from every file.
-* "targeted", which collects data from a files that are included by [collection filters](https://plaso.readthedocs.io/en/latest/sources/user/Collection-Filters.html).
+* by default, data from every file in a storage media image or directory is collected recursively based on the selected [parser preset](https://plaso.readthedocs.io/en/latest/sources/user/Parsers-and-plugins.html#parser-presets-plaso-data-presets-yaml).
+* [collection filters](https://plaso.readthedocs.io/en/latest/sources/user/Collection-Filters.html) can be used to only collect data from specific (or "targeted") files.
 
 The collection operation also handles archives, such as .tar or .zip, and
 compressed streams such as .log.gz.
