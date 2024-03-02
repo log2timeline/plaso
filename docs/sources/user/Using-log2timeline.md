@@ -127,9 +127,14 @@ That is evident by the entries like:
 Here log2timeline.py detected that the hostname from the Windows installation
 in this partition is: **N-1A9ODN6ZXK4LQ**.
 
-Note that the pre-processing will also determine the most appropriate [parser preset](https://plaso.readthedocs.io/en/latest/sources/user/Parsers-and-plugins.html#parser-presets-plaso-data-presets-yaml).
+Note that the pre-processing will also determine the most appropriate [parser preset](Parsers-and-plugins.md#parser-presets-plaso-data-presets-yaml).
 The parser preset defines which parser are enabled. The auto-detection can be
 overwritten with the `--parsers` option.
+
+Note that for the `--parsers` option parser plugins need to be prefixed with
+the name of their parent e.g. "winiis" should be specified as "text/winiis".
+
+For more information about parsers and preset selection see: [Internals](../developer/Internals.md).
 
 After that the tool spins up several workers (the actual number differs depends
 on number of CPU's on the system running the tool), a collector and a storage
