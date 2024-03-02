@@ -69,6 +69,15 @@ The [parsers mediator](https://plaso.readthedocs.io/en/latest/sources/api/plaso.
 is used for parsers (and parser plugins) to interface with Plaso core
 components such as the knowledge base and storage.
 
+### Parsers and preset selection
+
+The following is a high level overview of the order of how parsers and preset
+are selected:
+
+1. User specified parsers or preset
+1. Preprocessing was able to determine an operating system and the corresponding preset is used
+1. Fallback to all parsers
+
 ## Analysis
 
 The analysis operation (not to be conflated with analyzers) iterates over
