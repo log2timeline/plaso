@@ -9,8 +9,8 @@ override_dh_auto_test:
 .PHONY: override_dh_auto_install
 override_dh_auto_install:
 	dh_auto_install
-	mkdir -p ${PWD}/debian/plaso-data/usr/share/plaso/
-	mv ${PWD}/debian/python3-plaso/usr/lib/python*/site-packages/plaso/data/* ${PWD}/debian/plaso-data/usr/share/plaso/
-	rmdir ${PWD}/debian/python3-plaso/usr/lib/python*/site-packages/plaso/data
-	for FILENAME in ${PWD}/debian/plaso-tools/usr/bin/*; do mv ${FILENAME} ${FILENAME}.py; done
+	mkdir -p ${PWD}/debian/tmp/usr/share/plaso/
+	mv ${PWD}/debian/tmp/usr/lib/python*/dist-packages/plaso/data/* ${PWD}/debian/tmp/usr/share/plaso/
+	rmdir ${PWD}/debian/tmp/usr/lib/python*/dist-packages/plaso/data
+	find ${PWD}/debian/tmp/usr/bin/ -type f -exec {} {}.py \;
 
