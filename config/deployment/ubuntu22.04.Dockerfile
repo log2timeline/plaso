@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
@@ -13,18 +13,16 @@ ARG PPA_TRACK=stable
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y update
-RUN apt-get -y install apt-transport-https apt-utils
-RUN apt-get -y install libterm-readline-gnu-perl software-properties-common
-RUN add-apt-repository -y ppa:gift/$PPA_TRACK
-
-RUN apt-get -y update
-RUN apt-get -y upgrade
-
-RUN apt-get -y install locales plaso-tools
-
-# Clean up apt-get cache files
-RUN apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+# Combining the apt-get commands into a single run reduces the size of the resulting image.
+# The apt-get installations below are interdependent and need to be done in sequence.
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https apt-utils && \
+    apt-get -y install libterm-readline-gnu-perl software-properties-common && \
+    add-apt-repository -y ppa:gift/$PPA_TRACK && \
+    apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get -y install locales plaso-tools && \
+    apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default
 RUN locale-gen en_US.UTF-8
