@@ -1,0 +1,81 @@
+# dtFabric format specification.
+---
+name: apple_biome
+type: format
+description: Apple biome file (aka SEGB file)
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: float64
+aliases: [double, DOUBLE]
+type: floating-point
+description: 64-bit double precision floating-point type
+attributes:
+  size: 8
+  units: bytes
+---
+name: segb_header_v1
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: unknown0
+  data_type: uint32
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  number_of_elements: 8
+- name: unknown3
+  data_type: uint32
+- name: filename
+  type: stream
+  element_data_type: byte
+  number_of_elements: 16
+- name: unknown4
+  type: stream
+  element_data_type: byte
+  number_of_elements: 16
+- name: segb_magic
+  type: stream
+  element_data_type: byte
+  number_of_elements: 4
+---
+name: segb_record_v1
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+  - name: size
+    data_type: uint32
+  - name: unknown1
+    data_type: uint32
+  - name: timestamp1
+    data_type: float64
+  - name: timestamp2
+    data_type: float64
+  - name: unknown2
+    data_type: uint32
+  - name: unknown3
+    data_type: uint32
+  - name: protobuf
+    type: stream
+    element_data_type: byte
+    number_of_elements: segb_record_v1.size
+
+
