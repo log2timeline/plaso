@@ -1,0 +1,127 @@
+# Plaso filter file for triaging Windows systems.
+#
+# This file can be used by image_export or log2timeline to selectively export
+# few key files of a Windows system. This file will collect:
+# * The MFT file, LogFile and the UsnJrnl
+# * Contents of the Recycle Bin/Recycler.
+# * Windows Registry files, e.g. SYSTEM and NTUSER.DAT.
+# * Shortcut (LNK) files from recent files.
+# * Jump list files, automatic and custom destination.
+# * Windows Event Log files.
+# * Prefetch files.
+# * SetupAPI file.
+# * Application Compatibility files, the Recentfilecache and AmCachefile.
+# * Windows At job files.
+# * Browser history: IE, Firefox and Chrome.
+# * Browser cookie files: IE.
+# * Flash cookies, or LSO/SOL files from the Flash player.
+# * Windows User Access Logging (UAL) database.
+---
+description: File system metadata files.
+type: include
+path_separator: '\'
+paths:
+- '\\[$]Extend\\[$]UsnJrnl'
+- '\\[$]LogFile'
+- '\\[$]MFT'
+---
+description: Recycle Bin and Recycler.
+type: include
+path_separator: '\'
+paths:
+- '\\[$]Recycle.Bin'
+- '\\[$]Recycle.Bin\\.+'
+- '\\[$]Recycle.Bin\\.+\\.+'
+- '\\\\RECYCLER'
+- '\\RECYCLER\\.+'
+- '\\RECYCLER\\.+\\.+'
+---
+description: Windows Registry files.
+type: include
+path_separator: '\'
+paths:
+- '\\(Users|Documents And Settings)\\.+\\NTUSER[.]DAT'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\Usrclass[.]dat'
+- '\\Documents And Settings\\.+\\Local Settings\\Application Data\\Microsoft\\Windows\\Usrclass[.]dat'
+- '%SystemRoot%\\System32\\config\\(SAM|SOFTWARE|SECURITY|SYSTEM)'
+---
+description: Recent activity files.
+type: include
+path_separator: '\'
+paths:
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\.+[.]lnk'
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Office\\Recent\\.+[.]lnk'
+- '\\Documents And Settings\\.+\\Recent\\.+[.]lnk'
+---
+description: Jump List files.
+type: include
+path_separator: '\'
+paths:
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\Automaticdestinations\\.+[.]automaticDestinations-ms'
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\Customdestinations\\.+[.].customDestinations-ms'
+---
+description: Windows Event Log files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\System32\\winevt\\Logs\\.+[.]evtx'
+- '%SystemRoot%\\System32\\config\\.+[.]evt'
+---
+description: Various log files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\appcompat\\pca\\.+[.]txt'
+- '%SystemRoot%\\inf\\setupapi[.].+[.]log'
+- '%SystemRoot%\\setupapi.log'
+- '%SystemRoot%\\System32\\LogFiles\\.+\\.+[.]txt'
+---
+description: Windows User Access Logging (UAL) database files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\System32\\LogFiles\\Sum\\.+[.]mdb'
+---
+description: Windows execution artifact files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\Tasks\\.+[.]job'
+- '%SystemRoot%\\Appcompat\\Programs\\Recentfilecache[.]bcf'
+- '%SystemRoot%\\Appcompat\\Programs\\AMcache[.]hve'
+---
+description: Prefetch files.
+type: include
+path_separator: '\'
+paths:
+- '%SystemRoot%\\Prefetch\\.+[.]pf'
+---
+description: Browser history artifact files.
+type: include
+path_separator: '\'
+paths:
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\History\\History.IE5\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\History\\History.IE5\\MSHist.+\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\History\\Low\\History.IE5\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\History\\Low\\History.IE5\\MSHist.+\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\Content.IE5\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\Low\\Content.IE5\\index[.]dat'
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\index[.]dat'
+- '\\Users\\.+\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\Low\\index[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Internet Explorer\\Recovery\\.+\\.+[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Internet Explorer\\Recovery\\Immersive\\.+\\.+[.]dat'
+- '\\Users\\.+\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\.+\\.+[.]sqlite'
+- '\\Users\\.+\\AppData\\Local\\Microsoft\\Windows\\WebCache\\.+[.]dat'
+- '\\Users\\.+\\AppData\\Local\\Google\\Chrome\\User Data\\.+\\History'
+- '\\Users\\.+\\AppData\\Local\\Google\\Chrome\\User Data\\.+\\Current Session'
+- '\\Users\\.+\\AppData\\Local\\Google\\Chrome\\User Data\\.+\\Last Session'
+- '\\Users\\.+\\AppData\\Local\\Google\\Chrome\\User Data\\.+\\Current Tabs'
+- '\\Users\\.+\\AppData\\Local\\Google\\Chrome\\User Data\\.+\\Last Tabs'
+- '\\Users\\.+\\AppData\\Roaming\\Macromedia\\FlashPlayer\\#SharedObjects\\.+\\.+\\.+[.]sol'
+- '\\Documents And Settings\\.+\\Local Settings\\History\\History.IE5\\index[.]dat'
+- '\\Documents And Settings\\.+\\Local Settings\\History\\History.IE5\\MSHist.+\\index[.]dat'
+- '\\Documents And Settings\\.+\\Local Settings\\Temporary Internet Files\\Content.IE5\\index[.]dat'
+- '\\Documents And Settings\\.+\\Cookies\\index[.]dat'
+- '\\Documents And Settings\\.+\\Application Data\\Mozilla\\Firefox\\Profiles\\.+\\.+[.]sqlite'
+- '\\Documents And Settings\\.+\\Local Settings\\Application Data\\Google\\Chrome\\User Data\\.+\\History'
+- '\\Documents And Settings\\.+\\Local Settings\\Application Data\\Google\\Chrome\\.+'

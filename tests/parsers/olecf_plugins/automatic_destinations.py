@@ -62,7 +62,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'drive_type': 3,
         'file_attribute_flags': 0x00002020,
         'file_size': 3545,
-        'link_target': '<Users Libraries> <UNKNOWN: 0x00>',
+        'link_target': '<Users Libraries> <Users property view>',
         'local_path': (
             'C:\\\\Users\\\\nfury\\\\AppData\\\\Roaming\\\\Microsoft\\\\'
             'Windows\\\\Libraries\\\\Documents.library-ms'),

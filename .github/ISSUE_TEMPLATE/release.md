@@ -9,9 +9,9 @@
 - [ ] [Update GIFT COPR](https://github.com/log2timeline/l2tdocs/blob/main/process/GIFT%20COPR.md) staging
   - Build Fedora source rpms: `PYTHONPATH=. ./tools/build.py --preset plaso srpm`
 - [ ] [Update l2tbinaries](https://github.com/log2timeline/l2tdocs/blob/main/process/l2tbinaries.md) win32 staging
-  - Build 32-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso msi`
+  - Build 32-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso wheel`
 - [ ] [Update l2tbinaries](https://github.com/log2timeline/l2tdocs/blob/main/process/l2tbinaries.md) win64 staging
-  - Build 64-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso msi`
+  - Build 64-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso wheel`
 - [ ] Run integration tests
 - [ ] Promote pre-release to release
 - [ ] [Update pypi](https://github.com/log2timeline/l2tdocs/blob/main/process/PyPI.md)

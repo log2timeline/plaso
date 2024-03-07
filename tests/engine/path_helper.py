@@ -370,7 +370,8 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         parent=os_path_spec)
 
     expected_display_name = (
-        'TAR:/ustar/umlauts-\\xc4\\xd6\\xdc\\xe4\\xf6\\xfc\\xdf')
+        'TAR:/ustar/umlauts-\\U0000dcc4\\U0000dcd6\\U0000dcdc\\U0000dce4'
+        '\\U0000dcf6\\U0000dcfc\\U0000dcdf')
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         tar_path_spec)
     self.assertEqual(display_name, expected_display_name)

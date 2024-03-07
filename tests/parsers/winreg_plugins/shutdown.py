@@ -16,10 +16,11 @@ class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = shutdown.ShutdownWindowsRegistryPlugin()
 
-    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'ControlSet001\\Control\\Windows')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

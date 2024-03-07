@@ -141,7 +141,7 @@ class SQLiteDatabase(object):
 
   @property
   def tables(self):
-    """list[str]: names of all the tables."""
+    """List[str]: names of all the tables."""
     return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):

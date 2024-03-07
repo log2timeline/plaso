@@ -22,6 +22,7 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libevt-python3
                      libevtx-python3
                      libewf-python3
+                     libfcrypto-python3
                      libfsapfs-python3
                      libfsext-python3
                      libfsfat-python3
@@ -43,9 +44,9 @@ PYTHON_DEPENDENCIES="libbde-python3
                      libsigscan-python3
                      libsmdev-python3
                      libsmraw-python3
-                     libssl-dev
                      libvhdi-python3
                      libvmdk-python3
+                     libvsapm-python3
                      libvsgpt-python3
                      libvshadow-python3
                      libvslvm-python3
@@ -55,7 +56,6 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-certifi
                      python3-cffi-backend
                      python3-chardet
-                     python3-cryptography
                      python3-dateutil
                      python3-defusedxml
                      python3-dfdatetime
@@ -71,16 +71,17 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-psutil
                      python3-pyparsing
                      python3-pytsk3
-                     python3-pyxattr
                      python3-redis
                      python3-requests
                      python3-six
                      python3-tz
                      python3-urllib3
+                     python3-xattr
                      python3-xlsxwriter
                      python3-yaml
                      python3-yara
-                     python3-zmq";
+                     python3-zmq
+                     python3-zstd";
 
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-distutils
@@ -107,6 +108,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libevtx-python3-dbg
                     libewf-dbg
                     libewf-python3-dbg
+                    libfcrypto-dbg
+                    libfcrypto-python3-dbg
                     libfsapfs-dbg
                     libfsapfs-python3-dbg
                     libfsext-dbg
@@ -153,6 +156,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvhdi-python3-dbg
                     libvmdk-dbg
                     libvmdk-python3-dbg
+                    libvsapm-dbg
+                    libvsapm-python3-dbg
                     libvsgpt-dbg
                     libvsgpt-python3-dbg
                     libvshadow-dbg

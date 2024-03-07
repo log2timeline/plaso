@@ -62,13 +62,13 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   NAME = 'confluence_access'
   DATA_FORMAT = 'Confluence access log (access.log) file'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -90,7 +90,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   _TIME_ZONE_OFFSET = (
       pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
 
-  # Date and time values are formatted as: [18/Sep/2011:19:18:28 -0400]
+  # Date and time values are formatted as:
+  # [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
       pyparsing.Suppress('[') + _TWO_DIGITS +
       pyparsing.Suppress('/') + _THREE_LETTERS +
@@ -98,38 +99,38 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress(':') + _TWO_DIGITS +
-      _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).setResultsName('date_time')
+      _TIME_ZONE_OFFSET + pyparsing.Suppress(']')).set_results_name('date_time')
 
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
   _RESPONSE_BYTES = (
-      pyparsing.Literal('-') | _INTEGER).setResultsName('response_bytes')
+      pyparsing.Literal('-') | _INTEGER).set_results_name('response_bytes')
 
   _REFERER = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 
   _THREAD_NAME = (
-      pyparsing.Word(pyparsing.alphanums + '-').setResultsName('thread_name'))
+      pyparsing.Word(pyparsing.alphanums + '-').set_results_name('thread_name'))
 
-  _USER_AGENT = pyparsing.restOfLine().setResultsName('user_agent')
+  _USER_AGENT = pyparsing.restOfLine().set_results_name('user_agent')
 
   _USER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '@' + pyparsing.alphanums + '.') |
       pyparsing.Word(pyparsing.alphanums) |
-      pyparsing.Literal('-')).setResultsName('user_name')
+      pyparsing.Literal('-')).set_results_name('user_name')
 
-  _HTTP_METHOD = pyparsing.oneOf([
+  _HTTP_METHOD = pyparsing.one_of([
       'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
       'TRACE'])
 
   _REMOTE_NAME = (
       _IP_ADDRESS |
-      pyparsing.Word(pyparsing.alphanums + '-' + '.')).setResultsName(
+      pyparsing.Word(pyparsing.alphanums + '-' + '.')).set_results_name(
           'remote_name')
 
-  _HTTP_VERSION = (
-      pyparsing.Word(pyparsing.alphanums + '/.').setResultsName('http_version'))
+  _HTTP_VERSION = pyparsing.Word(pyparsing.alphanums + '/.').set_results_name(
+      'http_version')
 
   _REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]')
 
@@ -143,14 +144,14 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
-      _HTTP_METHOD.setResultsName('http_method') +
-      _REQUEST_URI.setResultsName('request_url') +
+      _HTTP_METHOD.set_results_name('http_method') +
+      _REQUEST_URI.set_results_name('request_url') +
       _HTTP_VERSION +
-      _INTEGER.setResultsName('response_code') +
-      _INTEGER.setResultsName('process_duration') +
+      _INTEGER.set_results_name('response_code') +
+      _INTEGER.set_results_name('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
-      _REFERER.setResultsName('referer') +
+      _REFERER.set_results_name('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 
@@ -160,18 +161,18 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
   _POST_711_FORMAT_LOG_LINE = (
       _DATE_TIME +
-      _IP_ADDRESS.setResultsName('forwarded_for') +
+      _IP_ADDRESS.set_results_name('forwarded_for') +
       _USER_NAME +
       _THREAD_NAME +
       _REMOTE_NAME +
-      _HTTP_METHOD.setResultsName('http_method') +
-      _REQUEST_URI.setResultsName('request_url') +
+      _HTTP_METHOD.set_results_name('http_method') +
+      _REQUEST_URI.set_results_name('request_url') +
       _HTTP_VERSION +
-      _INTEGER.setResultsName('response_code') +
-      _INTEGER.setResultsName('process_duration') +
+      _INTEGER.set_results_name('response_code') +
+      _INTEGER.set_results_name('process_duration') +
       pyparsing.Literal('ms') +
       _RESPONSE_BYTES +
-      _REFERER.setResultsName('referer') +
+      _REFERER.set_results_name('referer') +
       _USER_AGENT +
       _END_OF_LINE)
 
@@ -264,7 +265,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

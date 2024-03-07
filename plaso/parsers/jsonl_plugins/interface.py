@@ -15,8 +15,8 @@ from plaso.parsers import plugins
 class JSONLPlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based.
 
-  The following are the attributes and methods expected to be overridden by
-  a JSON-L parser plugin.
+  The following are the attributes and methods expected to be overridden by a
+  JSON-L parser plugin.
   """
 
   NAME = 'jsonl_plugin'

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The SHA-1 Hasher implementation"""
+"""The SHA-1 Hasher implementation."""
 
 import hashlib
 

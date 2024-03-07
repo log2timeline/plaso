@@ -18,7 +18,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && \
     apt-get -y install apt-transport-https apt-utils && \
     apt-get -y install libterm-readline-gnu-perl software-properties-common && \
-    add-apt-repository -y ppa:gift/$PPA_TRACK && apt-get -y update && \
+    add-apt-repository -y ppa:gift/$PPA_TRACK && \
+    apt-get -y update && \
     apt-get -y upgrade && \
     apt-get -y install locales plaso-tools && \
     apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*

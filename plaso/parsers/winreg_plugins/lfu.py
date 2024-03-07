@@ -116,11 +116,9 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         boot_execute = ', '.join(value_object or [])
       else:
         boot_execute = None
-        error_string = (
-            'Key: {0:s}, value: BootExecute: unsupported value data type: '
-            '{1:s}.').format(
-                registry_key.path, registry_value.data_type_string)
-        parser_mediator.ProduceExtractionWarning(error_string)
+        parser_mediator.ProduceExtractionWarning((
+            f'Key: {registry_key.path:s}, value: BootExecute: unsupported '
+            f'value data type: {registry_value.data_type_string:s}.'))
 
       if boot_execute:
         event_data = WindowsBootExecuteEventData()

@@ -1,0 +1,119 @@
+# Tags Linux application execution events.
+application_execution
+  data_type is 'bash:history:entry'
+  data_type is 'docker:layer:configuration'
+  data_type is 'fish:history:entry'
+  data_type is 'selinux:line' AND (audit_type is 'EXECVE' OR audit_type is 'USER_CMD')
+  data_type is 'shell:zsh:history'
+  data_type is 'syslog:cron:task_run'
+  reporter is 'sudo' AND body contains 'COMMAND='
+  reporter is 'CROND' AND body contains 'CMD'
+
+# Tags Linux log-in events.
+login
+  data_type is 'linux:utmp:event' AND type == 7
+  data_type is 'selinux:line' AND audit_type is 'LOGIN'
+  reporter is 'login' AND (body contains 'logged in' OR body contains 'ROOT LOGIN' OR body contains 'session opened')
+  reporter is 'sshd' AND (body contains 'session opened' OR body contains 'Starting session')
+  reporter is 'dovecot' AND body contains 'imap-login: Login:'
+  reporter is 'postfix/submission/smtpd' AND body contains 'sasl_'
+
+# Tags Linux failed log-in events.
+login_failed
+  data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
+  data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND body contains 'res=failed'
+  data_type is 'syslog:line' AND body contains 'pam_tally2'
+  (reporter is 'sshd' OR reporter is 'login' OR reporter is 'postfix/submission/smtpd' OR reporter is 'sudo') AND body contains 'uthentication fail'
+  reporter is 'sshd' AND (body contains 'Access denied for user' OR body contains 'not allowed because')
+  (reporter is 'xscreensaver' or reporter is 'login') AND body contains 'FAILED LOGIN'
+  reporter is 'su' and body contains 'DENIED'
+  reporter is 'nologin'
+
+# User added.
+useradd
+  reporter is 'useradd' AND body contains 'new user'
+  data_type is 'selinux:line' AND audit_type is 'ADD_USER'
+
+# Group added.
+groupadd
+  reporter is 'useradd' AND body contains 'new group'
+  data_type is 'selinux:line' AND audit_type is 'ADD_GROUP'
+  reporter is 'groupadd'
+
+# User removed.
+userdel
+  reporter is 'userdel' AND body contains 'delete user'
+  data_type is 'selinux:line' AND audit_type is 'DEL_USER'
+
+# Group removed.
+groupdel
+  reporter is 'userdel' AND body contains 'removed group'
+  data_type is 'selinux:line' AND audit_type is 'DEL_GROUP'
+  reporter is 'groupdel'
+
+# Netfilter chain modifications.
+firewall_change
+  data_type is 'selinux:line' AND audit_type is 'NETFILTER_CFG'
+
+# Tags Linux log-out events.
+logout
+  # This will also flag dead gettys that init kills during shutdown/reboot (at least with SysV init)
+  data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND pid != 0
+  reporter is 'login' AND body contains 'session closed'
+  reporter is 'sshd' AND (body contains 'session closed' OR body contains 'Close session')
+  reporter is 'systemd-logind' AND body contains 'logged out'
+  reporter is 'dovecot' AND body contains 'Logged out'
+  data_type is 'selinux:line' AND audit_type is 'USER_LOGOUT'
+
+# Tags Linux user session start events.
+session_start
+  reporter is 'systemd-logind' AND body contains 'New session'
+
+# Tags Linux user session stop events.
+session_stop
+  reporter is 'systemd-logind' AND body contains 'Removed session'
+
+# Tags Linux system boot events.
+boot
+  data_type is 'linux:utmp:event' AND type == 2 AND terminal is 'system boot' AND username is 'reboot'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_BOOT'
+
+# Tags Linux system shutdown events.
+shutdown
+  data_type is 'linux:utmp:event' AND type == 1 AND (terminal is '~~' OR terminal is 'system boot') AND username is 'shutdown'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_SHUTDOWN'
+
+# Tags Linux system run level change events.
+runlevel
+  data_type is 'linux:utmp:event' AND type == 1 AND username is 'runlevel'
+  data_type is 'selinux:line' AND audit_type is 'SYSTEM_RUNLEVEL'
+
+# Tags Linux device connection events.
+device_connection
+  reporter is 'kernel' AND body contains 'New USB device found'
+
+# Tags Linux device disconnection events.
+device_disconnection
+  reporter is 'kernel' AND body contains 'USB disconnect'
+
+# Tags Linux application installation events.
+application_install
+  data_type is 'linux:dpkg_log:entry' AND body contains 'status installed'
+
+# Tags Linux service start events.
+service_start
+  data_type is 'selinux:line' AND audit_type is 'SERVICE_START'
+
+# Tags Linux service stop events.
+service_stop
+  data_type is 'selinux:line' AND audit_type is 'SERVICE_STOP'
+
+# Tags Linux network promiscious mode change events.
+promiscuous
+  data_type is 'selinux:line' AND audit_type is 'ANOM_PROMISCUOUS'
+  reporter is 'kernel' AND body contains 'promiscuous mode'
+
+# Tags Linux system crash events.
+crash
+  data_type is 'selinux:line' AND audit_type is 'ANOM_ABEND'
+  reporter is 'kernel' AND body contains 'segfault'

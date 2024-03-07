@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the attribute container store serializers."""
 
-import json
-
 from acstore import interface as acstore_interface
 
 from dfdatetime import serializer as dfdatetime_serializer
@@ -18,15 +16,12 @@ class JSONDateTimeAttributeSerializer(acstore_interface.AttributeSerializer):
     """Deserializes a value.
 
     Args:
-      value (str): serialized value.
+      value (dict[str, object]): serialized value.
 
     Returns:
       dfdatetime.DateTimeValues: runtime value.
     """
-    json_dict = json.loads(value)
-
-    return dfdatetime_serializer.Serializer.ConvertDictToDateTimeValues(
-        json_dict)
+    return dfdatetime_serializer.Serializer.ConvertDictToDateTimeValues(value)
 
   def SerializeValue(self, value):
     """Serializes a value.
@@ -35,12 +30,9 @@ class JSONDateTimeAttributeSerializer(acstore_interface.AttributeSerializer):
       value (dfdatetime.DateTimeValues): runtime value.
 
     Returns:
-      list[str]: serialized value.
+      dict[str, object]: serialized value.
     """
-    json_dict = dfdatetime_serializer.Serializer.ConvertDateTimeValuesToDict(
-        value)
-
-    return json.dumps(json_dict)
+    return dfdatetime_serializer.Serializer.ConvertDateTimeValuesToDict(value)
 
 
 class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
@@ -50,30 +42,28 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     """Deserializes a value.
 
     Args:
-      value (str): serialized value.
+      value (dict[str, object]): serialized value.
 
     Returns:
       dfvfs.PathSpec: runtime value.
     """
-    json_dict = json.loads(value)
-
-    type_indicator = json_dict.get('type_indicator', None)
+    type_indicator = value.get('type_indicator', None)
     if type_indicator:
-      del json_dict['type_indicator']
+      del value['type_indicator']
 
-    if 'parent' in json_dict:
-      json_dict['parent'] = self.DeserializeValue(json_dict['parent'])
+    if 'parent' in value:
+      value['parent'] = self.DeserializeValue(value['parent'])
 
     # Remove the class type from the JSON dictionary since we cannot pass it.
-    del json_dict['__type__']
+    del value['__type__']
 
     path_spec = dfvfs_path_spec_factory.Factory.NewPathSpec(
-        type_indicator, **json_dict)
+        type_indicator, **value)
 
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       # dfvfs.OSPathSpec() will change the location to an absolute path
       # here we want to preserve the original location.
-      path_spec.location = json_dict.get('location', None)
+      path_spec.location = value.get('location', None)
 
     return path_spec
 
@@ -100,7 +90,7 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     if location:
       json_dict['location'] = location
 
-    return json.dumps(json_dict)
+    return json_dict
 
 
 class JSONStringsListAttributeSerializer(acstore_interface.AttributeSerializer):
@@ -110,20 +100,20 @@ class JSONStringsListAttributeSerializer(acstore_interface.AttributeSerializer):
     """Deserializes a value.
 
     Args:
-      value (str): serialized value.
+      value (list[str]): serialized value.
 
     Returns:
       list[str]: runtime value.
     """
-    return json.loads(value)
+    return value
 
   def SerializeValue(self, value):
     """Serializes a value.
 
     Args:
-      value (str): runtime value.
+      value (list[str]): runtime value.
 
     Returns:
       list[str]: serialized value.
     """
-    return json.dumps(value)
+    return value

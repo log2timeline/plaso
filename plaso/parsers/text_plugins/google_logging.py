@@ -62,16 +62,16 @@ class GoogleLogTextPlugin(
   NAME = 'googlelog'
   DATA_FORMAT = 'Google-formatted log file'
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
+  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Date and time values are formatted as: MMDD hh:mm:ss.######
@@ -81,21 +81,23 @@ class GoogleLogTextPlugin(
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Optional(
-          pyparsing.Suppress('.') + _SIX_DIGITS)).setResultsName('date_time')
+          pyparsing.Suppress('.') + _SIX_DIGITS)).set_results_name('date_time')
 
-  _PRIORITY = pyparsing.oneOf(['E', 'F', 'I', 'W']).setResultsName('priority')
+  _PRIORITY = pyparsing.one_of(['E', 'F', 'I', 'W']).set_results_name(
+      'priority')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
       _PRIORITY + _DATE_TIME +
-      pyparsing.Word(pyparsing.nums).setResultsName('thread_identifier') +
-      pyparsing.Word(pyparsing.printables.replace(':', '')).setResultsName(
+      pyparsing.Word(pyparsing.nums).set_results_name('thread_identifier') +
+      pyparsing.Word(pyparsing.printables.replace(':', '')).set_results_name(
           'file_name') + pyparsing.Suppress(':') +
-      pyparsing.Word(pyparsing.nums).setResultsName('line_number') +
+      pyparsing.Word(pyparsing.nums).set_results_name('line_number') +
       pyparsing.Suppress('] ') +
-      pyparsing.Regex('.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).setResultsName(
-          'message') + _END_OF_LINE)
+      pyparsing.Regex(
+          '.*?(?=($|\n[IWEF][0-9]{4}))', re.DOTALL).set_results_name(
+              'message') + _END_OF_LINE)
 
   # Header date and time values are formatted as: 2019/07/18 06:07:40
   _HEADER_DATE_TIME = (
@@ -137,8 +139,8 @@ class GoogleLogTextPlugin(
       ParseError: when the header cannot be parsed.
     """
     try:
-      structure_generator = self._HEADER_GRAMMAR.scanString(
-          text_reader.lines, maxMatches=1)
+      structure_generator = self._HEADER_GRAMMAR.scan_string(
+          text_reader.lines, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
@@ -153,7 +155,7 @@ class GoogleLogTextPlugin(
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+      time_elements_structure = self._HEADER_DATE_TIME.parse_string(
           date_time_structure)
     except pyparsing.ParseException:
       raise errors.ParseError('Unable to parser header date time.')
@@ -267,7 +269,7 @@ class GoogleLogTextPlugin(
     date_time_structure = self._GetValueFromStructure(structure, 'date_time')
 
     try:
-      time_elements_structure = self._HEADER_DATE_TIME.parseString(
+      time_elements_structure = self._HEADER_DATE_TIME.parse_string(
           date_time_structure)
     except pyparsing.ParseException:
       return False

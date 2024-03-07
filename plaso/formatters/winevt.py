@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows EventLog custom event formatter helpers."""
 
+import re
+
 from plaso.formatters import interface
 from plaso.formatters import logger
 from plaso.formatters import manager
@@ -11,6 +13,8 @@ class WindowsEventLogMessageFormatterHelper(
   """Windows EventLog message formatter helper."""
 
   IDENTIFIER = 'windows_eventlog_message'
+
+  _PARAMETER_REGEX = re.compile(r'^%%[1-9][0-9]*$')
 
   def __init__(self):
     """Initialized a indows EventLog message formatter helper."""
@@ -36,18 +40,35 @@ class WindowsEventLogMessageFormatterHelper(
       message_string_template = self._winevt_resources_helper.GetMessageString(
           provider_identifier, source_name, message_identifier, event_version)
       if message_string_template:
-        string_values = [
-            string or '' for string in event_values.get('strings', [])]
+        string_values = []
+        for string_value in event_values.get('strings', []):
+          if string_value is None:
+            string_value = ''
+
+          elif self._PARAMETER_REGEX.match(string_value):
+            try:
+              parameter_identifier = int(string_value[2:], 10)
+              parameter_string = (
+                  self._winevt_resources_helper.GetParameterString(
+                      provider_identifier, source_name, parameter_identifier))
+              if parameter_string:
+                string_value = parameter_string
+
+            except ValueError:
+              pass
+
+          string_values.append(string_value)
 
         try:
           message_string = message_string_template.format(*string_values)
         except (IndexError, TypeError) as exception:
+          provider_identifier = provider_identifier or ''
+          strings = ', '.join(string_values)
           logger.error((
-              'Unable to format message: 0x{0:08x} of provider: {1:s} '
-              'template: "{2:s}" and strings: "{3:s}" with error: '
-              '{4!s}').format(
-                  message_identifier, provider_identifier or '',
-                  message_string_template, ', '.join(string_values), exception))
+              f'Unable to format message: 0x{message_identifier:08x} of '
+              f'provider: {provider_identifier:s} template: '
+              f'"{message_string_template:s}" and strings: "{strings:s}" '
+              f'with error: {exception!s}'))
           # Unable to create the message string.
           # TODO: consider returning the unformatted message string.
 

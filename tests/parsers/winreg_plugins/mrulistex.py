@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUListEx plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRUlist', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=1456)
+        'MRUlist', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'))
 
     # The order is: 201
     value_data = (
@@ -64,11 +61,9 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRUlist')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRUlist', key_path=key_path)
+        'MRUlist', key_path_prefix='HKEY_CURRENT_USER', relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRUlist'))
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
@@ -82,23 +77,18 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
-    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\Shell\\BagMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\OpenSavePidlMRU')
-    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'OpenSavePidlMRU'))
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRUlist')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -116,15 +106,19 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     # MRUListEx event data.
-    expected_entries = (
-        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
-        'Index: 2 [MRU Value 0]: Some random text here '
-        'Index: 3 [MRU Value 1]: c:\\evil.exe')
+    expected_entries = [
+        'Index: 1 [MRU Value 2]: C:\\looks_legit.exe',
+        'Index: 2 [MRU Value 0]: Some random text here',
+        'Index: 3 [MRU Value 1]: c:\\evil.exe']
+
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRUlist')
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -139,17 +133,14 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExShellItemListWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\OpenSavePidlMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'OpenSavePidlMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\StreamMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StreamMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -178,17 +169,17 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
     self.assertEqual(number_of_warnings, 0)
 
     # MRUListEx event data.
-    expected_entries = (
+    expected_entries = [
         'Index: 1 [MRU Value 1]: Shell item path: <My Computer> '
-        'P:\\\\Application Tools\\\\Firefox 6.0\\\\Firefox Setup 6.0.exe '
+        'P:\\\\Application Tools\\\\Firefox 6.0\\\\Firefox Setup 6.0.exe',
         'Index: 2 [MRU Value 0]: Shell item path: <Computers and '
-        'Devices> <UNKNOWN: 0x00>\\\\controller\\WebDavShare\\\\Firefox '
-        'Setup 3.6.12.exe')
+        'Devices> <Users property view>\\\\controller\\WebDavShare\\\\Firefox '
+        'Setup 3.6.12.exe']
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
         'entries': expected_entries,
-        'key_path': '{0:s}\\exe'.format(key_path),
+        'key_path': f'{key_path:s}\\exe',
         'last_written_time': '2011-08-28T22:48:28.1593086+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
@@ -203,10 +194,10 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'long_name': 'Alloy Research',
         'name': 'ALLOYR~1',
         'modification_time': '2012-03-12T20:50:00+00:00',
-        'origin': '{0:s}\\*'.format(key_path),
+        'origin': f'{key_path:s}\\*',
         'shell_item_path': (
             '<Shared Documents Folder (Users Files)> '
-            '<UNKNOWN: 0x00>\\\\Alloy Research')}
+            '<Users property view>\\\\Alloy Research')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -220,12 +211,10 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringAndShellItemWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\RecentDocs')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RecentDocs'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -254,47 +243,47 @@ class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
     self.assertEqual(number_of_warnings, 0)
 
     # MRUListEx event data.
-    expected_entries = (
+    expected_entries = [
         'Index: 1 [MRU Value 17]: Path: The SHIELD, '
-        'Shell item: [The SHIELD.lnk] '
+        'Shell item: [The SHIELD.lnk]',
         'Index: 2 [MRU Value 18]: '
         'Path: captain_america_shield_by_almogrem-d48x9x8.jpg, '
-        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk] '
+        'Shell item: [captain_america_shield_by_almogrem-d48x9x8.lnk]',
         'Index: 3 [MRU Value 16]: Path: captain-america-shield-front.jpg, '
-        'Shell item: [captain-america-shield-front.lnk] '
+        'Shell item: [captain-america-shield-front.lnk]',
         'Index: 4 [MRU Value 12]: Path: Leadership, '
-        'Shell item: [Leadership.lnk] '
+        'Shell item: [Leadership.lnk]',
         'Index: 5 [MRU Value 15]: Path: followership.pdf, '
-        'Shell item: [followership.lnk] '
+        'Shell item: [followership.lnk]',
         'Index: 6 [MRU Value 14]: Path: leaderqualities.pdf, '
-        'Shell item: [leaderqualities.lnk] '
+        'Shell item: [leaderqualities.lnk]',
         'Index: 7 [MRU Value 13]: Path: htlhtl.pdf, '
-        'Shell item: [htlhtl.lnk] '
+        'Shell item: [htlhtl.lnk]',
         'Index: 8 [MRU Value 8]: Path: StarFury, '
-        'Shell item: [StarFury (2).lnk] '
+        'Shell item: [StarFury (2).lnk]',
         'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
-        'Shell item: [Earth_SA-26_Thunderbolt.lnk] '
+        'Shell item: [Earth_SA-26_Thunderbolt.lnk]',
         'Index: 10 [MRU Value 11]: Path: 5031RR_BalancedLeadership.pdf, '
-        'Shell item: [5031RR_BalancedLeadership.lnk] '
+        'Shell item: [5031RR_BalancedLeadership.lnk]',
         'Index: 11 [MRU Value 10]: '
         'Path: SA-23E Mitchell-Hyundyne Starfury.docx, '
-        'Shell item: [SA-23E Mitchell-Hyundyne Starfury.lnk] '
+        'Shell item: [SA-23E Mitchell-Hyundyne Starfury.lnk]',
         'Index: 12 [MRU Value 9]: Path: StarFury.docx, '
-        'Shell item: [StarFury (3).lnk] '
+        'Shell item: [StarFury (3).lnk]',
         'Index: 13 [MRU Value 6]: Path: StarFury.zip, '
-        'Shell item: [StarFury.lnk] '
+        'Shell item: [StarFury.lnk]',
         'Index: 14 [MRU Value 4]: Path: VIBRANIUM.docx, '
-        'Shell item: [VIBRANIUM.lnk] '
+        'Shell item: [VIBRANIUM.lnk]',
         'Index: 15 [MRU Value 5]: Path: ADAMANTIUM-Background.docx, '
-        'Shell item: [ADAMANTIUM-Background.lnk] '
+        'Shell item: [ADAMANTIUM-Background.lnk]',
         'Index: 16 [MRU Value 3]: Path: Pictures, '
-        'Shell item: [Pictures.lnk] '
+        'Shell item: [Pictures.lnk]',
         'Index: 17 [MRU Value 2]: Path: nick_fury_77831.jpg, '
-        'Shell item: [nick_fury_77831.lnk] '
+        'Shell item: [nick_fury_77831.lnk]',
         'Index: 18 [MRU Value 1]: Path: Downloads, '
-        'Shell item: [Downloads.lnk] '
+        'Shell item: [Downloads.lnk]',
         'Index: 19 [MRU Value 0]: Path: wallpaper_medium.jpg, '
-        'Shell item: [wallpaper_medium.lnk]')
+        'Shell item: [wallpaper_medium.lnk]']
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',
@@ -314,12 +303,11 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulistex.MRUListExStringAndShellItemListWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\ComDlg32\\LastVisitedPidlMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\'
+        'LastVisitedPidlMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -348,31 +336,33 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     self.assertEqual(number_of_warnings, 0)
 
     # MRUListEx event data.
-    expected_entries = (
+    expected_entries = [
         'Index: 1 [MRU Value 1]: Path: chrome.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
-        '<UNKNOWN: 0x00> '
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view> <Users property view>',
         'Index: 2 [MRU Value 7]: '
         'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, '
         'Shell item path: <Shared Documents Folder (Users Files)> '
-        '<UNKNOWN: 0x00>\\\\Alloy Research '
+        '<Users property view>\\\\Alloy Research',
         'Index: 3 [MRU Value 6]: '
         'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view>',
         'Index: 4 [MRU Value 5]: '
         'Path: {24B5C9BB-48B5-47FF-8343-40481DBA1E2B}, '
-        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents '
+        'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents',
         'Index: 5 [MRU Value 4]: '
         'Path: {0B8CFE96-DB69-4D33-8E3C-36EAB4F709E0}, '
         'Shell item path: <My Computer> C:\\\\Users\\\\nfury\\\\Documents\\\\'
-        'Alloy Research '
+        'Alloy Research',
         'Index: 6 [MRU Value 3]: '
         'Path: {D4F85F66-003D-4127-BCE9-CAD7A57B2857}, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00> <UNKNOWN: 0x00> '
+        'Shell item path: <Users Libraries> <Users property view> '
+        '<Users property view>',
         'Index: 7 [MRU Value 0]: Path: iexplore.exe, '
-        'Shell item path: <My Computer> P:\\\\Application Tools\\\\Firefox 6.0 '
+        'Shell item path: <My Computer> P:\\\\Application Tools\\\\Firefox 6.0',
         'Index: 8 [MRU Value 2]: Path: Skype.exe, '
-        'Shell item path: <Users Libraries> <UNKNOWN: 0x00>')
+        'Shell item path: <Users Libraries> <Users property view>']
 
     expected_event_values = {
         'data_type': 'windows:registry:mrulistex',

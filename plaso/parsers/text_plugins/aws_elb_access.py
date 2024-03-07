@@ -177,20 +177,11 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
   _BLANK = pyparsing.Literal('"-"') | pyparsing.Literal('-')
 
   _WORD = pyparsing.Word(pyparsing.printables) | _BLANK
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _UNSIGNED_INTEGER = _INTEGER | _BLANK
@@ -204,131 +195,125 @@ class AWSELBTextPlugin(interface.TextPlugin):
       pyparsing.pyparsing_common.ipv4_address |
       pyparsing.pyparsing_common.ipv6_address)
 
-  _PORT = pyparsing.Word(pyparsing.nums, max=6).setParseAction(
+  _PORT = pyparsing.Word(pyparsing.nums, max=6).set_parse_action(
       lambda tokens: int(tokens[0], 10)) | _BLANK
 
   _SOURCE_IP_ADDRESS_AND_PORT = pyparsing.Group(
-      _IP_ADDRESS.setResultsName('source_ip_address') +
-      pyparsing.Suppress(':') + _PORT.setResultsName('source_port') | _BLANK)
+      _IP_ADDRESS.set_results_name('source_ip_address') +
+      pyparsing.Suppress(':') + _PORT.set_results_name('source_port') | _BLANK)
 
   _DESTINATION_IP_ADDRESS_AND_PORT = pyparsing.Group(
-      _IP_ADDRESS.setResultsName('destination_ip_address') +
-      pyparsing.Suppress(':') + _PORT.setResultsName('destination_port') |
+      _IP_ADDRESS.set_results_name('destination_ip_address') +
+      pyparsing.Suppress(':') + _PORT.set_results_name('destination_port') |
       _BLANK)
 
-  _DATE_TIME_ISOFORMAT_STRING = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('T') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress('.') +
-      _SIX_DIGITS + pyparsing.Suppress('Z'))
+  # Date and time values are formatted as:
+  # 2020-01-11T16:56:05.917294Z
+  _DATE_TIME_ISOFORMAT_STRING = pyparsing.Regex(
+      r'([0-9]{4}-[0-9]{2}-[0-9]{2}T'
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6})Z')
 
-  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('T') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS)
+  # Date and time values are formatted as:
+  # 2022-12-20T02:59:40
+  _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE = pyparsing.Regex(
+      r'([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})')
 
-  _REQUEST = pyparsing.quotedString.setResultsName(
-      'request').setParseAction(pyparsing.removeQuotes)
+  _REQUEST = pyparsing.quotedString.set_results_name(
+      'request').set_parse_action(pyparsing.removeQuotes)
 
-  _USER_AGENT = pyparsing.quotedString.setResultsName(
-      'user_agent').setParseAction(pyparsing.removeQuotes)
+  _USER_AGENT = pyparsing.quotedString.set_results_name(
+      'user_agent').set_parse_action(pyparsing.removeQuotes)
 
-  _ALPN_CLIENT_PREFERENCE_LIST = pyparsing.quotedString.setResultsName(
-      'alpn_client_preference_list').setParseAction(pyparsing.removeQuotes)
+  _ALPN_CLIENT_PREFERENCE_LIST = pyparsing.quotedString.set_results_name(
+      'alpn_client_preference_list').set_parse_action(pyparsing.removeQuotes)
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # A log line is defined as in the AWS ELB documentation
   _APPLICATION_LOG_LINE = (
-      _WORD.setResultsName('request_type') +
-      _DATE_TIME_ISOFORMAT_STRING.setResultsName('response_time') +
-      _WORD.setResultsName('resource_identifier') +
-      _SOURCE_IP_ADDRESS_AND_PORT.setResultsName('source_ip_port') +
-      _DESTINATION_IP_ADDRESS_AND_PORT.setResultsName('destination_ip_port') +
-      _FLOATING_POINT.setResultsName('request_processing_duration') +
-      _FLOATING_POINT.setResultsName('destination_processing_duration') +
-      _FLOATING_POINT.setResultsName('response_processing_duration') +
-      _UNSIGNED_INTEGER.setResultsName('elb_status_code') +
-      _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
-      _UNSIGNED_INTEGER.setResultsName('received_bytes') +
-      _UNSIGNED_INTEGER.setResultsName('sent_bytes') +
+      _WORD.set_results_name('request_type') +
+      _DATE_TIME_ISOFORMAT_STRING.set_results_name('response_time') +
+      _WORD.set_results_name('resource_identifier') +
+      _SOURCE_IP_ADDRESS_AND_PORT.set_results_name('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_AND_PORT.set_results_name('destination_ip_port') +
+      _FLOATING_POINT.set_results_name('request_processing_duration') +
+      _FLOATING_POINT.set_results_name('destination_processing_duration') +
+      _FLOATING_POINT.set_results_name('response_processing_duration') +
+      _UNSIGNED_INTEGER.set_results_name('elb_status_code') +
+      _UNSIGNED_INTEGER.set_results_name('destination_status_code') +
+      _UNSIGNED_INTEGER.set_results_name('received_bytes') +
+      _UNSIGNED_INTEGER.set_results_name('sent_bytes') +
       _REQUEST +
       _USER_AGENT +
-      _WORD.setResultsName('ssl_cipher') +
-      _WORD.setResultsName('ssl_protocol') +
-      _WORD.setResultsName('destination_group_arn') +
-      pyparsing.quotedString.setResultsName(
-          'trace_identifier').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'domain_name').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'chosen_cert_arn').setParseAction(pyparsing.removeQuotes) +
-      _SIGNED_INTEGER.setResultsName('matched_rule_priority') +
-      _DATE_TIME_ISOFORMAT_STRING.setResultsName('request_time') +
-      pyparsing.quotedString.setResultsName(
-          'actions_executed').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'redirect_url').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'error_reason').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'destination_list').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'destination_status_code_list').setParseAction(
+      _WORD.set_results_name('ssl_cipher') +
+      _WORD.set_results_name('ssl_protocol') +
+      _WORD.set_results_name('destination_group_arn') +
+      pyparsing.quotedString.set_results_name(
+          'trace_identifier').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'domain_name').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'chosen_cert_arn').set_parse_action(pyparsing.removeQuotes) +
+      _SIGNED_INTEGER.set_results_name('matched_rule_priority') +
+      _DATE_TIME_ISOFORMAT_STRING.set_results_name('request_time') +
+      pyparsing.quotedString.set_results_name(
+          'actions_executed').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'redirect_url').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'error_reason').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'destination_list').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'destination_status_code_list').set_parse_action(
               pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'classification').setParseAction(pyparsing.removeQuotes) +
-      pyparsing.quotedString.setResultsName(
-          'classification_reason').setParseAction(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'classification').set_parse_action(pyparsing.removeQuotes) +
+      pyparsing.quotedString.set_results_name(
+          'classification_reason').set_parse_action(pyparsing.removeQuotes) +
       _END_OF_LINE)
 
   _NETWORK_LOG_LINE = (
-      _WORD.setResultsName('request_type') +
-      _WORD.setResultsName('version') +
-      _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE.setResultsName(
+      _WORD.set_results_name('request_type') +
+      _WORD.set_results_name('version') +
+      _DATE_TIME_ISOFORMAT_STRING_WITHOUT_TIMEZONE.set_results_name(
           'response_time') +
-      _WORD.setResultsName('resource_identifier') +
-      _WORD.setResultsName('listener') +
-      _SOURCE_IP_ADDRESS_AND_PORT.setResultsName('source_ip_port') +
-      _DESTINATION_IP_ADDRESS_AND_PORT.setResultsName('destination_ip_port') +
-      _UNSIGNED_INTEGER.setResultsName('connection_duration') +
-      _UNSIGNED_INTEGER.setResultsName('handshake_duration') +
-      _UNSIGNED_INTEGER.setResultsName('received_bytes') +
-      _UNSIGNED_INTEGER.setResultsName('sent_bytes') +
-      _WORD.setResultsName('incoming_tls_alert') +
-      _WORD.setResultsName('chosen_cert_arn') +
-      _WORD.setResultsName('chosen_cert_serial') +
-      _WORD.setResultsName('tls_cipher') +
-      _WORD.setResultsName('tls_protocol_version') +
-      _WORD.setResultsName('tls_named_group') +
-      _WORD.setResultsName('domain_name') +
-      _WORD.setResultsName('alpn_front_end_protocol') +
-      _WORD.setResultsName('alpn_back_end_protocol') +
+      _WORD.set_results_name('resource_identifier') +
+      _WORD.set_results_name('listener') +
+      _SOURCE_IP_ADDRESS_AND_PORT.set_results_name('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_AND_PORT.set_results_name('destination_ip_port') +
+      _UNSIGNED_INTEGER.set_results_name('connection_duration') +
+      _UNSIGNED_INTEGER.set_results_name('handshake_duration') +
+      _UNSIGNED_INTEGER.set_results_name('received_bytes') +
+      _UNSIGNED_INTEGER.set_results_name('sent_bytes') +
+      _WORD.set_results_name('incoming_tls_alert') +
+      _WORD.set_results_name('chosen_cert_arn') +
+      _WORD.set_results_name('chosen_cert_serial') +
+      _WORD.set_results_name('tls_cipher') +
+      _WORD.set_results_name('tls_protocol_version') +
+      _WORD.set_results_name('tls_named_group') +
+      _WORD.set_results_name('domain_name') +
+      _WORD.set_results_name('alpn_front_end_protocol') +
+      _WORD.set_results_name('alpn_back_end_protocol') +
       (_ALPN_CLIENT_PREFERENCE_LIST | pyparsing.Literal('-')) +
       _END_OF_LINE)
 
   _CLASSIC_LOG_LINE = (
-      _DATE_TIME_ISOFORMAT_STRING.setResultsName('response_time') +
-      _WORD.setResultsName('resource_identifier') +
-      _SOURCE_IP_ADDRESS_AND_PORT.setResultsName('source_ip_port') +
-      _DESTINATION_IP_ADDRESS_AND_PORT.setResultsName('destination_ip_port') +
-      _FLOATING_POINT.setResultsName('request_processing_duration') +
-      _FLOATING_POINT.setResultsName('destination_processing_duration') +
-      _FLOATING_POINT.setResultsName('response_processing_duration') +
-      _UNSIGNED_INTEGER.setResultsName('elb_status_code') +
-      _UNSIGNED_INTEGER.setResultsName('destination_status_code') +
-      _SIGNED_INTEGER.setResultsName('received_bytes') +
-      _SIGNED_INTEGER.setResultsName('sent_bytes') +
+      _DATE_TIME_ISOFORMAT_STRING.set_results_name('response_time') +
+      _WORD.set_results_name('resource_identifier') +
+      _SOURCE_IP_ADDRESS_AND_PORT.set_results_name('source_ip_port') +
+      _DESTINATION_IP_ADDRESS_AND_PORT.set_results_name('destination_ip_port') +
+      _FLOATING_POINT.set_results_name('request_processing_duration') +
+      _FLOATING_POINT.set_results_name('destination_processing_duration') +
+      _FLOATING_POINT.set_results_name('response_processing_duration') +
+      _UNSIGNED_INTEGER.set_results_name('elb_status_code') +
+      _UNSIGNED_INTEGER.set_results_name('destination_status_code') +
+      _SIGNED_INTEGER.set_results_name('received_bytes') +
+      _SIGNED_INTEGER.set_results_name('sent_bytes') +
       _REQUEST +
       _USER_AGENT +
-      _WORD.setResultsName('ssl_cipher') +
-      _WORD.setResultsName('ssl_protocol') +
+      _WORD.set_results_name('ssl_cipher') +
+      _WORD.set_results_name('ssl_protocol') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [
@@ -518,35 +503,20 @@ class AWSELBTextPlugin(interface.TextPlugin):
           the time elements.
     """
     try:
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-      # overriding __getattr__ with a function that returns an empty string
-      # when named token does not exist.
-
-      if len(time_elements_structure) == 7:
-        year, month, day_of_month, hours, minutes, seconds, microseconds = (
-            time_elements_structure)
-
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds, microseconds)
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple)
+      if len(time_elements_structure) == 27:
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+        date_time.CopyFromStringISO8601(time_elements_structure)
       else:
-        year, month, day_of_month, hours, minutes, seconds = (
-            time_elements_structure)
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromStringISO8601(time_elements_structure)
 
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds)
-        date_time = dfdatetime_time_elements.TimeElements(
-            time_elements_tuple=time_elements_tuple)
         date_time.is_local_time = True
 
       return date_time
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

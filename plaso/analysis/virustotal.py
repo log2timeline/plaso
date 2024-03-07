@@ -2,7 +2,7 @@
 """Analysis plugin to look up files in VirusTotal and tag events.
 
 Also see:
-  https://developers.virustotal.com/reference/overview
+  https://docs.virustotal.com/reference/overview
 """
 
 from plaso.analysis import hash_tagging
@@ -133,7 +133,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     self._api_key = api_key
 
   def TestConnection(self):
-    """Tests the connection to VirusTotal
+    """Tests the connection to VirusTotal.
 
     Returns:
       bool: True if VirusTotal is reachable.

@@ -12,7 +12,7 @@ class IOSAppPrivacPluginTest(test_lib.JSONLPluginTestCase):
   """Tests for the JSON-L parser plugin for iOS application privacy reports."""
 
   def testProcess(self):
-    """Tests for the Process function"""
+    """Tests for the Process function."""
     plugin = ios_app_privacy.IOSAppPrivacPlugin()
     storage_writer = self._ParseJSONLFileWithPlugin([
         'ios_app_privacy_report.ndjson'], plugin)

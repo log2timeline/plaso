@@ -1,0 +1,235 @@
+# Plaso iOS related event formatters.
+---
+type: 'conditional'
+data_type: 'ios:app_privacy:access'
+message:
+- 'Accessor Identifier: {accessor_identifier}'
+- 'Accessor Identifier Type: {accessor_identifier_type}'
+- 'Resource Category: {resource_category}'
+- 'Resource Identifier: {resource_identifier}'
+short_message:
+- 'Accessor Identifier: {accessor_identifier}'
+- 'Resource Category: {resource_category}'
+short_source: 'LOG'
+source: 'iOS application privacy report'
+---
+type: 'conditional'
+data_type: 'ios:app_privacy:network'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Domain: {domain}'
+short_message:
+- 'Bundle Identifier: {bundle_identifier}'
+short_source: 'LOG'
+source: 'iOS application privacy report'
+---
+type: 'conditional'
+data_type: 'ios:carplay:history:entry'
+message:
+- 'Application identifier: {application_identifier}'
+short_message:
+- 'Application identifier: {application_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS Car Play application plist'
+---
+type: 'conditional'
+data_type: 'ios:idstatuscache:lookup'
+message:
+- 'Process Name: {process_name}'
+- 'Apple Identifier: {apple_identifier}'
+short_message:
+- 'Apple Identifier: {apple_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS identity services status cache plist'
+---
+type: 'conditional'
+data_type: 'ios:datausage:event'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Process Name: {process_name}'
+- 'Wifi In: {wifi_in}'
+- 'Wifi Out: {wifi_out}'
+- 'Wireless Wan In: {wireless_wan_in}'
+- 'Wireless Wan Out: {wireless_wan_out}'
+short_message:
+- 'Process Name: {process_name}'
+short_source: 'HISTORY'
+source: 'iOS data usage database'
+---
+type: 'conditional'
+data_type: 'ios:kik:messaging'
+enumeration_helpers:
+- input_attribute: 'message_status'
+  output_attribute: 'message_status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'unread'
+    2: 'message not sent'
+    6: 'sent to Kik server'
+    14: 'delivered '
+    16: 'message read'
+    30: 'read after immediate delivery'
+    38: 'not a member of the group'
+    66: 'delay in reaching Kik server'
+    70: 'push notification sent'
+    78: 'delivered after offline'
+    94: 'read after offline'
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'received'
+    2: 'sent'
+    3: 'message to group admin'
+    4: 'message to group'
+message:
+- 'Username: {username}'
+- 'Displayname: {displayname}'
+- 'Status: {message_status}'
+- 'Type: {message_type}'
+- 'Message: {body}'
+short_message:
+- '{body}'
+short_source: 'Kik iOS'
+source: 'Kik iOS messages'
+---
+type: 'conditional'
+data_type: 'ios:lockdownd_log:entry'
+message:
+- 'Process identifer: {process_identifier}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS lockdown daemon log'
+---
+type: 'conditional'
+data_type: 'ios:netusage:route'
+enumeration_helpers:
+- input_attribute: 'network_type'
+  output_attribute: 'network_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'wifi'
+    2: 'cellular'
+message:
+- 'Bytes In: {bytes_in}'
+- 'Bytes Out: {bytes_out}'
+- 'Network Identifier: {network_identifier}'
+- 'Network Signature: {network_signature}'
+- 'Network Type: {network_type}'
+short_message:
+- 'Network Identifier: {network_identifier}'
+- 'Network Type: {network_type}'
+short_source: 'HISTORY'
+source: 'iOS netusage.sqlite database'
+---
+type: 'conditional'
+data_type: 'ios:netusage:process'
+message:
+- 'Process Name: {process_name}'
+- 'Wifi In: {wifi_in}'
+- 'Wifi Out: {wifi_out}'
+- 'Wired In: {wired_in}'
+- 'Wired Out: {wired_out}'
+- 'Wireless Wan In: {wireless_wan_in}'
+- 'Wireless Wan Out: {wireless_wan_out}'
+short_message:
+- 'Process Name: {process_name}'
+short_source: 'HISTORY'
+source: 'iOS netusage.sqlite database'
+---
+type: 'conditional'
+data_type: 'ios:powerlog:application_usage'
+message:
+- 'Application: {bundle_identifier}'
+- 'Background Time: {background_time}'
+- 'On Screen Time: {screen_on_time}'
+short_message:
+- 'Application: {bundle_identifier}'
+short_source: 'HISTORY'
+source: 'iOS powerlog database'
+---
+type: 'conditional'
+data_type: 'ios:screentime:event'
+message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Device Identifier: {device_identifier}'
+- 'Device Name: {device_name}'
+- 'Domain: {domain}'
+- 'Total Time: {total_time}'
+- 'User Family Name: {user_family_name}'
+- 'User Given Name: {user_given_name}'
+short_message:
+- 'Bundle Identifier: {bundle_identifier}'
+- 'Domain: {domain}'
+short_source: 'HISTORY'
+source: 'iOS Screen Time database'
+---
+type: 'conditional'
+data_type: 'ios:sysdiagnose:logd:line'
+message:
+- 'Logger: {logger}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiagnose log'
+---
+type: 'conditional'
+data_type: 'ios:sysdiag_log:entry'
+message:
+- 'Originating call: {originating_call}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiag log'
+---
+type: 'conditional'
+data_type: 'ios:twitter:contact'
+enumeration_helpers:
+- input_attribute: 'following'
+  output_attribute: 'following'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Screen name: {screen_name}'
+- 'Profile picture URL: {profile_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {url}'
+- 'Following: {following}'
+- 'Number of followers: {followers_count}'
+- 'Number of following: {following_count}'
+short_message:
+- 'Screen name: {screen_name}'
+- 'Description: {description}'
+- 'URL: {url}'
+short_source: 'Twitter iOS'
+source: 'Twitter iOS Contacts'
+---
+type: 'conditional'
+data_type: 'ios:twitter:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Name: {name}'
+- 'User Id: {user_identifier}'
+- 'Message: {text}'
+- 'Favorite: {favorited}'
+- 'Retweet Count: {retweet_count}'
+- 'Favorite Count: {favorite_count}'
+short_message:
+- 'Name: {name}'
+- 'Message: {text}'
+short_source: 'Twitter iOS'
+source: 'Twitter iOS Status'

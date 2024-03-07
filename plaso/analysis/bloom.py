@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up file hashes in bloom database."""
 
-import flor
+import flor  # pylint: disable=import-error
 
 from plaso.analysis import hash_tagging
 from plaso.analysis import logger
@@ -114,7 +114,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     return value_to_test in bloom_filter
 
   def SetBloomDatabasePath(self, bloom_database_path):
-    """Set the path to the bloom file containing hash
+    """Set the path to the bloom file containing hash.
 
     Args:
       bloom_database_path (str): Path to the bloom file

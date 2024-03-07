@@ -35,7 +35,7 @@ class IOSSysdiagLogEventData(events.EventData):
     self.written_time = None
 
 
-class IOSSysdiagLogTextPlugin(interface.TextPlugin):
+class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for iOS mobile installation log files."""
 
   NAME = 'ios_sysdiag_log'
@@ -55,16 +55,16 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -87,35 +87,30 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_START = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.set_results_name('date_time') +
       pyparsing.Suppress('[') +
-      _INTEGER.setResultsName('process_identifier') + pyparsing.Suppress(']') +
-      pyparsing.Suppress('<') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('severity') +
+      _INTEGER.set_results_name('process_identifier') +
+      pyparsing.Suppress(']') + pyparsing.Suppress('<') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('severity') +
       pyparsing.Suppress('>') +
       pyparsing.Suppress('(') +
-      pyparsing.Word(pyparsing.alphanums).setResultsName('id') +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('id') +
       pyparsing.Suppress(')') +
-      _ORIGINATING_CALL.setResultsName('originating_call') +
+      _ORIGINATING_CALL.set_results_name('originating_call') +
       pyparsing.Suppress(': '))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
-
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _LOG_LINE
 
   def __init__(self):
     """Initializes a text parser plugin."""
     super(IOSSysdiagLogTextPlugin, self).__init__()
+    self._body_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -126,6 +121,9 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.body = ' '.join(self._body_lines)
+      self._body_lines = None
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -139,8 +137,9 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
+    body = self._GetValueFromStructure(structure, 'body')
+
     event_data = IOSSysdiagLogEventData()
-    event_data.body = self._GetValueFromStructure(structure, 'body')
     event_data.originating_call = self._GetValueFromStructure(
         structure, 'originating_call')
     event_data.process_identifier = self._GetValueFromStructure(
@@ -149,6 +148,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     self._event_data = event_data
+    self._body_lines = [body]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -162,18 +162,17 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
+    if key == '_line_continuation':
+      body = structure.replace('\n', ' ').strip()
+      self._body_lines.append(body)
+
+    else:
       if self._event_data:
+        self._event_data.body = ' '.join(self._body_lines)
+
         parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
 
       self._ParseLogline(structure)
-
-    elif key == 'successive_log_line':
-      body = self._GetValueFromStructure(structure, 'body', default_value='')
-      body = body.strip()
-
-      self._event_data.body = ' '.join([self._event_data.body, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -204,6 +203,11 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse time elements with error: {0!s}'.format(exception))
 
+  def _ResetState(self):
+    """Resets stored values."""
+    self._body_lines = None
+    self._event_data = None
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
@@ -228,7 +232,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    self._event_data = None
+    self._ResetState()
 
     return True
 

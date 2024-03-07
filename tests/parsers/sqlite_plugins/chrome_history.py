@@ -209,8 +209,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
   def testProcess59ExtraColumn(self):
-    """Tests the Process function on a Google Chrome 59 History database,
-    manually modified to have an unexpected column.
+    """Tests the Process function on a Google Chrome 59 History database.
+
+    The History database has been modified to have an extra column.
     """
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(

@@ -30,7 +30,7 @@ class TestAnalyzer(interface.BaseAnalyzer):
       self._results.append(result)
 
   def Analyze(self, data):
-    """Processes a block of data, updating the state of the analyzer
+    """Processes a block of data, updating the state of the analyzer.
 
     Args:
       data(str): a string of data to process.

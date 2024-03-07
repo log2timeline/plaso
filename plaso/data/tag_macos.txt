@@ -1,0 +1,27 @@
+# Tags MacOS application execution events.
+application_execution
+  data_type is 'macos:application_usage:entry'
+  data_type is 'syslog:line' AND body contains 'COMMAND=/bin/launchctl'
+
+# Tags MacOS application installation events.
+application_install
+  data_type is 'plist:key' AND plugin is 'plist_install_history'
+
+# Tags creation events of HFS/HFS+ files with a filename that contains LaunchAgents as a path segment and plist as extension.
+autorun
+  data_type is 'fs:stat' AND timestamp_desc is 'Creation Time' AND filename contains PATH('LaunchAgents') AND filename contains '.plist'
+
+# Tags downloaded file events.
+file_download
+  data_type is 'chrome:history:file_downloaded'
+  data_type is 'macos:lsquarantine:entry'
+  timestamp_desc is 'Downloaded Time'
+
+# Tags device connection events.
+device_connection
+  data_type is 'ipod:device:entry'
+  data_type is 'plist:key' AND plugin is 'plist_airport'
+
+# Tags OLE compound document print events.
+document_print
+  data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'

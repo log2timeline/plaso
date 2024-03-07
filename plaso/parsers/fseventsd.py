@@ -18,7 +18,7 @@ from plaso.parsers import manager
 
 
 class FseventsdEventData(events.EventData):
-  """MacOS file system event (fseventsd) event data
+  """MacOS file system event (fseventsd) event data.
 
   Attributes:
     event_identifier (int): the record event identifier.

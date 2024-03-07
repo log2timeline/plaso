@@ -39,7 +39,7 @@ class GoogleDriveSyncLogEventData(events.EventData):
     self.thread = None
 
 
-class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
+class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for Google Drive Sync log files."""
 
   NAME = 'gdrive_synclog'
@@ -47,33 +47,18 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FRACTION_OF_SECOND = pyparsing.Word('.,', exact=1).suppress() + _THREE_DIGITS
-
-  _TIME_ZONE_OFFSET = pyparsing.Group(
-      pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
-
-  _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
-      _FRACTION_OF_SECOND + _TIME_ZONE_OFFSET).setResultsName('date_time')
+  # Date and time values are formatted as:
+  # 2018-03-01 12:48:14,224 -0800
+  _DATE_TIME = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2}[,.][0-9]{3} [+-][0-9]{4}) ')
 
   _PROCESS_IDENTIFIER = (
       pyparsing.Suppress('pid=') +
-      _INTEGER.setResultsName('process_identifier'))
+      _INTEGER.set_results_name('process_identifier'))
 
   _THREAD = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums) + pyparsing.Literal(':') +
@@ -83,23 +68,17 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
 
   _LOG_LINE_START = (
       _DATE_TIME +
-      pyparsing.Word(pyparsing.alphas).setResultsName('level') +
+      pyparsing.Word(pyparsing.alphas).set_results_name('level') +
       _PROCESS_IDENTIFIER +
       # TODO: consider stripping thread identifier/cleaning up thread name?
-      _THREAD.setResultsName('thread') +
-      pyparsing.Word(pyparsing.printables).setResultsName('source_code'))
+      _THREAD.set_results_name('thread') +
+      pyparsing.Word(pyparsing.printables).set_results_name('source_code'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('body') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
-
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   # Using a regular expression here is faster on non-match than the log line
   # grammar.
@@ -113,6 +92,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(GoogleDriveSyncLogTextPlugin, self).__init__()
+    self._body_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -123,6 +103,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.message = ' '.join(self._body_lines)
+      self._body_lines = None
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -147,9 +130,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
     event_data.source_code = self._GetValueFromStructure(
         structure, 'source_code')
-    event_data.message = body
 
     self._event_data = event_data
+    self._body_lines = [body]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -163,18 +146,17 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
+    if key == '_line_continuation':
+      body = structure.replace('\n', ' ').strip()
+      self._body_lines.append(body)
+
+    else:
       if self._event_data:
+        self._event_data.message = ' '.join(self._body_lines)
+
         parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
 
       self._ParseLogline(structure)
-
-    elif key == 'successive_log_line':
-      body = self._GetValueFromStructure(structure, 'body', default_value='')
-      body = body.strip()
-
-      self._event_data.message = ' '.join([self._event_data.message, body])
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements of a log line.
@@ -190,30 +172,30 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
       ParseError: if a valid date and time value cannot be derived from
           the time elements.
     """
-    # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-    # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-    # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-    # overriding __getattr__ with a function that returns an empty string when
-    # named token does not exist.
     try:
-      (year, month, day_of_month, hours, minutes, seconds, milliseconds,
-       time_zone_group) = time_elements_structure
+      date_time_string = time_elements_structure[:23].replace(',', '.')
 
-      time_zone_sign, time_zone_hours, time_zone_minutes = time_zone_group
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+      date_time.CopyFromDateTimeString(date_time_string)
 
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, milliseconds)
-
-      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
-      if time_zone_sign == '-':
+      time_zone_offset = int(time_elements_structure[-4:-2], 10) * 60
+      time_zone_offset += int(time_elements_structure[-2:], 10)
+      if time_elements_structure[-5] == '-':
         time_zone_offset *= -1
 
-      return dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple,
-          time_zone_offset=time_zone_offset)
+      date_time.time_zone_offset = time_zone_offset
+      date_time.is_local_time = False
 
-    except (TypeError, ValueError):
-      return None
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          f'Unable to parse time elements with error: {exception!s}')
+
+  def _ResetState(self):
+    """Resets stored values."""
+    self._body_lines = None
+    self._event_data = None
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -231,16 +213,15 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
-
-    time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     try:
       self._ParseTimeElements(time_elements_structure)
     except errors.ParseError:
       return False
 
-    self._event_data = None
+    self._ResetState()
 
     return True
 

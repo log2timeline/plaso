@@ -35,7 +35,7 @@ class ZshHistoryEventData(events.EventData):
     self.last_written_time = None
 
 
-class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
+class ZshExtendedHistoryTextPlugin(interface.TextPluginWithLineContinuation):
   """Text parser plugin for ZSH extended history files."""
 
   NAME = 'zsh_extended_history'
@@ -43,27 +43,21 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE_START = (
-      pyparsing.Literal(':') + _INTEGER.setResultsName('timestamp') +
-      pyparsing.Literal(':') + _INTEGER.setResultsName('elapsed_seconds') +
+      pyparsing.Literal(':') + _INTEGER.set_results_name('timestamp') +
+      pyparsing.Literal(':') + _INTEGER.set_results_name('elapsed_seconds') +
       pyparsing.Literal(';'))
 
   _LOG_LINE = (
-      _LOG_LINE_START + pyparsing.restOfLine().setResultsName('command') +
+      _LOG_LINE_START + pyparsing.restOfLine().set_results_name('command') +
       _END_OF_LINE)
 
-  _SUCCESSIVE_LOG_LINE = (
-      pyparsing.NotAny(_LOG_LINE_START) +
-      pyparsing.restOfLine().setResultsName('command') + _END_OF_LINE)
-
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('successive_log_line', _SUCCESSIVE_LOG_LINE)]
+  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   # Using a regular expression here to ensure whitespace is matched accordingly.
   VERIFICATION_GRAMMAR = (
@@ -73,6 +67,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
   def __init__(self):
     """Initializes a text parser plugin."""
     super(ZshExtendedHistoryTextPlugin, self).__init__()
+    self._command_lines = None
     self._event_data = None
 
   def _ParseFinalize(self, parser_mediator):
@@ -83,6 +78,9 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
           and other components, such as storage and dfVFS.
     """
     if self._event_data:
+      self._event_data.command = ' '.join(self._command_lines)
+      self._command_lines = []
+
       parser_mediator.ProduceEventData(self._event_data)
       self._event_data = None
 
@@ -95,14 +93,16 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
     """
     timestamp = self._GetValueFromStructure(structure, 'timestamp')
 
+    command = self._GetValueFromStructure(structure, 'command')
+
     event_data = ZshHistoryEventData()
-    event_data.command = self._GetValueFromStructure(structure, 'command')
     event_data.elapsed_seconds = self._GetValueFromStructure(
         structure, 'elapsed_seconds')
     event_data.last_written_time = dfdatetime_posix_time.PosixTime(
         timestamp=timestamp)
 
     self._event_data = event_data
+    self._command_lines = [command]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -116,19 +116,22 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key == 'log_line':
+    if key == '_line_continuation':
+      command = structure.replace('\n', ' ').strip()
+      self._command_lines.append(command)
+
+    else:
       if self._event_data:
+        self._event_data.command = ' '.join(self._command_lines)
+
         parser_mediator.ProduceEventData(self._event_data)
-        self._event_data = None
 
       self._ParseLogline(structure)
 
-    elif key == 'successive_log_line':
-      command = self._GetValueFromStructure(
-          structure, 'command', default_value='')
-      command = command.strip()
-
-      self._event_data.command = ' '.join([self._event_data.command, command])
+  def _ResetState(self):
+    """Resets stored values."""
+    self._command_lines = []
+    self._event_data = None
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -146,7 +149,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    self._event_data = None
+    self._ResetState()
 
     return True
 

@@ -106,6 +106,37 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 84)
     self.CheckEventData(event_data, expected_event_values)
 
+  def testParseCompactZSTD(self):
+    """Tests the Parse function on a journal with compact mode and ZSTD."""
+    parser = systemd_journal.SystemdJournalParser()
+    storage_writer = self._ParseFile([
+        'systemd', 'journal', 'user-1000.journal'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_body = 'Some large string: {0:s}'.format('A' * 512)
+
+    expected_event_values = {
+        'body': expected_body,
+        'data_type': 'systemd:journal',
+        'hostname': 'DESKTOP-QCDE2BT',
+        'pid': '197',
+        'reporter': 'testapp',
+        'written_time': '2023-09-26T07:42:46.445209+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
     parser = systemd_journal.SystemdJournalParser()

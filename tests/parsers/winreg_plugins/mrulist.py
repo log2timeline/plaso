@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUList plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRU', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=1456)
+        'MRU', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRU'))
 
     value_data = b'a\x00c\x00b\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -62,11 +59,9 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = mrulist.MRUListStringWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRU')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'MRUlist', key_path=key_path)
+        'MRUlist', key_path_prefix='HKEY_CURRENT_USER', relative_key_path=(
+            'Software\\Microsoft\\Some Windows\\InterestingApp\\MRU'))
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
@@ -80,19 +75,15 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\DesktopStreamMRU')
-    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+        'DesktopStreamMRU'))
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        'InterestingApp\\MRU')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = mrulist.MRUListStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -109,12 +100,17 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRU')
+
     expected_event_values = {
         'data_type': 'windows:registry:mrulist',
-        'entries': (
-            'Index: 1 [MRU Value a]: Some random text here '
-            'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-            'Index: 3 [MRU Value b]: c:/evil.exe'),
+        'entries': [
+            'Index: 1 [MRU Value a]: Some random text here',
+            'Index: 2 [MRU Value c]: C:/looks_legit.exe',
+            'Index: 3 [MRU Value b]: c:/evil.exe'],
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -125,21 +121,19 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUList plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates MRUList Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'DesktopStreamMRU', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=1456)
+        'DesktopStreamMRU', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+            'DesktopStreamMRU'))
 
     value_data = b'a\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -173,19 +167,15 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
     """Tests the FILTERS class attribute."""
     plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\DesktopStreamMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\'
+        'DesktopStreamMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\DesktopStreamMRU')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -202,12 +192,17 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\DesktopStreamMRU')
+
     # MRUList event data.
     expected_event_values = {
         'data_type': 'windows:registry:mrulist',
-        'entries': (
+        'entries': [
             'Index: 1 [MRU Value a]: Shell item path: <My Computer> '
-            'C:\\\\Winnt\\\\Profiles\\\\Administrator\\\\Desktop'),
+            'C:\\\\Winnt\\\\Profiles\\\\Administrator\\\\Desktop'],
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
@@ -220,7 +215,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(
         'data_type': 'windows:shell_item:file_entry',
         'modification_time': '2011-01-14T12:03:52+00:00',
         'name': 'Winnt',
-        'origin': key_path,
+        'origin': expected_key_path,
         'shell_item_path': '<My Computer> C:\\\\Winnt'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

@@ -15,35 +15,6 @@ from tests.parsers.text_plugins import test_lib
 class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
   """Testd for the bash history text parser plugin."""
 
-  def _TestEventsFromFile(
-      self, storage_writer, expected_number_of_extraction_warnings=0):
-    """Validates that all events are as expected.
-
-    Args:
-      storage_writer (FakeStorageWriter): storage writer.
-      expected_number_of_extraction_warnings (Optional[int]): number of expected
-          extraction warnings.
-    """
-    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    self.assertEqual(number_of_event_data, 3)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, expected_number_of_extraction_warnings)
-
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
-
-    expected_event_values = {
-        'command': '/usr/lib/plaso',
-        'data_type': 'bash:history:entry',
-        'written_time': '2013-10-01T12:36:17+00:00'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
-
   def testCheckRequiredFormat(self):
     """Tests for the CheckRequiredFormat method."""
     plugin = bash_history.BashHistoryTextPlugin()
@@ -88,20 +59,77 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     plugin = bash_history.BashHistoryTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(['bash_history'], plugin)
 
-    self._TestEventsFromFile(storage_writer)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 4)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_event_values = {
+        'command': '/usr/lib/plaso',
+        'data_type': 'bash:history:entry',
+        'written_time': '2013-10-01T12:36:17+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test multi line.
+    expected_event_values = {
+        'command': (
+            'binary argument1 "--params=\\ '
+            'param1=foo, param2=bar " argument2'),
+        'data_type': 'bash:history:entry',
+        'written_time': '2021-06-10T22:30:36+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+    self.CheckEventData(event_data, expected_event_values)
 
   def testProcessWithDesynchronizedFile(self):
     """Tests the Process function with a desynchronized file.
 
-    A desynchronized bash history file will start with the command line
-    instead of the timestamp.
+    A desynchronized bash history file will start with the command line instead
+    of the timestamp.
     """
     plugin = bash_history.BashHistoryTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
         ['bash_history_desync'], plugin)
 
-    self._TestEventsFromFile(
-        storage_writer, expected_number_of_extraction_warnings=1)
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 5)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    expected_event_values = {
+        'command': '/usr/lib/plaso',
+        'data_type': 'bash:history:entry',
+        'written_time': '2013-10-01T12:36:17+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test multi line.
+    expected_event_values = {
+        'command': (
+            'binary argument1 "--params=\\ '
+            'param1=foo, param2=bar " argument2'),
+        'data_type': 'bash:history:entry',
+        'written_time': '2021-06-10T22:30:36+00:00'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':

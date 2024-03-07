@@ -116,25 +116,40 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          file_system_path_spec, resolver_context=self._resolver_context)
+      try:
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(
+            file_system_path_spec, resolver_context=self._resolver_context)
 
-      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=included_find_specs,
-          recurse_file_system=False, resolver_context=self._resolver_context)
-      for path_spec in path_spec_generator:
-        if self._abort:
-          break
+        path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+            file_system_path_spec, find_specs=included_find_specs,
+            recurse_file_system=False, resolver_context=self._resolver_context)
+        for path_spec in path_spec_generator:
+          if self._abort:
+            break
 
-        if self._CheckExcludedPathSpec(file_system, path_spec):
-          display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
-          logger.debug('Excluded from extraction: {0:s}.'.format(display_name))
-          continue
+          if self._CheckExcludedPathSpec(file_system, path_spec):
+            display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+            logger.debug(f'Excluded from extraction: {display_name:s}.')
+            continue
 
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-        parser_mediator.ProduceEventSource(event_source)
+          # TODO: determine if event sources should be DataStream or FileEntry
+          # or both.
+          event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+          parser_mediator.ProduceEventSource(event_source)
+
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
+
+      # All exceptions need to be caught here to prevent the process
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            f'unable to process path specification with error: '
+            f'{exception!s}'), file_system_path_spec)
 
   def _ProcessEventData(self):
     """Generate events from event data."""
@@ -244,8 +259,8 @@ class SingleProcessEngine(engine.BaseEngine):
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
           path_spec, resolver_context=parser_mediator.resolver_context)
       if file_entry is None:
-        logger.warning('Unable to open file entry: {0:s}'.format(
-            self._current_display_name))
+        logger.warning(
+            f'Unable to open file entry: {self._current_display_name:s}')
         return
 
       file_system = file_entry.GetFileSystem()
@@ -255,8 +270,8 @@ class SingleProcessEngine(engine.BaseEngine):
         self._CacheFileSystem(file_system)
 
       if self._CheckExcludedPathSpec(file_system, path_spec):
-        logger.debug('Excluded from extraction: {0:s}.'.format(
-            self._current_display_name))
+        logger.debug(
+            f'Excluded from extraction: {self._current_display_name:s}.')
         return
 
       self._extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
@@ -268,19 +283,19 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    # All exceptions need to be caught here to prevent the worker
+    # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
-          'unable to process path specification with error: '
-          '{0!s}').format(exception), path_spec=path_spec)
+          f'unable to process path specification with error: '
+          f'{exception!s}'), path_spec=path_spec)
 
       if getattr(self._processing_configuration, 'debug_output', False):
         self._StopStatusUpdateThread()
 
-        logger.warning(
-            'Unhandled exception while processing path spec: {0:s}.'.format(
-                self._current_display_name))
+        logger.warning((
+            f'Unhandled exception while processing path spec: '
+            f'{self._current_display_name:s}.'))
         logger.exception(exception)
 
         pdb.post_mortem()
@@ -305,7 +320,8 @@ class SingleProcessEngine(engine.BaseEngine):
     self._CollectInitialEventSources(
         parser_mediator, file_system_path_specs)
 
-    self._ProcessEventSources(self._storage_writer, parser_mediator)
+    if not self._abort:
+      self._ProcessEventSources(self._storage_writer, parser_mediator)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_source')
@@ -362,7 +378,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def _CreateParserMediator(
       self, storage_writer, resolver_context, processing_configuration,
-      system_configurations):
+      system_configurations, windows_event_log_providers):
     """Creates a parser mediator.
 
     Args:
@@ -372,6 +388,8 @@ class SingleProcessEngine(engine.BaseEngine):
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
+      windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
+          Windows EventLog providers.
 
     Returns:
       ParserMediator: parser mediator.
@@ -393,8 +411,7 @@ class SingleProcessEngine(engine.BaseEngine):
           filter_file_path=processing_configuration.filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
-          'Unable to build collection filters with error: {0!s}'.format(
-              exception))
+          f'Unable to build collection filters with error: {exception!s}')
 
     parser_mediator = parsers_mediator.ParserMediator(
         registry_find_specs=self._registry_find_specs,
@@ -411,6 +428,8 @@ class SingleProcessEngine(engine.BaseEngine):
         processing_configuration.preferred_language)
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
+
+    parser_mediator.SetWindowsEventLogProviders(windows_event_log_providers)
 
     return parser_mediator
 
@@ -442,9 +461,12 @@ class SingleProcessEngine(engine.BaseEngine):
           processing_configuration.artifact_definitions_path,
           processing_configuration.custom_artifacts_path)
 
+    windows_event_log_providers = list(storage_writer.GetAttributeContainers(
+        'windows_eventlog_provider'))
+
     parser_mediator = self._CreateParserMediator(
         storage_writer, resolver_context, processing_configuration,
-        system_configurations)
+        system_configurations, windows_event_log_providers)
     parser_mediator.SetStorageWriter(storage_writer)
 
     self._extraction_worker = worker.EventExtractionWorker(

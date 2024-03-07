@@ -53,8 +53,8 @@ class EventSource(interface.AttributeContainer):
 class FileEntryEventSource(EventSource):
   """File entry event source.
 
-  The file entry event source is an event source that represents a file
-  within a file system.
+  The file entry event source is an event source that represents a file within a
+  file system.
   """
   DATA_TYPE = 'file_entry'
 

@@ -1,0 +1,220 @@
+# Plaso Android related event formatters.
+---
+type: 'conditional'
+data_type: 'android:app_usage'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
+data_type: 'android:event:call'
+enumeration_helpers:
+- input_attribute: 'call_type'
+  output_attribute: 'call_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'INCOMING'
+    2: 'OUTGOING'
+    3: 'MISSED'
+message:
+- '{call_type}'
+- 'Number: {number}'
+- 'Name: {name}'
+- 'Duration: {duration} seconds'
+short_message:
+- '{call_type} Call'
+short_source: 'LOG'
+source: 'Android Call History'
+---
+type: 'conditional'
+data_type: 'android:logcat'
+message:
+- '{message}'
+- 'Component Tag: {component_tag}'
+- 'PID: {pid}'
+- 'Thread: {thread_identifier}'
+- 'User identifier: {user_identifier}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Android logcat'
+---
+type: 'conditional'
+data_type: 'android:messaging:hangouts'
+enumeration_helpers:
+- input_attribute: 'message_status'
+  output_attribute: 'message_status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'UNREAD'
+    4: 'READ'
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'SENT'
+    2: 'RECEIVED'
+message:
+- 'Sender: {sender}'
+- 'Body: {body}'
+- 'Status: {message_status}'
+- 'Type: {message_type}'
+short_message:
+- '{body}'
+short_source: 'HANGOUTS'
+source: 'Google Hangouts Message'
+---
+type: 'conditional'
+data_type: 'android:messaging:sms'
+enumeration_helpers:
+- input_attribute: 'sms_type'
+  output_attribute: 'sms_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'RECEIVED'
+    2: 'SENT'
+- input_attribute: 'sms_read'
+  output_attribute: 'sms_read'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'UNREAD'
+    1: 'READ'
+message:
+- 'Type: {sms_type}'
+- 'Address: {address}'
+- 'Status: {sms_read}'
+- 'Message: {body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'Android SMS messages'
+---
+type: 'conditional'
+data_type: 'android:tango:contact'
+message:
+- '{first_name}'
+- '{last_name}'
+- '{gender}'
+- 'birthday: {birthday}'
+- 'Status: {status}'
+- 'Friend: {is_friend}'
+- 'Request type: {friend_request_type}'
+- 'Request message: {friend_request_message}'
+short_message:
+- '{first_name}'
+- '{last_name}'
+- 'Status: {status}'
+short_source: 'Tango Android'
+source: 'Tango Android Contact'
+---
+type: 'conditional'
+data_type: 'android:tango:conversation'
+message:
+- 'Conversation ({conversation_identifier})'
+short_message:
+- 'Conversation ({conversation_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Conversation'
+---
+type: 'conditional'
+data_type: 'android:tango:message'
+enumeration_helpers:
+- input_attribute: 'direction'
+  output_attribute: 'direction'
+  default_value: 'Unknown'
+  values:
+    1: 'Incoming'
+    2: 'Outgoing'
+message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_message:
+- '{direction}'
+- 'Message ({message_identifier})'
+short_source: 'Tango Android'
+source: 'Tango Android Message'
+---
+type: 'conditional'
+data_type: 'android:twitter:contact'
+message:
+- 'Screen name: {username}'
+- 'Profile picture URL: {image_url}'
+- 'Name: {name}'
+- 'Location: {location}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+- 'Number of followers: {followers}'
+- 'Number of following: {friend}'
+- 'Number of tweets: {statuses}'
+short_message:
+- 'Screen name: {username}'
+- 'Description: {description}'
+- 'URL: {web_url}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Contacts'
+---
+type: 'conditional'
+data_type: 'android:twitter:search'
+message:
+- 'Name: {name}'
+- 'Query: {search_query}'
+short_message:
+- 'Query: {search_query}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Search'
+---
+type: 'conditional'
+data_type: 'android:twitter:status'
+enumeration_helpers:
+- input_attribute: 'favorited'
+  output_attribute: 'favorited'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'retweeted'
+  output_attribute: 'retweeted'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'User: {username}'
+- 'Status: {content}'
+- 'Favorited: {favorited}'
+- 'Retweeted: {retweeted}'
+short_message:
+- 'User: {username}'
+- 'Status: {content}'
+short_source: 'Twitter Android'
+source: 'Twitter Android Status'
+---
+type: 'conditional'
+data_type: 'android:webview:cookie'
+message:
+- 'Host: {host}'
+- 'Path: {path}'
+- 'Cookie name: {name}'
+- 'Value: {value}'
+- 'Secure: {secure}'
+short_message:
+- '{host}'
+- '{name}'
+- '{value}'
+short_source: 'WebView'
+source: 'Android WebView'
+---
+type: 'conditional'
+data_type: 'android:webviewcache'
+message:
+- 'URL: {url}'
+- 'Content Length: {content_length}'
+short_message:
+- '{url}'
+short_source: 'WebViewCache'
+source: 'Android WebViewCache'

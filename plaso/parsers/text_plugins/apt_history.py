@@ -49,19 +49,11 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      lambda tokens: int(tokens[0], 10))
-
-  _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).setResultsName('date_time')
+  # Date and time values are formatted as:
+  # 2019-07-10  16:38:12
+  _DATE_TIME = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2}  '
+      r'[0-9]{2}:[0-9]{2}:[0-9]{2})')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -70,7 +62,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       pyparsing.Literal('Start-Date:') + _DATE_TIME + _END_OF_LINE)
 
   _RECORD_BODY_LINE = (
-      pyparsing.oneOf([
+      pyparsing.one_of([
           'Commandline:',
           'Downgrade:',
           'Error:',
@@ -198,26 +190,23 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
           the time elements.
     """
     try:
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
+      time_elements_structure = time_elements_structure.replace('  ', ' ')
 
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-      # overriding __getattr__ with a function that returns an empty string
-      # when named token does not exist.
-      time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
-      date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=time_elements_tuple)
+      date_time = dfdatetime_time_elements.TimeElements()
+      date_time.CopyFromDateTimeString(time_elements_structure)
 
       # APT History logs store date and time values in local time.
       date_time.is_local_time = True
+
+      # TODO: remove this after updating dfDateTime not to set the time zone in
+      # CopyFromDateTimeString for a time string without time zone information.
+      date_time.time_zone_offset = None
 
       return date_time
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def _ResetState(self):
     """Resets stored values."""

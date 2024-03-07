@@ -10,6 +10,7 @@ from plaso.cli.helpers import opensearch_ts_output
 from plaso.lib import errors
 from plaso.output import opensearch_ts
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
@@ -88,7 +89,8 @@ Test argument parser.
           opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper)
       arguments_helper.ParseOptions(options, None)
 
-    options.opensearch_mappings = os.path.join('data', 'opensearch.mappings')
+    options.opensearch_mappings = os.path.join(
+        shared_test_lib.DATA_PATH, 'opensearch.mappings')
     opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

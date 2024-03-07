@@ -5,7 +5,6 @@ import abc
 import codecs
 import datetime
 import locale
-import re
 import sys
 import time
 import textwrap
@@ -21,6 +20,7 @@ import plaso
 
 from plaso.cli import logger
 from plaso.cli import views
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -41,8 +41,6 @@ class CLITool(object):
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = 'utf-8'
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes a command line interface tool.
@@ -154,15 +152,9 @@ class CLITool(object):
     if not path_spec:
       return 'N/A'
 
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
+    return '\n'.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
@@ -200,8 +192,8 @@ class CLITool(object):
       warning_text (str): text used to warn the user.
     """
     warning_text = textwrap.wrap(f'WARNING: {warning_text:s}', 80)
-    print('\n'.join(warning_text))
-    print('')
+    print('\n'.join(warning_text), file=sys.stderr)
+    print('', file=sys.stderr)
 
     self._has_user_warning = True
 
@@ -289,7 +281,9 @@ class CLITool(object):
     date_time_delta = datetime.datetime.utcnow() - version_date_time
 
     if date_time_delta.days > 180:
-      logger.warning('This version of plaso is more than 6 months old.')
+      logger.warning((
+          'This version of plaso is more than 6 months old. We strongly '
+          'recommend to update it.'))
 
       self._PrintUserWarning((
           'the version of plaso you are using is more than 6 months old. We '

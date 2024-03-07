@@ -45,7 +45,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
 
   _FILENAME = '.viminfo'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
@@ -66,7 +66,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
 
   _VERSION_VALUE = (
       pyparsing.Literal('|') +
-      pyparsing.Word(pyparsing.nums + ',').setResultsName('version') +
+      pyparsing.Word(pyparsing.nums + ',').set_results_name('version') +
       _END_OF_LINE)
 
   _ENCODING_HEADER = (
@@ -76,7 +76,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
   _ENCODING_VALUE = (
       pyparsing.Literal('*') +
       pyparsing.Literal('encoding=') +
-      pyparsing.Word(pyparsing.alphanums + '-').setResultsName('encoding') +
+      pyparsing.Word(pyparsing.alphanums + '-').set_results_name('encoding') +
       _END_OF_LINE)
 
   _PREAMBLE = (
@@ -86,14 +86,14 @@ class VimInfoTextPlugin(interface.TextPlugin,):
   _HLSEARCH = (
       pyparsing.Literal('# hlsearch on (H) or off (h):') +
       _END_OF_LINE +
-      pyparsing.Word('~/hH').setResultsName('hlsearch') +
+      pyparsing.Word('~/hH').set_results_name('hlsearch') +
       _END_OF_LINE)
 
   # TODO: https://github.com/vim/vim/blob/master/src/viminfo.c#L1525
   _SEARCH_PATTERN = (
       pyparsing.Literal('# Last Search Pattern:') +
       _END_OF_LINE +
-      pyparsing.restOfLine().setResultsName('search_pattern') +
+      pyparsing.restOfLine().set_results_name('search_pattern') +
       _END_OF_LINE +
       _END_OF_LINE)
 
@@ -101,14 +101,14 @@ class VimInfoTextPlugin(interface.TextPlugin,):
   _SUBSTITUTE_SEARCH_PATTERN = (
       pyparsing.Literal('# Last Substitute Search Pattern:') +
       _END_OF_LINE +
-      pyparsing.restOfLine().setResultsName('substitute_search_pattern') +
+      pyparsing.restOfLine().set_results_name('substitute_search_pattern') +
       _END_OF_LINE +
       _END_OF_LINE)
 
   _SUBSTITUTE_STRING = (
       pyparsing.Literal('# Last Substitute String:') +
       _END_OF_LINE +
-      pyparsing.restOfLine().setResultsName('last_substitute_string') +
+      pyparsing.restOfLine().set_results_name('last_substitute_string') +
       _END_OF_LINE +
       _END_OF_LINE)
 
@@ -150,7 +150,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
   _COMMAND_LINE_ITEM = pyparsing.Group(
       pyparsing.Literal(':') +
       pyparsing.restOfLine() + _END_OF_LINE +
-      _BAR_ITEM).setResultsName('command_line_items*')
+      _BAR_ITEM).set_results_name('command_line_items*')
 
   _COMMAND_LINE_HISTORY = (
       pyparsing.Literal('# Command Line History (newest to oldest):') +
@@ -162,7 +162,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('?') +
       pyparsing.restOfLine() +
       _END_OF_LINE +
-      _BAR_ITEM).setResultsName('search_string_items*')
+      _BAR_ITEM).set_results_name('search_string_items*')
 
   _SEARCH_STRING_HISTORY = (
       pyparsing.Literal('# Search String History (newest to oldest):') +
@@ -174,7 +174,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('=') +
       pyparsing.Word(pyparsing.alphas + '/:') +
       _END_OF_LINE +
-      _BAR_ITEM).setResultsName('expression_history_items*')
+      _BAR_ITEM).set_results_name('expression_history_items*')
 
   _EXPRESSION_HISTORY = (
       pyparsing.Literal('# Expression History (newest to oldest):') +
@@ -185,7 +185,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('@') +
       pyparsing.Word(pyparsing.alphas + '/:') +
       _END_OF_LINE +
-      _BAR_ITEM).setResultsName('input_line_history_items*')
+      _BAR_ITEM).set_results_name('input_line_history_items*')
 
   _INPUT_LINE_HISTORY = (
       pyparsing.Literal('# Input Line History (newest to oldest):') +
@@ -196,7 +196,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('@') +
       pyparsing.Word(pyparsing.alphas + '/:') +
       _END_OF_LINE +
-      _BAR_ITEM).setResultsName('debug_line_history_items*')
+      _BAR_ITEM).set_results_name('debug_line_history_items*')
 
   _DEBUG_LINE_HISTORY = (
       pyparsing.Literal('# Debug Line History (newest to oldest):') +
@@ -213,11 +213,11 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       pyparsing.Literal('"') +
       pyparsing.Or([_INTEGER, pyparsing.Word(pyparsing.printables)]) +
       pyparsing.Suppress(pyparsing.White('\t')) +
-      pyparsing.oneOf(['BLOCK', 'CHAR', 'LINE']) +
+      pyparsing.one_of(['BLOCK', 'CHAR', 'LINE']) +
       pyparsing.Suppress(pyparsing.White('\t')) +
       _INTEGER + _END_OF_LINE +
       pyparsing.Group(pyparsing.ZeroOrMore(_REGISTERS_CONTENT)) +
-      _REGISTER_ITEM).setResultsName('registers_items*')
+      _REGISTER_ITEM).set_results_name('registers_items*')
 
   _REGISTERS_HISTORY = (
       pyparsing.Literal('# Registers:') +
@@ -231,7 +231,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       _INTEGER +
       pyparsing.restOfLine() +
       _END_OF_LINE +
-      _FILEMARK_ITEM).setResultsName('filemarks_items*')
+      _FILEMARK_ITEM).set_results_name('filemarks_items*')
 
   _FILEMARKS_HISTORY = (
       pyparsing.Literal('# File marks:') +
@@ -245,7 +245,7 @@ class VimInfoTextPlugin(interface.TextPlugin,):
       _INTEGER +
       pyparsing.restOfLine() +
       _END_OF_LINE +
-      _FILEMARK_ITEM).setResultsName('jumplist_items*')
+      _FILEMARK_ITEM).set_results_name('jumplist_items*')
 
   _JUMPLIST_HISTORY = (
       pyparsing.Literal('# Jumplist (newest first):') +

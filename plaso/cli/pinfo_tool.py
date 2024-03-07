@@ -547,11 +547,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       storage_reader (StorageReader): storage reader.
     """
     column_titles = [
-        'Identifier', 'Log source(s)', 'Log type(s)', 'Event message file(s)']
+        'Identifier', 'Log source(s)', 'Log type(s)', 'Event message file(s)',
+        'Parameter message file(s)']
     self._GenerateReportHeader('winevt_providers', column_titles)
 
     attribute_names = [
-        'identifier', 'log_sources', 'log_types', 'event_message_files']
+        'identifier', 'log_sources', 'log_types', 'event_message_files',
+        'parameter_message_files']
     entry_format_string = self._GenerateReportEntryFormatString(attribute_names)
 
     if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
@@ -567,7 +569,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             'identifier': artifact.identifier or '',
             'event_message_files': artifact.event_message_files or [],
             'log_sources': artifact.log_sources or [],
-            'log_types': artifact.log_types or []}
+            'log_types': artifact.log_types or [],
+            'parameter_message_files': artifact.parameter_message_files or []}
 
         self._output_writer.Write(entry_format_string.format(
             **attribute_values))
@@ -763,7 +766,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           table_view.Write(self._output_writer)
 
   def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
-    """Prints the parsers counter
+    """Prints the parsers counter.
 
     Args:
       parsers_counter (collections.Counter): number of events per parser or
@@ -1520,6 +1523,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     self.AddBasicOptions(argument_parser)
     self.AddStorageOptions(argument_parser)
+    self.AddLogFileOptions(argument_parser)
 
     if self._CanEnforceProcessMemoryLimit():
       helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -1604,6 +1608,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       BadConfigOption: if the options are invalid.
     """
     self._ParseInformationalOptions(options)
+
+    self._ParseLogFileOptions(options)
 
     self._verbose = getattr(options, 'verbose', False)
 

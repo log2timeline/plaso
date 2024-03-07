@@ -51,45 +51,46 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Date and time values are formatted as: YYYY-MM-DD hh:mm:ss.### UTC
   # For example: 2022-04-12 00:16:05.526 UTC
   _DATE_TIME = (
       pyparsing.LineStart() +
-      _FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
-      _TWO_DIGITS.setResultsName('day_of_month') +
-      _TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.setResultsName('seconds') +
+      _FOUR_DIGITS.set_results_name('year') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.set_results_name('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.set_results_name('day_of_month') +
+      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
+      _TWO_DIGITS.set_results_name('seconds') +
       pyparsing.Optional(
           pyparsing.Suppress('.') +
-          _THREE_DIGITS.setResultsName('milliseconds'))).setResultsName(
+          _THREE_DIGITS.set_results_name('milliseconds'))).set_results_name(
               'date_time')
 
-  _TIME_ZONE = pyparsing.Word(pyparsing.printables).setResultsName('time_zone')
+  _TIME_ZONE = pyparsing.Word(pyparsing.printables).set_results_name(
+      'time_zone')
 
   _PID = (
       pyparsing.Suppress('[') + pyparsing.OneOrMore(_INTEGER) +
       pyparsing.Optional(pyparsing.Literal('-')) +
       pyparsing.ZeroOrMore(_INTEGER) +
-      pyparsing.Suppress(']')).setResultsName('pid')
+      pyparsing.Suppress(']')).set_results_name('pid')
 
   _USER_AND_DATABASE = (
       pyparsing.Word(pyparsing.alphanums) +
       pyparsing.Literal('@') +
-      pyparsing.Word(pyparsing.alphanums)).setResultsName('user_and_database')
+      pyparsing.Word(pyparsing.alphanums)).set_results_name('user_and_database')
 
   _SEVERITY = pyparsing.Word(pyparsing.string.ascii_uppercase)
 
@@ -99,9 +100,9 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (
       _DATE_TIME + _TIME_ZONE + _PID + pyparsing.Optional(_USER_AND_DATABASE) +
-      _SEVERITY.setResultsName('severity') +
+      _SEVERITY.set_results_name('severity') +
       pyparsing.Suppress(':') +
-      pyparsing.SkipTo(_LOG_LINE_END).setResultsName('log_line') +
+      pyparsing.SkipTo(_LOG_LINE_END).set_results_name('log_line') +
       pyparsing.ZeroOrMore(_END_OF_LINE))
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

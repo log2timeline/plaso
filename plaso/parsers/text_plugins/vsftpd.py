@@ -12,7 +12,7 @@ from plaso.parsers.text_plugins import interface
 
 
 class VsftpdLogEventData(events.EventData):
-  """vsftpd log event data.
+  """Vsftpd log event data.
 
   Attributes:
     added_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -49,13 +49,13 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
       'nov': 11,
       'dec': 12}
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
+  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
@@ -70,8 +70,8 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
-      pyparsing.restOfLine().setResultsName('text') +
+      _DATE_TIME.set_results_name('date_time') +
+      pyparsing.restOfLine().set_results_name('text') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]

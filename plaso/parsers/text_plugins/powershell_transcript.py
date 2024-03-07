@@ -69,10 +69,10 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   # Date and time values are formatted as: YYYYMMDDhhmmss
@@ -98,25 +98,25 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   _LOG_LINE = (
       pyparsing.NotAny(_SEPARATOR) +
-      pyparsing.restOfLine().setResultsName('body') + _END_OF_LINE)
+      pyparsing.restOfLine().set_results_name('body') + _END_OF_LINE)
 
   _HEADER_GRAMMAR = (
       _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE +
-      _METADATA_LINE.setResultsName('date_time') +
-      _METADATA_LINE.setResultsName('username') +
-      _METADATA_LINE.setResultsName('runas_user') +
-      _METADATA_LINE.setResultsName('configuration_name') +
-      _METADATA_LINE.setResultsName('machine') +
-      _METADATA_LINE.setResultsName('host_application') +
-      _METADATA_LINE.setResultsName('process_identifier') +
-      _METADATA_LINE.setResultsName('version') +
-      _METADATA_LINE.setResultsName('edition') +
-      _METADATA_LINE.setResultsName('compatible_versions') +
-      _METADATA_LINE.setResultsName('build_version') +
-      _METADATA_LINE.setResultsName('clr_version') +
-      _METADATA_LINE.setResultsName('ws_man_stack_version') +
-      _METADATA_LINE.setResultsName('remoting_protocol_version') +
-      _METADATA_LINE.setResultsName('serialization_version') +
+      _METADATA_LINE.set_results_name('date_time') +
+      _METADATA_LINE.set_results_name('username') +
+      _METADATA_LINE.set_results_name('runas_user') +
+      _METADATA_LINE.set_results_name('configuration_name') +
+      _METADATA_LINE.set_results_name('machine') +
+      _METADATA_LINE.set_results_name('host_application') +
+      _METADATA_LINE.set_results_name('process_identifier') +
+      _METADATA_LINE.set_results_name('version') +
+      _METADATA_LINE.set_results_name('edition') +
+      _METADATA_LINE.set_results_name('compatible_versions') +
+      _METADATA_LINE.set_results_name('build_version') +
+      _METADATA_LINE.set_results_name('clr_version') +
+      _METADATA_LINE.set_results_name('ws_man_stack_version') +
+      _METADATA_LINE.set_results_name('remoting_protocol_version') +
+      _METADATA_LINE.set_results_name('serialization_version') +
       _SEPARATOR_LINE)
 
   _LINE_STRUCTURES = [
@@ -130,7 +130,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
   # TODO: handle footer with end time.
 
   def __init__(self):
-    """Initializes instance attributes needed for processing."""
+    """Initializes a text parser plugin."""
     super(PowerShellTranscriptLogTextPlugin, self).__init__()
     self._command_history = []
     self._event_data = None
@@ -148,8 +148,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
       ParseError: when the header cannot be parsed.
     """
     try:
-      structure_generator = self._HEADER_GRAMMAR.scanString(
-          text_reader.lines, maxMatches=1)
+      structure_generator = self._HEADER_GRAMMAR.scan_string(
+          text_reader.lines, max_matches=1)
       structure, start, end = next(structure_generator)
 
     except StopIteration:
@@ -195,7 +195,8 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
         structure, 'date_time')
 
     try:
-      time_elements_structure = self._DATE_TIME.parseString(date_time_structure)
+      time_elements_structure = self._DATE_TIME.parse_string(
+          date_time_structure)
     except pyparsing.ParseException:
       raise errors.ParseError('Unable to parse date time.')
 
@@ -241,7 +242,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
           date_time_structure = body.rsplit(':', maxsplit=1)[-1].strip()
 
           try:
-            time_elements_structure = self._DATE_TIME.parseString(
+            time_elements_structure = self._DATE_TIME.parse_string(
                 date_time_structure)
           except pyparsing.ParseException:
             raise errors.ParseError('Unable to parse date time.')

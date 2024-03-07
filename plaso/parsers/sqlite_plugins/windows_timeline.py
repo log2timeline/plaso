@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for Windows 10 Timeline database files."""
+"""SQLite parser plugin for Windows 10 timeline database files."""
 
 import json
 
@@ -11,7 +11,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class WindowsTimelineGenericEventData(events.EventData):
-  """Windows Timeline database generic event data.
+  """Windows 10 timeline database generic event data.
 
   Attributes:
     application_display_name (str): a more human-friendly version of the
@@ -31,7 +31,7 @@ class WindowsTimelineGenericEventData(events.EventData):
   DATA_TYPE = 'windows:timeline:generic'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsTimelineGenericEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.application_display_name = None
@@ -41,7 +41,7 @@ class WindowsTimelineGenericEventData(events.EventData):
 
 
 class WindowsTimelineUserEngagedEventData(events.EventData):
-  """Windows Timeline database User Engaged event data.
+  """Windows 10 timeline database User Engaged event data.
 
   Contains information describing how long a user interacted with an application
   for.
@@ -61,7 +61,7 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
   DATA_TYPE = 'windows:timeline:user_engaged'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsTimelineUserEngagedEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.active_duration_seconds = None
@@ -71,14 +71,14 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
 
 
 class WindowsTimelinePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for Windows 10 Timeline database files.
+  """SQLite parser plugin for Windows 10 timeline database files.
 
-  The Windows 10 Timeline database file is typically stored in:
+  The Windows 10 timeline database file is typically stored in:
   %APPDATA%\\Local\\ConnectedDevicesPlatform\\L.<username>\\ActivitiesCache.db
   """
 
   NAME = 'windows_timeline'
-  DATA_FORMAT = 'Windows 10 Timeline SQLite database (ActivitiesCache.db) file'
+  DATA_FORMAT = 'Windows 10 timeline SQLite database (ActivitiesCache.db) file'
 
   REQUIRED_STRUCTURE = {
       'Activity': frozenset([
@@ -212,9 +212,9 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
   def ParseGenericRow(
       self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a generic windows timeline row.
+    """Parses a generic Windows timeline row.
 
-      Args:
+    Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       query (str): query that created the row.

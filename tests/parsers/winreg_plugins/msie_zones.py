@@ -16,27 +16,23 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = msie_zones.MSIEZoneSettingsPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Internet Settings\\Lockdown_Zones')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\'
+        'Lockdown_Zones'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Internet Settings\\Zones')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\'
+        'Zones'))
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Internet Settings\\Lockdown_Zones')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\'
+        'Lockdown_Zones'))
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Internet Settings\\Zones')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Software', (
+        'Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\Software', 'Bogus')
 
   def testProcessNtuserLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
@@ -78,7 +74,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:msie_zone_settings',
-        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        'key_path': f'{key_path:s}\\0 (My Computer)',
         'last_written_time': '2011-09-16T21:12:40.1455141+00:00',
         'settings': expected_settings}
 
@@ -129,7 +125,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:msie_zone_settings',
-        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        'key_path': f'{key_path:s}\\0 (My Computer)',
         'last_written_time': '2011-09-16T21:12:40.1455141+00:00',
         'settings': expected_settings}
 
@@ -257,7 +253,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:msie_zone_settings',
-        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        'key_path': f'{key_path:s}\\0 (My Computer)',
         'last_written_time': '2011-08-28T21:32:44.9376751+00:00',
         'settings': expected_settings}
 
@@ -389,7 +385,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:msie_zone_settings',
-        'key_path': '{0:s}\\0 (My Computer)'.format(key_path),
+        'key_path': f'{key_path:s}\\0 (My Computer)',
         'last_written_time': '2011-08-28T21:32:44.9376751+00:00',
         'settings': expected_settings}
 

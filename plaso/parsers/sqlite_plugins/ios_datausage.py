@@ -10,7 +10,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 class IOSDatausageEventData(events.EventData):
   """iOS datausage event data.
-  
+
   Attributes:
     bundle_identifier (str): bundle identifier.
     process_name (str): name of the process.
@@ -91,6 +91,7 @@ class IOSDatausagePlugin(interface.SQLitePlugin):
   def ParseDatausageEventRow(
         self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the Datausage sqlite file.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.

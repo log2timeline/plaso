@@ -243,7 +243,7 @@ class PsortTool(
     self._worker_timeout = worker_timeout
 
   def AddProcessingOptions(self, argument_group):
-    """Adds processing options to the argument group
+    """Adds processing options to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.

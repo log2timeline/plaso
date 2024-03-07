@@ -65,7 +65,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
         continue
 
       value_string = registry_value.GetDataAsObject()
-      entries.append('{0:s}: {1:s}'.format(value_name, value_string))
+      entries.append(f'{value_name:s}: {value_string:s}')
 
     event_data = TypedURLsEventData()
     event_data.entries = ' '.join(entries) or None

@@ -2,7 +2,6 @@
 """The status view."""
 
 import ctypes
-import re
 import sys
 import time
 
@@ -36,8 +35,6 @@ class StatusView(object):
           'storage media device'),
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE: (
           'storage media image')}
-
-  _UNICODE_SURROGATES_RE = re.compile('[\ud800-\udfff]')
 
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 
@@ -256,15 +253,9 @@ class StatusView(object):
     Returns:
       str: printable string representation of the path specification.
     """
-    path_spec_string = path_spec.comparable
-
-    if self._UNICODE_SURROGATES_RE.search(path_spec_string):
-      path_spec_string = path_spec_string.encode(
-          'utf-8', errors='surrogateescape')
-      path_spec_string = path_spec_string.decode(
-          'utf-8', errors='backslashreplace')
-
-    return path_spec_string
+    return '\n'.join([
+        line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+        for line in path_spec.comparable.split('\n')])
 
   def _PrintAnalysisStatusUpdateFile(self, processing_status):
     """Prints an analysis status update in file mode.

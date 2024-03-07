@@ -7,6 +7,7 @@ import os
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from lz4 import block as lz4_block
+import zstd
 
 from plaso.containers import events
 from plaso.lib import dtfabric_helper
@@ -52,6 +53,7 @@ class SystemdJournalParser(
 
   _OBJECT_COMPRESSED_FLAG_XZ = 1
   _OBJECT_COMPRESSED_FLAG_LZ4 = 2
+  _OBJECT_COMPRESSED_FLAG_ZSTD = 4
 
   _OBJECT_TYPE_UNUSED = 0
   _OBJECT_TYPE_DATA = 1
@@ -66,8 +68,8 @@ class SystemdJournalParser(
   _HEADER_SIZE_VERSION_187 = 224
   _HEADER_SIZE_VERSION_189 = 240
   _HEADER_SIZE_VERSION_246 = 256
-  _HEADER_SIZE_VERSION_252 = 268
-  _HEADER_SIZE_VERSION_254 = 276
+  _HEADER_SIZE_VERSION_252 = 264
+  _HEADER_SIZE_VERSION_254 = 272
 
   _SUPPORTED_FILE_HEADER_SIZES = frozenset([
       _HEADER_SIZE_PRE_VERSION_187,
@@ -77,10 +79,13 @@ class SystemdJournalParser(
       _HEADER_SIZE_VERSION_252,
       _HEADER_SIZE_VERSION_254])
 
+  _HEADER_INCOMPATIBLE_COMPACT = 16
+
   def __init__(self):
     """Initializes a parser."""
     super(SystemdJournalParser, self).__init__()
     self._maximum_journal_file_offset = 0
+    self._is_compact = False
 
   def _ParseDataObject(self, file_object, file_offset):
     """Parses a data object.
@@ -96,10 +101,14 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the data object cannot be parsed.
     """
-    data_object_map = self._GetDataTypeMap('systemd_journal_data_object')
+    if self._is_compact:
+      data_object_map = self._GetDataTypeMap(
+          'systemd_journal_data_object_compact')
+    else:
+      data_object_map = self._GetDataTypeMap('systemd_journal_data_object')
 
     try:
-      data_object, _ = self._ReadStructureFromFileObject(
+      data_object, data_object_header_size = self._ReadStructureFromFileObject(
           file_object, file_offset, data_object_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
@@ -111,12 +120,13 @@ class SystemdJournalParser(
           data_object.object_type))
 
     if data_object.object_flags not in (
-        0, self._OBJECT_COMPRESSED_FLAG_XZ, self._OBJECT_COMPRESSED_FLAG_LZ4):
+        0, self._OBJECT_COMPRESSED_FLAG_XZ, self._OBJECT_COMPRESSED_FLAG_LZ4,
+        self._OBJECT_COMPRESSED_FLAG_ZSTD):
       raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
           data_object.object_flags))
 
     # The data is read separately for performance reasons.
-    data_size = data_object.data_size - 64
+    data_size = data_object.data_size - data_object_header_size
     data = file_object.read(data_size)
 
     if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
@@ -127,13 +137,22 @@ class SystemdJournalParser(
 
       try:
         uncompressed_size = self._ReadStructureFromByteStream(
-            data, file_offset + 64, uncompressed_size_map)
+            data, file_offset + data_object_header_size, uncompressed_size_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
             'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
-            'error: {1!s}').format(file_offset + 64, exception))
+            'error: {1!s}').format(
+                file_offset + data_object_header_size, exception))
 
       data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
+
+    elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_ZSTD:
+      try:
+        data = zstd.decompress(data)
+      except zstd.Error as exception:
+        raise errors.ParseError((
+            'Unable to decompress ZSTD at offset: 0x{0:08x} with error: '
+            '{1!s}').format(file_offset + data_object_header_size, exception))
 
     return data
 
@@ -151,8 +170,12 @@ class SystemdJournalParser(
     Raises:
       ParseError: if the entry array object cannot be parsed.
     """
-    entry_array_object_map = self._GetDataTypeMap(
-        'systemd_journal_entry_array_object')
+    if self._is_compact:
+      entry_array_object_map = self._GetDataTypeMap(
+          'systemd_journal_entry_array_object_compact')
+    else:
+      entry_array_object_map = self._GetDataTypeMap(
+          'systemd_journal_entry_array_object')
 
     try:
       entry_array_object, _ = self._ReadStructureFromFileObject(
@@ -246,7 +269,11 @@ class SystemdJournalParser(
     entry_object = self._ParseEntryObject(file_object, file_offset)
 
     # The data is read separately for performance reasons.
-    entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
+    if self._is_compact:
+      entry_item_map = self._GetDataTypeMap(
+          'systemd_journal_entry_item_compact')
+    else:
+      entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
 
     file_offset += 64
     data_end_offset = file_offset + entry_object.data_size - 64
@@ -311,6 +338,9 @@ class SystemdJournalParser(
       raise errors.WrongParser(
           'Unsupported file header size: {0:d}.'.format(
               file_header.header_size))
+
+    if file_header.incompatible_flags & self._HEADER_INCOMPATIBLE_COMPACT:
+      self._is_compact = True
 
     data_hash_table_end_offset = (
         file_header.data_hash_table_offset +

@@ -215,19 +215,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store.Open(path=test_path, read_only=False)
 
       try:
-        number_of_containers = test_store.GetNumberOfAttributeContainers(
+        number_of_containers = test_store._GetNumberOfAttributeContainerRows(
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 0)
 
         test_store._WriteNewAttributeContainer(event_data_stream)
 
-        number_of_containers = test_store.GetNumberOfAttributeContainers(
+        number_of_containers = test_store._GetNumberOfAttributeContainerRows(
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 1)
 
         test_store._WriteExistingAttributeContainer(event_data_stream)
 
-        number_of_containers = test_store.GetNumberOfAttributeContainers(
+        number_of_containers = test_store._GetNumberOfAttributeContainerRows(
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 1)
 
@@ -247,13 +247,13 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store.Open(path=test_path, read_only=False)
 
       try:
-        number_of_containers = test_store.GetNumberOfAttributeContainers(
+        number_of_containers = test_store._GetNumberOfAttributeContainerRows(
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 0)
 
         test_store._WriteNewAttributeContainer(event_data_stream)
 
-        number_of_containers = test_store.GetNumberOfAttributeContainers(
+        number_of_containers = test_store._GetNumberOfAttributeContainerRows(
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 1)
 
@@ -400,12 +400,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             event_data_stream.CONTAINER_TYPE)
         self.assertEqual(number_of_containers, 1)
 
-        # Test for a supported container type that does not have a table
-        # present in the storage file.
-        query = 'DROP TABLE {0:s}'.format(event_data_stream.CONTAINER_TYPE)
-        test_store._cursor.execute(query)
         number_of_containers = test_store.GetNumberOfAttributeContainers(
-            event_data_stream.CONTAINER_TYPE)
+            'bogus')
         self.assertEqual(number_of_containers, 0)
 
       finally:

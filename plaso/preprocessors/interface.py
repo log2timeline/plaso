@@ -14,8 +14,8 @@ from plaso.lib import errors
 class ArtifactPreprocessorPlugin(object):
   """The artifact preprocessor plugin interface.
 
-  The artifact preprocessor determines preprocessing attributes based on
-  an artifact definition defined by ARTIFACT_DEFINITION_NAME.
+  The artifact preprocessor determines preprocessing attributes based on an
+  artifact definition defined by ARTIFACT_DEFINITION_NAME.
   """
 
   ARTIFACT_DEFINITION_NAME = None
@@ -136,12 +136,12 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
       relative_path = searcher.GetRelativePath(path_specification)
       if path_separator != file_system.PATH_SEPARATOR:
         relative_path_segments = file_system.SplitPath(relative_path)
-        relative_path = '{0:s}{1:s}'.format(
-            path_separator, path_separator.join(relative_path_segments))
+        relative_path = path_separator.join(relative_path_segments)
+        relative_path = ''.join([path_separator, relative_path])
 
       raise errors.PreProcessFail((
-          'Unable to retrieve file entry: {0:s} with error: '
-          '{1!s}').format(relative_path, exception))
+          f'Unable to retrieve file entry: {relative_path:s} with error: '
+          f'{exception!s}'))
 
     if file_entry:
       mediator.SetFileEntry(file_entry)
@@ -183,8 +183,8 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
     """
     if not file_entry.IsFile():
       raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: file entry is not a regular '
-          'file').format(self.ARTIFACT_DEFINITION_NAME))
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
+          f'file entry is not a regular file'))
 
     file_object = file_entry.GetFileObject()
     self._ParseFileData(mediator, file_object)
@@ -193,8 +193,8 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
 class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
   """Windows Registry key artifact preprocessor plugin interface.
 
-  Shared functionality for preprocessing attributes based on a Windows
-  Registry artifact definition, such as Windows Registry key or value.
+  Shared functionality for preprocessing attributes based on a Windows Registry
+  artifact definition, such as Windows Registry key or value.
   """
 
   @abc.abstractmethod
@@ -246,8 +246,8 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
         # Also see: https://github.com/ForensicArtifacts/artifacts/issues/120
         key_path_upper = key_path.upper()
         if key_path_upper.startswith('%%CURRENT_CONTROL_SET%%'):
-          key_path = '{0:s}{1:s}'.format(
-              'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet', key_path[23:])
+          key_path = ''.join([
+              'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet', key_path[23:]])
 
         find_spec = registry_searcher.FindSpec(key_path_glob=key_path)
 
@@ -256,8 +256,8 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
             registry_key = searcher.GetKeyByPath(key_path)
           except IOError as exception:
             raise errors.PreProcessFail((
-                'Unable to retrieve Windows Registry key: {0:s} with error: '
-                '{1!s}').format(key_path, exception))
+                f'Unable to retrieve Windows Registry key: {key_path:s} with '
+                f'error: {exception!s}'))
 
           if registry_key:
             value_name = key_value_pair.get('value', None)
@@ -268,8 +268,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     WindowsRegistryKeyArtifactPreprocessorPlugin):
   """Windows Registry value artifact preprocessor plugin interface.
 
-  Shared functionality for preprocessing attributes based on a Windows
-  Registry value artifact definition.
+  Shared functionality for preprocessing attributes based on a Windows Registry
+  value artifact definition.
   """
 
   def _ParseKey(self, mediator, registry_key, value_name):
@@ -289,9 +289,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       registry_value = registry_key.GetValueByName(value_name)
     except IOError as exception:
       raise errors.PreProcessFail((
-          'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
-          'with error: {2!s}').format(
-              registry_key.path, value_name, exception))
+          f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
+          f'value: {value_name:s} with error: {exception!s}'))
 
     if registry_value:
       value_object = registry_value.GetDataAsObject()

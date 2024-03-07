@@ -14,7 +14,7 @@ class BaseWindowsRegistryKeyFilter(object):
 
   @property
   def key_paths(self):
-    """list[str]: key paths defined by the filter."""
+    """List[str]: key paths defined by the filter."""
     return []
 
   # pylint: disable=redundant-returns-doc
@@ -283,11 +283,12 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
           value_object = registry_value.GetDataAsObject()
 
           if registry_value.DataIsMultiString():
-            value_string = '[{0:s}]'.format(', '.join(value_object or []))
+            value_string = ', '.join(value_object or [])
+            value_string = f'[{value_string:s}]'
 
           elif (registry_value.DataIsInteger() or
                 registry_value.DataIsString()):
-            value_string = '{0!s}'.format(value_object)
+            value_string = str(value_object)
 
           elif parser_mediator.extract_winreg_binary_values:
             value_string = registry_value.data
@@ -295,14 +296,16 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
           else:
             # Add a place holder for remaining types such as REG_BINARY and
             # REG_RESOURCE_REQUIREMENT_LIST.
-            value_string = '({0:d} bytes)'.format(len(value_object))
+            value_data_size = len(value_object)
+            value_string = f'({value_data_size:d} bytes)'
 
         except dfwinreg_errors.WinRegistryValueError as exception:
           parser_mediator.ProduceRecoveryWarning((
-              'Unable to retrieve value data of type: {0:s} as object from '
-              'value: {1:s} in key: {2:s} with error: {3!s}').format(
-                  data_type_string, value_name, registry_key.path, exception))
-          value_string = '({0:d} bytes)'.format(len(registry_value.data))
+              f'Unable to retrieve value data of type: {data_type_string:s} '
+              f'as object from value: {value_name:s} in key: '
+              f'{registry_key.path:s} with error: {exception!s}'))
+          value_data_size = len(registry_value.data)
+          value_string = f'({value_data_size:d} bytes)'
 
       value_tuples.append((value_name, data_type_string, value_string))
 

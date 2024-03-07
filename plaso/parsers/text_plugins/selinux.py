@@ -53,7 +53,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
   NAME = 'selinux'
   DATA_FORMAT = 'SELinux audit log (audit.log) file'
 
-  _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
+  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
   _KEY_VALUE_GROUP = pyparsing.Group(
@@ -74,11 +74,11 @@ class SELinuxTextPlugin(interface.TextPlugin):
   _LOG_LINE = (
       pyparsing.Suppress('type=') + (
           pyparsing.Word(pyparsing.srange('[A-Z_]')) ^
-          pyparsing.Regex(r'UNKNOWN\[[0-9]+\]')).setResultsName('type') +
+          pyparsing.Regex(r'UNKNOWN\[[0-9]+\]')).set_results_name('type') +
       pyparsing.Suppress('msg=audit(') +
-      _TIMESTAMP.setResultsName('timestamp') +
+      _TIMESTAMP.set_results_name('timestamp') +
       pyparsing.Suppress(':') + _INTEGER + pyparsing.Suppress('):') +
-      pyparsing.restOfLine().setResultsName('body') +
+      pyparsing.restOfLine().set_results_name('body') +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
@@ -107,7 +107,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
       body = body.strip()
 
       try:
-        body_structure = self._KEY_VALUE_DICT.parseString(body)
+        body_structure = self._KEY_VALUE_DICT.parse_string(body)
 
         process_identifier = self._GetValueFromStructure(
             body_structure, 'pid')

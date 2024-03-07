@@ -62,7 +62,7 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
 
       value = registry_value.GetDataAsObject()
       if value is not None:
-        configuration.append('{0:s}: {1!s}'.format(registry_value.name, value))
+        configuration.append(f'{registry_value.name:s}: {value!s}')
 
     event_data = WindowsTimezoneSettingsEventData()
     event_data.configuration = ' '.join(sorted(configuration)) or None

@@ -325,8 +325,8 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
   def testExtractPathSpecsStorageMediaImageWithPartitions(self):
     """Tests the ExtractPathSpecs function an image file with partitions.
 
-    The image file contains 2 partitions, p1 and p2, both with a NFTS
-    file systems.
+    The image file contains 2 partitions, p1 and p2, both with a NFTS file
+    systems.
     """
     # Note that the source file is a RAW (VMDK flat) image.
     test_file_path = self._GetTestFilePath(['multi_partition_image.vmdk'])

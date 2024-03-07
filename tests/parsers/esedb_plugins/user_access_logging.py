@@ -18,7 +18,7 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
       0x79, 0xb7, 0x53, 0xf0]))
 
   def testProcessDatabase(self):
-    """Tests processing the database"""
+    """Tests processing the database."""
     plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['{C519A76A-D9B5-4F85-B667-5FAC08E0E1B4}.mdb'], plugin)

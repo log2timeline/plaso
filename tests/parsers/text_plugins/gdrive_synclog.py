@@ -38,7 +38,8 @@ class GoogleDriveSyncLogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['sync_log.log'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin([
+        'gdrive_synclog', 'sync_log.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -67,7 +68,8 @@ class GoogleDriveSyncLogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessWithMacOSLog(self):
     """Tests the Process function with a MacOS Google Drive sync log."""
     plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['sync_log-osx.log'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin([
+        'gdrive_synclog', 'sync_log-osx.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

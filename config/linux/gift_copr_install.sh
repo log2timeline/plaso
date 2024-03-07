@@ -15,6 +15,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libevt-python3
                       libevtx-python3
                       libewf-python3
+                      libfcrypto-python3
                       libfsapfs-python3
                       libfsext-python3
                       libfsfat-python3
@@ -38,6 +39,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libsmraw-python3
                       libvhdi-python3
                       libvmdk-python3
+                      libvsapm-python3
                       libvsgpt-python3
                       libvshadow-python3
                       libvslvm-python3
@@ -48,7 +50,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-certifi
                       python3-cffi
                       python3-chardet
-                      python3-cryptography
                       python3-dateutil
                       python3-defusedxml
                       python3-dfdatetime
@@ -64,14 +65,15 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-pyparsing
                       python3-pytsk3
                       python3-pytz
-                      python3-pyxattr
                       python3-pyyaml
                       python3-redis
                       python3-requests
                       python3-six
                       python3-urllib3
+                      python3-xattr
                       python3-yara
-                      python3-zmq";
+                      python3-zmq
+                      python3-zstd";
 
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-fakeredis
@@ -97,6 +99,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libevtx-python3-debuginfo
                     libewf-debuginfo
                     libewf-python3-debuginfo
+                    libfcrypto-debuginfo
+                    libfcrypto-python3-debuginfo
                     libfsapfs-debuginfo
                     libfsapfs-python3-debuginfo
                     libfsext-debuginfo
@@ -143,6 +147,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvhdi-python3-debuginfo
                     libvmdk-debuginfo
                     libvmdk-python3-debuginfo
+                    libvsapm-debuginfo
+                    libvsapm-python3-debuginfo
                     libvsgpt-debuginfo
                     libvsgpt-python3-debuginfo
                     libvshadow-debuginfo

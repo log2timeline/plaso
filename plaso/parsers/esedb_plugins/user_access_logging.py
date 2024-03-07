@@ -148,7 +148,7 @@ class UserAccessLoggingVirtualMachinesEventData(events.EventData):
 
 
 class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
-  """Parses Windows User Access Logging ESE database file. """
+  """Parses Windows User Access Logging ESE database file."""
 
   NAME = 'user_access_logging'
   DATA_FORMAT = 'Windows User Access Logging ESE database file'

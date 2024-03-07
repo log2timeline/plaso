@@ -16,17 +16,13 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = typedurls.TypedURLsPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\'
-        'TypedURLs')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Internet Explorer\\TypedURLs'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\TypedPaths')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

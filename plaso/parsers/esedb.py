@@ -21,7 +21,7 @@ class ESEDatabase(object):
 
   @property
   def tables(self):
-    """list[str]: names of all the tables."""
+    """List[str]: names of all the tables."""
     if not self._table_names:
       for esedb_table in self._esedb_file.tables:
         self._table_names.append(esedb_table.name)

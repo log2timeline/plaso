@@ -1,0 +1,1006 @@
+# Plaso Windows related event formatters.
+---
+type: 'basic'
+data_type: 'ccleaner:configuration'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
+type: 'conditional'
+data_type: 'ccleaner:update'
+message:
+- 'Origin: {key_path}'
+short_message:
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
+type: 'conditional'
+data_type: 'iis:log:line'
+message:
+- '{http_method}'
+- '{requested_uri_stem}'
+- '['
+- '{source_ip}'
+- '>'
+- '{dest_ip}'
+- ':'
+- '{dest_port}'
+- ']'
+- 'HTTP Status: {http_status}'
+- 'Bytes Sent: {sent_bytes}'
+- 'Bytes Received: {received_bytes}'
+- 'User Agent: {user_agent}'
+- 'Protocol Version: {protocol_version}'
+short_message:
+- '{http_method}'
+- '{requested_uri_stem}'
+- '['
+- '{source_ip}'
+- '>'
+- '{dest_ip}'
+- ':'
+- '{dest_port}'
+- ']'
+short_source: 'LOG'
+source: 'IIS Log'
+---
+type: 'conditional'
+data_type: 'sccm_log:entry'
+message:
+- '{component}'
+- '{text}'
+short_message:
+- '{text}'
+short_source: 'LOG'
+source: 'SCCM Log'
+---
+type: 'conditional'
+data_type: 'setupapi:log:line'
+message:
+- '{entry_type}'
+- '{exit_status}'
+separator: ' - '
+# Reversing fields for short description to prevent truncating the status
+short_message:
+- '{exit_status}'
+- '{entry_type}'
+short_source: 'LOG'
+source: 'Setup API Log'
+---
+type: 'conditional'
+data_type: 'task_scheduler:task_cache:entry'
+message:
+- '[{key_path}]'
+- 'Task: {task_name}'
+- '[Identifier: {task_identifier}]'
+short_message:
+- 'Task: {task_name}'
+short_source: 'REG'
+source: 'Task Cache Registry Key'
+---
+type: 'conditional'
+data_type: 'wincc:simatic_s7:entry'
+message:
+- '{body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'SIMATIC S7 log'
+---
+type: 'conditional'
+data_type: 'wincc:sys_log:entry'
+message:
+- 'Hostname: {log_hostname}'
+- 'Source: {source_device}'
+- '{body}'
+short_message:
+- '{source_device}'
+- '{body}'
+short_source: 'LOG'
+source: 'WinCC Sys Log'
+---
+type: 'conditional'
+data_type: 'windows:diagnosis:eventtranscript'
+message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
+- '[{friendly_logging_binary_name}]'
+- 'version: {version}'
+- 'name: {name}'
+- 'time: {time}'
+- 'iKey: {ikey}'
+- 'extension: {extension}'
+- 'data: {data}'
+- 'Application name: {application_name}'
+- 'Application version: {application_version}'
+- 'Application root directory: {application_root_directory}'
+short_message:
+- 'Event: {event_name}'
+- 'Binary: {logging_binary_name}'
+short_source: 'EventTranscript'
+source: 'Windows EventTranscript'
+---
+type: 'conditional'
+data_type: 'windows:distributed_link_tracking:creation'
+message:
+- '{uuid}'
+- 'MAC address: {mac_address}'
+- 'Origin: {origin}'
+short_message:
+- '{uuid}'
+- 'Origin: {origin}'
+short_source: 'LOG'
+source: 'System'
+---
+type: 'conditional'
+data_type: 'windows:evt:record'
+custom_helpers:
+- identifier: 'windows_eventlog_message'
+  output_attribute: 'message_string'
+enumeration_helpers:
+- input_attribute: 'event_type'
+  output_attribute: 'event_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Error event'
+    1: 'Warning event'
+    2: 'Information event'
+    3: 'Success Audit event'
+    4: 'Failure Audit event'
+- input_attribute: 'severity'
+  output_attribute: 'severity'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Success'
+    1: 'Informational'
+    2: 'Warning'
+    3: 'Error'
+message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Source Name: {source_name}'
+- 'Strings: {strings}'
+- 'Computer Name: {computer_name}'
+- 'Severity: {severity}'
+- 'Record Number: {record_number}'
+- 'Event Type: {event_type}'
+- 'Event Category: {event_category}'
+- 'Message string: {message_string}'
+short_message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Source Name: {source_name}'
+- 'Strings: {strings}'
+short_source: 'EVT'
+source: 'WinEVT'
+---
+type: 'conditional'
+data_type: 'windows:evtx:record'
+custom_helpers:
+- identifier: 'windows_eventlog_message'
+  output_attribute: 'message_string'
+message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Provider identifier: {provider_identifier}'
+- 'Source Name: {source_name}'
+- 'Strings: {strings}'
+- 'Computer Name: {computer_name}'
+- 'Record Number: {record_number}'
+- 'Event Level: {event_level}'
+- 'Message string: {message_string}'
+short_message:
+- '[{event_identifier} / 0x{event_identifier:04x}]'
+- 'Provider identifier: {provider_identifier}'
+- 'Source Name: {source_name}'
+- 'Strings: {strings}'
+short_source: 'EVT'
+source: 'WinEVTX'
+---
+type: 'conditional'
+data_type: 'windows:file_history:namespace'
+message:
+- 'Filename: {original_filename}'
+- 'Identifier: {identifier}'
+- 'Parent Identifier: {parent_identifier}'
+- 'Attributes: {file_attribute}'
+- 'USN number: {usn_number}'
+short_message:
+- 'Filename: {original_filename}'
+short_source: 'REG'
+source: 'File History Namespace'
+---
+# TODO: Add more "elegant" formatting, as in transform ICMP code/type into
+# a more human readable format as well as translating the additional information
+# column (meaning may depend on action field).
+type: 'conditional'
+data_type: 'windows:firewall_log:entry'
+message:
+- '{action}'
+- '['
+- '{protocol}'
+- '{path}'
+- ']'
+- 'From: {source_ip}'
+- ':{source_port}'
+- '>'
+- '{destination_ip}'
+- ':{destination_port}'
+- 'Size (bytes): {size}'
+- 'TCP flags [{tcp_flags}]'
+- 'TCP sequence number: {tcp_sequence_number}'
+- 'TCP ACK number: {tcp_ack}'
+- 'TCP window size (bytes): {tcp_window_size}'
+- 'ICMP type: {icmp_type}'
+- 'ICMP code: {icmp_code}'
+- 'Additional information: {information}'
+short_message:
+- '{action}'
+- '[{protocol}]'
+- '{source_ip}'
+- ': {source_port}'
+- '>'
+- '{destination_ip}'
+- ': {destination_port}'
+short_source: 'LOG'
+source: 'Windows Firewall Log'
+---
+type: 'conditional'
+data_type: 'windows:lnk:link'
+custom_helpers:
+- identifier: 'windows_shortcut_linked_path'
+  output_attribute: 'linked_path'
+message:
+- '[{description}]'
+- 'File size: {file_size}'
+- 'File attribute flags: 0x{file_attribute_flags:08x}'
+- 'Drive type: {drive_type}'
+- 'Drive serial number: 0x{drive_serial_number:08x}'
+- 'Volume label: {volume_label}'
+- 'Local path: {local_path}'
+- 'Network path: {network_path}'
+- 'cmd arguments: {command_line_arguments}'
+- 'env location: {env_var_location}'
+- 'Relative path: {relative_path}'
+- 'Working dir: {working_directory}'
+- 'Icon location: {icon_location}'
+- 'Link target: {link_target}'
+short_message:
+- '[{description}]'
+- '{linked_path}'
+- '{command_line_arguments}'
+short_source: 'LNK'
+source: 'Windows Shortcut'
+---
+type: 'conditional'
+data_type: 'windows:metadata:deleted_item'
+enumeration_helpers:
+- input_attribute: 'drive_number'
+  output_attribute: 'drive_letter'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'A'
+    1: 'B'
+    2: 'C'
+    3: 'D'
+    4: 'E'
+    5: 'F'
+    6: 'G'
+    7: 'H'
+    8: 'I'
+    9: 'J'
+    10: 'K'
+    11: 'L'
+    12: 'M'
+    13: 'N'
+    14: 'O'
+    15: 'P'
+    16: 'Q'
+    17: 'R'
+    18: 'S'
+    19: 'T'
+    20: 'U'
+    21: 'V'
+    22: 'W'
+    23: 'X'
+    24: 'Y'
+    25: 'Z'
+message:
+- 'DC{record_index} ->'
+- '{original_filename}'
+- '[{short_filename}]'
+- '(from drive: {drive_letter})'
+short_message:
+- 'Deleted file: {original_filename}'
+short_source: 'RECBIN'
+source: 'Recycle Bin'
+---
+type: 'conditional'
+data_type: 'windows:pca_log:entry'
+message:
+- '[{executable}] was executed - '
+- 'Description: {description}'
+- 'Version: {version}'
+- 'Vendor: {vendor}'
+- 'Exit code: {exit_code}'
+short_message:
+- '{executable} was run'
+short_source: 'LOG'
+source: 'Program Compatibility Assistant (PCA) Log'
+---
+type: 'conditional'
+data_type: 'windows:onedrive:log'
+message:
+- 'Code filename: {code_filename}'
+- 'Code function name: {code_function_name}'
+- 'Decoded parameters: {decoded_parameters}'
+- 'Raw Parameters: {raw_parameters}'
+short_message:
+- 'Code function name: {code_function_name}'
+- 'Decoded parameters: {decoded_parameters}'
+short_source: 'LOG'
+source: 'OneDrive Log file'
+---
+type: 'conditional'
+data_type: 'windows:prefetch:execution'
+custom_helpers:
+- identifier: 'windows_prefetch_path_hints'
+  output_attribute: 'path_hints'
+- identifier: 'windows_prefetch_volumes_string'
+  output_attribute: 'volumes_string'
+message:
+- 'Prefetch'
+- '[{executable}] was executed -'
+- 'run count {run_count}'
+- 'path hints: {path_hints}'
+- 'hash: 0x{prefetch_hash:08X}'
+- '{volumes_string}'
+short_message:
+- '{executable} was run'
+- '{run_count} time(s)'
+short_source: 'LOG'
+source: 'WinPrefetch'
+---
+type: 'conditional'
+data_type: 'windows:registry:amcache'
+message:
+- 'path: {full_path}'
+- 'file_reference: {file_reference}'
+- 'sha1: {sha1}'
+- 'product_name: {product_name}'
+- 'company_name: {company_name}'
+- 'file_version: {file_version}'
+- 'language_code: {language_code}'
+- 'file_size: {file_size}'
+- 'file_description: {file_description}'
+- 'program_identifier: {program_identifier}'
+short_message:
+- 'path: {full_path}'
+short_source: 'AMCACHE'
+source: 'Amcache Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:amcache:programs'
+message:
+- 'name: {name}'
+- 'version: {version}'
+- 'publisher: {publisher}'
+- 'language_code: {language_code}'
+- 'entry_type: {entry_type}'
+- 'uninstall_key: {uninstall_key}'
+- 'file_paths: {file_paths}'
+- 'product_code: {product_code}'
+- 'package_code: {package_code}'
+- 'msi_product_code: {msi_product_code}'
+- 'msi_package_code: {msi_package_code}'
+- 'files: {files}'
+short_message:
+- 'name: {name}'
+short_source: 'AMCACHEPROGRAM'
+source: 'Amcache Programs Registry Entry'
+---
+type: 'conditional'
+data_type: 'windows:registry:appcompatcache'
+message:
+- '[{key_path}]'
+- 'Cached entry: {entry_index}'
+- 'Path: {path}'
+short_message:
+- 'Path: {path}'
+short_source: 'REG'
+source: 'AppCompatCache Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:bagmru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'BagMRU Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:bam'
+message:
+- '{path}'
+- '[{user_identifier}]'
+short_message:
+- '{path}'
+short_source: 'REG'
+source: 'Background Activity Moderator Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:boot_execute'
+message: '[{key_path}] BootExecute: {value}'
+short_message: '[{key_path}] BootExecute: {value}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:boot_verification'
+message: '[{key_path}] ImagePath: {image_path}'
+short_message: '[{key_path}] ImagePath: {image_path}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:explorer:programcache'
+message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
+short_message:
+- 'Key: {key_path}'
+- 'Value: {value_name}'
+- 'Entries: [{entries}]'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:installation'
+message:
+- '{product_name}'
+- '{version}'
+- '{build_number}'
+- '{service_pack}'
+- 'Owner: {owner}'
+- 'Origin: {key_path}'
+short_message:
+- '{product_name}'
+- '{version}'
+- '{build_number}'
+- '{service_pack}'
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:key_value'
+custom_helpers:
+- identifier: 'windows_registry_values'
+  output_attribute: 'values'
+message:
+- '[{key_path}]'
+- '{values}'
+short_message:
+- '[{key_path}]'
+- '{values}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:mount_points2'
+message:
+- '[{key_path}]'
+- 'Label: {label}'
+- 'Remote_Server: {server_name}'
+- 'Share_Name: {share_name}'
+- 'Type: {type}'
+- 'Volume: {name}'
+short_message:
+- '[{key_path}]'
+- 'Label: {label}'
+- 'Remote_Server: {server_name}'
+- 'Share_Name: {share_name}'
+- 'Type: {type}'
+- 'Volume: {name}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:mrulist'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'MRUList Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:mrulistex'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'MRUListEx Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:msie_zone_settings'
+message: '[{key_path}] {settings}'
+short_message: '[{key_path}] {settings}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:mstsc:connection'
+message:
+- '[{key_path}]'
+- 'Username hint: {username}'
+short_message:
+- '[{key_path}]'
+short_source: 'REG'
+source: 'RDP Connection Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:mstsc:mru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'RDP Connection Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:network'
+enumeration_helpers:
+- input_attribute: 'connection_type'
+  output_attribute: 'connection_type'
+  default_value: 'UNKNOWN'
+  values:
+    0x06: 'Wired'
+    0x17: '3g'
+    0x47: 'Wireless'
+message:
+- 'SSID: {ssid}'
+- 'Description: {description}'
+- 'Connection Type: {connection_type}'
+- 'Default Gateway Mac: {default_gateway_mac}'
+- 'DNS Suffix: {dns_suffix}'
+short_message:
+- 'SSID: {ssid}'
+- 'Description: {description}'
+- 'Connection Type: {connection_type}'
+- 'Default Gateway Mac: {default_gateway_mac}'
+- 'DNS Suffix: {dns_suffix}'
+short_source: 'REG'
+source: 'Network Connection Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:network_drive'
+message:
+- '[{key_path}]'
+- 'DriveLetter: {drive_letter}'
+- 'RemoteServer: {server_name}'
+- 'ShareName: {share_name}'
+- 'Type: Mapped Drive'
+short_message:
+- '[{key_path}]'
+- 'DriveLetter: {drive_letter}'
+- 'RemoteServer: {server_name}'
+- 'ShareName: {share_name}'
+- 'Type: Mapped Drive'
+short_source: 'REG'
+source: 'Network Drive Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:office_mru'
+message:
+- '[{key_path}]'
+- 'Value: {value_string}'
+short_message:
+- '{value_string}'
+short_source: 'REG'
+source: 'Microsoft Office MRU Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:office_mru_list'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Microsoft Office MRU Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:outlook_search_mru'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Microsoft Outlook MRU Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:run'
+message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_source: 'REG'
+source: 'Run/Run Once Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:sam_users'
+message:
+- '[{key_path}]'
+- 'Username: {username}'
+- 'Full name: {fullname}'
+- 'Comments: {comments}'
+- 'RID: {account_rid}'
+- 'Login count: {login_count}'
+short_message:
+- '{username}'
+- 'RID: {account_rid}'
+- 'Login count: {login_count}'
+short_source: 'REG'
+source: 'User Account Information Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:service'
+custom_helpers:
+- identifier: 'windows_registry_values'
+  output_attribute: 'values'
+enumeration_helpers:
+- input_attribute: 'error_control'
+  output_attribute: 'error_control'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Ignore (0)'
+    1: 'Normal (1)'
+    2: 'Severe (2)'
+    3: 'Critical (3)'
+- input_attribute: 'service_type'
+  output_attribute: 'service_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'Kernel Device Driver (0x1)'
+    2: 'File System Driver (0x2)'
+    4: 'Adapter (0x4)'
+    16: 'Service - Own Process (0x10)'
+    32: 'Service - Share Process (0x20)'
+- input_attribute: 'start_type'
+  output_attribute: 'start_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Boot (0)'
+    1: 'System (1)'
+    2: 'Auto Start (2)'
+    3: 'Manual (3)'
+    4: 'Disabled (4)'
+message:
+- '[{key_path}]'
+- 'Type: {service_type}'
+- 'Start: {start_type}'
+- 'Image path: {image_path}'
+- 'Error control: {error_control}'
+- '{values}'
+short_message:
+- '[{key_path}]'
+- 'Type: {service_type}'
+- 'Start: {start_type}'
+- 'Image path: {image_path}'
+- 'Error control: {error_control}'
+- '{values}'
+short_source: 'REG'
+source: 'Service/Driver Configuration Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:shutdown'
+message:
+- '[{key_path}]'
+- 'Description: {value_name}'
+short_message:
+- '{value_name}'
+short_source: 'REG'
+source: 'Shutdown Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:timezone'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:typedurls'
+message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_message:
+- '[{key_path}]'
+- 'Entries: {entries}'
+short_source: 'REG'
+source: 'Typed URLs Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:usb'
+message:
+- '[{key_path}]'
+- 'Product: {product}'
+- 'Serial: {serial}'
+- 'Subkey name: {subkey_name}'
+- 'Vendor: {vendor}'
+short_message:
+- '[{key_path}]'
+- 'Product: {product}'
+- 'Serial: {serial}'
+- 'Subkey name: {subkey_name}'
+- 'Vendor: {vendor}'
+short_source: 'REG'
+source: 'USB Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:usbstor:instance'
+message:
+- '[{key_path}]'
+- 'Device type: {device_type}'
+- 'Display name: {display_name}'
+- 'Product: {product}'
+- 'Revision: {revision}'
+- 'Vendor: {vendor}'
+short_message:
+- '[{key_path}]'
+- 'Device type: {device_type}'
+- 'Display name: {display_name}'
+- 'Product: {product}'
+- 'Revision: {revision}'
+- 'Vendor: {vendor}'
+short_source: 'REG'
+source: 'USBStor Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:userassist'
+message:
+- '[{key_path}]'
+- 'UserAssist entry: {entry_index}'
+- 'Value name: {value_name}'
+- 'Count: {number_of_executions}'
+- 'Application focus count: {application_focus_count}'
+- 'Application focus duration: {application_focus_duration}'
+short_message:
+- '{value_name}'
+- 'Count: {number_of_executions}'
+short_source: 'REG'
+source: 'UserAssist Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:registry:winlogon'
+message:
+- '[{key_path}]'
+- 'Application: {application}'
+- 'Command: {command}'
+- 'Handler: {handler}'
+- 'Trigger: {trigger}'
+short_message:
+- '[{key_path}]'
+- 'Application: {application}'
+- 'Command: {command}'
+- 'Handler: {handler}'
+- 'Trigger: {trigger}'
+short_source: 'REG'
+source: 'Winlogon Registry Key'
+---
+type: 'conditional'
+data_type: 'windows:restore_point:info'
+enumeration_helpers:
+- input_attribute: 'restore_point_event_type'
+  output_attribute: 'restore_point_event_type'
+  default_value: 'UNKNOWN'
+  values:
+    100: 'BEGIN_SYSTEM_CHANGE'
+    101: 'END_SYSTEM_CHANGE'
+    102: 'BEGIN_NESTED_SYSTEM_CHANGE'
+    103: 'END_NESTED_SYSTEM_CHANGE'
+- input_attribute: 'restore_point_type'
+  output_attribute: 'restore_point_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'APPLICATION_INSTALL'
+    1: 'APPLICATION_UNINSTALL'
+    10: 'DEVICE_DRIVER_INSTALL'
+    12: 'MODIFY_SETTINGS'
+    13: 'CANCELLED_OPERATION'
+message:
+- '{description}'
+- 'Event type: {restore_point_event_type}'
+- 'Restore point type: {restore_point_type}'
+short_message:
+- '{description}'
+short_source: 'RP'
+source: 'Windows Restore Point'
+---
+type: 'conditional'
+data_type: 'windows:shell_item:file_entry'
+custom_helpers:
+- identifier: 'shell_item_file_entry_name'
+  output_attribute: 'file_entry_name'
+message:
+- 'Name: {name}'
+- 'Long name: {long_name}'
+- 'Localized name: {localized_name}'
+- 'NTFS file reference: {file_reference}'
+- 'Shell item path: {shell_item_path}'
+- 'Origin: {origin}'
+short_message:
+- 'Name: {file_entry_name}'
+- 'NTFS file reference: {file_reference}'
+- 'Origin: {origin}'
+short_source: 'FILE'
+source: 'File entry shell item'
+---
+type: 'conditional'
+data_type: 'windows:srum:application_usage'
+message:
+- 'Application: {application}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:srum:network_usage'
+message:
+- 'Application: {application}'
+- 'Bytes received: {bytes_received}'
+- 'Bytes sent: {bytes_sent}'
+- 'Interface LUID: {interface_luid}'
+- 'User identifier: {user_identifier}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:srum:network_connectivity'
+message:
+- 'Application: {application}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
+data_type: 'windows:tasks:job'
+message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+short_message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+short_source: 'JOB'
+source: 'Windows Scheduled Task Job'
+---
+type: 'conditional'
+data_type: 'windows:tasks:trigger'
+enumeration_helpers:
+- input_attribute: 'trigger_type'
+  output_attribute: 'trigger_type'
+  default_value: 'UNKNOWN'
+  values:
+    0x0000: 'ONCE'
+    0x0001: 'DAILY'
+    0x0002: 'WEEKLY'
+    0x0003: 'MONTHLYDATE'
+    0x0004: 'MONTHLYDOW'
+    0x0005: 'EVENT_ON_IDLE'
+    0x0006: 'EVENT_AT_SYSTEMSTART'
+    0x0007: 'EVENT_AT_LOGON'
+message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+- 'Trigger type: {trigger_type}'
+short_message:
+- 'Application: {application}'
+- '{parameters}'
+- 'Scheduled by: {username}'
+- 'Working directory: {working_directory}'
+- 'Trigger type: {trigger_type}'
+short_source: 'JOB'
+source: 'Windows Scheduled Task Trigger'
+---
+type: 'conditional'
+data_type: 'windows:timeline:generic'
+message:
+- 'Application Display Name: {application_display_name}'
+- 'Package Identifier: {package_identifier}'
+- 'Description: {description}'
+short_message:
+- '{package_identifier}'
+short_source: 'Windows Timeline'
+source: 'Windows Timeline'
+---
+type: 'conditional'
+data_type: 'windows:timeline:user_engaged'
+message:
+- 'Package Identifier: {package_identifier}'
+- 'Active Duration (seconds): {active_duration_seconds}'
+- 'Reporting App: {reporting_app}'
+short_message:
+- '{package_identifier}'
+short_source: 'Windows Timeline'
+source: 'User Engaged Windows Timeline'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:clients'
+message:
+- 'Account: {authenticated_username}'
+- 'Source IP address: {source_ip_address}'
+- 'Service identifier: {role_identifier}'
+- 'Service name: {role_name}'
+- 'Total accesses: {total_accesses}'
+- 'Client name: {client_name}'
+- 'Tenant identifier: {tenant_identifier}'
+short_message:
+- '{authenticated_username}'
+- 'Accessed: {role_name}'
+short_source: 'UAL'
+source: 'User Access Logging CLIENTS record'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:dns'
+message:
+- 'IP address: {ip_address}'
+- 'Hostname: {hostname}'
+short_message:
+- 'IP address: {ip_address}'
+- 'Hostname: {hostname}'
+short_source: 'UAL'
+source: 'User Access Logging DNS record'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:role_access'
+message:
+- 'Role name: {role_name}'
+- 'Role identifier: {role_identifier}'
+short_message:
+- 'Role name: {role_name}'
+short_source: 'UAL'
+source: 'User Access Logging ROLE_ACCESS record'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:system_identity'
+message:
+- 'Operating system build: {operating_system_build}'
+- 'System domain name: {system_domain_name}'
+- 'System DNS hostname: {system_dns_hostname}'
+short_message:
+- '{system_domain_name}'
+- '{system_dns_hostname}'
+short_source: 'UAL'
+source: 'User Access Logging SYSTEM_IDENTITY record'
+---
+type: 'conditional'
+data_type: 'windows:user_access_logging:virtual_machines'
+message:
+- 'BIOS identifier: {bios_identifier}'
+- 'Serial number: {serial_number}'
+- 'VM identifier: {vm_identifier}'
+short_message:
+- 'VM identifier: {vm_identifier}'
+short_source: 'UAL'
+source: 'User Access Logging VIRTUALMACHINES record'
+---
+type: 'conditional'
+data_type: 'windows:volume:creation'
+message:
+- '{device_path}'
+- 'Serial number: 0x{serial_number:08X}'
+- 'Origin: {origin}'
+short_message:
+- '{device_path}'
+- 'Origin: {origin}'
+short_source: 'LOG'
+source: 'System'
+---
+type: 'basic'
+data_type: 'winrar:history'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'WinRAR History Registry Key'

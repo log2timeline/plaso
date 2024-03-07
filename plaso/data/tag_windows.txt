@@ -1,0 +1,140 @@
+# Tags Windows application execution events.
+application_execution
+  data_type is 'fs:stat' AND filename contains PATH('Windows/Tasks/At')
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 592
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4688
+  data_type is 'windows:evtx:record' AND strings contains 'user mode service' AND strings contains 'demand start'
+  data_type is 'windows:lnk:link' AND filename contains 'Recent' AND (local_path contains '.exe' OR network_path contains '.exe' OR relative_path contains '.exe')
+  data_type is 'windows:prefetch:execution'
+  data_type is 'windows:registry:appcompatcache'
+  data_type is 'windows:registry:mrulist' AND entries contains '.exe'
+  data_type is 'windows:registry:mrulistex' AND entries contains '.exe'
+  data_type is 'windows:registry:userassist' AND value_name contains '.exe'
+  data_type is 'windows:tasks:job'
+
+# Tags Windows application installation events.
+application_install
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 903 OR event_identifier is 904)
+
+# Tags Windows application update events.
+application_update
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND event_identifier is 905
+
+# Tags Windows application removal events.
+application_removal
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Application-Experience' AND (event_identifier is 907 OR event_identifier is 908)
+
+# Tags Windows document open events.
+document_open
+  data_type is 'windows:registry:bagmru'
+  data_type is 'windows:registry:mrulist' AND entries not contains '.exe' AND timestamp > DATETIME(0)
+  data_type is 'windows:registry:mrulistex' AND entries not contains '.exe' AND timestamp > DATETIME(0)
+  data_type is 'windows:registry:office_mru'
+  data_type is 'windows:registry:office_mru_list'
+
+# Tags Windows failed log-in events.
+login_failed
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4625
+
+# Tags Windows log-in attempt events.
+login_attempt
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 540
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4624
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 21 OR event_identifier is 1101)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-RemoteConnectionManager' AND (event_identifier is 1147 OR event_identifier is 1149)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 2
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7001
+
+# Tags Windows log-off events.
+logoff
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 538
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4634
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 23 OR event_identifier is 1103)
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-User Profiles Service' AND event_identifier is 4
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Winlogon' AND event_identifier is 7002
+
+# Tags terminal services session disconnection events.
+session_disconnection
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND event_identifier is 24
+
+# Tags terminal services session reconnection events.
+session_reconnection
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 25 OR event_identifier is 1105)
+
+# Tags terminal services shell start events.
+shell_start
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
+
+# Tags scheduled task creation events.
+task_schedule
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 602
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4698
+
+# Tags task sheduler successful completed job events.
+job_success
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 102
+
+# Tags task sheduler successful completed actions events.
+action_success
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 201
+
+# Tags DNS resolution timeout events.
+name_resolution_timeout
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-DNS-Client' AND event_identifier is 1014
+
+# Tags system time change events.
+time_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 1
+
+# Tags system shutdown events.
+shutdown
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 13
+
+# Tags system start events.
+system_start
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-General' AND event_identifier is 12
+
+# Tags system sleep events.
+system_sleep
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Kernel-Power' AND event_identifier is 42
+
+# Tags system wake events.
+system_wake
+  data_type is 'windows:evtx:record' AND (provider_identifier is '{cdc05e28-c449-49c6-b9d2-88cf761644df}' OR source_name is 'Microsoft-Windows-Power-Troubleshooter') AND event_identifier is 1
+
+# Tags auto run events.
+autorun
+  data_type is 'windows:registry:boot_execute' AND (value contains '.exe' OR value contains '.dll')
+  data_type is 'windows:registry:boot_verification' AND (image_path contains '.exe' OR image_path contains '.dll')
+  data_type is 'windows:registry:run' AND (entries contains '.exe' OR entries contains '.dll')
+
+# Tags file download events.
+file_download
+  data_type is 'chrome:history:file_downloaded'
+  timestamp_desc is 'Downloaded Time'
+
+# Tags OLE compound document print events.
+document_print
+  data_type is 'olecf:summary_info' AND timestamp_desc is 'Last Printed Time'
+
+# Tags Windows Firewall With Advanced Security change events.
+firewall_change
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Windows Firewall With Advanced Security' AND (event_identifier is 2003 OR event_identifier is 2004 OR event_identifier is 2005 OR event_identifier is 2006)
+
+# Tags Windows Registry modification events.
+# Microsoft-Windows-Security-Auditing - Event ID 4657: A registry value was modified
+registry_modified
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4657
+
+# Tags Windows service creation events.
+# Service Control Manager - Event ID 7045: A new service was installed in the system
+service_new
+  data_type is 'windows:evtx:record' AND source_name is 'Service Control Manager' AND event_identifier is 7045
+
+# Tags audit log cleared events
+# Security - Event ID 517:
+# Microsoft-Windows-Eventlog - Event ID 104:
+# Microsoft-Windows-Eventlog - Event ID 1102:
+eventlog_cleared
+  data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 517
+  data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Eventlog' AND (event_identifier is 104 OR event_identifier is 1102)

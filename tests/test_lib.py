@@ -23,7 +23,7 @@ ANALYSIS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analysis')
 ANALYZERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'analyzers')
 CLI_HELPERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'cli', 'helpers')
 CONTAINERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'containers')
-DATA_PATH = os.path.join(PROJECT_PATH, 'data')
+DATA_PATH = os.path.join(PROJECT_PATH, 'plaso', 'data')
 OUTPUT_PATH = os.path.join(PROJECT_PATH, 'plaso', 'output')
 PARSERS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'parsers')
 PREPROCESSORS_PATH = os.path.join(PROJECT_PATH, 'plaso', 'preprocessors')
@@ -154,7 +154,7 @@ class ImportCheckTestCase(BaseTestCase):
   _FILENAME_REGEXP = re.compile(r'^[^_].*\.py$')
 
   def _AssertFilesImportedInInit(self, path, ignorable_files):
-    """Checks that files in path are imported in __init__.py
+    """Checks that files in path are imported in __init__.py.
 
     Args:
       path (str): path to directory containing an __init__.py file and other

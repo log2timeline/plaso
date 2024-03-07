@@ -22,7 +22,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
   def __init__(
       self, task_queue, processing_configuration, system_configurations,
-      registry_find_specs, **kwargs):
+      windows_event_log_providers, registry_find_specs, **kwargs):
     """Initializes an extraction worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -34,8 +34,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
-     registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
-         specifications.
+      windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
+          Windows EventLog providers.
+      registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+          specifications.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(ExtractionWorkerProcess, self).__init__(
@@ -53,6 +55,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     self._task = None
     self._task_queue = task_queue
     self._system_configurations = system_configurations
+    self._windows_event_log_providers = windows_event_log_providers
 
   def _CacheFileSystem(self, file_system):
     """Caches a dfVFS file system object.
@@ -76,7 +79,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       self._file_system_cache.append(file_system)
 
   def _CreateParserMediator(
-      self, resolver_context, processing_configuration, system_configurations):
+      self, resolver_context, processing_configuration, system_configurations,
+      windows_event_log_providers):
     """Creates a parser mediator.
 
     Args:
@@ -85,6 +89,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           configuration.
       system_configurations (list[SystemConfigurationArtifact]): system
           configurations.
+      windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
+          Windows EventLog providers.
 
     Returns:
       ParserMediator: parser mediator.
@@ -104,6 +110,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         processing_configuration.preferred_language)
     parser_mediator.SetTemporaryDirectory(
         processing_configuration.temporary_directory)
+
+    parser_mediator.SetWindowsEventLogProviders(windows_event_log_providers)
 
     return parser_mediator
 
@@ -143,7 +151,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     # XML RPC does not support integer values > 2 GiB so we format them
     # as a string.
-    used_memory = '{0:d}'.format(used_memory)
+    used_memory = f'{used_memory:d}'
 
     status = {
         'display_name': self._current_display_name,
@@ -177,7 +185,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     self._parser_mediator = self._CreateParserMediator(
         self._resolver_context, self._processing_configuration,
-        self._system_configurations)
+        self._system_configurations, self._windows_event_log_providers)
 
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
@@ -200,21 +208,21 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-    logger.debug('Worker: {0!s} (PID: {1:d}) started.'.format(
-        self._name, self._pid))
+    logger.debug(f'Worker: {self._name!s} (PID: {self._pid:d}) started.')
 
     self._status = definitions.STATUS_INDICATOR_RUNNING
 
     try:
-      logger.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
-          self._name, self._pid))
+      logger.debug(
+          f'{self._name!s} (PID: {self._pid:d}) started monitoring task queue.')
 
       while not self._abort:
         try:
           task = self._task_queue.PopItem()
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logger.debug('ConsumeItems exiting with exception: {0!s}.'.format(
-              type(exception)))
+          exception_type = type(exception)
+          logger.debug(
+              f'ConsumeItems exiting with exception: {exception_type!s}.')
           break
 
         if isinstance(task, plaso_queue.QueueAbort):
@@ -223,15 +231,15 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         self._ProcessTask(task)
 
-      logger.debug('{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
-          self._name, self._pid))
+      logger.debug(
+          f'{self._name!s} (PID: {self._pid:d}) stopped monitoring task queue.')
 
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logger.warning(
-          'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
-              self._name, self._pid))
+      logger.warning((
+          f'Unhandled exception in process: {self._name!s} '
+          f'(PID: {self._pid:d}).'))
       logger.exception(exception)
 
       self._abort = True
@@ -255,13 +263,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     else:
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-    logger.debug('Worker: {0!s} (PID: {1:d}) stopped.'.format(
-        self._name, self._pid))
+    logger.debug(f'Worker: {self._name!s} (PID: {self._pid:d}) stopped.')
 
     try:
       self._task_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logger.error('Queue for {0:s} was already closed.'.format(self.name))
+      logger.error(f'Queue for {self.name:s} was already closed.')
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -278,8 +285,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
           path_spec, resolver_context=parser_mediator.resolver_context)
       if file_entry is None:
-        logger.warning('Unable to open file entry: {0:s}'.format(
-            self._current_display_name))
+        logger.warning(
+            f'Unable to open file entry: {self._current_display_name:s}')
         return
 
       if (path_spec and not path_spec.IsSystemLevel() and
@@ -291,13 +298,13 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
-          'unable to process path specification with error: '
-          '{0!s}').format(exception), path_spec=path_spec)
+          f'unable to process path specification with error: '
+          f'{exception!s}'), path_spec=path_spec)
 
       if self._processing_configuration.debug_output:
         logger.warning((
-            'Unhandled exception while processing path specification: '
-            '{0:s}.').format(self._current_display_name))
+            f'Unhandled exception while processing path specification: '
+            f'{self._current_display_name:s}.'))
         logger.exception(exception)
 
   def _ProcessTask(self, task):
@@ -306,7 +313,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     Args:
       task (Task): task.
     """
-    logger.debug('Started processing task: {0:s}.'.format(task.identifier))
+    logger.debug(f'Started processing task: {task.identifier:s}.')
 
     if self._tasks_profiler:
       self._tasks_profiler.Sample(task, 'processing_started')
@@ -359,7 +366,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     if self._tasks_profiler:
       self._tasks_profiler.Sample(task, 'processing_completed')
 
-    logger.debug('Completed processing task: {0:s}.'.format(task.identifier))
+    logger.debug(f'Completed processing task: {task.identifier:s}.')
 
   def SignalAbort(self):
     """Signals the process to abort."""

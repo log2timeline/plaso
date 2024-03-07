@@ -35,8 +35,8 @@ class TransmissionEventData(events.EventData):
 class TransmissionBencodePlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents.
 
-  Transmission stores an individual Bencoded file for each active download
-  in a folder named resume under the user's application data folder.
+  Transmission stores an individual Bencoded file for each active download in a
+  folder named resume under the user's application data folder.
   """
 
   NAME = 'bencode_transmission'
