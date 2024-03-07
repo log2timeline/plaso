@@ -19,7 +19,7 @@ class AppleRecoveryLogdIPSPluginTest(test_lib.IPSPluginTestCase):
         ['ips_files', 'stacks-2023-02-10-100716.ips'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-      'event_data')
+        'event_data')
     self.assertEqual(number_of_event_data, 1)
 
     expected_event_values = {

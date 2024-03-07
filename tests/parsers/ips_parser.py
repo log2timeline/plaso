@@ -58,7 +58,7 @@ class IPSParserTest(test_lib.ParserTestCase):
     parser = ips_parser.IPSParser()
 
     storage_writer = self._ParseFile(
-      ['ips_files', 'recoverylogd-2023-06-08-144913.ips'], parser)
+        ['ips_files', 'recoverylogd-2023-06-08-144913.ips'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
