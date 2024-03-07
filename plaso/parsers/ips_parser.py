@@ -84,7 +84,7 @@ class IPSParser(interface.FileEntryParser):
 
       try:
         plugin.UpdateChainAndProcess(
-          parser_mediator, ips_file=ips_file_object)
+            parser_mediator, ips_file=ips_file_object)
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((

@@ -45,7 +45,7 @@ class AppleStacksIPSPlugin(interface.IPSPlugin):
 
   REQUIRED_HEADER_KEYS = ['bug_type', 'incident_id', 'os_version', 'timestamp']
   REQUIRED_CONTENT_KEYS = [
-    'build', 'crashReporterKey', 'kernel', 'product', 'reason']
+      'build', 'crashReporterKey', 'kernel', 'product', 'reason']
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
