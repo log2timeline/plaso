@@ -12,5 +12,5 @@ override_dh_auto_install:
 	mkdir -p ${PWD}/debian/tmp/usr/share/plaso/
 	mv ${PWD}/debian/tmp/usr/lib/python*/dist-packages/plaso/data/* ${PWD}/debian/tmp/usr/share/plaso/
 	rmdir ${PWD}/debian/tmp/usr/lib/python*/dist-packages/plaso/data
-	find ${PWD}/debian/tmp/usr/bin/ -type f -exec {} {}.py \;
+	find ${PWD}/debian/tmp/usr/bin/ -type f -exec mv {} {}.py \;
 
