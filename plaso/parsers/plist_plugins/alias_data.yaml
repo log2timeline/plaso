@@ -1,0 +1,181 @@
+# dtFabric format specification.
+---
+name: alias_data
+type: format
+description: Mac OS com.apple.loginitems.plist Alias and AliasData values data format
+urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20login%20item%20alias%20data%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: alias_data_record_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: application_information
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: record_size
+  data_type: uint16
+- name: format_version
+  data_type: uint16
+  values: [2, 3]
+---
+name: alias_data_record_v3
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: alias_type
+  data_type: uint16
+- name: volume_creation_time
+  data_type: uint64
+- name: file_system_type
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: disk_type
+  data_type: uint16
+- name: parent_fsid
+  data_type: uint32
+- name: target_fsid
+  data_type: uint32
+- name: target_creation_time
+  data_type: uint64
+- name: volume_flags
+  data_type: uint32
+- name: unknown1
+  type: stream
+  element_data_type: byte
+  elements_data_size: 14
+---
+name: alias_data_tagged_value_base
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+- name: value_data_size
+  data_type: uint16
+# TODO: change dtFabric and _ReadStructureFromFileObject to support
+# base structure without value_data and alignment_padding
+- name: value_data
+  type: stream
+  element_data_type: byte
+  elements_data_size: alias_data_tagged_value_base.value_data_size
+- name: alignment_padding
+  type: padding
+  alignment_size: 2
+---
+name: alias_data_tagged_value_with_data
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+- name: value_data_size
+  data_type: uint16
+- name: value_data
+  type: stream
+  element_data_type: byte
+  elements_data_size: alias_data_tagged_value_with_data.value_data_size
+- name: alignment_padding
+  type: padding
+  alignment_size: 2
+---
+name: alias_data_tagged_value_with_uint32_array
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+  value: 0x0001
+- name: value_data_size
+  data_type: uint16
+- name: integers
+  type: sequence
+  element_data_type: uint32
+  elements_data_size: alias_data_tagged_value_with_uint32_array.value_data_size
+- name: alignment_padding
+  type: padding
+  alignment_size: 2
+---
+name: alias_data_tagged_value_with_utf8_string
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+  values: [0x0000, 0x0002, 0x0006, 0x0012, 0x0013]
+- name: value_data_size
+  data_type: uint16
+- name: string
+  type: string
+  encoding: utf8
+  element_data_type: byte
+  elements_data_size: alias_data_tagged_value_with_utf8_string.value_data_size
+- name: alignment_padding
+  type: padding
+  alignment_size: 2
+---
+name: alias_data_tagged_value_with_utf16_string
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: value_tag
+  data_type: uint16
+  values: [0x000e, 0x000f]
+- name: value_data_size
+  data_type: uint16
+- name: number_of_characters
+  data_type: uint16
+- name: string
+  type: string
+  encoding: utf-16-be
+  element_data_type: uint16
+  number_of_elements: alias_data_tagged_value_with_utf16_string.number_of_characters
+- name: alignment_padding
+  type: padding
+  alignment_size: 2
+---
+name: alias_data_tagged_value
+type: structure-group
+base: alias_data_tagged_value_base
+identifier: value_tag
+default: alias_data_tagged_value_with_data
+members:
+- alias_data_tagged_value_with_uint32_array
+- alias_data_tagged_value_with_utf8_string
+- alias_data_tagged_value_with_utf16_string

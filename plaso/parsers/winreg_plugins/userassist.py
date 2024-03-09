@@ -10,7 +10,6 @@ from plaso.containers import events
 from plaso.helpers.windows import known_folders
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
-from plaso.parsers import logger
 from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
@@ -121,7 +120,7 @@ class UserAssistPlugin(
     format_version = version_value.GetDataAsObject()
     if format_version not in (3, 5):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported format version: {0:d}'.format(format_version))
+          f'unsupported format version: {format_version:d}')
       return
 
     if not count_subkey:
@@ -131,27 +130,7 @@ class UserAssistPlugin(
     userassist_entry_index = 0
 
     for registry_value in count_subkey.GetValues():
-      try:
-        # Note that Python 2 codecs.decode() does not support keyword arguments
-        # such as encodings='rot-13'.
-        value_name = codecs.decode(registry_value.name, 'rot-13')
-      except UnicodeEncodeError as exception:
-        logger.debug((
-            'Unable to decode UserAssist string: {0:s} with error: {1!s}.\n'
-            'Attempting piecewise decoding.').format(
-                registry_value.name, exception))
-
-        characters = []
-        for char in registry_value.name:
-          if ord(char) < 128:
-            try:
-              characters.append(char.decode('rot-13'))
-            except UnicodeEncodeError:
-              characters.append(char)
-          else:
-            characters.append(char)
-
-        value_name = ''.join(characters)
+      value_name = codecs.decode(registry_value.name, 'rot-13')
 
       if format_version == 5:
         path_segments = value_name.split('\\')
@@ -178,19 +157,18 @@ class UserAssistPlugin(
         entry_data_size = 72
       else:
         parser_mediator.ProduceExtractionWarning(
-            'unsupported format version: {0:d}'.format(format_version))
+            f'unsupported format version: {format_version:d}')
         continue
 
       if not registry_value.DataIsBinaryData():
         parser_mediator.ProduceExtractionWarning(
-            'unsupported value data type: {0:s}'.format(
-                registry_value.data_type_string))
+            f'unsupported value data type: {registry_value.data_type_string:s}')
         continue
 
       value_data_size = len(registry_value.data)
       if entry_data_size != value_data_size:
         parser_mediator.ProduceExtractionWarning(
-            'unsupported value data size: {0:d}'.format(value_data_size))
+            f'unsupported value data size: {value_data_size:d}')
         continue
 
       try:
@@ -198,8 +176,7 @@ class UserAssistPlugin(
             registry_value.data, 0, entry_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse UserAssist entry value with error: {0!s}'.format(
-                exception))
+            f'unable to parse UserAssist entry value with error: {exception!s}')
         continue
 
       event_data = UserAssistWindowsRegistryEventData()

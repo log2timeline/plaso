@@ -9,6 +9,7 @@ from plaso.cli.helpers import opensearch_output
 from plaso.lib import errors
 from plaso.output import opensearch
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
@@ -74,7 +75,7 @@ Test argument parser.
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options._data_location = 'data'
+    options._data_location = shared_test_lib.DATA_PATH
 
     output_module = opensearch.OpenSearchOutputModule()
     opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(

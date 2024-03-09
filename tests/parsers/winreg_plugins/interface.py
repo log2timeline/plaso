@@ -50,19 +50,22 @@ class WindowsRegistryKeyPathFilterTest(test_lib.RegistryPluginTestCase):
         'HKEY_LOCAL_MACHINE\\System')
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'System', key_path='HKEY_LOCAL_MACHINE\\System')
+        'System', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        relative_key_path='')
 
     result = path_filter.Match(registry_key)
     self.assertTrue(result)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Select', key_path='HKEY_LOCAL_MACHINE\\System\\Select')
+        'Select', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        relative_key_path='Select')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Software', key_path='HKEY_LOCAL_MACHINE\\Software')
+        'Software', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
@@ -89,19 +92,22 @@ class WindowsRegistryKeyPathPrefixFilterTest(test_lib.RegistryPluginTestCase):
         'HKEY_LOCAL_MACHINE\\System')
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'System', key_path='HKEY_LOCAL_MACHINE\\System')
+        'System', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        relative_key_path='')
 
     result = path_filter.Match(registry_key)
     self.assertTrue(result)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Select', key_path='HKEY_LOCAL_MACHINE\\System\\Select')
+        'Select', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        relative_key_path='Select')
 
     result = path_filter.Match(registry_key)
     self.assertTrue(result)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Software', key_path='HKEY_LOCAL_MACHINE\\Software')
+        'Software', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
@@ -128,20 +134,22 @@ class WindowsRegistryKeyPathSuffixFilterTest(test_lib.RegistryPluginTestCase):
         'Windows\\Explorer')
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Explorer', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows\\Explorer')
+        'Explorer', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='Windows\\Explorer')
 
     result = path_filter.Match(registry_key)
     self.assertTrue(result)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Windows', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows')
+        'Windows', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='Windows')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
 
-    key_path = 'HKEY_LOCAL_MACHINE\\Software\\Windows\\Explorer\\Zones'
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Explorer', key_path=key_path)
+        'Explorer', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='Windows\\Explorer\\Zones')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
@@ -168,7 +176,8 @@ class WindowsRegistryKeyWithValuesFilterTest(test_lib.RegistryPluginTestCase):
         ('a', 'MRUList'))
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Explorer', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows\\MRU')
+        'Explorer', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='Windows\\MRU')
 
     result = path_filter.Match(registry_key)
     self.assertFalse(result)
@@ -202,7 +211,8 @@ class WindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     parser_mediator = self._CreateParserMediator(session, storage_writer)
 
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Explorer', key_path='HKEY_LOCAL_MACHINE\\Software\\Windows\\MRU')
+        'Explorer', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        relative_key_path='Windows\\MRU')
 
     value_data = b'a\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(

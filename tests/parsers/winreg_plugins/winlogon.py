@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Winlogon Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2013-01-30 10:47:57')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Winlogon', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=153)
+        'Winlogon', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        last_written_time=filetime.timestamp, offset=153,
+        relative_key_path='Microsoft\\Windows NT\\CurrentVersion')
 
     # Setup Winlogon values.
     value_data = '1'.encode('utf_16_le')
@@ -271,19 +268,15 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = winlogon.WinlogonPlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\'
-        'Winlogon')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Software', (
+        'Microsoft\\Windows NT\\CurrentVersion\\Winlogon'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\Software', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function on created key."""
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey()
 
     plugin = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -300,11 +293,14 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+
     expected_event_values = {
         'application': 'VmApplet',
         'command': 'SystemPropertiesPerformance.exe/pagefile',
         'data_type': 'windows:registry:winlogon',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'trigger': 'Logon'}
 
@@ -315,7 +311,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         'application': 'NavLogon',
         'command': 'NavLogon.dll',
         'data_type': 'windows:registry:winlogon',
-        'key_path': '{0:s}\\Notify\\NavLogon'.format(key_path),
+        'key_path': f'{expected_key_path:s}\\Notify\\NavLogon',
         'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'trigger': 'Logoff'}
 

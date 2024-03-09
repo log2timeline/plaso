@@ -4,6 +4,8 @@
 import os
 import sys
 
+import plaso
+
 from plaso.cli import tools
 from plaso.cli import logger
 from plaso.cli.helpers import interface
@@ -55,47 +57,32 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
           'Configuration object is not an instance of CLITool')
 
     data_location = cls._ParseStringOption(options, 'data_location')
-    if not data_location:
-      # Determine the source root path, which is 3 directories up from
-      # the location of the script.
-      data_location = os.path.dirname(cls._PATH)
-      data_location = os.path.dirname(data_location)
-      data_location = os.path.dirname(data_location)
-      data_location = os.path.dirname(data_location)
-
-      # There are multiple options to run a tool e.g. running from source or
-      # from an egg file.
-      data_location_egg = os.path.join(data_location, 'share', 'plaso')
-      data_location_source = os.path.join(data_location, 'data')
-
-      data_location = None
-      if os.path.exists(data_location_egg) and os.path.isfile(os.path.join(
-          data_location_egg, 'plaso-data.README')):
-        data_location = data_location_egg
-      elif os.path.exists(data_location_source) and os.path.isfile(os.path.join(
-          data_location_source, 'plaso-data.README')):
-        data_location = data_location_source
-
-      if not data_location or not os.path.exists(data_location):
+    if not data_location or not os.path.exists(data_location):
+      data_location = os.path.join(os.path.dirname(plaso.__file__), 'data')
+      if not os.path.exists(data_location) or not os.path.isfile(
+          os.path.join(data_location, 'timeliner.yaml')):
         data_location = os.path.join(sys.prefix, 'share', 'plaso')
-      if not os.path.exists(data_location):
-        data_location = os.path.join(sys.prefix, 'local', 'share', 'plaso')
+        if not os.path.exists(data_location) or not os.path.isfile(
+            os.path.join(data_location, 'timeliner.yaml')):
+          data_location = os.path.join(sys.prefix, 'local', 'share', 'plaso')
 
-      if sys.prefix != '/usr':
-        if not os.path.exists(data_location):
-          data_location = os.path.join('/usr', 'share', 'plaso')
-        if not os.path.exists(data_location):
-          data_location = os.path.join('/usr', 'local', 'share', 'plaso')
+        if sys.prefix != '/usr':
+          if not os.path.exists(data_location) or not os.path.isfile(
+              os.path.join(data_location, 'timeliner.yaml')):
+            data_location = os.path.join('/usr', 'share', 'plaso')
+          if not os.path.exists(data_location) or not os.path.isfile(
+              os.path.join(data_location, 'timeliner.yaml')):
+            data_location = os.path.join('/usr', 'local', 'share', 'plaso')
+          if not os.path.exists(data_location) or not os.path.isfile(
+              os.path.join(data_location, 'timeliner.yaml')):
+            data_location = None
 
-      if not os.path.exists(data_location) or not os.path.isfile(os.path.join(
-          data_location, 'plaso-data.README')):
-        data_location = None
+      if data_location:
+        logger.debug(f'Detected data location: {data_location:s}')
 
     if not data_location:
       raise errors.BadConfigOption(
           'Unable to determine location of data files.')
-
-    logger.info(f'Determined data location: {data_location:s}')
 
     setattr(configuration_object, '_data_location', data_location)
 

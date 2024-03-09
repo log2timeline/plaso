@@ -116,25 +116,40 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          file_system_path_spec, resolver_context=self._resolver_context)
+      try:
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(
+            file_system_path_spec, resolver_context=self._resolver_context)
 
-      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=included_find_specs,
-          recurse_file_system=False, resolver_context=self._resolver_context)
-      for path_spec in path_spec_generator:
-        if self._abort:
-          break
+        path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+            file_system_path_spec, find_specs=included_find_specs,
+            recurse_file_system=False, resolver_context=self._resolver_context)
+        for path_spec in path_spec_generator:
+          if self._abort:
+            break
 
-        if self._CheckExcludedPathSpec(file_system, path_spec):
-          display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
-          logger.debug(f'Excluded from extraction: {display_name:s}.')
-          continue
+          if self._CheckExcludedPathSpec(file_system, path_spec):
+            display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
+            logger.debug(f'Excluded from extraction: {display_name:s}.')
+            continue
 
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-        parser_mediator.ProduceEventSource(event_source)
+          # TODO: determine if event sources should be DataStream or FileEntry
+          # or both.
+          event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+          parser_mediator.ProduceEventSource(event_source)
+
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
+
+      # All exceptions need to be caught here to prevent the process
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionWarning((
+            f'unable to process path specification with error: '
+            f'{exception!s}'), file_system_path_spec)
 
   def _ProcessEventData(self):
     """Generate events from event data."""
@@ -268,7 +283,7 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    # All exceptions need to be caught here to prevent the worker
+    # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionWarning((
@@ -305,7 +320,8 @@ class SingleProcessEngine(engine.BaseEngine):
     self._CollectInitialEventSources(
         parser_mediator, file_system_path_specs)
 
-    self._ProcessEventSources(self._storage_writer, parser_mediator)
+    if not self._abort:
+      self._ProcessEventSources(self._storage_writer, parser_mediator)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_source')

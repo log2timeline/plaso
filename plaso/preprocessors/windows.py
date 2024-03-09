@@ -29,10 +29,10 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=value_data)
@@ -42,7 +42,7 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s}.'.format(self._NAME))
+          f'Unable to set environment variable: {self._NAME:s}.')
 
 
 class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -68,9 +68,8 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
       registry_value = registry_key.GetValueByName('ProfilesDirectory')
     except IOError as exception:
       raise errors.PreProcessFail((
-          'Unable to retrieve Windows Registry key: {0:s} value: '
-          'ProfilesDirectory with error: {1!s}').format(
-              registry_key.path, exception))
+          f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
+          f'value: ProfilesDirectory with error: {exception!s}'))
 
     profiles_directory = ''
     if registry_value:
@@ -82,19 +81,18 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
       registry_value = registry_key.GetValueByName(value_name)
     except IOError as exception:
       raise errors.PreProcessFail((
-          'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
-          'with error: {2!s}').format(
-              registry_key.path, value_name, exception))
+          f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
+          f'value: {value_name:s} with error: {exception!s}'))
 
     if not registry_value:
       return
 
     value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     first_path_segment = value_data.split('\\')[0]
 
@@ -116,7 +114,7 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s}.'.format(self._NAME))
+          f'Unable to set environment variable: {self._NAME:s}.')
 
 
 class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -145,14 +143,14 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
     """
     relative_path = searcher.GetRelativePath(path_specification)
     if not relative_path:
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} with error: missing relative path'.format(
-              self.ARTIFACT_DEFINITION_NAME))
+      raise errors.PreProcessFail((
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
+          f'missing relative path.'))
 
     if path_separator != file_system.PATH_SEPARATOR:
       relative_path_segments = file_system.SplitPath(relative_path)
-      relative_path = '{0:s}{1:s}'.format(
-          path_separator, path_separator.join(relative_path_segments))
+      relative_path = path_separator.join(relative_path_segments)
+      relative_path = ''.join([path_separator, relative_path])
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=relative_path)
@@ -162,7 +160,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set environment variable: {0:s}.'.format(self._NAME))
+          f'Unable to set environment variable: {self._NAME:s}.')
 
 
 class WindowsAllUsersAppDataKnowledgeBasePlugin(
@@ -291,10 +289,9 @@ class WindowsAvailableTimeZonesPlugin(
 
     tzi_value = registry_key.GetValueByName('TZI')
     if not tzi_value:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'TZI value missing from Windows Registry key: {0:s}'.format(
-              registry_key.key_path))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'TZI value missing from Windows Registry key: '
+          f'{registry_key.key_path:s}.'))
       return
 
     time_zone_artifact = artifacts.TimeZoneArtifact(
@@ -305,20 +302,17 @@ class WindowsAvailableTimeZonesPlugin(
       self._ParseTZIValue(tzi_value.data, time_zone_artifact)
 
     except (ValueError, errors.ParseError) as exception:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Unable to parse TZI record value in Windows Registry key: {0:s} '
-          'with error: {2!s}'.format(
-              registry_key.key_path, exception))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to parse TZI record value in Windows Registry key: '
+          f'{registry_key.key_path:s} with error: {exception!s}'))
       return
 
     try:
       mediator.AddTimeZoneInformation(time_zone_artifact)
     except KeyError:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          ('Unable to add time zone information: {0:s} to knowledge '
-           'base.').format(registry_key.name))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to add time zone information: {registry_key.name:s} to '
+          f'knowledge base.'))
 
   def _ParseTZIValue(self, value_data, time_zone_artifact):
     """Parses the time zone information (TZI) value data.
@@ -359,19 +353,20 @@ class WindowsCodePagePlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     # Map the Windows code page name to a Python equivalent name.
-    code_page = 'cp{0:s}'.format(value_data)
+    code_page = f'cp{value_data:s}'
 
     try:
       mediator.SetCodePage(code_page)
     except ValueError:
       mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME, 'Unable to set code page.')
+          self.ARTIFACT_DEFINITION_NAME,
+          f'Unable to set code page: {code_page:s}.')
 
 
 class WindowsEventLogPublishersPlugin(
@@ -397,8 +392,7 @@ class WindowsEventLogPublishersPlugin(
     if not registry_value:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'EventLog source missing for: {0:s}'.format(
-              registry_key.name))
+          f'EventLog source missing for: {registry_key.name:s}')
       return
 
     log_source = registry_value.GetDataAsObject()
@@ -424,8 +418,7 @@ class WindowsEventLogPublishersPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set add Windows EventLog provider: {0:s}.',format(
-              log_source))
+          f'Unable to set add Windows EventLog provider: {log_source:s}.')
 
 
 class WindowsEventLogSourcesPlugin(
@@ -493,10 +486,9 @@ class WindowsEventLogSourcesPlugin(
     try:
       mediator.AddWindowsEventLogProvider(windows_event_log_provider)
     except KeyError:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Unable to set add Windows EventLog provider: {0:s}/{1:s}.'.format(
-              log_type, log_source))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to set add Windows EventLog provider: {log_type:s}/'
+          f'{log_source:s}.'))
 
 
 class WindowsHostnamePlugin(
@@ -518,10 +510,10 @@ class WindowsHostnamePlugin(
     """
     if not isinstance(value_data, str):
       if not hasattr(value_data, '__iter__'):
-        raise errors.PreProcessFail(
-            'Unsupported Windows Registry value type: {0!s} for '
-            'artifact: {1:s}.'.format(
-                type(value_data), self.ARTIFACT_DEFINITION_NAME))
+        type_string = type(value_data)
+        raise errors.PreProcessFail((
+            f'Unsupported Windows Registry value type: {type_string!s} for '
+            f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
       # If the value data is a multi string only use the first string.
       value_data = value_data[0]
@@ -548,10 +540,10 @@ class WindowsLanguagePlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     try:
       lcid = int(value_data, 16)
@@ -564,8 +556,7 @@ class WindowsLanguagePlugin(
     else:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to determine language tag for LCID: {0:s}.'.format(
-              value_data))
+          f'Unable to determine language tag for LCID: {value_data:s}.')
 
 
 class WindowsMountedDevicesPlugin(
@@ -609,11 +600,10 @@ class WindowsMountedDevicesPlugin(
               partition_values.partition_offset)
 
         except (ValueError, errors.ParseError) as exception:
-          mediator.ProducePreprocessingWarning(
-              self.ARTIFACT_DEFINITION_NAME,
-              ('Unable to parse mounted devices MBR partition value Windows '
-               'Registry value: {0:s} with error: {1!s}').format(
-                  registry_value.name, exception))
+          mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+              f'Unable to parse mounted devices MBR partition value Windows '
+              f'Registry value: {registry_value.name:s} with error: '
+              f'{exception!s}'))
 
       elif value_data_size == 24:
         data_type_map = self._GetDataTypeMap('mounted_devices_gpt_partition')
@@ -626,30 +616,27 @@ class WindowsMountedDevicesPlugin(
               partition_values.partition_identifier)
 
         except (ValueError, errors.ParseError) as exception:
-          mediator.ProducePreprocessingWarning(
-              self.ARTIFACT_DEFINITION_NAME,
-              ('Unable to parse mounted devices GPT partition value Windows '
-               'Registry value: {0:s} with error: {1!s}').format(
-                  registry_value.name, exception))
+          mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+              f'Unable to parse mounted devices GPT partition value Windows '
+              f'Registry value: {registry_value.name:s} with error: '
+              f'{exception!s}'))
 
       else:
         try:
           mounted_device_artifact.device = registry_value.data.decode(
               'utf-16-le')
         except UnicodeDecodeError as exception:
-          mediator.ProducePreprocessingWarning(
-              self.ARTIFACT_DEFINITION_NAME,
-              ('Unable to parse mounted devices device string value Windows '
-               'Registry value: {0:s} with error: {1!s}').format(
-                  registry_value.name, exception))
+          mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+              f'Unable to parse mounted devices device string value Windows '
+              f'Registry value: {registry_value.name:s} with error: '
+              f'{exception!s}'))
 
       try:
         mediator.AddArtifact(mounted_device_artifact)
       except KeyError:
-        mediator.ProducePreprocessingWarning(
-            self.ARTIFACT_DEFINITION_NAME,
-            'Unable to add Windows mounted device: {0:s} artifact.'.format(
-                registry_value.name))
+        mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+            f'Unable to add Windows mounted device: {registry_value.name:s} '
+            f'artifact.'))
 
 
 class WindowsProgramDataEnvironmentVariablePlugin(
@@ -777,10 +764,9 @@ class WindowsServicesAndDriversPlugin(
     try:
       mediator.AddArtifact(service_configuration)
     except KeyError:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Unable to add Windows service configuation: {0:s} artifact.'.format(
-              registry_value.name))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to add Windows service configuation: '
+          f'{registry_value.name:s} artifact.'))
 
 
 class WindowsSystemProductPlugin(
@@ -801,10 +787,10 @@ class WindowsSystemProductPlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     mediator.SetValue('operating_system_product', value_data)
 
@@ -836,10 +822,10 @@ class WindowsSystemVersionPlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     mediator.SetValue('operating_system_version', value_data)
 
@@ -862,18 +848,17 @@ class WindowsTimeZonePlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not isinstance(value_data, str):
-      raise errors.PreProcessFail(
-          'Unsupported Windows Registry value type: {0!s} for '
-          'artifact: {1:s}.'.format(
-              type(value_data), self.ARTIFACT_DEFINITION_NAME))
+      type_string = type(value_data)
+      raise errors.PreProcessFail((
+          f'Unsupported Windows Registry value type: {type_string!s} for '
+          f'artifact: {self.ARTIFACT_DEFINITION_NAME:s}.'))
 
     try:
       mediator.SetTimeZone(value_data)
     except ValueError as execption:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          'Unable to map: "{0:s}" to time zone with error: {1!s}'.format(
-              value_data, execption))
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to map: "{value_data:s}" to time zone with error: '
+          f'{execption!s}'))
 
 
 class WindowsUserAccountsPlugin(
@@ -918,7 +903,9 @@ class WindowsUserAccountsPlugin(
         identifier=registry_key.name, path_separator='\\')
 
     registry_value = registry_key.GetValueByName('ProfileImagePath')
-    if registry_value:
+    if not registry_value:
+      username = 'N/A'
+    else:
       profile_path = registry_value.GetDataAsObject()
       username = self._GetUsernameFromProfilePath(profile_path)
 
@@ -930,8 +917,7 @@ class WindowsUserAccountsPlugin(
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          ('Unable to add user account: "{0!s}" to knowledge '
-           'base').format(username))
+          f'Unable to add user account: "{username!s}" to knowledge base')
 
 
 class WindowsWinDirEnvironmentVariablePlugin(

@@ -4,6 +4,7 @@
 
 import unittest
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
@@ -187,9 +188,11 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     # Ensure to reset the timeliner base years cache.
     event_data_timeliner._base_years = {}
 
-    with self.assertRaises(ValueError):
-      event_data_timeliner._GetEvent(
-          storage_writer, event_data, None, date_time, 'Test Time')
+    event = event_data_timeliner._GetEvent(
+        storage_writer, event_data, None, date_time, 'Test Time')
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertIsInstance(event.date_time, dfdatetime_semantic_time.InvalidTime)
 
     # Test date time delta without a base year.
     storage_writer = self._CreateStorageWriter(event_data)

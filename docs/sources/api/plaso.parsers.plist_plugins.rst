@@ -84,6 +84,38 @@ plaso.parsers.plist\_plugins.launchd module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.plist\_plugins.macos\_background\_items module
+------------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.macos_background_items
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.plist\_plugins.macos\_login\_items module
+-------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.macos_login_items
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.plist\_plugins.macos\_login\_window module
+--------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.macos_login_window
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+plaso.parsers.plist\_plugins.macos\_startup\_item module
+--------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.macos_startup_item
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.plist\_plugins.macos\_user module
 -----------------------------------------------
 

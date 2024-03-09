@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Network Drives Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2013-01-30 10:47:57')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Network', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=153)
+        'Network', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=153,
+        relative_key_path='Network')
 
     # Setup H drive.
     h_key_name = 'H'
@@ -135,14 +132,13 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = network_drives.NetworkDrivesPlugin()
 
-    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER\\Network')
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Network')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function on created key."""
-    key_path = 'HKEY_CURRENT_USER\\Network'
-    registry_key = self._CreateTestKey(key_path, '2013-01-30 10:47:57')
+    registry_key = self._CreateTestKey()
 
     plugin = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -162,7 +158,7 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:network_drive',
         'drive_letter': 'H',
-        'key_path': key_path,
+        'key_path': 'HKEY_CURRENT_USER\\Network',
         'last_written_time': '2013-01-30T10:47:57.0000000+00:00',
         'server_name': 'acme.local',
         'share_name': '\\Shares\\User_Data\\John.Doe'}

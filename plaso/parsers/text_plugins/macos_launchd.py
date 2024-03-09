@@ -39,6 +39,8 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
   NAME = 'macos_launchd_log'
   DATA_FORMAT = 'Mac OS launchd log file'
 
+  # Date and time values are formatted as:
+  # 2023-06-08 14:51:38.987368
   _DATE_TIME = pyparsing.Regex(
       r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} '
       r'[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}) ')
@@ -50,34 +52,12 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   _LOG_LINE = (
-      _DATE_TIME + pyparsing.Optional(_PROCESS_NAME) +
-      _SEVERITY + pyparsing.restOfLine().set_results_name('body') +
-      _END_OF_LINE)
+      _DATE_TIME + pyparsing.Optional(_PROCESS_NAME) + _SEVERITY +
+      pyparsing.restOfLine().set_results_name('body') + _END_OF_LINE)
 
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _LOG_LINE
-
-  def _ParseLogline(self, parser_mediator, structure):
-    """Parses a log line.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    event_data = MacOSLaunchdEventData()
-    event_data.body = self._GetValueFromStructure(structure, 'body')
-    event_data.process_name = self._GetValueFromStructure(
-        structure, 'process_name')
-    event_data.severity = self._GetValueFromStructure(structure, 'severity')
-    event_data.written_time = self._ParseTimeElements(time_elements_structure)
-
-    parser_mediator.ProduceEventData(event_data)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -92,7 +72,17 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key == 'log_line':
-      self._ParseLogline(parser_mediator, structure)
+      time_elements_structure = self._GetValueFromStructure(
+          structure, 'date_time')
+
+      event_data = MacOSLaunchdEventData()
+      event_data.body = self._GetValueFromStructure(structure, 'body')
+      event_data.process_name = self._GetValueFromStructure(
+          structure, 'process_name')
+      event_data.severity = self._GetValueFromStructure(structure, 'severity')
+      event_data.written_time = self._ParseTimeElements(time_elements_structure)
+
+      parser_mediator.ProduceEventData(event_data)
 
   def _ParseTimeElements(self, time_elements_structure):
     """Parses date and time elements.
@@ -110,14 +100,13 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
     """
     try:
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-
       date_time.CopyFromDateTimeString(time_elements_structure)
 
       return date_time
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.

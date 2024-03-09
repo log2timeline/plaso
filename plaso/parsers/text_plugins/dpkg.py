@@ -58,19 +58,10 @@ class DpkgTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _DATE_TIME = pyparsing.Group(
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS).set_results_name('date_time')
+  # Date and time values are formatted as:
+  # 2009-02-25 11:45:23
+  _DATE_TIME = pyparsing.Regex(
+      r'(?P<date_time>[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}) ')
 
   _DPKG_STARTUP_TYPE = pyparsing.one_of([
       'archives',
@@ -166,23 +157,21 @@ class DpkgTextPlugin(interface.TextPlugin):
           the time elements.
     """
     try:
-      # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
-      # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
-      # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
-      # overriding __getattr__ with a function that returns an empty string
-      # when named token does not exists.
-      year, month, day_of_month, hours, minutes, seconds = (
-          time_elements_structure)
+      date_time = dfdatetime_time_elements.TimeElements()
+      date_time.CopyFromDateTimeString(time_elements_structure)
 
-      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-          year, month, day_of_month, hours, minutes, seconds))
+      # APT History logs store date and time values in local time.
       date_time.is_local_time = True
+
+      # TODO: remove this after updating dfDateTime not to set the time zone in
+      # CopyFromDateTimeString for a time string without time zone information.
+      date_time.time_zone_offset = None
 
       return date_time
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

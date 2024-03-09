@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Services Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'TestDriver', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=1456)
+        'TestDriver', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'ControlSet001\\services\\TestDriver'))
 
     value_data = b'\x02\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -84,14 +81,28 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = services.ServicesPlugin()
 
-    # TODO: add test.
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'MRUlist', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        relative_key_path='ControlSet001\\services\\TestDriver')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('Start')
+    registry_key.AddValue(registry_value)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('Type')
+    registry_key.AddValue(registry_value)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function on a virtual key."""
-    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver'
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = services.ServicesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -108,11 +119,14 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver')
+
     expected_event_values = {
         'data_type': 'windows:registry:service',
         'error_control': 1,
         'image_path': 'C:\\Dell\\testdriver.sys',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         'service_type': 2,
         'start_type': 2,
@@ -150,6 +164,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:service',
+        'key_path': key_path,
         'last_written_time': '2012-04-06T20:43:27.6390752+00:00',
         'service_dll': '%SystemRoot%\\System32\\qmgr.dll',
         'service_type': 0x20,

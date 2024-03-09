@@ -115,9 +115,13 @@ ios_carplay | Parser for Apple iOS Car Play application plist files.
 ios_identityservices | Parser for Idstatuscache plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
+macos_background_items_plist | Parser for Mac OS backgrounditems.btm or BackgroundItems-v[3-9].btm plist files.
 macos_bluetooth | Parser for MacOS Bluetooth plist files.
 macos_install_history | Parser for MacOS installation history plist files.
+macos_login_items_plist | Parser for Mac OS com.apple.loginitems.plist files.
+macos_login_window_plist | Parser for Mac OS login window plist files.
 macos_software_update | Parser for MacOS software update plist files.
+macos_startup_item_plist | Parser for Mac OS startup item plist files.
 macuser | Parser for MacOS user plist files.
 plist_default | Parser for plist files.
 safari_downloads | Parser for Safari Downloads plist files.
@@ -193,6 +197,7 @@ ios_sysdiag_log | Parser for iOS sysdiag log.
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_securityd | Parser for MacOS security daemon (securityd) log files.
 mac_wifi | Parser for MacOS Wi-Fi log (wifi.log) files.
+macos_launchd_log | Parser for Mac OS launchd log files.
 popularity_contest | Parser for Popularity Contest log files.
 postgresql | Parser for PostgreSQL application log files.
 powershell_transcript | Parser for PowerShell transcript event.
@@ -255,14 +260,14 @@ winlogon | Parser for Windows log-on Registry data.
 winrar_mru | Parser for WinRAR History Registry data.
 winreg_default | Parser for Windows Registry data.
 
-### Parser presets (data/presets.yaml)
+### Parser presets (plaso/data/presets.yaml)
 
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 ios | jsonl/ios_application_privacy, plist/ios_identityservices, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
 linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
-macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
+macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/macos_launchd_log, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_2_cookies, sqlite/firefox_10_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, text/powershell_transcript, winevtx, win_gen, winpca_db0, winpca_dic

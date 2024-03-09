@@ -16,8 +16,6 @@ from tests.parsers.winreg_plugins import test_lib
 class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the AppCompatCache Windows Registry plugin."""
 
-  _TEST_KEY_PATH = '\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
-
   _TEST_DATA_XP = bytes(bytearray([
       0xef, 0xbe, 0xad, 0xde, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
       0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -233,8 +231,9 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'AppCompatCache', key_path=self._TEST_KEY_PATH,
-        last_written_time=filetime.timestamp, offset=1456)
+        'AppCompatCache', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'ControlSet001\\Control\\Session Manager\\AppCompatCache'))
 
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'AppCompatCache', data=binary_data,
@@ -247,17 +246,14 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-        'Session Manager\\AppCompatibility')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
+        'CurrentControlSet\\Control\\Session Manager\\AppCompatibility'))
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-        'Session Manager\\AppCompatCache')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
+        'CurrentControlSet\\Control\\Session Manager\\AppCompatCache'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcessWindowsXP(self):
     """Tests the Process function for Windows XP AppCompatCache data."""
@@ -280,11 +276,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2004-08-04T14:00:00.0000000+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': '2009-09-20T11:59:16.3281250+00:00',
         'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll'}
 
@@ -312,11 +312,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2003-03-24T20:32:18.0000000+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': (
             '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')}
@@ -347,11 +351,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2006-11-02T12:35:24.7041218+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'}
 
@@ -419,11 +427,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2012-02-18T05:18:23.9350000+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'}
 
@@ -451,11 +463,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2013-08-22T12:35:25.3750709+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': 'SYSVOL\\Windows\\System32\\dllhost.exe'}
 
@@ -483,11 +499,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2014-09-22T06:42:39.0000000+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': 'C:\\Windows\\system32\\MpSigStub.exe'}
 
@@ -515,11 +535,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager\\'
+        'AppCompatCache')
+
     expected_event_values = {
         'data_type': 'windows:registry:appcompatcache',
         'entry_index': 1,
         'file_entry_modification_time': '2017-03-16T22:56:01.2487145+00:00',
-        'key_path': self._TEST_KEY_PATH,
+        'key_path': expected_key_path,
         'last_update_time': None,
         'path': (
             'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\'

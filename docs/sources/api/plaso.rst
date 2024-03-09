@@ -20,6 +20,7 @@ Subpackages
    plaso.output
    plaso.parsers
    plaso.preprocessors
+   plaso.scripts
    plaso.serializer
    plaso.single_process
    plaso.storage

@@ -13,24 +13,21 @@ from plaso.parsers.winreg_plugins import terminal_server
 from tests.parsers.winreg_plugins import test_lib
 
 
-class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Terminal Server Client Windows Registry plugin."""
+class TerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the Terminal Server Client Connection plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Servers', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=865)
+        'Servers', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=865, relative_key_path=(
+            'Software\\Microsoft\\Terminal Server Client\\Servers'))
 
     server_subkey_name = 'myserver.com'
     server_subkey = dfwinreg_fake.FakeWinRegistryKey(
@@ -50,24 +47,17 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = terminal_server.TerminalServerClientPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        'Servers')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Terminal Server Client\\Servers'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        'Default\\AddIns\\RDPDR')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        'Servers')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = terminal_server.TerminalServerClientPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -84,9 +74,13 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        'Servers')
+
     expected_event_values = {
         'data_type': 'windows:registry:mstsc:connection',
-        'key_path': '{0:s}\\myserver.com'.format(key_path),
+        'key_path': f'{expected_key_path:s}\\myserver.com',
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         'username': 'DOMAIN\\username'}
 
@@ -95,7 +89,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         'values': None}
 
@@ -103,24 +97,21 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
 
-class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Terminal Server Client MRU Windows Registry plugin."""
+class TerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the Terminal Server Client Connection MRU plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Default', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=1456)
+        'Default', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Terminal Server Client\\Default'))
 
     value_data = '192.168.16.60'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -138,10 +129,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        'Default')
-    registry_key = self._CreateTestKey(key_path, '2012-08-28 09:23:49.002031')
+    registry_key = self._CreateTestKey()
 
     plugin = terminal_server.TerminalServerClientMRUPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -158,12 +146,16 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        'Default')
+
     expected_event_values = {
         'data_type': 'windows:registry:mstsc:mru',
         'entries': (
             'MRU0: 192.168.16.60 '
             'MRU1: computer.domain.com'),
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

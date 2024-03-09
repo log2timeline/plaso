@@ -17,17 +17,13 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
     """Tests the FILTERS class attribute."""
     plugin = programscache.ExplorerProgramsCacheWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\StartPage')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        'Explorer\\StartPage2')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage2'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
@@ -62,7 +58,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'localized_name': '@shell32.dll,-21782',
         'long_name': 'Programs',
         'name': 'Programs',
-        'origin': '{0:s} ProgramsCache'.format(key_path),
+        'origin': f'{key_path:s} ProgramsCache',
         'shell_item_path': 'Programs'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -146,7 +142,7 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(
         'creation_time': '2010-11-10T07:50:38+00:00',
         'data_type': 'windows:shell_item:file_entry',
         'modification_time': '2010-11-10T07:51:24+00:00',
-        'origin': '{0:s} ProgramsCache'.format(key_path),
+        'origin': f'{key_path:s} ProgramsCache',
         'shell_item_path': 'Programs'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

@@ -181,11 +181,22 @@ class EventDataTimeliner(object):
     Returns:
       EventObject: event.
     """
+    timestamp = None
     if date_time.is_delta:
       base_year = self._GetBaseYear(storage_writer, event_data)
-      date_time = date_time.NewFromDeltaAndYear(base_year)
 
-    timestamp = date_time.GetPlasoTimestamp()
+      try:
+        date_time = date_time.NewFromDeltaAndYear(base_year)
+      except ValueError as exception:
+        self._ProduceTimeliningWarning(
+            storage_writer, event_data, str(exception))
+
+        date_time = dfdatetime_semantic_time.InvalidTime()
+        timestamp = 0
+
+    if timestamp is None:
+      timestamp = date_time.GetPlasoTimestamp()
+
     if timestamp is None:
       self._ProduceTimeliningWarning(
           storage_writer, event_data, 'unable to determine timestamp')

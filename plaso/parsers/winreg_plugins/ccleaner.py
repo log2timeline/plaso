@@ -83,9 +83,9 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
           if not available.
     """
     if not registry_value.DataIsString():
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported UpdateKey value data type: {0:s}'.format(
-              registry_value.data_type_string))
+      parser_mediator.ProduceExtractionWarning((
+          f'unsupported UpdateKey value data type: '
+          f'{registry_value.data_type_string:s}'))
       return None
 
     date_time_string = registry_value.GetDataAsObject()
@@ -96,7 +96,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     re_match = self._UPDATE_DATE_TIME_RE.match(date_time_string)
     if not re_match:
       parser_mediator.ProduceExtractionWarning(
-          'unsupported UpdateKey value data: {0!s}'.format(date_time_string))
+          f'unsupported UpdateKey value data: {date_time_string!s}')
       return None
 
     month, day_of_month, year, hours, minutes, seconds, part_of_day = (
@@ -111,7 +111,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       seconds = int(seconds, 10)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'invalid UpdateKey date time value: {0!s}'.format(date_time_string))
+          f'invalid UpdateKey date time value: {date_time_string!s}')
       return None
 
     if part_of_day == 'PM':
@@ -125,8 +125,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid UpdateKey date time value: {0!s}'.format(
-              time_elements_tuple))
+          f'invalid UpdateKey date time value: {time_elements_tuple!s}')
       return None
 
     return date_time
@@ -150,7 +149,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         date_time = self._ParseUpdateKeyValue(parser_mediator, registry_value)
       else:
         value = registry_value.GetDataAsObject()
-        configuration.append('{0:s}: {1!s}'.format(registry_value.name, value))
+        configuration.append(f'{registry_value.name:s}: {value!s}')
 
     if date_time:
       event_data = CCleanerUpdateEventData()

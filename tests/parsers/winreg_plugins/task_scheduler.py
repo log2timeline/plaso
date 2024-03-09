@@ -16,12 +16,11 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = task_scheduler.TaskCacheWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
-        'CurrentVersion\\Schedule\\TaskCache')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Software', (
+        'Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\Software', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

@@ -60,22 +60,23 @@ class PlistFileArtifactPreprocessorPlugin(
       plist_file.Read(file_object)
 
     except IOError as exception:
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} with error: {1!s}'.format(
-              self.ARTIFACT_DEFINITION_NAME, exception))
+      raise errors.PreProcessFail((
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
+          f'{exception!s}'))
 
     if not plist_file.root_key:
       raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: missing root key').format(
-              self.ARTIFACT_DEFINITION_NAME))
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
+          f'missing root key'))
 
     matches = []
 
     self._FindKeys(plist_file.root_key, self._PLIST_KEYS, matches)
     if not matches:
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} with error: no such keys: {1:s}.'.format(
-              self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
+      plist_keys_string = ', '.join(self._PLIST_KEYS)
+      raise errors.PreProcessFail((
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: no '
+          f'such keys: {plist_keys_string:s}.'))
 
     name = None
     value = None
@@ -84,10 +85,10 @@ class PlistFileArtifactPreprocessorPlugin(
         break
 
     if value is None:
+      plist_keys_string = ', '.join(self._PLIST_KEYS)
       raise errors.PreProcessFail((
-          'Unable to read: {0:s} with error: no values found for keys: '
-          '{1:s}.').format(
-              self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: no '
+          f'values found for keys: {plist_keys_string:s}.'))
 
     self._ParsePlistKeyValue(mediator, name, value)
 
@@ -187,9 +188,9 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       errors.PreProcessFail: if the preprocessing fails.
     """
     if not file_entry or not file_entry.link:
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} with error: not a symbolic link'.format(
-              self.ARTIFACT_DEFINITION_NAME))
+      raise errors.PreProcessFail((
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: not '
+          f'a symbolic link'))
 
     _, _, time_zone = file_entry.link.partition('zoneinfo/')
     if time_zone:
@@ -249,7 +250,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     except (IOError, plistlib.InvalidFileException) as exception:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to read plist with error: {0!s}.'.format(exception))
+          f'Unable to read plist with error: {exception!s}')
       return
 
     name = match.get('name', [None])[0]
@@ -272,7 +273,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     except KeyError:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
-          'Unable to add user account: {0:s} to knowledge base.'.format(name))
+          f'Unable to add user account: {name:s} to knowledge base.')
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Outlook Search MRU Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Search', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=1456)
+        'Search', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
+            'Software\\Microsoft\\Office\\15.0\\Outlook\\Search'))
 
     value_name = (
         'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
@@ -47,25 +44,17 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = outlook.OutlookSearchMRUPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
-        'Search')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\14.0\\Outlook\\Search'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-        'Search')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Office\\15.0\\Outlook\\Search'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-        'Search')
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey()
 
     plugin = outlook.OutlookSearchMRUPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -82,12 +71,16 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+        'Search')
+
     expected_event_values = {
         'data_type': 'windows:registry:outlook_search_mru',
         'entries': (
             'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
             'username@example.com.ost: 0x00372bcf'),
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

@@ -69,6 +69,7 @@ class ShellItemsParser(object):
     self._path_segments.append(path_segment)
 
     # TODO: generate event_data for non file_entry shell items.
+
     if isinstance(shell_item, pyfwsi.file_entry):
       event_data = windows_events.WindowsShellItemFileEntryEventData()
       event_data.modification_time = self._GetDateTime(
@@ -116,22 +117,13 @@ class ShellItemsParser(object):
     """
     path_segment = None
 
-    if isinstance(shell_item, pyfwsi.root_folder):
-      description = shell_folders.WindowsShellFoldersHelper.GetDescription(
-          shell_item.shell_folder_identifier)
+    if isinstance(shell_item, pyfwsi.control_panel_category):
+      # TODO: map identifier to human readable string.
+      path_segment = f'<Control panel category: {shell_item.identifier:d}>'
 
-      if description:
-        path_segment = description
-      else:
-        path_segment = '{{{0:s}}}'.format(shell_item.shell_folder_identifier)
-
-      path_segment = '<{0:s}>'.format(path_segment)
-
-    elif isinstance(shell_item, pyfwsi.volume):
-      if shell_item.name:
-        path_segment = self._GetSanitizedPathString(shell_item.name)
-      elif shell_item.identifier:
-        path_segment = '{{{0:s}}}'.format(shell_item.identifier)
+    elif isinstance(shell_item, pyfwsi.control_panel_item):
+      # TODO: map identifier to human readable string.
+      path_segment = f'<Control panel item: {shell_item.identifier:s}>'
 
     elif isinstance(shell_item, pyfwsi.file_entry):
       long_name = ''
@@ -148,9 +140,25 @@ class ShellItemsParser(object):
       if shell_item.location:
         path_segment = shell_item.location
 
-    if path_segment is None and shell_item.class_type == 0x00:
-      # TODO: check for signature 0x23febbee
-      pass
+    elif isinstance(shell_item, pyfwsi.root_folder):
+      description = shell_folders.WindowsShellFoldersHelper.GetDescription(
+          shell_item.shell_folder_identifier)
+
+      if description:
+        path_segment = description
+      else:
+        path_segment = '{{{0:s}}}'.format(shell_item.shell_folder_identifier)
+
+      path_segment = '<{0:s}>'.format(path_segment)
+
+    elif isinstance(shell_item, pyfwsi.users_property_view):
+      path_segment = '<Users property view>'
+
+    elif isinstance(shell_item, pyfwsi.volume):
+      if shell_item.name:
+        path_segment = self._GetSanitizedPathString(shell_item.name)
+      elif shell_item.identifier:
+        path_segment = '{{{0:s}}}'.format(shell_item.identifier)
 
     if path_segment is None:
       path_segment = '<UNKNOWN: 0x{0:02x}>'.format(shell_item.class_type)

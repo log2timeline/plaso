@@ -75,8 +75,7 @@ class AutoRunsPlugin(interface.WindowsRegistryPlugin):
 
       value_data = registry_value.GetDataAsObject()
 
-      value_string = '{0:s}: {1:s}'.format(registry_value.name, value_data)
-      entries.append(value_string)
+      entries.append(f'{registry_value.name:s}: {value_data:s}')
 
     event_data = RunKeyEventData()
     event_data.entries = sorted(entries)

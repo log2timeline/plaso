@@ -124,6 +124,14 @@ plaso.parsers.text\_plugins.macos\_appfirewall module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.macos\_launchd module
+-------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.macos_launchd
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.macos\_securityd module
 ---------------------------------------------------
 

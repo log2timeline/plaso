@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the timezone Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2013-01-30 10:47:57')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'TimeZoneInformation', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=153)
+        'TimeZoneInformation', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        last_written_time=filetime.timestamp, offset=153,
+        relative_key_path='ControlSet001\\Control\\TimeZoneInformation')
 
     value_data = 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -106,20 +103,15 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = timezone.WinRegTimezonePlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
-        'TimeZoneInformation')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
+        'ControlSet001\\Control\\TimeZoneInformation'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcessMock(self):
     """Tests the Process function on created key."""
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
-        'TimeZoneInformation')
-    time_string = '2013-01-30 10:47:57'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey()
 
     plugin = timezone.WinRegTimezonePlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -136,6 +128,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+        'TimeZoneInformation')
+
     expected_event_values = {
         'configuration': (
             'ActiveTimeBias: -60 '
@@ -147,7 +143,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
             'StandardName: @tzres.dll,-322 '
             'TimeZoneKeyName: W. Europe Standard Time'),
         'data_type': 'windows:registry:timezone',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2013-01-30T10:47:57.0000000+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

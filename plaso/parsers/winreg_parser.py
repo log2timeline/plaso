@@ -243,8 +243,7 @@ class WinRegistryParser(interface.FileObjectParser):
     """
     code_page = parser_mediator.GetCodePage()
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=code_page, emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage=code_page)
 
     try:
       registry_file.Open(file_object)

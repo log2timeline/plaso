@@ -16,10 +16,11 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = usbstor.USBStorPlugin()
 
-    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR'
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'ControlSet001\\Enum\\USBSTOR')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -55,8 +56,8 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         'driver_last_installation_time': '2011-04-01T04:52:38.6860000+00:00',
         'firmware_time': None,
         'key_path': (
-            '{0:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\AA951D0000007252&0'.format(
-                key_path)),
+            f'{key_path:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\'
+            f'AA951D0000007252&0'),
         'product': 'Prod_v100w',
         'revision': 'Rev_1024',
         'vendor': 'Ven_HP'}

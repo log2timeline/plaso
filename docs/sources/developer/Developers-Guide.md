@@ -1,12 +1,22 @@
 # Developer Guide
 
-* [Setting up and maintaining your development environment](Developers-Guide.html#setting-up-and-maintaining-your-development-environment)
-* [Getting Started](Developers-Guide.html#getting-started)
-* [Design](Developers-Guide.html#design)
-* [Roadmap](Developers-Guide.html#roadmap)
-* [Contributing Code](Developers-Guide.html#contributing-code)
+## Getting Started
 
-## Setting up and maintaining your development environment
+For this you'll need to use the development release; found in the [git repository](https://github.com/log2timeline/plaso).
+
+Get a GitHub account and enable 2-factor authentication.
+
+Join the development mailing list [log2timeline-dev](https://groups.google.com/forum/#!forum/log2timeline-dev).
+
+### But I don't know how to use git
+
+* [Get started using GitHub to manage Git repositories and collaborate with others](https://docs.github.com/en/get-started/quickstart)
+
+### But I don't know how to program in Python
+
+* [The Python Tutorial](https://docs.python.org/3/tutorial/)
+
+### Setting up and maintaining your development environment
 
 The first challenge you will encounter is setting up and maintaining your
 development environment.
@@ -19,7 +29,7 @@ Start by setting up a development environment:
 * [Development environment on Ubuntu](Developing-Ubuntu.md)
 * [Development environment on Windows](Developing-Windows.md)
 
-## Getting Started
+### Writing code
 
 Once you've set up your development environment we recommend start simple:
 
@@ -30,14 +40,13 @@ Once you've set up your development environment we recommend start simple:
 
 ## Design
 
-Overview of the general architecture of Plaso:
+For and overview of the general architecture of Plaso:
 
 * [Internals](Internals.md)
 * [API documentation](https://plaso.readthedocs.io/en/latest/sources/api/plaso.html)
 
 ## Roadmap
 
-A high level roadmap can be found [here](../user/Releases-and-roadmap.md).
 Individual features are tracked as a github issue and labeled as "enhancement".
 A list of features we'd already like to add can be found
 [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).

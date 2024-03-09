@@ -18,18 +18,18 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = amcache.AMCachePlugin()
 
-    self._AssertFiltersOnKeyPath(plugin, '\\Root')
-    self._AssertNotFiltersOnKeyPath(plugin, '\\Root\\File')
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertFiltersOnKeyPath(plugin, '', 'Root')
+    self._AssertNotFiltersOnKeyPath(plugin, '', 'Root\\File')
+
+    self._AssertNotFiltersOnKeyPath(plugin, '', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntry(['Amcache.hve'])
+    test_file_entry = self._GetTestFileEntry(['winreg', 'Amcache.hve'])
 
     file_object = test_file_entry.GetFileObject()
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
     registry_file.Open(file_object)
 
     registry_key = registry_file.GetKeyByPath('\\Root')
@@ -85,14 +85,13 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3480)
     self.CheckEventData(event_data, expected_event_values)
 
-  def testProcessWindows101(self):
+  def testProcessWindows10(self):
     """Tests the Process function on a Windows 10 1807 AMCache.hve file."""
-    test_file_entry = self._GetTestFileEntry(['win10-Amcache.hve'])
+    test_file_entry = self._GetTestFileEntry(['winreg', 'win10-Amcache.hve'])
 
     file_object = test_file_entry.GetFileObject()
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
     registry_file.Open(file_object)
 
     registry_key = registry_file.GetKeyByPath('\\Root')

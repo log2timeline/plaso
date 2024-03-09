@@ -1,4 +1,4 @@
-FROM fedora:36
+FROM fedora:39
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
@@ -11,9 +11,8 @@ MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ARG PPA_TRACK=staging
 
-RUN dnf -y install dnf-plugins-core
-RUN dnf -y copr enable @gift/$PPA_TRACK
-
-RUN dnf -y update
-
-RUN dnf install -y plaso-tools
+# Combining the dnf commands into a single run reduces the size of the resulting image.
+RUN dnf -y install dnf-plugins-core && \
+    dnf -y copr enable @gift/$PPA_TRACK && \
+    dnf -y update && \
+    dnf -y install plaso-tools

@@ -31,12 +31,12 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
-    key_path = '\\ControlSet001\\Services\\bam\\State'
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString('2019-03-19 20:55:19.975237')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'UserSettings', key_path=key_path,
-        last_written_time=filetime.timestamp)
+        'UserSettings', key_path_prefix='HKEY_LOCAL_MACHINE\\System',
+        last_written_time=filetime.timestamp,
+        relative_key_path='\\ControlSet001\\Services\\bam\\State')
 
     filetime.CopyFromDateTimeString('2019-03-19 13:29:56.008214')
 
@@ -58,17 +58,14 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
     """Tests the FILTERS class attribute."""
     plugin = bam.BackgroundActivityModeratorWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\bam'
-        '\\UserSettings')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
+        'CurrentControlSet\\Services\\bam\\UserSettings'))
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\bam'
-        '\\State\\UserSettings')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
+        'CurrentControlSet\\Services\\bam\\State\\UserSettings'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
   def testProcessValue(self):
     """Tests the Process function for BAM data."""

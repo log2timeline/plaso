@@ -247,34 +247,50 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       if self._abort:
         break
 
-      file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          file_system_path_spec, resolver_context=self._resolver_context)
+      try:
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(
+            file_system_path_spec, resolver_context=self._resolver_context)
 
-      path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-          file_system_path_spec, find_specs=included_find_specs,
-          recurse_file_system=False, resolver_context=self._resolver_context)
-      for path_spec in path_spec_generator:
-        if self._abort:
-          break
+        path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+            file_system_path_spec, find_specs=included_find_specs,
+            recurse_file_system=False, resolver_context=self._resolver_context)
+        for path_spec in path_spec_generator:
+          if self._abort:
+            break
 
-        if self._CheckExcludedPathSpec(file_system, path_spec):
-          display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-              path_spec)
-          logger.debug(f'Excluded from extraction: {display_name:s}.')
-          continue
+          if self._CheckExcludedPathSpec(file_system, path_spec):
+            display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+                path_spec)
+            logger.debug(f'Excluded from extraction: {display_name:s}.')
+            continue
 
-        # TODO: determine if event sources should be DataStream or FileEntry
-        # or both.
-        event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
-        storage_writer.AddAttributeContainer(event_source)
+          # TODO: determine if event sources should be DataStream or FileEntry
+          # or both.
+          event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+          storage_writer.AddAttributeContainer(event_source)
 
-        self._number_of_produced_sources += 1
+          self._number_of_produced_sources += 1
 
-        # Update the foreman process status in case we are using a filter file.
-        self._UpdateForemanProcessStatus()
+          # Update the foreman process status in case we are using a filter
+          # file.
+          self._UpdateForemanProcessStatus()
 
+          if self._status_update_callback:
+            self._status_update_callback(self._processing_status)
+
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
         if self._status_update_callback:
           self._status_update_callback(self._processing_status)
+
+      # All exceptions need to be caught here to prevent the foreman
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        self._ProduceExtractionWarning(storage_writer, (
+            f'unable to process path specification with error: '
+            f'{exception!s}'), file_system_path_spec)
 
   def _CreateTask(self, storage_writer, session_identifier, event_source):
     """Creates a task to processes an event source.
@@ -785,7 +801,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._CollectInitialEventSources(storage_writer, file_system_path_specs)
 
-    self._ProcessEventSources(storage_writer, session_identifier)
+    if not self._abort:
+      self._ProcessEventSources(storage_writer, session_identifier)
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED

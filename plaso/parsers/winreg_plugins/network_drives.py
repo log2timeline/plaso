@@ -60,7 +60,8 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
         remote_path = remote_path_value.GetDataAsObject()
         if remote_path.startswith('\\\\'):
           server_name, _, share_name = remote_path[2:].partition('\\')
-          share_name = '\\{0:s}'.format(share_name.replace('#', '\\'))
+          share_name = share_name.replace('#', '\\')
+          share_name = f'\\{share_name:s}'
 
       event_data = NetworkDriveEventData()
       event_data.drive_letter = drive_letter

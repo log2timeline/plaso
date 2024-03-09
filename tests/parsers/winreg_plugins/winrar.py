@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the WinRAR history Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates WinRAR history Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'ArcHistory', key_path=key_path, last_written_time=filetime.timestamp,
-        offset=1456)
+        'ArcHistory', key_path_prefix='HKEY_CURRENT_USER',
+        last_written_time=filetime.timestamp, offset=1456,
+        relative_key_path='Software\\WinRAR\\ArcHistory')
 
     value_data = 'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
         'utf_16_le')
@@ -51,16 +48,14 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = winrar.WinRARHistoryPlugin()
 
-    key_path = 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_CURRENT_USER', 'Software\\WinRAR\\ArcHistory')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey()
 
     plugin = winrar.WinRARHistoryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -82,7 +77,7 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
         'entries': (
             '0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
             '1: C:\\Downloads\\plaso-static.rar'),
-        'key_path': key_path,
+        'key_path': 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory',
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

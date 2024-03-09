@@ -88,8 +88,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       registry_file.Open(file_object)
     except IOError as exception:
       logger.warning(
-          'Unable to open Windows Registry file with error: {0!s}'.format(
-              exception))
+          f'Unable to open Windows Registry file with error: {exception!s}')
       return None
 
     return registry_file
@@ -110,8 +109,8 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       path_specification = self._path_resolver.ResolvePath(path)
     except dfvfs_errors.BackEndError as exception:
       logger.warning((
-          'Unable to open Windows Registry file: {0:s} with error: '
-          '{1!s}').format(path, exception))
+          f'Unable to open Windows Registry file: {path:s} with error: '
+          f'{exception!s}'))
 
     if path_specification is None:
       return None
@@ -151,26 +150,26 @@ class PreprocessPluginsManager(object):
           artifact_definition = artifacts_registry.GetDefinitionByAlias(
               preprocess_plugin.ARTIFACT_DEFINITION_NAME)
         if not artifact_definition:
-          logger.warning('Missing artifact definition: {0:s}'.format(
-              preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+          logger.warning((
+              f'Missing artifact definition: '
+              f'{preprocess_plugin.ARTIFACT_DEFINITION_NAME:s}'))
           continue
 
+      class_name = preprocess_plugin.__class__.__name__
+      definition_name = preprocess_plugin.ARTIFACT_DEFINITION_NAME or 'N/A'
+
       logger.debug((
-          'Running file system preprocessor plugin: {0:s} with artifact '
-          'definition: {1:s}').format(
-              preprocess_plugin.__class__.__name__,
-              preprocess_plugin.ARTIFACT_DEFINITION_NAME or 'N/A'))
+          f'Running file system preprocessor plugin: {class_name:s} with '
+          f'artifact definition: {definition_name:s}'))
 
       try:
         preprocess_plugin.Collect(
             mediator, artifact_definition, searcher, file_system)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
-            'Preprocessor plugin: {0:s} with artifact definition: {1:s} '
-            'was unable to collect value with error: {2!s}').format(
-                preprocess_plugin.__class__.__name__,
-                preprocess_plugin.ARTIFACT_DEFINITION_NAME or 'N/A',
-                exception))
+            f'Preprocessor plugin: {class_name:s} with artifact definition: '
+            f'{definition_name:s} was unable to collect value with error: '
+            f'{exception!s}'))
 
   @classmethod
   def CollectFromKnowledgeBase(cls, mediator):
@@ -181,14 +180,15 @@ class PreprocessPluginsManager(object):
           plugins and other components, such as storage and knowledge base.
     """
     for preprocess_plugin in cls._knowledge_base_plugins.values():
-      logger.debug('Running knowledge base preprocessor plugin: {0:s}'.format(
-          preprocess_plugin.__class__.__name__))
+      class_name = preprocess_plugin.__class__.__name__
+      logger.debug(
+          f'Running knowledge base preprocessor plugin: {class_name:s}')
+
       try:
         preprocess_plugin.Collect(mediator)
       except errors.PreProcessFail as exception:
         logger.warning(
-            'Unable to collect knowledge base value with error: {0!s}'.format(
-                exception))
+            f'Unable to collect knowledge base value with error: {exception!s}')
 
   @classmethod
   def CollectFromWindowsRegistry(cls, artifacts_registry, mediator, searcher):
@@ -212,19 +212,21 @@ class PreprocessPluginsManager(object):
         artifact_definition = artifacts_registry.GetDefinitionByAlias(
             preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
-        logger.warning('Missing artifact definition: {0:s}'.format(
-            preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+        logger.warning((
+            f'Missing artifact definition: '
+            f'{preprocess_plugin.ARTIFACT_DEFINITION_NAME:s}'))
         continue
 
-      logger.debug('Running Windows Registry preprocessor plugin: {0:s}'.format(
-          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+      logger.debug((
+          f'Running Windows Registry preprocessor plugin: '
+          f'{preprocess_plugin.ARTIFACT_DEFINITION_NAME:s}'))
       try:
         preprocess_plugin.Collect(mediator, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
         logger.warning((
-            'Unable to collect value from artifact definition: {0:s} '
-            'with error: {1!s}').format(
-                preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
+            f'Unable to collect value from artifact definition: '
+            f'{preprocess_plugin.ARTIFACT_DEFINITION_NAME:s} with error: '
+            f'{exception!s}'))
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -241,8 +243,7 @@ class PreprocessPluginsManager(object):
             plugin_class.__name__)
     name = name.lower()
     if name not in cls._plugins:
-      raise KeyError(
-          'Artifact plugin class not set for name: {0:s}.'.format(name))
+      raise KeyError(f'Artifact plugin class not set for name: {name:s}.')
 
     del cls._plugins[name]
 
@@ -285,8 +286,7 @@ class PreprocessPluginsManager(object):
             plugin_class.__name__)
     name = name.lower()
     if name in cls._plugins:
-      raise KeyError(
-          'Artifact plugin class already set for name: {0:s}.'.format(name))
+      raise KeyError(f'Artifact plugin class already set for name: {name:s}.')
 
     preprocess_plugin = plugin_class()
 

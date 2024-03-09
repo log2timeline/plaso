@@ -79,8 +79,7 @@ class SAMUsersWindowsRegistryPlugin(
     registry_value = registry_key.GetValueByName('F')
     if not registry_value:
       raise errors.ParseError(
-          'missing value: "F" in Windows Registry key: {0:s}.'.format(
-              registry_key.name))
+          f'missing value: "F" in Windows Registry key: {registry_key.name:s}.')
 
     f_value_map = self._GetDataTypeMap('f_value')
 
@@ -114,9 +113,9 @@ class SAMUsersWindowsRegistryPlugin(
     except (UnicodeDecodeError, UnicodeEncodeError) as exception:
       username = descriptor_data.decode('utf-16-le', errors='replace')
       parser_mediator.ProduceExtractionWarning((
-          'unable to decode V value string with error: {0!s}. Characters '
-          'that cannot be decoded will be replaced with "?" or '
-          '"\\ufffd".').format(exception))
+          f'unable to decode "V" value string with error: {exception!s}. '
+          f'Characters that cannot be decoded will be replaced with "?" or '
+          f'"\\ufffd".'))
 
     return username
 
@@ -145,14 +144,13 @@ class SAMUsersWindowsRegistryPlugin(
         f_value = self._ParseFValue(subkey)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse F value with error: {0!s}'.format(exception))
+            f'unable to parse "F" value with error: {exception!s}')
         continue
 
       registry_value = subkey.GetValueByName('V')
       if not registry_value:
         parser_mediator.ProduceExtractionWarning(
-            'missing Registry value: "V" in subkey: {0:s}.'.format(
-                subkey.name))
+            f'missing Registry value: "V" in subkey: {subkey.name:s}.')
         continue
 
       v_value_map = self._GetDataTypeMap('v_value')
@@ -162,7 +160,7 @@ class SAMUsersWindowsRegistryPlugin(
             registry_value.data, 0, v_value_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse V value with error: {0!s}'.format(exception))
+            f'unable to parse "V" value with error: {exception!s}')
         continue
 
       username = self._ParseVValueString(

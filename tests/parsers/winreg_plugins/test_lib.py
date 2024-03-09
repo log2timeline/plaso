@@ -37,28 +37,36 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def _AssertFiltersOnKeyPath(self, plugin, key_path):
+  def _AssertFiltersOnKeyPath(
+      self, plugin, key_path_prefix, relative_key_path):
     """Asserts if the key path matches one of the plugin filters.
 
     Args:
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
-      key_path (str): Windows Registry key path.
+      key_path_prefix (str): Windows Registry key path prefix.
+      relative_key_path (Optional[str]): relative Windows Registry key path.
     """
-    _, _, key_name = key_path.rpartition('\\')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(key_name, key_path=key_path)
+    _, _, name = relative_key_path.rpartition('\\')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        name, key_path_prefix=key_path_prefix,
+        relative_key_path=relative_key_path)
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
-  def _AssertNotFiltersOnKeyPath(self, plugin, key_path):
+  def _AssertNotFiltersOnKeyPath(
+      self, plugin, key_path_prefix, relative_key_path):
     """Asserts if the key path does not match one of the plugin filters.
 
     Args:
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
-      key_path (str): Windows Registry key path.
+      key_path_prefix (str): Windows Registry key path prefix.
+      relative_key_path (Optional[str]): relative Windows Registry key path.
     """
-    _, _, key_name = key_path.rpartition('\\')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(key_name, key_path=key_path)
+    _, _, name = relative_key_path.rpartition('\\')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        name, key_path_prefix=key_path_prefix,
+        relative_key_path=relative_key_path)
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
@@ -94,8 +102,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     if not file_object:
       return None
 
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage='cp1252', emulate_virtual_keys=False)
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
     registry_file.Open(file_object)
 
     win_registry = dfwinreg_registry.WinRegistry()

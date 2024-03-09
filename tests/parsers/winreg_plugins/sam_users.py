@@ -16,10 +16,10 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = sam_users.SAMUsersWindowsRegistryPlugin()
 
-    key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\SAM', 'SAM\\Domains\\Account\\Users')
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\SAM', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -49,6 +49,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'account_rid': 500,
         'comments': 'Built-in account for administering the computer/domain',
         'data_type': 'windows:registry:sam_users',
+        'key_path': key_path,
         'last_login_time': '2010-11-20T21:48:12.5692440+00:00',
         'last_password_set_time': '2010-11-20T21:56:34.7436870+00:00',
         'last_written_time': '2014-09-24T03:36:06.3588374+00:00',

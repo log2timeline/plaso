@@ -16,21 +16,18 @@ from tests.parsers.winreg_plugins import test_lib
 class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
   """Tests for the default Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'TimeZoneInformation', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=1456)
+        'TimeZoneInformation', key_path_prefix='HKEY_CURRENT_MACHINE\\Software',
+        last_written_time=filetime.timestamp, offset=1456,
+        relative_key_path='Microsoft\\Some Windows\\InterestingApp\\MRU')
 
     value_data = 'acb'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -60,9 +57,7 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = '\\Microsoft\\Some Windows\\InterestingApp\\MRU'
-    time_string = '2012-08-28 09:23:49.002031'
-    registry_key = self._CreateTestKey(key_path, time_string)
+    registry_key = self._CreateTestKey()
 
     plugin = default.DefaultPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -79,9 +74,13 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_CURRENT_MACHINE\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRU')
+
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-28T09:23:49.0020310+00:00',
         'values': [
             ('MRUList', 'REG_SZ', 'acb'),

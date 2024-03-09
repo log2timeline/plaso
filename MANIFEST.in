@@ -3,7 +3,6 @@ include dependencies.ini run_tests.py utils/__init__.py utils/dependencies.py
 include utils/check_dependencies.py
 include requirements.txt test_requirements.txt
 recursive-include config *
-recursive-include data *
 recursive-include doc *
 # Do not include the test data otherwise the sdist will be too large for PyPi.
 recursive-exclude test_data *
@@ -11,7 +10,7 @@ exclude .gitignore
 exclude *.pyc
 recursive-include plaso *.yaml
 recursive-exclude plaso *.pyc
-# The test scripts are not required in a binary distribution package they 
+# The test scripts are not required in a binary distribution package they
 # are considered source distribution files and excluded in find_package()
 # in setup.py.
 recursive-include tests *.py

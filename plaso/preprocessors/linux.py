@@ -239,15 +239,15 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
     try:
       reader = line_reader_file.BinaryDSVReader(line_reader, b':')
     except csv.Error as exception:
-      raise errors.PreProcessFail(
-          'Unable to read: {0:s} with error: {1!s}'.format(
-              self.ARTIFACT_DEFINITION_NAME, exception))
+      raise errors.PreProcessFail((
+          f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
+          f'{exception!s}'))
 
     for line_number, row in enumerate(reader):
       if len(row) < 7 or not row[0] or not row[2]:
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,
-            'Unsupported number of values in line: {0:d}.'.format(line_number))
+            f'Unsupported number of values in line: {line_number:d}.')
         continue
 
       try:
@@ -309,7 +309,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
       except KeyError as exception:
         mediator.ProducePreprocessingWarning(
             self.ARTIFACT_DEFINITION_NAME,
-            'Unable to add user account with error: {0!s}'.format(exception))
+            f'Unable to add user account with error: {exception!s}')
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

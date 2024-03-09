@@ -193,9 +193,9 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
     except dfwinreg_errors.WinRegistryValueError as exception:
       parser_mediator.ProduceRecoveryWarning((
-          'Unable to retrieve value data of type: {0:s} as object from '
-          'value: {1:s} in key: {2:s} with error: {3!s}').format(
-              registry_value.data_type_string, value_name, key_path, exception))
+          f'Unable to retrieve value data of type: '
+          f'{registry_value.data_type_string,:s} as object from value: '
+          f'{value_name:s} in key: {key_path:s} with error: {exception!s}'))
       value_object = None
 
     return value_object
@@ -252,23 +252,21 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
     """
     if not registry_value.DataIsString():
       parser_mediator.ProduceExtractionWarning((
-          'unsupported {0:s} with value data type: {1:s} in key: '
-          '{2:s}').format(
-              registry_value.name, registry_value.data_type_string, key_path))
+          f'unsupported {registry_value.name:s} with value data type: '
+          f'{registry_value.data_type_string:s} in key: {key_path:s}'))
       return None
 
     date_time_string = registry_value.GetDataAsObject()
     if not date_time_string:
       parser_mediator.ProduceExtractionWarning(
-          'missing {0:s} value data in key: {1:s}'.format(
-              registry_value.name, key_path))
+          f'missing {registry_value.name:s} value data in key: {key_path:s}')
       return None
 
     re_match = self._LINK_DATE_TIME_RE.match(date_time_string)
     if not re_match:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported {0:s} value data: {1!s} in key: {2:s}'.format(
-              registry_value.name, date_time_string, key_path))
+      parser_mediator.ProduceExtractionWarning((
+          f'unsupported {registry_value.name:s} value data: '
+          f'{date_time_string!s} in key: {key_path:s}'))
       return None
 
     month, day_of_month, year, hours, minutes, seconds= re_match.groups()
@@ -281,9 +279,9 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       minutes = int(minutes, 10)
       seconds = int(seconds, 10)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionWarning(
-          'invalid {0:s} date time value: {1!s} in key: {2:s}'.format(
-              registry_value.name, date_time_string, key_path))
+      parser_mediator.ProduceExtractionWarning((
+          f'invalid {registry_value.name:s} date time value: '
+          f'{date_time_string!s} in key: {key_path:s}'))
       return None
 
     time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
@@ -292,9 +290,9 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid {0:s} date time value: {1!s} in key: {2:s}'.format(
-              registry_value.name, time_elements_tuple, key_path))
+      parser_mediator.ProduceExtractionWarning((
+          f'invalid {registry_value.name:s} date time value: '
+          f'{time_elements_tuple!s} in key: {key_path:s}'))
       return None
 
     return date_time
@@ -329,13 +327,12 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         sequence_number, mft_entry = file_reference_key.name.split('0000')
         mft_entry = int(mft_entry, 16)
         sequence_number = int(sequence_number, 16)
-        event_data.file_reference = '{0:d}-{1:d}'.format(
-            mft_entry, sequence_number)
+        event_data.file_reference = f'{mft_entry:d}-{sequence_number:d}'
       else:
         # A FAT file reference is the offset of the corresponding directory
         # entry.
         file_reference = int(file_reference_key.name, 16)
-        event_data.file_reference = '{0:d}'.format(file_reference)
+        event_data.file_reference = f'{file_reference:d}'
 
     except (ValueError, TypeError):
       pass

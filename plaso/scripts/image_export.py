@@ -13,15 +13,15 @@ from plaso.lib import errors
 
 
 def Main():
-  """The main function.
+  """Entry point of console script to extract files from images.
 
   Returns:
-    bool: True if successful or False otherwise.
+    int: exit code that is provided to sys.exit().
   """
   tool = image_export_tool.ImageExportTool()
 
   if not tool.ParseArguments(sys.argv[1:]):
-    return False
+    return 1
 
   if tool.show_troubleshooting:
     print('Using Python version {0!s}'.format(sys.version))
@@ -34,12 +34,12 @@ def Main():
 
     print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
           'Troubleshooting.html')
-    return True
+    return 0
 
   try:
     tool.CheckOutDated()
   except KeyboardInterrupt:
-    return False
+    return 1
 
   if tool.list_signature_identifiers:
     try:
@@ -48,9 +48,9 @@ def Main():
     # BadConfigOption will be raised if signatures.conf cannot be found.
     except errors.BadConfigOption as exception:
       logging.warning(exception)
-      return False
+      return 1
 
-    return True
+    return 0
 
   if not tool.has_filters:
     logging.warning('No filter defined exporting all files.')
@@ -68,20 +68,20 @@ def Main():
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning('Aborted by user.')
-    return False
+    return 1
 
   except errors.BadConfigOption as exception:
     logging.warning(exception)
-    return False
+    return 1
 
   except errors.SourceScannerError as exception:
     logging.warning((
         'Unable to scan for a supported file system with error: {0!s}\n'
         'Most likely the image format is not supported by the '
         'tool.').format(exception))
-    return False
+    return 1
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
@@ -89,7 +89,4 @@ if __name__ == '__main__':
   # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
   multiprocessing.freeze_support()
 
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

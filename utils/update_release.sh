@@ -25,7 +25,7 @@ plaso (${VERSION}-1) unstable; urgency=low
 EOT
 
 # Regenerate the parser and plugins documentation.
-PYTHONPATH=. ./tools/log2timeline.py --parsers list --use-markdown > docs/sources/user/Parsers-and-plugins.md
+PYTHONPATH=. ./plaso/scripts/log2timeline.py --parsers list --use-markdown > docs/sources/user/Parsers-and-plugins.md
 
 # Regenerate the supported formats documentation.
 # TODO: generate supported formats.
