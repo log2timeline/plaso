@@ -282,7 +282,6 @@ class EventDataTimeliner(object):
 
       else:
         base_year = self._GetBaseYear(storage_writer, event_data)
-        date_time = date_time.NewFromDeltaAndYear(base_year)
 
         try:
           date_time = date_time.NewFromDeltaAndYear(base_year)
