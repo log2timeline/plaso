@@ -25,7 +25,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 66)
+    self.assertEqual(number_of_event_data, 55)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -50,7 +50,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'path': 'C:\\Users\\nfury\\Pictures\\The SHIELD',
         'pin_status': -1}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
 
     # Check a WinLnkLinkEvent.
