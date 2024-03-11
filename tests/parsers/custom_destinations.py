@@ -21,7 +21,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 54)
+    self.assertEqual(number_of_event_data, 45)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -51,7 +51,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'local_path': 'C:\\\\Windows\\\\System32\\\\GettingStarted.exe',
         'modification_time': '2009-07-14T01:39:11.3880000+00:00'}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 51)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 43)
     self.CheckEventData(event_data, expected_event_values)
 
     # Test distributed link tracking event data.
@@ -77,7 +77,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         'origin': '5afe4de1b92fc382.customDestinations-ms',
         'shell_item_path': '<My Computer> C:\\\\Windows\\\\System32'}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 49)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 41)
     self.CheckEventData(event_data, expected_event_values)
 
   def testParseWithEmpty(self):
@@ -108,7 +108,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 12)
+    self.assertEqual(number_of_event_data, 9)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
