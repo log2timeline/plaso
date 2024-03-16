@@ -131,7 +131,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'drive_type': None,
         'file_attribute_flags': 0,
         'file_size': 0,
-        'link_target': '<Internet Explorer (Homepage)> <UNKNOWN: 0x61>',
+        'link_target': '<Internet Folder> <UNKNOWN: 0x61>',
         'local_path': None,
         'modification_time': None}
 
