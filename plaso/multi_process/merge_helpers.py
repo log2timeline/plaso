@@ -120,6 +120,7 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       # data by the timeliner and therefore needs to be merged before event
       # data containers.
       events.YearLessLogHelper.CONTAINER_TYPE,
+      events.DateLessLogHelper.CONTAINER_TYPE,
       events.EventData.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,

@@ -9,6 +9,39 @@ from plaso.containers import events
 from tests import test_lib as shared_test_lib
 
 
+class DateLessLogHelperTest(shared_test_lib.BaseTestCase):
+  """Tests for the date-less log helper attribute container."""
+
+  # pylint: disable=protected-access
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = events.DateLessLogHelper()
+
+    expected_attribute_names = [
+        '_event_data_stream_identifier', 'earliest_date', 'latest_date']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+  def testGetEventDataStreamIdentifier(self):
+    """Tests the GetEventDataStreamIdentifier function."""
+    attribute_container = events.DateLessLogHelper()
+
+    identifier = attribute_container.GetEventDataStreamIdentifier()
+    self.assertIsNone(identifier)
+
+  def testSetEventDataStreamIdentifier(self):
+    """Tests the SetEventDataStreamIdentifier function."""
+    attribute_container = events.DateLessLogHelper()
+
+    attribute_container.SetEventDataStreamIdentifier('Foo')
+
+    self.assertEqual(
+        attribute_container._event_data_stream_identifier, 'Foo')
+
+
 class EventValuesHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the event values helper functions."""
 

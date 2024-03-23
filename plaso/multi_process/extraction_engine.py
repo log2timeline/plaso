@@ -96,6 +96,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_YEAR_LESS_LOG_HELPER = events.YearLessLogHelper.CONTAINER_TYPE
+  _CONTAINER_TYPE_DATE_LESS_LOG_HELPER = events.DateLessLogHelper.CONTAINER_TYPE
 
   # Maximum number of dfVFS file system objects to cache in the foreman process.
   _FILE_SYSTEM_CACHE_SIZE = 3
@@ -396,7 +397,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if container.CONTAINER_TYPE in (
         self._CONTAINER_TYPE_EVENT_DATA,
-        self._CONTAINER_TYPE_YEAR_LESS_LOG_HELPER):
+        self._CONTAINER_TYPE_YEAR_LESS_LOG_HELPER,
+        self._CONTAINER_TYPE_DATE_LESS_LOG_HELPER):
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
       event_data_stream_lookup_key = None
       if event_data_stream_identifier:
