@@ -159,7 +159,7 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row of the NotificationHandler table.
 
-      Args:
+    Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       query (str): query that created the row.
