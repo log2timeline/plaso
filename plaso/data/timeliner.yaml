@@ -1373,16 +1373,16 @@ attribute_mappings:
   description: 'Content Deletion Time'
 place_holder_event: true
 ---
-data_type: 'windows:pca_log:entry'
-attribute_mappings:
-- name: 'last_execution_time'
-  description: 'Last Time Executed'
-place_holder_event: false
----
 data_type: 'windows:onedrive:log'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
+place_holder_event: false
+---
+data_type: 'windows:pca_log:entry'
+attribute_mappings:
+- name: 'last_execution_time'
+  description: 'Last Time Executed'
 place_holder_event: false
 ---
 data_type: 'windows:prefetch:execution'
@@ -1391,6 +1391,22 @@ attribute_mappings:
   description: 'Last Time Executed'
 - name: 'previous_run_times'
   description: 'Previous Last Time Executed'
+place_holder_event: true
+---
+data_type: 'windows:push_notification:notification'
+attribute_mappings:
+- name: 'arrival_time'
+  description: 'Arrival Time'
+- name: 'expiration_time'
+  description: 'Expiration Time'
+place_holder_event: true
+---
+data_type: 'windows:push_notification:notification_handler'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Modification Time'
 place_holder_event: true
 ---
 data_type: 'windows:registry:amcache'
