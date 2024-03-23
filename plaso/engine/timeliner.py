@@ -159,7 +159,7 @@ class EventDataTimeliner(object):
     Returns:
       int: the current year.
     """
-    datetime_object = datetime.datetime.now()
+    datetime_object = datetime.datetime.now(pytz.UTC)
     return datetime_object.year
 
   def _GetEvent(
