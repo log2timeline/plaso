@@ -102,15 +102,14 @@ class EventDataTimeliner(object):
     if base_year:
       return base_year
 
-    filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
-        lookup_key)
+    filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
     year_less_log_helpers = list(storage_writer.GetAttributeContainers(
         events.YearLessLogHelper.CONTAINER_TYPE,
         filter_expression=filter_expression))
     if not year_less_log_helpers:
       message = (
-          'missing year-less log helper, defaulting to current year: '
-          '{0:d}').format(self._current_year)
+          f'missing year-less log helper, defaulting to current year: '
+          f'{self._current_year:d}')
       self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
       base_year = self._current_year
@@ -122,8 +121,8 @@ class EventDataTimeliner(object):
 
       if earliest_year is None and latest_year is None:
         message = (
-            'missing earliest and latest year in year-less log helper, '
-            'defaulting to current year: {0:d}').format(self._current_year)
+            f'missing earliest and latest year in year-less log helper, '
+            f'defaulting to current year: {self._current_year:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         base_year = self._current_year
@@ -133,21 +132,19 @@ class EventDataTimeliner(object):
 
       elif latest_year < self._current_year:
         message = (
-            'earliest year: {0:d} as base year would exceed current year: '
-            '{1:d} + {2:d}, using latest year: {3:d}').format(
-                earliest_year, self._current_year, last_relative_year,
-                latest_year)
+            f'earliest year: {earliest_year:d} as base year would exceed '
+            f'current year: {self._current_year:d} + {last_relative_year:d}, '
+            f'using latest year: {latest_year:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         base_year = latest_year - last_relative_year
 
       else:
         message = (
-            'earliest year: {0:d} and latest: year: {1:d} as base year '
-            'would exceed current year: {2:d} + {3:d}, using current '
-            'year').format(
-                earliest_year, latest_year, self._current_year,
-                last_relative_year)
+            f'earliest year: {earliest_year:d} and latest: year: '
+            f'{latest_year:d} as base year would exceed current year: '
+            f'{self._current_year:d} + {last_relative_year:d}, using current '
+            f'year')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         base_year = self._current_year - last_relative_year
@@ -225,8 +222,8 @@ class EventDataTimeliner(object):
             time_zone = pytz.timezone(date_time.time_zone_hint)
           except pytz.UnknownTimeZoneError:
             message = (
-                'unsupported time zone hint: {0:s}, using default time '
-                'zone').format(date_time.time_zone_hint)
+                f'unsupported time zone hint: {date_time.time_zone_hint:s}, '
+                f'using default time zone')
             self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         if not time_zone and event_data_stream:
@@ -234,8 +231,8 @@ class EventDataTimeliner(object):
             time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
           except pytz.UnknownTimeZoneError:
             message = (
-                'unsupported system time zone: {0:s}, using default time '
-                'zone').format(date_time.time_zone_hint)
+                f'unsupported system time zone: {date_time.time_zone_hint:s}, '
+                f'using default time zone')
             self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         if not time_zone:
@@ -329,9 +326,9 @@ class EventDataTimeliner(object):
     configuration_file = yaml_timeliner_file.YAMLTimelinerConfigurationFile()
     for timeliner_definition in configuration_file.ReadFromFile(path):
       if timeliner_definition.data_type in self._attribute_mappings:
-        raise KeyError(
-            'Attribute mappings for data type: {0:s} already set.'.format(
-                timeliner_definition.data_type))
+        raise KeyError((
+            f'Attribute mappings for data type: '
+            f'{timeliner_definition.data_type:s} already set.'))
 
       self._attribute_mappings[timeliner_definition.data_type] = (
           timeliner_definition.attribute_mappings)
@@ -368,8 +365,7 @@ class EventDataTimeliner(object):
 
       for attribute_value in attribute_values:
         if not isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-          message = 'unsupported date time attribute: {0:s}'.format(
-              attribute_name)
+          message = f'unsupported date time attribute: {attribute_name:s}'
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
           continue
 
@@ -380,7 +376,7 @@ class EventDataTimeliner(object):
         try:
           storage_writer.AddAttributeContainer(event)
         except OverflowError as exception:
-          message = 'unable to add event with error: {0!s}'.format(exception)
+          message = f'unable to add event with error: {exception!s}'
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
           continue
 
@@ -425,7 +421,6 @@ class EventDataTimeliner(object):
       try:
         time_zone = pytz.timezone(time_zone_string)
       except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0!s}'.format(
-            time_zone_string))
+        raise ValueError(f'Unsupported time zone: {time_zone_string!s}')
 
     self._preferred_time_zone = time_zone
