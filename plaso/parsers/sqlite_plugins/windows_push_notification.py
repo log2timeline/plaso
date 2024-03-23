@@ -24,7 +24,7 @@ class WindowsPushNotificationEventData(events.EventData):
   DATA_TYPE = 'windows:wpndatabase:notification'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsPushNotificationEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.arrival_time = None
@@ -52,7 +52,7 @@ class WindowsPushNotificationHandlerEventData(events.EventData):
   DATA_TYPE = 'windows:wpndatabase:notification_handler'
 
   def __init__(self):
-    """Initialize event data"""
+    """Initialize event data."""
     super(WindowsPushNotificationHandlerEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = None
@@ -184,7 +184,7 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row of the Notification table.
 
-      Args:
+    Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
       query (str): query that created the row.
