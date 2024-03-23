@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Redis store.
+"""Redis-based attribute container store.
 
 Only supports task storage at the moment.
 """
@@ -17,8 +17,9 @@ from plaso.serializer import json_serializer
 from plaso.storage import logger
 
 
-class RedisStore(interface.AttributeContainerStore):
-  """Redis store.
+class RedisAttributeContainerStore(
+    interface.AttributeContainerStoreWithReadCache):
+  """Redis-based attribute container store.
 
   Attribute containers are stored as Redis Hashes. All keys are prefixed with
   the session identifier to avoid collisions. Event identifiers are also stored
@@ -35,8 +36,8 @@ class RedisStore(interface.AttributeContainerStore):
   DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
 
   def __init__(self):
-    """Initializes a Redis store."""
-    super(RedisStore, self).__init__()
+    """Initializes a Redis attribute container store."""
+    super(RedisAttributeContainerStore, self).__init__()
     self._redis_client = None
     self._session_identifier = None
     self._serializer = json_serializer.JSONAttributeContainerSerializer

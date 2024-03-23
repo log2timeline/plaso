@@ -15,7 +15,6 @@ class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
   """
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
   def __init__(self):
     """Initializes a fake (in-memory only) store."""
