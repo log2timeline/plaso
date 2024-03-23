@@ -15,7 +15,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(['CMD.EXE-087B4001.pf'], parser)
+    storage_writer = self._ParseFile(
+        ['winprefetch', 'CMD.EXE-087B4001.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -96,7 +97,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(['PING.EXE-B29F6629.pf'], parser)
+    storage_writer = self._ParseFile(
+        ['winprefetch', 'PING.EXE-B29F6629.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -140,7 +142,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        ['WUAUCLT.EXE-830BCC14.pf'], parser)
+        ['winprefetch', 'WUAUCLT.EXE-830BCC14.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -190,7 +192,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a version 26 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        ['TASKHOST.EXE-3AE259FC.pf'], parser)
+        ['winprefetch', 'TASKHOST.EXE-3AE259FC.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -298,7 +300,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a compressed version 30 Prefetch file."""
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        ['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
+        ['winprefetch', 'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -347,7 +349,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse30Variant1Compressed(self):
     """Tests the Parse function on a compressed version 30 variant 1 file."""
     parser = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(['ONEDRIVE.EXE-7E152375.pf'], parser)
+    storage_writer = self._ParseFile(
+        ['winprefetch', 'ONEDRIVE.EXE-7E152375.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -391,7 +394,8 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   def testParse30Variant2Compressed(self):
     """Tests the Parse function on a compressed version 30 variant 2 file."""
     parser = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(['NOTEPAD.EXE-D8414F97.pf'], parser)
+    storage_writer = self._ParseFile(
+        ['winprefetch', 'NOTEPAD.EXE-D8414F97.pf'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

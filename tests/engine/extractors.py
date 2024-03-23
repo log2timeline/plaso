@@ -49,7 +49,7 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
 
   def testParseDataStream(self):
     """Tests the ParseDataStream function."""
-    test_file_path = self._GetTestFilePath(['INFO2'])
+    test_file_path = self._GetTestFilePath(['recycler', 'INFO2'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_extractor = extractors.EventDataExtractor(

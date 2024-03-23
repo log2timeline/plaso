@@ -15,7 +15,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   def testParseVista(self):
     """Tests the Parse function on a Windows Vista RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
-    storage_writer = self._ParseFile(['$II3DF3L.zip'], parser)
+    storage_writer = self._ParseFile(['recycler', '$II3DF3L.zip'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -42,7 +42,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
     parser = recycler.WinRecycleBinParser()
-    storage_writer = self._ParseFile(['$I103S5F.jpg'], parser)
+    storage_writer = self._ParseFile(['recycler', '$I103S5F.jpg'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -73,7 +73,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a Windows Recycler INFO2 file."""
     parser = recycler.WinRecyclerInfo2Parser()
-    storage_writer = self._ParseFile(['INFO2'], parser)
+    storage_writer = self._ParseFile(['recycler', 'INFO2'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

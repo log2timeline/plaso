@@ -141,7 +141,8 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessChromeOS(self):
     """Tests the Process function with a ChromeOS syslog file."""
     plugin = syslog.SyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog_chromeos'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog', 'syslog_chromeos'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -169,7 +170,8 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessRsyslog(self):
     """Tests the Process function with a rsyslog file."""
     plugin = syslog.SyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog_rsyslog'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog', 'syslog_rsyslog'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -197,7 +199,7 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a protocol 23 rsyslog file."""
     plugin = syslog.SyslogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['syslog_rsyslog_SyslogProtocol23Format'], plugin)
+        ['syslog', 'syslog_rsyslog_SyslogProtocol23Format'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -351,7 +353,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = syslog.TraditionalSyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(['syslog', 'syslog'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -391,7 +393,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessCron(self):
     """Tests the Process function with a cron syslog file."""
     plugin = syslog.TraditionalSyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog_cron.log'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog', 'syslog_cron.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -417,7 +420,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessDarwin(self):
     """Tests the Process function with a Darwin syslog file."""
     plugin = syslog.TraditionalSyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog_osx'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog', 'syslog_osx'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -445,7 +449,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a syslogkd rsyslog file."""
     plugin = syslog.TraditionalSyslogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['syslog_rsyslog_SysklogdFileFormat'], plugin)
+        ['syslog', 'syslog_rsyslog_SysklogdFileFormat'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -473,7 +477,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests the Process function with a traditional rsyslog file."""
     plugin = syslog.TraditionalSyslogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
-        ['syslog_rsyslog_traditional'], plugin)
+        ['syslog', 'syslog_rsyslog_traditional'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -500,7 +504,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
   def testProcessSshd(self):
     """Tests the Process function with a sshd syslog file."""
     plugin = syslog.TraditionalSyslogTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(['syslog_ssh.log'], plugin)
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['syslog', 'syslog_ssh.log'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
