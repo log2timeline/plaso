@@ -68,12 +68,12 @@ class TaggingFile(object):
       filter_object = event_filter.EventObjectFilter()
 
       try:
-        filter_rule = ' OR '.join(['({0:s})'.format(rule) for rule in rules])
+        filter_rule = ' OR '.join([f'({rule:s})' for rule in rules])
         filter_object.CompileFilter(filter_rule)
       except errors.ParseError as exception:
         raise errors.TaggingFileError((
-            'Unable to compile filter for label: {0:s} with error: '
-            '{1!s}').format(label_name, exception))
+            f'Unable to compile filter for label: {label_name:s} with error: '
+            f'{exception!s}'))
 
       # TODO: change other code remove list around filter_object
       filter_objects_per_label[label_name] = [filter_object]
