@@ -1242,6 +1242,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'm365:activitylog:event'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'mackeeper:cache'
 attribute_mappings:
 - name: 'added_time'
@@ -2351,13 +2357,6 @@ attribute_mappings:
 place_holder_event: true
 ---
 data_type: 'zeitgeist:activity'
-attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
-place_holder_event: true
----
-# Microsoft Defender Activity Log
-data_type: 'm365:activitylog:event'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'

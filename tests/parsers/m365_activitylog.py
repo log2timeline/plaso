@@ -34,9 +34,9 @@ class M365ActivityLogTest(test_lib.ParserTestCase):
 
     expected_event_values = {
         'application': 'Microsoft OneDrive for Business',
-        'userprincipalname': 'test-user@test-company.tld',
         'data_type': 'm365:activitylog:event',
-        'ipaddress': '82.181.16.164'}
+        'ip_address': '82.181.16.164',
+        'user_principal_name': 'test-user@test-company.tld'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)

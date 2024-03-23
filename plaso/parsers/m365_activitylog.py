@@ -14,11 +14,11 @@ class M365ActivityLogEventData(events.EventData):
   Attributes:
     application (str): application of the activity.
     description (str): description of the activity..
-    ipaddress (str): IP address request originated from.
-    timestamp (dfdatetime.DateTimeValues): date and time when
-       the activity. was recorded.
+    ip_address (str): IP address request originated from.
+    recorded_time (dfdatetime.DateTimeValues): date and time when
+       the activity was recorded.
     useragent (str): User agent of the activity..
-    userprincipalname (str): User Principle Name of the activity..
+    user_principal_name (str): user principle name of the activity..
   """
 
   DATA_TYPE = 'm365:activitylog:event'
@@ -28,10 +28,10 @@ class M365ActivityLogEventData(events.EventData):
     super(M365ActivityLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.application = None
     self.description = None
-    self.ipaddress = None
-    self.timestamp = None
+    self.ip_address = None
+    self.recorded_time = None
     self.useragent = None
-    self.userprincipalname = None
+    self.user_principal_name = None
 
 
 class M365ActivityLogParser(dsv_parser.DSVParser):
@@ -103,12 +103,12 @@ class M365ActivityLogParser(dsv_parser.DSVParser):
       date_time = None
 
     event_data = M365ActivityLogEventData()
-    event_data.timestamp = date_time
-    event_data.description = row['Description']
     event_data.application = row['App']
-    event_data.userprincipalname = row['User Principle Name']
+    event_data.description = row['Description']
+    event_data.ip_address = row['IP address']
+    event_data.recorded_time = date_time
     event_data.useragent = row['User agent']
-    event_data.ipaddress = row['IP address']
+    event_data.user_principal_name = row['User Principle Name']
 
     parser_mediator.ProduceEventData(event_data)
 
