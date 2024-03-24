@@ -120,7 +120,7 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
   def testReadlinesWithFileWithoutNewLineAtEnd(self):
     """Test reading lines from a file without a new line char at the end."""
-    test_file_path = self._GetTestFilePath(['bodyfile'])
+    test_file_path = self._GetTestFilePath(['bodyfile', 'bodyfile'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_path_spec = os_path_spec.OSPathSpec(location=test_file_path)
