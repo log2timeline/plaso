@@ -15,7 +15,7 @@ class BodyfileTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = bodyfile.BodyfileParser()
-    storage_writer = self._ParseFile(['bodyfile'], parser)
+    storage_writer = self._ParseFile(['bodyfile', 'bodyfile'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -50,7 +50,7 @@ class BodyfileTest(test_lib.ParserTestCase):
   def testParseOnCorruptFile(self):
     """Tests the Parse function on a corrupt bodyfile."""
     parser = bodyfile.BodyfileParser()
-    storage_writer = self._ParseFile(['bodyfile.corrupt'], parser)
+    storage_writer = self._ParseFile(['bodyfile', 'bodyfile.corrupt'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

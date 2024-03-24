@@ -16,7 +16,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Chrome History database file."""
     plugin = chrome_history.GoogleChrome8HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History'], plugin)
+        ['chrome_history', 'History'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -65,7 +65,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Google Chrome 57 History database."""
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History-57.0.2987.133'], plugin)
+        ['chrome_history', 'History-57.0.2987.133'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -114,7 +114,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Google Chrome 58 History database."""
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History-58.0.3029.96'], plugin)
+        ['chrome_history', 'History-58.0.3029.96'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -163,7 +163,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Google Chrome 59 History database."""
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History-59.0.3071.86'], plugin)
+        ['chrome_history', 'History-59.0.3071.86'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -215,7 +215,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     """
     plugin = chrome_history.GoogleChrome27HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History-59_added-fake-column'], plugin)
+        ['chrome_history', 'History-59_added-fake-column'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

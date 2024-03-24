@@ -16,7 +16,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        ['1b4dd67f29cb1962.automaticDestinations-ms'], plugin)
+        ['automatic_destinations', '1b4dd67f29cb1962.automaticDestinations-ms'],
+        plugin)
 
     # Number of events:
     # olecf:dest_list:entry: 11
@@ -86,7 +87,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        ['9d1f905ce5044aee.automaticDestinations-ms'], plugin)
+        ['automatic_destinations', '9d1f905ce5044aee.automaticDestinations-ms'],
+        plugin)
 
     # Event data types:
     # olecf:dest_list:entry: 2
