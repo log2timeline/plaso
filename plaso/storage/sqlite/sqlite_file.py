@@ -519,7 +519,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         filter_expression.append(f'timestamp >= {time_range.start_timestamp:d}')
 
       if time_range.end_timestamp:
-        filter_expression.append('timestamp <= {time_range.end_timestamp:d}')
+        filter_expression.append(f'timestamp <= {time_range.end_timestamp:d}')
 
       filter_expression = ' AND '.join(filter_expression)
 
