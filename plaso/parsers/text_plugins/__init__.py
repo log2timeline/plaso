@@ -15,6 +15,7 @@ from plaso.parsers.text_plugins import ios_lockdownd
 from plaso.parsers.text_plugins import ios_logd
 from plaso.parsers.text_plugins import ios_sysdiag_log
 from plaso.parsers.text_plugins import macos_appfirewall
+from plaso.parsers.text_plugins import macos_launchd
 from plaso.parsers.text_plugins import macos_securityd
 from plaso.parsers.text_plugins import macos_wifi
 from plaso.parsers.text_plugins import popcontest

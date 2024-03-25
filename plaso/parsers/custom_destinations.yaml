@@ -36,31 +36,47 @@ type: structure
 attributes:
   byte_order: little-endian
 members:
+- name: format_version
+  data_type: uint32
+  value: 2
+- name: number_of_categories
+  data_type: uint32
 - name: unknown1
   data_type: uint32
-- name: unknown2
-  data_type: uint32
-- name: unknown3
-  data_type: uint32
-- name: header_values_type
-  data_type: uint32
 ---
-name: custom_file_header_value_type_0
+name: custom_category_header
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: category_type
+  data_type: uint32
+  values: [0, 1, 2]
+---
+name: custom_category_header_type_0
 type: structure
 attributes:
   byte_order: little-endian
 members:
 - name: number_of_characters
   data_type: uint16
-- name: value
+- name: category_name
   type: string
   encoding: utf-16-le
   element_data_type: wchar16
-  number_of_elements: custom_file_header_value_type_0.number_of_characters
+  number_of_elements: custom_category_header_type_0.number_of_characters
 - name: number_of_entries
   data_type: uint32
 ---
-name: custom_file_header_value_type_1_or_2
+name: custom_category_header_type_1
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: category_identifier
+  data_type: uint32
+---
+name: custom_category_header_type_2
 type: structure
 attributes:
   byte_order: little-endian
@@ -68,14 +84,15 @@ members:
 - name: number_of_entries
   data_type: uint32
 ---
-name: custom_file_footer
+name: custom_category_footer
 type: structure
 attributes:
   byte_order: little-endian
 members:
 - name: signature
-  data_type: uint32
-  value: 0xbabffbab
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
 ---
 name: custom_entry_header
 type: structure

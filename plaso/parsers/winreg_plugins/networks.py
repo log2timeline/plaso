@@ -21,6 +21,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
     default_gateway_mac (str): MAC address for the default gateway.
     description (str): description of the wireless connection.
     dns_suffix (str): DNS suffix.
+    key_path (str): Windows Registry key path.
     last_connected_time (dfdatetime.DateTimeValues): last connected date and
         time.
     ssid (str): SSID of the connection.
@@ -37,6 +38,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
     self.default_gateway_mac = None
     self.description = None
     self.dns_suffix = None
+    self.key_path = None
     self.last_connected_time = None
     self.ssid = None
 
@@ -81,7 +83,7 @@ class NetworksWindowsRegistryPlugin(
             'DefaultGatewayMac')
         if default_gateway_mac_value:
           default_gateway_mac = ':'.join([
-              '{0:02x}'.format(octet)
+              f'{octet:02x}'
               for octet in bytearray(default_gateway_mac_value.data)])
         else:
           default_gateway_mac = None
@@ -122,9 +124,9 @@ class NetworksWindowsRegistryPlugin(
       systemtime = self._ReadStructureFromByteStream(
           registry_value.data, 0, systemtime_map)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'Unable to parse SYSTEMTIME in value: {0:s} with error: {1!s}'.format(
-              value_name, exception))
+      parser_mediator.ProduceExtractionWarning((
+          f'Unable to parse SYSTEMTIME in value: {value_name:s} with error: '
+          f'{exception!s}'))
       return None
 
     system_time_tuple = (
@@ -140,9 +142,9 @@ class NetworksWindowsRegistryPlugin(
           system_time_tuple=system_time_tuple)
 
     except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          'Invalid SYSTEMTIME value: {0!s} in value: {1:s}'.format(
-              system_time_tuple, value_name))
+      parser_mediator.ProduceExtractionWarning((
+          f'Invalid SYSTEMTIME value: {system_time_tuple!s} in value: '
+          f'{value_name:s}'))
       return None
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
@@ -171,6 +173,7 @@ class NetworksWindowsRegistryPlugin(
         event_data.default_gateway_mac = default_gateway_mac
         event_data.description = self._GetValueFromKey(subkey, 'Description')
         event_data.dns_suffix = dns_suffix
+        event_data.key_path = subkey.path
         event_data.last_connected_time = self._ParseSystemTime(
             parser_mediator, subkey, 'DateLastConnected')
         event_data.ssid = self._GetValueFromKey(subkey, 'ProfileName')

@@ -114,15 +114,15 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_event_data._parser_chain = 'test_parser'
     expected_event_data.data_type = 'test:event2'
 
+    expected_event_data.a_tuple = ('some item', [234, 52, 15])
     expected_event_data.empty_string = ''
-    expected_event_data.zero_integer = 0
-    expected_event_data.integer = 34
     expected_event_data.float = -122.082203542683
+    expected_event_data.integer = 34
+    expected_event_data.my_list = ['asf', 4234, 2, 54, 'asf']
+    expected_event_data.null_value = None
     expected_event_data.string = 'Normal string'
     expected_event_data.unicode_string = 'And I am a unicorn.'
-    expected_event_data.my_list = ['asf', 4234, 2, 54, 'asf']
-    expected_event_data.a_tuple = ('some item', [234, 52, 15])
-    expected_event_data.null_value = None
+    expected_event_data.zero_integer = 0
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -155,10 +155,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventDataStream(self):
     """Test ReadSerialized and WriteSerialized of EventDataStream."""
-    test_file = self._GetTestFilePath(['ímynd.dd'])
+    test_file_path = self._GetTestFilePath(['ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
@@ -182,13 +182,16 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_data_stream_dict = {
         'md5_hash': 'e3df0d2abd2c27fbdadfb41a47442520',
-        'path_spec': path_spec.comparable}
+        'path_spec': {
+            '__type__': 'PathSpec',
+            'location': '/',
+            'parent': {
+                '__type__': 'PathSpec',
+                'location': test_file_path,
+                'type_indicator': 'OS'},
+            'type_indicator': 'TSK'}}
 
     event_data_stream_dict = event_data_stream.CopyToDict()
-
-    path_spec = event_data_stream_dict.get('path_spec', None)
-    if path_spec:
-      event_data_stream_dict['path_spec'] = path_spec.comparable
 
     self.assertEqual(event_data_stream_dict, expected_event_data_stream_dict)
 
@@ -215,7 +218,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_dict = {
         '_event_data_identifier': 'event_data.1',
-        'date_time': expected_event.date_time,
+        'date_time': {
+            '__class_name__': 'PosixTime',
+            '__type__': 'DateTimeValues',
+            'timestamp': 1621839644},
         'timestamp': 1621839644,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -243,13 +249,12 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_source, event_sources.EventSource)
 
     expected_event_source_dict = {
-        'path_spec': test_path_spec.comparable,
-    }
+        'path_spec': {
+            '__type__': 'PathSpec',
+            'location': '/opt/plaso.txt',
+            'type_indicator': 'FAKE'}}
 
     event_source_dict = event_source.CopyToDict()
-    path_spec = event_source_dict.get('path_spec', None)
-    if path_spec:
-      event_source_dict['path_spec'] = path_spec.comparable
 
     self.assertEqual(
         sorted(event_source_dict.items()),
@@ -276,8 +281,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_tag_dict = {
         '_event_identifier': 'event.1',
-        'labels': ['Malware', 'Common'],
-    }
+        'labels': ['Malware', 'Common']}
 
     event_tag_dict = event_tag.CopyToDict()
     self.assertEqual(
@@ -340,8 +344,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'has_retry': False,
         'identifier': task.identifier,
         'session_identifier': session_identifier,
-        'start_time': task.start_time
-    }
+        'start_time': task.start_time}
 
     task_dict = task.CopyToDict()
     self.assertEqual(

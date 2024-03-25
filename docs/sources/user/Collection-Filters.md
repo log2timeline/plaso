@@ -88,8 +88,17 @@ paths:
 - '/usr/bin'
 ```
 
-**Note that if you use \ as a path segment separator it must be escaped as part
-of the regular expression.**
+**Note that if you use `\` as a path segment separator it must be escaped as part
+of the regular expression of the paths attribute. Also make sure to escape any
+special regular expression characters such as `$`.**
+
+```
+description: Exclude NTFS $BadClus metadata file.
+type: exclude
+path_separator: '\'
+paths:
+- '\\[$]BadClus
+```
 
 ## References
 

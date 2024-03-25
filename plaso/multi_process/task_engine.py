@@ -300,7 +300,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if the temporary path for the SQLite task storage already exists.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
-      url = redis_store.RedisStore.DEFAULT_REDIS_URL
+      url = redis_store.RedisAttributeContainerStore.DEFAULT_REDIS_URL
       self._redis_client = redis.from_url(url=url, socket_timeout=60)
       self._redis_client.client_setname('task_engine')
 

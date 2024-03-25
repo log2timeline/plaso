@@ -1978,9 +1978,10 @@ def Main():
           'The location of the directory where the test sources are stored.'))
 
   argument_parser.add_argument(
-      '--tools-directory', '--tools_directory', action='store',
-      metavar='DIRECTORY', dest='tools_directory', type=str,
-      default=None, help='The location of the plaso tools directory.')
+      '--scripts-directory', '--scripts_directory', '--tools-directory',
+      '--tools_directory', action='store', metavar='DIRECTORY',
+      dest='scripts_directory', type=str, default=None,
+      help='The location of the plaso scripts directory.')
 
   options = argument_parser.parse_args()
 
@@ -1998,10 +1999,10 @@ def Main():
   logging.basicConfig(
       format='[%(levelname)s] %(message)s', level=logging.INFO)
 
-  tools_path = options.tools_directory
+  tools_path = options.scripts_directory
   if not tools_path:
     tools_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 'tools')
+        os.path.dirname(os.path.dirname(__file__)), 'plaso', 'scripts')
 
   test_sources_path = options.sources_directory
   if test_sources_path and not os.path.isdir(test_sources_path):

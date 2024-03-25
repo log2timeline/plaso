@@ -19,7 +19,7 @@ class RedisStorageReader(reader.StorageReader):
           will be opened connected to the Redis instance specified by 'url'.
     """
     super(RedisStorageReader, self).__init__()
-    self._store = redis_store.RedisStore()
+    self._store = redis_store.RedisAttributeContainerStore()
     self._store.Open(
         redis_client=redis_client, session_identifier=session_identifier,
         task_identifier=task_identifier)

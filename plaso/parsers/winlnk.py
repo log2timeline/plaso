@@ -80,7 +80,7 @@ class WinLnkLinkEventData(events.EventData):
 
 
 class WinLnkParser(interface.FileObjectParser):
-  """Parses Windows Shortcut (LNK) files."""
+  """Windows Shortcut (LNK) file parser."""
 
   _INITIAL_FILE_OFFSET = None
 
@@ -245,7 +245,8 @@ class WinLnkParser(interface.FileObjectParser):
             'unable to read droid file identifier with error: {0!s}.'.format(
                 exception))
 
-    if lnk_file.birth_droid_file_identifier:  # pylint: disable=using-constant-test
+    if (lnk_file.birth_droid_file_identifier and
+        lnk_file.birth_droid_file_identifier != lnk_file.droid_file_identifier):
       try:
         self._ParseDistributedTrackingIdentifier(
             parser_mediator, lnk_file.birth_droid_file_identifier, display_name)

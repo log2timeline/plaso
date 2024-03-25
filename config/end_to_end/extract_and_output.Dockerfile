@@ -5,15 +5,12 @@ ARG GIT_REPOSITORY=https://github.com/log2timeline/plaso.git
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update Ubuntu and install necessary dependencies.
-RUN apt-get -y update
-RUN apt-get -y install apt-transport-https apt-utils
-RUN apt-get -y install libterm-readline-gnu-perl software-properties-common
-
-RUN apt-get -y update
-RUN apt-get -y upgrade
-
-RUN apt-get -y install locales git sudo
+# Combining the apt-get commands into a single run reduces the size of the resulting image.
+# The apt-get installations below are interdependent and need to be done in sequence.
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https apt-utils && \
+    apt-get -y install libterm-readline-gnu-perl software-properties-common && \
+    apt-get -y install locales git sudo
 
 # Set terminal to UTF-8 by default.
 RUN locale-gen en_US.UTF-8

@@ -1,0 +1,9 @@
+Mar 11 00:00:00 ubuntu2015 sshd[3]:  Server listening on 0.0.0.0 port 22.
+Mar 11 19:26:39 osx-machine sshd[3]:  Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99
+Mar 11 22:55:30 ubuntu2015 sshd[3]:  Accepted password for plaso from 2001:0db8:0a0b:12f0:0000:0000:0000:0001 port 42532  ssh2
+Mar 11 22:55:30 ubuntu2015 sshd[3]:  Failed publickey for plaso from 001:db8:a0b:12f0::1 port 8759
+Mar 11 22:55:31 ubuntu2015 sshd[3]:  Connection from 188.124.3.41 port 32889
+Mar 11 22:55:32 ubuntu2015 sshd[3]:  Failed password for root from 188.124.3.41 port 32889 ssh2
+Mar 11 22:55:33 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 60594 ssh2: RSA e8:31:68:c7:01:2d:25:20:36:8f:50:5d:f9:ee:70:4c
+Mar 11 22:55:34 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 20042 ssh2
+Mar 11 22:55:35 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 59915 ssh2: RSA SHA256:5xyQ+PG1Z3CIiShclJ2iNya5TOdKDgE/HrOXr21IdOo

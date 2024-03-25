@@ -17,7 +17,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # This is probably version 23 but potentially an older version.
     plugin = firefox_history.FirefoxHistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['places.sqlite'], plugin)
+        ['firefox_history', 'places.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -89,7 +89,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox History database file v 25."""
     plugin = firefox_history.FirefoxHistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['places_new.sqlite'], plugin)
+        ['firefox_history', 'places_new.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

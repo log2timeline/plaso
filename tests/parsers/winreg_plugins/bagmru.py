@@ -16,36 +16,27 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = bagmru.BagMRUWindowsRegistryPlugin()
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\Shell\\BagMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\'
-        'BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
-        'Microsoft\\Windows\\Shell\\BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_CURRENT_USER\\Software\\Classes',
+        'Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
-        'Microsoft\\Windows\\ShellNoRoam\\BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(
+        plugin, 'HKEY_CURRENT_USER\\Software\\Classes',
+        'Local Settings\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
-        'Shell\\BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU'))
 
-    key_path = (
-        'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
-        'ShellNoRoam\\BagMRU')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
+        'Local Settings\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -84,7 +75,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         'data_type': 'windows:registry:bagmru',
         'entries': (
             'Index: 1 [MRU Value 0]: Shell item path: <My Computer> C:\\\\'),
-        'key_path': '{0:s}\\0'.format(key_path),
+        'key_path': f'{key_path:s}\\0',
         'last_written_time': '2009-08-04T15:19:10.6696250+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
@@ -93,7 +84,7 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:bagmru',
         'entries': None,
-        'key_path': '{0:s}\\0\\0\\0\\0\\0'.format(key_path),
+        'key_path': f'{key_path:s}\\0\\0\\0\\0\\0',
         'last_written_time': '2009-08-04T15:19:16.9977500+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 8)

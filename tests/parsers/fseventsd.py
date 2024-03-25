@@ -20,7 +20,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a version 1 file."""
     parser = fseventsd.FseventsdParser()
 
-    path = self._GetTestFilePath(['fsevents-0000000002d89b58'])
+    path = self._GetTestFilePath(['fsevents', 'fsevents-0000000002d89b58'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
 
@@ -60,7 +60,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a version 2 file."""
     parser = fseventsd.FseventsdParser()
 
-    path = self._GetTestFilePath(['fsevents-00000000001a0b79'])
+    path = self._GetTestFilePath(['fsevents', 'fsevents-00000000001a0b79'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
 

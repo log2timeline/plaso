@@ -44,12 +44,24 @@ class YearLessLogFormatHelper(object):
     Returns:
       set[int]: years of the file entry.
     """
+    if file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+      # Ignore a gzip file that contains a modification timestamp of 0.
+      if (file_entry.modification_time and
+          file_entry.modification_time.timestamp > 0):
+        year, _, _ = file_entry.modification_time.GetDate()
+        return set([year])
+
     years = set()
 
     for attribute_name in ('change_time', 'creation_time', 'modification_time'):
       date_time = getattr(file_entry, attribute_name, None)
       if date_time:
         year, _, _ = date_time.GetDate()
+
+        if year == 1970 and file_entry.type_indicator == (
+            dfvfs_definitions.TYPE_INDICATOR_GZIP):
+          continue
+
         years.add(year)
 
     return years
@@ -149,7 +161,7 @@ class YearLessLogFormatHelper(object):
       # Account for log formats that allow out-of-order date and time values
       # (Apr->May->Apr) such as rsyslog with the RepeatedMsgReduction setting
       # enabled.
-      if (month + 1) < self._month:
+      if month + 1 < self._month:
         self._relative_year += 1
         self._year += 1
 

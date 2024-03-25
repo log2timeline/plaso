@@ -90,7 +90,8 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
   _TIME_ZONE_OFFSET = (
       pyparsing.Word('+-', exact=1) + _TWO_DIGITS + _TWO_DIGITS)
 
-  # Date and time values are formatted as: [18/Sep/2011:19:18:28 -0400]
+  # Date and time values are formatted as:
+  # [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
       pyparsing.Suppress('[') + _TWO_DIGITS +
       pyparsing.Suppress('/') + _THREE_LETTERS +
@@ -264,7 +265,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

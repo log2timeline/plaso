@@ -80,17 +80,17 @@ class BagMRUWindowsRegistryPlugin(
       tuple[str, str]: path and upper path segment of the shell item or
           None, None if not available.
     """
-    value = registry_key.GetValueByName('{0:d}'.format(entry_number))
+    value = registry_key.GetValueByName(f'{entry_number:d}')
     if value is None:
-      parser_mediator.ProduceExtractionWarning(
-          'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
-              entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionWarning((
+          f'Missing MRUListEx entry value: {entry_number:d} in key: '
+          f'{registry_key.path:s}'))
       return None, None
 
     if not value.DataIsBinaryData():
-      parser_mediator.ProduceExtractionWarning(
-          'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
-              entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionWarning((
+          f'Non-binary MRUListEx entry value: {entry_number:d} in key: '
+          f'{registry_key.path:s}'))
       return None, None
 
     path = None
@@ -147,7 +147,7 @@ class BagMRUWindowsRegistryPlugin(
       mrulistex = self._ParseMRUListExValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse MRUListEx value with error: {0!s}'.format(exception))
+          f'unable to parse MRUListEx value with error: {exception!s}')
       return
 
     if not mrulistex:
@@ -164,8 +164,8 @@ class BagMRUWindowsRegistryPlugin(
 
       if found_terminator:
         parser_mediator.ProduceExtractionWarning((
-            'found additional MRUListEx entries after terminator in key: '
-            '{0:s}.').format(registry_key.path))
+            f'found additional MRUListEx entries after terminator in key: '
+            f'{registry_key.path:s}'))
 
         # Only create one parser error per terminator.
         found_terminator = False
@@ -176,9 +176,11 @@ class BagMRUWindowsRegistryPlugin(
 
       entry_numbers[entry_number] = upper_path_segment
 
-      entry = 'Index: {0:d} [MRU Value {1:d}]: Shell item path: {2:s}'.format(
-          entry_index + 1, entry_number, path or 'N/A')
-      entries.append(entry)
+      display_entry_index = entry_index + 1
+      display_path = path or 'N/A'
+      entries.append((
+          f'Index: {display_entry_index:d} [MRU Value {entry_number:d}]: '
+          f'Shell item path: {display_path:s}'))
 
     event_data = BagMRUEventData()
     event_data.entries = ' '.join(entries) or None
@@ -188,12 +190,11 @@ class BagMRUWindowsRegistryPlugin(
     parser_mediator.ProduceEventData(event_data)
 
     for entry_number, path_segment in entry_numbers.items():
-      sub_key_name = '{0:d}'.format(entry_number)
-      sub_key = registry_key.GetSubkeyByName(sub_key_name)
+      sub_key = registry_key.GetSubkeyByName(f'{entry_number:d}')
       if not sub_key:
-        parser_mediator.ProduceExtractionWarning(
-            'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
-                entry_number, registry_key.path))
+        parser_mediator.ProduceExtractionWarning((
+            f'Missing BagMRU sub key: {entry_number:d} in key: '
+            f'{registry_key.path:s}'))
         continue
 
       parent_path_segments.append(path_segment)

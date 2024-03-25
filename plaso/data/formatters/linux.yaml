@@ -1,0 +1,111 @@
+# Plaso Linux related event formatters.
+---
+type: 'conditional'
+data_type: 'linux:apt_history_log:entry'
+message:
+- '{command}:'
+- '{packages}'
+- '[{command_line}]'
+- '[{error}]'
+- '[{requester}]'
+short_message:
+- '{command}:'
+- '{packages}'
+short_source: 'LOG'
+source: 'APT History Log'
+---
+type: 'conditional'
+data_type: 'linux:dpkg_log:entry'
+message:
+- '{body}'
+short_message:
+- '{body}'
+short_source: 'LOG'
+source: 'dpkg log file'
+---
+# TODO: paths is kept for backwards compatibility
+type: 'conditional'
+data_type: 'linux:locate_database:entry'
+message:
+- 'Folder Path: {path}'
+- 'Folder Paths: {paths}'
+- 'Entries: {entries}'
+short_message:
+- '{path}'
+- '{paths}'
+- '{entries}'
+short_source: 'LOCATE'
+source: 'Locate Database record (updatedb)'
+---
+type: 'conditional'
+data_type: 'linux:popularity_contest_log:entry'
+message:
+- 'mru [{mru}]'
+- 'package [{package}]'
+- 'tag [{record_tag}]'
+short_message:
+- '{mru}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
+data_type: 'linux:popularity_contest_log:session'
+message:
+- 'Session {session}'
+- 'Host identifier: {host_identifier}'
+- '[{details}]'
+short_message:
+- 'Session {session}'
+short_source: 'LOG'
+source: 'Popularity Contest Log'
+---
+type: 'conditional'
+data_type: 'linux:utmp:event'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMPTY'
+    1: 'RUN_LVL'
+    2: 'BOOT_TIME'
+    3: 'NEW_TIME'
+    4: 'OLD_TIME'
+    5: 'INIT_PROCESS'
+    6: 'LOGIN_PROCESS'
+    7: 'USER_PROCESS'
+    8: 'DEAD_PROCESS'
+    9: 'ACCOUNTING'
+message:
+- 'User: {username}'
+- 'Hostname: {hostname}'
+- 'Terminal: {terminal}'
+- 'PID: {pid}'
+- 'Terminal identifier: {terminal_identifier}'
+- 'Status: {status}'
+- 'IP Address: {ip_address}'
+- 'Exit status: {exit_status}'
+short_message:
+- 'User: {username}'
+- 'PID: {pid}'
+- 'Status: {status}'
+short_source: 'LOG'
+source: 'UTMP session'
+---
+type: 'conditional'
+data_type: 'selinux:line'
+message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'
+separator: ''
+short_message:
+- '['
+- 'audit_type: {audit_type}'
+- ', pid: {pid}'
+- ']'
+- ' {body}'
+short_source: 'LOG'
+source: 'Audit Log'

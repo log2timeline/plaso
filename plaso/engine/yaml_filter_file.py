@@ -61,7 +61,7 @@ class YAMLFilterFile(object):
     different_keys = set(filter_definition_values) - self._SUPPORTED_KEYS
     if different_keys:
       different_keys = ', '.join(different_keys)
-      raise errors.ParseError('Undefined keys: {0:s}'.format(different_keys))
+      raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
     filter_type = filter_definition_values.get('type', None)
     if not filter_type:
@@ -71,8 +71,7 @@ class YAMLFilterFile(object):
         path_filters.PathFilter.FILTER_TYPE_EXCLUDE,
         path_filters.PathFilter.FILTER_TYPE_INCLUDE):
       raise errors.ParseError(
-          'Invalid path filter definition unsupported type: {0!s}.'.format(
-              filter_type))
+          f'Invalid path filter definition unsupported type: {filter_type!s}.')
 
     paths = filter_definition_values.get('paths', None)
 

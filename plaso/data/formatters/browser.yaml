@@ -1,0 +1,647 @@
+# Plaso web browser related event formatters.
+---
+type: 'conditional'
+data_type: 'chrome:autofill:entry'
+message:
+- 'Form field name: {field_name}'
+- 'Entered value: {value}'
+- 'Times used: {usage_count}'
+short_message:
+- '{field_name}:'
+- '{value}'
+- '({usage_count})'
+short_source: 'WEBHIST'
+source: 'Chrome Autofill'
+---
+type: 'conditional'
+data_type: 'chrome:cache:entry'
+message:
+- 'Original URL: {original_url}'
+short_message:
+- 'Original URL: {original_url}'
+short_source: 'WEBHIST'
+source: 'Chrome Cache'
+---
+type: 'conditional'
+data_type: 'chrome:cookie:entry'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Flags:'
+- '[HTTP only] = {httponly}'
+- '[Persistent] = {persistent}'
+short_message:
+- '{host}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Chrome Cookies'
+---
+type: 'conditional'
+data_type: 'chrome:extension_activity:activity_log'
+enumeration_helpers:
+- input_attribute: 'action_type'
+  output_attribute: 'action_type_string'
+  default_value: 'unknown'
+  values:
+    1: 'API event callback'
+    2: 'API action blocked'
+    3: 'Content Script inserted'
+    4: 'DOM access'
+    5: 'DOM event'
+    6: 'WebRequest'
+    1001: 'Unspecified'
+message:
+- 'Chrome extension: {extension_id}'
+- 'Action type: {action_type_string}'
+- '(type {action_type})'
+- 'Activity identifier: {activity_id}'
+- 'Page URL: {page_url}'
+- 'Page title: {page_title}'
+- 'API name: {api_name}'
+- 'Args: {args}'
+- 'Other: {other}'
+short_message:
+- '{extension_id}'
+- '{api_name}'
+- '{args}'
+short_source: 'WEBHIST'
+source: 'Chrome Extension Activity'
+---
+type: 'conditional'
+data_type: 'chrome:history:file_downloaded'
+enumeration_helpers:
+- input_attribute: 'danger_type'
+  output_attribute: 'danger_type_string'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/components/download/public/common/download_danger_type.h
+  values:
+    0: 'Not Dangerous'
+    1: 'Dangerous (for example, a pdf or extension from places other than gallery)'
+    2: 'Dangerous URL - Safe Browsing shows this URL leads to a malicious file download'
+    3: 'Dangerous Content -  Safe Browsing shows this file content as being malicious'
+    4: 'Content May Be Malicious - (eg: extension is exe but Safe Browsing has not finished checking the content)'
+    5: 'Uncommon Content - Safe Browsing checked the contents, but did not have enough data to determine whether it was malicious'
+    6: 'Dangerous But User Validated - The download was evaluated to be one of the other types of danger but the user told us to go ahead anyway'
+    7: 'Dangerous Host - Safe Browsing checked the contents of the download and did not find anything, but the file was served from a host known to serve mostly malicious content'
+    8: 'Potentially Unwanted - Applications and extensions that modify browser and/or computer settings'
+    9: 'Allowlisted by Policy - Download URL allowlisted by enterprise policy'
+    10: 'Pending Scanning - Download is pending a more detailed verdict'
+    11: 'Blocked, Password Protected - Download is password protected, and should be blocked according to policy'
+    12: 'Blocked, Too Large - Download is too large, and should be blocked according to policy'
+    13: 'Warning, Sensitive Content - Deep scanning identified sensitive content, and recommended warning the user'
+    14: 'Blocked, Sensitive Content - Deep scanning identified sensitive content, and recommended blocking the file'
+    15: 'Safe, Deep Scanned - Download deep scanning identified no problems'
+    16: 'Dangerous File Opened - Download deep scanning identified a problem, but the file has already been opened by the user'
+    17: 'Prompt for Scanning - The user is enrolled in the Advanced Protection Program, and the server has recommended this file be deep scanned'
+    18: 'Blocked, Unsupported File Type - File type is unsupported for deep scanning, and should be blocked according to policy'
+- input_attribute: 'interrupt_reason'
+  output_attribute: 'interrupt_reason_string'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/components/download/public/common/download_interrupt_reason_values.h
+  values:
+    0: 'No Interrupt - Success'
+    1: 'File Error'
+    2: 'Access Denied'
+    3: 'Disk Full'
+    5: 'Path Too Long'
+    6: 'File Too Large'
+    7: 'Virus'
+    10: 'Temporary Problem'
+    11: 'Blocked'
+    12: 'Security Check Failed'
+    13: 'Resume Error'
+    20: 'Network Error'
+    21: 'Operation Timed Out'
+    22: 'Connection Lost'
+    23: 'Server Down'
+    30: 'Server Error'
+    31: 'Range Request Error'
+    32: 'Server Precondition Error'
+    33: 'Unable to get file'
+    34: 'Server Unauthorized'
+    35: 'Server Certificate Problem'
+    36: 'Server Access Forbidden'
+    37: 'Server Unreachable'
+    38: 'Content Length Mismatch'
+    39: 'Cross Origin Redirect'
+    40: 'Cancelled'
+    41: 'Browser Shutdown'
+    50: 'Browser Crashed'
+- input_attribute: 'state'
+  output_attribute: 'state_string'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/components/download/public/common/download_item.h
+  values:
+    0: 'In Progress'
+    1: 'Complete'
+    2: 'Cancelled'
+    3: 'Interrupted'
+    4: 'Interrupted'
+message:
+- '{url}'
+- '({full_path}).'
+- 'State: {state_string}.'
+- 'Received {received_bytes} of'
+- '{total_bytes} bytes.'
+- 'Interrupt Reason: {interrupt_reason_string}.'
+- 'Danger Type: {danger_type_string}.'
+short_message:
+- '{full_path} downloaded'
+- '({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Chrome History'
+---
+type: 'conditional'
+data_type: 'chrome:history:page_visited'
+boolean_helpers:
+- input_attribute: 'url_hidden'
+  output_attribute: 'url_hidden_string'
+  value_if_true: '(URL hidden)'
+custom_helpers:
+- identifier: 'chrome_history_typed_count'
+  output_attribute: 'url_typed_string'
+enumeration_helpers:
+- input_attribute: 'page_transition_type'
+  output_attribute: 'page_transition'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
+  values:
+    0: 'LINK - User clicked a link'
+    1: 'TYPED - User typed the URL in the URL bar'
+    2: 'AUTO_BOOKMARK - Got through a suggestion in the UI'
+    3: 'AUTO_SUBFRAME - Content automatically loaded in a non-toplevel frame - user may not realize'
+    4: 'MANUAL_SUBFRAME - Subframe explicitly requested by the user'
+    5: 'GENERATED - User typed in the URL bar and selected an entry from the list - such as a search bar'
+    6: 'START_PAGE - The start page of the browser'
+    7: 'FORM_SUBMIT - A form the user has submitted values to'
+    8: 'RELOAD - The user reloaded the page, eg by hitting the reload button or restored a session'
+    9: 'KEYWORD - URL what was generated from a replaceable keyword other than the default search provider'
+    10: 'KEYWORD_GENERATED - Corresponds to a visit generated from a KEYWORD'
+- input_attribute: 'visit_source'
+  output_attribute: 'visit_source'
+  default_value: 'UNKNOWN'
+  # Also see: https://cs.chromium.org/chromium/src/ui/app_list/search/history_types.h
+  values:
+    0: 'SOURCE_SYNCED'
+    1: 'SOURCE_BROWSED'
+    2: 'SOURCE_EXTENSION'
+    3: 'SOURCE_FIREFOX_IMPORTED'
+    4: 'SOURCE_IE_IMPORTED'
+    5: 'SOURCE_SAFARI_IMPORTED'
+message:
+- '{url}'
+- '({title})'
+- '[count: {typed_count}]'
+- 'Visit from: {from_visit}'
+- 'Visit source: [{visit_source}]'
+- 'Visit count: {visit_count}'
+- 'Type: [{page_transition}]'
+- '{url_hidden_string}'
+- '{url_typed_string}'
+short_message:
+- '{url}'
+- '({title})'
+short_source: 'WEBHIST'
+source: 'Chrome History'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:content_settings:exceptions'
+custom_helpers:
+- identifier: 'chrome_preferences_primary_url'
+  output_attribute: 'primary_url'
+- identifier: 'chrome_preferences_secondary_url'
+  output_attribute: 'secondary_url'
+message:
+- 'Permission {permission}'
+- 'used by {primary_url}'
+- 'embedded in {secondary_url}'
+short_message:
+- 'Permission {permission}'
+- 'used by {primary_url}'
+- 'embedded in {secondary_url}'
+short_source: 'LOG'
+source: 'Chrome Preferences'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extension_installation'
+message:
+- 'CRX identifier: {extension_identifier}'
+- 'CRX name: {extension_name}'
+- 'Path: {path}'
+short_message:
+- '{extension_identifier}'
+- '{path}'
+short_source: 'LOG'
+source: 'Chrome Preferences'
+---
+type: 'conditional'
+data_type: 'chrome:preferences:extensions_autoupdater'
+message:
+- '{message}'
+short_message:
+- '{message}'
+short_source: 'LOG'
+source: 'Chrome Preferences'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utma'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Sessions: {sessions}'
+- 'Domain Hash: {domain_hash}'
+- 'Visitor identifier: {visitor_identifier}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmb'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Pages Viewed: {pages_viewed}'
+- 'Domain Hash: {domain_hash}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmt'
+message:
+- '{url}'
+- '({cookie_name})'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'cookie:google:analytics:utmz'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Sessions: {sessions}'
+- 'Domain Hash: {domain_hash}'
+- 'Sources: {sources}'
+- 'Last source used to access: {utmcsr}'
+- 'Ad campaign information: {utmccn}'
+- 'Last type of visit: {utmcmd}'
+- 'Keywords used to find site: {utmctr}'
+- 'Path to the page of referring link: {utmcct}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Google Analytics Cookies'
+---
+type: 'conditional'
+data_type: 'edge:resources:load_statistics'
+enumeration_helpers:
+- input_attribute: 'resource_type'
+  output_attribute: 'resource_type_loaded'
+  default_value: 'UNKNOWN'
+  # Also see: https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/platform/loader/fetch/resource.h?q=ResourceType%20resource.h&ss=chromium
+  values:
+    0: 'MainResource'
+    1: 'Image'
+    2: 'CSSStyleSheet'
+    3: 'Script'
+    4: 'Font'
+    5: 'Raw'
+    6: 'SVGDocument'
+    7: 'XSLStyleSheet'
+    8: 'LinkPrefetch'
+    9: 'TextTrack'
+    10: 'Audio'
+    11: 'Video'
+    12: 'Manifest'
+    13: 'SpeculationRules'
+message:
+- '{top_level_hostname}'
+- 'loaded External Resource from: {resource_hostname}'
+- ' with type of {resource_type_loaded}'
+short_message:
+- 'External Resource loaded from: {resource_hostname}'
+short_source: 'WEBHIST'
+source: 'Edge Load Statistics'
+---
+type: 'conditional'
+data_type: 'firefox:cache:record'
+message:
+- 'Fetched {fetch_count} time(s)'
+- '[{response_code}]'
+- '{request_method}'
+- '"{url}"'
+short_message:
+- '[{response_code}]'
+- '{request_method}'
+- '"{url}"'
+short_source: 'WEBHIST'
+source: 'Firefox Cache'
+---
+type: 'conditional'
+data_type: 'firefox:cookie:entry'
+message:
+- '{url}'
+- '({cookie_name})'
+- 'Flags:'
+- '[HTTP only]: {httponly}'
+- '(GA analysis: {ga_data})'
+short_message:
+- '{host}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Firefox Cache'
+---
+type: 'basic'
+data_type: 'firefox:downloads:download'
+message: '{url} ({full_path}). Received: {received_bytes} bytes out of: {total_bytes} bytes.'
+short_message: '{full_path} downloaded ({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'firefox:places:bookmark'
+message:
+- 'Bookmark {type}'
+- '{title}'
+- '({url})'
+- '[{places_title}]'
+- 'visit count {visit_count}'
+short_message:
+- 'Bookmarked {title}'
+- '({url})'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'firefox:places:bookmark_annotation'
+message:
+- 'Bookmark Annotation: [{content}]'
+- 'to bookmark [{title}]'
+- '({url})'
+short_message:
+- 'Bookmark Annotation: {title}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'basic'
+data_type: 'firefox:places:bookmark_folder'
+message: '{title}'
+short_message: '{title}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'firefox:places:page_visited'
+custom_helpers:
+- identifier: 'firefox_history_typed_count'
+  output_attribute: 'url_typed_string'
+- identifier: 'firefox_history_url_hidden'
+  output_attribute: 'url_hidden_string'
+enumeration_helpers:
+- input_attribute: 'visit_type'
+  output_attribute: 'transition_string'
+  default_value: 'UNKOWN'
+  # Also see: src/toolkit/components/places/nsINavHistoryService.idl
+  values:
+    1: 'LINK'
+    2: 'TYPED'
+    3: 'BOOKMARK'
+    4: 'EMBED'
+    5: 'REDIRECT_PERMANENT'
+    6: 'REDIRECT_TEMPORARY'
+    7: 'DOWNLOAD'
+    8: 'FRAMED_LINK'
+message:
+- '{url}'
+- '({title})'
+- '[count: {visit_count}]'
+- 'Host: {host}'
+- 'visited from: {from_visit}'
+- '{url_hidden_string}'
+- '{url_typed_string}'
+- 'Transition: {transition_string}'
+short_message:
+- 'URL: {url}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
+data_type: 'msiecf:leak'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
+message:
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- '{recovered_string}'
+short_message:
+- 'Cached file: {cached_file_path}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File leak record'
+---
+type: 'conditional'
+data_type: 'msiecf:redirected'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+message:
+- 'Location: {url}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File redirected record'
+---
+type: 'conditional'
+data_type: 'msiecf:url'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
+- identifier: 'msiecf_http_headers'
+  output_attribute: 'http_headers'
+message:
+- 'Location: {url}'
+- 'Number of hits: {number_of_hits}'
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- 'HTTP headers: {http_headers}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+- 'Cached file: {cached_file_path}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File URL record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:container'
+message:
+- 'URL: {url}'
+- 'Redirect URL: {redirect_url}'
+- 'Access count: {access_count}'
+- 'Synchronization count: {synchronization_count}'
+- 'Filename: {cached_filename}'
+- 'File extension: {file_extension}'
+- 'Cached file size: {cached_file_size}'
+- 'Request headers: {request_headers}'
+- 'Response headers: {response_headers}'
+- 'Entry identifier: {entry_identifier}'
+- 'Container identifier: {container_identifier}'
+- 'Cache identifier: {cache_identifier}'
+short_message:
+- 'URL: {url}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache container record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:containers'
+message:
+- 'Name: {name}'
+- 'Directory: {directory}'
+- 'Table: Container_{container_identifier}'
+- 'Container identifier: {container_identifier}'
+- 'Set identifier: {set_identifier}'
+short_message:
+- 'Directory: {directory}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache containers record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:cookie'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flags}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache cookies record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:leak_file'
+message:
+- 'Filename: {cached_filename}'
+- 'Leak identifier: {leak_identifier}'
+short_message:
+- 'Filename: {cached_filename}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache leak file record'
+---
+type: 'conditional'
+data_type: 'msie:webcache:partitions'
+message:
+- 'Partition identifier: {partition_identifier}'
+- 'Partition type: {partition_type}'
+- 'Directory: {directory}'
+- 'Table identifier: {table_identifier}'
+short_message:
+- 'Directory: {directory}'
+short_source: 'WEBHIST'
+source: 'MSIE WebCache partitions record'
+---
+type: 'conditional'
+data_type: 'opera:history:entry'
+message:
+- '{url}'
+- '({title})'
+- '[{description}]'
+short_message:
+- '{url}'
+- '({title})'
+- '[{description}]'
+short_source: 'WEBHIST'
+source: 'Opera Browser History'
+---
+type: 'conditional'
+data_type: 'opera:history:typed_entry'
+message:
+- '{url}'
+- '({entry_selection})'
+short_message:
+- '{url}'
+- '({entry_selection})'
+short_source: 'WEBHIST'
+source: 'Opera Browser History'
+---
+type: 'conditional'
+data_type: 'safari:cookie:entry'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  values:
+    1: 'Secure'
+    2: 'Unknown'
+    4: 'HttpOnly'
+message:
+- '{url}'
+- '<{path}>'
+- '({cookie_name})'
+- 'Flags: {flag_values}'
+short_message:
+- '{url}'
+- '({cookie_name})'
+short_source: 'WEBHIST'
+source: 'Safari Cookies'
+---
+type: 'conditional'
+data_type: 'safari:downloads:entry'
+message:
+- '{url}'
+- '({full_path}).'
+- 'Received {received_bytes} of'
+- '{total_bytes} bytes.'
+short_message:
+- '{full_path} downloaded'
+- '({received_bytes} bytes)'
+short_source: 'WEBHIST'
+source: 'Safari Downloads'
+---
+type: 'conditional'
+data_type: 'safari:history:visit'
+message:
+- 'Visited: {url}'
+- '({title}'
+- '- {display_title}'
+- ')'
+- 'Visit Count: {visit_count}'
+short_message:
+- 'Visited: {url}'
+- '({title}'
+- '- {display_title}'
+- ')'
+- 'Visit Count: {visit_count}'
+short_source: 'WEBHIST'
+source: 'Safari History Plist'
+---
+type: 'conditional'
+data_type: 'safari:history:visit_sqlite'
+message:
+- 'URL: {url}'
+- 'Title: ({title})'
+- '[count: {visit_count}]'
+- 'http_non_get: {was_http_non_get}'
+short_message:
+- 'URL: {url}'
+- 'Title: ({title})'
+- '[count: {visit_count}]'
+- 'http_non_get: {was_http_non_get}'
+short_source: 'WEBHIST'
+source: 'Safari History Database'

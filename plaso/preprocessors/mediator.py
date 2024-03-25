@@ -62,14 +62,15 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the environment variable already exists.
     """
-    logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
-        environment_variable_artifact.name,
-        environment_variable_artifact.value))
+    logger.debug((
+        f'setting environment variable: {environment_variable_artifact.name:s} '
+        f'to: "{environment_variable_artifact.value:s}"'))
 
     name = environment_variable_artifact.name.upper()
     if name in self._environment_variables:
-      raise KeyError('Environment variable: {0:s} already exists.'.format(
-          environment_variable_artifact.name))
+      raise KeyError((
+          f'Environment variable: {environment_variable_artifact.name:s} '
+          f'already exists.'))
 
     self._environment_variables[name] = environment_variable_artifact
 
@@ -95,8 +96,7 @@ class PreprocessMediator(object):
       KeyError: if the time zone already exists.
     """
     if time_zone_artifact.name in self._available_time_zones:
-      raise KeyError('Time zone: {0:s} already exists.'.format(
-          time_zone_artifact.name))
+      raise KeyError(f'Time zone: {time_zone_artifact.name:s} already exists.')
 
     self._available_time_zones[time_zone_artifact.name] = time_zone_artifact
 
@@ -112,7 +112,7 @@ class PreprocessMediator(object):
     Raises:
       KeyError: if the user account already exists.
     """
-    logger.debug('adding user account: {0:s}'.format(user_account.username))
+    logger.debug(f'adding user account: {user_account.username:s}')
 
     if self._storage_writer:
       self._storage_writer.AddAttributeContainer(user_account)
@@ -215,7 +215,7 @@ class PreprocessMediator(object):
           message=message, path_spec=path_spec, plugin_name=plugin_name)
       self._storage_writer.AddAttributeContainer(warning)
 
-    logger.debug('[{0:s}] {1:s}'.format(plugin_name, message))
+    logger.debug(f'[{plugin_name:s}] {message:s}')
 
   def Reset(self):
     """Resets the values stored in the mediator."""
@@ -240,7 +240,7 @@ class PreprocessMediator(object):
     Raises:
       ValueError: if the code page is not supported.
     """
-    logger.debug('setting code page to: "{0:s}"'.format(code_page))
+    logger.debug(f'setting code page to: "{code_page:s}"')
     self.code_page = code_page
 
   def SetFileEntry(self, file_entry):
@@ -291,7 +291,7 @@ class PreprocessMediator(object):
     try:
       self.time_zone = pytz.timezone(time_zone)
     except pytz.UnknownTimeZoneError:
-      raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
+      raise ValueError(f'Unsupported time zone: {time_zone!s}')
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.

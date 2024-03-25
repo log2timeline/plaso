@@ -16,7 +16,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        ['1b4dd67f29cb1962.automaticDestinations-ms'], plugin)
+        ['automatic_destinations', '1b4dd67f29cb1962.automaticDestinations-ms'],
+        plugin)
 
     # Number of events:
     # olecf:dest_list:entry: 11
@@ -25,7 +26,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 66)
+    self.assertEqual(number_of_event_data, 55)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -50,7 +51,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'path': 'C:\\Users\\nfury\\Pictures\\The SHIELD',
         'pin_status': -1}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
 
     # Check a WinLnkLinkEvent.
@@ -62,7 +63,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'drive_type': 3,
         'file_attribute_flags': 0x00002020,
         'file_size': 3545,
-        'link_target': '<Users Libraries> <UNKNOWN: 0x00>',
+        'link_target': '<Users Libraries> <Users property view>',
         'local_path': (
             'C:\\\\Users\\\\nfury\\\\AppData\\\\Roaming\\\\Microsoft\\\\'
             'Windows\\\\Libraries\\\\Documents.library-ms'),
@@ -86,7 +87,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
     plugin = automatic_destinations.AutomaticDestinationsOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        ['9d1f905ce5044aee.automaticDestinations-ms'], plugin)
+        ['automatic_destinations', '9d1f905ce5044aee.automaticDestinations-ms'],
+        plugin)
 
     # Event data types:
     # olecf:dest_list:entry: 2
@@ -131,7 +133,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'drive_type': None,
         'file_attribute_flags': 0,
         'file_size': 0,
-        'link_target': '<Internet Explorer (Homepage)> <UNKNOWN: 0x61>',
+        'link_target': '<Internet Folder> <UNKNOWN: 0x61>',
         'local_path': None,
         'modification_time': None}
 

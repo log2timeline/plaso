@@ -1,5 +1,0 @@
-2020-05-31T00:00:45.698463+00:00 localhost rsyslogd:  message repeated 76 times: [-- MARK --]
-2020-05-31T00:00:45.698885+00:00 localhost rsyslogd:  [origin software="rsyslogd" swVersion="8.33.1" x-pid="1138" x-info="http://www.rsyslog.com"] rsyslogd was HUPed
-2020-05-31T00:00:45.738158+00:00 localhost systemd[1]: Reloaded System Logging Service.
-2020-05-31T00:00:46.599903+00:00 localhost systemd[1]: Started Rotate log files.
-2020-05-31T00:00:47.044800+00:00 localhost systemd[1]: Started Do daily mandb update.

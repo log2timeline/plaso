@@ -2,7 +2,7 @@
 """Text parser plugin for syslog log files.
 
 Also see:
-  https://www.rsyslog.com/doc/v8-stable/configuration/templates.html
+  https://www.rsyslog.com/doc/configuration/templates.html
 """
 
 import re

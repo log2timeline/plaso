@@ -93,7 +93,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 
 
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
-  """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
+  """Windows Registry plugin for Terminal Server Client Connection MRU keys."""
 
   NAME = 'mstsc_rdp_mru'
   DATA_FORMAT = 'Terminal Server Client Most Recently Used (MRU) Registry data'
@@ -127,7 +127,7 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
         continue
 
       value_string = value.GetDataAsObject()
-      entries.append('{0:s}: {1:s}'.format(value.name, value_string))
+      entries.append(f'{value.name:s}: {value_string:s}')
 
     event_data = TerminalServerClientMRUEventData()
     event_data.entries = ' '.join(entries) or None

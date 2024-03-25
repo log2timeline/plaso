@@ -56,7 +56,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       OSError: if the SQLite task storage file cannot be renamed.
     """
     if task.storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
-      url = redis_store.RedisStore.DEFAULT_REDIS_URL
+      url = redis_store.RedisAttributeContainerStore.DEFAULT_REDIS_URL
       redis_client = redis.from_url(url=url, socket_timeout=60)
       redis_client.client_setname('task_process')
 

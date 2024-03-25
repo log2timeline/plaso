@@ -7,7 +7,8 @@ import collections
 import json
 
 from acstore.containers import interface as containers_interface
-from acstore.containers import manager as containers_manager
+from acstore.helpers import json_serializer
+from acstore.helpers import schema as schema_helper
 
 from dfdatetime import interface as dfdatetime_interface
 from dfdatetime import serializer as dfdatetime_serializer
@@ -20,10 +21,20 @@ from dfvfs.path import factory as dfvfs_path_spec_factory
 # the dfDateTime factory.
 from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
 
-from plaso.serializer import logger
+from plaso.storage import serializers
 
 
-class JSONAttributeContainerSerializer(object):
+schema_helper.SchemaHelper.RegisterDataTypes({
+    'dfdatetime.DateTimeValues': {
+        'json': serializers.JSONDateTimeAttributeSerializer()},
+    'dfvfs.PathSpec': {
+        'json': serializers.JSONPathSpecAttributeSerializer()},
+    'List[str]': {
+        'json': serializers.JSONStringsListAttributeSerializer()}})
+
+
+class JSONAttributeContainerSerializer(
+    json_serializer.AttributeContainerJSONSerializer):
   """JSON attribute container serializer."""
 
   _convert_json_to_value = {}
@@ -43,7 +54,7 @@ class JSONAttributeContainerSerializer(object):
     'AttributeContainer'.
 
     '__container_type__' indicates the container type and rest of the elements
-    of the dictionary make up the attributes of the container.
+    of the dictionary that make up the attributes of the container.
 
     Args:
       attribute_container (AttributeContainer): attribute container.
@@ -51,6 +62,10 @@ class JSONAttributeContainerSerializer(object):
     Returns:
       dict[str, object]: JSON serialized objects.
     """
+    if attribute_container.CONTAINER_TYPE not in (
+        'event_data', 'system_configuration'):
+      return cls.ConvertAttributeContainerToJSON(attribute_container)
+
     json_dict = {
         '__type__': 'AttributeContainer',
         '__container_type__': attribute_container.CONTAINER_TYPE}
@@ -75,7 +90,7 @@ class JSONAttributeContainerSerializer(object):
     return {
         '__encoding__': 'base16',
         '__type__': 'bytes',
-        'stream': '{encoded_value:s}'}
+        'stream': encoded_value}
 
   @classmethod
   def _ConvertCollectionsCounterToJSON(cls, counter_value):
@@ -131,40 +146,28 @@ class JSONAttributeContainerSerializer(object):
     # Use __container_type__ to indicate the attribute container type.
     container_type = json_dict.get('__container_type__', None)
 
-    attribute_container = (
-        containers_manager.AttributeContainersManager.CreateAttributeContainer(
-            container_type))
+    if container_type not in ('event_data', 'system_configuration'):
+      return cls.ConvertJSONToAttributeContainer(json_dict)
 
-    supported_attribute_names = attribute_container.GetAttributeNames()
+    attribute_container = cls._CONTAINERS_MANAGER.CreateAttributeContainer(
+        container_type)
+
     for attribute_name, attribute_value in json_dict.items():
-      # Be strict about which attributes to set in non event data attribute
-      # containers.
-      if (container_type != 'event_data' and
-          attribute_name not in supported_attribute_names):
-
-        if attribute_name not in ('__container_type__', '__type__'):
-          logger.debug((
-              f'[_ConvertJSONToAttributeContainer] unsupported attribute name: '
-              f'{container_type:s}.{attribute_name:s}'))
-
-        continue
-
       if isinstance(attribute_value, dict):
         attribute_value = cls._ConvertJSONToValue(attribute_value)
 
       elif isinstance(attribute_value, list):
         attribute_value = cls._ConvertListToValue(attribute_value)
 
-      if container_type == 'event_data':
-        if isinstance(attribute_value, bytes):
-          raise ValueError((
-              f'Event data attribute value: {attribute_name:s} of type bytes '
-              f'is not supported.'))
+      if isinstance(attribute_value, bytes):
+        raise ValueError((
+            f'Event data attribute value: {attribute_name:s} of type bytes '
+            f'is not supported.'))
 
-        if isinstance(attribute_value, dict):
-          raise ValueError((
-              f'Event data attribute value: {attribute_name:s} of type dict '
-              f'is not supported.'))
+      if isinstance(attribute_value, dict):
+        raise ValueError((
+            f'Event data attribute value: {attribute_name:s} of type dict '
+            f'is not supported.'))
 
       setattr(attribute_container, attribute_name, attribute_value)
 
@@ -469,7 +472,7 @@ class JSONAttributeContainerSerializer(object):
       convert_function = cls._ConvertPathSpecToJSON
 
     elif isinstance(attribute_value, containers_interface.AttributeContainer):
-      convert_function = cls._ConvertAttributeContainerToJSON
+      convert_function = cls.ConvertAttributeContainerToJSON
 
     if convert_function:
       attribute_value = convert_function(attribute_value)

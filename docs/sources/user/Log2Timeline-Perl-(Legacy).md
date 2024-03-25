@@ -109,8 +109,8 @@ none will be processed. You can abort with Ctrl^C.
 ```
 
 The options can also be supplied on the command line, `--vss_stores '1,2'` for
-defining the VSS stores to parse, or `--no-vss` or `-vss-stores all` for
-processing all VSS stores.
+defining the VSS stores to parse, or `--vss_stores=none` or `-vss-stores=all`
+for respectively processing no or all VSS stores.
 
 This can be achieved without calculating the offset into the disk image.
 

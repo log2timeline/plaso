@@ -21,6 +21,7 @@ docker run log2timeline/plaso log2timeline --version 2>&1 | tee ${LOGFILE};
 VERSION=$( grep -e '^plaso - log2timeline version ' ${LOGFILE} | sed 's/^plaso - log2timeline version //' );
 
 docker tag ${IDENTIFIER} log2timeline/plaso:${VERSION}
+docker tag ${IDENTIFIER} log2timeline/plaso:staging
 docker tag ${IDENTIFIER} log2timeline/plaso:latest
 
 rm -f ${LOGFILE};

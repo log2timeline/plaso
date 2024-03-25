@@ -1,0 +1,9 @@
+2016-10-25T12:37:23.297265-07:00 INFO periodic_scheduler[13707]: cleanup_logs: job completed
+2016-10-25T12:37:23.742610-07:00 INFO periodic_scheduler[13714]: trim: running chromeos-trim
+2016-10-25T12:37:24.987014-07:00 DEBUG kernel: [  316.559919] wlan0: deauthenticating from 94:b4:0f:ff:9a:b0 by local choice (reason=3)
+2016-10-25T12:37:24.987995-07:00 WARNING kernel: [  316.561088] init: debugd main process (10086) killed by TERM signal
+2016-10-25T12:37:24.993079-07:00 DEBUG kernel: [  316.566106] wlan0: moving STA 94:b4:0f:ff:9a:b0 to state 3
+2016-10-25T12:37:25.007960-07:00 ERR kernel: [  316.578806] ath: phy0: TX while HW is in FULL_SLEEP mode
+2016-10-25T12:37:25.007963-07:00 ERR kernel: [  316.578824] ath: phy0: TX while HW is in FULL_SLEEP mode
+2016-10-25T12:37:25.014015-07:00 INFO aprocess: [  316.587330] cfg80211: This is a multi-line
+	message that screws up many syslog parsers.

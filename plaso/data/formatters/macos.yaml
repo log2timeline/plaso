@@ -1,0 +1,631 @@
+# Plaso Mac OS related event formatters.
+---
+type: 'conditional'
+data_type: 'imessage:event:chat'
+enumeration_helpers:
+- input_attribute: 'message_type'
+  output_attribute: 'message_type'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Received'
+    1: 'Sent'
+- input_attribute: 'read_receipt'
+  output_attribute: 'read_receipt'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Row ID: {identifier}'
+- 'iMessage ID: {imessage_id}'
+- 'Read Receipt: {read_receipt}'
+- 'Message Type: {message_type}'
+- 'Service: {service}'
+- 'Attachment Location: {attachment_location}'
+- 'Message Content: {text}'
+short_message:
+- '{text}'
+short_source: 'iMessage'
+source: 'Apple iMessage application'
+---
+type: 'conditional'
+data_type: 'ipod:device:entry'
+message:
+- 'Device identifier: {device_identifier}'
+- 'Type: {device_class}'
+- '[{family_identifier}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+short_message:
+- 'Device identifier: {device_identifier}'
+- 'Type: {device_class}'
+- '[{family_identifier}]'
+- 'Connected {use_count} times'
+- 'Serial nr: {serial_number}'
+- 'IMEI [{imei}]'
+short_source: 'LOG'
+source: 'iPod Connections'
+---
+type: 'conditional'
+data_type: 'mackeeper:cache'
+message:
+- '{description}'
+- '<{event_type}>'
+- ':'
+- '{text}'
+- '['
+- 'URL: {url}'
+- 'Event ID: {record_id}'
+- 'Room: {room}'
+- ']'
+short_message:
+- '<{event_type}>'
+- '{text}'
+short_source: 'LOG'
+source: 'MacKeeper Cache'
+---
+type: 'basic'
+data_type: 'macos:airport:entry'
+message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
+short_message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
+short_source: 'PLIST'
+source: 'MacOS Airport plist'
+---
+type: 'conditional'
+data_type: 'macos:appfirewall_log:entry'
+message:
+- 'Computer: {computer_name}'
+- 'Agent: {agent}'
+- 'Status: {status}'
+- 'Process name: {process_name}'
+- 'Log: {action}'
+short_message:
+- 'Process name: {process_name}'
+- 'Status: {status}'
+short_source: 'LOG'
+source: 'MacOS AppFirewall Log'
+---
+type: 'basic'
+data_type: 'macos:apple_account:entry'
+message: 'Apple account: {account_name} ({first_name} {last_name})'
+short_message: 'Apple account: {account_name} ({first_name} {last_name})'
+short_source: 'PLIST'
+source: 'Apple account plist'
+---
+type: 'basic'
+data_type: 'macos:application_usage:entry'
+message: '{application} {application_version} (bundle: {bundle_identifier}). {event}: {count} time(s)'
+short_message: '{application} ({event} {count} time(s))'
+short_source: 'LOG'
+source: 'MacOS Application Usage Log'
+---
+type: 'conditional'
+data_type: 'macos:asl:entry'
+enumeration_helpers:
+- input_attribute: 'level'
+  output_attribute: 'level_enumeration'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMERGENCY'
+    1: 'ALERT'
+    2: 'CRITICAL'
+    3: 'ERROR'
+    4: 'WARNING'
+    5: 'NOTICE'
+    6: 'INFO'
+    7: 'DEBUG'
+- input_attribute: 'read_group_identifier'
+  output_attribute: 'read_group_identifier'
+  values:
+    -1: 'ALL'
+- input_attribute: 'read_user_identifier'
+  output_attribute: 'read_user_identifier'
+  values:
+    -1: 'ALL'
+message:
+- 'Message: {message_identifier}'
+- 'Level: {level_enumeration}'
+- '({level})'
+- 'User: {user_identifier}'
+- 'Group: {group_identifier}'
+- 'Read User: {read_user_identifier}'
+- 'Read Group: {read_group_identifier}'
+- 'Host: {computer_name}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+- 'Message: {message}'
+- '{extra_information}'
+short_message:
+- 'Host: {host}'
+- 'Sender: {sender}'
+- 'Facility: {facility}'
+short_source: 'LOG'
+source: 'MacOS ASL Log'
+---
+type: 'conditional'
+data_type: 'macos:unified_logging:event'
+message:
+- 'Subsystem: {subsystem}'
+- 'Thread Identifier: 0x{thread_identifier:x}'
+- 'Process Identifier: {process_identifier}'
+- 'Effective User Identifier: {euid}'
+- 'Boot Identifier: {boot_identifier}'
+- 'Time To Live: {ttl}'
+- 'Process image identifier: {process_image_identifier}'
+- 'Process image path: {process_image_path}'
+- 'Sender image identifier: {sender_image_identifier}'
+- 'Sender image path: {sender_image_path}'
+- 'Activity identifier: {activity_identifier}'
+- 'Category: {category}'
+- 'Event type: {event_type}'
+- 'Event message: {event_message}'
+short_message:
+- 'Subsystem: {subsystem}'
+- 'Event messaeg: {event_message}'
+short_source: 'LOG'
+source: 'Apple Unified Logging'
+---
+type: 'conditional'
+data_type: 'macos:asl:file'
+boolean_helpers:
+- input_attribute: 'is_dirty'
+  output_attribute: 'is_dirty_string'
+  value_if_true: '(Is dirty)'
+message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+short_message:
+- 'Format version: {format_version}'
+- '{is_dirty_string}'
+short_source: 'LOG'
+source: 'MacOS ASL Log'
+---
+type: 'conditional'
+data_type: 'macos:background_items:entry'
+flags_helpers:
+- input_attribute: 'volume_flags'
+  output_attribute: 'volume_flag_values'
+  values:
+    0x0000000000000001: 'IsLocal'
+    0x0000000000000002: 'IsAutomount'
+    0x0000000000000004: 'DontBrowse'
+    0x0000000000000008: 'IsReadOnly'
+    0x0000000000000010: 'IsQuarantined'
+    0x0000000000000020: 'IsEjectable'
+    0x0000000000000040: 'IsRemovable'
+    0x0000000000000080: 'IsInternal'
+    0x0000000000000100: 'IsExternal'
+    0x0000000000000200: 'IsDiskImage'
+    0x0000000000000400: 'IsFileVault'
+    0x0000000000000800: 'IsLocaliDiskMirror'
+    0x0000000000001000: 'IsiPod'
+    0x0000000000002000: 'IsiDisk'
+    0x0000000000004000: 'IsCD'
+    0x0000000000008000: 'IsDVD'
+    0x0000000000010000: 'IsDeviceFileSystem'
+    # TODO: add more values.
+    0x0000000100000000: 'SupportsPersistentIDs'
+    0x0000000200000000: 'SupportsSearchFS'
+    0x0000000400000000: 'SupportsExchange'
+    0x0000001000000000: 'SupportsSymbolicLinks'
+    0x0000002000000000: 'SupportsDenyModes'
+    0x0000004000000000: 'SupportsCopyFile'
+    0x0000008000000000: 'SupportsReadDirAttr'
+    0x0000010000000000: 'SupportsJournaling'
+    0x0000020000000000: 'SupportsRename'
+    0x0000040000000000: 'SupportsFastStatFS'
+    0x0000080000000000: 'SupportsCaseSensitiveNames'
+    0x0000100000000000: 'SupportsCasePreservedNames'
+    0x0000200000000000: 'SupportsFLock'
+    0x0000400000000000: 'HasNoRootDirectoryTimes'
+    0x0000800000000000: 'SupportsExtendedSecurity'
+    0x0001000000000000: 'Supports2TBFileSize'
+    0x0002000000000000: 'SupportsHardLinks'
+    0x0004000000000000: 'SupportsMandatoryByteRangeLocks'
+    0x0008000000000000: 'SupportsPathFromID'
+    0x0020000000000000: 'IsJournaling'
+    0x0040000000000000: 'SupportsSparseFiles'
+    0x0080000000000000: 'SupportsZeroRuns'
+    0x0100000000000000: 'SupportsVolumeSizes'
+    0x0200000000000000: 'SupportsRemoteEvents'
+    0x0400000000000000: 'SupportsHiddenFiles'
+    0x0800000000000000: 'SupportsDecmpFSCompression'
+    0x1000000000000000: 'Has64BitObjectIDs'
+message:
+- 'Login item: {name}'
+- 'Points to: {target_path}'
+- 'Volume name: {volume_name}'
+- 'Volume mount point: {volume_mount_point}'
+- 'Volume flags: {volume_flag_values}'
+short_message: 'Login item {name} points to {target_path}'
+short_source: 'PLIST'
+source: 'MacOS background items plist'
+---
+type: 'conditional'
+data_type: 'macos:bluetooth:entry'
+message:
+- 'Identifier: {device_identifier}'
+- 'Name: {device_name}'
+- 'Paired: {is_paired}'
+short_message:
+- 'Identifier: {device_identifier}'
+- 'Name: {device_name}'
+- 'Paired: {is_paired}'
+short_source: 'PLIST'
+source: 'MacOS Bluetooth plist'
+---
+type: 'conditional'
+data_type: 'macos:document_versions:file'
+message:
+- 'Version of [{name}]'
+- '({path})'
+- 'stored in {version_path}'
+- 'by {user_sid}'
+short_message:
+- 'Stored a document version of [{name}]'
+short_source: 'HISTORY'
+source: 'MacOS Document Versions'
+---
+type: 'conditional'
+data_type: 'macos:fseventsd:record'
+flags_helpers:
+- input_attribute: 'flags'
+  output_attribute: 'flag_values'
+  # The include header sys/fsevents.h defines various FSE constants, e.g.
+  # #define FSE_CREATE_FILE          0
+  # The flag values correspond to: FLAG = 1 << CONSTANT
+  values:
+    0x00000000: 'None'
+    0x00000001: 'Created'
+    0x00000002: 'Removed'
+    0x00000004: 'InodeMetadataModified'
+    0x00000008: 'Renamed'
+    0x00000010: 'Modified'
+    0x00000020: 'Exchange'
+    0x00000040: 'FinderInfoModified'
+    0x00000080: 'DirectoryCreated'
+    0x00000100: 'PermissionChanged'
+    0x00000200: 'ExtendedAttributeModified'
+    0x00000400: 'ExtendedAttributeRemoved'
+    0x00001000: 'DocumentRevision'
+    0x00004000: 'ItemCloned'
+    0x00080000: 'LastHardLinkRemoved'
+    0x00100000: 'IsHardLink'
+    0x00400000: 'IsSymbolicLink'
+    0x00800000: 'IsFile'
+    0x01000000: 'IsDirectory'
+    0x02000000: 'Mount'
+    0x04000000: 'Unmount'
+    0x20000000: 'EndOfTransaction'
+message:
+- '{path}'
+- 'Flag Values: {flag_values}'
+- 'Flags: 0x{flags:08x}'
+- 'Event Identifier: {event_identifier}'
+short_message:
+- '{path}'
+- '{flag_values}'
+short_source: 'FILE'
+source: 'MacOS File System Events Disk Log Stream'
+---
+type: 'basic'
+data_type: 'macos:install_history:entry'
+message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
+short_message: 'Installation of [{name} {version}] using [{process_name}] Packages {identifiers}'
+short_source: 'PLIST'
+source: 'MacOS install history plist'
+---
+type: 'conditional'
+data_type: 'macos:keychain:application'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (application password)'
+---
+type: 'conditional'
+data_type: 'macos:keychain:internet'
+message:
+- 'Name: {entry_name}'
+- 'Account: {account_name}'
+- 'Where: {where}'
+- 'Protocol: {protocol}'
+- '({type_protocol})'
+short_message:
+- '{entry_name}'
+short_source: 'LOG'
+source: 'MacOS Keychain (Internet password)'
+---
+type: 'conditional'
+data_type: 'macos:knowledgec:application'
+message:
+- 'Application {bundle_identifier} executed'
+- 'for {duration} seconds'
+short_message:
+- 'Application {bundle_identifier}'
+short_source: 'LOG'
+source: 'MacOS KnowledgeC'
+---
+type: 'conditional'
+data_type: 'macos:knowledgec:safari'
+message:
+- 'Visited: {url}'
+- '({title})'
+- 'Duration: {duration}'
+short_message:
+- 'Safari: {url}'
+short_source: 'WEBHIST'
+source: 'MacOS KnowledgeC (Safari)'
+---
+type: 'conditional'
+data_type: 'macos:launchd_log:entry'
+message:
+- 'Body: {body}'
+- 'Process Name: {process_name}'
+- 'Severity: {severity}'
+short_message:
+- 'Body: {body}'
+short_source: 'Launchd'
+source: 'MacOS Laucnhd'
+---
+type: 'conditional'
+data_type: 'macos:lsquarantine:entry'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+short_source: 'LOG'
+source: 'MacOS LS Quarantine Database'
+---
+type: 'conditional'
+data_type: 'macos:notes:entry'
+message:
+- 'title:{title}'
+- 'note_text:{text}'
+short_message:
+- 'title:{title}'
+short_source: 'Mac Notes'
+source: 'MacOS Notes'
+---
+type: 'conditional'
+data_type: 'macos:notification_center:entry'
+enumeration_helpers:
+- input_attribute: 'presented'
+  output_attribute: 'presented'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Title: {title}'
+- '(subtitle: {subtitle})'
+- 'registered by: {bundle_name}'
+- 'Presented: {presented}'
+- 'Content: {body}'
+short_message:
+- 'Title: {title},'
+- 'Content: {body}'
+short_source: 'NOTIFICATION'
+source: 'MacOS Notification Center database'
+---
+type: 'basic'
+data_type: 'macos:launchd:entry'
+message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_source: 'PLIST'
+source: 'MacOS launchd plist'
+---
+type: 'conditional'
+data_type: 'macos:login_items:entry'
+flags_helpers:
+- input_attribute: 'volume_flags'
+  output_attribute: 'volume_flag_values'
+  values:
+    0x00000002: 'IsEjectable'
+    0x00000020: 'IsBootVolume'
+    0x00000080: 'IsAutomounted'
+    0x00000100: 'HasPersistentFileIds'
+message:
+- 'Login item: {name}'
+- 'Points to: {target_path}'
+- 'Volume name: {volume_name}'
+- 'Volume mount point: {volume_mount_point}'
+- 'Volume flags: {volume_flag_values}'
+short_message: 'Login item {name} points to {target_path}'
+short_source: 'PLIST'
+source: 'MacOS login items plist'
+---
+type: 'conditional'
+data_type: 'macos:login_window:entry'
+message:
+- 'Login hook: {login_hook}'
+- 'Logout hook: {logout_hook}'
+short_message:
+- 'Login hook: {login_hook}'
+- 'Logout hook: {logout_hook}'
+short_source: 'PLIST'
+source: 'Mac OS login window plist'
+---
+type: 'conditional'
+data_type: 'macos:login_window:managed_login_item'
+boolean_helpers:
+- input_attribute: 'is_hidden'
+  output_attribute: 'is_hidden_string'
+  value_if_true: '(Hidden in Users & Groups items list)'
+message:
+- 'Auto-launched application: {path}'
+- '{is_hidden_string}'
+short_message:
+- 'Auto-launched application: {path}'
+- '{is_hidden_string}'
+short_source: 'PLIST'
+source: 'Mac OS login window plist'
+---
+type: 'conditional'
+data_type: 'macos:securityd_log:entry'
+message:
+- 'Sender: {sender}'
+- '({sender_pid})'
+- 'Level: {level}'
+- 'Facility: {facility}'
+- 'Text: {message}'
+short_message:
+- 'Text: {message}'
+short_source: 'LOG'
+source: 'MacOS Securityd Log'
+---
+type: 'conditional'
+data_type: 'macos:software_updata:entry'
+message:
+- 'Last update: MacOS {system_version}'
+- 'Recommended updates: {recommended_updates}'
+short_message:
+- 'Last update: MacOS {system_version}'
+- 'Recommended updates: {recommended_updates}'
+short_source: 'PLIST'
+source: 'MacOS software update plist'
+---
+type: 'conditional'
+data_type: 'macos:startup_item:entry'
+message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+- 'Order Preference: {order_preference}'
+- 'Requires: {requires}'
+- 'Uses: {uses}'
+short_message:
+- 'Startup item: [{description}]'
+- 'Provides: {provides}'
+short_source: 'PLIST'
+source: 'MacOS startup item plist'
+---
+type: 'basic'
+data_type: 'macos:time_machine:backup'
+message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_source: 'PLIST'
+source: 'MacOS TimeMachine plist'
+---
+type: 'conditional'
+data_type: 'macos:tcc_entry'
+enumeration_helpers:
+- input_attribute: 'allowed'
+  output_attribute: 'allowed'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'False'
+    1: 'True'
+message:
+- 'Service: {service}'
+- 'Client: {client}'
+- 'Allowed: {allowed}'
+- 'Prompt count: {prompt_count}'
+short_message:
+- '{service}:'
+- '{client}'
+short_source: 'MacOS TCC'
+source: 'MacOS Transparenty, Control and Consent logs'
+---
+type: 'conditional'
+data_type: 'macos:user:entry'
+message:
+- 'User: {username}'
+- '({user_identifier})'
+- 'Full name: {fullname}'
+- 'Home directory: {home_directory}'
+- 'Number of failed login attempts: {number_of_failed_login_attempts}'
+- 'Password hash: {password_hash}'
+short_message:
+- 'User: {username}'
+- '({user_identifier})'
+- 'Full name: {fullname}'
+short_source: 'PLIST'
+source: 'MacOS User plist'
+---
+type: 'conditional'
+data_type: 'macos:utmpx:entry'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'status'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'EMPTY'
+    1: 'RUN_LVL'
+    2: 'BOOT_TIME'
+    3: 'OLD_TIME'
+    4: 'NEW_TIME'
+    5: 'INIT_PROCESS'
+    6: 'LOGIN_PROCESS'
+    7: 'USER_PROCESS'
+    8: 'DEAD_PROCESS'
+    9: 'ACCOUNTING'
+    10: 'SIGNATURE'
+    11: 'SHUTDOWN_TIME'
+message:
+- 'User: {username}'
+- 'Status: {status}'
+- 'Hostname: {hostname}'
+- 'Terminal: {terminal}'
+- 'PID: {pid}'
+- 'Terminal identifier: {terminal_identifier}'
+short_message:
+- 'User: {username}'
+- 'PID: {pid}'
+- 'Status: {status}'
+short_source: 'LOG'
+source: 'MacOS UTMPX Log'
+---
+type: 'conditional'
+data_type: 'macos:wifi_log:entry'
+message:
+- 'Action: {action}'
+- 'Agent: {agent}'
+- '({function})'
+- 'Log: {text}'
+short_message:
+- 'Action: {action}'
+short_source: 'LOG'
+source: 'MacOS Wifi Log'
+---
+type: 'conditional'
+data_type: 'plist:key'
+message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+separator: ''
+short_message:
+- '{root}/'
+- '{key}'
+- ' {desc}'
+short_source: 'PLIST'
+source: 'Plist file'
+---
+type: 'conditional'
+data_type: 'spotlight:metadata_item'
+message:
+- '{file_name}'
+- '{content_type}'
+short_message:
+- '{file_name}'
+short_source: 'SPOTLIGHT'
+source: 'Spotlight store database'
+---
+type: 'basic'
+data_type: 'spotlight_searched_terms:entry'
+message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+short_message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+short_source: 'PLIST'
+source: 'Spotlight searched terms plist'
+---
+type: 'basic'
+data_type: 'spotlight_volume_configuration:store'
+message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'
+short_message: 'Spotlight Volume {volume_identifier} ({partial_path}) activated'
+short_source: 'PLIST'
+source: 'Spotlight volume configuration plist'

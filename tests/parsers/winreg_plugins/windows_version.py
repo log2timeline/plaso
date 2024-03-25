@@ -42,21 +42,18 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
 class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Windows version Windows Registry plugin."""
 
-  def _CreateTestKey(self, key_path, time_string):
+  def _CreateTestKey(self):
     """Creates Registry keys and values for testing.
-
-    Args:
-      key_path (str): Windows Registry key path.
-      time_string (str): key last written date and time.
 
     Returns:
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString(time_string)
+    filetime.CopyFromDateTimeString('2012-08-31 20:09:55.123521')
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'CurrentVersion', key_path=key_path,
-        last_written_time=filetime.timestamp, offset=153)
+        'CurrentVersion', key_path_prefix='HKEY_LOCAL_MACHINE\\Software',
+        last_written_time=filetime.timestamp, offset=153,
+        relative_key_path='Microsoft\\Windows NT\\CurrentVersion')
 
     value_data = 'Service Pack 1'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -94,17 +91,15 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     """Tests the FILTERS class attribute."""
     plugin = windows_version.WindowsVersionPlugin()
 
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    self._AssertFiltersOnKeyPath(plugin, key_path)
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Software', (
+        'Microsoft\\Windows NT\\CurrentVersion'))
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+    self._AssertNotFiltersOnKeyPath(
+        plugin, 'HKEY_LOCAL_MACHINE\\Software', 'Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = (
-        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    registry_key = self._CreateTestKey(key_path, '2012-08-31 20:09:55.123521')
+    registry_key = self._CreateTestKey()
 
     plugin = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
@@ -121,10 +116,13 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+    expected_key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+
     expected_event_values = {
         'data_type': 'windows:registry:installation',
         'installation_time': '2012-08-31T20:09:55+00:00',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'owner': 'A Concerned Citizen',
         'product_name': 'MyTestOS',
         'service_pack': 'Service Pack 1',
@@ -135,7 +133,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_event_values = {
         'data_type': 'windows:registry:key_value',
-        'key_path': key_path,
+        'key_path': expected_key_path,
         'last_written_time': '2012-08-31T20:09:55.1235210+00:00',
         'values': [
             ('CSDVersion', 'REG_SZ', 'Service Pack 1'),

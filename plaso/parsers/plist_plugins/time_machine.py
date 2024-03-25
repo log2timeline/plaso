@@ -3,6 +3,8 @@
 
 import os
 
+import pytz
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
@@ -90,6 +92,10 @@ class MacOSTimeMachinePlistPlugin(
                   exception))
 
       for datetime_value in destination.get('SnapshotDates', []):
+        # dfDateTime relies on the time zone but since plistlib does not set
+        # one.
+        datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
+
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
         date_time.CopyFromDatetime(datetime_value)
         snapshot_times.append(date_time)
