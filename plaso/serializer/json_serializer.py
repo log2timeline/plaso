@@ -62,12 +62,13 @@ class JSONAttributeContainerSerializer(
     Returns:
       dict[str, object]: JSON serialized objects.
     """
-    if attribute_container.CONTAINER_TYPE != 'event_data':
+    if attribute_container.CONTAINER_TYPE not in (
+        'event_data', 'system_configuration'):
       return cls.ConvertAttributeContainerToJSON(attribute_container)
 
     json_dict = {
         '__type__': 'AttributeContainer',
-        '__container_type__': 'event_data'}
+        '__container_type__': attribute_container.CONTAINER_TYPE}
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
       json_dict[attribute_name] = cls._ConvertValueToJSON(attribute_value)
@@ -145,7 +146,7 @@ class JSONAttributeContainerSerializer(
     # Use __container_type__ to indicate the attribute container type.
     container_type = json_dict.get('__container_type__', None)
 
-    if container_type != 'event_data':
+    if container_type not in ('event_data', 'system_configuration'):
       return cls.ConvertJSONToAttributeContainer(json_dict)
 
     attribute_container = cls._CONTAINERS_MANAGER.CreateAttributeContainer(
