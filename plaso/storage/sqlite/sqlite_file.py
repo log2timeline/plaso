@@ -63,8 +63,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     compression_format = metadata_values.get('compression_format', None)
     if compression_format not in definitions.COMPRESSION_FORMATS:
-      raise IOError('Unsupported compression format: {0!s}'.format(
-          compression_format))
+      raise IOError(f'Unsupported compression format: {compression_format!s}')
 
   def _CreateAttributeContainerFromRow(
       self, container_type, column_names, row, first_column_index):
@@ -131,14 +130,13 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         data_column_type = 'TEXT'
 
       query = (
-          'CREATE TABLE {0:s} (_identifier INTEGER PRIMARY KEY AUTOINCREMENT, '
-          '_data {1:s});').format(container_type, data_column_type)
+          f'CREATE TABLE {container_type:s} (_identifier INTEGER PRIMARY KEY '
+          f'AUTOINCREMENT, _data {data_column_type:s});')
 
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-        raise IOError('Unable to query storage file with error: {0!s}'.format(
-            exception))
+        raise IOError(f'Unable to query storage file with error: {exception!s}')
 
     if container_type == self._CONTAINER_TYPE_EVENT_TAG:
       query = ('CREATE INDEX event_tag_per_event '
@@ -146,8 +144,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-        raise IOError('Unable to query storage file with error: {0!s}'.format(
-            exception))
+        raise IOError(f'Unable to query storage file with error: {exception!s}')
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -174,11 +171,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       container = self._serializer.ReadSerialized(serialized_string)
 
     except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+      raise IOError(
+          f'Unable to decode serialized data with error: {exception!s}')
 
     except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
-      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+      raise IOError(f'Unable to read serialized data with error: {exception!s}')
 
     finally:
       if self._serializers_profiler:
@@ -245,12 +243,13 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         serialized_string = json.dumps(json_dict)
       except TypeError as exception:
         raise IOError((
-            'Unable to serialize attribute container: {0:s} with error: '
-            '{1!s}.').format(container.CONTAINER_TYPE, exception))
+            f'Unable to serialize attribute container: '
+            f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
 
       if not serialized_string:
-        raise IOError('Unable to serialize attribute container: {0:s}.'.format(
-            container.CONTAINER_TYPE))
+        raise IOError((
+            f'Unable to serialize attribute container: '
+            f'{container.CONTAINER_TYPE:s}'))
 
       serialized_string = serialized_string.encode('utf-8')
 
@@ -282,8 +281,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     if not schema:
       raise IOError(
-          'Unsupported attribute container type: {0:s}'.format(
-              container.CONTAINER_TYPE))
+          f'Unsupported attribute container type: {container.CONTAINER_TYPE:s}')
 
     identifier = container.GetIdentifier()
 
@@ -305,12 +303,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           # TODO: add compression support
           attribute_value = self._serializer.WriteSerialized(attribute_value)
 
-      column_names.append('{0:s} = ?'.format(name))
+      column_names.append(f'{name:s} = ?')
       values.append(attribute_value)
 
-    query = 'UPDATE {0:s} SET {1:s} WHERE _identifier = {2:d}'.format(
-        container.CONTAINER_TYPE, ', '.join(column_names),
-        identifier.sequence_number)
+    column_names = ', '.join(column_names)
+    query = (f'UPDATE {container.CONTAINER_TYPE:s} SET {column_names:s} '
+             f'WHERE _identifier = {identifier.sequence_number:d}')
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('write_existing')
@@ -319,8 +317,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       self._cursor.execute(query, values)
 
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
+      raise IOError(f'Unable to query storage file with error: {exception!s}')
 
     finally:
       if self._storage_profiler:
@@ -336,12 +333,11 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     try:
       self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError(
-          'Unable to query attribute container store with error: {0!s}'.format(
-              exception))
+      raise IOError((
+          f'Unable to query attribute container store with error: '
+          f'{exception!s}'))
 
-    self._WriteMetadataValue(
-        'format_version', '{0:d}'.format(self._FORMAT_VERSION))
+    self._WriteMetadataValue('format_version', f'{self._FORMAT_VERSION:d}')
     self._WriteMetadataValue('compression_format', self.compression_format)
     self._WriteMetadataValue('serialization_format', self.serialization_format)
 
@@ -436,14 +432,14 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     column_names = ['_data']
 
     row_number = index + 1
-    query = 'SELECT {0:s} FROM {1:s} WHERE rowid = {2:d}'.format(
-        ', '.join(column_names), container_type, row_number)
+    column_names = ', '.join(column_names)
+    query = (f'SELECT {column_names:s} FROM {container_type:s} '
+             f'WHERE rowid = {row_number:d}')
 
     try:
       self._cursor.execute(query)
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError('Unable to query storage file with error: {0!s}'.format(
-          exception))
+      raise IOError(f'Unable to query storage file with error: {exception!s}')
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('get_container_by_index')
@@ -520,12 +516,10 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       filter_expression = []
 
       if time_range.start_timestamp:
-        filter_expression.append('timestamp >= {0:d}'.format(
-            time_range.start_timestamp))
+        filter_expression.append(f'timestamp >= {time_range.start_timestamp:d}')
 
       if time_range.end_timestamp:
-        filter_expression.append('timestamp <= {0:d}'.format(
-            time_range.end_timestamp))
+        filter_expression.append('timestamp <= {time_range.end_timestamp:d}')
 
       filter_expression = ' AND '.join(filter_expression)
 
