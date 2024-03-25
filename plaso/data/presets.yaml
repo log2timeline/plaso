@@ -151,7 +151,9 @@ parsers:
 - text/setupapi
 - text/skydrive_log_v1
 - text/skydrive_log_v2
-- text/teamviewer
+- text/teamviewer_application_log
+- text/teamviewer_connections_incoming
+- text/teamviewer_connections_outgoing
 - text/winfirewall
 - usnjrnl
 - webhist

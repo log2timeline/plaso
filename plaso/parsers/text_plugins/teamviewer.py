@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugins for TeamViewer application log, 
-outgoing connections log and incoming connections logs."""
+"""Text parser plugins for TeamViewer application log, outgoing connections log
+and incoming connections logs."""
 
 import pyparsing
 
@@ -16,18 +16,18 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
   """TeamViewer incoming connection log event data.
 
   Attributes:
-    activity_type (str): Type of the activity 
+    activity_type (str): Type of the activity
         (e.g. RemoteSupport, FileTransfer).
     connection_guid (str): The GUID associated with the connection.
-    display_name (string): The display name of the incoming connection 
+    display_name (string): The display name of the incoming connection
         source. Usually the computer name or the TeamViewer user name.
-    local_account (str): The local user account associated 
+    local_account (str): The local user account associated
         with this activity.
-    session_end_timestamp (dfdatetime.DateTimeValues): End time 
+    session_end_timestamp (dfdatetime.DateTimeValues): End time
         of the connection (UTC).
-    session_start_timestamp (dfdatetime.DateTimeValues): Start time 
+    session_start_timestamp (dfdatetime.DateTimeValues): Start time
         of the connection (UTC).
-    source_teamviewer_id (int): The TeamViewer ID of 
+    source_teamviewer_id (int): The TeamViewer ID of
         the incoming connection.
   """
 
@@ -50,15 +50,15 @@ class TeamViewerConnectionsOutgoingEventData(events.EventData):
   """TeamViewer outgoing connection log event data.
 
   Attributes:
-    activity_type (str): Type of the activity 
+    activity_type (str): Type of the activity
         (e.g. RemoteSupport, FileTransfer).
     connection_guid (str): The GUID associated with the connection.
     destination_teamviewer_id (int): The TeamViewer ID of the destination.
-    local_account (str): The local user account associated 
+    local_account (str): The local user account associated
         with this activity.
-    session_end_timestamp (dfdatetime.DateTimeValues): End time 
+    session_end_timestamp (dfdatetime.DateTimeValues): End time
         of the connection (UTC).
-    session_start_timestamp (dfdatetime.DateTimeValues): Start time 
+    session_start_timestamp (dfdatetime.DateTimeValues): Start time
         of the connection (UTC).
   """
 
@@ -100,7 +100,7 @@ class TeamViewerApplicationLogTextPlugin(
     interface.TextPluginWithLineContinuation):
   """Text parser plugin for TeamViewer application log files."""
 
-  NAME = 'teamviewer:application_log'
+  NAME = 'teamviewer_application_log'
   DATA_FORMAT = 'TeamViewer application log file parser.'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
@@ -263,9 +263,9 @@ class TeamViewerApplicationLogTextPlugin(
 
 
 class TeamViewerConnectionsOutgoingLogTextPlugin(interface.TextPlugin):
-  """Text parser plugin for TeamViewer connections.txt log files"""
+  """Text parser plugin for TeamViewer connections.txt log files."""
 
-  NAME = 'teamviewer:connections_outgoing'
+  NAME = 'teamviewer_connections_outgoing'
   DATA_FORMAT = 'TeamViewer connections.txt log file'
 
   _TEAMVIEWER_ID = pyparsing.Word(pyparsing.nums, min=8, max=11
@@ -403,8 +403,8 @@ class TeamViewerConnectionsOutgoingLogTextPlugin(interface.TextPlugin):
     return True
 
 class TeamViewerConnectionsIncomingLogTextPlugin(interface.TextPlugin):
-  """Text parser plugin for TeamViewer connections_incoming.txt log files"""
-  NAME = 'teamviewer:connections_incoming'
+  """Text parser plugin for TeamViewer connections_incoming.txt ."""
+  NAME = 'teamviewer_connections_incoming'
   DATA_FORMAT = 'TeamViewer connections_incoming.txt log file'
 
   _TEAMVIEWER_ID = pyparsing.Word(pyparsing.nums, min=8, max=11

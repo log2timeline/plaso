@@ -47,8 +47,7 @@ class TeamViewerConnectionsIncomingLogTextPluginTest(
 
 class TeamViewerConnectionsOutgoingLogTextPluginTest(
     test_lib.TextPluginTestCase):
-  """Tests for the TeamViewer Connections.txt 
-  log file parser plugin."""
+  """Tests for the TeamViewer Connections.txt log file parser plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
