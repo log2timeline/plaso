@@ -83,10 +83,10 @@ class StorageReader(object):
       EventTag: event tag or None if the event has no event tag.
     """
     lookup_key = event_identifier.CopyToString()
-    filter_expression = '_event_identifier == "{0:s}"'.format(lookup_key)
 
     event_tags = list(self.GetAttributeContainers(
-        self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression))
+        self._CONTAINER_TYPE_EVENT_TAG,
+        filter_expression=f'_event_identifier == "{lookup_key:s}"'))
 
     if not event_tags:
       return None

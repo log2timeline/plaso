@@ -71,11 +71,12 @@ class RedisAttributeContainerStore(
       attribute_container = self._serializer.ReadSerialized(serialized_string)
 
     except UnicodeDecodeError as exception:
-      raise IOError('Unable to decode serialized data: {0!s}'.format(exception))
+      raise IOError(
+          f'Unable to decode serialized data with error: {exception!s}')
 
     except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
-      raise IOError('Unable to read serialized data: {0!s}'.format(exception))
+      raise IOError(f'Unable to read serialized data with error: {exception!s}')
 
     finally:
       if self._serializers_profiler:
@@ -92,8 +93,8 @@ class RedisAttributeContainerStore(
     Returns:
       str: a Redis key name.
     """
-    return '{0:s}-{1:s}-{2:s}'.format(
-        self._session_identifier, self._task_identifier, container_type)
+    return (f'{self._session_identifier:s}-{self._task_identifier:s}-'
+            f'{container_type:s}')
 
   def _RaiseIfNotReadable(self):
     """Checks that the store is ready to for reading.
@@ -136,9 +137,9 @@ class RedisAttributeContainerStore(
       attribute_container_data = self._serializer.WriteSerialized(
           attribute_container)
       if not attribute_container_data:
-        raise IOError(
-            'Unable to serialize attribute container: {0:s}.'.format(
-                attribute_container.CONTAINER_TYPE))
+        raise IOError((
+            f'Unable to serialize attribute container: '
+            f'{attribute_container.CONTAINER_TYPE:s}'))
 
     finally:
       if self._serializers_profiler:
@@ -162,9 +163,9 @@ class RedisAttributeContainerStore(
     try:
       redis_client.client_setname(name)
     except redis.ResponseError as exception:
-      logger.debug(
-          'Unable to set redis client name: {0:s} with error: {1!s}'.format(
-              name, exception))
+      logger.debug((
+          f'Unable to set redis client name: {name:s} with error: '
+          f'{exception!s}'))
 
   def _UpdateAttributeContainerAfterDeserialize(self, container):
     """Updates an attribute container after deserialization.
@@ -329,9 +330,9 @@ class RedisAttributeContainerStore(
     """
     sequence_number = index + 1
     redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = '{0:s}.{1:d}'.format(container_type, sequence_number)
 
-    serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
+    serialized_data = self._redis_client.hget(
+        redis_hash_name, f'{container_type:s}.{sequence_number:d}')
     if not serialized_data:
       return None
 
