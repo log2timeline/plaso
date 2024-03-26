@@ -132,7 +132,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(field_values, expected_field_values)
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -158,7 +158,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         field_values = output_module._GetFieldValues(
             output_mediator, event, event_data, event_data_stream, event_tag)
 
-        output_module._WriteFieldValues(output_mediator, field_values)
+        output_module.WriteFieldValues(output_mediator, field_values)
 
       finally:
         output_module.Close()

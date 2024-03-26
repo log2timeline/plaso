@@ -349,9 +349,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               self._output_mediator, macb_group)
           macb_group = []
 
-        output_module.WriteFieldValues(
+        field_values = output_module.GetFieldValues(
             self._output_mediator, event, event_data, event_data_stream,
             event_tag)
+        output_module.WriteFieldValues(self._output_mediator, field_values)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or

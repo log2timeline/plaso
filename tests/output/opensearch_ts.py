@@ -72,7 +72,7 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -83,7 +83,7 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function.
+    """Tests the WriteFieldValues function.
 
     Raises:
       SkipTest: if opensearch-py is missing.
@@ -112,7 +112,7 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)

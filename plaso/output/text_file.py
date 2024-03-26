@@ -89,16 +89,6 @@ class TextFileOutputModule(interface.OutputModule):
       dict[str, str]: output field values per name.
     """
 
-  @abc.abstractmethod
-  def _WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-
   def Close(self):
     """Closes the output file."""
     if self._file_object:
@@ -125,6 +115,16 @@ class TextFileOutputModule(interface.OutputModule):
           '[{0:s}]').format(path))
 
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
+
+  @abc.abstractmethod
+  def WriteFieldValues(self, output_mediator, field_values):
+    """Writes field values to the output.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+    """
 
   def WriteLine(self, text):
     """Writes a line of text to the output file.
@@ -197,7 +197,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
       str: output string.
     """
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -205,34 +205,19 @@ class SortedTextFileOutputModule(TextFileOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    output_text = self._GetString(output_mediator, field_values)
-    if output_text:
-      sort_key = ' '.join([
-          field_values.get(field_name) or ''
-          for field_name in self._SORT_KEY_FIELD_NAMES])
-      self._sorted_strings_heap.PushString(sort_key, output_text)
+    sort_key = ' '.join([
+        field_values.get(field_name) or ''
+        for field_name in self._SORT_KEY_FIELD_NAMES])
 
-  def WriteFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Writes field values to the output.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-    """
-    sort_key = event.timestamp
     if self._last_sort_key is None:
       self._last_sort_key = sort_key
 
     if sort_key != self._last_sort_key or self._sorted_strings_heap.IsFull():
       self._FlushSortedStringsHeap()
 
-    super(SortedTextFileOutputModule, self).WriteFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
+    output_text = self._GetString(output_mediator, field_values)
+    if output_text:
+      self._sorted_strings_heap.PushString(sort_key, output_text)
 
   def WriteFooter(self):
     """Writes the footer to the output.
