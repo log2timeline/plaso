@@ -53,7 +53,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     # Test event without geo-location.
     test_file_object = io.StringIO()
 
@@ -68,7 +68,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     event_body = test_file_object.getvalue()
     self.assertEqual(event_body, '')
@@ -87,7 +87,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     event_body = test_file_object.getvalue()
 

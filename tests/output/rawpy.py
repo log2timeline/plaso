@@ -76,7 +76,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     self.assertEqual(field_values, expected_field_values)
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -90,7 +90,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     field_values = output_module._GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

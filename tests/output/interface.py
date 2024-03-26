@@ -53,7 +53,7 @@ class TestXMLOutputModule(interface.OutputModule):
         'datetime': date_time_string,
         'entry': event_data.entry}
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -122,7 +122,7 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
       field_values = output_module._GetFieldValues(
           output_mediator, event, event_data, event_data_stream, None)
 
-      output_module._WriteFieldValues(output_mediator, field_values)
+      output_module.WriteFieldValues(output_mediator, field_values)
 
     output_module.WriteFooter()
 

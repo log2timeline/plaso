@@ -30,7 +30,7 @@ class NullOutputModule(interface.OutputModule):
     """
     return {}
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
