@@ -146,7 +146,7 @@ class TextFileOutputModule(interface.OutputModule):
 class SortedTextFileOutputModule(TextFileOutputModule):
   """Shared functionality of an output module that writes to a text file."""
 
-  _SORT_KEY_FIELD_NAMES = []
+  _SORT_KEY_FIELD_NAMES = ['time']
 
   def __init__(self, event_formatting_helper):
     """Initializes an output module that writes to a text file.
@@ -156,7 +156,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
     """
     super(SortedTextFileOutputModule, self).__init__()
     self._event_formatting_helper = event_formatting_helper
-    self._last_sort_key = None
+    self._last_primary_sort_key = None
     self._sorted_strings_heap = SortedStringHeap()
 
   def _FlushSortedStringsHeap(self):
@@ -164,7 +164,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
     for output_text in self._sorted_strings_heap.PopStrings():
       self.WriteText(output_text)
 
-    self._last_sort_key = None
+    self._last_primary_sort_key = None
 
   def _GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
@@ -205,18 +205,18 @@ class SortedTextFileOutputModule(TextFileOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    sort_key = ' '.join([
-        field_values.get(field_name) or ''
-        for field_name in self._SORT_KEY_FIELD_NAMES])
+    primary_sort_key = field_values.get(self._SORT_KEY_FIELD_NAMES[0], None)
+    if self._last_primary_sort_key is None:
+      self._last_primary_sort_key = primary_sort_key
 
-    if self._last_sort_key is None:
-      self._last_sort_key = sort_key
-
-    if sort_key != self._last_sort_key or self._sorted_strings_heap.IsFull():
+    if (primary_sort_key != self._last_primary_sort_key or
+        self._sorted_strings_heap.IsFull()):
       self._FlushSortedStringsHeap()
 
     output_text = self._GetString(output_mediator, field_values)
     if output_text:
+      sort_key = ' '.join([field_values.get(field_name, None) or ''
+                           for field_name in self._SORT_KEY_FIELD_NAMES])
       self._sorted_strings_heap.PushString(sort_key, output_text)
 
   def WriteFooter(self):
