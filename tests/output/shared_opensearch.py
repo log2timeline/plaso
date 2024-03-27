@@ -43,8 +43,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'a_binary_field': b'binary',
-       'data_type': 'syslog:line',
+      {'data_type': 'syslog:line',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
@@ -124,7 +123,6 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabel('Test')
 
     expected_field_values = {
-        'a_binary_field': 'binary',
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01.000000+00:00',
         'display_name': 'FAKE:log/syslog.1',
