@@ -29,6 +29,7 @@ from plaso.parsers.text_plugins import skydrivelog
 from plaso.parsers.text_plugins import snort_fastlog
 from plaso.parsers.text_plugins import sophos_av
 from plaso.parsers.text_plugins import syslog
+from plaso.parsers.text_plugins import teamviewer
 from plaso.parsers.text_plugins import viminfo
 from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import winfirewall

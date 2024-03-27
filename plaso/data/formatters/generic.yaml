@@ -958,6 +958,50 @@ short_message:
 short_source: 'LOG'
 source: 'Systemd journal'
 ---
+type: 'conditional'
+data_type: 'teamviewer:application_log:entry'
+separator: ''
+message:
+- '['
+- 'pid: {process_id}'
+- '] {message}'
+short_message:
+- '{message}'
+source: 'TeamViewer application log'
+short_source: 'LOG'
+---
+type: 'conditional'
+data_type: 'teamviewer:connections_incoming:entry'
+message:
+- 'source TeamViewer ID: {source_teamviewer_id}'
+- 'display name: {display_name}'
+- 'local account: {local_account}'
+- 'activity type: {activity_type}'
+- 'connection GUID: {connection_guid}'
+short_message:
+- '{source_teamviewer_id}'
+- '{display_name}'
+- '{local_account}'
+- '{activity_type}'
+- '{connection_guid}'
+source: 'TeamViewer incoming connections log'
+short_source: 'LOG'
+---
+type: 'conditional'
+data_type: 'teamviewer:connections_outgoing:entry'
+message:
+- 'destination TeamViewer ID: {destination_teamviewer_id}'
+- 'local account: {local_account}'
+- 'activity type: {activity_type}'
+- 'connection GUID: {connection_guid}'
+short_message:
+- '{destination_teamviewer_id}'
+- '{local_account}'
+- '{activity_type}'
+- '{connection_guid}'
+source: 'TeamViewer outgoing connections log'
+short_source: 'LOG'
+---
 type: 'basic'
 data_type: 'text:entry'
 message: '{text}'

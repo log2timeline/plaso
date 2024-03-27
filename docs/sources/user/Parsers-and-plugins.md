@@ -211,6 +211,7 @@ snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 syslog | Parser for System log (syslog) files.
 syslog_traditional | Parser for Traditional system log (syslog) files.
+teamviewer | Parser for TeamViewer log files.
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
