@@ -22,13 +22,27 @@ opensearch_ts | Saves the events into an OpenSearch database for use with Timesk
 tln | Output events to TLN format, with 5 fixed fields. Also see: [TLN](https://forensics.wiki/tln).
 xlsx | Output events to an Excel Spreadsheet (XLSX).
 
-### Dynamic output module fields
+The following sections define "special" fields that are composed at runtime.
+
+### Common runtime fields
+
+Output fields that are not part of the event data but of the data stream the
+event data originates from.
+
+Name | Description
+--- | ---
+file_entropy | Byte entropy of the data stream content. This is a value ranging from 0.0 to 8.0, where 8.0 indicates the distribution of byte values is highly random.
+md5_hash | MD5 hash of the data stream content.
+sha1_hash | SHA-1 hash of the data stream content.
+sha256_hash | SHA-256 hash of the data stream content.
+yara_match | Names of the Yara rules that matched the data stream content.
+
+### Dynamic runtime fields
 
 The dynamic output module defines the following command line options to specify
 which fields should be represented in the output, namely `--fields` and
 `--additional_fields`. The name of the fields typically map 1-to-1 to the names
-of attributes of the event data. However there are "special" fields that are
-composed at runtime.
+of attributes of the event data.
 
 Name | Description
 --- | ---
@@ -44,35 +58,62 @@ inode | The "inode" attribute if present in the event data, otherwise derived fr
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter
 message_short | The short event message string as defined by the message formatter
-source | The short event source as defined by the message formatter
-sourcetype | The event source as defined by the message formatter
-source_long | The event source as defined by the message formatter
+source | The short event source as defined by `data/sources.config`
+sourcetype | The event source as defined by `data/sources.config`, equivalent to source_long
+source_long | The event source as defined by `data/sources.config`
 tag | The labels defined by event tags
 time | The time of the event in seconds formatted as "HH:MM:SS" or "--:--:--" on error
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 timezone | Time zone indicator
-type | Indication of what the event time represents such as Creation Time or Program Execution Duration
-user | The username derived by pre-processing
+type | Indication of what the event time represents such as Creation Time or Program Execution Duration, equivalent to timestamp_desc
+user | The username derived by pre-processing, equivalent to username
 username | The username derived by pre-processing
-zone | Time zone indicator
+zone | Time zone indicator, equivalent to timezone
 
 Note that the `--dynamic-time` output option will change the format of the
 datetime output field to use value appropriate granularity, for example seconds
-for a HFS+ timestamp will be "YYYY-MM-DDTHH:MM:SS" but for an NTFS filetime it
+for a HFS+ timestamp will be "YYYY-MM-DDTHH:MM:SS" but for an NTFS FILETIME it
 will be "YYYY-MM-DDTHH:MM:SS.#######", or a semantic time, for example
 "Not set", or "Error" on error. Older Plaso storage files do not necessarily
 support the dynamic time option.
 
-Output fields that are not part of the event data but of the data stream the
-event data originates from.
+### JSON output module fields
 
 Name | Description
 --- | ---
-file_entropy | Byte entropy of the data stream content. This is a value ranging from 0.0 to 8.0, where 8.0 indicates the distribution of byte values is highly random.
-md5_hash | MD5 hash of the data stream content.
-sha1_hash | SHA-1 hash of the data stream content.
-sha256_hash | SHA-256 hash of the data stream content.
-yara_match | Names of the Yara rules that matched the data stream content.
+display_name | Human readable representation of the path specification
+filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
+inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
+message | The event message string as defined by the message formatter
+pathspec | JSON serialized path specification
+parser | Chain of parsers that generated the event.
+tag | The labels defined by event tags
+timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
+
+### Native (or "raw") Python runtime fields
+
+Name | Description
+--- | ---
+display_name | Human readable representation of the path specification
+filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
+inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
+message | The event message string as defined by the message formatter
+parser | Chain of parsers that generated the event.
+short_source | The short event source as defined by `data/sources.config`
+source_long | The event source as defined by `data/sources.config`
+timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
+
+### OpenSearch runtime fields
+
+Name | Description
+--- | ---
+display_name | Human readable representation of the path specification
+message | The event message string as defined by the message formatter
+parser | Chain of parsers that generated the event.
+short_source | The short event source as defined by `data/sources.config`
+source_long | The event source as defined by `data/sources.config`
+tag | The labels defined by event tags
+timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 
 ## Output field formatting
 

@@ -31,8 +31,7 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'a_binary_field': b'binary',
-       'data_type': 'syslog:line',
+      {'data_type': 'syslog:line',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
