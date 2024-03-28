@@ -39,7 +39,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
        'filename': 'log/syslog.1',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-           'closed for user root) Invalid character -> \ud801'),
+           'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
@@ -119,7 +119,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         'display_name': '-',
         'message': (
             'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-            'closed for user root) Invalid character -> �'),
+            'closed for user root)'),
         'parser': '-',
         'source': 'FILE',
         'source_long': 'Test log file',
@@ -175,7 +175,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
           '41087.76181712963', 'Metadata Modification Time', 'FILE',
           'Test log file',
           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-          'closed for user root) Invalid character -> \ufffd',
+          'closed for user root)',
           '-', '-', 'Malware Printed']
 
       self.assertEqual(expected_header, rows[0])

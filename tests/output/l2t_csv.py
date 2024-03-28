@@ -22,7 +22,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
   _TEST_EVENTS = [
       {'_parser_chain': 'test_parser',
-       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
@@ -36,7 +35,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN},
       {'_parser_chain': 'test_parser',
-       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
@@ -120,7 +118,6 @@ class L2TCSVFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         output_mediator, event, event_data, event_data_stream)
 
     expected_extra_attributes_string = (
-        'a_binary_field: binary; '
         'my_number: 123; '
         'some_additional_foo: True')
     self.assertEqual(extra_attributes_string, expected_extra_attributes_string)
@@ -166,7 +163,6 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   _TEST_EVENTS = [
       {'_parser_chain': 'test_parser',
-       'a_binary_field': b'binary',
        'data_type': 'test:event',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
@@ -200,8 +196,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'date': '06/27/2012',
         'desc': ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
                  'closed for user root)'),
-        'extra': ('a_binary_field: binary; my_number: 123; '
-                  'some_additional_foo: True'),
+        'extra': 'my_number: 123; some_additional_foo: True',
         'filename': 'FAKE:log/syslog.1',
         'format': 'test_parser',
         'host': 'ubuntu',
@@ -254,8 +249,8 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'Time,-,ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
         'session closed for user root),Reporter <CRON> PID: 8442 '
         '(pam_unix(cron:session): session closed for user root),'
-        '2,FAKE:log/syslog.1,-,Malware Printed,test_parser,a_binary_field: '
-        'binary; my_number: 123; some_additional_foo: True\n')
+        '2,FAKE:log/syslog.1,-,Malware Printed,test_parser,my_number: 123; '
+        'some_additional_foo: True\n')
 
     event_body = test_file_object.getvalue()
     self.assertEqual(event_body, expected_event_body)

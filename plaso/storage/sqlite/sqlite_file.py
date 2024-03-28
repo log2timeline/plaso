@@ -27,11 +27,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
   _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20230327
 
-  _READ_COMPATIBLE_FORMAT_VERSION = 20221023
-
-  _READ_INCOMPATIBLE_CONTAINER_TYPES = frozenset([
-      'hostname', 'operating_system', 'path', 'source_configuration',
-      'time_zone', 'user_account'])
+  _READ_COMPATIBLE_FORMAT_VERSION = 20230327
 
   _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
@@ -78,12 +74,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     Returns:
       AttributeContainer: attribute container.
     """
-    if self.format_version > 20221023 or container_type not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container_type)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container_type)
     if schema:
       return super(SQLiteStorageFile, self)._CreateAttributeContainerFromRow(
           container_type, column_names, row, first_column_index)
@@ -114,12 +105,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file or if
           an unsupported attribute container is provided.
     """
-    if self.format_version > 20221023 or container_type not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container_type)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container_type)
     if schema:
       super(SQLiteStorageFile, self)._CreateAttributeContainerTable(
           container_type)
@@ -273,12 +259,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file or if
           an unsupported identifier is provided.
     """
-    if self.format_version > 20221023 or container.CONTAINER_TYPE not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if not schema:
       raise IOError(
           f'Unsupported attribute container type: {container.CONTAINER_TYPE:s}')
@@ -353,12 +334,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    if self.format_version > 20221023 or container.CONTAINER_TYPE not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if schema:
       super(SQLiteStorageFile, self)._WriteNewAttributeContainer(container)
     else:
@@ -410,12 +386,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when the store is closed or when there is an error querying
           the storage file.
     """
-    if self.format_version > 20221023 or container_type not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container_type)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container_type)
     if schema:
       return super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
           container_type, index)
@@ -479,12 +450,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
-    if self.format_version > 20221023 or container_type not in (
-        self._READ_INCOMPATIBLE_CONTAINER_TYPES):
-      schema = self._GetAttributeContainerSchema(container_type)
-    else:
-      schema = None
-
+    schema = self._GetAttributeContainerSchema(container_type)
     if schema:
       return super(SQLiteStorageFile, self).GetAttributeContainers(
           container_type, filter_expression=filter_expression)

@@ -42,6 +42,10 @@ def CreateEventFromValues(event_values):
   event_data = events.EventData()
   event_data.CopyFromDict(copy_of_event_values)
 
+  event_values_hash = events.CalculateEventValuesHash(
+      event_data, event_data_stream)
+  setattr(event_data, '_event_values_hash', event_values_hash)
+
   return event, event_data, event_data_stream
 
 
