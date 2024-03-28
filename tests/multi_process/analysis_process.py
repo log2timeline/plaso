@@ -21,30 +21,35 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
 
   NAME = 'test_plugin'
 
-  # pylint: disable=arguments-renamed
-  # pylint: disable=unused-argument
-  def CompileReport(self, mediator):
+  # pylint: disable=redundant-returns-doc,unused-argument
+
+  def CompileReport(self, analysis_mediator):
     """Compiles a report of the analysis.
 
-    After the plugin has received every copy of an event to
-    analyze this function will be called so that the report
-    can be assembled.
+    After the plugin has received every copy of an event to analyze this
+    function will be called so that the report can be assembled.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-    """
-    return
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
 
-  def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+    Returns:
+      AnalysisReport: report.
+    """
+    return None
+
+  def ExamineEvent(
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+      analysis_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfVFS.
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     return
 

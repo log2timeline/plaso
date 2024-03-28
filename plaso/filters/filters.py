@@ -54,13 +54,15 @@ class Filter(object):
     return value
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -74,13 +76,15 @@ class AndFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -88,7 +92,7 @@ class AndFilter(Filter):
     """
     for sub_filter in self.args:
       match = sub_filter.Matches(
-          event, event_data, event_data_stream, event_tag)
+          event, event_data, event_data_stream, event_values, event_tag)
       if not match:
         return False
     return True
@@ -100,13 +104,15 @@ class OrFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -117,7 +123,7 @@ class OrFilter(Filter):
 
     for sub_filter in self.args:
       match = sub_filter.Matches(
-          event, event_data, event_data_stream, event_tag)
+          event, event_data, event_data_stream, event_values, event_tag)
       if match:
         return True
     return False
@@ -127,13 +133,15 @@ class Operator(Filter):
   """Interface for filters that represent operators."""
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -144,13 +152,15 @@ class Operator(Filter):
 class IdentityFilter(Operator):
   """A filter which always evaluates to True."""
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -187,13 +197,15 @@ class BinaryOperator(Operator):
     self.right_operand = arguments[1]
 
   @abc.abstractmethod
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -233,7 +245,8 @@ class GenericBinaryOperator(BinaryOperator):
     """
 
   def _GetValue(
-      self, attribute_name, event, event_data, event_data_stream, event_tag):
+      self, attribute_name, event, event_data, event_data_stream, event_values,
+      event_tag):
     """Retrieves the value of a specific event, data or tag attribute.
 
     Args:
@@ -241,6 +254,7 @@ class GenericBinaryOperator(BinaryOperator):
       event (EventObject): event to retrieve the value from.
       event_data (EventData): event data to retrieve the value from.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to retrieve the value from.
 
     Returns:
@@ -270,6 +284,9 @@ class GenericBinaryOperator(BinaryOperator):
     elif attribute_name == 'tag':
       attribute_value = getattr(event_tag, 'labels', None)
 
+    elif event_values and attribute_name != 'data_type':
+      attribute_value = getattr(event_values, attribute_name, None)
+
     else:
       attribute_value = getattr(event_data, attribute_name, None)
 
@@ -280,20 +297,23 @@ class GenericBinaryOperator(BinaryOperator):
     logger.debug('Negative matching.')
     self._bool_value = not self._bool_value
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
       bool: True if the event, data and tag match the filter, False otherwise.
     """
     value = self._GetValue(
-        self.left_operand, event, event_data, event_data_stream, event_tag)
+        self.left_operand, event, event_data, event_data_stream, event_values,
+        event_tag)
 
     if value and self._CompareValue(value, self.right_operand):
       return self._bool_value

@@ -35,7 +35,8 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
 
   # pylint: disable=unused-argument
   def ExamineEvent(
-      self, analysis_mediator, event, event_data, event_data_stream):
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Analyzes an event.
 
     Args:
@@ -44,6 +45,7 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     self._objects.append(list(range(1024)))
 

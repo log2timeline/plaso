@@ -4,8 +4,8 @@
 import hashlib
 import re
 
-from acstore.containers import interface
-from acstore.containers import manager
+from acstore.containers import interface as containers_interface
+from acstore.containers import manager as containers_manager
 
 from dfdatetime import interface as dfdatetime_interface
 
@@ -28,8 +28,8 @@ def CalculateEventValuesHash(event_data, event_data_stream):
 
   for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
     if attribute_value is None or attribute_name in (
-        '_event_data_stream_identifier', '_event_values_hash', '_parser_chain',
-        'data_type'):
+        '_event_data_stream_identifier', '_event_values_hash',
+        '_event_values_identifier', '_parser_chain', 'data_type'):
       continue
 
     # Ignore date and time values.
@@ -82,7 +82,7 @@ def CalculateEventValuesHash(event_data, event_data_stream):
   return md5_context.hexdigest()
 
 
-class DateLessLogHelper(interface.AttributeContainer):
+class DateLessLogHelper(containers_interface.AttributeContainer):
   """Attribute container to assist with logs without full dates.
 
   Attributes:
@@ -197,7 +197,7 @@ class DateLessLogHelper(interface.AttributeContainer):
     self._event_data_stream_identifier = event_data_stream_identifier
 
 
-class EventData(interface.AttributeContainer):
+class EventData(containers_interface.AttributeContainer):
   """Event data attribute container.
 
   The event data attribute container represents the attributes of an entity,
@@ -212,6 +212,7 @@ class EventData(interface.AttributeContainer):
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
       '_event_data_stream_identifier',
       '_event_values_hash',
+      '_event_values_identifier',
       '_parser_chain']
 
   def __init__(self, data_type=None):
@@ -223,6 +224,7 @@ class EventData(interface.AttributeContainer):
     super(EventData, self).__init__()
     self._event_data_stream_identifier = None
     self._event_values_hash = None
+    self._event_values_identifier = None
     self._parser_chain = None
 
     self.data_type = data_type
@@ -280,8 +282,31 @@ class EventData(interface.AttributeContainer):
     """
     self._event_data_stream_identifier = event_data_stream_identifier
 
+  def GetEventValuesIdentifier(self):
+    """Retrieves the identifier of the associated event values container.
 
-class EventDataStream(interface.AttributeContainer):
+    The event values identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Returns:
+      AttributeContainerIdentifier: event values or None when not set.
+    """
+    return self._event_values_identifier
+
+  def SetEventValuesIdentifier(self, event_values_identifier):
+    """Sets the identifier of the associated event values container.
+
+    The event values identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Args:
+      event_values_identifier (AttributeContainerIdentifier): event values
+          identifier.
+    """
+    self._event_values_identifier = event_values_identifier
+
+
+class EventDataStream(containers_interface.AttributeContainer):
   """Event data stream attribute container.
 
   The event data stream attribute container represents the attributes of
@@ -318,7 +343,7 @@ class EventDataStream(interface.AttributeContainer):
     self.yara_match = None
 
 
-class EventObject(interface.AttributeContainer):
+class EventObject(containers_interface.AttributeContainer):
   """Event attribute container.
 
   The framework is designed to parse files and create events
@@ -392,7 +417,7 @@ class EventObject(interface.AttributeContainer):
     self._event_data_identifier = event_data_identifier
 
 
-class EventTag(interface.AttributeContainer):
+class EventTag(containers_interface.AttributeContainer):
   """Event tag attribute container.
 
   Attributes:
@@ -501,7 +526,7 @@ class EventTag(interface.AttributeContainer):
 
 # TODO: the YearLessLogHelper attribute container is kept for backwards
 # compatibility remove once storage format 20230327 is obsolete.
-class YearLessLogHelper(interface.AttributeContainer):
+class YearLessLogHelper(containers_interface.AttributeContainer):
   """Year-less log helper attribute container.
 
   Attributes:
@@ -555,6 +580,6 @@ class YearLessLogHelper(interface.AttributeContainer):
     self._event_data_stream_identifier = event_data_stream_identifier
 
 
-manager.AttributeContainersManager.RegisterAttributeContainers([
+containers_manager.AttributeContainersManager.RegisterAttributeContainers([
     DateLessLogHelper, EventData, EventDataStream, EventObject, EventTag,
     YearLessLogHelper])

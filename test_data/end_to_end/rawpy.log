@@ -3,13 +3,13 @@
   2012-01-22T07:52:33.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -24,13 +24,13 @@
   2012-01-22T07:52:33.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} INFO No new content in ímynd.dd.
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -45,13 +45,13 @@
   2012-01-22T07:53:01.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -68,13 +68,13 @@
   2012-01-22T07:54:01.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -91,13 +91,13 @@
   2012-01-22T07:54:01.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} (root) CMD (/sbin/status.mycheck))
   {data_type} syslog:cron:task_run
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -114,13 +114,13 @@
   2012-01-22T07:54:32.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} `cron.daily' terminated
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -134,13 +134,13 @@
   2012-02-29T01:15:43.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} testing leap year in parsing, events take place in 2012 ---
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} :
   {inode} -
   {parser} text/syslog_traditional
@@ -154,13 +154,13 @@
   2012-12-18T17:54:32.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} No true exit can exist (124 job run)
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -178,34 +178,13 @@
   2013-03-23T23:01:18.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-
-[Reserved attributes]:
-  {body} This syslog message has a fractional value for seconds.
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {inode} -
-  {parser} text/syslog_traditional
-
-[Additional attributes]:
-  {pid} 19
-  {reporter} somrandomexe
-  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
-
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2013-03-23T23:01:18.000000+00:00
-
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} This syslog message is brought to you by me (and not the other guy)
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -217,17 +196,38 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
+  2013-03-23T23:01:18.000000+00:00
+
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog/syslog
+
+[Reserved attributes]:
+  {body} This syslog message has a fractional value for seconds.
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
+  {hostname} myhostname.myhost.com
+  {inode} -
+  {parser} text/syslog_traditional
+
+[Additional attributes]:
+  {pid} 19
+  {reporter} somrandomexe
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
+
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
   2013-11-18T01:15:20.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} This is a multi-line message that screws up
 	many syslog parsers.
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -242,13 +242,13 @@
   2013-12-31T17:54:32.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} Another one just like this (124 job run)
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
   {inode} -
   {parser} text/syslog_traditional
@@ -263,13 +263,13 @@
   2014-02-06T15:16:30.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} Test message with single character day
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} victoria
   {inode} -
   {parser} text/syslog_traditional
@@ -284,13 +284,13 @@
   2014-11-18T01:15:43.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} last message repeated 5 times ---
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} :
   {inode} -
   {parser} text/syslog_traditional
@@ -307,13 +307,13 @@
   2014-11-18T08:30:20.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} [997.390602] sda2: rw=0, want=65, limit=2
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {inode} -
   {parser} text/syslog_traditional
 
@@ -326,13 +326,13 @@
   2014-11-18T08:31:20.000000+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {body} [998.390602] sda2: rw=0, want=66, limit=2
   {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} victoria
   {inode} -
   {parser} text/syslog_traditional
@@ -343,16 +343,16 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2023-03-27T03:47:03.767381+00:00
+  2024-03-28T07:54:34.785375+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {inode} 762256
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
+  {inode} 3487956
   {parser} filestat
 
 [Additional attributes]:
@@ -369,16 +369,16 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2023-03-27T03:47:03.767381+00:00
+  2024-03-28T07:54:34.785375+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {inode} 762256
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
+  {inode} 3487956
   {parser} filestat
 
 [Additional attributes]:
@@ -395,16 +395,16 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2023-03-27T03:47:05.830383+00:00
+  2024-03-28T07:54:36.751358+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {inode} 762256
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
+  {inode} 3487956
   {parser} filestat
 
 [Additional attributes]:
@@ -421,16 +421,16 @@
 
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2023-03-27T03:47:08.884386+00:00
+  2024-03-28T07:54:40.393325+00:00
 
 [Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog/syslog
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {inode} 762256
+  {display_name} OS:/tmp/test/test_data/syslog/syslog
+  {filename} /tmp/test/test_data/syslog/syslog
+  {inode} 3487956
   {parser} filestat
 
 [Additional attributes]:

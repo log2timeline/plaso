@@ -280,7 +280,7 @@ Test argument parser.
     expected_line = (
         '2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,'
         '[/sbin/anacron  pid: 1234] Another one just like this (124 job run),'
-        'text/syslog_traditional,OS:/tmp/test/test_data/syslog,-')
+        'text/syslog_traditional,OS:/tmp/test/test_data/syslog/syslog,-')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(

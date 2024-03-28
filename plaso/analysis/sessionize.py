@@ -22,7 +22,8 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
   # pylint: disable=unused-argument
   def ExamineEvent(
-      self, analysis_mediator, event, event_data, event_data_stream):
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Analyzes an EventObject and tags it as part of a session.
 
     Args:
@@ -31,6 +32,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     if (self._session_end_timestamp is not None and
         event.timestamp > self._session_end_timestamp):

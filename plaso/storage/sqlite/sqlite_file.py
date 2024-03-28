@@ -21,11 +21,11 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     compression_format (str): compression format.
   """
 
-  _FORMAT_VERSION = 20230327
+  _FORMAT_VERSION = 20240325
 
-  _APPEND_COMPATIBLE_FORMAT_VERSION = 20230327
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20240325
 
-  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20230327
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20240325
 
   _READ_COMPATIBLE_FORMAT_VERSION = 20230327
 
@@ -91,7 +91,29 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           'read_create', 'read', container_type, len(serialized_data),
           len(compressed_data))
 
-    return self._DeserializeAttributeContainer(container_type, serialized_data)
+    container = self._DeserializeAttributeContainer(
+        container_type, serialized_data)
+
+    if container_type == self._CONTAINER_TYPE_EVENT_DATA:
+      serialized_identifier = row[first_column_index + 1]
+      if serialized_identifier:
+        event_data_stream_identifier = (
+            containers_interface.AttributeContainerIdentifier())
+        event_data_stream_identifier.CopyFromString(serialized_identifier)
+        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+      setattr(container, '_event_values_hash', row[first_column_index + 2])
+
+      serialized_identifier = row[first_column_index + 3]
+      if serialized_identifier:
+        event_values_identifier = (
+            containers_interface.AttributeContainerIdentifier())
+        event_values_identifier.CopyFromString(serialized_identifier)
+        container.SetEventValuesIdentifier(event_values_identifier)
+
+      container.data_type = row[first_column_index + 4]
+
+    return container
 
   def _CreateAttributeContainerTable(self, container_type):
     """Creates a table for a specific attribute container type.
@@ -115,9 +137,16 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       else:
         data_column_type = 'TEXT'
 
-      query = (
-          f'CREATE TABLE {container_type:s} (_identifier INTEGER PRIMARY KEY '
-          f'AUTOINCREMENT, _data {data_column_type:s});')
+      if container_type == self._CONTAINER_TYPE_EVENT_DATA:
+        query = (
+            f'CREATE TABLE {container_type:s} (_identifier INTEGER PRIMARY KEY '
+            f'AUTOINCREMENT, _data {data_column_type:s}, '
+            f'_event_data_stream_identifier TEXT, _event_values_hash TEXT, '
+            f'_event_values_identifier TEXT, data_type TEXT);')
+      else:
+        query = (
+            f'CREATE TABLE {container_type:s} (_identifier INTEGER PRIMARY KEY '
+            f'AUTOINCREMENT, _data {data_column_type:s});')
 
       try:
         self._cursor.execute(query)
@@ -168,15 +197,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(container_type)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      serialized_identifier = getattr(
-          container, '_event_data_stream_identifier', None)
-      if serialized_identifier:
-        event_data_stream_identifier = (
-            containers_interface.AttributeContainerIdentifier())
-        event_data_stream_identifier.CopyFromString(serialized_identifier)
-        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
-
     return container
 
   def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
@@ -224,6 +244,11 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         if event_data_stream_identifier:
           json_dict['_event_data_stream_identifier'] = (
               event_data_stream_identifier.CopyToString())
+
+        event_values_identifier = container.GetEventValuesIdentifier()
+        if event_values_identifier:
+          json_dict['_event_values_identifier'] = (
+              event_values_identifier.CopyToString())
 
       try:
         serialized_string = json.dumps(json_dict)
@@ -337,38 +362,57 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if schema:
       super(SQLiteStorageFile, self)._WriteNewAttributeContainer(container)
+      return
+
+    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+        container.CONTAINER_TYPE)
+
+    if (next_sequence_number == 1 and
+        not self._HasTable(container.CONTAINER_TYPE)):
+      self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
+
+    identifier = containers_interface.AttributeContainerIdentifier(
+        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
+    container.SetIdentifier(identifier)
+
+    serialized_data = self._SerializeAttributeContainer(container)
+
+    if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+      compressed_data = zlib.compress(serialized_data)
+      serialized_data = sqlite3.Binary(compressed_data)
     else:
-      next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-          container.CONTAINER_TYPE)
+      compressed_data = ''
 
-      if (next_sequence_number == 1 and
-          not self._HasTable(container.CONTAINER_TYPE)):
-        self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
+    if self._storage_profiler:
+      self._storage_profiler.Sample(
+          'write_new', 'write', container.CONTAINER_TYPE,
+          len(serialized_data), len(compressed_data))
 
-      identifier = containers_interface.AttributeContainerIdentifier(
-          name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
-      container.SetIdentifier(identifier)
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+      if event_data_stream_identifier:
+        event_data_stream_identifier = (
+            event_data_stream_identifier.CopyToString())
 
-      serialized_data = self._SerializeAttributeContainer(container)
+      event_values_hash = getattr(container, '_event_values_hash', None)
 
-      if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        compressed_data = zlib.compress(serialized_data)
-        serialized_data = sqlite3.Binary(compressed_data)
-      else:
-        compressed_data = ''
+      event_values_identifier = container.GetEventValuesIdentifier()
+      if event_values_identifier:
+        event_values_identifier = event_values_identifier.CopyToString()
 
-      if self._storage_profiler:
-        self._storage_profiler.Sample(
-            'write_new', 'write', container.CONTAINER_TYPE,
-            len(serialized_data), len(compressed_data))
-
+      column_names = ['_data', '_event_data_stream_identifier',
+                      '_event_values_hash', '_event_values_identifier',
+                      'data_type']
+      values = [serialized_data, event_data_stream_identifier,
+                event_values_hash, event_values_identifier, container.data_type]
+    else:
       column_names = ['_data']
       values = [serialized_data]
 
-      self._CacheAttributeContainerForWrite(
-          container.CONTAINER_TYPE, column_names, values)
+    self._CacheAttributeContainerForWrite(
+        container.CONTAINER_TYPE, column_names, values)
 
-      self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+    self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -409,7 +453,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     if not self._attribute_container_sequence_numbers[container_type]:
       return None
 
-    column_names = ['_data']
+    if container_type == self._CONTAINER_TYPE_EVENT_DATA:
+      column_names = ['_data', '_event_data_stream_identifier',
+                      '_event_values_hash', '_event_values_identifier',
+                      'data_type']
+    else:
+      column_names = ['_data']
 
     row_number = index + 1
     column_names = ', '.join(column_names)
@@ -473,13 +522,20 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         yield container
 
     else:
+      if container_type == self._CONTAINER_TYPE_EVENT_DATA:
+        column_names = ['_data', '_event_data_stream_identifier',
+                        '_event_values_hash', '_event_values_identifier',
+                        'data_type']
+      else:
+        column_names = ['_data']
+
       sql_filter_expression = None
       if filter_expression:
         expression_ast = ast.parse(filter_expression, mode='eval')
         sql_filter_expression = sqlite_store.PythonAST2SQL(expression_ast.body)
 
       yield from self._GetAttributeContainersWithFilter(
-          container_type, column_names=['_data'],
+          container_type, column_names=column_names,
           filter_expression=sql_filter_expression)
 
   def GetSortedEvents(self, time_range=None):
