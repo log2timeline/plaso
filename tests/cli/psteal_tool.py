@@ -33,7 +33,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     output = output.split('\n')
 
     self.assertEqual(output[:3], expected_output[:3])
-    self.assertTrue(output[3].startswith('Processing time\t\t: '))
+    self.assertTrue(output[3].startswith('Processing time\t: '))
     self.assertEqual(output[4:], expected_output[4:])
 
   def testFailWhenOutputAlreadyExists(self):
@@ -163,7 +163,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: directory',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -207,7 +207,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: storage media image',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -248,7 +248,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: storage media image',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -291,7 +291,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: storage media image',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -335,7 +335,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: storage media image',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -380,7 +380,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           '',
           'Source path\t\t: {0:s}'.format(options.source),
           'Source type\t\t: single file',
-          'Processing time\t\t: 00:00:00',
+          'Processing time\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',

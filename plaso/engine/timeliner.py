@@ -46,8 +46,8 @@ class EventDataTimeliner(object):
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
-    self._base_years = {}
-    self._current_year = self._GetCurrentYear()
+    self._base_dates = {}
+    self._current_date = self._GetCurrentDate()
     self._data_location = data_location
     self._place_holder_event = set()
     self._preferred_time_zone = None
@@ -75,32 +75,34 @@ class EventDataTimeliner(object):
             self._time_zone_per_path_spec[path_spec.parent] = (
                 system_configuration.time_zone)
 
-  def _GetBaseYear(self, storage_writer, event_data):
-    """Retrieves the base year.
+  def _GetBaseDate(self, storage_writer, event_data):
+    """Retrieves the base date.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
 
     Returns:
-      int: base year.
+      tuple[int, int, int]: base date, as a tuple of year, month, day of month.
     """
     # If preferred year is set considered it a user override, otherwise try
     # to determine the year based on the date-less log helper or fallback to
     # the current year.
 
     if self._preferred_year:
-      return self._preferred_year
+      current_date = (self._preferred_year, 1, 1)
+    else:
+      current_date = self._current_date
 
     event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
     if not event_data_stream_identifier:
-      return self._current_year
+      return current_date[0], 0, 0
 
     lookup_key = event_data_stream_identifier.CopyToString()
 
-    base_year = self._base_years.get(lookup_key, None)
-    if base_year:
-      return base_year
+    base_date = self._base_dates.get(lookup_key, None)
+    if base_date:
+      return base_date
 
     filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
     date_less_log_helpers = list(storage_writer.GetAttributeContainers(
@@ -108,59 +110,84 @@ class EventDataTimeliner(object):
         filter_expression=filter_expression))
     if not date_less_log_helpers:
       message = (
-          f'missing date-less log helper, defaulting to current year: '
-          f'{self._current_year:d}')
+          f'missing date-less log helper, defaulting to date: '
+          f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
       self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      base_year = self._current_year
+      base_date = (current_date[0], 0, 0)
 
     else:
-      earliest_date = date_less_log_helpers[0].earliest_date
-      last_relative_date = date_less_log_helpers[0].last_relative_date
-      latest_date = date_less_log_helpers[0].latest_date
+      date_less_log_helper = date_less_log_helpers[0]
+
+      earliest_date = date_less_log_helper.GetEarliestDate()
+      last_relative_date = date_less_log_helper.GetLastRelativeDate()
+      latest_date = date_less_log_helper.GetLatestDate()
+
+      if date_less_log_helper.granularity == (
+          date_less_log_helper.GRANULARITY_NO_YEARS):
+        current_date = (current_date[0], 0, 0)
+
+      if earliest_date is None or last_relative_date is None:
+        last_date = None
+      else:
+        last_date = tuple(map(
+            lambda earliest, last_relative: earliest + last_relative,
+            earliest_date, last_relative_date))
 
       if earliest_date is None and latest_date is None:
         message = (
-            f'missing earliest and latest year in date-less log helper, '
-            f'defaulting to current year: {self._current_year:d}')
+            f'missing earliest and latest date in date-less log helper, '
+            f'defaulting to date: {current_date[0]:d}-{current_date[1]:d}-'
+            f'{current_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = self._current_year
+        base_date = current_date
 
-      elif earliest_date[0] + last_relative_date[0] < self._current_year:
-        base_year = earliest_date[0]
+      elif last_date < current_date:
+        base_date = earliest_date
 
-      elif latest_date[0] < self._current_year:
+      elif latest_date < current_date:
         message = (
-            f'earliest year: {earliest_date[0]:d} as base year would exceed '
-            f'current year: {self._current_year:d} + '
-            f'{last_relative_date[0]:d}, using latest year: {latest_date[0]:d}')
+            f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
+            f'{earliest_date[2]:d} as base date would exceed : '
+            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d} + '
+            f'{last_relative_date[0]:d}-{last_relative_date[1]:d}-'
+            f'{last_relative_date[2]:d}, using latest date: {latest_date[0]:d}-'
+            f'{latest_date[1]:d}-{latest_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = latest_date[0] - last_relative_date[0]
+        base_date = tuple(map(
+            lambda latest, last_relative: latest - last_relative,
+            latest_date, last_relative_date))
 
       else:
         message = (
-            f'earliest year: {earliest_date[0]:d} and latest: year: '
-            f'{latest_date[0]:d} as base year would exceed current year: '
-            f'{self._current_year:d} + {last_relative_date[0]:d}, using '
-            f'current year')
+            f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
+            f'{earliest_date[2]:d} and latest: date: {latest_date[0]:d}-'
+            f'{latest_date[1]:d}-{latest_date[2]:d} as base date would exceed '
+            f'date: {current_date[0]:d}-{current_date[1]:d}-'
+            f'{current_date[2]:d} + {last_relative_date[0]:d}-'
+            f'{last_relative_date[1]:d}-{last_relative_date[2]:d}, using date: '
+            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = self._current_year - last_relative_date[0]
+        base_date = tuple(map(
+            lambda current, last_relative: current - last_relative,
+            current_date, last_relative_date))
 
-    self._base_years[lookup_key] = base_year
+    self._base_dates[lookup_key] = base_date
 
-    return base_year
+    return base_date
 
-  def _GetCurrentYear(self):
-    """Retrieves current year.
+  def _GetCurrentDate(self):
+    """Retrieves current date.
 
     Returns:
-      int: the current year.
+      tuple[int, int, int]: current date, as a tuple of year, month, day of
+          month.
     """
     datetime_object = datetime.datetime.now(pytz.UTC)
-    return datetime_object.year
+    return datetime_object.year, datetime_object.month, datetime_object.day
 
   def _GetEvent(
       self, storage_writer, event_data, event_data_stream, date_time,
@@ -180,10 +207,10 @@ class EventDataTimeliner(object):
     """
     timestamp = None
     if date_time.is_delta:
-      base_year = self._GetBaseYear(storage_writer, event_data)
+      base_date = self._GetBaseDate(storage_writer, event_data)
 
       try:
-        date_time = date_time.NewFromDeltaAndYear(base_year)
+        date_time = date_time.NewFromDeltaAndDate(*base_date)
       except ValueError as exception:
         self._ProduceTimeliningWarning(
             storage_writer, event_data, str(exception))

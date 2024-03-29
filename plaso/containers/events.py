@@ -88,6 +88,7 @@ class DateLessLogHelper(interface.AttributeContainer):
   Attributes:
     earliest_date (list[int, int, int]): earliest possible date the event data
         stream was created. The date is a tuple of year, month and day of month.
+    granularity (str): granularity of the date-less log format.
     last_relative_date (list[int, int, int]): last relative date determined by
         the date-less log helper. The date is a tuple of year, month and day of
         month.
@@ -100,17 +101,25 @@ class DateLessLogHelper(interface.AttributeContainer):
   SCHEMA = {
       '_event_data_stream_identifier': 'AttributeContainerIdentifier',
       'earliest_date': 'List[int]',
+      'granularity': 'str',
       'last_relative_date': 'List[int]',
       'latest_date': 'List[int]'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
       '_event_data_stream_identifier']
 
+  # The date-less log format only supports time.
+  GRANULARITY_NO_DATE = 'd'
+
+  # The date-less log format only supports month and day of month.
+  GRANULARITY_NO_YEARS = 'y'
+
   def __init__(self):
     """Initializes a date-less log helper attribute container."""
     super(DateLessLogHelper, self).__init__()
     self._event_data_stream_identifier = None
     self.earliest_date = None
+    self.granularity = self.GRANULARITY_NO_YEARS
     self.last_relative_date = None
     self.latest_date = None
 
@@ -123,8 +132,21 @@ class DateLessLogHelper(interface.AttributeContainer):
       year_less_log_helper (YearLessLogHelper): year-less log helper.
     """
     self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
+    self.granularity = self.GRANULARITY_NO_YEARS
     self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
     self.latest_date = (year_less_log_helper.latest_year, 1, 1)
+
+  def GetEarliestDate(self):
+    """Retrieves the earliest date adjusted to the granularity.
+
+    Returns:
+      tuple[int, int, int]: earliest date as tuple of year, month and day of
+          month or None if not available.
+    """
+    if self.earliest_date and self.granularity == self.GRANULARITY_NO_YEARS:
+      return self.earliest_date[0], 0, 0
+
+    return self.earliest_date
 
   def GetEventDataStreamIdentifier(self):
     """Retrieves the identifier of the associated event data stream.
@@ -136,6 +158,31 @@ class DateLessLogHelper(interface.AttributeContainer):
       AttributeContainerIdentifier: event data stream or None when not set.
     """
     return self._event_data_stream_identifier
+
+  def GetLastRelativeDate(self):
+    """Retrieves the last relative date adjusted to the granularity.
+
+    Returns:
+      tuple[int, int, int]: last relative date as tuple of year, month and day
+          of month or None if not available.
+    """
+    if (self.last_relative_date and
+        self.granularity == self.GRANULARITY_NO_YEARS):
+      return self.last_relative_date[0], 0, 0
+
+    return self.last_relative_date
+
+  def GetLatestDate(self):
+    """Retrieves the latest date adjusted to the granularity.
+
+    Returns:
+      tuple[int, int, int]: latest date as tuple of year, month and day of
+          month or None if not available.
+    """
+    if self.latest_date and self.granularity == self.GRANULARITY_NO_YEARS:
+      return self.latest_date[0], 0, 0
+
+    return self.latest_date
 
   def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
     """Sets the identifier of the associated event data stream.
