@@ -49,7 +49,71 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
     super(NativePythonOutputModule, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
-  def _GetFieldValues(
+  def _GetString(self, field_values):
+    """Retrieves an output string.
+
+    Args:
+      field_values (dict[str, str]): output field values per name.
+
+    Returns:
+      str: output string.
+    """
+    reserved_attributes = []
+    additional_attributes = []
+
+    for field_name, field_value in sorted(field_values.items()):
+      if field_name in (
+          '_event_identifier', '_event_tag_labels', '_timestamp', 'path_spec'):
+        continue
+
+      field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
+
+      if field_name in self._RESERVED_FIELDS:
+        reserved_attributes.append(field_string)
+      else:
+        additional_attributes.append(field_string)
+
+    lines_of_text = [
+        '+-' * 40,
+        '[Timestamp]:',
+        '  {0:s}'.format(field_values['_timestamp'])]
+
+    path_specification = field_values.get('path_spec', None)
+    if path_specification:
+      lines_of_text.extend([
+          '',
+          '[Pathspec]:'])
+      lines_of_text.extend([
+          '  {0:s}'.format(line)
+          for line in path_specification.comparable.split('\n')])
+
+      # Remove additional empty line.
+      lines_of_text.pop()
+
+    lines_of_text.extend([
+        '',
+        '[Reserved attributes]:'])
+    lines_of_text.extend(reserved_attributes)
+
+    lines_of_text.extend([
+        '',
+        '[Additional attributes]:'])
+    lines_of_text.extend(additional_attributes)
+
+    event_tag_labels = field_values.get('_event_tag_labels', None)
+    if event_tag_labels:
+      labels = ', '.join([
+          '\'{0:s}\''.format(label) for label in event_tag_labels])
+      lines_of_text.extend([
+          '',
+          '[Tag]:',
+          '  {{labels}} [{0:s}]'.format(labels)])
+
+    lines_of_text.append('')
+
+    return '\n'.join(lines_of_text)
+
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -122,70 +186,6 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
       field_values['_event_tag_labels'] = event_tag.labels
 
     return field_values
-
-  def _GetString(self, field_values):
-    """Retrieves an output string.
-
-    Args:
-      field_values (dict[str, str]): output field values per name.
-
-    Returns:
-      str: output string.
-    """
-    reserved_attributes = []
-    additional_attributes = []
-
-    for field_name, field_value in sorted(field_values.items()):
-      if field_name in (
-          '_event_identifier', '_event_tag_labels', '_timestamp', 'path_spec'):
-        continue
-
-      field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
-
-      if field_name in self._RESERVED_FIELDS:
-        reserved_attributes.append(field_string)
-      else:
-        additional_attributes.append(field_string)
-
-    lines_of_text = [
-        '+-' * 40,
-        '[Timestamp]:',
-        '  {0:s}'.format(field_values['_timestamp'])]
-
-    path_specification = field_values.get('path_spec', None)
-    if path_specification:
-      lines_of_text.extend([
-          '',
-          '[Pathspec]:'])
-      lines_of_text.extend([
-          '  {0:s}'.format(line)
-          for line in path_specification.comparable.split('\n')])
-
-      # Remove additional empty line.
-      lines_of_text.pop()
-
-    lines_of_text.extend([
-        '',
-        '[Reserved attributes]:'])
-    lines_of_text.extend(reserved_attributes)
-
-    lines_of_text.extend([
-        '',
-        '[Additional attributes]:'])
-    lines_of_text.extend(additional_attributes)
-
-    event_tag_labels = field_values.get('_event_tag_labels', None)
-    if event_tag_labels:
-      labels = ', '.join([
-          '\'{0:s}\''.format(label) for label in event_tag_labels])
-      lines_of_text.extend([
-          '',
-          '[Tag]:',
-          '  {{labels}} [{0:s}]'.format(labels)])
-
-    lines_of_text.append('')
-
-    return '\n'.join(lines_of_text)
 
   def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.

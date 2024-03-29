@@ -108,7 +108,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
     super(SharedJSONOutputModule, self).__init__()
     self._field_formatting_helper = JSONFieldFormattingHelper()
 
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 

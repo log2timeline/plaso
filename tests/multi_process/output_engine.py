@@ -38,7 +38,7 @@ class TestOutputModule(output_interface.OutputModule):
     self.events = []
     self.macb_groups = []
 
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator_object, event, event_data, event_data_stream,
       event_tag):
     """Retrieves the output field values.

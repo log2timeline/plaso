@@ -67,7 +67,7 @@ class OpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
     output_module.WriteFieldValues(output_mediator, field_values)
@@ -107,7 +107,7 @@ class OpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
     output_module.WriteFieldValues(output_mediator, field_values)
