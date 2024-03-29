@@ -153,12 +153,12 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_container.SetEventIdentifier(None)
 
 
-class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
-  """Tests for the year-less log helper attribute container."""
+class DateLessLogHelperTest(shared_test_lib.BaseTestCase):
+  """Tests for the date-less log helper attribute container."""
 
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
-    attribute_container = events.YearLessLogHelper()
+    attribute_container = events.DateLessLogHelper()
 
     expected_attribute_names = [
         '_event_data_stream_identifier',
@@ -172,14 +172,14 @@ class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
 
   def testGetEventDataStreamIdentifier(self):
     """Tests the GetEventDataStreamIdentifier function."""
-    attribute_container = events.YearLessLogHelper()
+    attribute_container = events.DateLessLogHelper()
 
     identifier = attribute_container.GetEventDataStreamIdentifier()
     self.assertIsNone(identifier)
 
   def testSetEventDataStreamIdentifier(self):
     """Tests the SetEventDataStreamIdentifier function."""
-    attribute_container = events.YearLessLogHelper()
+    attribute_container = events.DateLessLogHelper()
 
     attribute_container.SetEventDataStreamIdentifier(None)
 

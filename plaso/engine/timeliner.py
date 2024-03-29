@@ -39,7 +39,7 @@ class EventDataTimeliner(object):
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
-      preferred_year (Optional[int]): preferred initial year value for year-less
+      preferred_year (Optional[int]): preferred initial year value for date-less
           date and time values.
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
@@ -86,7 +86,7 @@ class EventDataTimeliner(object):
       int: base year.
     """
     # If preferred year is set considered it a user override, otherwise try
-    # to determine the year based on the year-less log helper or fallback to
+    # to determine the year based on the date-less log helper or fallback to
     # the current year.
 
     if self._preferred_year:
@@ -103,25 +103,25 @@ class EventDataTimeliner(object):
       return base_year
 
     filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
-    year_less_log_helpers = list(storage_writer.GetAttributeContainers(
-        events.YearLessLogHelper.CONTAINER_TYPE,
+    date_less_log_helpers = list(storage_writer.GetAttributeContainers(
+        events.DateLessLogHelper.CONTAINER_TYPE,
         filter_expression=filter_expression))
-    if not year_less_log_helpers:
+    if not date_less_log_helpers:
       message = (
-          f'missing year-less log helper, defaulting to current year: '
+          f'missing date-less log helper, defaulting to current year: '
           f'{self._current_year:d}')
       self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
       base_year = self._current_year
 
     else:
-      earliest_year = year_less_log_helpers[0].earliest_year
-      last_relative_year = year_less_log_helpers[0].last_relative_year
-      latest_year = year_less_log_helpers[0].latest_year
+      earliest_year = date_less_log_helpers[0].earliest_year
+      last_relative_year = date_less_log_helpers[0].last_relative_year
+      latest_year = date_less_log_helpers[0].latest_year
 
       if earliest_year is None and latest_year is None:
         message = (
-            f'missing earliest and latest year in year-less log helper, '
+            f'missing earliest and latest year in date-less log helper, '
             f'defaulting to current year: {self._current_year:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 

@@ -35,8 +35,8 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
+from plaso.lib import dateless_helper
 from plaso.lib import errors
-from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -76,7 +76,7 @@ class AndroidLogcatEventData(events.EventData):
 
 
 class AndroidLogcatTextPlugin(
-    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
+    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper):
   """Text parser plugin for Android logcat files."""
 
   NAME = 'android_logcat'
@@ -105,7 +105,7 @@ class AndroidLogcatTextPlugin(
       pyparsing.Word(pyparsing.nums, exact=6))
 
   # Date and time values are formatted as:
-  # 01-02 01:02:04.156 (yearless)
+  # 01-02 01:02:04.156 (year-less)
   # 2022-01-02 01:20:03.171
   # 2022-01-02 11:44:23.183801
   _DATE_TIME = (

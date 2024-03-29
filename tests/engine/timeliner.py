@@ -74,13 +74,13 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data_stream_identifier = event_data_stream.GetIdentifier()
 
     if base_year:
-      year_less_log_helper = events.YearLessLogHelper()
-      year_less_log_helper.earliest_year = base_year
-      year_less_log_helper.last_relative_year = 0
+      date_less_log_helper = events.DateLessLogHelper()
+      date_less_log_helper.earliest_year = base_year
+      date_less_log_helper.last_relative_year = 0
 
-      year_less_log_helper.SetEventDataStreamIdentifier(
+      date_less_log_helper.SetEventDataStreamIdentifier(
           event_data_stream_identifier)
-      storage_writer.AddAttributeContainer(year_less_log_helper)
+      storage_writer.AddAttributeContainer(date_less_log_helper)
 
     event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
     storage_writer.AddAttributeContainer(event_data)
@@ -97,7 +97,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     event_data = TestEventData1()
     event_data.value = 'MyValue'
 
-    # Test with year-less log helper.
+    # Test with date-less log helper.
     storage_writer = self._CreateStorageWriter(event_data, base_year=2012)
 
     # Ensure to reset the timeliner base years cache.
@@ -110,7 +110,7 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
         'timelining_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # Test missing year-less log helper.
+    # Test missing date-less log helper.
     storage_writer = self._CreateStorageWriter(event_data)
 
     # Ensure to reset the timeliner base years cache.

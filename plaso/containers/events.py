@@ -82,6 +82,60 @@ def CalculateEventValuesHash(event_data, event_data_stream):
   return md5_context.hexdigest()
 
 
+class DateLessLogHelper(interface.AttributeContainer):
+  """Attribute container to assist with logs without full dates.
+
+  Attributes:
+    earliest_year (int): earliest possible year the event data stream was
+        created.
+    last_relative_year (int): last relative year determined by the date-less
+        log helper.
+    latest_year (int): latest possible year the event data stream was created.
+  """
+
+  CONTAINER_TYPE = 'date_less_log_helper'
+
+  SCHEMA = {
+      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
+      'earliest_year': 'int',
+      'last_relative_year': 'int',
+      'latest_year': 'int'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_event_data_stream_identifier']
+
+  def __init__(self):
+    """Initializes a date-less log helper attribute container."""
+    super(DateLessLogHelper, self).__init__()
+    self._event_data_stream_identifier = None
+    self.earliest_year = None
+    self.last_relative_year = None
+    self.latest_year = None
+
+  def GetEventDataStreamIdentifier(self):
+    """Retrieves the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Returns:
+      AttributeContainerIdentifier: event data stream or None when not set.
+    """
+    return self._event_data_stream_identifier
+
+  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+    """Sets the identifier of the associated event data stream.
+
+    The event data stream identifier is a storage specific value that requires
+    special handling during serialization.
+
+    Args:
+      event_data_stream_identifier (AttributeContainerIdentifier): event data
+          stream identifier.
+    """
+    self._event_data_stream_identifier = event_data_stream_identifier
+
+
 class EventData(interface.AttributeContainer):
   """Event data attribute container.
 
@@ -384,59 +438,5 @@ class EventTag(interface.AttributeContainer):
     self._event_identifier = event_identifier
 
 
-class YearLessLogHelper(interface.AttributeContainer):
-  """Year-less log helper attribute container.
-
-  Attributes:
-    earliest_year (int): earliest possible year the event data stream was
-        created.
-    last_relative_year (int): last relative year determined by the year-less
-        log helper.
-    latest_year (int): latest possible year the event data stream was created.
-  """
-
-  CONTAINER_TYPE = 'year_less_log_helper'
-
-  SCHEMA = {
-      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
-      'earliest_year': 'int',
-      'last_relative_year': 'int',
-      'latest_year': 'int'}
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier']
-
-  def __init__(self):
-    """Initializes a year-less log helper attribute container."""
-    super(YearLessLogHelper, self).__init__()
-    self._event_data_stream_identifier = None
-    self.earliest_year = None
-    self.last_relative_year = None
-    self.latest_year = None
-
-  def GetEventDataStreamIdentifier(self):
-    """Retrieves the identifier of the associated event data stream.
-
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
-
-    Returns:
-      AttributeContainerIdentifier: event data stream or None when not set.
-    """
-    return self._event_data_stream_identifier
-
-  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-    """Sets the identifier of the associated event data stream.
-
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
-
-    Args:
-      event_data_stream_identifier (AttributeContainerIdentifier): event data
-          stream identifier.
-    """
-    self._event_data_stream_identifier = event_data_stream_identifier
-
-
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventData, EventDataStream, EventObject, EventTag, YearLessLogHelper])
+    DateLessLogHelper, EventData, EventDataStream, EventObject, EventTag])

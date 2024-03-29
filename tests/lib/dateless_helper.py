@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for the year-less log format helper mix-in."""
+"""Tests for the date-less log format helper mix-in."""
 
 import unittest
 
@@ -7,14 +7,14 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.lib import yearless_helper
+from plaso.lib import dateless_helper
 from plaso.parsers import mediator as parsers_mediator
 
 from tests import test_lib as shared_test_lib
 
 
-class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
-  """Year-less log format definition helper mix-in tests."""
+class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
+  """Date-less log format definition helper mix-in tests."""
 
   # pylint: disable=protected-access
 
@@ -27,14 +27,14 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(gzip_path_spec)
 
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     years = test_helper._GetYearsFromFileEntry(file_entry)
     self.assertEqual(years, set([2012]))
 
   def testGetMonthFromString(self):
     """Tests the _GetMonthFromString function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     month = test_helper._GetMonthFromString('jan')
     self.assertEqual(month, 1)
@@ -44,7 +44,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
   def testGetRelativeYear(self):
     """Tests the _GetRelativeYear function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     test_helper._SetMonthAndYear(11, 2022)
 
@@ -53,7 +53,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
   def testGetYear(self):
     """Tests the _GetYear function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     test_helper._SetMonthAndYear(11, 2022)
 
@@ -73,7 +73,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     parser_mediator.SetFileEntry(file_entry)
 
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     self.assertEqual(test_helper._relative_year, 0)
     self.assertEqual(test_helper._year, 0)
@@ -100,7 +100,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     parser_mediator.SetFileEntry(file_entry)
 
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     self.assertEqual(test_helper._relative_year, 0)
     self.assertEqual(test_helper._year, 0)
@@ -116,7 +116,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
   def testSetMonthAndYear(self):
     """Tests the _SetMonthAndYear function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     self.assertEqual(test_helper._relative_year, 0)
     self.assertEqual(test_helper._year, 0)
@@ -130,7 +130,7 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
   def testUpdateYear(self):
     """Tests the _UpdateYear function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
     self.assertEqual(test_helper._relative_year, 0)
     self.assertEqual(test_helper._year, 0)
@@ -178,11 +178,11 @@ class YearLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(test_helper._year, 2)
     self.assertEqual(test_helper._month, 1)
 
-  def testGetYearLessLogHelper(self):
-    """Tests the GetYearLessLogHelper function."""
-    test_helper = yearless_helper.YearLessLogFormatHelper()
+  def testGetDateLessLogHelper(self):
+    """Tests the GetDateLessLogHelper function."""
+    test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    year_less_log_helper = test_helper.GetYearLessLogHelper()
+    year_less_log_helper = test_helper.GetDateLessLogHelper()
     self.assertIsNotNone(year_less_log_helper)
 
 

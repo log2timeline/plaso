@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The year-less log format helper mix-in."""
+"""The date-less log format helper mix-in."""
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -7,8 +7,8 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import events
 
 
-class YearLessLogFormatHelper(object):
-  """Year-less log format helper mix-in."""
+class DateLessLogFormatHelper(object):
+  """Date-less log format helper mix-in."""
 
   _MONTH_DICT = {
       'jan': 1,
@@ -27,8 +27,8 @@ class YearLessLogFormatHelper(object):
   _VALID_MONTHS = frozenset(range(1, 13))
 
   def __init__(self):
-    """Initializes the year-less log format helper mix-in."""
-    super(YearLessLogFormatHelper, self).__init__()
+    """Initializes the date-less log format helper mix-in."""
+    super(DateLessLogFormatHelper, self).__init__()
     self._base_year = None
     self._maximum_year = None
     self._month = None
@@ -173,13 +173,13 @@ class YearLessLogFormatHelper(object):
 
     self._month = month
 
-  def GetYearLessLogHelper(self):
-    """Retrieves a year-less log helper attribute container.
+  def GetDateLessLogHelper(self):
+    """Retrieves a date-less log helper attribute container.
 
     Returns:
-      YearLessLogHelper: year-less log helper.
+      DateLessLogHelper: date-less log helper.
     """
-    year_less_log_helper = events.YearLessLogHelper()
+    year_less_log_helper = events.DateLessLogHelper()
     year_less_log_helper.earliest_year = self._base_year
     year_less_log_helper.last_relative_year = self._relative_year
     year_less_log_helper.latest_year = self._maximum_year

@@ -20,6 +20,14 @@ plaso.lib.cookie\_plugins\_helper module
    :undoc-members:
    :show-inheritance:
 
+plaso.lib.dateless\_helper module
+---------------------------------
+
+.. automodule:: plaso.lib.dateless_helper
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.lib.decorators module
 ---------------------------
 
@@ -80,14 +88,6 @@ plaso.lib.specification module
 ------------------------------
 
 .. automodule:: plaso.lib.specification
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-plaso.lib.yearless\_helper module
----------------------------------
-
-.. automodule:: plaso.lib.yearless_helper
    :members:
    :undoc-members:
    :show-inheritance:
