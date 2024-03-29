@@ -15,8 +15,8 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
+from plaso.lib import dateless_helper
 from plaso.lib import errors
-from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -56,7 +56,7 @@ class GoogleLogEventData(events.EventData):
 
 
 class GoogleLogTextPlugin(
-    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
+    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper):
   """Text parser plugin for Google-formatted log files."""
 
   NAME = 'googlelog'

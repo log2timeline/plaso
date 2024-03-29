@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The year-less log format helper mix-in."""
+"""The date-less log format helper mix-in."""
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -7,8 +7,8 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import events
 
 
-class YearLessLogFormatHelper(object):
-  """Year-less log format helper mix-in."""
+class DateLessLogFormatHelper(object):
+  """Date-less log format helper mix-in."""
 
   _MONTH_DICT = {
       'jan': 1,
@@ -27,44 +27,45 @@ class YearLessLogFormatHelper(object):
   _VALID_MONTHS = frozenset(range(1, 13))
 
   def __init__(self):
-    """Initializes the year-less log format helper mix-in."""
-    super(YearLessLogFormatHelper, self).__init__()
-    self._base_year = None
-    self._maximum_year = None
+    """Initializes the date-less log format helper mix-in."""
+    super(DateLessLogFormatHelper, self).__init__()
+    self._base_date = None
+    self._maximum_date = None
     self._month = None
-    self._relative_year = 0
+    self._relative_date = (0, 0, 0)
     self._year = 0
 
-  def _GetYearsFromFileEntry(self, file_entry):
-    """Retrieves the years from the file entry date and time values.
+  def _GetDatesFromFileEntry(self, file_entry):
+    """Retrieves the dates from the file entry date and time values.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry.
 
     Returns:
-      set[int]: years of the file entry.
+      set[tuple[int, int, int]]: dates, as tuple of year, month, day, of the
+          file entry.
     """
     if file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
       # Ignore a gzip file that contains a modification timestamp of 0.
       if (file_entry.modification_time and
           file_entry.modification_time.timestamp > 0):
-        year, _, _ = file_entry.modification_time.GetDate()
-        return set([year])
+        date_tuple = file_entry.modification_time.GetDate()
+        return set([date_tuple])
 
-    years = set()
+    dates = set()
 
     for attribute_name in ('change_time', 'creation_time', 'modification_time'):
       date_time = getattr(file_entry, attribute_name, None)
       if date_time:
-        year, _, _ = date_time.GetDate()
+        date_tuple = date_time.GetDate()
 
-        if year == 1970 and file_entry.type_indicator == (
-            dfvfs_definitions.TYPE_INDICATOR_GZIP):
+        if (date_tuple == (1970, 1, 1) and
+            file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP):
           continue
 
-        years.add(year)
+        dates.add(date_tuple)
 
-    return years
+    return dates
 
   def _GetMonthFromString(self, month_string):
     """Retrieves a numeric month value from a string.
@@ -84,7 +85,7 @@ class YearLessLogFormatHelper(object):
     Returns:
       int: relative year.
     """
-    return self._relative_year
+    return self._relative_date[0]
 
   def _GetYear(self):
     """Retrieves the year.
@@ -101,19 +102,19 @@ class YearLessLogFormatHelper(object):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
     """
-    self._base_year = None
-    self._maximum_year = None
+    self._base_date = None
+    self._maximum_date = None
     self._month = None
-    self._relative_year = 0
+    self._relative_date = (0, 0, 0)
     self._year = 0
 
-    years = set()
+    dates = set()
 
     file_entry = parser_mediator.GetFileEntry()
     if file_entry:
-      years = self._GetYearsFromFileEntry(file_entry)
+      dates = self._GetDatesFromFileEntry(file_entry)
 
-    if not years and file_entry.type_indicator in (
+    if not dates and file_entry.type_indicator in (
         dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
         dfvfs_definitions.TYPE_INDICATOR_GZIP):
 
@@ -121,12 +122,12 @@ class YearLessLogFormatHelper(object):
           file_entry.path_spec.parent,
           resolver_context=parser_mediator.resolver_context)
       if parent_file_entry:
-        years = self._GetYearsFromFileEntry(parent_file_entry)
+        dates = self._GetDatesFromFileEntry(parent_file_entry)
 
-    if years:
-      self._base_year = min(years)
-      self._maximum_year = max(years)
-      self._year = self._base_year
+    if dates:
+      self._base_date = min(dates)
+      self._maximum_date = max(dates)
+      self._year = self._base_date[0]
 
   def _SetMonthAndYear(self, month, year):
     """Sets the month and year.
@@ -142,7 +143,7 @@ class YearLessLogFormatHelper(object):
       raise ValueError('Invalid month: {0!s}'.format(month))
 
     self._month = month
-    self._relative_year = 0
+    self._relative_date = (0, 0, 0)
     self._year = year
 
   def _UpdateYear(self, month):
@@ -158,30 +159,34 @@ class YearLessLogFormatHelper(object):
       raise ValueError('Invalid month: {0!s}'.format(month))
 
     if self._month:
+      relative_year, relative_month, relative_day_of_month = self._relative_date
+
       # Account for log formats that allow out-of-order date and time values
       # (Apr->May->Apr) such as rsyslog with the RepeatedMsgReduction setting
       # enabled.
       if month + 1 < self._month:
-        self._relative_year += 1
+        self._relative_date = (
+            relative_year + 1, relative_month, relative_day_of_month)
         self._year += 1
 
       # Account for out-of-order Jan->Dec->Jan with the exception of the start
       # of the log file.
-      elif self._relative_year > 0 and self._month == 1 and month == 12:
-        self._relative_year -= 1
+      elif relative_year > 0 and self._month == 1 and month == 12:
+        self._relative_date = (
+            relative_year - 1, relative_month, relative_day_of_month)
         self._year -= 1
 
     self._month = month
 
-  def GetYearLessLogHelper(self):
-    """Retrieves a year-less log helper attribute container.
+  def GetDateLessLogHelper(self):
+    """Retrieves a date-less log helper attribute container.
 
     Returns:
-      YearLessLogHelper: year-less log helper.
+      DateLessLogHelper: date-less log helper.
     """
-    year_less_log_helper = events.YearLessLogHelper()
-    year_less_log_helper.earliest_year = self._base_year
-    year_less_log_helper.last_relative_year = self._relative_year
-    year_less_log_helper.latest_year = self._maximum_year
+    date_less_log_helper = events.DateLessLogHelper()
+    date_less_log_helper.earliest_date = self._base_date
+    date_less_log_helper.last_relative_date = self._relative_date
+    date_less_log_helper.latest_date = self._maximum_date
 
-    return year_less_log_helper
+    return date_less_log_helper

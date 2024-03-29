@@ -93,17 +93,17 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     return json_dict
 
 
-class JSONStringsListAttributeSerializer(acstore_interface.AttributeSerializer):
-  """JSON strings list attribute serializer."""
+class JSONValueListAttributeSerializer(acstore_interface.AttributeSerializer):
+  """JSON value list attribute serializer."""
 
   def DeserializeValue(self, value):
     """Deserializes a value.
 
     Args:
-      value (list[str]): serialized value.
+      value (list[int|str]): serialized value.
 
     Returns:
-      list[str]: runtime value.
+      list[int|str]: runtime value.
     """
     return value
 
@@ -111,9 +111,9 @@ class JSONStringsListAttributeSerializer(acstore_interface.AttributeSerializer):
     """Serializes a value.
 
     Args:
-      value (list[str]): runtime value.
+      value (list[int|str]): runtime value.
 
     Returns:
-      list[str]: serialized value.
+      list[int|str]: serialized value.
     """
     return value

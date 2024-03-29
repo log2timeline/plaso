@@ -388,8 +388,17 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      return super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
+      container = super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
           container_type, index)
+
+      # TODO: the YearLessLogHelper attribute container is kept for backwards
+      # compatibility remove once storage format 20230327 is obsolete.
+      if container_type == 'year_less_log_helper':
+        year_less_log_helper = container
+        container = events.DateLessLogHelper()
+        container.CopyFromYearLessLogHelper(year_less_log_helper)
+
+      return container
 
     container = self._GetCachedAttributeContainer(container_type, index)
     if container:
@@ -443,8 +452,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       filter_expression (Optional[str]): expression to filter the resulting
           attribute containers by.
 
-    Returns:
-      generator(AttributeContainer): attribute container generator.
+    Yields:
+      AttributeContainer: attribute container.
 
     Raises:
       IOError: when there is an error querying the storage file.
@@ -452,17 +461,26 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      return super(SQLiteStorageFile, self).GetAttributeContainers(
-          container_type, filter_expression=filter_expression)
+      for container in super(SQLiteStorageFile, self).GetAttributeContainers(
+          container_type, filter_expression=filter_expression):
+        # TODO: the YearLessLogHelper attribute container is kept for backwards
+        # compatibility remove once storage format 20230327 is obsolete.
+        if container_type == 'year_less_log_helper':
+          year_less_log_helper = container
+          container = events.DateLessLogHelper()
+          container.CopyFromYearLessLogHelper(year_less_log_helper)
 
-    sql_filter_expression = None
-    if filter_expression:
-      expression_ast = ast.parse(filter_expression, mode='eval')
-      sql_filter_expression = sqlite_store.PythonAST2SQL(expression_ast.body)
+        yield container
 
-    return self._GetAttributeContainersWithFilter(
-        container_type, column_names=['_data'],
-        filter_expression=sql_filter_expression)
+    else:
+      sql_filter_expression = None
+      if filter_expression:
+        expression_ast = ast.parse(filter_expression, mode='eval')
+        sql_filter_expression = sqlite_store.PythonAST2SQL(expression_ast.body)
+
+      yield from self._GetAttributeContainersWithFilter(
+          container_type, column_names=['_data'],
+          filter_expression=sql_filter_expression)
 
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.

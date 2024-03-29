@@ -39,7 +39,7 @@ class EventDataTimeliner(object):
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
-      preferred_year (Optional[int]): preferred initial year value for year-less
+      preferred_year (Optional[int]): preferred initial year value for date-less
           date and time values.
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
@@ -86,7 +86,7 @@ class EventDataTimeliner(object):
       int: base year.
     """
     # If preferred year is set considered it a user override, otherwise try
-    # to determine the year based on the year-less log helper or fallback to
+    # to determine the year based on the date-less log helper or fallback to
     # the current year.
 
     if self._preferred_year:
@@ -103,51 +103,51 @@ class EventDataTimeliner(object):
       return base_year
 
     filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
-    year_less_log_helpers = list(storage_writer.GetAttributeContainers(
-        events.YearLessLogHelper.CONTAINER_TYPE,
+    date_less_log_helpers = list(storage_writer.GetAttributeContainers(
+        events.DateLessLogHelper.CONTAINER_TYPE,
         filter_expression=filter_expression))
-    if not year_less_log_helpers:
+    if not date_less_log_helpers:
       message = (
-          f'missing year-less log helper, defaulting to current year: '
+          f'missing date-less log helper, defaulting to current year: '
           f'{self._current_year:d}')
       self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
       base_year = self._current_year
 
     else:
-      earliest_year = year_less_log_helpers[0].earliest_year
-      last_relative_year = year_less_log_helpers[0].last_relative_year
-      latest_year = year_less_log_helpers[0].latest_year
+      earliest_date = date_less_log_helpers[0].earliest_date
+      last_relative_date = date_less_log_helpers[0].last_relative_date
+      latest_date = date_less_log_helpers[0].latest_date
 
-      if earliest_year is None and latest_year is None:
+      if earliest_date is None and latest_date is None:
         message = (
-            f'missing earliest and latest year in year-less log helper, '
+            f'missing earliest and latest year in date-less log helper, '
             f'defaulting to current year: {self._current_year:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         base_year = self._current_year
 
-      elif earliest_year + last_relative_year < self._current_year:
-        base_year = earliest_year
+      elif earliest_date[0] + last_relative_date[0] < self._current_year:
+        base_year = earliest_date[0]
 
-      elif latest_year < self._current_year:
+      elif latest_date[0] < self._current_year:
         message = (
-            f'earliest year: {earliest_year:d} as base year would exceed '
-            f'current year: {self._current_year:d} + {last_relative_year:d}, '
-            f'using latest year: {latest_year:d}')
+            f'earliest year: {earliest_date[0]:d} as base year would exceed '
+            f'current year: {self._current_year:d} + '
+            f'{last_relative_date[0]:d}, using latest year: {latest_date[0]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = latest_year - last_relative_year
+        base_year = latest_date[0] - last_relative_date[0]
 
       else:
         message = (
-            f'earliest year: {earliest_year:d} and latest: year: '
-            f'{latest_year:d} as base year would exceed current year: '
-            f'{self._current_year:d} + {last_relative_year:d}, using current '
-            f'year')
+            f'earliest year: {earliest_date[0]:d} and latest: year: '
+            f'{latest_date[0]:d} as base year would exceed current year: '
+            f'{self._current_year:d} + {last_relative_date[0]:d}, using '
+            f'current year')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = self._current_year - last_relative_year
+        base_year = self._current_year - last_relative_date[0]
 
     self._base_years[lookup_key] = base_year
 

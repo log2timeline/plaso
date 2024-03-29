@@ -92,10 +92,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
   * merge results returned by extraction worker processes.
   """
 
+  _CONTAINER_TYPE_DATE_LESS_LOG_HELPER = events.DateLessLogHelper.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
-  _CONTAINER_TYPE_YEAR_LESS_LOG_HELPER = events.YearLessLogHelper.CONTAINER_TYPE
 
   # Maximum number of dfVFS file system objects to cache in the foreman process.
   _FILE_SYSTEM_CACHE_SIZE = 3
@@ -395,8 +395,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     self._status = definitions.STATUS_INDICATOR_MERGING
 
     if container.CONTAINER_TYPE in (
-        self._CONTAINER_TYPE_EVENT_DATA,
-        self._CONTAINER_TYPE_YEAR_LESS_LOG_HELPER):
+        self._CONTAINER_TYPE_DATE_LESS_LOG_HELPER,
+        self._CONTAINER_TYPE_EVENT_DATA):
       event_data_stream_identifier = container.GetEventDataStreamIdentifier()
       event_data_stream_lookup_key = None
       if event_data_stream_identifier:
@@ -757,9 +757,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # All exceptions need to be caught here to prevent the foreman
       # from being killed by an uncaught exception.
       except Exception as exception:  # pylint: disable=broad-except
+        path_spec = getattr(event_source, 'path_spec', None) or 'N/A'
         self._ProduceExtractionWarning(storage_writer, (
             f'unable to process path specification with error: '
-            f'{exception!s}'), event_source.path_spec)
+            f'{exception!s}'), path_spec)
         event_source = None
 
     for task in self._task_manager.GetFailedTasks():
