@@ -124,7 +124,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -166,7 +166,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         'type': 'Metadata Modification Time',
         'user': '-'}
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
@@ -206,7 +206,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     output_module.WriteFieldValues(output_mediator, field_values)
@@ -249,7 +249,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     output_module.WriteFieldValues(output_mediator, field_values)

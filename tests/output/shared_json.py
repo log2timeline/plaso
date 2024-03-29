@@ -41,7 +41,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -100,7 +100,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
         'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN,
         'username': 'root'}
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(field_values, expected_field_values)

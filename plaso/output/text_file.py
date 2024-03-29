@@ -72,8 +72,14 @@ class TextFileOutputModule(interface.OutputModule):
     super(TextFileOutputModule, self).__init__()
     self._file_object = None
 
+  def Close(self):
+    """Closes the output file."""
+    if self._file_object:
+      self._file_object.close()
+      self._file_object = None
+
   @abc.abstractmethod
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -88,12 +94,6 @@ class TextFileOutputModule(interface.OutputModule):
     Returns:
       dict[str, str]: output field values per name.
     """
-
-  def Close(self):
-    """Closes the output file."""
-    if self._file_object:
-      self._file_object.close()
-      self._file_object = None
 
   def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Opens the output file.
@@ -166,7 +166,20 @@ class SortedTextFileOutputModule(TextFileOutputModule):
 
     self._last_primary_sort_key = None
 
-  def _GetFieldValues(
+  @abc.abstractmethod
+  def _GetString(self, output_mediator, field_values):
+    """Retrieves an output string.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      field_values (dict[str, str]): output field values per name.
+
+    Returns:
+      str: output string.
+    """
+
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -183,19 +196,6 @@ class SortedTextFileOutputModule(TextFileOutputModule):
     """
     return self._event_formatting_helper.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
-
-  @abc.abstractmethod
-  def _GetString(self, output_mediator, field_values):
-    """Retrieves an output string.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-
-    Returns:
-      str: output string.
-    """
 
   def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.

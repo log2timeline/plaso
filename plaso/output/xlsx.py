@@ -81,7 +81,29 @@ class XLSXOutputModule(interface.OutputModule):
               event.timestamp, exception))
       return 'ERROR'
 
-  def _GetFieldValues(
+  def _SanitizeField(self, field):
+    """Sanitizes a field for output.
+
+    This method replaces any illegal XML string characters with the Unicode
+    replacement character (\ufffd).
+
+    Args:
+      field (str): value of the field to sanitize.
+
+    Returns:
+      str: sanitized value of the field.
+    """
+    return self._ILLEGAL_XML_RE.sub('\ufffd', field)
+
+  def Close(self):
+    """Closes the workbook."""
+    for column_index, column_width in enumerate(self._column_widths):
+      self._sheet.set_column(column_index, column_index, column_width)
+
+    self._workbook.close()
+    self._workbook = None
+
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -118,28 +140,6 @@ class XLSXOutputModule(interface.OutputModule):
       field_values[field_name] = field_value
 
     return field_values
-
-  def _SanitizeField(self, field):
-    """Sanitizes a field for output.
-
-    This method replaces any illegal XML string characters with the Unicode
-    replacement character (\ufffd).
-
-    Args:
-      field (str): value of the field to sanitize.
-
-    Returns:
-      str: sanitized value of the field.
-    """
-    return self._ILLEGAL_XML_RE.sub('\ufffd', field)
-
-  def Close(self):
-    """Closes the workbook."""
-    for column_index, column_width in enumerate(self._column_widths):
-      self._sheet.set_column(column_index, column_index, column_width)
-
-    self._workbook.close()
-    self._workbook = None
 
   def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
     """Creates a new workbook.

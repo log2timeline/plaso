@@ -99,7 +99,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     return rows
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -126,7 +126,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         'tag': 'Malware Printed',
         'timestamp_desc': 'Metadata Modification Time'}
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
@@ -155,7 +155,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       try:
         output_module.WriteHeader(output_mediator)
 
-        field_values = output_module._GetFieldValues(
+        field_values = output_module.GetFieldValues(
             output_mediator, event, event_data, event_data_stream, event_tag)
 
         output_module.WriteFieldValues(output_mediator, field_values)

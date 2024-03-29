@@ -21,23 +21,6 @@ class OutputModule(object):
   # Value to indicate the output module writes to an output file.
   WRITES_OUTPUT_FILE = False
 
-  @abc.abstractmethod
-  def _GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, str]: output field values per name.
-    """
-
   def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.
 
@@ -62,6 +45,7 @@ class OutputModule(object):
     """Closes the output."""
     return
 
+  @abc.abstractmethod
   def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
@@ -77,8 +61,6 @@ class OutputModule(object):
     Returns:
       dict[str, str]: output field values per name.
     """
-    return self._GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
 
   def GetMissingArguments(self):
     """Retrieves arguments required by the module that have not been specified.
@@ -114,7 +96,7 @@ class OutputModule(object):
           with identical timestamps, attributes and values.
     """
     for event, event_data, event_data_stream, event_tag in macb_group:
-      field_values = self._GetFieldValues(
+      field_values = self.GetFieldValues(
           output_mediator, event, event_data, event_data_stream, event_tag)
       self.WriteFieldValues(output_mediator, field_values)
 
