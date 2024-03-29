@@ -757,9 +757,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       # All exceptions need to be caught here to prevent the foreman
       # from being killed by an uncaught exception.
       except Exception as exception:  # pylint: disable=broad-except
+        path_spec = getattr(event_source, 'path_spec', None) or 'N/A'
         self._ProduceExtractionWarning(storage_writer, (
             f'unable to process path specification with error: '
-            f'{exception!s}'), event_source.path_spec)
+            f'{exception!s}'), path_spec)
         event_source = None
 
     for task in self._task_manager.GetFailedTasks():

@@ -75,8 +75,8 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     if base_year:
       date_less_log_helper = events.DateLessLogHelper()
-      date_less_log_helper.earliest_year = base_year
-      date_less_log_helper.last_relative_year = 0
+      date_less_log_helper.earliest_date = (base_year, 1, 1)
+      date_less_log_helper.last_relative_date = (0, 0, 0)
 
       date_less_log_helper.SetEventDataStreamIdentifier(
           event_data_stream_identifier)

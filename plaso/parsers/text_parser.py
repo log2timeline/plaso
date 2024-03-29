@@ -317,8 +317,8 @@ class TextLogParser(interface.FileObjectParser):
             parser_mediator.SampleStopTiming(profiling_name)
 
           if hasattr(plugin, 'GetDateLessLogHelper'):
-            year_less_log_helper = plugin.GetDateLessLogHelper()
-            parser_mediator.AddDateLessLogHelper(year_less_log_helper)
+            date_less_log_helper = plugin.GetDateLessLogHelper()
+            parser_mediator.AddDateLessLogHelper(date_less_log_helper)
 
           break
 

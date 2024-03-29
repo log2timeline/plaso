@@ -18,8 +18,8 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def testGetYearsFromFileEntry(self):
-    """Tests the _GetYearsFromFileEntry function."""
+  def testGetDatesFromFileEntry(self):
+    """Tests the _GetDatesFromFileEntry function."""
     test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
@@ -29,8 +29,8 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    years = test_helper._GetYearsFromFileEntry(file_entry)
-    self.assertEqual(years, set([2012]))
+    dates = test_helper._GetDatesFromFileEntry(file_entry)
+    self.assertEqual(dates, set([tuple([2012, 7, 28])]))
 
   def testGetMonthFromString(self):
     """Tests the _GetMonthFromString function."""
@@ -75,13 +75,13 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertIsNone(test_helper._month)
 
     test_helper._SetEstimatedYear(parser_mediator)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 2012)
     self.assertIsNone(test_helper._month)
 
@@ -89,7 +89,7 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
-    years = test_helper._GetYearsFromFileEntry(file_entry)
+    dates = test_helper._GetDatesFromFileEntry(file_entry)
 
     compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
@@ -102,29 +102,29 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertIsNone(test_helper._month)
 
     test_helper._SetEstimatedYear(parser_mediator)
 
-    expected_year = min(years)
+    expected_date = min(dates)
 
-    self.assertEqual(test_helper._relative_year, 0)
-    self.assertEqual(test_helper._year, expected_year)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
+    self.assertEqual(test_helper._year, expected_date[0])
     self.assertIsNone(test_helper._month)
 
   def testSetMonthAndYear(self):
     """Tests the _SetMonthAndYear function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertIsNone(test_helper._month)
 
     test_helper._SetMonthAndYear(11, 2022)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 2022)
     self.assertEqual(test_helper._month, 11)
 
@@ -132,49 +132,49 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
     """Tests the _UpdateYear function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertIsNone(test_helper._month)
 
     test_helper._UpdateYear(1)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertEqual(test_helper._month, 1)
 
     test_helper._UpdateYear(5)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertEqual(test_helper._month, 5)
 
     test_helper._UpdateYear(12)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertEqual(test_helper._month, 12)
 
     test_helper._UpdateYear(1)
 
-    self.assertEqual(test_helper._relative_year, 1)
+    self.assertEqual(test_helper._relative_date, (1, 0, 0))
     self.assertEqual(test_helper._year, 1)
     self.assertEqual(test_helper._month, 1)
 
     test_helper._UpdateYear(12)
 
-    self.assertEqual(test_helper._relative_year, 0)
+    self.assertEqual(test_helper._relative_date, (0, 0, 0))
     self.assertEqual(test_helper._year, 0)
     self.assertEqual(test_helper._month, 12)
 
     test_helper._UpdateYear(5)
 
-    self.assertEqual(test_helper._relative_year, 1)
+    self.assertEqual(test_helper._relative_date, (1, 0, 0))
     self.assertEqual(test_helper._year, 1)
     self.assertEqual(test_helper._month, 5)
 
     test_helper._UpdateYear(1)
 
-    self.assertEqual(test_helper._relative_year, 2)
+    self.assertEqual(test_helper._relative_date, (2, 0, 0))
     self.assertEqual(test_helper._year, 2)
     self.assertEqual(test_helper._month, 1)
 
@@ -182,8 +182,8 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
     """Tests the GetDateLessLogHelper function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
-    year_less_log_helper = test_helper.GetDateLessLogHelper()
-    self.assertIsNotNone(year_less_log_helper)
+    date_less_log_helper = test_helper.GetDateLessLogHelper()
+    self.assertIsNotNone(date_less_log_helper)
 
 
 if __name__ == '__main__':
