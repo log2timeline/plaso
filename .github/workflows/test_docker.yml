@@ -27,16 +27,12 @@ jobs:
     - name: Run end-to-end tests
       run: |
         if test -f tests/end-to-end.py; then PYTHONPATH=. python3 ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
-    - name: Build source distribution
+    - name: Build source distribution (sdist)
       run: |
-        python3 ./setup.py sdist
-    - name: Build binary distribution
+        python3 -m build --no-isolation --sdist
+    - name: Build binary distribution (wheel)
       run: |
-        python3 ./setup.py bdist
-    - name: Run build and install test
-      run: |
-        python3 ./setup.py build
-        python3 ./setup.py install
+        python3 -m build --no-isolation --wheel
   test_ubuntu:
     runs-on: ubuntu-latest
     strategy:
@@ -69,13 +65,9 @@ jobs:
         LANG: en_US.UTF-8
       run: |
         if test -f tests/end-to-end.py; then PYTHONPATH=. python3 ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
-    - name: Build source distribution
+    - name: Build source distribution (sdist)
       run: |
-        python3 ./setup.py sdist
-    - name: Build binary distribution
+        python3 -m build --no-isolation --sdist
+    - name: Build binary distribution (wheel)
       run: |
-        python3 ./setup.py bdist
-    - name: Run build and install test
-      run: |
-        python3 ./setup.py build
-        python3 ./setup.py install
+        python3 -m build --no-isolation --wheel
