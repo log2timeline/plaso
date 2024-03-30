@@ -22,7 +22,7 @@ PYTHON_DEPENDENCIES = {
     'certifi': ('__version__', '2016.9.26', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
-    'dfdatetime': ('__version__', '20221112', None, True),
+    'dfdatetime': ('__version__', '20240330', None, True),
     'dfvfs': ('__version__', '20240115', None, True),
     'dfwinreg': ('__version__', '20240229', None, True),
     'dtfabric': ('__version__', '20230518', None, True),

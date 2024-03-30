@@ -39,9 +39,9 @@ Checking availability and versions of dependencies.
 [OK]
 
 
-Source path		: /PATH/image.E01
-Source type		: storage media image
-Processing time		: 00:00:00
+Source path     : /PATH/image.E01
+Source type     : storage media image
+Processing time : 00:00:00
 
 Processing started.
 ```
@@ -49,9 +49,9 @@ Processing started.
 ```bash
 plaso - log2timeline version 20210412
 
-Source path		: /PATH/image.E01
-Source type		: storage media image
-Processing time		: 00:04:57
+Source path     : /PATH/image.E01
+Source type     : storage media image
+Processing time : 00:04:57
 
 Tasks:          Queued  Processing      Merging         Abandoned       Total
                 0       0               0               0               18675
@@ -186,9 +186,9 @@ every discovered file. To do more targeted extraction a filter file can be used.
 ```bash
 $ log2timeline.py -f filter --storage-file timeline.plaso test.vhd
 
-Source path	: /PATH/test.vhd
-Source type	: storage media image
-Filter file	: filter
+Source path     : /PATH/test.vhd
+Source type     : storage media image
+Filter file     : filter
 
 Processing started.
 ...
