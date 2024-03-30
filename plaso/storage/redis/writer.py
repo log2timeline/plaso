@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Storage writer for Redis."""
+"""Redis-based storage writer."""
 
 from plaso.storage import writer
 from plaso.storage.redis import redis_store

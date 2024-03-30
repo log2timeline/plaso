@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-"""SQLite-based storage file reader."""
+"""SQLite-based storage reader."""
 
 from plaso.storage import reader
 from plaso.storage.sqlite import sqlite_file
 
 
-class SQLiteStorageFileReader(reader.StorageReader):
-  """SQLite-based storage file reader."""
+class SQLiteStorageReader(reader.StorageReader):
+  """SQLite-based storage reader."""
 
   def __init__(self, path):
-    """Initializes a SQLite-based file storage reader.
+    """Initializes a storage reader.
 
     Args:
-      path (str): path to the input file.
+      path (str): path to the input SQLite database.
     """
-    super(SQLiteStorageFileReader, self).__init__()
+    super(SQLiteStorageReader, self).__init__()
     self._path = path
     self._store = sqlite_file.SQLiteStorageFile()
     self._store.Open(path=path)

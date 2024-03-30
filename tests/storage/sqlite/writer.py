@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the fake storage writer."""
+"""Tests for the SQLite-based storage writer."""
 
 import os
 import unittest
@@ -14,8 +14,8 @@ from tests.storage import test_lib
 from tests.containers import test_lib as containers_test_lib
 
 
-class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
-  """Tests for the fake storage writer."""
+class SQLiteStorageWriterTest(test_lib.StorageTestCase):
+  """Tests for the SQLite-based storage writer."""
 
   # pylint: disable=protected-access
 
@@ -23,7 +23,7 @@ class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
     """Adds tests events to the storage writer.
 
     Args:
-      storage_writer (SQLiteStorageFileWriter): storage writer.
+      storage_writer (SQLiteStorageWriter): storage writer.
 
     Returns:
       list[EventObject]: test events.
@@ -49,7 +49,7 @@ class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter()
+      storage_writer = sqlite_writer.SQLiteStorageWriter()
       storage_writer.Open(path=test_path)
 
       try:
@@ -73,7 +73,7 @@ class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the AddOrUpdateEventTag function."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter()
+      storage_writer = sqlite_writer.SQLiteStorageWriter()
       storage_writer.Open(path=test_path)
 
       try:
@@ -134,7 +134,7 @@ class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the GetSortedEvents function."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter()
+      storage_writer = sqlite_writer.SQLiteStorageWriter()
       storage_writer.Open(path=test_path)
 
       try:
@@ -152,14 +152,14 @@ class SQLiteStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the Open and Close functions."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter()
+      storage_writer = sqlite_writer.SQLiteStorageWriter()
       storage_writer.Open(path=test_path)
       storage_writer.Close()
 
       storage_writer.Open(path=test_path)
       storage_writer.Close()
 
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter(
+      storage_writer = sqlite_writer.SQLiteStorageWriter(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_writer.Open(path=test_path)
       storage_writer.Close()
