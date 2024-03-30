@@ -69,9 +69,6 @@ jobs:
         LANG: en_US.UTF-8
       run: |
         if test -f tests/end-to-end.py; then PYTHONPATH=. python3 ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
-    - name: Update setuptools
-      run: |
-        python3 -m pip install -U setuptools
     - name: Build source distribution
       run: |
         python3 ./setup.py sdist
