@@ -21,7 +21,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
 
     storage_reader = factory.StorageFactory.CreateStorageReaderForFile(
         test_file_path)
-    self.assertIsInstance(storage_reader, sqlite_reader.SQLiteStorageFileReader)
+    self.assertIsInstance(storage_reader, sqlite_reader.SQLiteStorageReader)
 
   def testCreateStorageWriterForFile(self):
     """Test the CreateStorageWriterForFile function."""
@@ -30,7 +30,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
 
     storage_reader = factory.StorageFactory.CreateStorageWriterForFile(
         test_file_path)
-    self.assertIsInstance(storage_reader, sqlite_writer.SQLiteStorageFileWriter)
+    self.assertIsInstance(storage_reader, sqlite_writer.SQLiteStorageWriter)
 
 
 if __name__ == '__main__':

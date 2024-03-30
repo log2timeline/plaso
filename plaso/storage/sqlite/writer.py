@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Storage writer for SQLite storage files."""
+"""SQLite-based storage writer."""
 
 from plaso.lib import definitions
 from plaso.storage import writer
 from plaso.storage.sqlite import sqlite_file
 
 
-class SQLiteStorageFileWriter(writer.StorageWriter):
-  """SQLite-based storage file writer."""
+class SQLiteStorageWriter(writer.StorageWriter):
+  """SQLite-based storage writer."""
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes a storage writer.
@@ -15,7 +15,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     Args:
       storage_type (Optional[str]): storage type.
     """
-    super(SQLiteStorageFileWriter, self).__init__()
+    super(SQLiteStorageWriter, self).__init__()
     self._first_written_event_data_index = 0
     self._first_written_event_source_index = 0
     self._written_event_data_index = 0
@@ -112,7 +112,7 @@ class SQLiteStorageFileWriter(writer.StorageWriter):
     """Opens the storage writer.
 
     Args:
-      path (Optional[str]): path to the output file.
+      path (Optional[str]): path to the output SQLite database.
 
     Raises:
       IOError: if the storage writer is already opened.
