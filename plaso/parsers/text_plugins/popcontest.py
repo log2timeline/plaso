@@ -294,7 +294,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
     try:
       self._VerifyString(text_reader.lines)

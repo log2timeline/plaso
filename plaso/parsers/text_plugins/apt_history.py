@@ -221,7 +221,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
     # Format verification will be faster on average by checking the presence of
     # fixed-text fragments first.
