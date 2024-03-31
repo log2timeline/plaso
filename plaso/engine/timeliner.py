@@ -124,7 +124,7 @@ class EventDataTimeliner(object):
       latest_date = date_less_log_helper.GetLatestDate()
 
       if date_less_log_helper.granularity == (
-          date_less_log_helper.GRANULARITY_NO_YEARS):
+          date_less_log_helper.GRANULARITY_NO_YEAR):
         current_date = (current_date[0], 0, 0)
 
       if earliest_date is None or last_relative_date is None:

@@ -161,6 +161,11 @@ class XChatLogTextPlugin(
 
   VERIFICATION_GRAMMAR = _SECTION_HEADER_LINE
 
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(XChatLogTextPlugin, self).__init__()
+    self._year = None
+
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
@@ -222,8 +227,9 @@ class XChatLogTextPlugin(
         structure, 'log_action', default_value=[])
 
     if log_action[0] not in ('BEGIN', 'END'):
+      log_action_string = ' '.join(log_action)
       parser_mediator.ProduceExtractionWarning(
-          'unsupported log action: {0:s}.'.format(' '.join(log_action)))
+          f'unsupported log action: {log_action_string:s}')
       self._year = None
       return
 
@@ -272,6 +278,8 @@ class XChatLogTextPlugin(
 
         self._SetMonthAndYear(month, year)
 
+      self._year = year
+
       time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
       date_time = dfdatetime_time_elements.TimeElements(
@@ -283,7 +291,7 @@ class XChatLogTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
