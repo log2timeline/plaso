@@ -56,7 +56,25 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
   # /Library/LaunchAgents/*.plist
   # ~/Library/LaunchAgents
 
+  # The Mac OS documentation indicates that Label and # ProgramArguments are
+  # required keys, lauchd plists have been observed  that contain Label and
+  # Program keys.
+
   PLIST_KEYS = frozenset(['Label'])
+
+  def CheckRequiredFormat(self, top_level):
+    """Check if the plist has the minimal structure required by the plugin.
+
+    Args:
+      top_level (dict[str, object]): plist top-level item.
+
+    Returns:
+      bool: True if this is the correct plugin, False otherwise.
+    """
+    if not super(MacOSLaunchdPlistPlugin, self).CheckRequiredFormat(top_level):
+      return False
+
+    return 'Program' in top_level or 'ProgramArguments' in top_level
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
