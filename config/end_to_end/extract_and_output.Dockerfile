@@ -24,6 +24,8 @@ RUN git clone $GIT_REPOSITORY
 
 # Install Plaso dependencies.
 WORKDIR /home/test/plaso
+
+# Install Plaso and dependencies.
 RUN ./config/linux/ubuntu_install_plaso.sh
 
 # Configure container for running Plaso.

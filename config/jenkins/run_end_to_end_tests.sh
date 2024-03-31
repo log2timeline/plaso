@@ -26,9 +26,11 @@ RESULTS_DIRECTORY="${PWD}/plaso-out";
 
 mkdir -p "${RESULTS_DIRECTORY}/profiling";
 
-# Build the extract_and_output end-to-end test Docker image.
+# Build the end-to-end test Docker image.
 docker build -f extract_and_output.Dockerfile --force-rm --no-cache -t log2timeline/plaso . ;
 
 docker run log2timeline/plaso ./utils/check_dependencies.py;
 
-docker run -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts"
+COMMAND="./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts";
+
+docker run --name plaso -p 9200:9200 -p 9600:9600 -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}"
