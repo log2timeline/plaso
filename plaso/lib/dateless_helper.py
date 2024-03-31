@@ -26,14 +26,20 @@ class DateLessLogFormatHelper(object):
 
   _VALID_MONTHS = frozenset(range(1, 13))
 
+  # The date-less log format only supports time.
+  _GRANULARITY_NO_DATE = 'd'
+
+  # The date-less log format only supports month and day of month.
+  _GRANULARITY_NO_YEAR = 'y'
+
   def __init__(self):
     """Initializes the date-less log format helper mix-in."""
     super(DateLessLogFormatHelper, self).__init__()
     self._base_date = None
+    self._date = (0, 0, 0)
+    self._granularity = self._GRANULARITY_NO_YEAR
     self._maximum_date = None
-    self._month = None
     self._relative_date = (0, 0, 0)
-    self._year = 0
 
   def _GetDatesFromFileEntry(self, file_entry):
     """Retrieves the dates from the file entry date and time values.
@@ -93,20 +99,20 @@ class DateLessLogFormatHelper(object):
     Returns:
       int: year.
     """
-    return self._year
+    return self._date[0]
 
-  def _SetEstimatedYear(self, parser_mediator):
-    """Sets the year based on the parser mediator year estimation.
+  def _SetEstimatedDate(self, parser_mediator):
+    """Estimate the date based on the file entry dates.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
     """
     self._base_date = None
+    self._date = (0, 0, 0)
+    self._granularity = self._GRANULARITY_NO_DATE
     self._maximum_date = None
-    self._month = None
     self._relative_date = (0, 0, 0)
-    self._year = 0
 
     dates = set()
 
@@ -126,8 +132,20 @@ class DateLessLogFormatHelper(object):
 
     if dates:
       self._base_date = min(dates)
+      self._date = self._base_date
       self._maximum_date = max(dates)
-      self._year = self._base_date[0]
+
+  def _SetEstimatedYear(self, parser_mediator):
+    """Estimate the year based on the file entry dates.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    self._SetEstimatedDate(parser_mediator)
+
+    self._date = (self._date[0], 0, 0)
+    self._granularity = self._GRANULARITY_NO_YEAR
 
   def _SetMonthAndYear(self, month, year):
     """Sets the month and year.
@@ -142,9 +160,9 @@ class DateLessLogFormatHelper(object):
     if month not in self._VALID_MONTHS:
       raise ValueError('Invalid month: {0!s}'.format(month))
 
-    self._month = month
+    self._date = (year, month, 0)
+    self._granularity = self._GRANULARITY_NO_YEAR
     self._relative_date = (0, 0, 0)
-    self._year = year
 
   def _UpdateYear(self, month):
     """Updates the year based on the month observed in the log format.
@@ -158,25 +176,27 @@ class DateLessLogFormatHelper(object):
     if month not in self._VALID_MONTHS:
       raise ValueError('Invalid month: {0!s}'.format(month))
 
-    if self._month:
+    last_year, last_month, _ = self._date
+
+    if last_month:
       relative_year, relative_month, relative_day_of_month = self._relative_date
 
       # Account for log formats that allow out-of-order date and time values
       # (Apr->May->Apr) such as rsyslog with the RepeatedMsgReduction setting
       # enabled.
-      if month + 1 < self._month:
+      if month + 1 < last_month:
         self._relative_date = (
             relative_year + 1, relative_month, relative_day_of_month)
-        self._year += 1
+        last_year += 1
 
       # Account for out-of-order Jan->Dec->Jan with the exception of the start
       # of the log file.
-      elif relative_year > 0 and self._month == 1 and month == 12:
+      elif relative_year > 0 and last_month == 1 and month == 12:
         self._relative_date = (
             relative_year - 1, relative_month, relative_day_of_month)
-        self._year -= 1
+        last_year -= 1
 
-    self._month = month
+    self._date = (last_year, month, 0)
 
   def GetDateLessLogHelper(self):
     """Retrieves a date-less log helper attribute container.
@@ -186,6 +206,7 @@ class DateLessLogFormatHelper(object):
     """
     date_less_log_helper = events.DateLessLogHelper()
     date_less_log_helper.earliest_date = self._base_date
+    date_less_log_helper.granularity = self._granularity
     date_less_log_helper.last_relative_date = self._relative_date
     date_less_log_helper.latest_date = self._maximum_date
 

@@ -75,15 +75,13 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
+    self.assertEqual(test_helper._date, (0, 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertIsNone(test_helper._month)
 
     test_helper._SetEstimatedYear(parser_mediator)
 
+    self.assertEqual(test_helper._date, (2012, 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 2012)
-    self.assertIsNone(test_helper._month)
 
     test_path = self._GetTestFilePath(['syslog.xz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -102,81 +100,69 @@ class DateLessLogFormatHelperTest(shared_test_lib.BaseTestCase):
 
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
+    self.assertEqual(test_helper._date, (0, 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertIsNone(test_helper._month)
 
     test_helper._SetEstimatedYear(parser_mediator)
 
     expected_date = min(dates)
 
+    self.assertEqual(test_helper._date, (expected_date[0], 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, expected_date[0])
-    self.assertIsNone(test_helper._month)
 
   def testSetMonthAndYear(self):
     """Tests the _SetMonthAndYear function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
+    self.assertEqual(test_helper._date, (0, 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertIsNone(test_helper._month)
 
     test_helper._SetMonthAndYear(11, 2022)
 
+    self.assertEqual(test_helper._date, (2022, 11, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 2022)
-    self.assertEqual(test_helper._month, 11)
 
   def testUpdateYear(self):
     """Tests the _UpdateYear function."""
     test_helper = dateless_helper.DateLessLogFormatHelper()
 
+    self.assertEqual(test_helper._date, (0, 0, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertIsNone(test_helper._month)
 
     test_helper._UpdateYear(1)
 
+    self.assertEqual(test_helper._date, (0, 1, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertEqual(test_helper._month, 1)
 
     test_helper._UpdateYear(5)
 
+    self.assertEqual(test_helper._date, (0, 5, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertEqual(test_helper._month, 5)
 
     test_helper._UpdateYear(12)
 
+    self.assertEqual(test_helper._date, (0, 12, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertEqual(test_helper._month, 12)
 
     test_helper._UpdateYear(1)
 
+    self.assertEqual(test_helper._date, (1, 1, 0))
     self.assertEqual(test_helper._relative_date, (1, 0, 0))
-    self.assertEqual(test_helper._year, 1)
-    self.assertEqual(test_helper._month, 1)
 
     test_helper._UpdateYear(12)
 
+    self.assertEqual(test_helper._date, (0, 12, 0))
     self.assertEqual(test_helper._relative_date, (0, 0, 0))
-    self.assertEqual(test_helper._year, 0)
-    self.assertEqual(test_helper._month, 12)
 
     test_helper._UpdateYear(5)
 
+    self.assertEqual(test_helper._date, (1, 5, 0))
     self.assertEqual(test_helper._relative_date, (1, 0, 0))
-    self.assertEqual(test_helper._year, 1)
-    self.assertEqual(test_helper._month, 5)
 
     test_helper._UpdateYear(1)
 
+    self.assertEqual(test_helper._date, (2, 1, 0))
     self.assertEqual(test_helper._relative_date, (2, 0, 0))
-    self.assertEqual(test_helper._year, 2)
-    self.assertEqual(test_helper._month, 1)
 
   def testGetDateLessLogHelper(self):
     """Tests the GetDateLessLogHelper function."""

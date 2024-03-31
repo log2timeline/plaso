@@ -112,14 +112,14 @@ class DateLessLogHelper(interface.AttributeContainer):
   GRANULARITY_NO_DATE = 'd'
 
   # The date-less log format only supports month and day of month.
-  GRANULARITY_NO_YEARS = 'y'
+  GRANULARITY_NO_YEAR = 'y'
 
   def __init__(self):
     """Initializes a date-less log helper attribute container."""
     super(DateLessLogHelper, self).__init__()
     self._event_data_stream_identifier = None
     self.earliest_date = None
-    self.granularity = self.GRANULARITY_NO_YEARS
+    self.granularity = self.GRANULARITY_NO_YEAR
     self.last_relative_date = None
     self.latest_date = None
 
@@ -132,7 +132,7 @@ class DateLessLogHelper(interface.AttributeContainer):
       year_less_log_helper (YearLessLogHelper): year-less log helper.
     """
     self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
-    self.granularity = self.GRANULARITY_NO_YEARS
+    self.granularity = self.GRANULARITY_NO_YEAR
     self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
     self.latest_date = (year_less_log_helper.latest_year, 1, 1)
 
@@ -143,7 +143,7 @@ class DateLessLogHelper(interface.AttributeContainer):
       tuple[int, int, int]: earliest date as tuple of year, month and day of
           month or None if not available.
     """
-    if self.earliest_date and self.granularity == self.GRANULARITY_NO_YEARS:
+    if self.earliest_date and self.granularity == self.GRANULARITY_NO_YEAR:
       return self.earliest_date[0], 0, 0
 
     return self.earliest_date
@@ -167,7 +167,7 @@ class DateLessLogHelper(interface.AttributeContainer):
           of month or None if not available.
     """
     if (self.last_relative_date and
-        self.granularity == self.GRANULARITY_NO_YEARS):
+        self.granularity == self.GRANULARITY_NO_YEAR):
       return self.last_relative_date[0], 0, 0
 
     return self.last_relative_date
@@ -179,7 +179,7 @@ class DateLessLogHelper(interface.AttributeContainer):
       tuple[int, int, int]: latest date as tuple of year, month and day of
           month or None if not available.
     """
-    if self.latest_date and self.granularity == self.GRANULARITY_NO_YEARS:
+    if self.latest_date and self.granularity == self.GRANULARITY_NO_YEAR:
       return self.latest_date[0], 0, 0
 
     return self.latest_date
