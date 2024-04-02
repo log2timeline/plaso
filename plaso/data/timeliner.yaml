@@ -1291,26 +1291,26 @@ attribute_mappings:
   description: 'Unknown Time'
 place_holder_event: true
 ---
+data_type: 'teamviewer:application_log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'teamviewer:connections_incoming:entry'
 attribute_mappings:
-- name: 'session_start_timestamp'
-  description: 'Start Time'
-- name: 'session_end_timestamp'
+- name: 'end_time'
   description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'teamviewer:connections_outgoing:entry'
 attribute_mappings:
-- name: 'session_start_timestamp'
-  description: 'Start Time'
-- name: 'session_end_timestamp'
+- name: 'end_time'
   description: 'End Time'
-place_holder_event: true
----
-data_type: 'teamviewer:application_log:entry'
-attribute_mappings:
-- name: 'timestamp'
-  description: 'Content Modification Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'viminfo:history'
