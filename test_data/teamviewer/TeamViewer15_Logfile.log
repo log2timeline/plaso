@@ -1,0 +1,1049 @@
+2024/02/16 06:05:19.349  2136       3688  0   Logger started.
+2024/02/16 06:05:19.352  2136       5868  0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:05:19.360  2136       5868  0   Generating new RSA private/public key pair
+2024/02/16 06:05:19.374  2136       5868  0   WinCryptoProtectData::EncryptData has successfully encrypted!
+2024/02/16 06:05:19.375  2136       5868  0   WinCryptoProtectData::EncryptData has successfully encrypted!
+2024/02/16 06:05:19.375  2136       5868  0   InitializeRemoteAccessAPI
+2024/02/16 06:05:19.376  2136       5868  0   QueryVPNRegKey: Subkey 'SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\Configuration' (9) has no 'MatchingDeviceID' entry. Continuing...
+2024/02/16 06:05:19.377  2136       5868  0   QueryVPNRegKey: Subkey 'SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\Properties' (10) has no 'MatchingDeviceID' entry. Continuing...
+2024/02/16 06:05:19.377  2136       5868  0   IdentityManagement: Load ManagerIDs from local Storage: 
+2024/02/16 06:05:19.377  2136       5868  0   InitializeDeviceManagementV2
+2024/02/16 06:05:19.377  2136       5868  0   ManagedDeviceClientModule: Trigger Startup
+2024/02/16 06:05:19.377  2136       5868  0   MDv2::ProviderRegistrationController::UpdateRegistration: device is offline
+2024/02/16 06:05:19.377  2136       5868  0   ManagedDeviceClientModule::ManagedDeviceClientModule(): Started ManagedDevice V2 module
+2024/02/16 06:05:19.378  2136       5868  0   BYOC::Initialize: ClientCertificateAuthentication feature is deactivated
+2024/02/16 06:05:19.400  2136       3688 S0   SERVICE_CONTROL_POWEREVENT 32787
+2024/02/16 06:05:19.432  2136       3688 S0   SERVICE_CONTROL_POWEREVENT 32787
+2024/02/16 06:05:19.464  2136       5868 S0   DesiredServices: waiting for service winmgmt
+2024/02/16 06:05:19.561  2136       5868 S0   
+Start:              2024/02/16 06:05:19.548 (UTC-8:00)
+Version:            15.50.5 (64-bit)
+Version short hash: b23ae08066e
+ID:                 0
+Loglevel:           Info
+License:            0
+IC:                 -2100253538
+CPU:                AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+CPU extensions:     e9
+OS:                 Win_10.0.17763_W (64-bit)
+IP:                 10.0.2.15
+MID:                0x080027e6e559_1d44cc67230d0d5_3030843078
+MIDv:               0
+Proxy-Settings:     Type=1 IP= User=
+IE                  11.1790.17763.0
+AppPath:            C:\Program Files\TeamViewer\TeamViewer_Service.exe
+UserAccount:        SYSTEM
+
+2024/02/16 06:05:19.561  2136       5868 S0   LanguageControl: device language is 'en'
+2024/02/16 06:05:19.566  2136       3876 S0   NetWatchdog: Internet is now connected
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_TVClientSetting_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Scripting_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_Antivirus_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_Backup_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_RemoteManagement_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_ActiveDirectory_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_PatchManagement_Policy empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry IoTSensor empty
+2024/02/16 06:05:19.566  2136       5868 S0   RemoteSettingsReception::HandleRestoredStatusFromRemoteSettingsStoreEvent.
+2024/02/16 06:05:19.567  2136       5868 S0   RemoteSettingsMDRelationshipWatchDog::ActivateWatchDog
+2024/02/16 06:05:19.567  2136       5868 S0   RemoteSettingsMDRelationshipWatchDog: DEVICE ISN'T A MANAGED DEVICE
+2024/02/16 06:05:19.567  2136       5868 S0   RemoteSettingsReception::HandleManagementStatusChanged
+2024/02/16 06:05:19.567  2136       2276 S0   CKeepAliveClientClient::HandleStartKeepAlive: going online not wanted!
+2024/02/16 06:05:19.568  2136       3576 S0   RemoteSettingsStore: Cleanup all policies from version: 1
+2024/02/16 06:05:19.568  2136       5868 S0   RemoteSettingsMDv2RelationshipWatchdog: Start WatchDog
+2024/02/16 06:05:19.568  2136       5868 S0   RemoteSettingsMDv2RelationshipWatchdog::HandleManagementChanged
+2024/02/16 06:05:19.568  2136       5868 S0   RemoteSettingsMDv2RelationshipWatchdog: Device isn't a managed v2 device anymore
+2024/02/16 06:05:19.568  2136       5868 S0   RemoteSettingsReception::HandleManagmentv2StatusChanged
+2024/02/16 06:05:19.568  2136       3576 S0   RemoteSettingsStore: Cleanup all policies from version: 2
+2024/02/16 06:05:19.568  2136       5868 S0!  MDv2::ManagedDeviceController::UpdateDeviceFlags: cannot update flags for a device that is not managed
+2024/02/16 06:05:19.568  2136       5868 S0   tvrmmonitoring::RemoteManagementCallbackHandler::RegisterRemoteManagementCallbacks::<lambda_6>::operator (): RMMonitoringMigrationPossible flag was set
+2024/02/16 06:05:19.568  2136       5868 S0   Using IPC-Port 5939
+2024/02/16 06:05:19.568  2136       5868 S0   SHMR: Initializing shared memory.
+2024/02/16 06:05:19.568  2136       5868 S0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:05:19.568  2136       5868 S0   TVNetwork::StartCustomizable: success 1 updated 0
+2024/02/16 06:05:19.568  2136       5868 S0   PrintingPrinterManager::CleanupPrinters: started
+2024/02/16 06:05:19.576  2136       5868 S0   PrintingPrinterManager::CleanupPrinters: allocating 10064 bytes
+2024/02/16 06:05:19.576  2136       5868 S0   PrintingPrinterManager::CleanupPrinters: finished
+2024/02/16 06:05:19.576  2136       5868 S0!  OptOutManager::[]ResultCB: Send message result 0
+2024/02/16 06:05:19.581  2136       5868 S0   ApiServer::IsApiInstalled: The API is not registered with Windows.
+2024/02/16 06:05:19.585  2136       2276 S0   OSSessionEventTranslator::GenerateEventsForSession: SessionID = 0, username = , primarySession = 0, isUsable = 0, locked = 0, connected = 0
+2024/02/16 06:05:19.585  2136       2276 S0   OSSessionEventTranslator::GenerateEventsForSession: SessionID = 1, username = msedgewin10\ieuser, primarySession = 1, isUsable = 1, locked = 0, connected = 1
+2024/02/16 06:05:19.585  2136       2276 S0   SingleUserSessionDesignator: New active session: 1
+2024/02/16 06:05:19.585  2136       2276 S0   Force Autostart GUI for session ID 1
+2024/02/16 06:05:20.702  2136       2276 S0   ProcessControlBase[2]: Start GUI process in session 1, pid 1040
+2024/02/16 06:05:20.735  2136       3728 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=0 restart=0 termsOfUseAccepted=0
+2024/02/16 06:05:20.735  2136       3728 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=0 restart=0 termsOfUseAccepted=0
+2024/02/16 06:05:22.113  2136       3728 S0   AcceptServer::HandleAccept: new connection from 127.0.0.1:50021
+2024/02/16 06:05:22.113  2136       3728 S0   IpcInitConnection::Received_Control_InitIPC: Connecting process: 1040
+2024/02/16 06:05:22.116  1040       6808 G1!  Couldn't access Log-File since startup
+2024/02/16 06:05:22.116  1040       6808 G1   SettingsIPCReception receive a SYNCHRONISE Settings command : UserSettings
+2024/02/16 06:05:22.116  1040       6808 G1   IpcRemoteSettingsHandler::HandleCommand UserSettings process sends sync settings response to network.
+2024/02/16 06:05:22.116  2136       3728 S0   IpcInitConnection::SendInitIPCResponse: Send InitIPC_Response to process: 1040
+2024/02/16 06:05:22.116  1040       6808 G1   Received Control_InitIPC_Response processtype=1
+2024/02/16 06:05:22.116  1040       6808 G1   Received Control_InitIPC_Response runningProcesses=3
+2024/02/16 06:05:22.122  1040       6808 G1   IPCConnection: all processes 3 completely initialized
+2024/02/16 06:05:22.123  2136       2276 S0   ProcessControlBase[2]::ProcessConnected: Process pid 1040 in session 1 connected
+2024/02/16 06:05:22.123  2136       3728 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=1 restart=0 termsOfUseAccepted=0
+2024/02/16 06:05:22.123  1040       1324 G1   InterProcessBase::ConnectToOtherProcess: Process connected to service.
+2024/02/16 06:05:22.142  1040       1324 G1!! DriverInstalled: SetupDiEnumDriverInfoW failed with error code 259, Errorcode=259
+2024/02/16 06:05:22.143  1040       1324 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:05:22.143  1040       1324 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:05:22.143  1040       1324 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:05:22.144  1040       1324 G1!! DriverInstalled: SetupDiEnumDriverInfoW failed with error code 259, Errorcode=259
+2024/02/16 06:05:22.149  1040       1324 G1   MachineHooks: Initialized Shm
+2024/02/16 06:05:22.149  1040       1324 G1   MachineHooks: refcount = 1
+2024/02/16 06:05:22.153  2136       2276 S0   CToken::GetSystemToken() set session 1
+2024/02/16 06:05:22.153  1040       1324 G1   MachineHooks: w32 Loader is starting
+2024/02/16 06:05:22.154  1040       1324 G1   MachineHooks: x64 Loader is starting
+2024/02/16 06:05:22.171  1040       1324 G1   PredefinedSessionPassword (reset) ForceId(1) CurrentId(1) ConsoleId(1)
+2024/02/16 06:05:22.171  1040       1324 G1   TermsOfUseHandler: Show terms of use
+2024/02/16 06:05:22.176  2136       2276 S0   IpcLoaderProcessHandlerWin: Loader process started, pid = 1752
+2024/02/16 06:05:22.181  2136       3728 S0   CToken::GetSystemToken() set session 1
+2024/02/16 06:05:22.199  1752  7508 L32  Loader started with: "C:\Program Files\TeamViewer\tv_w32.exe" --action hooks  --log C:\Program Files\TeamViewer\TeamViewer15_Logfile.log  
+2024/02/16 06:05:22.223  2136       3728 S0   IpcLoaderProcessHandlerWin: Loader process started, pid = 6268
+2024/02/16 06:05:22.228  1752  7508 L32  Starting Loader
+2024/02/16 06:05:22.149  1040  1324 H64  Loader: SharedMem Connected (seg = 00000275E5140000, refcnt = 1)
+2024/02/16 06:05:22.149  1040  1324 H64  teamviewer.exe: SharedMem Connected (seg = 00000275E5140000, refcnt = 2)
+2024/02/16 06:05:22.154  1040  1324 H64  teamviewer.exe: SharedMem_SetLogLevel: 0 -> 200
+2024/02/16 06:05:22.312  1040       5844 G1   ProxySearch: no PAC script detected via WPAD
+2024/02/16 06:05:22.313  6268  3028 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action hooks  --log C:\Program Files\TeamViewer\TeamViewer15_Logfile.log  
+2024/02/16 06:05:22.334  1040       5844 G1   ProxySearch: no PAC script detected via WPAD
+2024/02/16 06:05:22.339  6268  3028 L64  Starting Loader
+2024/02/16 06:05:32.104  1040       6808 G1!! WorkingProxyListener::WorkingProxyResultHandler failed: 1
+2024/02/16 06:05:32.104  1040       6808 G1!  WorkingProxyListener::WorkingProxyResultHandler: setting default value ProxyType::Undefined
+2024/02/16 06:05:32.104  1040       6808 G1!! WorkingProxyListener::WorkingProxyResultHandler failed: 1
+2024/02/16 06:05:32.104  1040       6808 G1!  WorkingProxyListener::WorkingProxyResultHandler: setting default value ProxyType::Undefined
+2024/02/16 06:05:32.104  1040       6416 G1!! WorkingProxyListener::WorkingProxyResultHandler failed: 1
+2024/02/16 06:05:32.104  1040       6416 G1!  WorkingProxyListener::WorkingProxyResultHandler: setting default value ProxyType::Undefined
+2024/02/16 06:07:16.802  1040       1324 G1   TermsOfUseHandler: Set terms of use accepted
+2024/02/16 06:07:16.803  1040       1324 G1   tvapplication::OneApiResourceServerFactory::CreateEmbeddedResourceServer: load UI from embedded resource
+2024/02/16 06:07:16.804  1040       1324 G1   tvapplication::TVDesktopApplicationWinFull::InitMainWindow: using UI-Package v15.50.2 (commit hash: fa4d86814, commit date: 2024-Jan-22 15:51:56, build date: 2024-Jan-22 15:59:07.867000)
+2024/02/16 06:07:16.804  1040       1324 G1   tvapplication::OneApiResourceServerFactory::CreateEmbeddedResourceServer: load UI from embedded resource
+2024/02/16 06:07:16.804  1040       1324 G1!! tvbrowser::BrowserUI::ZipContentServer::GetZipItem: couldn't find zip item for path "build-info.json" (error 1280), Errorcode=3
+2024/02/16 06:07:16.804  1040       1324 G1!! tvbrowser::BrowserUI::ZipContentServer::ReadResource: zip item '"build-info.json"' not found, Errorcode=3
+2024/02/16 06:07:16.804  1040       1324 G1!! tvapplication::TVDesktopApplicationWinFull::InitMainWindow: build info of CompanionDock-UI-Package not available, Errorcode=3
+2024/02/16 06:07:16.804  1040       1324 G1   UpdateBase::StartUpdate(): Start minor update... (UpdateType=4) (TargetModule=1)
+2024/02/16 06:07:16.805  1040       1324 G1   tvmanagedgroups::ManagedDeviceManagementModuleManager::UpdateModule: Initialize ManagedDeviceManagementModule
+2024/02/16 06:07:16.806  1040       1324 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:07:16.811  1040       1324 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=0 ka=0 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=0
+2024/02/16 06:07:16.854  1040       1324 G1   PrinterDriverInstaller::IsInstalled: result = 0
+2024/02/16 06:07:17.043  2136       3728 S0   NetworkControlWin::UpdateTermsOfUseAccepted: Store terms of use accepted for the device
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForUpdate: processid 1040
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForNotification: processid 1040
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::ProviderRegistrationController::SetManagerId: called with id 00000000-0000-0000-0000-000000000000 and account 0
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::ProviderRegistrationController::UpdateRegistration: device is offline
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForUpdate: processid 1040
+2024/02/16 06:07:17.044  2136       3728 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForNotification: processid 1040
+2024/02/16 06:07:17.059  2136       2276 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=1 restart=0 termsOfUseAccepted=1
+2024/02/16 06:07:17.059  2136       2276 S0   TeamViewer is going online!
+2024/02/16 06:07:17.060  2136       2276 S0   CKeepAliveClientClient::DoReconnectInternal: doing nothing, state = 0
+2024/02/16 06:07:17.060  2136       2276 S0   AntiMalwareController::IsManagedDeviceChanged(): Machine is not a managed device anymore
+2024/02/16 06:07:17.060  2136       2276 S0   AntiMalwareController::TriggerUninstall(): reason 2
+2024/02/16 06:07:17.060  2136       2276 S0   CBackupController::IsManagedDeviceChanged(): Machine is not a managed device anymore
+2024/02/16 06:07:17.060  2136       2276 S0   CBackupController::TriggerUninstall(): reason 2
+2024/02/16 06:07:17.060  2136       2276 S0   BackupUninstallerWin::TriggerUninstallation(): Uninstallation failed.
+2024/02/16 06:07:17.060  2136       2276 S0   tvrmpatchmanagement::PatchManagementController::IsManagedDeviceChanged: Machine is not a managed device anymore
+2024/02/16 06:07:17.060  2136       2276 S0   tvrmpatchmanagement::PatchManagementController::TriggerUninstallation: PM uninstall reason: 2
+2024/02/16 06:07:17.060  2136       2276 S0   tvrmpatchmanagement::PatchManagementUninstallerWin::Uninstall: Uninstallation failed.
+2024/02/16 06:07:17.060  2136       3728 S0   CKeepAliveClientClient::StartConnect(): Protocol 8 proxy -- IP router14.teamviewer.com
+2024/02/16 06:07:17.060  2136       3728 S0   Activating Router Carrier
+2024/02/16 06:07:17.061  2136       2276 S0   ManagedDeviceController:: ManagmentStatusChanged to unmanaged.
+2024/02/16 06:07:17.112  2136       3728 S0   CTcpConnectionBase[1]::HandleResolveSuccess(): Connecting to router14.teamviewer.com
+2024/02/16 06:07:17.112  2136       3728 S0   TcpConnectorv4[1]::ConnectEndpoint(): Connecting to endpoint 188.172.219.139:5938
+2024/02/16 06:07:17.177  2136       3728 S0   KeepAliveSessionOutgoing::ConnectSuccessHandler(): KeepAliveConnect to router14.teamviewer.com successful
+2024/02/16 06:07:17.177  2136       3728 S0   KeepAliveSessionOutgoing::KeepAliveChannelInitialized(): KeepAliveConnection to router14.teamviewer.com initialized
+2024/02/16 06:07:17.177  2136       3728 S0   KeepAliveSession::KeepAliveChannelInitialized(): KeepAlive-Connection initialized with ID 0 (IP: 188.172.219.139), SendQueue 0 (0 Bytes), SendIndex 0, AckIndex 0, RemoteSessionID 1
+2024/02/16 06:07:17.178  2136       3728 S0   IdentifyRequest: ID = 0, IC = -2100253538, IsTemporaryID = 0, InitiativeGUID = 2423ac00-58d5-469f-9a4a-b4b58754ce85, CanStoreGUID = 1, MIDHistory = {0x080027e6e559_1d44cc67230d0d5_3030843078|u7409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42|v7409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~0dd0c5b4e712d7cef7750d93b4e6b006|windows037409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~0dd0c5b4e712d7cef7750d93b4e6b006}, MIDv = 0, MaxSupportedMIDv = 3, RebootHash = {fe8497cd-60b4-9704-0596-249fda072168}, MIDFlags = 1, MIDForceUpdateFlags = 0, AttractionGUID = 00000000-0000-0000-0000-000000000000, TerminalServerIDsInToken = 0
+2024/02/16 06:07:17.290  2136       3728 S0   TVRouterClock: received router time: 20240216T140720.641450
+2024/02/16 06:07:17.290  2136       3728 S0   TVRouterClock Schedule next request in 43200 seconds
+2024/02/16 06:07:17.701  1040       1324 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:07:17.703  1040       1324 G1   Tray::Init: Tray created!
+2024/02/16 06:07:17.704  1040       1324 G1   tvviews::MainWindowOne::CreateMainWebView: creating main WebView
+2024/02/16 06:07:17.843  1040       6416 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 1, allowOutgoing: 1, isOnline: 0, masterConnect: 0
+2024/02/16 06:07:17.843  1040       1324 G1   InterProcessBase::SetReadyToProcessCommands(1)
+2024/02/16 06:07:17.843  1040       6416 G1!! InterProcessBase::ProcessControlCommand Command 47 not handled
+2024/02/16 06:07:17.843  1040       6416 G1!! InterProcessBase::ProcessControlCommand Command 47 not handled
+2024/02/16 06:07:17.843  1040       6416 G1!! InterProcessBase::ProcessControlCommand Command 47 not handled
+2024/02/16 06:07:17.843  1040       6416 G1   UpdateBase::StartVersionFileDownload(): Start download of version file...(Version : 3.0, Channel: 1 )
+2024/02/16 06:07:17.843  1040       7616 G1   ChangeThreadDesktop(): SetThreadDesktop to default successful
+2024/02/16 06:07:17.845  1040       1324 G1   ApiServer::IsApiInstalled: The API is not registered with Windows.
+2024/02/16 06:07:18.918  2136       2276 S0   SelfSignedCertificateManager::CallbackWithCertificateData: created new 4096 bit RSA private key with fingerprint SHA256:6KbsMOucCY/Ib7/yWyBKuyieM8agQ2d2WOjcywbvkl4
+2024/02/16 06:07:18.918  2136       2276 S0   WinCryptoProtectData::EncryptData has successfully encrypted!
+2024/02/16 06:07:19.116  1040       1324 G1!  OptOutManager::[]ResultCB: Send message result 0
+2024/02/16 06:07:19.116  1040       1324 G1   MainBaseWin::ExecuteMain: MainThread-Id = 1324
+2024/02/16 06:07:19.116  1040       1324 G1   MainWindowViewModel::HandlePowerBroadcast: monitor/display is on
+2024/02/16 06:07:19.118  1040       1324 G1   ChatStateProvider::HandleStateChange: Switching from None to Offline_NoCredentials (HasKeepAlive: 0, HasAutoLoginCredentials: 0, IsLoggedIn: 0)
+2024/02/16 06:07:19.184  1040       1324 G1   ChatManagerHolder::ClearAccountChat
+2024/02/16 06:07:19.184  1040       1324 G1   ChatManager::ChatManager: created
+2024/02/16 06:07:19.184  1040       1324 G1   ChatManager::Factory: ChatManager created
+2024/02/16 06:07:19.184  1040       1324 G1   IncomingBetterChatCommandHandler::IncomingBetterChatCommandHandler: created
+2024/02/16 06:07:19.184  1040       1324 G1   IncomingCommandRegistration::Start: registering for ready state properties
+2024/02/16 06:07:19.184  1040       1324 G1   ViewModelOnCore::Init[chatManagerCb]: ChatManager created
+2024/02/16 06:07:19.186  1040       1324 G1   MainWindowOne::AfterMainWebViewCreated: WebView created with process id 7080
+2024/02/16 06:07:19.257  2136       3728 S0   Login::Identify::ManageLogin(): ID: 1660388656 IC -2100253538 MIDv2
+2024/02/16 06:07:19.260  1040       1324 G1   tvviews::MainWindowOne::AfterMainWebViewCreated::<lambda_5>::operator (): navigation started to URL https://teamviewer_internal/ (id: 2)
+2024/02/16 06:07:19.375  2136       3728 S0   CKeepAliveClientClient::OnKeepAliveSucceeded(): Protocol 8 proxy -- IP 188.172.219.139
+2024/02/16 06:07:19.375  2136       3728 S0   TeamViewerIDTracker::UpdateMachineID: New machineID = 1660388656
+2024/02/16 06:07:19.398  1040       6808 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=1660388656 ka=0 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=0
+2024/02/16 06:07:19.398  1040       6416 G1   IDLabelContent::UpdateImpl() IDs changed: SessionID "1660388656", ServerID "0"
+2024/02/16 06:07:19.398  1040       6416 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 1, allowOutgoing: 1, isOnline: 0, masterConnect: 0
+2024/02/16 06:07:19.399  1040       6808 G1   IncomingCommandRegistration::TeamViewerOnlineStateChanged: TeamViewer-Onlinestate changed to offline
+2024/02/16 06:07:19.399  2136       7608 S0   BonjourDiscoveryWin::DNSServiceHandleEvents: Reloading interfaces.
+2024/02/16 06:07:19.724  1040       7616 G1!! HttpQueryInfoNum(5) failed with error 12150, Errorcode=12150
+2024/02/16 06:07:19.724  1040       7616 G1   UpdateBase::OnDownloadFinishedVersionFile() Version file successfully downloaded.
+2024/02/16 06:07:19.731  1040       7616 G1   VersionFileHandler::CheckVersionFile(): Found version "15.50.5"
+2024/02/16 06:07:19.731  1040       7616 G1   VersionFileHandler::CheckVersionFile(): Found version "+EMwZO+5sFlRCLkF2D6hrw=="
+2024/02/16 06:07:19.732  1040       7616 G1   VersionFileHandler::OnDownloadFinishedVersionFile() major='' minor='15.50.5'
+2024/02/16 06:07:19.732  1040       7616 G1   tvsystem::CThread::weakJoin - thread {Not-any-thread} has succesfully detached itself
+2024/02/16 06:07:20.191  2136       3728 S0   LicenseTracker::UpdateMachineLicense() local license differs from master license
+2024/02/16 06:07:20.192  2136       3728 S0   Non-Commercial use
+2024/02/16 06:07:20.200  1040       6808 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 0
+2024/02/16 06:07:20.790  2136       3728 S0   SyncManagersFunction::Start: current managerlist size: 0
+2024/02/16 06:07:20.790  2136       3728 S0   ManagedDeviceController::RegisterForOnlineState(): Device came online. Triggering initial sync.
+2024/02/16 06:07:20.790  2136       3728 S0   UpdateStates::Start(): No device state found, reporting Device as not managed
+2024/02/16 06:07:20.790  2136       3728 S0   TVNetwork::StartEasyRollout: TV online, start assignment trigger listener
+2024/02/16 06:07:20.791  2136       3728 S0   AntiMalwareController::FetchAndReportPartnerMachineID(): Trying to retrieve partner MachineId...
+2024/02/16 06:07:20.791  2136       3728 S0!! ProcessExecutor::Execute(): Executable was not found, Errorcode=3
+2024/02/16 06:07:20.791  2136       3728 S0   HandlePartnerMachineIdMitigation::Start(): Couldn't retrieve partner machine Id: (3) Executable not found
+2024/02/16 06:07:20.791  2136       3728 S0   HttpCustomConfigurationDownloader::SetProxyList: Set proxy settings
+2024/02/16 06:07:20.791  2136       3728 S0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:07:20.791  2136       3728 S0   Client logged in and online
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 3a86d697-97df-4650-bb1e-07c534413598)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: f91c199f-9901-4003-bdb8-c6e0181b9ba8)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 1e65d96e-cf2d-441e-8d87-d51409243365)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 59ed5c0b-96f8-4321-9bad-3e337ce1bb11)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: aebe22da-9ed5-4b1d-95ab-1adf976c9ce1)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 6d84f82d-915c-4fdc-b959-169ee1612330)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 6306cd22-84fd-4db8-b0e0-3d827bf86db8)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: cabd56fb-bf3f-4b36-a099-cbc825114de8)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 82415b6a-0833-432c-bb07-39db2c0178a4)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 24fabf09-9a4b-4c84-b31f-f2197478ec20)
+2024/02/16 06:07:20.819  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: f44e9259-8eb9-401a-9987-c8438d088528)
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: ea36968b-8217-4a7b-a804-133b6434ef91)
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: ca849ce0-5cc0-41ab-a387-c5366eea9792)
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 8bbd23f1-3971-4c80-8f7c-055d5e0c9916)
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: c48e1d58-9547-413d-a9e2-d9d18383d7c2)
+2024/02/16 06:07:20.820  1040       6808 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=1660388656 ka=1 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=1
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 4d8663c3-2a33-47a0-824e-eea710a61c4f)
+2024/02/16 06:07:20.820  1040       6808 G1   IncomingCommandRegistration::TeamViewerOnlineStateChanged: TeamViewer-Onlinestate changed to online
+2024/02/16 06:07:20.820  1040       6808 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: b6ffbf41-db1f-42f5-9cdc-6158c54469b8)
+2024/02/16 06:07:20.820  1040       6808 G1   IncomingCommandRegistration::Register: Registered successfully for incoming commands (after 0 retries)
+2024/02/16 06:07:20.820  1040       6808 G1   Account::UpdateState: KA = 1, active = 1
+2024/02/16 06:07:20.820  1040       6808 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 0, allowOutgoing: 1, isOnline: 1, masterConnect: 0
+2024/02/16 06:07:20.820  1040       1324 G1   Account::SetLoginState: new state: 2
+2024/02/16 06:07:20.821  2136       2276 S0   tvcore::tvremoteaccessapi::RemoteAccessAPIControl::UpdateRemoteAccessDeviceState: IPC call to ReachStateManager passed
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 61, RegistrationID: 3a86d697-97df-4650-bb1e-07c534413598, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 67, RegistrationID: f91c199f-9901-4003-bdb8-c6e0181b9ba8, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 56, RegistrationID: 1e65d96e-cf2d-441e-8d87-d51409243365, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 86, RegistrationID: 59ed5c0b-96f8-4321-9bad-3e337ce1bb11, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 68, RegistrationID: aebe22da-9ed5-4b1d-95ab-1adf976c9ce1, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 39, RegistrationID: 6d84f82d-915c-4fdc-b959-169ee1612330, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 111, RegistrationID: 6306cd22-84fd-4db8-b0e0-3d827bf86db8, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 72, RegistrationID: cabd56fb-bf3f-4b36-a099-cbc825114de8, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 58, RegistrationID: 82415b6a-0833-432c-bb07-39db2c0178a4, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 136, RegistrationID: 24fabf09-9a4b-4c84-b31f-f2197478ec20, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 138, RegistrationID: f44e9259-8eb9-401a-9987-c8438d088528, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.821  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.821  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 30, RegistrationID: ea36968b-8217-4a7b-a804-133b6434ef91, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 34, RegistrationID: ca849ce0-5cc0-41ab-a387-c5366eea9792, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:07:20.822  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 110, RegistrationID: 8bbd23f1-3971-4c80-8f7c-055d5e0c9916, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.822  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 121, RegistrationID: c48e1d58-9547-413d-a9e2-d9d18383d7c2, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.822  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 4, RegistrationID: 4d8663c3-2a33-47a0-824e-eea710a61c4f, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.822  2136       3728 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 25, RegistrationID: b6ffbf41-db1f-42f5-9cdc-6158c54469b8, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:07:20.823  1040       1324 G1   ChatStateProvider::HandleStateChange: Switching from Offline_NoCredentials to Online_NoCredentials (HasKeepAlive: 1, HasAutoLoginCredentials: 0, IsLoggedIn: 0)
+2024/02/16 06:07:21.016  2136       3728 S0   AsyncMessaging::UnregisterAtAsyncMessageProvider(): Unregister successful
+2024/02/16 06:07:21.018  2136       3728 S0   RequestIPAddress::RequestResult: Client country code: GB
+2024/02/16 06:07:21.077  2136       3728 S0   MDv2::Sync::UpdateStates::ReportUnmanagedDevice::<lambda_1>::operator (): successfully reported as unmanaged
+2024/02/16 06:07:21.077  2136       3728 S0   ManagedDeviceController::OnSyncFinished(): Sync finished
+2024/02/16 06:07:21.077  2136       3728 S0   CBackupController::IsManagedDeviceV2Changed(): Machine is not a managed device anymore
+2024/02/16 06:07:21.077  2136       3728 S0!! tvrmpatchmanagement::PatchManagementController::HandleMdv2Update: Cannot handle MDv2 update: MDv2 system not available.
+2024/02/16 06:07:21.077  2136       3728 S0!! ProcessExecutor::Execute(): Executable was not found, Errorcode=3
+2024/02/16 06:07:21.077  2136       3728 S0!! tvrmadvancedassetmanagement::AdvancedAssetManagementUnInstallerBase::Start::<lambda_1>::operator (): Un-Installation failed with error: 3 msg: Executable not found, Errorcode=3
+2024/02/16 06:07:21.077  2136       3728 S0!! tvrmadvancedassetmanagement::AdvancedAssetManagementController::TriggerUninstallatioWhenDeviceIsUnmanaged::<lambda_1>::operator (): Un-installation after device unmanaged finished with error: system:0, Errorcode=3
+2024/02/16 06:07:21.139  1040       6416 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:07:21.149  1040       6808 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:07:21.149  1040       6416 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: Active: 1
+2024/02/16 06:07:21.149  1040       6416 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: API-Host: hapi.teamviewer.com
+2024/02/16 06:07:21.149  1040       6416 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: Request-Timeout: 30 seconds
+2024/02/16 06:07:21.149  1040       6416 G1   IpcRouterClock: received router time: 20240216T140724.547450
+2024/02/16 06:07:21.318  1040       6416 G1   TAF::CMML::ServerUrlUpdate: Received new server URL: https://client.teamviewer.com/taf/index.aspx
+2024/02/16 06:07:21.318  1040       6416 G1   TAF::CMML: requesting new list for licenseType [10000], accountId [0], companyId [0], clientId [1660388656], addonLicenses [[]], optOut [0]
+2024/02/16 06:07:21.319  1040       6416 G1!! CMessageLayer::DisplayBCommandMessage: Invalid message. Message ID 7
+2024/02/16 06:07:21.324  2136       3728 S0   SecureNetworkConnection::SendCallbackHandler(): [ remoteID: 1510566255 connection: 3890339067 remoteConnection: 842884477 ], Error: RCommand (Command not handled by receiver)
+2024/02/16 06:07:21.324  2136       3728 S0   SecureNetworkConnection::SendCallbackHandler(): [ remoteID: 1510566255 connection: 3890339067 remoteConnection: 842884477 ] Resetting connection due to error RCommand (Command not handled by receiver)
+2024/02/16 06:07:21.324  2136       3728 S0   RetryHandle::HandleRetry(): Trying resend to 75 failed with error RCommand:4, not retrying (2 retries would remain) BCmd: CC=0 CT=0
+2024/02/16 06:07:21.324  1040       1324 G1!! RequestDeviceLimitsFromProvider::Execute::getDeviceLimitsCallback: unexpected system error 4 (Command not handled by receiver)
+2024/02/16 06:07:21.324  1040       1324 G1!! RequestDeviceLimitsFromProvider::Execute::getDeviceLimitsCallback: DeviceLimitsRequest failed
+2024/02/16 06:07:21.361  1040       6416 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:07:21.395  1040       6416 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:07:21.511  1040       6416 G1   TAF::CJP::ParseCreativeList: list parsed successfully. Triggers=1, Entries=13 [057ad5679b40cdde0f251a8a7a930cf19c0cfe2f7c7b33cc4496f972c0aef989, 057ad5679b40cdde0f251a8a7a930cf19c0cfe2f7c7b33cc4496f972c0aef989, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, 35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, 35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, 35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, 59ef690c374a2b21f249daaa6cd5a24cfa3b5737b23a0205f1ff1c8229700f50]
+2024/02/16 06:07:21.511  1040       6416 G1   TAF::CMML: ValidHours=2, TimeOut=20000 ms
+2024/02/16 06:07:23.692  1040       1324 G1   MainWindowOne::AfterMainWebViewCreated: show WebView
+2024/02/16 06:14:09.372  2216       2220  0   Logger started.
+2024/02/16 06:14:09.623  2216       2380  0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:14:09.654  2216       2380  0   WinCryptoProtectData::DecryptData has successfully decrypted!
+2024/02/16 06:14:09.654  2216       2380  0   WinCryptoProtectData::DecryptData has successfully decrypted!
+2024/02/16 06:14:09.654  2216       2380  0   WinCryptoProtectData::DecryptData has successfully decrypted!
+2024/02/16 06:14:10.435  2216       2380  0   SecureNetwork::InitSecureNetwork: loaded 4096 bit RSA private key with fingerprint SHA256:6KbsMOucCY/Ib7/yWyBKuyieM8agQ2d2WOjcywbvkl4
+2024/02/16 06:14:10.435  2216       2380  0   InitializeRemoteAccessAPI
+2024/02/16 06:14:10.435  2216       2380  0   QueryVPNRegKey: Subkey 'SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\Configuration' (9) has no 'MatchingDeviceID' entry. Continuing...
+2024/02/16 06:14:10.435  2216       2380  0   QueryVPNRegKey: Subkey 'SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\Properties' (10) has no 'MatchingDeviceID' entry. Continuing...
+2024/02/16 06:14:10.435  2216       2380  0   IdentityManagement: Load ManagerIDs from local Storage: 
+2024/02/16 06:14:10.435  2216       2380  0   InitializeDeviceManagementV2
+2024/02/16 06:14:10.435  2216       2380  0   ManagedDeviceClientModule: Trigger Startup
+2024/02/16 06:14:10.435  2216       2380  0   MDv2::ProviderRegistrationController::UpdateRegistration: device is offline
+2024/02/16 06:14:10.435  2216       2380  0   ManagedDeviceClientModule::ManagedDeviceClientModule(): Started ManagedDevice V2 module
+2024/02/16 06:14:10.450  2216       2380  0   BYOC::Initialize: ClientCertificateAuthentication feature is deactivated
+2024/02/16 06:14:10.545  2216       2220 S0   SERVICE_CONTROL_POWEREVENT 32787
+2024/02/16 06:14:10.639  2216       2220 S0   SERVICE_CONTROL_POWEREVENT 32787
+2024/02/16 06:14:10.842  2216       2380 S0   DesiredServices: waiting for service winmgmt
+2024/02/16 06:14:13.358  2216       2380 S0   
+Start:              2024/02/16 06:14:13.342 (UTC-8:00)
+Version:            15.50.5 (64-bit)
+Version short hash: b23ae08066e
+ID:                 1660388656
+Loglevel:           Info
+License:            10000
+IC:                 -2100253538
+CPU:                AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD
+CPU extensions:     e9
+OS:                 Win_10.0.17763_W (64-bit)
+IP:                 10.0.2.15
+MID:                v7409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~0dd0c5b4e712d7cef7750d93b4e6b006
+MIDv:               2
+Proxy-Settings:     Type=1 IP= User=
+IE                  11.1790.17763.0
+AppPath:            C:\Program Files\TeamViewer\TeamViewer_Service.exe
+UserAccount:        SYSTEM
+
+2024/02/16 06:14:13.358  2216       2380 S0   LanguageControl: device language is 'en'
+2024/02/16 06:14:13.435  2216       1060 S0   NetWatchdog: Internet is now connected
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_TVClientSetting_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Scripting_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_Antivirus_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_Backup_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_RemoteManagement_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_ActiveDirectory_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry Remote_Settings_PatchManagement_Policy empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsStore::LoadLastReceivedPolicies : Storage Entry IoTSensor empty
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsReception::HandleRestoredStatusFromRemoteSettingsStoreEvent.
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsMDRelationshipWatchDog::ActivateWatchDog
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsMDRelationshipWatchDog: DEVICE ISN'T A MANAGED DEVICE
+2024/02/16 06:14:13.435  2216       2380 S0   RemoteSettingsReception::HandleManagementStatusChanged
+2024/02/16 06:14:13.435  2216       2488 S0   CKeepAliveClientClient::HandleStartKeepAlive: going online not wanted!
+2024/02/16 06:14:13.451  2216       2908 S0   RemoteSettingsStore: Cleanup all policies from version: 1
+2024/02/16 06:14:13.451  2216       2380 S0   RemoteSettingsMDv2RelationshipWatchdog: Start WatchDog
+2024/02/16 06:14:13.451  2216       2380 S0   RemoteSettingsMDv2RelationshipWatchdog::HandleManagementChanged
+2024/02/16 06:14:13.451  2216       2380 S0   RemoteSettingsMDv2RelationshipWatchdog: Device isn't a managed v2 device anymore
+2024/02/16 06:14:13.451  2216       2380 S0   RemoteSettingsReception::HandleManagmentv2StatusChanged
+2024/02/16 06:14:13.451  2216       2908 S0   RemoteSettingsStore: Cleanup all policies from version: 2
+2024/02/16 06:14:13.451  2216       2380 S0!  MDv2::ManagedDeviceController::UpdateDeviceFlags: cannot update flags for a device that is not managed
+2024/02/16 06:14:13.451  2216       2380 S0   tvrmmonitoring::RemoteManagementCallbackHandler::RegisterRemoteManagementCallbacks::<lambda_6>::operator (): RMMonitoringMigrationPossible flag was set
+2024/02/16 06:14:13.451  2216       2380 S0   Using IPC-Port 5939
+2024/02/16 06:14:13.451  2216       2380 S0   SHMR: Initializing shared memory.
+2024/02/16 06:14:13.451  2216       2380 S0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:14:13.451  2216       2380 S0   TVNetwork::StartCustomizable: success 1 updated 0
+2024/02/16 06:14:13.451  2216       2380 S0   PrintingPrinterManager::CleanupPrinters: started
+2024/02/16 06:14:13.560  2216       2380 S0   PrintingPrinterManager::CleanupPrinters: allocating 10064 bytes
+2024/02/16 06:14:13.592  2216       2380 S0   PrintingPrinterManager::CleanupPrinters: finished
+2024/02/16 06:14:13.592  2216       2380 S0!  OptOutManager::[]ResultCB: Send message result 0
+2024/02/16 06:14:13.592  2216       2380 S0   ApiServer::IsApiInstalled: The API is not registered with Windows.
+2024/02/16 06:14:13.639  2216       2488 S0   OSSessionEventTranslator::GenerateEventsForSession: SessionID = 0, username = , primarySession = 0, isUsable = 0, locked = 0, connected = 0
+2024/02/16 06:14:13.639  2216       2488 S0   OSSessionEventTranslator::GenerateEventsForSession: SessionID = 1, username = , primarySession = 1, isUsable = 1, locked = 1, connected = 1
+2024/02/16 06:14:13.639  2216       2488 S0   SingleUserSessionDesignator: New active session: 1
+2024/02/16 06:14:13.654  2216       2492 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=0 restart=0 termsOfUseAccepted=1
+2024/02/16 06:14:13.654  2216       2492 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=0 restart=0 termsOfUseAccepted=1
+2024/02/16 06:14:13.654  2216       2492 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=0 restart=0 termsOfUseAccepted=1
+2024/02/16 06:14:19.095  2216       2220 S0   SERVICE_CONTROL_SESSIONCHANGE session=1, statusCode=WTS_SESSION_LOGON, console=1
+2024/02/16 06:14:30.940  2216       2492 S0   AcceptServer::HandleAccept: new connection from 127.0.0.1:49683
+2024/02/16 06:14:30.940  2216       2492 S0   IpcInitConnection::Received_Control_InitIPC: Connecting process: 5276
+2024/02/16 06:14:30.940  5276       5360 G1   SettingsIPCReception receive a SYNCHRONISE Settings command : UserSettings
+2024/02/16 06:14:30.940  5276       5360 G1   IpcRemoteSettingsHandler::HandleCommand UserSettings process sends sync settings response to network.
+2024/02/16 06:14:30.940  2216       2492 S0   IpcInitConnection::SendInitIPCResponse: Send InitIPC_Response to process: 5276
+2024/02/16 06:14:30.940  5276       5360 G1   Received Control_InitIPC_Response processtype=1
+2024/02/16 06:14:30.940  5276       5360 G1   Received Control_InitIPC_Response runningProcesses=3
+2024/02/16 06:14:30.955  5276       5360 G1   IPCConnection: all processes 3 completely initialized
+2024/02/16 06:14:30.955  2216       2488 S0   ProcessControlBase[2]::ProcessConnected: Unknown process pid 5276 in session 1 connected
+2024/02/16 06:14:30.955  2216       2492 S0   NetworkControl::UpdateOnlineState alwaysOnline=0 delayOffline=0 otherProcess=1 restart=0 termsOfUseAccepted=1
+2024/02/16 06:14:30.955  2216       2492 S0   TeamViewer is going online!
+2024/02/16 06:14:30.955  2216       2492 S0   CKeepAliveClientClient::DoReconnectInternal: doing nothing, state = 0
+2024/02/16 06:14:30.955  2216       2492 S0   AntiMalwareController::IsManagedDeviceChanged(): Machine is not a managed device anymore
+2024/02/16 06:14:30.955  2216       2492 S0   AntiMalwareController::TriggerUninstall(): reason 2
+2024/02/16 06:14:30.955  2216       2492 S0   CBackupController::IsManagedDeviceChanged(): Machine is not a managed device anymore
+2024/02/16 06:14:30.955  2216       2492 S0   CBackupController::TriggerUninstall(): reason 2
+2024/02/16 06:14:30.955  2216       2492 S0   BackupUninstallerWin::TriggerUninstallation(): Uninstallation failed.
+2024/02/16 06:14:30.955  2216       2492 S0   tvrmpatchmanagement::PatchManagementController::IsManagedDeviceChanged: Machine is not a managed device anymore
+2024/02/16 06:14:30.955  2216       2492 S0   tvrmpatchmanagement::PatchManagementController::TriggerUninstallation: PM uninstall reason: 2
+2024/02/16 06:14:30.955  2216       2492 S0   tvrmpatchmanagement::PatchManagementUninstallerWin::Uninstall: Uninstallation failed.
+2024/02/16 06:14:30.955  2216       2492 S0   ManagedDeviceController:: ManagmentStatusChanged to unmanaged.
+2024/02/16 06:14:30.955  2216       2492 S0   CKeepAliveClientClient::StartConnect(): Protocol 8 proxy -- IP router2.teamviewer.com
+2024/02/16 06:14:30.955  2216       2492 S0   Activating Router Carrier
+2024/02/16 06:14:30.955  5276       5280 G1   InterProcessBase::ConnectToOtherProcess: Process connected to service.
+2024/02/16 06:14:30.955  5276       5280 G1!! DriverInstalled: SetupDiEnumDriverInfoW failed with error code 259, Errorcode=259
+2024/02/16 06:14:30.955  5276       5280 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:14:30.955  5276       5280 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:14:30.955  5276       5280 G1!! DriverInstalled: SetupDiGetDeviceRegistryProperty failed with error code 122, Errorcode=122
+2024/02/16 06:14:30.955  5276       5280 G1!! DriverInstalled: SetupDiEnumDriverInfoW failed with error code 259, Errorcode=259
+2024/02/16 06:14:30.970  5276       5280 G1   MachineHooks: Initialized Shm
+2024/02/16 06:14:30.970  5276       5280 G1   MachineHooks: refcount = 1
+2024/02/16 06:14:30.970  5276       5280 G1   MachineHooks: w32 Loader is starting
+2024/02/16 06:14:30.970  5276       5280 G1   MachineHooks: x64 Loader is starting
+2024/02/16 06:14:30.986  5276       5280 G1   TermsOfUseHandler: Terms of use already accepted
+2024/02/16 06:14:30.986  5276       5280 G1   tvapplication::OneApiResourceServerFactory::CreateEmbeddedResourceServer: load UI from embedded resource
+2024/02/16 06:14:30.986  5276       5280 G1   tvapplication::TVDesktopApplicationWinFull::InitMainWindow: using UI-Package v15.50.2 (commit hash: fa4d86814, commit date: 2024-Jan-22 15:51:56, build date: 2024-Jan-22 15:59:07.867000)
+2024/02/16 06:14:30.986  5276       5280 G1   tvapplication::OneApiResourceServerFactory::CreateEmbeddedResourceServer: load UI from embedded resource
+2024/02/16 06:14:30.986  5276       5280 G1!! tvbrowser::BrowserUI::ZipContentServer::GetZipItem: couldn't find zip item for path "build-info.json" (error 1280), Errorcode=3
+2024/02/16 06:14:30.986  5276       5280 G1!! tvbrowser::BrowserUI::ZipContentServer::ReadResource: zip item '"build-info.json"' not found, Errorcode=3
+2024/02/16 06:14:30.986  5276       5280 G1!! tvapplication::TVDesktopApplicationWinFull::InitMainWindow: build info of CompanionDock-UI-Package not available, Errorcode=3
+2024/02/16 06:14:30.986  5276       5280 G1   UpdateBase::CheckForAutoUpdates(): AutoUpdateMode=0, LastAutoUpdate=0, AdminRights=1
+2024/02/16 06:14:30.986  5276       5280 G1   tvmanagedgroups::ManagedDeviceManagementModuleManager::UpdateModule: Initialize ManagedDeviceManagementModule
+2024/02/16 06:14:30.986  5276       5280 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:14:30.986  5276       5280 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=0 ka=0 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=0
+2024/02/16 06:14:31.001  2216       2488 S0   CToken::GetSystemToken() set session 1
+2024/02/16 06:14:31.017  2216       2488 S0   IpcLoaderProcessHandlerWin: Loader process started, pid = 5448
+2024/02/16 06:14:31.017  2216       2488 S0   CToken::GetSystemToken() set session 1
+2024/02/16 06:14:31.017  5276       5280 G1   PrinterDriverInstaller::IsInstalled: result = 0
+2024/02/16 06:14:31.079  5448  5452 L32  Loader started with: "C:\Program Files\TeamViewer\tv_w32.exe" --action hooks  --log C:\Program Files\TeamViewer\TeamViewer15_Logfile.log  
+2024/02/16 06:14:31.095  2216       2488 S0   IpcLoaderProcessHandlerWin: Loader process started, pid = 5460
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForUpdate: processid 5276
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForNotification: processid 5276
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::ProviderRegistrationController::SetManagerId: called with id 00000000-0000-0000-0000-000000000000 and account 0
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::ProviderRegistrationController::UpdateRegistration: device is offline
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForUpdate: processid 5276
+2024/02/16 06:14:31.095  2216       2488 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForNotification: processid 5276
+2024/02/16 06:14:31.110  2216       2492 S0   CTcpConnectionBase[1]::HandleResolveSuccess(): Connecting to router2.teamviewer.com
+2024/02/16 06:14:31.110  2216       2492 S0   TcpConnectorv4[1]::ConnectEndpoint(): Connecting to endpoint 217.146.21.133:5938
+2024/02/16 06:14:31.110  5448  5452 L32  Starting Loader
+2024/02/16 06:14:31.141  5276       5280 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:14:31.141  5276       5280 G1   IntroScreenHandler::ShowIntroScreenOnStartup: Show HowItWorks intro screen
+2024/02/16 06:14:31.156  5460  5464 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action hooks  --log C:\Program Files\TeamViewer\TeamViewer15_Logfile.log  
+2024/02/16 06:14:30.970  5276  5280 H64  Loader: SharedMem Connected (seg = 000001A6D0360000, refcnt = 1)
+2024/02/16 06:14:30.970  5276  5280 H64  teamviewer.exe: SharedMem Connected (seg = 000001A6D0360000, refcnt = 2)
+2024/02/16 06:14:30.970  5276  5280 H64  teamviewer.exe: SharedMem_SetLogLevel: 0 -> 200
+2024/02/16 06:14:31.171  5276       5280 G1   Tray::Init: Tray created!
+2024/02/16 06:14:31.171  5276       5280 G1   tvviews::MainWindowOne::CreateMainWebView: creating main WebView
+2024/02/16 06:14:31.171  2216       2488 S0   KeepAliveSessionOutgoing::ConnectSuccessHandler(): KeepAliveConnect to router2.teamviewer.com successful
+2024/02/16 06:14:31.171  2216       2488 S0   KeepAliveSessionOutgoing::KeepAliveChannelInitialized(): KeepAliveConnection to router2.teamviewer.com initialized
+2024/02/16 06:14:31.171  2216       2488 S0   KeepAliveSession::KeepAliveChannelInitialized(): KeepAlive-Connection initialized with ID 0 (IP: 217.146.21.133), SendQueue 0 (0 Bytes), SendIndex 0, AckIndex 0, RemoteSessionID 1
+2024/02/16 06:14:31.171  2216       2488 S0   IdentifyRequest: ID = 1660388656, IC = -2100253538, IsTemporaryID = 0, InitiativeGUID = 2423ac00-58d5-469f-9a4a-b4b58754ce85, CanStoreGUID = 1, MIDHistory = {0x080027e6e559_1d44cc67230d0d5_3030843078|u7409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42|v7409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~0dd0c5b4e712d7cef7750d93b4e6b006|windows037409180e7ff96c40bd12dcc4797a38a4080027e6e5594d36956b776c8258168c911e88c69a42<~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~0dd0c5b4e712d7cef7750d93b4e6b006}, MIDv = 2, MaxSupportedMIDv = 3, RebootHash = {51e6c84b-c19a-f294-8ec4-b0f8cba49f35}, MIDFlags = 1, MIDForceUpdateFlags = 0, AttractionGUID = 00000000-0000-0000-0000-000000000000, TerminalServerIDsInToken = 0
+2024/02/16 06:14:31.203  5460  5464 L64  Starting Loader
+2024/02/16 06:14:31.218  5276       5440 G1   ProxySearch: no PAC script detected via WPAD
+2024/02/16 06:14:31.234  2216       2488 S0   TVRouterClock: received router time: 20240216T141431.472037
+2024/02/16 06:14:31.234  2216       2488 S0   TVRouterClock Schedule next request in 43200 seconds
+2024/02/16 06:14:31.280  5276       5280 G1   InterProcessBase::SetReadyToProcessCommands(1)
+2024/02/16 06:14:31.280  5276       5280 G1   ApiServer::IsApiInstalled: The API is not registered with Windows.
+2024/02/16 06:14:31.280  5276       5356 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 1, allowOutgoing: 1, isOnline: 0, masterConnect: 0
+2024/02/16 06:14:31.280  5276       5360 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 1, allowOutgoing: 1, isOnline: 0, masterConnect: 0
+2024/02/16 06:14:31.280  5276       5440 G1   ProxySearch: no PAC script detected via WPAD
+2024/02/16 06:14:31.372  2216       2492 S0   Login::Identify::ManageLogin(): ID: 1660388656 IC -2100253538 MIDv2
+2024/02/16 06:14:31.822  2216       2492 S0   CKeepAliveClientClient::OnKeepAliveSucceeded(): Protocol 8 proxy -- IP 217.146.21.133
+2024/02/16 06:14:31.822  2216       2492 S0   TeamViewerIDTracker::UpdateMachineID: New machineID = 1660388656
+2024/02/16 06:14:31.867  5276       5360 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=1660388656 ka=0 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=0
+2024/02/16 06:14:31.867  5276       5356 G1   IDLabelContent::UpdateImpl() IDs changed: SessionID "1660388656", ServerID "0"
+2024/02/16 06:14:31.867  5276       5356 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 1, allowOutgoing: 1, isOnline: 0, masterConnect: 0
+2024/02/16 06:14:31.867  5276       5280 G1!  OptOutManager::[]ResultCB: Send message result 0
+2024/02/16 06:14:31.867  5276       5280 G1   MainBaseWin::ExecuteMain: MainThread-Id = 5280
+2024/02/16 06:14:31.867  5276       5280 G1   MainWindowViewModel::HandlePowerBroadcast: monitor/display is on
+2024/02/16 06:14:31.867  5276       5280 G1   ChatStateProvider::HandleStateChange: Switching from None to Offline_NoCredentials (HasKeepAlive: 0, HasAutoLoginCredentials: 0, IsLoggedIn: 0)
+2024/02/16 06:14:31.887  5276       5280 G1   ChatManagerHolder::ClearAccountChat
+2024/02/16 06:14:31.887  5276       5280 G1   ChatManager::ChatManager: created
+2024/02/16 06:14:31.887  5276       5280 G1   ChatManager::Factory: ChatManager created
+2024/02/16 06:14:31.887  5276       5280 G1   IncomingBetterChatCommandHandler::IncomingBetterChatCommandHandler: created
+2024/02/16 06:14:31.887  5276       5280 G1   IncomingCommandRegistration::Start: registering for ready state properties
+2024/02/16 06:14:31.887  5276       5280 G1   ViewModelOnCore::Init[chatManagerCb]: ChatManager created
+2024/02/16 06:14:32.007  2216       2184 S0   BonjourDiscoveryWin::DNSServiceHandleEvents: Reloading interfaces.
+2024/02/16 06:14:32.348  2216       2488 S0   LicenseTracker::UpdateMachineLicense() local license differs from master license
+2024/02/16 06:14:32.348  2216       2488 S0   Non-Commercial use
+2024/02/16 06:14:32.348  5276       5356 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 0
+2024/02/16 06:14:32.471  5276       5280 G1   MainWindowOne::AfterMainWebViewCreated: WebView created with process id 5508
+2024/02/16 06:14:32.501  5276       5280 G1   tvviews::MainWindowOne::AfterMainWebViewCreated::<lambda_5>::operator (): navigation started to URL https://teamviewer_internal/ (id: 2)
+2024/02/16 06:14:32.564  2216       2488 S0   SyncManagersFunction::Start: current managerlist size: 0
+2024/02/16 06:14:32.564  2216       2488 S0   ManagedDeviceController::RegisterForOnlineState(): Device came online. Triggering initial sync.
+2024/02/16 06:14:32.564  2216       2488 S0   UpdateStates::Start(): Device has been marked unmanaged. Stopping sync.
+2024/02/16 06:14:32.564  2216       2488 S0   ManagedDeviceController::OnSyncFinished(): Sync finished
+2024/02/16 06:14:32.564  2216       2488 S0   CBackupController::IsManagedDeviceV2Changed(): Machine is not a managed device anymore
+2024/02/16 06:14:32.564  2216       2488 S0!! tvrmpatchmanagement::PatchManagementController::HandleMdv2Update: Cannot handle MDv2 update: MDv2 system not available.
+2024/02/16 06:14:32.564  2216       2488 S0!! ProcessExecutor::Execute(): Executable was not found, Errorcode=3
+2024/02/16 06:14:32.564  2216       2488 S0!! tvrmadvancedassetmanagement::AdvancedAssetManagementUnInstallerBase::Start::<lambda_1>::operator (): Un-Installation failed with error: 3 msg: Executable not found, Errorcode=3
+2024/02/16 06:14:32.564  2216       2488 S0!! tvrmadvancedassetmanagement::AdvancedAssetManagementController::TriggerUninstallatioWhenDeviceIsUnmanaged::<lambda_1>::operator (): Un-installation after device unmanaged finished with error: system:0, Errorcode=3
+2024/02/16 06:14:32.564  2216       2488 S0   TVNetwork::StartEasyRollout: TV online, start assignment trigger listener
+2024/02/16 06:14:32.564  2216       2488 S0   HttpCustomConfigurationDownloader::SetProxyList: Set proxy settings
+2024/02/16 06:14:32.564  2216       2488 S0   CustomConfigurationUpdaterImplWin::ReadInitialConfigurationId: Loading from machine
+2024/02/16 06:14:32.564  2216       2488 S0   Client logged in and online
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 97fbf6f8-ea83-4ec8-890b-d2903561ad7a)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 54d21ad5-f71a-4a5e-b432-6c218d00f2ef)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: fcebd21c-ba62-497e-8883-1db2267e447f)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 83094ad1-63a7-422b-b2be-6e50e2ba3555)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 0c546fee-3941-457e-bede-ae2bac76526a)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 2157d8bc-9703-4181-9181-abe3737b73b2)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 4fed185e-e1e7-44da-a9f7-8832f2c8dc2e)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 9c74f065-69ae-4f96-b93b-50aa00ed1122)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 4256c2fb-1968-4c41-a1d8-3d1afd13a87e)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 8fc33992-ba85-4848-9d8b-b0884b173902)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 7d8ba048-4d6a-437d-b05b-3a9c784e76cf)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: ade6daf6-3108-42ef-a15d-f0d941a51fd1)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 1ad7828b-c244-48fb-a2fc-84ae25ee6002)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 46144592-1ef7-4eea-8c90-0725fb91b2dd)
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: ecdfea6f-82da-4baf-a269-cbdda137e415)
+2024/02/16 06:14:32.564  5276       5360 G1   DynamicPasswordUIModel::ShouldShowDynamicPassword(): dynPw=1 allowIncoming=1 id=1660388656 ka=1 lanAllowed=0 lanOnly=0 networkState=1 showDynPwd=1
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 94186c62-345b-4ca8-bcbb-6dc4f2b99146)
+2024/02/16 06:14:32.564  5276       5360 G1   IncomingCommandRegistration::TeamViewerOnlineStateChanged: TeamViewer-Onlinestate changed to online
+2024/02/16 06:14:32.564  5276       5360 G1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: a6110ba2-9d24-4b3c-9c1b-567a9fb93db8)
+2024/02/16 06:14:32.564  5276       5360 G1   IncomingCommandRegistration::Register: Registered successfully for incoming commands (after 0 retries)
+2024/02/16 06:14:32.564  5276       5360 G1   Account::UpdateState: KA = 1, active = 1
+2024/02/16 06:14:32.564  5276       5360 G1   CConnectionButtonState::UpdateImpl(): hideConnectionButton: 0, allowOutgoing: 1, isOnline: 1, masterConnect: 0
+2024/02/16 06:14:32.564  5276       5280 G1   Account::SetLoginState: new state: 2
+2024/02/16 06:14:32.564  5276       5280 G1   ChatStateProvider::HandleStateChange: Switching from Offline_NoCredentials to Online_NoCredentials (HasKeepAlive: 1, HasAutoLoginCredentials: 0, IsLoggedIn: 0)
+2024/02/16 06:14:32.595  2216       2488 S0   tvcore::tvremoteaccessapi::RemoteAccessAPIControl::UpdateRemoteAccessDeviceState: IPC call to ReachStateManager passed
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 61, RegistrationID: 97fbf6f8-ea83-4ec8-890b-d2903561ad7a, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 67, RegistrationID: 54d21ad5-f71a-4a5e-b432-6c218d00f2ef, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 56, RegistrationID: fcebd21c-ba62-497e-8883-1db2267e447f, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 86, RegistrationID: 83094ad1-63a7-422b-b2be-6e50e2ba3555, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 68, RegistrationID: 0c546fee-3941-457e-bede-ae2bac76526a, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 39, RegistrationID: 2157d8bc-9703-4181-9181-abe3737b73b2, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 111, RegistrationID: 4fed185e-e1e7-44da-a9f7-8832f2c8dc2e, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 72, RegistrationID: 9c74f065-69ae-4f96-b93b-50aa00ed1122, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 58, RegistrationID: 4256c2fb-1968-4c41-a1d8-3d1afd13a87e, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 136, RegistrationID: 8fc33992-ba85-4848-9d8b-b0884b173902, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 138, RegistrationID: 7d8ba048-4d6a-437d-b05b-3a9c784e76cf, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 30, RegistrationID: ade6daf6-3108-42ef-a15d-f0d941a51fd1, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 34, RegistrationID: 1ad7828b-c244-48fb-a2fc-84ae25ee6002, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 110, RegistrationID: 46144592-1ef7-4eea-8c90-0725fb91b2dd, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 121, RegistrationID: ecdfea6f-82da-4baf-a269-cbdda137e415, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 4, RegistrationID: 94186c62-345b-4ca8-bcbb-6dc4f2b99146, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.595  2216       2488 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 25, RegistrationID: a6110ba2-9d24-4b3c-9c1b-567a9fb93db8, DyngateID: 1660388656, ProcessType: 2, SessionID: 1
+2024/02/16 06:14:32.951  2216       2492 S0   AsyncMessaging::UnregisterAtAsyncMessageProvider(): Unregister successful
+2024/02/16 06:14:32.951  2216       2492 S0   RequestIPAddress::RequestResult: Client country code: GB
+2024/02/16 06:14:33.059  5276       5360 G1   tvbrowser::BrowserUI::EdgeBrowserControlFactory::GetWebView2RuntimeVersion: got runtime version 121.0.2277.128
+2024/02/16 06:14:33.090  5276       5356 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:14:33.090  5276       5360 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: Active: 1
+2024/02/16 06:14:33.090  5276       5360 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: API-Host: hapi.teamviewer.com
+2024/02/16 06:14:33.090  5276       5360 G1   tvoneapi::webplatform::WpsBridgeConfigurationAdapter::LogConfig: Request-Timeout: 30 seconds
+2024/02/16 06:14:33.090  5276       5360 G1   IpcRouterClock: received router time: 20240216T141433.347037
+2024/02/16 06:14:33.105  5276       5356 G1   TAF::CMML::ServerUrlUpdate: Received new server URL: https://client.teamviewer.com/taf/index.aspx
+2024/02/16 06:14:33.105  5276       5356 G1   TAF::CMML: requesting new list for licenseType [10000], accountId [0], companyId [0], clientId [1660388656], addonLicenses [[]], optOut [0]
+2024/02/16 06:14:33.121  5276       5356 G1!! CMessageLayer::DisplayBCommandMessage: Invalid message. Message ID 7
+2024/02/16 06:14:33.167  5276       5360 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:14:33.200  2216       2492 S0   SecureNetworkConnection::SendCallbackHandler(): [ remoteID: 1510562643 connection: 2921828942 remoteConnection: 3909014143 ], Error: RCommand (Command not handled by receiver)
+2024/02/16 06:14:33.200  2216       2492 S0   SecureNetworkConnection::SendCallbackHandler(): [ remoteID: 1510562643 connection: 2921828942 remoteConnection: 3909014143 ] Resetting connection due to error RCommand (Command not handled by receiver)
+2024/02/16 06:14:33.200  2216       2492 S0   RetryHandle::HandleRetry(): Trying resend to 75 failed with error RCommand:4, not retrying (2 retries would remain) BCmd: CC=0 CT=0
+2024/02/16 06:14:33.200  5276       5280 G1!! RequestDeviceLimitsFromProvider::Execute::getDeviceLimitsCallback: unexpected system error 4 (Command not handled by receiver)
+2024/02/16 06:14:33.200  5276       5280 G1!! RequestDeviceLimitsFromProvider::Execute::getDeviceLimitsCallback: DeviceLimitsRequest failed
+2024/02/16 06:14:33.475  5276       5356 G1   TAF::CJP::ParseCreativeList: list parsed successfully. Triggers=1, Entries=13 [35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, 35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, 35d4827762e83bc051e922d428a49a20558a0efc93f9e87d3b346408c79ef4ac, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, 613de2c27247ee888f1a16882285d4863dd8ef15e984b6ed358f3f4e5f0af432, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, edcbcfc8418693c88cd713e37dda03b720e501c92c10f6044ec7b611920f4268, 057ad5679b40cdde0f251a8a7a930cf19c0cfe2f7c7b33cc4496f972c0aef989, 057ad5679b40cdde0f251a8a7a930cf19c0cfe2f7c7b33cc4496f972c0aef989, 59ef690c374a2b21f249daaa6cd5a24cfa3b5737b23a0205f1ff1c8229700f50]
+2024/02/16 06:14:33.475  5276       5356 G1   TAF::CMML: ValidHours=2, TimeOut=20000 ms
+2024/02/16 06:14:33.985  5276       5360 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:14:59.358  5276       5280 G1   MainWindowOne::AfterMainWebViewCreated: show WebView
+2024/02/16 06:16:32.444  2216       2492 S0!! DriverConfiguration::GetPortNumber() RegOpenKey failed: 2
+2024/02/16 06:16:32.444  2216       2492 S0   ClientWebAPI: started accept server on port 37014
+2024/02/16 06:16:32.444  2216       2492 S0   ClientWebAPI: started accept server on port 37114
+2024/02/16 06:16:32.444  2216       2492 S0   Activating Router Carrier
+2024/02/16 06:16:32.444  2216       2492 S0   CommandHandlerRouting[2]::CreatePassiveSession(): incoming session via gb-man-anx-r001.router.teamviewer.com, protocol Tcp
+2024/02/16 06:16:32.444  2216       2492 S0   CTcpConnectionBase[2]::HandleResolveSuccess(): Connecting to gb-man-anx-r001.router.teamviewer.com
+2024/02/16 06:16:32.444  2216       2492 S0   TcpConnectorv4[2]::ConnectEndpoint(): Connecting to endpoint 37.252.232.100:5938
+2024/02/16 06:16:32.562  2216       2492 S0   Negotiating session encryption: client hello received from 1660360496, RSA key length = 4096
+2024/02/16 06:16:32.562  2216       2492 S0   Negotiating session encryption: client hello received from 1660360496, RSA key length = 4096
+2024/02/16 06:16:32.590  2216       2492 S0   Negotiating session encryption: server hello sent
+2024/02/16 06:16:32.678  2216       2492 S0   Negotiating session encryption: client handshake received
+2024/02/16 06:16:32.678  2216       2492 S0   Negotiating session encryption: client handshake received
+2024/02/16 06:16:32.692  2216       2492 S0   Negotiating session encryption: server handshake sent, encryption established with AES key length 256
+2024/02/16 06:16:32.692  2216       2492 S0   NegotiateEncryptionV2::CreateEncryption: handshake successful, local fingerprint: SHA256:6KbsMOucCY/Ib7/yWyBKuyieM8agQ2d2WOjcywbvkl4, remote fingerprint SHA256:F6J54A4e6E3zAT3MfpfUU1M3tWiqitOieVrEdzqJ/Jw
+2024/02/16 06:16:32.721  2216       2488 S0   CToken::GetSystemToken() set session 1
+2024/02/16 06:16:32.721  2216       2488 S0   ProcessControlBase[4]: Start Desktop process in session 1, pid 1084
+2024/02/16 06:16:32.736  2216       2488 S0   CParticipantManagerBase::SetMyParticipantIdentifier(): pid=[1660388656,126302903]
+2024/02/16 06:16:32.736  2216       2488 S0   ConnectionGuard: incoming remote control in sessions: 1(1)
+2024/02/16 06:16:32.736  5276       5360 G1   AppSessionManager::HandleSessionIncoming: Connection incoming, sessionID = 126302903
+2024/02/16 06:16:32.750  1084       6464 D1   Logger started.
+2024/02/16 06:16:32.968  1084       6464 D1   TeamViewerDesktop started, PID=1084
+2024/02/16 06:16:32.968  1084       6464 D1   Monitors: Generic Non-PnP Monitor, \\.\DISPLAY1, 1152x864 (0,0), flags=3, dpi=96
+2024/02/16 06:16:32.968  1084       7024 D1   WindowsDesktopDispatcherThread::InitThread(default): ChangeThreadDesktop(): SetThreadDesktop to default successful
+2024/02/16 06:16:32.968  1084       1172 D1   WindowsDesktopDispatcherThread::InitThread(winlogon): ChangeThreadDesktop(): SetThreadDesktop to winlogon successful
+2024/02/16 06:16:32.968  1084       1092 D1   WindowsDesktopDispatcherThread::InitThread(default): ChangeThreadDesktop(): SetThreadDesktop to default successful
+2024/02/16 06:16:32.968  1084       1180 D1   WindowsDesktopDispatcherThread::InitThread(winlogon): ChangeThreadDesktop(): SetThreadDesktop to winlogon successful
+2024/02/16 06:16:32.968  1084       6464 D1   Changing keyboard layout to: 0000000004090409
+2024/02/16 06:16:32.989  1084       6464 D1   MachineHooks: Initialized Shm
+2024/02/16 06:16:32.989  1084       6464 D1   MachineHooks: refcount = 2
+2024/02/16 06:16:32.989  1084       6464 D1   RemoveLoginScreenWallpaper: inputDesktopName=Default
+2024/02/16 06:16:33.053  1084       6464 D1   tvdesktop::MonitorPowerWin::Setup::<lambda_1>::operator (): Primary monitor power state has changed to 'Unknown'.
+2024/02/16 06:16:33.053  1084       6464 D1   tvdesktop::MonitorPowerWin::Setup::<lambda_2>::operator (): Laptop lid state has changed to 'Unknown'.
+2024/02/16 06:16:33.054  1084       6464 D1   InterProcessBase::StartTcpCommunicationInternal(): setting m_NetworkConnector to new TCP connector
+2024/02/16 06:16:33.054  1084       6464 D1   Opening local TCP connection to 127.0.0.1:5939
+2024/02/16 06:16:33.055  2216       2492 S0   AcceptServer::HandleAccept: new connection from 127.0.0.1:49787
+2024/02/16 06:16:33.055  1084       1436 D1   Local TCP connection established
+2024/02/16 06:16:33.057  2216       2492 S0   IpcInitConnection::Received_Control_InitIPC: Connecting process: 1084
+2024/02/16 06:16:33.060  1084       2988 D1   SettingsIPCReception receive a SYNCHRONISE Settings command : UserSettings
+2024/02/16 06:16:33.060  1084       2988 D1   IpcRemoteSettingsHandler::HandleCommand UserSettings process sends sync settings response to network.
+2024/02/16 06:16:33.060  2216       2492 S0   IpcInitConnection::SendInitIPCResponse: Send InitIPC_Response to process: 1084
+2024/02/16 06:16:33.060  1084       2988 D1   Received Control_InitIPC_Response processtype=1
+2024/02/16 06:16:33.060  1084       2988 D1   Received Control_InitIPC_Response runningProcesses=7
+2024/02/16 06:16:33.060  5276       5360 G1   Received Control_InitIPC processtype=4
+2024/02/16 06:16:33.090  1084       2988 D1   Received Control_InitIPC_Response processtype=2
+2024/02/16 06:16:33.090  1084       2988 D1   IPCConnection: all processes 7 completely initialized
+2024/02/16 06:16:33.092  2216       2492 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForUpdate: processid 1084
+2024/02/16 06:16:33.092  2216       2492 S0   MDv2::InterProcess::ManagedDeviceIpcAdapter::HandleRegisterForNotification: processid 1084
+2024/02/16 06:16:33.093  2216       2492 S0   ProcessControlBase[4]::ProcessConnected: Process pid 1084 in session 1 connected
+2024/02/16 06:16:33.094  1084       6464 D1   InterProcessBase::ConnectToOtherProcess: Process connected to service.
+2024/02/16 06:16:33.250  1084       6464 D1   InterProcessBase::SecureNetwork created
+2024/02/16 06:16:33.250  1084       6464 D1!  OptOutManager::[]ResultCB: Send message result 0
+2024/02/16 06:16:33.261  1084       6168 D1   InterProcessBase::SetReadyToProcessCommands(1)
+2024/02/16 06:16:33.262  1084       5376 D1   LoginDesktopWindowImpl::GuiThreadFunction(): ChangeThreadDesktop(): SetThreadDesktop to winlogon successful
+2024/02/16 06:16:33.262  1084       1436 D1   SessionManagerDesktop::IncomingConnection: Connection incoming, sessionID = 126302903
+2024/02/16 06:16:33.262  1084       1436 D1   CParticipantManagerBase::SetMyParticipantIdentifier(): pid=[1660388656,126302903]
+2024/02/16 06:16:33.262  1084       1436 D1!! InterProcessBase::ProcessControlCommand Command 39 not handled
+2024/02/16 06:16:33.262  1084       1436 D1   IpcRouterClock: received router time: 20240216T141637.894037
+2024/02/16 06:16:33.262  1084       5376 D1   tvdesktop::MonitorPowerWin::Setup::<lambda_1>::operator (): Primary monitor power state has changed to 'On'.
+2024/02/16 06:16:33.271  1084       3644 D1   CLogin::run(), session id: 126302903
+2024/02/16 06:16:33.271  1084       3644 D1   CLogin::NegotiateVersionServer()
+2024/02/16 06:16:33.291  5276       5280 G1   MainWindowGuiCommandHandler::HandleIncomingConnection: showing main window
+2024/02/16 06:16:33.352  1084       3644 D1   BuddyLoginToken 1, SupporterDataRequest 1
+2024/02/16 06:16:33.619  1084       3644 D1   CLoginServer::CheckIfConnectionIsAllowed()
+2024/02/16 06:16:33.853  1084       2988 D1   LoginServer::HandleBlockConditionsResponse: using condition set: { (true) -> 111111111111111111111 }
+2024/02/16 06:16:33.853  1084       3644 D1   CLoginServer::AuthenticateServer()
+2024/02/16 06:16:33.862  2216       2492 S0   AuthenticationBlocker::Allocate: allocate ok for DyngateID 1660360496, attempt number 1
+2024/02/16 06:16:38.594  2216       2488 S0   Estimated RTT self to router: 33 ms, reliability: High, ConnectionMode: Tcp
+2024/02/16 06:16:40.412  2216       2492 S0   Estimated RTT router to 1660360496: 28 ms, reliability: High
+2024/02/16 06:16:40.412  2216       2492 S0   Estimated RTT router to self: 41 ms, reliability: High
+2024/02/16 06:16:47.155  1084       3644 D1   InterProcessBase::SecureNetworkCallbackHandle created (RegistrationID: 1a359639-8f3d-4f3d-a647-ff119cf10953)
+2024/02/16 06:16:47.156  2216       2492 S0   SecureNetworkIPCAdapter::RegisterSharedBCmdCallback(): CC: 122, RegistrationID: 1a359639-8f3d-4f3d-a647-ff119cf10953, DyngateID: 1660388656, ProcessType: 4, SessionID: 1
+2024/02/16 06:16:47.312  1084       3644 D1   AuthenticationPasswordLogin_Passive::RunAuthenticationMethod: authentication using dynamic password was successful
+2024/02/16 06:16:47.312  1084       3644 D1   InterProcessBase::SecureNetworkCallbackHandle destroyed (RegistrationID: 1a359639-8f3d-4f3d-a647-ff119cf10953)
+2024/02/16 06:16:47.312  2216       2492 S0   AuthenticationBlocker::Reset: attempts reset for DyngateID 1660360496
+2024/02/16 06:16:47.314  2216       2492 S0   SecureNetworkIPCAdapter::UnregisterSharedBCmdCallback(): RegistrationID: 1a359639-8f3d-4f3d-a647-ff119cf10953
+2024/02/16 06:16:47.385  2216       2492 S0   UDPv6: ProcessHandshake: (*)
+2024/02/16 06:16:47.386  2216       2492 S0   Initializing transmission control v2
+2024/02/16 06:16:47.386  2216       2492 S0   UdpTransmissionControl, fec enabled = 1
+2024/02/16 06:16:47.386  2216       2492 S0   UDPv4: ProcessHandshake: (*)
+2024/02/16 06:16:47.386  2216       2492 S0   Initializing transmission control v2
+2024/02/16 06:16:47.386  2216       2492 S0   UdpTransmissionControl, fec enabled = 1
+2024/02/16 06:16:47.388  2216       2488 S0   UHP.DNS Resolution failed with system:11004:The requested name is valid, but no data of the requested type was found!
+2024/02/16 06:16:47.388  1084       3644 D1   CLoginServer::runServer: ConnectionMode == 1
+2024/02/16 06:16:47.388  2216       2488 S0   PseudoRoutableCmdHandler[2]::StartPseudoRouter(): PseudoRouter has been started
+2024/02/16 06:16:47.388  2216       2488 S0   CPersistentParticipantManager::AddParticipant: [1660388656,126302903] type=3 name=MSEDGEWIN10
+2024/02/16 06:16:47.388  2216       2488 S0   CPersistentParticipantManager::AddParticipant: [1660388656,126302903] type=3 name=MSEDGEWIN10
+2024/02/16 06:16:47.389  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=5 (StreamType_Chat), streamTypeUuid={16f66c28-8c51-4820-82e5-4015581005d7}, source=[1660388656,126302903], features=1, compression=2 streamID=1
+2024/02/16 06:16:47.389  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=7 (StreamType_VPN), streamTypeUuid={f751449f-844f-4dc6-8b52-222a2d25e29c}, source=[1660388656,126302903], features=1, compression=2 streamID=2
+2024/02/16 06:16:47.389  1084       3644 D1   SessionManagerDesktop::ChangeToServermode: creating session with tvsessionprotocol::TVSessionID = 126302903
+2024/02/16 06:16:47.389  1084       3644 D1   SessionManagerDesktop::InitiateDesktopSession: creating session with tvsessionprotocol::TVSessionID = 126302903
+2024/02/16 06:16:47.400  1084       3644 D1   WorkstationLockerWin::ShouldAutoLockWorkstation: Autolock: no, Local user logged-in: 1, window session locked: 0, secure screen saver running: no disabled by policy: 0
+2024/02/16 06:16:47.400  1084       3644 D1   WorkstationLocker::SetInitialSessionLockState() tvsessionprotocol::TVSessionID: 126302903 auto lock: 0
+2024/02/16 06:16:47.400  5276       5360 G1   CParticipantManagerBase::SetMyParticipantIdentifier(): pid=[1660388656,126302903]
+2024/02/16 06:16:47.400  5276       5360 G1   VoIP: Meeting session created: MeetingID = m000-000-00, ParticipantID = [1660388656,126302903], MeetingGUID = 
+2024/02/16 06:16:47.402  1084       3644 D1   WindowObserver::SessionStart: -1; type: 1
+2024/02/16 06:16:47.413  2216       2488 S0   CPersistentParticipantManager::AddParticipant: [1660360496,115469523] type=6 name=TestAccountRedacted
+2024/02/16 06:16:47.414  1084       1436 D1   SessionManagerDesktop::ApplyInputBlockerPermissions: apply permissions: 0
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::UserInteractionHelper::ChangeServerInputInternal (inputMode 0)
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::InputBlocker::EnableInputAsync(true)
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::UserInteractionHelper::SendInputChangedCmd : inputDisabled:0; blackScreenEnabled: 0
+2024/02/16 06:16:47.414  1084       1436 D1   SessionManagerDesktop::ApplyInputBlockerPermissions: apply permissions: 0
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::UserInteractionHelper::ChangeServerInputInternal (inputMode 0)
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::InputBlocker::EnableInputAsync(true)
+2024/02/16 06:16:47.414  1084       1436 D1   tvdesktop::UserInteractionHelper::SendInputChangedCmd : inputDisabled:0; blackScreenEnabled: 0
+2024/02/16 06:16:47.426  5276       5360 G1   VoIP: using pipeline factory async = 1
+2024/02/16 06:16:47.426  1084       3632 D1   WindowsDesktopDispatcherThread::InitThread(default): ChangeThreadDesktop(): SetThreadDesktop to default successful
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: LoadEndpointPairSettingsFromStorage
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Request capturing endpoint: "UndefinedEndpoint"
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Request rendering endpoint: "UndefinedEndpoint"
+2024/02/16 06:16:47.429  5276       4040 G1   VoIP: AudioControl: Fallback-mode = 1
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: SetUsedRenderingEndpointFinal no change
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Endpointing = 0, available = 1
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Establish audio endpoint pair in pipeline
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: Audio endpointing disabled!
+2024/02/16 06:16:47.430  5276       4040 G1   VoIP: AudioControl: No VoIPRadioAudioControl installed!
+2024/02/16 06:16:47.430  5276       5360 G1   VoIP: CreateComponentsAndStartThreads start
+2024/02/16 06:16:47.430  5276       5360 G1   VoIP: using pipeline factory async = 1
+2024/02/16 06:16:47.430  5276       5360 G1   VoIP: Receiver: Audio pipeline: Building pipeline finished
+2024/02/16 06:16:47.430  5276       5360 G1   VoIP: Receiver: Audio pipeline: VoiceReceiverAudioPipeline RegisterPlaybackDataObserver
+2024/02/16 06:16:47.431  5276       5360 G1   VoIP: using pipeline factory async = 1
+2024/02/16 06:16:47.431  1084       3788 D1   WindowsDesktopDispatcherThread::InitThread(winlogon): ChangeThreadDesktop(): SetThreadDesktop to winlogon successful
+2024/02/16 06:16:47.431  1084       3644 D1   SessionManagerDesktop::ReportSession(): report incoming session -> isManagedDevice: 0, isManagedDeviceV2: 0, reportIncomingSession setting: 0
+2024/02/16 06:16:47.431  1084       3644 D1   CLogin::run() leave, session id: 126302903
+2024/02/16 06:16:47.431  1084       3644 D1   tvsystem::CThread::weakJoin - thread {Not-any-thread} has succesfully detached itself
+2024/02/16 06:16:47.433  5276        872 G1   VoiceSenderAudioPipeline: Building pipeline started
+2024/02/16 06:16:47.433  5276        872 G1   VoiceSenderAudioPipeline: Building pipeline finished
+2024/02/16 06:16:47.434  5276        872 G1   VoIP: Sender: Initialized
+2024/02/16 06:16:47.434  5276        872 G1   VoIP: Sender: Audio pipeline: RebuildingAutoVoiceCapturer: Data streaming activity changed to 0
+2024/02/16 06:16:47.434  5276        872 G1   VoIP: Sender: Audio pipeline: RebuildingAutoVoiceCapturer: Tick streaming activity changed to 0
+2024/02/16 06:16:47.434  5276       2544 G1   VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Establishing audio endpoints requested
+2024/02/16 06:16:47.434  5276       2544 G1   VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Endpoints have not changed, so ignore the request
+2024/02/16 06:16:47.434  5276       5360 G1   VoIP: CreateComponentsAndStartThreads end
+2024/02/16 06:16:47.434  5276        872 G1   VoIP: Sender: Audio pipeline: StartTicking called
+2024/02/16 06:16:47.434  5276       2544 G1   VoIP: Receiver: Audio pipeline: StartTicking called
+2024/02/16 06:16:47.434  5276       2544 G1   VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: UpdateActualAudioRendererState Unavailable
+2024/02/16 06:16:47.434  5276       2544 G1   VoIP: Receiver: ****** Playback status changed to VoiceReceiverPlaybackUnavailable ******
+2024/02/16 06:16:47.444  5276       5360 G1   CacheManager::SetCleanupLimit: 26214400
+2024/02/16 06:16:47.445  5276       5360 G1   SessionRecorder::SetNewStateAndTriggerEvent: State changed from 0 to 3
+2024/02/16 06:16:47.445  5276       5360 G1   RA: Creating audio server
+2024/02/16 06:16:47.445  5276       5360 G1   RA: quality suggestion by capacity measurement: (350)
+2024/02/16 06:16:47.445  5276       5360 G1   RA: Audio quality set to 120000
+2024/02/16 06:16:47.445  5276       5360 G1   RA: Enable SidechainSourceIsActive = 0
+2024/02/16 06:16:47.445  5276       5360 G1   StringCompare locale: 
+2024/02/16 06:16:47.447  5276       2544 G1   VoIP: Receiver: Added session 126302903. Meeting id is -. Our participant id is "1 660 388 656" [1660388656,126302903].
+2024/02/16 06:16:47.447  1084       6700 D1   DesktopThread started, number of Cores: 1
+2024/02/16 06:16:47.492  2216       2488 S0   CParticipantManagerBase participant MSEDGEWIN10 (ID [1660388656,126302903]) was added with the role 3
+2024/02/16 06:16:47.499  2216       2492 S0   CParticipantManagerBase InteractionDefaults arrived : CInteractionDefaults = (0) [ 0,2,0,0,2,0,0]
+2024/02/16 06:16:47.499  2216       2492 S0   CParticipantManagerBase participant TestAccountRedacted (ID [1660360496,115469523]) was added with the role 6
+2024/02/16 06:16:47.504  2216       2488 S0   CPersistentParticipantManager::SendPMSynchronizationComplete 0000019D9B512D40
+2024/02/16 06:16:47.504  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=5 (StreamType_Chat), streamTypeUuid={16f66c28-8c51-4820-82e5-4015581005d7}, source=[1660360496,115469523], features=1, compression=2 streamID=3
+2024/02/16 06:16:47.504  1084       1436 D1   CParticipantManagerBase participant MSEDGEWIN10 (ID [1660388656,126302903]) was added with the role 3
+2024/02/16 06:16:47.504  1084       1436 D1   New Participant added in CParticipantManager MSEDGEWIN10 ([1660388656,126302903])
+2024/02/16 06:16:47.506  1084       1436 D1   CParticipantManagerBase participant TestAccountRedacted (ID [1660360496,115469523]) was added with the role 6
+2024/02/16 06:16:47.506  1084       1436 D1   New Participant added in CParticipantManager TestAccountRedacted ([1660360496,115469523])
+2024/02/16 06:16:47.506  1084       2988 D1   CParticipantManager::SynchronizationComplete: session=126302903, this=0000014CA67F22E0
+2024/02/16 06:16:47.507  1084       2988 D1   SendInfo() executed.
+2024/02/16 06:16:47.508  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=1 (StreamType_Misc), streamTypeUuid={1accdea8-09c3-40f9-a699-b7051251fbd7}, source=[1660388656,126302903], features=1, compression=2 streamID=4
+2024/02/16 06:16:47.524  5276       5356 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
+2024/02/16 06:16:47.526  5276       5280 G1   BaseSessionEndpoint::StartProcessingCommands Start processing commands for session 126302903
+2024/02/16 06:16:47.526  2216       2492 S0   CPersistentParticipantManager::SendPMSynchronizationComplete 0000019D9B512D40
+2024/02/16 06:16:47.526  5276       5356 G1   CParticipantManagerBase participant MSEDGEWIN10 (ID [1660388656,126302903]) was added with the role 3
+2024/02/16 06:16:47.526  5276       5356 G1   New Participant added in CParticipantManager MSEDGEWIN10 ([1660388656,126302903])
+2024/02/16 06:16:47.526  5276       5356 G1   SessionStateParticipants::AddParticipant: pid: [1660388656,126302903] and timestamp: 1708093007388 
+2024/02/16 06:16:47.526  5276       5356 G1   DC: Presenter role assigned to [1660388656,126302903] (MSEDGEWIN10 (1 660 388 656))
+2024/02/16 06:16:47.528  5276       5356 G1   CParticipantManagerBase participant TestAccountRedacted (ID [1660360496,115469523]) was added with the role 6
+2024/02/16 06:16:47.528  5276       5356 G1   New Participant added in CParticipantManager TestAccountRedacted ([1660360496,115469523])
+2024/02/16 06:16:47.528  5276       5356 G1   SessionStateParticipants::AddParticipant: pid: [1660360496,115469523] and timestamp: 1708093007161 
+2024/02/16 06:16:47.528  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: Created for session 126302903
+2024/02/16 06:16:47.528  5276       2544 G1   VoIP: Receiver: Session 126302903: Channel created for participant [1660360496,115469523] called "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]
+2024/02/16 06:16:47.529  5276       5356 G1   CParticipantManager::SynchronizationComplete: session=126302903, this=000001A6D01B1950
+2024/02/16 06:16:47.530  2216       2488 S0   UDPv4: sending pings...: (*)
+2024/02/16 06:16:47.531  5276       5356 G1   PrintingDatabaseNotificationHandler::Init: successfully created event Global\tvprint_ed4552a18b704083967eb9189a4ffbf1
+2024/02/16 06:16:47.541  5276       5280 G1   CServerSessionRecorder::AutoStart: AutoStart recording function called and not activated (auto recording of incoming RemoteControl not activated)
+2024/02/16 06:16:47.552  5276       5280 G1   RA: RemoteAudioSender get started
+2024/02/16 06:16:47.553  5276       7360 G1   VoIP: Sender: Added session 126302903. Meeting id is TestAccountRedacted (1 660 360 496). Our participant id is "MSEDGEWIN10 (1 660 388 656)" [1660388656,126302903].
+2024/02/16 06:16:47.553  5276       7360 G1   VoIP: Sender: Session 126302903 initialized. 
+2024/02/16 06:16:47.553  5276       5356 G1   RA: Control stream will get created
+2024/02/16 06:16:47.553  5276       5356 G1   CParticipantManagerBase::CheckAndSubscribeNewStream(): Subscribe stream now streamID=3 type=5 required=1 supported=1
+2024/02/16 06:16:47.554  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=26 (StreamType_VoIP_Data), streamTypeUuid={97669627-a036-4d71-9277-fd53d07ff402}, source=[1660388656,126302903], features=1, compression=1 streamID=5
+2024/02/16 06:16:47.554  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=25 (StreamType_VoIP_Control), streamTypeUuid={3825b10f-fe04-4767-8dd2-eab6247201a5}, source=[1660388656,126302903], features=1, compression=1 streamID=6
+2024/02/16 06:16:47.554  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=12 (StreamType_RemoteAudioControl), streamTypeUuid={364fdf6a-48b1-4752-94a5-18dbd96f3b87}, source=[1660388656,126302903], features=1, compression=2 streamID=7
+2024/02/16 06:16:47.555  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: We registered VoIPV3 data stream 5
+2024/02/16 06:16:47.555  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: We registered VoIPV3 control stream 6
+2024/02/16 06:16:47.555  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: We registered all streams of VoIPV3 channel
+2024/02/16 06:16:47.555  5276       5356 G1   RA: Controlstream succesfull registered with id 7
+2024/02/16 06:16:47.555  5276       5280 G1   RA: RemoteAudioSender get started
+2024/02/16 06:16:47.568  2216       2488 S0   CParticipantManagerBase InteractionDefaults arrived : CInteractionDefaults = (0) [ 0,2,0,0,2,0,0]
+2024/02/16 06:16:47.568  5276       5356 G1   CParticipantManagerBase InteractionDefaults arrived : CInteractionDefaults = (0) [ 0,2,0,0,2,0,0]
+2024/02/16 06:16:47.578  2216       2492 S0   UDPv4: UHP.PING response received: (*)
+2024/02/16 06:16:47.591  2216       2492 S0   UDPv4: UHP.PING response received: (*)
+2024/02/16 06:16:47.600  2216       2492 S0   UDPv4: UHP.PING response received: (*)
+2024/02/16 06:16:47.600  2216       2492 S0   UDPv4: punching: (*)
+2024/02/16 06:16:47.600  2216       2492 S0   UDPv4: PingOK.PunchInit: (*)
+2024/02/16 06:16:47.601  2216       2492 S0   UDPv4: UHP.PING response received: (*)
+2024/02/16 06:16:47.601  5276       5356 G1   SessionFeatureClassicalFileTransfer: network protocol Tcpv4
+2024/02/16 06:16:47.601  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:16:47.601  2216       2488 S0   CSendCommandToMaster::SendBCommandToMaster: CC=3 CT=38
+2024/02/16 06:16:47.611  2216       2488 S0   UDPv4: UHP.PING response received: (*)
+2024/02/16 06:16:47.669  2216       2492 S0   UDPv4: SendUDPPunches: (*)
+2024/02/16 06:16:47.726  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=1 (StreamType_Misc), streamTypeUuid={1accdea8-09c3-40f9-a699-b7051251fbd7}, source=[1660360496,115469523], features=1, compression=2 streamID=8
+2024/02/16 06:16:47.731  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.731  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.731  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.734  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.739  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.739  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2492 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.740  2216       2488 S0   UDPv4: send UdpSendPossible: (*)
+2024/02/16 06:16:47.783  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=1 (StreamType_Misc, private), streamTypeUuid={1accdea8-09c3-40f9-a699-b7051251fbd7}, source=[1660360496,115469523], features=1, compression=2 streamID=9
+2024/02/16 06:16:47.783  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=26 (StreamType_VoIP_Data), streamTypeUuid={97669627-a036-4d71-9277-fd53d07ff402}, source=[1660360496,115469523], features=1, compression=1 streamID=10
+2024/02/16 06:16:47.783  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=25 (StreamType_VoIP_Control), streamTypeUuid={3825b10f-fe04-4767-8dd2-eab6247201a5}, source=[1660360496,115469523], features=1, compression=1 streamID=11
+2024/02/16 06:16:47.783  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=24 (StreamType_Clipboard, private), streamTypeUuid={a4da01ca-c0f8-4cbe-8800-5309bac135c7}, source=[1660360496,115469523], features=1, compression=2 streamID=12
+2024/02/16 06:16:47.785  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: Partner registered VoIPV3 audio stream 10
+2024/02/16 06:16:47.785  5276       2544 G1   CParticipantManagerBase::CheckAndSubscribeNewStream(): Subscribe stream now streamID=10 type=26 required=1 supported=1
+2024/02/16 06:16:47.785  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: We subscribed VoIPV3 audio stream 10
+2024/02/16 06:16:47.785  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: Partner registered VoIPV3 control stream 11
+2024/02/16 06:16:47.785  5276       2544 G1   CParticipantManagerBase::CheckAndSubscribeNewStream(): Subscribe stream now streamID=11 type=25 required=1 supported=1
+2024/02/16 06:16:47.785  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: We subscribed VoIPV3 control stream 11 (waiting for init command)
+2024/02/16 06:16:47.785  5276       5356 G1   RA: quality suggestion by capacity measurement: (350)
+2024/02/16 06:16:47.785  5276       5356 G1   RA: Audio quality set to 32000
+2024/02/16 06:16:47.785  5276       5356 G1   RA: Enable SidechainSourceIsActive = 0
+2024/02/16 06:16:47.785  5276       5356 G1   RA: Control stream will get created
+2024/02/16 06:16:47.785  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: Partner "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] subscribed VoIPV3 control stream. We have to send an init command.
+2024/02/16 06:16:47.785  5276       7360 G1   VoIP: Sender: Session-format channel (126302903, V3): Init VoIP channel
+2024/02/16 06:16:47.785  5276       7360 G1   VoIP: Sender: Session-format channel (126302903, V3): VoIPV3BCommandSender: We sent init command on stream 6
+2024/02/16 06:16:47.785  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: Partners changed subscriptions and so the receiving usage of the VoIPV3 channel changed to 1
+2024/02/16 06:16:47.785  5276       7360 G1   VoIP: Sender: Session-format channel (126302903, V3): Receiving usage by partners changed to 1
+2024/02/16 06:16:47.786  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=1 (StreamType_Misc, private), streamTypeUuid={1accdea8-09c3-40f9-a699-b7051251fbd7}, source=[1660388656,126302903], features=1, compression=2 streamID=13
+2024/02/16 06:16:47.786  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=12 (StreamType_RemoteAudioControl), streamTypeUuid={364fdf6a-48b1-4752-94a5-18dbd96f3b87}, source=[1660388656,126302903], features=1, compression=2 streamID=14
+2024/02/16 06:16:47.786  2216       2492 S0!  CStreamManager::StreamUnregistered: Could not find outgoing stream 7
+2024/02/16 06:16:47.787  5276       5356 G1   RA: Controlstream succesfull registered with id 14
+2024/02/16 06:16:47.787  5276       5356 G1   RA: quality suggestion by capacity measurement: (350)
+2024/02/16 06:16:47.787  5276       5356 G1   RA: Audio quality set to 120000
+2024/02/16 06:16:47.787  5276       5356 G1   RA: Enable SidechainSourceIsActive = 0
+2024/02/16 06:16:47.787  5276       5356 G1   RA: Control stream will get created
+2024/02/16 06:16:47.787  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=12 (StreamType_RemoteAudioControl), streamTypeUuid={364fdf6a-48b1-4752-94a5-18dbd96f3b87}, source=[1660388656,126302903], features=1, compression=2 streamID=15
+2024/02/16 06:16:47.787  5276       5356 G1   RA: Controlstream succesfull registered with id 15
+2024/02/16 06:16:47.788  2216       2492 S0!  CStreamManager::StreamUnregistered: Could not find outgoing stream 14
+2024/02/16 06:16:47.792  5276       5360 G1!! DataTransceiver: DataTransceiver => DataTransceiverFileBox::HandleEvent: routerInstance is null
+2024/02/16 06:16:47.792  5276       5360 G1   CServerSessionRecorder::AutoStart: AutoStart recording function called and not activated (auto recording of incoming RemoteControl not activated)
+2024/02/16 06:16:47.846  5276       5360 G1   ServerThreadInfo connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:47.846  5276       5360 G1   ServerThreadInfo connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:47.848  5276       5360 G1   ServerThreadInfo connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:47.848  5276       5360 G1   CServerThreadInfo::Received_AccessControlSettings: RCAccessControl: RemoteControl='Allowed', FileTransfer='Allowed', ControlRemoteTV = 'Allowed', SwitchSides = 'Allowed', AllowDisableRemoteInput='Allowed', AllowVPN = 'Allowed', AllowPartnerViewDesktop = 'Allowed', ShareMyFiles = 'Allowed', ShareFilesWithMe = 'Allowed', PrintOnMyPrinters='Allowed', PrintOnRemotePrinters='Allowed', SessionRecording = 'Allowed', ExecuteScripts = 'After confirmation', RemoteTerminal = 'Allowed', InSessionChat = 'Allowed' 
+2024/02/16 06:16:47.849  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=24 (StreamType_Clipboard, private), streamTypeUuid={a4da01ca-c0f8-4cbe-8800-5309bac135c7}, source=[1660388656,126302903], features=1, compression=2 streamID=16
+2024/02/16 06:16:47.885  2216       2488 S0!  CMeetingControl[1]::Received_MeetingSubscribeStream(): invalid streamID=14
+2024/02/16 06:16:47.912  5276       5360 G1   RA: quality suggestion by capacity measurement: (350)
+2024/02/16 06:16:47.912  5276       5360 G1   RA: Audio quality set to 32000
+2024/02/16 06:16:47.912  2216       2492 S0!  CStreamManager::StreamUnregistered: Could not find outgoing stream 15
+2024/02/16 06:16:47.912  5276       5360 G1   RA: Enable SidechainSourceIsActive = 0
+2024/02/16 06:16:47.912  5276       5360 G1   RA: Control stream will get created
+2024/02/16 06:16:47.912  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=12 (StreamType_RemoteAudioControl), streamTypeUuid={364fdf6a-48b1-4752-94a5-18dbd96f3b87}, source=[1660388656,126302903], features=1, compression=2 streamID=17
+2024/02/16 06:16:47.912  5276       5356 G1   RA: Controlstream succesfull registered with id 17
+2024/02/16 06:16:47.912  5276       5356 G1   MultimediaStreamStateStorage::Received_VoIPInitReceiver [1660360496,115469523]
+2024/02/16 06:16:47.912  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: VoIPBCommandReceiver: Partner sent init command on stream 11
+2024/02/16 06:16:47.912  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]: Initialize to version V3
+2024/02/16 06:16:47.921  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): Building pipeline finished
+2024/02/16 06:16:47.921  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): JitterBufferB: Set latency-mode = LowLatency
+2024/02/16 06:16:47.921  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): Added to mixer
+2024/02/16 06:16:47.921  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): Incoming shut status changed to shut = 1
+2024/02/16 06:16:47.921  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): Initialized
+2024/02/16 06:16:48.008  5276       3492 G1!  RA: GetDefaultDevice failed
+2024/02/16 06:16:48.008  5276       3492 G1!  RA: RemoteAudioSender unable to start audio processor
+2024/02/16 06:16:48.443  5276        872 G1   VoIP: Sender: ****** Audio: Voice capturer state changed to AvailableButNotCapturing ******
+2024/02/16 06:16:48.443  5276        872 G1   VoIP: Sender: ****** Visible sender status changed to VoiceSenderAvailableButNotRunning ******
+2024/02/16 06:16:48.800  5276       5356 G1   RA: quality suggestion by capacity measurement: (4969)
+2024/02/16 06:16:48.800  5276       5356 G1   RA: Audio quality set to 120000
+2024/02/16 06:16:48.800  5276       5356 G1   RA: RemoteAudioSender stopping...
+2024/02/16 06:16:48.801  2216       2492 S0!  CStreamManager::StreamUnregistered: Could not find outgoing stream 17
+2024/02/16 06:16:48.801  5276       5356 G1   RA: Enable SidechainSourceIsActive = 0
+2024/02/16 06:16:49.038  1084       2988 D1   tvdesktop::UserInteractionHelper::SendInputChangedCmd : inputDisabled:0; blackScreenEnabled: 0
+2024/02/16 06:16:49.040  1084       2988 D1   SendInfo() executed.
+2024/02/16 06:16:49.111  5276       5360 G1   ServerThreadInfo connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.154  5276       5360 G1   ServerThreadInfo connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.158  5276       5360 G1   CServerThreadInfo::Received_AccessControlSettings: RCAccessControl: RemoteControl='Allowed', FileTransfer='Allowed', ControlRemoteTV = 'Allowed', SwitchSides = 'Allowed', AllowDisableRemoteInput='Allowed', AllowVPN = 'Allowed', AllowPartnerViewDesktop = 'Allowed', ShareMyFiles = 'Allowed', ShareFilesWithMe = 'Allowed', PrintOnMyPrinters='Allowed', PrintOnRemotePrinters='Allowed', SessionRecording = 'Allowed', ExecuteScripts = 'After confirmation', RemoteTerminal = 'Allowed', InSessionChat = 'Allowed' 
+2024/02/16 06:16:49.233  1084       2988 D1   CParticipantManagerBase InteractionDefaults arrived : CInteractionDefaults = (0) [ 0,2,0,0,2,0,0]
+2024/02/16 06:16:49.233  1084       2988 D1   InfoCommandHandlerDesktop::ReceivedInfo: connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.233  1084       1436 D1   CacheManager::SetCleanupLimit: 26214400
+2024/02/16 06:16:49.235  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=2 (StreamType_Screen), streamTypeUuid={69e1e0a3-2efa-4364-aa0b-140b8669ab4b}, source=[1660388656,126302903], features=127, compression=3 streamID=18
+2024/02/16 06:16:49.235  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=10 (StreamType_ScreenVideo), streamTypeUuid={74eb2281-403a-4905-bd03-837cc2260b6e}, source=[1660388656,126302903], features=127, compression=1 streamID=19
+2024/02/16 06:16:49.236  1084       6700 D1   CDesktop_Win::WindowsDesktopWasChanged(): initial InputDesktop: Default
+2024/02/16 06:16:49.236  1084       6700 D1   tvdesktop::InputBlocker::SyncState()
+2024/02/16 06:16:49.237  5460  5464 H64  tv_x64.exe: Starting Update Hook
+2024/02/16 06:16:49.237  5448  5452 H32  tv_w32.exe: Starting Update Hook
+2024/02/16 06:16:49.239  1084       2988 D1   QualitySelectionDesktop::OnInfoReceived: Starting auto quality check.
+2024/02/16 06:16:49.239  1084       2988 D1   QualitySelectionDesktop::CheckAndSetDisplayQuality: Auto quality selection done.
+2024/02/16 06:16:49.239  1084       2988 D1   DisplayQuality m=0, bpp=32, q=80, conRating=2, cpu=3475, capacity=4969, RTT=65483, disable animation=1 remove wallpaper=1, video=1, fullscreenVideo=0
+2024/02/16 06:16:49.245  1084       1436 D1   GuiWindowCheckBase::CheckForValidGUIWindows() ok
+2024/02/16 06:16:49.245  1084       6700 D1!! DuplicateMonitor::Init(): failed, no device manager!, Errorcode=298
+2024/02/16 06:16:49.245  1084       6700 D1   CGrabMethodDuplication::Initialize() m_State=2 m_gpuSurfaceRequested=0
+2024/02/16 06:16:49.245  1084       6700 D1   GrabMethodWin::CreateMonitorDC(): Using device \\.\DISPLAY1
+2024/02/16 06:16:49.245  1084       6700 D1   CGrabScreenGDI::Initialize(): BPP_USED = 32, colors = 4294967296
+2024/02/16 06:16:49.245  1084       6700 D1   CGrabScreenGDI::Initialize() m_State=1
+2024/02/16 06:16:49.246  1084       1696 D1   runLLHook(default): ChangeThreadDesktop(): SetThreadDesktop to default successful
+2024/02/16 06:16:49.246  1084       6896 D1   runLLHook(winlogon): ChangeThreadDesktop(): SetThreadDesktop to winlogon successful
+2024/02/16 06:16:49.287  1084       6700 D1   first fullscreen grab time in ms = 41
+2024/02/16 06:16:49.293  1084       6700 D1   Desktop: Grabbed screen is ok.
+2024/02/16 06:16:49.304  1084       1436 D1   Desktop grab succeeded.
+2024/02/16 06:16:49.373  1084       2988 D1   InfoCommandHandlerDesktop::ReceivedInfo: connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.373  1084       2988 D1   DisplayQuality m=0, bpp=32, q=80, conRating=2, cpu=3475, capacity=4969, RTT=65483, disable animation=1 remove wallpaper=1, video=1, fullscreenVideo=0
+2024/02/16 06:16:49.376  1084       2988 D1   InfoCommandHandlerDesktop::ReceivedInfo: connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.376  1084       2988 D1   DisplayQuality m=0, bpp=32, q=80, conRating=2, cpu=3475, capacity=4969, RTT=65483, disable animation=1 remove wallpaper=1, video=1, fullscreenVideo=0
+2024/02/16 06:16:49.400  1084       2988 D1   ConnectionAccessControl => RCAccessControl: RemoteControl='Allowed', FileTransfer='Allowed', ControlRemoteTV = 'Allowed', SwitchSides = 'Allowed', AllowDisableRemoteInput='Allowed', AllowVPN = 'Allowed', AllowPartnerViewDesktop = 'Allowed', ShareMyFiles = 'Allowed', ShareFilesWithMe = 'Allowed', PrintOnMyPrinters='Allowed', PrintOnRemotePrinters='Allowed', SessionRecording = 'Allowed', ExecuteScripts = 'After confirmation', RemoteTerminal = 'Allowed', InSessionChat = 'Allowed' 
+2024/02/16 06:16:49.400  1084       2988 D1   StreamControlDesktop::StreamRegistered: Registered Clipboard Stream (00000010)
+2024/02/16 06:16:49.400  1084       2988 D1   tvdesktop::ScreenControlDesktop::Received_VirtualMonitorRequest: Received virtual monitor ready signal.
+2024/02/16 06:16:49.401  1084       2988 D1   InfoCommandHandlerDesktop::ReceivedInfo: connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.401  1084       2988 D1   DisplayQuality m=0, bpp=32, q=80, conRating=2, cpu=3475, capacity=4969, RTT=65483, disable animation=1 remove wallpaper=1, video=1, fullscreenVideo=0
+2024/02/16 06:16:49.405  1084       2988 D1   InfoCommandHandlerDesktop::ReceivedInfo: connected to 1660360496, client version is 15.50.5 , OS=32768
+2024/02/16 06:16:49.405  1084       2988 D1   DisplayQuality m=0, bpp=32, q=80, conRating=2, cpu=3475, capacity=4969, RTT=65483, disable animation=1 remove wallpaper=1, video=1, fullscreenVideo=0
+2024/02/16 06:16:49.411  1084       2988 D1   ConnectionAccessControl => RCAccessControl: RemoteControl='Allowed', FileTransfer='Allowed', ControlRemoteTV = 'Allowed', SwitchSides = 'Allowed', AllowDisableRemoteInput='Allowed', AllowVPN = 'Allowed', AllowPartnerViewDesktop = 'Allowed', ShareMyFiles = 'Allowed', ShareFilesWithMe = 'Allowed', PrintOnMyPrinters='Allowed', PrintOnRemotePrinters='Allowed', SessionRecording = 'Allowed', ExecuteScripts = 'After confirmation', RemoteTerminal = 'Allowed', InSessionChat = 'Allowed' 
+2024/02/16 06:16:49.411  1084       2988 D1   tvdesktop::MachineControlDesktop::Received_AutoLockOnSessionEnd - received lockWSAfterSessionEnd = false, cp = 0000014CA67D6560, this = 0000014CA67E9CC0
+2024/02/16 06:16:49.411  1084       2988 D1   WorkstationLocker::SetAutoLockOnSessionEnd() tvsessionprotocol::TVSessionID: 126302903 lock: 0 can lock: 1
+2024/02/16 06:16:49.411  1084       2988 D1   tvdesktop::MachineControlDesktop::Received_AutoLockOnSessionEnd - received lockWSAfterSessionEnd = false, cp = 0000014CA67D6560, this = 0000014CA67E9CC0
+2024/02/16 06:16:49.411  1084       2988 D1   WorkstationLocker::SetAutoLockOnSessionEnd() tvsessionprotocol::TVSessionID: 126302903 lock: 0 can lock: 1
+2024/02/16 06:16:49.431  1084       2988 D1   TileCompressor::Init dims=(1152,864), colordepth=32, streamFeatures=127
+2024/02/16 06:16:49.433  1084       2988 D1   Tile caching activated. Size divisor 1
+2024/02/16 06:16:49.522  2216       2492 S0   UDPv6: Ping destinations empty, no pings sent: (*)
+2024/02/16 06:16:49.522  2216       2492 S0   UDPv6: punching: (*)
+2024/02/16 06:16:49.522  2216       2492 S0   UDPv6: PingOK.PunchInit: (*)
+2024/02/16 06:16:49.581  2216       2488 S0   UDPv6: SendUDPPunches: (*)
+2024/02/16 06:16:49.582  2216       2492 S0!! EmergingUdpConnection::AsyncSendTo::Handler Send error system:1231 to fc00:f853:ccd:e793::1:38848
+2024/02/16 06:16:49.632  1084       2988 D1   CScreenStreamSender::SendDisplayParams() 1152x864x32 on 18 to 3 (restartStream=1)
+2024/02/16 06:16:49.632  1084       2988 D1   Max cache size: 387.20 MB for stream 18
+2024/02/16 06:16:49.632  1084       2988 D1   CacheManager::SetCleanupLimit: 135336209
+2024/02/16 06:16:49.642  2216       2488 S0   StreamCompressor[2]: change compression to ZLibLevel6 for stream 18
+2024/02/16 06:16:49.645  5276       5360 G1   RA: RemoteAudioSender get started
+2024/02/16 06:16:49.645  5276       5360 G1   RA: Control stream will get created
+2024/02/16 06:16:49.645  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=12 (StreamType_RemoteAudioControl), streamTypeUuid={364fdf6a-48b1-4752-94a5-18dbd96f3b87}, source=[1660388656,126302903], features=1, compression=2 streamID=20
+2024/02/16 06:16:49.646  5276       5356 G1   RA: Controlstream succesfull registered with id 20
+2024/02/16 06:16:49.737  5276       3048 G1!  RA: GetDefaultDevice failed
+2024/02/16 06:16:49.737  5276       3048 G1!  RA: RemoteAudioSender unable to start audio processor
+2024/02/16 06:16:49.738  1084       2988 D1   Received cache version 2 from [1660360496,115469523]
+2024/02/16 06:16:49.738  1084       2988 D1   Max cache size: 380.80 MB for stream 18
+2024/02/16 06:16:49.738  1084       2988 D1   CacheManager::SetCleanupLimit: 133099246
+2024/02/16 06:16:49.761  1084       2988 D1   Caching activated, partners version is 2, own version is 2
+2024/02/16 06:16:49.913  2216       2488 S0   Estimated RTT partner 1660360496 to router: 30 ms, reliability: High, ConnectionMode: Tcp
+2024/02/16 06:16:58.728  2216       2492 S0   Estimated Jitter self to router: 5 ms, reliability: High, ConnectionMode: Tcp
+2024/02/16 06:17:17.390  2216       2488 S0   UDPv4: [2]: create udp connection was not successful: establish udp connection timed out: (*)
+2024/02/16 06:17:17.390  2216       2492 S0   UDPv6: [2]: create udp connection was not successful: establish udp connection timed out: (*)
+2024/02/16 06:17:17.391  2216       2488 S0!  RemoteSession[2]::AddRequestedCarrier(): request carrier UdpToPartner failed!
+2024/02/16 06:17:17.391  2216       2488 S0!! EmergingUdpConnection[2]::AsyncReceiveHandler receive failed e=10009
+2024/02/16 06:17:17.391  2216       2488 S0   UdpConnection[4]: UDP statistics: nb=13 
+2024/02/16 06:17:17.391  2216       2488 S0   IConnection[4]::~IConnection(): Count: 3
+2024/02/16 06:17:17.391  2216       2492 S0   UdpConnection[3]: UDP statistics: nb=5 
+2024/02/16 06:17:17.391  2216       2492 S0!! EmergingUdpConnection[2]::AsyncReceiveHandler receive failed e=10009
+2024/02/16 06:17:17.392  2216       2492 S0   IConnection[3]::~IConnection(): Count: 2
+2024/02/16 06:17:23.924  2216       2488 S0   StreamCompressionSelectorOutgoing: switching compression to 12 (bandwidth 652, lan=0)
+2024/02/16 06:17:23.924  2216       2492 S0   StreamCompressor[2]: change compression to LzmaFast for stream 18
+2024/02/16 06:17:23.937  1084       7024 D1!  MouseHandlerDesktopWin::ProcessCommand(): SendInput very slow, duration=59ms
+2024/02/16 06:17:38.316  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=6 (StreamType_File, private), streamTypeUuid={39f8c238-87a6-4fc5-8173-872482924948}, source=[1660360496,115469523], features=1, compression=2 streamID=21
+2024/02/16 06:17:38.390  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=6 (StreamType_File, private), streamTypeUuid={39f8c238-87a6-4fc5-8173-872482924948}, source=[1660388656,126302903], features=1, compression=2 streamID=22
+2024/02/16 06:17:47.443  5276       5360 G1   VoIP: System performance (last 60s): CPU load of system = 95%
+2024/02/16 06:17:54.692  2216       2488 S0   Estimated bandwidth capacity self to router: 5416 kbit/s, reliability: High, ConnectionMode: Tcp
+2024/02/16 06:17:58.247  2216       2492 S0   Estimated bandwidth capacity router to 1660360496: 5888 kbit/s, reliability: High
+2024/02/16 06:17:59.382  2216       2492 S0   Estimated bandwidth capacity router to self: 5790 kbit/s, reliability: High
+2024/02/16 06:17:59.589  2216       2492 S0   Estimated bandwidth capacity partner 1660360496 to router: 5449 kbit/s, reliability: High, ConnectionMode: Tcp
+2024/02/16 06:18:02.112  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=6 (StreamType_File, private), streamTypeUuid={39f8c238-87a6-4fc5-8173-872482924948}, source=[1660360496,115469523], features=1, compression=2 streamID=23
+2024/02/16 06:18:02.205  5276        948 G1!! FileManager::CreateRecursiveDirectory: caught exception exception: boost::filesystem::create_directories: Access is denied [system:5]: "cert-bundle.crt\", "cert-bundle.crt", Errorcode=2
+2024/02/16 06:18:02.205  5276        948 G1!! DataTransceiver: Core_FileManagement => FileControllerWin::MakeFileInternal: GetFileAttributesEx failed, Errorcode=3
+2024/02/16 06:18:08.372  5276        948 G1!! DataTransceiver: CFT_Operation_Incoming => CopyFilesOperationIncoming::HandleError: Incoming Error on Stream: 23, error = 0
+2024/02/16 06:18:08.390  5276       2032 G1   TaskbarProgress::ProgressWorkerFunc: Worker end.
+2024/02/16 06:18:14.660  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=6 (StreamType_File, private), streamTypeUuid={39f8c238-87a6-4fc5-8173-872482924948}, source=[1660360496,115469523], features=1, compression=2 streamID=24
+2024/02/16 06:18:14.750  5276        948 G1!! FileManager::CreateRecursiveDirectory: caught exception exception: boost::filesystem::create_directories: Access is denied [system:5]: "test\", "test", Errorcode=2
+2024/02/16 06:18:14.750  5276        948 G1!! DataTransceiver: Core_FileManagement => FileControllerWin::MakeFileInternal: GetFileAttributesEx failed, Errorcode=3
+2024/02/16 06:18:18.042  5276        948 G1!! DataTransceiver: CFT_Operation_Incoming => CopyFilesOperationIncoming::HandleError: Incoming Error on Stream: 24, error = 0
+2024/02/16 06:18:18.053  5276       6308 G1   TaskbarProgress::ProgressWorkerFunc: Worker end.
+2024/02/16 06:18:34.893  2216       2492 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=24 (StreamType_Clipboard, private), streamTypeUuid={a4da01ca-c0f8-4cbe-8800-5309bac135c7}, source=[1660388656,126302903], features=1, compression=2 streamID=25
+2024/02/16 06:18:34.893  1084       2988 D1   StreamControlDesktop::StreamRegistered: Registered Clipboard Stream (00000019)
+2024/02/16 06:18:35.051  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=24 (StreamType_Clipboard, private), streamTypeUuid={a4da01ca-c0f8-4cbe-8800-5309bac135c7}, source=[1660388656,126302903], features=1, compression=2 streamID=26
+2024/02/16 06:18:35.051  1084       1436 D1   StreamControlDesktop::StreamRegistered: Registered Clipboard Stream (0000001a)
+2024/02/16 06:18:36.062  2216       2488 S0   tvnetwork::StreamManagerInternals::ReadStreamParameters: type=24 (StreamType_Clipboard, private), streamTypeUuid={a4da01ca-c0f8-4cbe-8800-5309bac135c7}, source=[1660388656,126302903], features=1, compression=2 streamID=27
+2024/02/16 06:18:36.062  1084       1436 D1   StreamControlDesktop::StreamRegistered: Registered Clipboard Stream (0000001b)
+2024/02/16 06:18:36.100  2216       2488 S0   CPersistentParticipantManager::RemoveParticipant: [1660360496,115469523]
+2024/02/16 06:18:36.100  2216       2488 S0   CStreamManager[2]::ReceivedEndSession(): reason=1
+2024/02/16 06:18:36.101  2216       2488 S0   CPersistentParticipantManager::RemoveParticipant: [1660388656,126302903]
+2024/02/16 06:18:36.106  5276       5356 G1   VoIP: Sender: Session 126302903: VoIP streams: Partners changed subscriptions and so the receiving usage of the VoIPV3 channel changed to 0
+2024/02/16 06:18:36.106  5276        872 G1   VoIP: Sender: Session-format channel (126302903, V3): Receiving usage by partners changed to 0
+2024/02/16 06:18:36.106  5276        872 G1   VoIP: Sender: Session-format channel (126302903, V3): Removed from format channel
+2024/02/16 06:18:36.106  5276       5356 G1   RA: RemoteAudioSender stopping...
+2024/02/16 06:18:36.107  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): Removed from mixer
+2024/02/16 06:18:36.107  5276       2544 G1   VoIP: Receiver: Session 126302903: Channel removed for participant [1660360496,115469523] called "TestAccountRedacted (1 660 360 496)" [1660360496,115469523]
+2024/02/16 06:18:36.107  5276       2544 G1   Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.107  5276       2544 G1   Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.107  5276       2544 G1   VoIP: Receiver: Participant channel "TestAccountRedacted (1 660 360 496)" [1660360496,115469523] (V3): JitterBuffer statistics block (JBS V7) (StreamId=10): -------------------
+2024/02/16 06:18:36.107  5276       2544 G1   JBS ("TestAccountRedacted (1 660 360 496)" [1660360496,115469523]): Start of logging sequence!
+2024/02/16 06:18:36.107  5276       2544 G1   JBS ("TestAccountRedacted (1 660 360 496)" [1660360496,115469523]): No data. JitterBuffer was permanently shut!
+2024/02/16 06:18:36.108  2216       2488 S0!! CMeetingControl[1]::Received_MeetingCloseStream(): participant doesn't exist: [1660388656,126302903]
+2024/02/16 06:18:36.108  5276       5356 G1   DC: Presenter role reset
+2024/02/16 06:18:36.109  2216       2488 S0!  CMeetingControl[1]::CmdDataStream(): invalid StreamID=16, discarding 23 bytes
+2024/02/16 06:18:36.111  1084       6700 D1!  CDesktop::DistributeSnapshots: unexpected state Success but snapshots empty
+2024/02/16 06:18:36.135  2216       2492 S0   ConnectionGuard: no restrictions
+2024/02/16 06:18:36.135  2216       2492 S0   ShowSponsoredSessionDialog: duration=1, usedLicense=10000, outgoing=0, established=1
+2024/02/16 06:18:36.135  2216       2492 S0   IPCHandler[2]::ShowSponsoredSessionDialog(): Try to show SponsoredSession
+2024/02/16 06:18:36.136  2216       2492 S0   SessionStatistics[2] Session to 1660360496 ended. Estimated capacity=5448kBit/s, Latency=65ms
+2024/02/16 06:18:36.136  2216       2492 S0   DesktopProcessControl::StopDesktopProcess terminate process 1084 in session 1
+2024/02/16 06:18:36.136  2216       2492 S0   InterProcessNetwork::TerminateProcessInSession session=1, ptype=4
+2024/02/16 06:18:36.136  2216       2492 S0   ClientWebAPI: stopped accept server on port 37014
+2024/02/16 06:18:36.136  2216       2492 S0   ClientWebAPI: stopped accept server on port 37114
+2024/02/16 06:18:36.136  2216       2492 S0   CAcceptServer[127.0.0.1:37014]::HandleAccept(): Accept canceled
+2024/02/16 06:18:36.136  2216       2492 S0   CAcceptServer[127.0.0.1:37114]::HandleAccept(): Accept canceled
+2024/02/16 06:18:36.136  1084       1436 D1   SessionManagerDesktop::SessionTerminate: removing session with tvsessionprotocol::TVSessionID = 126302903
+2024/02/16 06:18:36.136  1084       1436 D1   WorkstationLocker::OnSessionEnd() tvsessionprotocol::TVSessionID: 126302903
+2024/02/16 06:18:36.177  2216       2492 S0   IConnection[2]::~IConnection(): Count: 1
+2024/02/16 06:18:36.203  1084       6700 D1   DesktopThread ended
+2024/02/16 06:18:36.203  1084       1436 D1   DesktopThread stopped
+2024/02/16 06:18:36.204  1084       1436 D1   tvdesktop::InputBlocker::Shutdown(false)
+2024/02/16 06:18:36.204  1084       1436 D1   tvdesktop::InputBlocker::EnableInputAsync(true)
+2024/02/16 06:18:36.204  1084       1436 D1   tvdesktop::UserInteractionHelper::SendInputChangedCmd : inputDisabled:0; blackScreenEnabled: 0
+2024/02/16 06:18:36.204  1084       1436 D1   CollectionOrchestrator::~CollectionOrchestrator()
+2024/02/16 06:18:36.204  1084       1436 D1   Received Control_TerminateProcess
+2024/02/16 06:18:36.225  1084       6464 D1   InterProcessBase::SetReadyToProcessCommands(0)
+2024/02/16 06:18:36.225  1084       6464 D1   tvdesktop::InputBlocker::Shutdown(false)
+2024/02/16 06:18:36.225  1084       6464 D1   tvdesktop::InputBlocker::EnableInputAsync(true)
+2024/02/16 06:18:36.225  1084       6464 D1   tvdesktop::UserInteractionHelper::SendInputChangedCmd : inputDisabled:0; blackScreenEnabled: 0
+2024/02/16 06:18:36.225  1084       6464 D1!  CDesktop_Win::ShutDown(): Failed to reset the timer resolution.
+2024/02/16 06:18:36.225  1084       6464 D1   ~MachineHooks: refcount = 1
+2024/02/16 06:18:36.225  1084       6464 D1   interprocessbase::SecureNetwork destroyed
+2024/02/16 06:18:36.225  1084       6464 D1   InterProcessBase::ShutDown: Shutdown IPC
+2024/02/16 06:18:36.237  2216       2488 S0   InterProcessNetwork: Received DisconnectIPC from processID 1084 (ProcessType: 4 in Session 1) with reason 4
+2024/02/16 06:18:36.237  2216       2488 S0   DesktopProcessControl::ProcessDisconnected: terminating process pid 1084 in session 1 disconnected
+2024/02/16 06:18:36.237  1084       2988 D1   TcpProcessConnector::HandleRead(): Socket gracefully closed (PID=2216)
+2024/02/16 06:18:36.237  1084       2988 D1   TcpProcessConnector::CloseConnection(): PID=2216
+2024/02/16 06:18:36.237  1084       2988 D1   InterProcessBase::EventFunctionInternal(): IPC-Connection Closed
+2024/02/16 06:18:36.237  1084       2988 D1   TcpProcessConnector::CloseConnection(): PID=2216
+2024/02/16 06:18:36.237  2216       2488 S0   TcpProcessConnector::HandleRead(): Socket gracefully closed (PID=1084)
+2024/02/16 06:18:36.237  2216       2488 S0   TcpProcessConnector::CloseConnection(): PID=1084
+2024/02/16 06:18:36.237  5276       5360 G1   RA: RemoteAudioSender get stopped
+2024/02/16 06:18:36.237  5276        872 G1   VoIP: Sender: Removed session 126302903
+2024/02/16 06:18:36.237  5276       5360 G1   RA: RemoteAudioSender get stopped
+2024/02/16 06:18:36.253  5276       5360 G1   PrinterJobDispatcherServer::DeletePrintingSessionInDatabase: session 1 successfully deleted
+2024/02/16 06:18:36.253  5276       5360 G1   VoIP: DestroyComponents start
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Terminate
+2024/02/16 06:18:36.253  5276        872 G1   VoIP: Sender: TickUsersAndSinksHub: Stopping tick usage...
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: TickUsersHub: Stopping tick usage...
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: SpeexAgcDelayingFilter (a DelayingPacketDelegatingFilter): Tick usage stopped, since buffer is empty already
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: TickUsersHub: Tick usage stopped by all users
+2024/02/16 06:18:36.253  5276        872 G1   VoIP: Sender: TickUsersAndSinksHub: Tick usage stopped by all users
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: StopTicking called
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: Terminate
+2024/02/16 06:18:36.253  5276        872 G1   VoIP: Sender: Audio pipeline: RebuildingAutoVoiceCapturer: StopTicking called
+2024/02/16 06:18:36.253  5276       7360 G1   VoIP: Sender: Audio pipeline: RebuildingAutoVoiceCapturer: TerminatePipeline called
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Terminate
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: Channel-mixer FusionPipe (a FusionPipeImplementation): TickStreamChannel: Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: Channel-mixer FusionPipe (a FusionPipeImplementation): TickStreamChannel: Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.253  5276       2544 G1   Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       2544 G1   Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: Final-mixer FusionPipe (a FusionPipeImplementation): TickStreamChannel: Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: Final-mixer FusionPipe (a FusionPipeImplementation): TickStreamChannel: Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: UpdateActualAudioRendererState Unavailable
+2024/02/16 06:18:36.253  5276       2544 G1   VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: UpdateActualAudioRendererState Unavailable
+2024/02/16 06:18:36.253  5276       2544 G1!  VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Data input: Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       2544 G1!  VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Data input: Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.253  5276       2544 G1!  VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Ticking: Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       2544 G1!  VoIP: Receiver: Audio pipeline: AudioRenderingSinkFilter: Ticking: Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.253  5276       5360 G1!  VoIP: Sender: Audio pipeline: AutoVoiceCapturer data ticking: Periods (in ms): Variability (#samples=0): (Undefined)
+2024/02/16 06:18:36.253  5276       5360 G1!  VoIP: Sender: Audio pipeline: AutoVoiceCapturer data ticking: Periods (in ms): Histogram (#samples=0): avg=0.000000, 
+2024/02/16 06:18:36.264  5276       5360 G1   VoIP: DestroyComponents end
+2024/02/16 06:18:36.264  2216       2580 S0   DesktopProcessControl::OnProcessTerminated: Process 1084 in session 1 has terminated
+2024/02/16 06:18:36.370  5276       5360 G1   MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1
