@@ -17,10 +17,10 @@ message:
 - 'Process Launch Time: {process_launch_time}'
 - 'User Identifier: {user_identifier}'
 short_message:
-- 'Bug Type :{bug_type}'
-- 'Device Model :{device_model}'
-- 'Incident Identifier :{incident_identifier}'
-- 'OS version :{os_version}'
+- 'Bug Type: {bug_type}'
+- 'Device Model: {device_model}'
+- 'Incident Identifier: {incident_identifier}'
+- 'OS version: {os_version}'
 short_source: 'RecoveryLogd'
 source: 'Apple Recovery IPS'
 ---
