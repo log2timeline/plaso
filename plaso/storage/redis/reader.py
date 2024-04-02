@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Redis storage reader."""
+"""Redis-based storage reader."""
 
 from plaso.storage import reader
 from plaso.storage.redis import redis_store
 
 
 class RedisStorageReader(reader.StorageReader):
-  """Redis storage file reader."""
+  """Redis-based storage reader."""
 
   def __init__(self, session_identifier, task_identifier, redis_client=None):
-    """Initializes a Redis storage reader.
+    """Initializes a storage reader.
 
     Args:
       session_identifier (str): session identifier.

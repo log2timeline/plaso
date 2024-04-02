@@ -200,17 +200,17 @@ class ParserMediator(object):
 
     return self._environment_variables_per_path_spec.get(path_spec.parent, None)
 
-  def AddYearLessLogHelper(self, year_less_log_helper):
-    """Adds a year-less log helper.
+  def AddDateLessLogHelper(self, date_less_log_helper):
+    """Adds a date-less log helper.
 
     Args:
-      year_less_log_helper (YearLessLogHelper): year-less log helper.
+      date_less_log_helper (DateLessLogHelper): date-less log helper.
     """
     if self._event_data_stream_identifier:
-      year_less_log_helper.SetEventDataStreamIdentifier(
+      date_less_log_helper.SetEventDataStreamIdentifier(
           self._event_data_stream_identifier)
 
-    self._storage_writer.AddAttributeContainer(year_less_log_helper)
+    self._storage_writer.AddAttributeContainer(date_less_log_helper)
 
   def AddWindowsEventLogMessageFile(self, message_file):
     """Adds a Windows EventLog message file.

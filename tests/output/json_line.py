@@ -43,7 +43,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -59,10 +59,10 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     expected_timestamp = shared_test_lib.CopyTimestampFromString(
         '2012-06-27 18:17:01')

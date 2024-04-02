@@ -29,8 +29,10 @@ schema_helper.SchemaHelper.RegisterDataTypes({
         'json': serializers.JSONDateTimeAttributeSerializer()},
     'dfvfs.PathSpec': {
         'json': serializers.JSONPathSpecAttributeSerializer()},
+    'List[int]': {
+        'json': serializers.JSONValueListAttributeSerializer()},
     'List[str]': {
-        'json': serializers.JSONStringsListAttributeSerializer()}})
+        'json': serializers.JSONValueListAttributeSerializer()}})
 
 
 class JSONAttributeContainerSerializer(

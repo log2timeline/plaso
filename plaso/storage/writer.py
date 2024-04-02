@@ -74,10 +74,9 @@ class StorageWriter(reader.StorageReader):
 
     event_tag = self._event_tag_per_event_identifier.get(lookup_key, None)
     if not event_tag:
-      filter_expression = '_event_identifier == "{0:s}"'.format(lookup_key)
-
       generator = self._store.GetAttributeContainers(
-          self._CONTAINER_TYPE_EVENT_TAG, filter_expression=filter_expression)
+          self._CONTAINER_TYPE_EVENT_TAG,
+          filter_expression=f'_event_identifier == "{lookup_key:s}"')
 
       existing_event_tags = list(generator)
       if len(existing_event_tags) == 1:

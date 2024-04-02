@@ -26,7 +26,7 @@ class TestOpenSearchOutputModule(
 
   # pylint: disable=unused-argument
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -43,8 +43,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
   # pylint: disable=protected-access
 
   _TEST_EVENTS = [
-      {'a_binary_field': b'binary',
-       'data_type': 'syslog:line',
+      {'data_type': 'syslog:line',
        'filename': 'log/syslog.1',
        'hostname': 'ubuntu',
        'my_number': 123,
@@ -108,7 +107,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertIsNone(output_module._client)
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetDataFilePath(['formatters'])
@@ -124,7 +123,6 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabel('Test')
 
     expected_field_values = {
-        'a_binary_field': 'binary',
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01.000000+00:00',
         'display_name': 'FAKE:log/syslog.1',
@@ -144,7 +142,7 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'timestamp': 1340821021000000,
         'timestamp_desc': 'Content Modification Time'}
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)

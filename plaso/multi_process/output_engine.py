@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The output and formatting multi-processing engine."""
 
-import collections
 import heapq
 import os
 
@@ -19,12 +18,9 @@ from plaso.storage import time_range as storage_time_range
 class PsortEventHeap(object):
   """Psort event heap."""
 
-  _MAXIMUM_CACHED_HASHES = 500000
-
   def __init__(self):
     """Initializes a psort events heap."""
     super(PsortEventHeap, self).__init__()
-    self._event_values_hash_cache = collections.OrderedDict()
     self._heap = []
 
   @property
@@ -80,23 +76,9 @@ class PsortEventHeap(object):
       event_data_stream (EventDataStream): event data stream.
     """
     event_values_hash = getattr(event_data, '_event_values_hash', None)
-
-    if not event_values_hash:
-      # Note that this is kept for backwards compatibility for event_data
-      # containers that do not have a _event_values_hash attribute value.
-      event_data_identifier = event_data.GetIdentifier()
-      lookup_key = event_data_identifier.CopyToString()
-
-      event_values_hash = self._event_values_hash_cache.get(lookup_key, None)
-      if not event_values_hash:
-        event_values_hash = events.CalculateEventValuesHash(
-            event_data, event_data_stream)
-        if len(self._event_values_hash_cache) >= self._MAXIMUM_CACHED_HASHES:
-          self._event_values_hash_cache.popitem(last=True)
-
-        self._event_values_hash_cache[lookup_key] = event_values_hash
-
-      self._event_values_hash_cache.move_to_end(lookup_key, last=False)
+    if event_values_hash is None:
+      logger.warning('Missing _event_values_hash attribute')
+      event_values_hash = 'UNKNOWN'
 
     timestamp_desc = event.timestamp_desc
     if timestamp_desc is None:
@@ -349,9 +331,10 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               self._output_mediator, macb_group)
           macb_group = []
 
-        output_module.WriteFieldValues(
+        field_values = output_module.GetFieldValues(
             self._output_mediator, event, event_data, event_data_stream,
             event_tag)
+        output_module.WriteFieldValues(self._output_mediator, field_values)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
