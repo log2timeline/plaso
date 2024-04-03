@@ -33,9 +33,13 @@ docker run log2timeline/plaso ./utils/check_dependencies.py;
 
 COMMAND="./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts";
 
-if test ${CONFIGURATION_NAME} = "output_opensearch" || test ${CONFIGURATION_NAME} = "studentpc1-redis";
+if test ${CONFIGURATION_NAME} = "output_opensearch";
 then
-	DOCKER_OPTIONS="--network=dockernetwork"
+	DOCKER_NETWORK="--network container:opensearch"
+
+elif test ${CONFIGURATION_NAME} = "studentpc1-redis";
+then
+	DOCKER_NETWORK="--network container:redis"
 fi
 
-docker run --name=plaso ${DOCKER_OPTIONS} -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}"
+docker run --name=plaso ${DOCKER_NETWORK} -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}"
