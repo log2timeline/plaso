@@ -35,11 +35,11 @@ COMMAND="./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --refe
 
 if test ${CONFIGURATION_NAME} = "output_opensearch";
 then
-	DOCKER_NETWORK="--network container:opensearch"
+	DOCKER_NETWORK="--network container:opensearch";
 
 elif test ${CONFIGURATION_NAME} = "studentpc1-redis";
 then
-	DOCKER_NETWORK="--network container:redis"
+	DOCKER_NETWORK="--network container:redis";
 fi
 
 docker run --name=plaso ${DOCKER_NETWORK} -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}"
