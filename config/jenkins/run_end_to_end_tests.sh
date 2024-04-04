@@ -26,9 +26,20 @@ RESULTS_DIRECTORY="${PWD}/plaso-out";
 
 mkdir -p "${RESULTS_DIRECTORY}/profiling";
 
-# Build the extract_and_output end-to-end test Docker image.
+# Build the end-to-end test Docker image.
 docker build -f extract_and_output.Dockerfile --force-rm --no-cache -t log2timeline/plaso . ;
 
 docker run log2timeline/plaso ./utils/check_dependencies.py;
 
-docker run -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts"
+COMMAND="./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts";
+
+if test ${CONFIGURATION_NAME} = "output_opensearch";
+then
+	DOCKER_NETWORK="--network=opensearch-network";
+
+elif test ${CONFIGURATION_NAME} = "studentpc1-redis";
+then
+	DOCKER_NETWORK="--network=redis-network";
+fi
+
+docker run --name=plaso ${DOCKER_NETWORK} -v "${CONFIGURATION_DIRECTORY}:/config:z" -v "${RESULTS_DIRECTORY}:/home/test/plaso/plaso-out:z" -v "${SOURCES_DIRECTORY}:/sources:z" log2timeline/plaso /bin/bash -c "${COMMAND}"
