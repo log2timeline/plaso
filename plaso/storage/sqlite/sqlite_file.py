@@ -245,65 +245,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     return serialized_string
 
-  def _WriteExistingAttributeContainer(self, container):
-    """Writes an existing attribute container to the store.
-
-    The table for the container type is created if needed.
-
-    Args:
-      container (AttributeContainer): attribute container.
-
-    Raises:
-      IOError: when there is an error querying the storage file or if
-          an unsupported identifier is provided.
-      OSError: when there is an error querying the storage file or if
-          an unsupported identifier is provided.
-    """
-    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-    if not schema:
-      raise IOError(
-          f'Unsupported attribute container type: {container.CONTAINER_TYPE:s}')
-
-    identifier = container.GetIdentifier()
-
-    self._CommitWriteCache(container.CONTAINER_TYPE)
-
-    column_names = []
-    values = []
-    for name, data_type in sorted(schema.items()):
-      attribute_value = getattr(container, name, None)
-      if attribute_value is not None:
-        if data_type == 'AttributeContainerIdentifier' and isinstance(
-            attribute_value, containers_interface.AttributeContainerIdentifier):
-          attribute_value = attribute_value.CopyToString()
-
-        elif data_type == 'bool':
-          attribute_value = int(attribute_value)
-
-        elif data_type not in self._CONTAINER_SCHEMA_TO_SQLITE_TYPE_MAPPINGS:
-          # TODO: add compression support
-          attribute_value = self._serializer.WriteSerialized(attribute_value)
-
-      column_names.append(f'{name:s} = ?')
-      values.append(attribute_value)
-
-    column_names = ', '.join(column_names)
-    query = (f'UPDATE {container.CONTAINER_TYPE:s} SET {column_names:s} '
-             f'WHERE _identifier = {identifier.sequence_number:d}')
-
-    if self._storage_profiler:
-      self._storage_profiler.StartTiming('write_existing')
-
-    try:
-      self._cursor.execute(query, values)
-
-    except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError(f'Unable to query storage file with error: {exception!s}')
-
-    finally:
-      if self._storage_profiler:
-        self._storage_profiler.StopTiming('write_existing')
-
   def _WriteMetadata(self):
     """Writes metadata.
 
