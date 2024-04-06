@@ -519,16 +519,12 @@ class JSONAttributeContainerSerializer(
 
     json_object = cls._ConvertJSONToValue(json_dict)
 
-    if isinstance(json_object, dfdatetime_interface.DateTimeValues):
-      return json_object
-
-    if isinstance(json_object, dfvfs_path_spec.PathSpec):
-      return json_object
-
-    if not isinstance(json_object, containers_interface.AttributeContainer):
+    if not isinstance(json_object, (
+        containers_interface.AttributeContainer,
+        dfdatetime_interface.DateTimeValues,
+        dfvfs_path_spec.PathSpec)):
       json_object_type = type(json_object)
-      raise TypeError(
-          f'{json_object_type!s} is not an attribute container type.')
+      raise TypeError(f'{json_object_type!s} is not a supported type.')
 
     return json_object
 
