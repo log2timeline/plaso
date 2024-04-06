@@ -159,13 +159,13 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
+    test_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
 
     expected_event_data_stream = events.EventDataStream()
     expected_event_data_stream.md5_hash = 'e3df0d2abd2c27fbdadfb41a47442520'
-    expected_event_data_stream.path_spec = path_spec
+    expected_event_data_stream.path_spec = test_path_spec
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -182,14 +182,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_data_stream_dict = {
         'md5_hash': 'e3df0d2abd2c27fbdadfb41a47442520',
-        'path_spec': {
-            '__type__': 'PathSpec',
-            'location': '/',
-            'parent': {
-                '__type__': 'PathSpec',
-                'location': test_file_path,
-                'type_indicator': 'OS'},
-            'type_indicator': 'TSK'}}
+        'path_spec': test_path_spec}
 
     event_data_stream_dict = event_data_stream.CopyToDict()
 
@@ -197,10 +190,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
+    test_date_time = dfdatetime_posix_time.PosixTime(timestamp=1621839644)
+
     expected_event = events.EventObject()
     expected_event._event_data_identifier = 'event_data.1'
-    expected_event.date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=1621839644)
+    expected_event.date_time = test_date_time
     expected_event.timestamp = 1621839644
     expected_event.timestamp_desc = definitions.TIME_DESCRIPTION_MODIFICATION
 
@@ -218,10 +212,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_dict = {
         '_event_data_identifier': 'event_data.1',
-        'date_time': {
-            '__class_name__': 'PosixTime',
-            '__type__': 'DateTimeValues',
-            'timestamp': 1621839644},
+        'date_time': test_date_time,
         'timestamp': 1621839644,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
@@ -249,10 +240,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(event_source, event_sources.EventSource)
 
     expected_event_source_dict = {
-        'path_spec': {
-            '__type__': 'PathSpec',
-            'location': '/opt/plaso.txt',
-            'type_indicator': 'FAKE'}}
+        'path_spec': test_path_spec}
 
     event_source_dict = event_source.CopyToDict()
 

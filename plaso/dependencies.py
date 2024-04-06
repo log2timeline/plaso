@@ -16,7 +16,7 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    'acstore': ('__version__', '20240121', None, True),
+    'acstore': ('__version__', '20240406', None, True),
     'artifacts': ('__version__', '20220219', None, True),
     'bencode': ('', '', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
