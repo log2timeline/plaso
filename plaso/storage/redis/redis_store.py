@@ -429,9 +429,9 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       serialized_data = self._SerializeAttributeContainer(container)
       self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
 
-      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-        index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-        self._redis_client.zincrby(index_name, container.timestamp, redis_key)
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+      index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+      self._redis_client.zincrby(index_name, container.timestamp, redis_key)
 
   def GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
