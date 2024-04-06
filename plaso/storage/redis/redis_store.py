@@ -112,7 +112,18 @@ class BaseRedisAttributeContainerStore(
     redis_key = identifier.CopyToString()
 
     json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
-    json_string = json.dumps(json_dict)
+
+    try:
+      json_string = json.dumps(json_dict)
+    except TypeError as exception:
+      raise IOError((
+          f'Unable to serialize attribute container: '
+          f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
+
+    if not json_string:
+      raise IOError((
+          f'Unable to serialize attribute container: '
+          f'{container.CONTAINER_TYPE:s}'))
 
     self._redis_client.hset(redis_hash_name, key=redis_key, value=json_string)
 
@@ -133,7 +144,18 @@ class BaseRedisAttributeContainerStore(
     redis_key = identifier.CopyToString()
 
     json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
-    json_string = json.dumps(json_dict)
+
+    try:
+      json_string = json.dumps(json_dict)
+    except TypeError as exception:
+      raise IOError((
+          f'Unable to serialize attribute container: '
+          f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
+
+    if not json_string:
+      raise IOError((
+          f'Unable to serialize attribute container: '
+          f'{container.CONTAINER_TYPE:s}'))
 
     self._redis_client.hsetnx(redis_hash_name, redis_key, json_string)
 
@@ -449,19 +471,18 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
           RedisAttributeContainerStore, self).GetAttributeContainerByIndex(
               container_type, index)
 
-    sequence_number = index + 1
-    redis_hash_name = self._GetRedisHashName(container_type)
+    identifier = containers_interface.AttributeContainerIdentifier(
+        name=container_type, sequence_number=index + 1)
 
-    serialized_data = self._redis_client.hget(
-        redis_hash_name, f'{container_type:s}.{sequence_number:d}')
+    redis_hash_name = self._GetRedisHashName(container_type)
+    redis_key = identifier.CopyToString()
+
+    serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
     if not serialized_data:
       return None
 
     container = self._DeserializeAttributeContainer(
         container_type, serialized_data)
-
-    identifier = containers_interface.AttributeContainerIdentifier(
-        name=container_type, sequence_number=sequence_number)
     container.SetIdentifier(identifier)
 
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
@@ -495,16 +516,12 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       redis_hash_name = self._GetRedisHashName(container_type)
       for redis_key, serialized_data in self._redis_client.hscan_iter(
           redis_hash_name):
-        redis_key = redis_key.decode('utf-8')
-
         container = self._DeserializeAttributeContainer(
             container_type, serialized_data)
 
-        _, sequence_number = redis_key.split('.')
-        sequence_number = int(sequence_number, 10)
-        identifier = containers_interface.AttributeContainerIdentifier(
-            name=container_type, sequence_number=sequence_number)
-        container.SetIdentifier(identifier)
+        redis_key = redis_key.decode('utf-8')
+        identifier = containers_interface.AttributeContainerIdentifier()
+        identifier.CopyFromString(redis_key)
 
         if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
           identifier = getattr(container, '_event_data_stream_identifier', None)
@@ -538,11 +555,9 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
 
     for redis_key, _ in self._redis_client.zscan_iter(event_index_name):
       redis_key = redis_key.decode('utf-8')
+      identifier = containers_interface.AttributeContainerIdentifier()
+      identifier.CopyFromString(redis_key)
 
-      container_type, sequence_number = redis_key.split('.')
-      sequence_number = int(sequence_number, 10)
-      identifier = containers_interface.AttributeContainerIdentifier(
-          name=container_type, sequence_number=sequence_number)
       yield self.GetAttributeContainerByIdentifier(
           self._CONTAINER_TYPE_EVENT, identifier)
 
