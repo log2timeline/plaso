@@ -6,6 +6,8 @@ import json
 import unittest
 import uuid
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import fake_path_spec
@@ -212,11 +214,22 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_dict = {
         '_event_data_identifier': 'event_data.1',
-        'date_time': test_date_time,
+        'date_time': test_date_time.CopyToDateTimeStringISO8601(),
         'timestamp': 1621839644,
         'timestamp_desc': definitions.TIME_DESCRIPTION_MODIFICATION}
 
     event_dict = event.CopyToDict()
+
+    self.assertIsInstance(
+        event_dict['_event_data_identifier'],
+        containers_interface.AttributeContainerIdentifier)
+    event_dict['_event_data_identifier'] = (
+        event_dict['_event_data_identifier'].CopyToString())
+
+    self.assertIsInstance(
+        event_dict['date_time'], dfdatetime_posix_time.PosixTime)
+    event_dict['date_time'] = (
+        event_dict['date_time'].CopyToDateTimeStringISO8601())
 
     self.assertEqual(event_dict, expected_event_dict)
 
@@ -272,6 +285,13 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'labels': ['Malware', 'Common']}
 
     event_tag_dict = event_tag.CopyToDict()
+
+    self.assertIsInstance(
+        event_tag_dict['_event_identifier'],
+        containers_interface.AttributeContainerIdentifier)
+    event_tag_dict['_event_identifier'] = (
+        event_tag_dict['_event_identifier'].CopyToString())
+
     self.assertEqual(
         sorted(event_tag_dict.items()),
         sorted(expected_event_tag_dict.items()))
