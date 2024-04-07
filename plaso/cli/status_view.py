@@ -237,7 +237,7 @@ class StatusView(object):
         f'Storage file\t\t: {self._storage_file_path:s}\n')
 
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(f'Processing time\t: {processing_time:s}\n')
+    self._output_writer.Write(f'Processing time\t\t: {processing_time:s}\n')
 
     if processing_status and processing_status.events_status:
       self._PrintEventsStatus(processing_status.events_status)
@@ -525,7 +525,7 @@ class StatusView(object):
       self._output_writer.Write(f'Filter file\t\t: {self._filter_file:s}\n')
 
     processing_time = self._FormatProcessingTime(processing_status)
-    self._output_writer.Write(f'Processing time\t: {processing_time:s}\n')
+    self._output_writer.Write(f'Processing time\t\t: {processing_time:s}\n')
 
     self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
