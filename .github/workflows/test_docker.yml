@@ -1,6 +1,12 @@
 # Run tests on Fedora and Ubuntu Docker images using GIFT CORP and GIFT PPA on commit
 name: test_docker
-on: [push]
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
 permissions: read-all
 jobs:
   test_fedora:
