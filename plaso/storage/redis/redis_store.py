@@ -453,6 +453,10 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
 
     if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+
+      identifier = container.GetIdentifier()
+      redis_key = identifier.CopyToString()
+
       self._redis_client.zincrby(index_name, container.timestamp, redis_key)
 
   def GetAttributeContainerByIndex(self, container_type, index):
