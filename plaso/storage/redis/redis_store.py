@@ -515,7 +515,7 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
     if schema:
       yield from super(
           RedisAttributeContainerStore, self).GetAttributeContainers(
-              container_type)
+              container_type, filter_expression=filter_expression)
     else:
       redis_hash_name = self._GetRedisHashName(container_type)
       for redis_key, serialized_data in self._redis_client.hscan_iter(

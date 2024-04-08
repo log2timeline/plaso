@@ -290,7 +290,7 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
 
       filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
       containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE,
+         event_data_stream.CONTAINER_TYPE,
          filter_expression=filter_expression))
       self.assertEqual(len(containers), 0)
 
