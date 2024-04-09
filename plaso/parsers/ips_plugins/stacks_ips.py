@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""IPS file parser plugin for Apple stacks report."""
+"""IPS log file parser plugin for Apple stacks report."""
 
 from plaso.containers import events
 from plaso.parsers import ips_parser
@@ -14,10 +14,10 @@ class AppleStacksIPSEvent(events.EventData):
     crash_reporter_key (str): Key of the crash reporter.
     device_model (str): model of the device.
     event_time (dfdatetime.DateTimeValues): date and time of the crash report.
-    kernel_version (str): kernel version.
     incident_identifier (str): uuid for crash.
+    kernel_version (str): kernel version.
+    operating_system_version (str): version of the operating system.
     process_list (str): list of process names running at the time of the crash.
-    os_version (str): version of the operating system.
     reason (str): reason for the crash.
   """
 
@@ -30,10 +30,10 @@ class AppleStacksIPSEvent(events.EventData):
     self.crash_reporter_key = None
     self.device_model = None
     self.event_time = None
-    self.kernel_version = None
     self.incident_identifier = None
+    self.kernel_version = None
+    self.operating_system_version = None
     self.process_list = None
-    self.os_version = None
     self.reason = None
 
 
@@ -43,18 +43,19 @@ class AppleStacksIPSPlugin(interface.IPSPlugin):
   NAME = 'apple_stacks_ips'
   DATA_FORMAT = 'IPS stacks crash log'
 
-  REQUIRED_HEADER_KEYS = ['bug_type', 'incident_id', 'os_version', 'timestamp']
-  REQUIRED_CONTENT_KEYS = [
-      'build', 'crashReporterKey', 'kernel', 'product', 'reason']
+  REQUIRED_HEADER_KEYS = frozenset([
+      'bug_type', 'incident_id', 'os_version', 'timestamp'])
+  REQUIRED_CONTENT_KEYS = frozenset([
+      'build', 'crashReporterKey', 'kernel', 'product', 'reason'])
 
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an IPS log file. This is the main method that
-    an IPS plugin needs to implement.
+    """Extracts information from an Apple stacks crash IPS log file.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       ips_file (Optional[IpsFile]): database.
+
     Raises:
       ValueError: If the file value is missing.
     """
@@ -67,7 +68,7 @@ class AppleStacksIPSPlugin(interface.IPSPlugin):
     event_data.device_model = ips_file.content.get('product')
     event_data.kernel_version = ips_file.content.get('kernel')
     event_data.incident_identifier = ips_file.header.get('incident_id')
-    event_data.os_version = ips_file.header.get('os_version')
+    event_data.operating_system_version = ips_file.header.get('os_version')
     event_data.reason = ips_file.content.get('reason')
 
     process_list = [
