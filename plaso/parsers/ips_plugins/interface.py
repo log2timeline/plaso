@@ -17,8 +17,8 @@ class IPSPlugin(plugins.BasePlugin):
 
   ENCODING = 'utf-8'
 
-  REQUIRED_HEADER_KEYS = []
-  REQUIRED_CONTENT_KEYS = []
+  REQUIRED_HEADER_KEYS = frozenset()
+  REQUIRED_CONTENT_KEYS = frozenset()
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
@@ -37,7 +37,7 @@ class IPSPlugin(plugins.BasePlugin):
       _TWO_DIGITS.set_results_name('seconds') + pyparsing.Suppress('.') +
       _VARYING_DIGITS.set_results_name('fraction') +
       pyparsing.Word(
-          pyparsing.nums + '+' + '-').set_results_name('timezone_delta'))
+          pyparsing.nums + '+' + '-').set_results_name('time_zone_delta'))
 
   def _ParseTimestampValue(self, parser_mediator, timestamp_text):
     """Parses a timestamp string.
@@ -47,8 +47,7 @@ class IPSPlugin(plugins.BasePlugin):
       timestamp_text (str): the timestamp to parse.
 
     Returns:
-       dfdatetime.TimeElements: date and time
-          or None if not available.
+       dfdatetime.TimeElements: date and time or None if not available.
     """
     # dfDateTime takes the time zone offset as number of minutes relative from
     # UTC. So for Easter Standard Time (EST), which is UTC-5:00 the sign needs
@@ -57,25 +56,28 @@ class IPSPlugin(plugins.BasePlugin):
     parsed_timestamp = self.TIMESTAMP_GRAMMAR.parseString(timestamp_text)
 
     try:
-      time_delta_hours = int(parsed_timestamp['timezone_delta'][:3], 10)
-      time_delta_minutes = int(parsed_timestamp['timezone_delta'][3:], 10)
+      time_delta_hours = int(parsed_timestamp['time_zone_delta'][:3], 10)
+      time_delta_minutes = int(parsed_timestamp['time_zone_delta'][3:], 10)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported timezone offset value')
+          'unsupported time zone offset value')
       return None
 
     time_zone_offset = (time_delta_hours * 60) + time_delta_minutes
 
     try:
-      fraction_float = float(f"0.{parsed_timestamp['fraction']}")
+      fraction = parsed_timestamp['fraction']
+      fraction_float = float(f'0.{fraction:s}')
       milliseconds = round(fraction_float * 1000)
 
+      time_elements_tuple = (
+          parsed_timestamp['year'], parsed_timestamp['month'],
+          parsed_timestamp['day'], parsed_timestamp['hours'],
+          parsed_timestamp['minutes'], parsed_timestamp['seconds'],
+          milliseconds)
+
       time_element_object = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=(
-              parsed_timestamp['year'], parsed_timestamp['month'],
-              parsed_timestamp['day'], parsed_timestamp['hours'],
-              parsed_timestamp['minutes'], parsed_timestamp['seconds'],
-              milliseconds),
+          time_elements_tuple=time_elements_tuple,
           time_zone_offset=time_zone_offset)
 
     except (TypeError, ValueError):
@@ -85,11 +87,11 @@ class IPSPlugin(plugins.BasePlugin):
     return time_element_object
 
   def CheckRequiredKeys(self, ips_file):
-    """Checks if the ips file's header and content have the keys required by the
-    plugin.
+    """Checks the IPS header and content have the keys required for the plugin.
 
     Args:
       ips_file (IPSFile): the file for which the structure is checked.
+
     Returns:
       bool: True if the file has the required keys defined by the plugin, or
           False if it does not, or if the plugin does not define required
@@ -115,12 +117,12 @@ class IPSPlugin(plugins.BasePlugin):
   # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, ips_file=None, **unused_kwargs):
-    """Extracts information from an ips log file. This is the main method that
-    an ips plugin needs to implement.
+    """Extracts events from an IPS log file.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       ips_file (Optional[IPSFile]): database.
+
     Raises:
       ValueError: If the file value is missing.
     """
