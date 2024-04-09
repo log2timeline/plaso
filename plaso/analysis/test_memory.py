@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin for testing exceeding memory consumption."""
 
-from __future__ import unicode_literals
-
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
