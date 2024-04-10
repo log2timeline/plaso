@@ -1,6 +1,6 @@
 # Fedora Packaged Release
 
-### Fedora 38
+### Fedora 39 and 40
 
 **Note that other versions of Fedora are not supported at this time.**
 
