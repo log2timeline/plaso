@@ -1,6 +1,10 @@
 # MacOS Source release
 
-To install the "Source code" release of Plaso on MacOS you need to download the
+**WARNING: these instructions assume you are comfortable troubleshooting Python
+module installation issues. If not we strongly encourage using the Docker
+installation instead.**
+
+To install the "Source code" release of Plaso on Mac OS you need to download the
 latest version from https://github.com/log2timeline/plaso/releases/latest
 
 For the purposes of this guide it will use 20200430 to represent the latest
@@ -18,7 +22,7 @@ cd /tmp
 tar zxf ~/Downloads/plaso-20200430.tar.gz
 ```
 
-In some cases, MacOS will automatically ungzip the downloaded file. In which
+In some cases, Mac OS will automatically ungzip the downloaded file. In which
 case, untar with:
 
 ```
@@ -111,9 +115,9 @@ Some Python dependencies fail to compile with the error:
   error: command 'clang' failed with exit status 1
 ```
 
-It is likely that the Python interpreter was built using a specific MacOS SDK.
-Make sure that version of the MacOS SDK is installed on your system, in the
-example above this is MacOS SDK 10.14.
+It is likely that the Python interpreter was built using a specific Mac OS SDK.
+Make sure that version of the Mac OS SDK is installed on your system, in the
+example above this is Mac OS SDK 10.14.
 
 Pycrypto fails to build with the error:
 
