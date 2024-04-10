@@ -85,7 +85,7 @@ PYTHON_DEPENDENCIES="libbde-python3
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-distutils
                    python3-fakeredis
-		   python3-lib2to3
+                   python3-lib2to3
                    python3-mock
                    python3-setuptools";
 

@@ -175,6 +175,7 @@ tango_android_tc | Parser for Tango on Android TC SQLite database files.
 twitter_android | Parser for Twitter on Android SQLite database files.
 twitter_ios | Parser for Twitter on iOS 8 and later SQLite database (twitter.db) files.
 windows_eventtranscript | Parser for Windows diagnosis EventTranscript SQLite database (EventTranscript.db) files.
+windows_push_notification | Parser for Windows 10 push notification SQLite database (wpndatabase.db) files.
 windows_timeline | Parser for Windows 10 timeline SQLite database (ActivitiesCache.db) files.
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
@@ -211,7 +212,9 @@ snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 syslog | Parser for System log (syslog) files.
 syslog_traditional | Parser for Traditional system log (syslog) files.
-teamviewer | Parser for TeamViewer log files.
+teamviewer_application_log | Parser for TeamViewer application log file parser..
+teamviewer_connections_incoming | Parser for TeamViewer connections_incoming.txt log files.
+teamviewer_connections_outgoing | Parser for TeamViewer connections.txt log files.
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
@@ -273,7 +276,7 @@ mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_2_cookies, sqlite/firefox_10_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, text/powershell_transcript, winevtx, win_gen, winpca_db0, winpca_dic
 win7_slow | esedb, mft, win7
-win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/winfirewall, usnjrnl, webhist, winjob, winreg
+win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/teamviewer_application_log, text/teamviewer_connections_incoming, text/teamviewer_connections_outgoing, text/winfirewall, usnjrnl, webhist, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | esedb, mft, winxp
 
