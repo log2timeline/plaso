@@ -1,6 +1,6 @@
 # Script to set up tests on AppVeyor Windows.
 
-$Dependencies = "PyYAML XlsxWriter acstore artifacts bencode certifi cffi chardet dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric fakeredis flor idna libbde libcaes libcreg libesedb libevt libevtx libewf libfcrypto libfsapfs libfsext libfsfat libfshfs libfsntfs libfsxfs libfvde libfwnt libfwsi liblnk libluksde libmodi libmsiecf libolecf libphdi libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvsapm libvsgpt libvshadow libvslvm lz4 mock opensearch-py pefile psutil pyparsing pytsk3 pytz pyzmq redis requests six urllib3 xattr yara-python zstd"
+$Dependencies = "PyYAML XlsxWriter acstore artifacts bencode certifi cffi chardet dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric fakeredis flor libbde libcaes libcreg libesedb libevt libevtx libewf libfcrypto libfsapfs libfsext libfsfat libfshfs libfsntfs libfsxfs libfvde libfwnt libfwsi liblnk libluksde libmodi libmsiecf libolecf libphdi libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvsapm libvsgpt libvshadow libvslvm lz4 mock opensearch-py pefile psutil pyparsing pytsk3 pytz pyzmq redis requests six urllib3 xattr yara-python zstd"
 
 If ($Dependencies.Length -gt 0)
 {
