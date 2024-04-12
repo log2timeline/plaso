@@ -15,8 +15,9 @@ class ApplePSTextPluginTest(test_lib.TextPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = apple_pstxt.ApplePSTextPlugin()
-    storage_writer = self._ParseTextFileWithPlugin(
-        ['text_parser', 'ps.txt'], plugin)
+
+    storage_writer = self._ParseCompressedTextFileWithPlugin(
+        'test_data/text_parser/ps.txt.gz', plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
