@@ -75,8 +75,8 @@ class ApplePSTextPluginTest(test_lib.TextPluginTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'command': '/System/Library/PrivateFrameworks/'
-                   'MediaAnalysis.framework/mediaanalysisd',
+        'command': ('/System/Library/PrivateFrameworks/'
+                    'MediaAnalysis.framework/mediaanalysisd'),
         'control_terminal_name': '??',
         'cpu': '0.0',
         'flags': '4004004',

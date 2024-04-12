@@ -95,8 +95,8 @@ class ApplePSTextPlugin(
                         '      TIME COMMAND') + pyparsing.LineEnd())
 
   _COMMAND = pyparsing.OneOrMore(
-    pyparsing.Word(pyparsing.printables),
-    stop_on=pyparsing.LineEnd()).set_parse_action(' '.join)
+      pyparsing.Word(pyparsing.printables),
+      stop_on=pyparsing.LineEnd()).set_parse_action(' '.join)
 
   _LOG_LINE = (
       pyparsing.Word(pyparsing.alphanums + '_').set_results_name('user') +
@@ -138,9 +138,6 @@ class ApplePSTextPlugin(
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    # Retrieve the data from the file's metadata
-    self._SetEstimatedDate(parser_mediator)
-
     if key == 'log_line':
       event_data = ApplePSTxtEventData()
       event_data.user = self._GetValueFromStructure(structure, 'user')
@@ -257,7 +254,7 @@ class ApplePSTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-        f'Unable to parse time elements with error: {exception}')
+        f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
@@ -282,6 +279,9 @@ class ApplePSTextPlugin(
       self._ParseStartTime(start_time_string)
     except errors.ParseError:
       return False
+
+    # Retrieve the data from the file's metadata
+    self._SetEstimatedDate(parser_mediator)
 
     return True
 
