@@ -259,14 +259,14 @@ class ApplePSTextPlugin(
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
 
-     Args:
-       parser_mediator (ParserMediator): mediates interactions between parsers
-           and other components, such as storage and dfVFS.
-       text_reader (EncodedTextReader): text reader.
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
 
-     Returns:
-       bool: True if this is the correct parser, False otherwise.
-     """
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
     try:
       structure = self._VerifyString(text_reader.lines)
     except errors.ParseError:
