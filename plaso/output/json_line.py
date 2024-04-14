@@ -17,7 +17,7 @@ class JSONLineOutputModule(shared_json.SharedJSONOutputModule):
   NAME = 'json_line'
   DESCRIPTION = 'Saves the events into a JSON line format.'
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:

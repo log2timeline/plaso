@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Storage writer for Redis."""
+"""Redis-based storage writer."""
 
 from plaso.storage import writer
 from plaso.storage.redis import redis_store
@@ -98,7 +98,7 @@ class RedisStorageWriter(writer.StorageWriter):
     if self._store:
       raise IOError('Storage writer already opened.')
 
-    self._store = redis_store.RedisStore()
+    self._store = redis_store.RedisAttributeContainerStore()
 
     if self._serializers_profiler:
       self._store.SetSerializersProfiler(self._serializers_profiler)

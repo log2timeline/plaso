@@ -20,7 +20,8 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     parser = sqlite.SQLiteParser()
     plugin = browser_search.BrowserSearchPlugin()
 
-    storage_writer = self._ParseAndAnalyzeFile(['History'], parser, plugin)
+    storage_writer = self._ParseAndAnalyzeFile(
+        ['chrome_history', 'History'], parser, plugin)
 
     analysis_results = list(storage_writer.GetAttributeContainers(
         'browser_search_analysis_result'))

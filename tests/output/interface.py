@@ -30,7 +30,7 @@ class TestXMLOutputModule(interface.OutputModule):
     self._field_formatting_helper = formatting_helper.FieldFormattingHelper()
     self.file_object = io.StringIO()
 
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -53,7 +53,7 @@ class TestXMLOutputModule(interface.OutputModule):
         'datetime': date_time_string,
         'entry': event_data.entry}
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:
@@ -119,10 +119,10 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
           containers_test_lib.CreateEventFromValues(event_values))
 
       # TODO: add test for event_tag.
-      field_values = output_module._GetFieldValues(
+      field_values = output_module.GetFieldValues(
           output_mediator, event, event_data, event_data_stream, None)
 
-      output_module._WriteFieldValues(output_mediator, field_values)
+      output_module.WriteFieldValues(output_mediator, field_values)
 
     output_module.WriteFooter()
 

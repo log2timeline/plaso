@@ -56,12 +56,25 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
   # /Library/LaunchAgents/*.plist
   # ~/Library/LaunchAgents
 
-  PLIST_KEYS = frozenset([
-      'GroupName',
-      'Label',
-      'Program',
-      'ProgramArguments',
-      'UserName'])
+  # The Mac OS documentation indicates that Label and # ProgramArguments are
+  # required keys, lauchd plists have been observed  that contain Label and
+  # Program keys.
+
+  PLIST_KEYS = frozenset(['Label'])
+
+  def CheckRequiredFormat(self, top_level):
+    """Check if the plist has the minimal structure required by the plugin.
+
+    Args:
+      top_level (dict[str, object]): plist top-level item.
+
+    Returns:
+      bool: True if this is the correct plugin, False otherwise.
+    """
+    if not super(MacOSLaunchdPlistPlugin, self).CheckRequiredFormat(top_level):
+      return False
+
+    return 'Program' in top_level or 'ProgramArguments' in top_level
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
@@ -74,8 +87,12 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
     """
     program = top_level.get('Program', None)
     program_arguments = top_level.get('ProgramArguments', None)
+    if not (program or program_arguments):
+      return
     if program and program_arguments:
       program = ' '.join([program, ' '.join(program_arguments)])
+    elif program_arguments:
+      program = ' '.join(program_arguments)
 
     event_data = MacOSLaunchdEventData()
     event_data.group_name = top_level.get('GroupName')

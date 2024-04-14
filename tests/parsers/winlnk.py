@@ -29,7 +29,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 3)
+    self.assertEqual(number_of_event_data, 2)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -73,7 +73,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 8)
+    self.assertEqual(number_of_event_data, 7)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -137,7 +137,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 5)
+    self.assertEqual(number_of_event_data, 4)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

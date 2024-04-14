@@ -12,8 +12,8 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 import pyparsing
 
 from plaso.containers import events
+from plaso.lib import dateless_helper
 from plaso.lib import errors
-from plaso.lib import yearless_helper
 from plaso.parsers import logger
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
@@ -536,7 +536,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
     try:
       structure = self._VerifyString(text_reader.lines)
@@ -555,7 +555,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
 
 class TraditionalSyslogTextPlugin(
-    BaseSyslogTextPlugin, yearless_helper.YearLessLogFormatHelper):
+    BaseSyslogTextPlugin, dateless_helper.DateLessLogFormatHelper):
   """Text parser plugin for traditional syslog log files."""
 
   NAME = 'syslog_traditional'
@@ -611,7 +611,7 @@ class TraditionalSyslogTextPlugin(
   # consists of:
   # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
   #
-  # Where %TIMESTAMP% is in yearless ctime date time format e.g.
+  # Where %TIMESTAMP% is in year-less ctime date time format e.g.
   # Jan 22 07:54:32
 
   _RSYSLOG_BODY = (
@@ -743,7 +743,7 @@ class TraditionalSyslogTextPlugin(
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
     try:
       structure = self._VerifyString(text_reader.lines)

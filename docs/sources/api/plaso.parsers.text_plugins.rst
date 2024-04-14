@@ -236,6 +236,14 @@ plaso.parsers.text\_plugins.syslog module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.teamviewer module
+---------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.teamviewer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.viminfo module
 ------------------------------------------
 

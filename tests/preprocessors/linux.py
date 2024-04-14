@@ -203,7 +203,7 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
   def testParseFileEntryWithBogusTZif(self):
     """Tests the _ParseFileEntry function on a bogus TZif file."""
-    test_file_path = self._GetTestFilePath(['syslog'])
+    test_file_path = self._GetTestFilePath(['syslog', 'syslog'])
     self._SkipIfPathNotExists(test_file_path)
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()

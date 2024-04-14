@@ -18,9 +18,10 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = 'native (or "raw") Python output.'
 
+  _GENERATED_FIELD_VALUES = ['display_name', 'filename', 'inode']
+
   # Note that native Python output defines certain fields as part of the format.
   _RESERVED_FIELDS = frozenset([
-      '_event_values_hash',
       'body',
       'data_type',
       'date_time',
@@ -47,84 +48,6 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
     """Initializes an output module."""
     super(NativePythonOutputModule, self).__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
-
-  def _GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
-
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
-
-    Returns:
-      dict[str, str]: output field values per name.
-    """
-    event_identifier = event.GetIdentifier()
-    event_identifier_string = event_identifier.CopyToString()
-
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=event.timestamp)
-    date_time_string = date_time.CopyToDateTimeStringISO8601()
-
-    field_values = {
-        '_event_identifier': event_identifier_string,
-        '_timestamp': date_time_string}
-
-    event_attributes = list(event_data.GetAttributes())
-    if event_data_stream:
-      event_attributes.extend(event_data_stream.GetAttributes())
-
-    for attribute_name, attribute_value in sorted(event_attributes):
-      # Ignore attribute container identifier and date and time values.
-      if isinstance(attribute_value, (
-          containers_interface.AttributeContainerIdentifier,
-          dfdatetime_interface.DateTimeValues)):
-        continue
-
-      if (isinstance(attribute_value, list) and attribute_value and
-          isinstance(attribute_value[0],
-                     dfdatetime_interface.DateTimeValues)):
-        continue
-
-      # Some parsers have written bytes values to storage.
-      if isinstance(attribute_value, bytes):
-        attribute_value = attribute_value.decode('utf-8', 'replace')
-        logger.warning(
-            'Found bytes value for attribute "{0:s}" for data type: '
-            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-                attribute_name, event_data.data_type, attribute_value))
-
-      # Output _parser_chain as parser for backwards compatibility.
-      if attribute_name == '_parser_chain':
-        attribute_name = 'parser'
-
-      field_values[attribute_name] = attribute_value
-
-    if 'display_name' not in field_values:
-      field_values['display_name'] = (
-          self._field_formatting_helper.GetFormattedField(
-              output_mediator, 'display_name', event, event_data,
-              event_data_stream, event_tag))
-
-    if 'filename' not in field_values:
-      field_values['filename'] = (
-          self._field_formatting_helper.GetFormattedField(
-              output_mediator, 'filename', event, event_data, event_data_stream,
-              event_tag))
-
-    if 'inode' not in field_values:
-      field_values['inode'] = self._field_formatting_helper.GetFormattedField(
-          output_mediator, 'inode', event, event_data, event_data_stream,
-          event_tag)
-
-    if event_tag:
-      field_values['_event_tag_labels'] = event_tag.labels
-
-    return field_values
 
   def _GetString(self, field_values):
     """Retrieves an output string.
@@ -190,7 +113,81 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
     return '\n'.join(lines_of_text)
 
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def GetFieldValues(
+      self, output_mediator, event, event_data, event_data_stream, event_tag):
+    """Retrieves the output field values.
+
+    Args:
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfVFS.
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+      event_tag (EventTag): event tag.
+
+    Returns:
+      dict[str, str]: output field values per name.
+    """
+    event_identifier = event.GetIdentifier()
+    event_identifier_string = event_identifier.CopyToString()
+
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+    date_time_string = date_time.CopyToDateTimeStringISO8601()
+
+    field_values = {
+        '_event_identifier': event_identifier_string,
+        '_timestamp': date_time_string}
+
+    event_attributes = list(event_data.GetAttributes())
+    if event_data_stream:
+      event_attributes.extend(event_data_stream.GetAttributes())
+
+    for attribute_name, attribute_value in sorted(event_attributes):
+      # Ignore attribute container identifier and date and time values.
+      if isinstance(attribute_value, (
+          containers_interface.AttributeContainerIdentifier,
+          dfdatetime_interface.DateTimeValues)):
+        continue
+
+      if (isinstance(attribute_value, list) and attribute_value and
+          isinstance(attribute_value[0],
+                     dfdatetime_interface.DateTimeValues)):
+        continue
+
+      # Ignore protected internal only attributes.
+      if attribute_name[0] == '_' and attribute_name != '_parser_chain':
+        continue
+
+      # Some parsers have written bytes values to storage.
+      if isinstance(attribute_value, bytes):
+        attribute_value = attribute_value.decode('utf-8', 'replace')
+        logger.warning(
+            'Found bytes value for attribute "{0:s}" for data type: '
+            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
+                attribute_name, event_data.data_type, attribute_value))
+
+      # Output _parser_chain as parser for backwards compatibility.
+      if attribute_name == '_parser_chain':
+        attribute_name = 'parser'
+
+      field_values[attribute_name] = attribute_value
+
+    for field_name in self._GENERATED_FIELD_VALUES:
+      if field_name not in field_values:
+        field_value = field_values.get(field_name, None)
+        if field_value is None:
+          field_value = self._field_formatting_helper.GetFormattedField(
+              output_mediator, field_name, event, event_data, event_data_stream,
+              event_tag)
+          field_values[field_name] = field_value
+
+    if event_tag:
+      field_values['_event_tag_labels'] = event_tag.labels
+
+    return field_values
+
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:

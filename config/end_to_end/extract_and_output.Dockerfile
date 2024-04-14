@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 ARG GIT_REPOSITORY=https://github.com/log2timeline/plaso.git
@@ -24,6 +24,8 @@ RUN git clone $GIT_REPOSITORY
 
 # Install Plaso dependencies.
 WORKDIR /home/test/plaso
+
+# Install Plaso and dependencies.
 RUN ./config/linux/ubuntu_install_plaso.sh
 
 # Configure container for running Plaso.

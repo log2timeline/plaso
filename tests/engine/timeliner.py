@@ -4,6 +4,7 @@
 
 import unittest
 
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
@@ -54,12 +55,13 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
   # pylint: disable=protected-access
 
   # pylint: disable=arguments-differ
-  def _CreateStorageWriter(self, event_data, base_year=None):
+  def _CreateStorageWriter(self, event_data, base_date=None):
     """Creates a storage writer object.
 
     Args:
       event_data (EventData): event data.
-      base_year (Optional[int]): base year.
+      base_date (Optional[tuple[int, int, int]]): base date, as tuple of year,
+          month and day of month.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -72,51 +74,52 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     event_data_stream_identifier = event_data_stream.GetIdentifier()
 
-    if base_year:
-      year_less_log_helper = events.YearLessLogHelper()
-      year_less_log_helper.earliest_year = base_year
-      year_less_log_helper.last_relative_year = 0
+    if base_date:
+      date_less_log_helper = events.DateLessLogHelper()
+      date_less_log_helper.earliest_date = base_date
+      date_less_log_helper.last_relative_date = (0, 0, 0)
 
-      year_less_log_helper.SetEventDataStreamIdentifier(
+      date_less_log_helper.SetEventDataStreamIdentifier(
           event_data_stream_identifier)
-      storage_writer.AddAttributeContainer(year_less_log_helper)
+      storage_writer.AddAttributeContainer(date_less_log_helper)
 
     event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
     storage_writer.AddAttributeContainer(event_data)
 
     return storage_writer
 
-  def testGetBaseYear(self):
-    """Tests the _GetBaseYear function."""
+  def testGetBaseDate(self):
+    """Tests the _GetBaseDate function."""
     event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=shared_test_lib.TEST_DATA_PATH)
 
-    current_year = event_data_timeliner._GetCurrentYear()
+    current_date = event_data_timeliner._GetCurrentDate()
 
     event_data = TestEventData1()
     event_data.value = 'MyValue'
 
-    # Test with year-less log helper.
-    storage_writer = self._CreateStorageWriter(event_data, base_year=2012)
+    # Test with date-less log helper.
+    storage_writer = self._CreateStorageWriter(
+        event_data, base_date=(2012, 3, 30))
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
-    base_year = event_data_timeliner._GetBaseYear(storage_writer, event_data)
-    self.assertEqual(base_year, 2012)
+    base_date = event_data_timeliner._GetBaseDate(storage_writer, event_data)
+    self.assertEqual(base_date, (2012, 0, 0))
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'timelining_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # Test missing year-less log helper.
+    # Test missing date-less log helper.
     storage_writer = self._CreateStorageWriter(event_data)
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
-    base_year = event_data_timeliner._GetBaseYear(storage_writer, event_data)
-    self.assertEqual(base_year, current_year)
+    base_date = event_data_timeliner._GetBaseDate(storage_writer, event_data)
+    self.assertEqual(base_date, (current_date[0], 0, 0))
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'timelining_warning')
@@ -124,13 +127,13 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
 
     # TODO: improve test coverage.
 
-  def testGetCurrentYear(self):
-    """Tests the _GetCurrentYear function."""
+  def testGetCurrentDate(self):
+    """Tests the _GetCurrentDate function."""
     event_data_timeliner = timeliner.EventDataTimeliner(
         data_location=shared_test_lib.TEST_DATA_PATH)
 
-    current_year = event_data_timeliner._GetCurrentYear()
-    self.assertIsNotNone(current_year)
+    current_date = event_data_timeliner._GetCurrentDate()
+    self.assertIsNotNone(current_date)
 
   def testGetEvent(self):
     """Tests the _GetEvent function."""
@@ -146,8 +149,8 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876))
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
     event = event_data_timeliner._GetEvent(
         storage_writer, event_data, None, date_time, 'Test Time')
@@ -160,13 +163,14 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
         time_elements_tuple=(2010, 8, 12, 20, 6, 31, 429876))
 
     # Test date time delta of February 29 with leap year.
-    storage_writer = self._CreateStorageWriter(event_data, base_year=2012)
+    storage_writer = self._CreateStorageWriter(
+        event_data, base_date=(2012, 1, 1))
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         is_delta=True, time_elements_tuple=(0, 2, 29, 20, 6, 31, 429876))
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
     event = event_data_timeliner._GetEvent(
         storage_writer, event_data, None, date_time, 'Test Time')
@@ -179,26 +183,29 @@ class EventDataTimelinerTest(test_lib.EngineTestCase):
         is_delta=True, time_elements_tuple=(1, 8, 12, 20, 6, 31, 429876))
 
     # Test date time delta of February 29 with non-leap year.
-    storage_writer = self._CreateStorageWriter(event_data, base_year=2013)
+    storage_writer = self._CreateStorageWriter(
+        event_data, base_date=(2013, 1, 1))
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         is_delta=True, time_elements_tuple=(0, 2, 29, 20, 6, 31, 429876))
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
-    with self.assertRaises(ValueError):
-      event_data_timeliner._GetEvent(
-          storage_writer, event_data, None, date_time, 'Test Time')
+    event = event_data_timeliner._GetEvent(
+        storage_writer, event_data, None, date_time, 'Test Time')
+    self.assertIsNotNone(event)
+    self.assertIsNotNone(event.date_time)
+    self.assertIsInstance(event.date_time, dfdatetime_semantic_time.InvalidTime)
 
-    # Test date time delta without a base year.
+    # Test date time delta without a base date.
     storage_writer = self._CreateStorageWriter(event_data)
 
     date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
         time_elements_tuple=(4, 2, 29, 20, 6, 31, 429876))
 
-    # Ensure to reset the timeliner base years cache.
-    event_data_timeliner._base_years = {}
+    # Ensure to reset the timeliner base dates cache.
+    event_data_timeliner._base_dates = {}
 
     event = event_data_timeliner._GetEvent(
         storage_writer, event_data, None, date_time, 'Test Time')

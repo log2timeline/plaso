@@ -196,8 +196,8 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(
         'modification_time': '2012-03-12T20:50:00+00:00',
         'origin': f'{key_path:s}\\*',
         'shell_item_path': (
-            '<Shared Documents Folder (Users Files)> '
-            '<Users property view>\\\\Alloy Research')}
+            '<Shared Documents Folder> <Users property view>\\\\'
+            'Alloy Research')}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -342,7 +342,7 @@ class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
         '<Users property view> <Users property view>',
         'Index: 2 [MRU Value 7]: '
         'Path: {48E1ED6B-CF49-4609-B1C1-C082BFC3D0B4}, '
-        'Shell item path: <Shared Documents Folder (Users Files)> '
+        'Shell item path: <Shared Documents Folder> '
         '<Users property view>\\\\Alloy Research',
         'Index: 3 [MRU Value 6]: '
         'Path: {427865A0-03AF-4F25-82EE-10B6CB1DED3E}, '

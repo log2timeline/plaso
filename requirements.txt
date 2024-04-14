@@ -1,17 +1,16 @@
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-acstore >= 20240121
+acstore >= 20240407
 artifacts >= 20220219
 bencode.py
 certifi >= 2016.9.26
 cffi >= 1.9.1
 defusedxml >= 0.5.0
-dfdatetime >= 20221112
+dfdatetime >= 20240330
 dfvfs >= 20240115
 dfwinreg >= 20240229
 dtfabric >= 20230518
 flor >= 1.1.3
-future >= 0.16.0
 libbde-python >= 20220121
 libcaes-python >= 20240114
 libcreg-python >= 20200725
@@ -49,7 +48,7 @@ libvshadow-python >= 20160109
 libvslvm-python >= 20160109
 lz4 >= 0.10.0
 opensearch-py
-pefile >= 2021.5.24
+pefile >= 2023.2.7
 psutil >= 5.4.3
 pyparsing >= 3.0.0
 python-dateutil >= 1.5

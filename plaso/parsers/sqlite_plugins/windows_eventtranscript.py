@@ -3,8 +3,6 @@
 
 import json
 
-from dfdatetime import filetime as dfdatetime_filetime
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -127,24 +125,6 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
           'FOREIGN KEY(producer_id) '
           'REFERENCES producers(producer_id) ON DELETE CASCADE)')}]
 
-  def _GetDateTimeRowValue(self, query_hash, row, value_name):
-    """Retrieves a date and time value from the row.
-
-    Args:
-      query_hash (int): hash of the query, that uniquely identifies the query
-          that produced the row.
-      row (sqlite3.Row): row.
-      value_name (str): name of the value.
-
-    Returns:
-      dfdatetime.Filetime: date and time value or None if not available.
-    """
-    timestamp = self._GetRowValue(query_hash, row, value_name)
-    if timestamp is None:
-      return None
-
-    return dfdatetime_filetime.Filetime(timestamp=timestamp)
-
   def ParseEventTranscriptRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses EventTranscript row.
@@ -176,7 +156,7 @@ class EventTranscriptPlugin(interface.SQLitePlugin):
         query_hash, row, 'producer_id')
     event_data.provider_group_identifier = self._GetRowValue(
         query_hash, row, 'provider_group_id')
-    event_data.recorded_time = self._GetDateTimeRowValue(
+    event_data.recorded_time = self._GeFiletimeRowValue(
         query_hash, row, 'timestamp')
     # If the user identifier is an empty string set it to None.
     event_data.user_identifier = self._GetRowValue(

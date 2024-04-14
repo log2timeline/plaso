@@ -46,7 +46,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return sqlite_reader.SQLiteStorageFileReader(path)
+      return sqlite_reader.SQLiteStorageReader(path)
 
     return None
 
@@ -62,7 +62,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return sqlite_writer.SQLiteStorageFileWriter()
+      return sqlite_writer.SQLiteStorageWriter()
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_writer:
       return redis_writer.RedisStorageWriter()
@@ -81,7 +81,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return sqlite_writer.SQLiteStorageFileWriter()
+      return sqlite_writer.SQLiteStorageWriter()
 
     return None
 
@@ -99,7 +99,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return sqlite_reader.SQLiteStorageFileReader(path)
+      return sqlite_reader.SQLiteStorageReader(path)
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_reader:
       return redis_reader.RedisStorageReader(
@@ -119,7 +119,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return sqlite_writer.SQLiteStorageFileWriter(
+      return sqlite_writer.SQLiteStorageWriter(
           storage_type=definitions.STORAGE_TYPE_TASK)
 
     if storage_format == definitions.STORAGE_FORMAT_REDIS and redis_writer:

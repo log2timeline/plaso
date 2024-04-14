@@ -9,6 +9,38 @@ from plaso.containers import events
 from tests import test_lib as shared_test_lib
 
 
+class DateLessLogHelperTest(shared_test_lib.BaseTestCase):
+  """Tests for the date-less log helper attribute container."""
+
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = events.DateLessLogHelper()
+
+    expected_attribute_names = [
+        '_event_data_stream_identifier',
+        'earliest_date',
+        'granularity',
+        'last_relative_date',
+        'latest_date']
+
+    attribute_names = sorted(attribute_container.GetAttributeNames())
+
+    self.assertEqual(attribute_names, expected_attribute_names)
+
+  def testGetEventDataStreamIdentifier(self):
+    """Tests the GetEventDataStreamIdentifier function."""
+    attribute_container = events.DateLessLogHelper()
+
+    identifier = attribute_container.GetEventDataStreamIdentifier()
+    self.assertIsNone(identifier)
+
+  def testSetEventDataStreamIdentifier(self):
+    """Tests the SetEventDataStreamIdentifier function."""
+    attribute_container = events.DateLessLogHelper()
+
+    attribute_container.SetEventDataStreamIdentifier(None)
+
+
 class EventValuesHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the event values helper functions."""
 
@@ -153,6 +185,8 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_container.SetEventIdentifier(None)
 
 
+# TODO: the YearLessLogHelper attribute container is kept for backwards
+# compatibility remove once storage format 20230327 is obsolete.
 class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the year-less log helper attribute container."""
 

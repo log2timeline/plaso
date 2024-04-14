@@ -37,5 +37,6 @@ from plaso.parsers.sqlite_plugins import macos_tcc
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import windows_eventtranscript
+from plaso.parsers.sqlite_plugins import windows_push_notification
 from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.sqlite_plugins import zeitgeist

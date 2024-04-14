@@ -49,7 +49,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      storage_writer = sqlite_writer.SQLiteStorageFileWriter()
+      storage_writer = sqlite_writer.SQLiteStorageWriter()
       storage_writer.Open(path=temp_file)
 
       try:

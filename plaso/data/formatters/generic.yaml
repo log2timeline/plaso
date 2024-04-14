@@ -918,7 +918,7 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
-# It would be nice to have the _MACHINE_ID field, which is a unique identifier
+# It would be nice to have the _MACHINE_ID field, which is an unique identifier
 # for the system, and hopefully more unique than the _HOSTNAME field.
 # Unfortunately, journal files that have not been closed cleanly may contain
 # entries that have no _MACHINE_ID field.
@@ -957,6 +957,48 @@ short_message:
 - '] {body}'
 short_source: 'LOG'
 source: 'Systemd journal'
+---
+type: 'conditional'
+data_type: 'teamviewer:application_log:entry'
+message:
+- '[pid: {process_identifier}]'
+- '{body}'
+short_message:
+- '{body}'
+source: 'TeamViewer application log'
+short_source: 'LOG'
+---
+type: 'conditional'
+data_type: 'teamviewer:connections_incoming:entry'
+message:
+- 'Source TeamViewer identifier: {source_identifier}'
+- 'Connection identifier: {connection_identifier}'
+- 'Activity type: {activity_type}'
+- 'Display name: {display_name}'
+- 'Local account: {local_account}'
+short_message:
+- '{source_identifier}'
+- '{connection_identifier}'
+- '{activity_type}'
+- '{display_name}'
+- '{local_account}'
+source: 'TeamViewer incoming connections log'
+short_source: 'LOG'
+---
+type: 'conditional'
+data_type: 'teamviewer:connections_outgoing:entry'
+message:
+- 'Destination TeamViewer identifier: {destination_identifier}'
+- 'Connection identifier: {connection_identifier}'
+- 'Activity type: {activity_type}'
+- 'Local account: {local_account}'
+short_message:
+- '{destination_identifier}'
+- '{connection_identifier}'
+- '{activity_type}'
+- '{local_account}'
+source: 'TeamViewer outgoing connections log'
+short_source: 'LOG'
 ---
 type: 'basic'
 data_type: 'text:entry'

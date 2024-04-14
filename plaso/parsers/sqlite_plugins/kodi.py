@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Kodi videos database files."""
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -162,26 +160,6 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
           'CREATE TABLE writer_link(actor_id INTEGER, media_id INTEGER, '
           'media_type TEXT)')}]
 
-  def _GetDateTimeRowValue(self, query_hash, row, value_name):
-    """Retrieves a date and time value from the row.
-
-    Args:
-      query_hash (int): hash of the query, that uniquely identifies the query
-          that produced the row.
-      row (sqlite3.Row): row.
-      value_name (str): name of the value.
-
-    Returns:
-      dfdatetime.CocoaTime: date and time value or None if not available.
-    """
-    time_string = self._GetRowValue(query_hash, row, value_name)
-    if time_string is None:
-      return None
-
-    date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromDateTimeString(time_string)
-    return date_time
-
   def ParseVideoRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Video row.
 
@@ -195,7 +173,7 @@ class KodiMyVideosPlugin(interface.SQLitePlugin):
 
     event_data = KodiVideoEventData()
     event_data.filename = self._GetRowValue(query_hash, row, 'strFilename')
-    event_data.last_played_time = self._GetDateTimeRowValue(
+    event_data.last_played_time = self._GetDateTimeStringRowValue(
         query_hash, row, 'lastPlayed')
     event_data.play_count = self._GetRowValue(query_hash, row, 'playCount')
     event_data.query = query

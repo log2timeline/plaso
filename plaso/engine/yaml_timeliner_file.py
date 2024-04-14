@@ -74,7 +74,7 @@ class YAMLTimelinerConfigurationFile(object):
     different_keys = set(timeliner_definition_values) - self._SUPPORTED_KEYS
     if different_keys:
       different_keys = ', '.join(different_keys)
-      raise errors.ParseError('Undefined keys: {0:s}'.format(different_keys))
+      raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
     data_type = timeliner_definition_values.get('data_type', None)
     if not data_type:

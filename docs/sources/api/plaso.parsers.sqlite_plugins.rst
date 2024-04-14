@@ -300,6 +300,14 @@ plaso.parsers.sqlite\_plugins.windows\_eventtranscript module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.windows\_push\_notification module
+----------------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.windows_push_notification
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.windows\_timeline module
 ------------------------------------------------------
 

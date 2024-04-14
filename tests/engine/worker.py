@@ -370,7 +370,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def testProcessPathSpecFile(self):
     """Tests the ProcessPathSpec function on a file."""
-    path_spec = self._GetTestFilePathSpec(['syslog'])
+    path_spec = self._GetTestFilePathSpec(['syslog', 'syslog'])
     storage_writer = fake_writer.FakeStorageWriter()
 
     expected_event_data_counts = {

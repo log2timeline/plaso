@@ -145,13 +145,6 @@ class PlistParser(interface.FileObjectParser):
     display_name = parser_mediator.GetDisplayName()
     filename_lower_case = filename.lower()
 
-    try:
-      top_level_keys = set(top_level_object.keys())
-    except AttributeError as exception:
-      raise errors.WrongParser(
-          'Unable to parse top level keys of: {0:s} with error: {1!s}.'.format(
-              filename, exception))
-
     found_matching_plugin = False
     for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:
@@ -170,13 +163,17 @@ class PlistParser(interface.FileObjectParser):
             if path_filter.Match(filename_lower_case):
               path_filter_match = True
 
-        result = (path_filter_match and
-                  top_level_keys.issuperset(plugin.PLIST_KEYS))
+        try:
+          required_format = plugin.CheckRequiredFormat(top_level_object)
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionWarning((
+              'plugin: {0:s} unable to parse plist file with error: '
+              '{1!s}').format(plugin_name, exception))
 
       finally:
         parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
-      if not result:
+      if not path_filter_match or not required_format:
         logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin_name))
         continue

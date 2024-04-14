@@ -41,7 +41,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
        'username': 'root'}]
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -70,13 +70,13 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         'username': 'root'}
 
     # TODO: add test for event_tag.
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
     self.assertEqual(field_values, expected_field_values)
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     test_file_object = io.StringIO()
 
     output_mediator = self._CreateOutputMediator()
@@ -87,10 +87,10 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
 
     # TODO: add test for event_tag.
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, None)
 
-    output_module._WriteFieldValues(output_mediator, field_values)
+    output_module.WriteFieldValues(output_mediator, field_values)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

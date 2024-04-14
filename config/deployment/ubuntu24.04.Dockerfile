@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:

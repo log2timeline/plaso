@@ -361,6 +361,26 @@ short_source: 'LOG'
 source: 'WinPrefetch'
 ---
 type: 'conditional'
+data_type: 'windows:wpndatabase:notification'
+message:
+- 'Payload: {payload}'
+short_message:
+- '{payload}'
+short_source: 'Windows Push Notification Database'
+source: 'Windows Push Notification Database'
+---
+type: 'conditional'
+data_type: 'windows:wpndatabase:notification_handler'
+message:
+- 'Identifier: {identifier}'
+- 'Type: {handler_type}'
+- 'Service identifier: {service_identifier}'
+short_message:
+- '{identifier}'
+short_source: 'Windows Push Notification Database'
+source: 'Windows Push Notification Database'
+---
+type: 'conditional'
 data_type: 'windows:registry:amcache'
 message:
 - 'path: {full_path}'

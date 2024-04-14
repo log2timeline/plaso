@@ -60,8 +60,8 @@ class TextPluginTestCase(test_lib.ParserTestCase):
 
     plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
-    if hasattr(plugin, 'GetYearLessLogHelper'):
-      year_less_log_helper = plugin.GetYearLessLogHelper()
-      parser_mediator.AddYearLessLogHelper(year_less_log_helper)
+    if hasattr(plugin, 'GetDateLessLogHelper'):
+      date_less_log_helper = plugin.GetDateLessLogHelper()
+      parser_mediator.AddDateLessLogHelper(date_less_log_helper)
 
     return storage_writer

@@ -690,13 +690,13 @@ class PlistPlugin(plugins.BasePlugin):
   NAME = 'plist_plugin'
 
   # This is expected to be overridden by the processing plugin, for example:
-  # frozenset(PlistPathFilter('com.apple.bluetooth.plist'))
+  # PLIST_PATH_FILTERS = frozenset(PlistPathFilter('com.apple.bluetooth.plist'))
   PLIST_PATH_FILTERS = frozenset()
 
-  # PLIST_KEYS is a list of keys required by a plugin.
-  # This is expected to be overridden by the processing plugin.
-  # Ex. frozenset(['DeviceCache', 'PairedDevices'])
-  PLIST_KEYS = frozenset(['any'])
+  # PLIST_KEYS is a list of keys required by a plugin. This is expected to be
+  # overridden by the processing plugin, for example:
+  # PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
+  PLIST_KEYS = frozenset()
 
   def _GetDateTimeValueFromPlistKey(self, plist_key, plist_value_name):
     """Retrieves a date and time value from a specific value in a plist key.
@@ -750,6 +750,7 @@ class PlistPlugin(plugins.BasePlugin):
       # Return an empty dict here if top_level is a list object, which happens
       # if the plist file is flat.
       return match
+
     keys = set(keys)
 
     if depth == 1:
@@ -856,6 +857,17 @@ class PlistPlugin(plugins.BasePlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
+
+  def CheckRequiredFormat(self, top_level):
+    """Check if the plist has the minimal structure required by the plugin.
+
+    Args:
+      top_level (dict[str, object]): plist top-level item.
+
+    Returns:
+      bool: True if this is the correct plugin, False otherwise.
+    """
+    return set(top_level.keys()).issuperset(self.PLIST_KEYS)
 
   def Process(self, parser_mediator, top_level=None, **kwargs):
     """Extracts events from a plist file.

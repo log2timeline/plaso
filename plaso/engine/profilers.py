@@ -81,8 +81,7 @@ class SampleFileProfiler(object):
 
   def Start(self):
     """Starts the profiler."""
-    filename = '{0:s}-{1:s}.csv.gz'.format(
-        self._FILENAME_PREFIX, self._identifier)
+    filename = f'{self._FILENAME_PREFIX:s}-{self._identifier:s}.csv.gz'
     if self._path:
       filename = os.path.join(self._path, filename)
 
@@ -125,10 +124,9 @@ class CPUTimeProfiler(SampleFileProfiler):
     if measurements:
       measurements.SampleStop()
 
-      sample = '{0:f}\t{1:s}\t{2:f}\n'.format(
-          measurements.start_sample_time, profile_name,
-          measurements.total_cpu_time)
-      self._WritesString(sample)
+      self._WritesString((
+          f'{measurements.start_sample_time:f}\t{profile_name:s}\t'
+          f'{measurements.total_cpu_time:f}\n'))
 
 
 class MemoryProfiler(SampleFileProfiler):
@@ -146,9 +144,7 @@ class MemoryProfiler(SampleFileProfiler):
       used_memory (int): amount of used memory in bytes.
     """
     sample_time = time.time()
-    sample = '{0:f}\t{1:s}\t{2:d}\n'.format(
-        sample_time, profile_name, used_memory)
-    self._WritesString(sample)
+    self._WritesString(f'{sample_time:f}\t{profile_name:s}\t{used_memory:d}\n')
 
 
 class AnalyzersProfiler(CPUTimeProfiler):
@@ -219,10 +215,9 @@ class StorageProfiler(SampleFileProfiler):
       sample_time = time.time()
       processing_time = 0.0
 
-    sample = '{0:f}\t{1:s}\t{2:s}\t{3:s}\t{4:f}\t{5:d}\t{6:d}\n'.format(
-        sample_time, profile_name, operation, description,
-        processing_time, data_size, compressed_data_size)
-    self._WritesString(sample)
+    self._WritesString((
+        f'{sample_time:f}\t{profile_name:s}\t{operation:s}\t{description:s}\t'
+        f'{processing_time:f}\t{data_size:d}\t{compressed_data_size:d}\n'))
 
 
 class TaskQueueProfiler(SampleFileProfiler):
@@ -240,13 +235,12 @@ class TaskQueueProfiler(SampleFileProfiler):
       tasks_status (TasksStatus): status information about tasks.
     """
     sample_time = time.time()
-    sample = '{0:f}\t{1:d}\t{2:d}\t{3:d}\t{4:d}\t{5:d}\n'.format(
-        sample_time, tasks_status.number_of_queued_tasks,
-        tasks_status.number_of_tasks_processing,
-        tasks_status.number_of_tasks_pending_merge,
-        tasks_status.number_of_abandoned_tasks,
-        tasks_status.total_number_of_tasks)
-    self._WritesString(sample)
+    self._WritesString((
+        f'{sample_time:f}\t{tasks_status.number_of_queued_tasks:d}\t'
+        f'{tasks_status.number_of_tasks_processing:d}\t'
+        f'{tasks_status.number_of_tasks_pending_merge:d}\t'
+        f'{tasks_status.number_of_abandoned_tasks:d}\t'
+        f'{tasks_status.total_number_of_tasks:d}\n'))
 
 
 class TasksProfiler(SampleFileProfiler):
@@ -264,6 +258,4 @@ class TasksProfiler(SampleFileProfiler):
       status (str): status.
     """
     sample_time = time.time()
-    sample = '{0:f}\t{1:s}\t{2:s}\n'.format(
-        sample_time, task.identifier, status)
-    self._WritesString(sample)
+    self._WritesString(f'{sample_time:f}\t{task.identifier:s}\t{status:s}\n')

@@ -71,21 +71,18 @@ class BaseEngine(object):
       self._memory_profiler.Start()
 
     if configuration.HaveProfileAnalyzers():
-      identifier = '{0:s}-analyzers'.format(self._name)
       self._analyzers_profiler = profilers.AnalyzersProfiler(
-          identifier, configuration)
+          f'{self._name:s}-analyzers', configuration)
       self._analyzers_profiler.Start()
 
     if configuration.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profilers.ProcessingProfiler(
-          identifier, configuration)
+          f'{self._name:s}-processing', configuration)
       self._processing_profiler.Start()
 
     if configuration.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profilers.SerializersProfiler(
-          identifier, configuration)
+          f'{self._name:s}-serializers', configuration)
       self._serializers_profiler.Start()
 
     if configuration.HaveProfileStorage():
@@ -151,8 +148,8 @@ class BaseEngine(object):
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
-          'Unable to read artifact definitions from: {0:s} with error: '
-          '{1!s}').format(artifact_definitions_path, exception))
+          f'Unable to read artifact definitions from: '
+          f'{artifact_definitions_path:s} with error: {exception!s}'))
 
     if custom_artifacts_path:
       try:
@@ -163,8 +160,8 @@ class BaseEngine(object):
 
       except (KeyError, artifacts_errors.FormatError) as exception:
         raise errors.BadConfigOption((
-            'Unable to read custom artifact definitions from: {0:s} with '
-            'error: {1!s}').format(custom_artifacts_path, exception))
+            f'Unable to read custom artifact definitions from: '
+            f'{custom_artifacts_path:s} with error: {exception!s}'))
 
     self._artifacts_registry = registry
 
@@ -188,9 +185,8 @@ class BaseEngine(object):
     filters_helper = None
 
     if artifact_filter_names:
-      logger.debug(
-          'building find specification based on artifacts: {0:s}'.format(
-              ', '.join(artifact_filter_names)))
+      names = ', '.join(artifact_filter_names)
+      logger.debug(f'building find specification based on artifacts: {names:s}')
 
       filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
           self._artifacts_registry)
@@ -216,9 +212,9 @@ class BaseEngine(object):
       self._registry_find_specs = filters_helper.registry_find_specs
 
     elif filter_file_path:
-      logger.debug(
-          'building find specification based on filter file: {0:s}'.format(
-              filter_file_path))
+      logger.debug((
+          f'building find specification based on filter file: '
+          f'{filter_file_path:s}'))
 
       filter_file_object = yaml_filter_file.YAMLFilterFile()
       filter_file_path_filters = filter_file_object.ReadFromFile(
@@ -231,8 +227,8 @@ class BaseEngine(object):
       if (not filters_helper.excluded_file_system_find_specs and
           not filters_helper.included_file_system_find_specs):
         raise errors.InvalidFilter((
-            'No valid file system find specifications were built from filter '
-            'file: {0:s}.').format(filter_file_path))
+            f'No valid file system find specifications were built from filter '
+            f'file: {filter_file_path:s}.'))
 
       self._excluded_file_system_find_specs = (
           filters_helper.excluded_file_system_find_specs)

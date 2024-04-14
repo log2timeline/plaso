@@ -108,7 +108,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
     super(SharedJSONOutputModule, self).__init__()
     self._field_formatting_helper = JSONFieldFormattingHelper()
 
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -138,6 +138,10 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         if (isinstance(attribute_value, list) and attribute_value and
             isinstance(attribute_value[0],
                        dfdatetime_interface.DateTimeValues)):
+          continue
+
+        # Ignore protected internal only attributes.
+        if attribute_name[0] == '_' and attribute_name != '_parser_chain':
           continue
 
         field_value = self._field_formatting_helper.GetFormattedField(
@@ -174,12 +178,13 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         field_values[attribute_name] = attribute_value
 
     for field_name in self._GENERATED_FIELD_VALUES:
-      field_value = field_values.get(field_name, None)
-      if field_value is None:
-        field_value = self._field_formatting_helper.GetFormattedField(
-            output_mediator, field_name, event, event_data, event_data_stream,
-            event_tag)
-        field_values[field_name] = field_value
+      if field_name not in field_values:
+        field_value = field_values.get(field_name, None)
+        if field_value is None:
+          field_value = self._field_formatting_helper.GetFormattedField(
+              output_mediator, field_name, event, event_data, event_data_stream,
+              event_tag)
+          field_values[field_name] = field_value
 
     field_values['message'] = self._field_formatting_helper.GetFormattedField(
         output_mediator, 'message', event, event_data, event_data_stream,
@@ -203,7 +208,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
     return field_values
 
   @abc.abstractmethod
-  def _WriteFieldValues(self, output_mediator, field_values):
+  def WriteFieldValues(self, output_mediator, field_values):
     """Writes field values to the output.
 
     Args:

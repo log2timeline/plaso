@@ -56,8 +56,8 @@ import pyparsing
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
+from plaso.lib import dateless_helper
 from plaso.lib import errors
-from plaso.lib import yearless_helper
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
@@ -83,7 +83,7 @@ class XChatLogEventData(events.EventData):
 
 
 class XChatLogTextPlugin(
-    interface.TextPlugin, yearless_helper.YearLessLogFormatHelper):
+    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper):
   """Text parser plugin for XChat log files."""
 
   NAME = 'xchatlog'
@@ -161,6 +161,11 @@ class XChatLogTextPlugin(
 
   VERIFICATION_GRAMMAR = _SECTION_HEADER_LINE
 
+  def __init__(self):
+    """Initializes a text parser plugin."""
+    super(XChatLogTextPlugin, self).__init__()
+    self._year = None
+
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
@@ -222,8 +227,9 @@ class XChatLogTextPlugin(
         structure, 'log_action', default_value=[])
 
     if log_action[0] not in ('BEGIN', 'END'):
+      log_action_string = ' '.join(log_action)
       parser_mediator.ProduceExtractionWarning(
-          'unsupported log action: {0:s}.'.format(' '.join(log_action)))
+          f'unsupported log action: {log_action_string:s}')
       self._year = None
       return
 
@@ -272,6 +278,8 @@ class XChatLogTextPlugin(
 
         self._SetMonthAndYear(month, year)
 
+      self._year = year
+
       time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
       date_time = dfdatetime_time_elements.TimeElements(
@@ -283,7 +291,7 @@ class XChatLogTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -294,7 +302,7 @@ class XChatLogTextPlugin(
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
     try:
       structure = self._VerifyString(text_reader.lines)

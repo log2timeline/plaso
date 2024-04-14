@@ -21,7 +21,7 @@ from tests.storage import test_lib
 
 
 @unittest.skipIf(redis is None, 'missing redis support')
-class RedisStoreTest(test_lib.StorageTestCase):
+class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
   """Tests for the Redis storage object."""
 
   # pylint: disable=protected-access
@@ -68,7 +68,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
     event_data_stream = events.EventDataStream()
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -99,7 +99,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=session.identifier,
         task_identifier=task.identifier)
@@ -135,7 +135,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -165,7 +165,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -200,7 +200,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -233,7 +233,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -263,7 +263,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -290,7 +290,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
       filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
       containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE,
+         event_data_stream.CONTAINER_TYPE,
          filter_expression=filter_expression))
       self.assertEqual(len(containers), 0)
 
@@ -306,7 +306,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -329,35 +329,6 @@ class RedisStoreTest(test_lib.StorageTestCase):
 
       self._RemoveSessionData(redis_client, session.identifier)
 
-  def testGetSerializedAttributeContainers(self):
-    """Tests the GetSerializedAttributeContainers method."""
-    redis_client = self._CreateRedisClient()
-
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
-
-    test_store = redis_store.RedisStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
-
-    try:
-      for _, event_data, _ in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
-        test_store.AddAttributeContainer(event_data)
-
-      cursor, serialized_containers = (
-          test_store.GetSerializedAttributeContainers('event_data', 0, 0))
-      self.assertEqual(len(serialized_containers), 4)
-      for serialized_container in serialized_containers:
-        self.assertIsInstance(serialized_container, bytes)
-      self.assertIsInstance(cursor, int)
-
-    finally:
-      test_store.Close()
-
-      self._RemoveSessionData(redis_client, session.identifier)
-
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents method."""
     redis_client = self._CreateRedisClient()
@@ -365,7 +336,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -390,7 +361,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)
@@ -422,7 +393,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    test_store = redis_store.RedisStore()
+    test_store = redis_store.RedisAttributeContainerStore()
     test_store.Open(
         redis_client=redis_client, session_identifier=task.session_identifier,
         task_identifier=task.identifier)

@@ -39,15 +39,15 @@ class EventDataTimeliner(object):
 
     Args:
       data_location (Optional[str]): path of the timeliner configuration file.
-      preferred_year (Optional[int]): preferred initial year value for year-less
+      preferred_year (Optional[int]): preferred initial year value for date-less
           date and time values.
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
     """
     super(EventDataTimeliner, self).__init__()
     self._attribute_mappings = {}
-    self._base_years = {}
-    self._current_year = self._GetCurrentYear()
+    self._base_dates = {}
+    self._current_date = self._GetCurrentDate()
     self._data_location = data_location
     self._place_holder_event = set()
     self._preferred_time_zone = None
@@ -75,95 +75,119 @@ class EventDataTimeliner(object):
             self._time_zone_per_path_spec[path_spec.parent] = (
                 system_configuration.time_zone)
 
-  def _GetBaseYear(self, storage_writer, event_data):
-    """Retrieves the base year.
+  def _GetBaseDate(self, storage_writer, event_data):
+    """Retrieves the base date.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       event_data (EventData): event data.
 
     Returns:
-      int: base year.
+      tuple[int, int, int]: base date, as a tuple of year, month, day of month.
     """
     # If preferred year is set considered it a user override, otherwise try
-    # to determine the year based on the year-less log helper or fallback to
+    # to determine the year based on the date-less log helper or fallback to
     # the current year.
 
     if self._preferred_year:
-      return self._preferred_year
+      current_date = (self._preferred_year, 1, 1)
+    else:
+      current_date = self._current_date
 
     event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
     if not event_data_stream_identifier:
-      return self._current_year
+      return current_date[0], 0, 0
 
     lookup_key = event_data_stream_identifier.CopyToString()
 
-    base_year = self._base_years.get(lookup_key, None)
-    if base_year:
-      return base_year
+    base_date = self._base_dates.get(lookup_key, None)
+    if base_date:
+      return base_date
 
-    filter_expression = '_event_data_stream_identifier == "{0:s}"'.format(
-        lookup_key)
-    year_less_log_helpers = list(storage_writer.GetAttributeContainers(
-        events.YearLessLogHelper.CONTAINER_TYPE,
+    filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
+    date_less_log_helpers = list(storage_writer.GetAttributeContainers(
+        events.DateLessLogHelper.CONTAINER_TYPE,
         filter_expression=filter_expression))
-    if not year_less_log_helpers:
+    if not date_less_log_helpers:
       message = (
-          'missing year-less log helper, defaulting to current year: '
-          '{0:d}').format(self._current_year)
+          f'missing date-less log helper, defaulting to date: '
+          f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
       self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-      base_year = self._current_year
+      base_date = (current_date[0], 0, 0)
 
     else:
-      earliest_year = year_less_log_helpers[0].earliest_year
-      last_relative_year = year_less_log_helpers[0].last_relative_year
-      latest_year = year_less_log_helpers[0].latest_year
+      date_less_log_helper = date_less_log_helpers[0]
 
-      if earliest_year is None and latest_year is None:
+      earliest_date = date_less_log_helper.GetEarliestDate()
+      last_relative_date = date_less_log_helper.GetLastRelativeDate()
+      latest_date = date_less_log_helper.GetLatestDate()
+
+      if date_less_log_helper.granularity == (
+          date_less_log_helper.GRANULARITY_NO_YEAR):
+        current_date = (current_date[0], 0, 0)
+
+      if earliest_date is None or last_relative_date is None:
+        last_date = None
+      else:
+        last_date = tuple(map(
+            lambda earliest, last_relative: earliest + last_relative,
+            earliest_date, last_relative_date))
+
+      if earliest_date is None and latest_date is None:
         message = (
-            'missing earliest and latest year in year-less log helper, '
-            'defaulting to current year: {0:d}').format(self._current_year)
+            f'missing earliest and latest date in date-less log helper, '
+            f'defaulting to date: {current_date[0]:d}-{current_date[1]:d}-'
+            f'{current_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = self._current_year
+        base_date = current_date
 
-      elif earliest_year + last_relative_year < self._current_year:
-        base_year = earliest_year
+      elif last_date < current_date:
+        base_date = earliest_date
 
-      elif latest_year < self._current_year:
+      elif latest_date < current_date:
         message = (
-            'earliest year: {0:d} as base year would exceed current year: '
-            '{1:d} + {2:d}, using latest year: {3:d}').format(
-                earliest_year, self._current_year, last_relative_year,
-                latest_year)
+            f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
+            f'{earliest_date[2]:d} as base date would exceed : '
+            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d} + '
+            f'{last_relative_date[0]:d}-{last_relative_date[1]:d}-'
+            f'{last_relative_date[2]:d}, using latest date: {latest_date[0]:d}-'
+            f'{latest_date[1]:d}-{latest_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = latest_year - last_relative_year
+        base_date = tuple(map(
+            lambda latest, last_relative: latest - last_relative,
+            latest_date, last_relative_date))
 
       else:
         message = (
-            'earliest year: {0:d} and latest: year: {1:d} as base year '
-            'would exceed current year: {2:d} + {3:d}, using current '
-            'year').format(
-                earliest_year, latest_year, self._current_year,
-                last_relative_year)
+            f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
+            f'{earliest_date[2]:d} and latest: date: {latest_date[0]:d}-'
+            f'{latest_date[1]:d}-{latest_date[2]:d} as base date would exceed '
+            f'date: {current_date[0]:d}-{current_date[1]:d}-'
+            f'{current_date[2]:d} + {last_relative_date[0]:d}-'
+            f'{last_relative_date[1]:d}-{last_relative_date[2]:d}, using date: '
+            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
         self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
-        base_year = self._current_year - last_relative_year
+        base_date = tuple(map(
+            lambda current, last_relative: current - last_relative,
+            current_date, last_relative_date))
 
-    self._base_years[lookup_key] = base_year
+    self._base_dates[lookup_key] = base_date
 
-    return base_year
+    return base_date
 
-  def _GetCurrentYear(self):
-    """Retrieves current year.
+  def _GetCurrentDate(self):
+    """Retrieves current date.
 
     Returns:
-      int: the current year.
+      tuple[int, int, int]: current date, as a tuple of year, month, day of
+          month.
     """
-    datetime_object = datetime.datetime.now()
-    return datetime_object.year
+    datetime_object = datetime.datetime.now(pytz.UTC)
+    return datetime_object.year, datetime_object.month, datetime_object.day
 
   def _GetEvent(
       self, storage_writer, event_data, event_data_stream, date_time,
@@ -181,11 +205,22 @@ class EventDataTimeliner(object):
     Returns:
       EventObject: event.
     """
+    timestamp = None
     if date_time.is_delta:
-      base_year = self._GetBaseYear(storage_writer, event_data)
-      date_time = date_time.NewFromDeltaAndYear(base_year)
+      base_date = self._GetBaseDate(storage_writer, event_data)
 
-    timestamp = date_time.GetPlasoTimestamp()
+      try:
+        date_time = date_time.NewFromDeltaAndDate(*base_date)
+      except ValueError as exception:
+        self._ProduceTimeliningWarning(
+            storage_writer, event_data, str(exception))
+
+        date_time = dfdatetime_semantic_time.InvalidTime()
+        timestamp = 0
+
+    if timestamp is None:
+      timestamp = date_time.GetPlasoTimestamp()
+
     if timestamp is None:
       self._ProduceTimeliningWarning(
           storage_writer, event_data, 'unable to determine timestamp')
@@ -214,8 +249,8 @@ class EventDataTimeliner(object):
             time_zone = pytz.timezone(date_time.time_zone_hint)
           except pytz.UnknownTimeZoneError:
             message = (
-                'unsupported time zone hint: {0:s}, using default time '
-                'zone').format(date_time.time_zone_hint)
+                f'unsupported time zone hint: {date_time.time_zone_hint:s}, '
+                f'using default time zone')
             self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         if not time_zone and event_data_stream:
@@ -223,8 +258,8 @@ class EventDataTimeliner(object):
             time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
           except pytz.UnknownTimeZoneError:
             message = (
-                'unsupported system time zone: {0:s}, using default time '
-                'zone').format(date_time.time_zone_hint)
+                f'unsupported system time zone: {date_time.time_zone_hint:s}, '
+                f'using default time zone')
             self._ProduceTimeliningWarning(storage_writer, event_data, message)
 
         if not time_zone:
@@ -318,9 +353,9 @@ class EventDataTimeliner(object):
     configuration_file = yaml_timeliner_file.YAMLTimelinerConfigurationFile()
     for timeliner_definition in configuration_file.ReadFromFile(path):
       if timeliner_definition.data_type in self._attribute_mappings:
-        raise KeyError(
-            'Attribute mappings for data type: {0:s} already set.'.format(
-                timeliner_definition.data_type))
+        raise KeyError((
+            f'Attribute mappings for data type: '
+            f'{timeliner_definition.data_type:s} already set.'))
 
       self._attribute_mappings[timeliner_definition.data_type] = (
           timeliner_definition.attribute_mappings)
@@ -357,8 +392,7 @@ class EventDataTimeliner(object):
 
       for attribute_value in attribute_values:
         if not isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-          message = 'unsupported date time attribute: {0:s}'.format(
-              attribute_name)
+          message = f'unsupported date time attribute: {attribute_name:s}'
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
           continue
 
@@ -369,7 +403,7 @@ class EventDataTimeliner(object):
         try:
           storage_writer.AddAttributeContainer(event)
         except OverflowError as exception:
-          message = 'unable to add event with error: {0!s}'.format(exception)
+          message = f'unable to add event with error: {exception!s}'
           self._ProduceTimeliningWarning(storage_writer, event_data, message)
           continue
 
@@ -414,7 +448,6 @@ class EventDataTimeliner(object):
       try:
         time_zone = pytz.timezone(time_zone_string)
       except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0!s}'.format(
-            time_zone_string))
+        raise ValueError(f'Unsupported time zone: {time_zone_string!s}')
 
     self._preferred_time_zone = time_zone

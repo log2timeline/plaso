@@ -96,7 +96,7 @@ class SharedOpenSearchFieldFormattingHelper(
     """
     inode = getattr(event_data, 'inode', None)
     if isinstance(inode, int):
-      inode = '{0:d}'.format(inode)
+      inode = f'{inode:d}'
 
     return inode
 
@@ -254,8 +254,8 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         ca_certs=self._ca_certs)
 
     logger.debug((
-        'Connected to OpenSearch server: {0:s} port: {1:d} URL prefix: '
-        '{2!s}.').format(self._host, self._port, self._url_prefix))
+        f'Connected to OpenSearch server: {self._host:s} port: {self._port:d} '
+        f'URL prefix: {self._url_prefix!s}.'))
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
     """Creates an OpenSearch index if it does not exist.
@@ -274,8 +274,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     except opensearchpy.exceptions.ConnectionError as exception:
       raise RuntimeError(
-          'Unable to create OpenSearch index with error: {0!s}'.format(
-              exception))
+          f'Unable to create OpenSearch index with error: {exception!s}')
 
   def _FlushEvents(self):
     """Inserts the buffered event documents into OpenSearch."""
@@ -291,11 +290,10 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     except (ValueError,
             opensearchpy.exceptions.OpenSearchException) as exception:
       # Ignore problematic events
-      logger.warning('Unable to bulk insert with error: {0!s}'.format(
-          exception))
+      logger.warning(f'Unable to bulk insert with error: {exception!s}')
 
-    logger.debug('Inserted {0:d} events into OpenSearch'.format(
-        self._number_of_buffered_events))
+    logger.debug(
+        'Inserted {self._number_of_buffered_events:d} events into OpenSearch')
 
     self._event_documents = []
     self._number_of_buffered_events = 0
@@ -314,10 +312,9 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     # Some parsers have written bytes values to storage.
     if isinstance(field, bytes):
       field = field.decode('utf-8', 'replace')
-      logger.warning(
-          'Found bytes value for attribute: {0:s} of data type: '
-          '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-              attribute_name, data_type, field))
+      logger.warning((
+          f'Found bytes value for attribute: {attribute_name:s} of data type: '
+          f'{data_type!s}. Value was converted to UTF-8: "{field:s}"'))
 
     return field
 
@@ -330,7 +327,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     self._client = None
 
-  def _GetFieldValues(
+  def GetFieldValues(
       self, output_mediator, event, event_data, event_data_stream, event_tag):
     """Retrieves the output field values.
 
@@ -361,8 +358,14 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
           continue
 
         # Ignore protected internal only attributes.
-        if attribute_name[0] != '_':
-          event_values[attribute_name] = attribute_value
+        if attribute_name[0] == '_' and attribute_name != '_parser_chain':
+          continue
+
+        # Output _parser_chain as parser for backwards compatibility.
+        if attribute_name == '_parser_chain':
+          attribute_name = 'parser'
+
+        event_values[attribute_name] = attribute_value
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
@@ -422,7 +425,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
           insert.
     """
     self._flush_interval = flush_interval
-    logger.debug('OpenSearch flush interval: {0:d}'.format(flush_interval))
+    logger.debug(f'OpenSearch flush interval: {flush_interval:d}')
 
   def SetIndexName(self, index_name):
     """Sets the index name.
@@ -431,7 +434,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       index_name (str): name of the index.
     """
     self._index_name = index_name
-    logger.debug('OpenSearch index name: {0:s}'.format(index_name))
+    logger.debug(f'OpenSearch index name: {index_name:s}')
 
   def SetMappings(self, mappings):
     """Sets the mappings.
@@ -459,8 +462,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('OpenSearch server: {0!s} port: {1:d}'.format(
-        server, port))
+    logger.debug(f'OpenSearch server: {server!s} port: {port:d}')
 
   def SetUsername(self, username):
     """Sets the username.
@@ -469,7 +471,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       username (str): username to authenticate with.
     """
     self._username = username
-    logger.debug('OpenSearch username: {0!s}'.format(username))
+    logger.debug(f'OpenSearch username: {username!s}')
 
   def SetUseSSL(self, use_ssl):
     """Sets the use of ssl.
@@ -478,7 +480,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       use_ssl (bool): enforces use of ssl.
     """
     self._use_ssl = use_ssl
-    logger.debug('OpenSearch use_ssl: {0!s}'.format(use_ssl))
+    logger.debug(f'OpenSearch use SSL/TLS: {use_ssl!s}')
 
   def SetCACertificatesPath(self, ca_certificates_path):
     """Sets the path to the CA certificates.
@@ -495,10 +497,10 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
     if not os.path.exists(ca_certificates_path):
       raise errors.BadConfigOption(
-          'No such certificate file: {0:s}.'.format(ca_certificates_path))
+          f'No such certificate file: {ca_certificates_path:s}')
 
     self._ca_certs = ca_certificates_path
-    logger.debug('OpenSearch ca_certs: {0!s}'.format(ca_certificates_path))
+    logger.debug(f'OpenSearch certificate file: {ca_certificates_path:s}')
 
   def SetURLPrefix(self, url_prefix):
     """Sets the URL prefix.

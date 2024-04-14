@@ -1,6 +1,6 @@
 - [ ] Update version and documentation
   - `./utils/update_release.sh`
-- [ ] Create github release and tag
+- [ ] Create GitHub release and tag
 - [ ] Upload source package and signature to Github release page as pre-release
   - `./setup.py sdist_test_data`
   - `gpg --armor --detach-sign dist/plaso-$VERSION.tar.gz > dist/plaso-$VERSION.tar.gz.asc`
@@ -12,9 +12,14 @@
   - Build 32-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso wheel`
 - [ ] [Update l2tbinaries](https://github.com/log2timeline/l2tdocs/blob/main/process/l2tbinaries.md) win64 staging
   - Build 64-bit Windows binaries: `PYTHONPATH=. ./tools/build.py --preset plaso wheel`
+- [ ] [Update Docker image](https://github.com/log2timeline/l2tdocs/blob/main/process/Maintainers%20guide.md#updating-the-plasos-image-on-dockers-hub-to-the-latest-version-in-ppa)
 - [ ] Run integration tests
 - [ ] Promote pre-release to release
-- [ ] [Update pypi](https://github.com/log2timeline/l2tdocs/blob/main/process/PyPI.md)
+  - GitHub release
 - [ ] Promote staging to stable
-- [ ] [Update docker image](https://github.com/log2timeline/l2tdocs/blob/main/process/Maintainers%20guide.md#updating-the-plasos-image-on-dockers-hub-to-the-latest-version-in-ppa)
+  - GIFT PPA
+  - GIFT COPR
+  - l2tbinaires
+  - Docker image
+- [ ] [Update PyPI](https://github.com/log2timeline/l2tdocs/blob/main/process/PyPI.md)
 - [ ] Write and publish blog post

@@ -334,7 +334,7 @@ class TextPlugin(plugins.BasePlugin):
       text_reader (EncodedTextReader): text reader.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if this is the correct plugin, False otherwise.
     """
 
   # pylint: disable=arguments-differ

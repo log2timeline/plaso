@@ -39,7 +39,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
        'filename': 'log/syslog.1',
        'text': (
            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-           'closed for user root) Invalid character -> \ud801'),
+           'closed for user root)'),
        'timestamp': '2012-06-27 18:17:01',
        'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
 
@@ -99,7 +99,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     return rows
 
   def testGetFieldValues(self):
-    """Tests the _GetFieldValues function."""
+    """Tests the GetFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -119,20 +119,20 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
         'display_name': '-',
         'message': (
             'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-            'closed for user root) Invalid character -> �'),
+            'closed for user root)'),
         'parser': '-',
         'source': 'FILE',
         'source_long': 'Test log file',
         'tag': 'Malware Printed',
         'timestamp_desc': 'Metadata Modification Time'}
 
-    field_values = output_module._GetFieldValues(
+    field_values = output_module.GetFieldValues(
         output_mediator, event, event_data, event_data_stream, event_tag)
 
     self.assertEqual(field_values, expected_field_values)
 
   def testWriteFieldValues(self):
-    """Tests the _WriteFieldValues function."""
+    """Tests the WriteFieldValues function."""
     output_mediator = self._CreateOutputMediator()
 
     formatters_directory_path = self._GetTestFilePath(['formatters'])
@@ -155,10 +155,10 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       try:
         output_module.WriteHeader(output_mediator)
 
-        field_values = output_module._GetFieldValues(
+        field_values = output_module.GetFieldValues(
             output_mediator, event, event_data, event_data_stream, event_tag)
 
-        output_module._WriteFieldValues(output_mediator, field_values)
+        output_module.WriteFieldValues(output_mediator, field_values)
 
       finally:
         output_module.Close()
@@ -175,7 +175,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
           '41087.76181712963', 'Metadata Modification Time', 'FILE',
           'Test log file',
           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-          'closed for user root) Invalid character -> \ufffd',
+          'closed for user root)',
           '-', '-', 'Malware Printed']
 
       self.assertEqual(expected_header, rows[0])
