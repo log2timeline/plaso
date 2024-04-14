@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import cri
 
 from tests.parsers.text_plugins import test_lib
@@ -32,9 +31,9 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'data_type': 'crio:container:log:entry',
+        'data_type': 'cri:container:log:entry',
         'event_datetime': '2016-10-06T00:17:09.669794202+00:00',
-        'log_message': ' log content 1',
+        'message': ' log content 1',
         'stream': 'stdout',
         'tag': 'P'}
 
@@ -42,9 +41,9 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
     expected_event_values = {
-        'data_type': 'crio:container:log:entry',
+        'data_type': 'cri:container:log:entry',
         'event_datetime': '2016-10-06T00:17:09.669794203+00:00',
-        'log_message': ' log content 2',
+        'message': ' log content 2',
         'stream': 'stderr',
         'tag': 'F'}
 

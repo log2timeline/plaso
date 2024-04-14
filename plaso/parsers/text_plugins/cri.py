@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Text file parser plugin for Container Runtime Interface (CRI) log format."""
+"""Text file parser plugin for Container Runtime Interface (CRI) log format.
+
+This is a text-based log format used in kubernetes.  
+
+Also see:
+  https://github.com/kubernetes/design-proposals-archive/blob/main/node/kubelet-cri-logging.md
+"""
 
 import pyparsing
 
@@ -15,17 +21,19 @@ class CRIEventData(events.EventData):
 
   Attributes:
     event_datetime (dfdatetime.Golangtime): the datetime of the log message.
-    log_message (str): the log message.
-    stream (str): the log stream.  Currently stdout and stderr.
-    tag (str): the log tag.  Currently only P (partial) and F (full) are supported.
+    message (str): the log message.
+    stream (str): the log stream.  Currently only 'stdout' and 'stderr' are
+        supported.
+    tag (str): the log tag.  Currently only 'P' (partial) and 'F' (full) are
+        supported.
   """
-  DATA_TYPE = 'crio:container:log:entry'
+  DATA_TYPE = 'cri:container:log:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(CRIEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_datetime = None
-    self.log_message = None
+    self.message = None
     self.stream = None
     self.tag = None
 
@@ -60,13 +68,13 @@ class CRITextPlugin(interface.TextPlugin):
       pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
   ).setResultsName('stream')
 
-  # P indicates a partial log, 
+  # P indicates a partial log,
   # F indicates a complete or the end of a multiline log.
   _TAG = pyparsing.oneOf(['P', 'F']).setResultsName('tag')
 
   _LOG = (
       pyparsing.restOfLine() + pyparsing.Suppress(pyparsing.LineEnd())
-  ).setResultsName('log_message')
+  ).setResultsName('message')
 
   _LOG_LINE = _DATE_AND_TIME + _STREAM + _TAG + _LOG
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
@@ -92,8 +100,8 @@ class CRITextPlugin(interface.TextPlugin):
 
       event_data = CRIEventData()
       event_data.event_datetime = golang_time_object
-      event_data.log_message = self._GetValueFromStructure(
-          structure, 'log_message')[0]
+      event_data.message = self._GetValueFromStructure(
+          structure, 'message')[0]
       event_data.stream = self._GetValueFromStructure(structure, 'stream')
       event_data.tag = self._GetValueFromStructure(structure, 'tag')
       parser_mediator.ProduceEventData(event_data)
