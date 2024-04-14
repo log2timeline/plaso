@@ -48,17 +48,20 @@ class CRITextPlugin(interface.TextPlugin):
   _DATE_AND_TIME = pyparsing.Combine(
       _FOUR_DIGITS + pyparsing.Literal('-') +
       _TWO_DIGITS + pyparsing.Literal('-') +
-      _TWO_DIGITS + pyparsing.Literal('T') +
+      _TWO_DIGITS + pyparsing.Literal('T').setParseAction(
+          pyparsing.replace_with(' ')) +
       _TWO_DIGITS + pyparsing.Literal(':') +
       _TWO_DIGITS + pyparsing.Literal(':') +
       _TWO_DIGITS + pyparsing.Literal('.') +
-      _NINE_DIGITS + pyparsing.Literal('Z')).setResultsName('date_time')
+      _NINE_DIGITS + pyparsing.Suppress(pyparsing.Literal('Z'))
+  ).setResultsName('date_time')
 
   _STREAM = (
       pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
   ).setResultsName('stream')
 
-  # P indicates a partial log, F indicates a complete or the end of a multiline log.
+  # P indicates a partial log, 
+  # F indicates a complete or the end of a multiline log.
   _TAG = pyparsing.oneOf(['P', 'F']).setResultsName('tag')
 
   _LOG = (
@@ -83,9 +86,9 @@ class CRITextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key == 'log_line':
+      golang_time_object = golang_time.GolangTime()
       golang_time_string = self._GetValueFromStructure(structure, 'date_time')
-      golang_time_object = golang_time.GolangTime(
-          golang_timestring=golang_time_string)
+      golang_time_object.CopyFromDateTimeString(golang_time_string)
 
       event_data = CRIEventData()
       event_data.event_datetime = golang_time_object
