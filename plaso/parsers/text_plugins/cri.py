@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Text file parser plugin for Container Runtime Interface (CRI) log format.
 
-This is a text-based log format used in kubernetes.  
+This is a text-based log format used in kubernetes/GKE.
 
 Also see:
   https://github.com/kubernetes/design-proposals-archive/blob/main/node/kubelet-cri-logging.md
