@@ -152,7 +152,7 @@ class AppleBiomeParser(interface.FileObjectParser):
 
       try:
         result = False
-        # Some of the records may have missing fields
+        # Some of the records may have missing fields, but most will conform.
         for record in biome_file.records:
           result = plugin.CheckRequiredSchema(record.protobuf)
           if result:
