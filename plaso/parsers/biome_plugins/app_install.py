@@ -20,7 +20,7 @@ class ApplicationInstallAppleBiomeEvent(events.EventData):
     bundle_identifier (str): bundle identifier of the application.
     event_time (dfdatetime.DateTimeValues): date and time when the application
         was installed.
-    """
+  """
 
   DATA_TYPE = 'apple:biome:app_install'
 
@@ -85,7 +85,7 @@ class ApplicationInstallBiomePlugin(interface.AppleBiomePlugin):
   # pylint: disable=unused-argument
   def Process(self, parser_mediator, biome_file=None, **unused_kwargs):
     """Extracts information from an Apple biome file. This is the main method
-        that an Apple biome file plugin needs to implement.
+    that an Apple biome file plugin needs to implement.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
