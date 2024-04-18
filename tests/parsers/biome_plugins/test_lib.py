@@ -12,6 +12,7 @@ class AppleBiomeTestCase(test_lib.ParserTestCase):
   """Apple biome plugin test case."""
   def _OpenAppleBiomeFile(self, path_segments):
     """Opens an Apple biome log file.
+
     Args:
       path_segments (list[str]): path segments inside the test data directory.
     Returns:
@@ -30,10 +31,11 @@ class AppleBiomeTestCase(test_lib.ParserTestCase):
     return apple_biome_file
 
   def _ParseAppleBiomeFileWithPlugin(self, path_segments, plugin):
-    """Parses a file as an Apple biome file and returns an event generator.
-    This method will first test if the Apple biome file has the required schema
-    using plugin.CheckRequiredSchema() and then extracts events using
+    """Parses a file as an Apple biome file and returns an event generator. This
+    method will first test if the Apple biome file has the required schema using
+    plugin.CheckRequiredSchema() and then extracts events using
     plugin.Process().
+
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       plugin (AppleBiomePlugin): Apple biome file plugin.
