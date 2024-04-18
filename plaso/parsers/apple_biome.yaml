@@ -61,21 +61,19 @@ type: structure
 attributes:
   byte_order: little-endian
 members:
-  - name: size
-    data_type: uint32
-  - name: unknown1
-    data_type: uint32
-  - name: timestamp1
-    data_type: float64
-  - name: timestamp2
-    data_type: float64
-  - name: unknown2
-    data_type: uint32
-  - name: unknown3
-    data_type: uint32
-  - name: protobuf
-    type: stream
-    element_data_type: byte
-    number_of_elements: segb_record_v1.size
-
-
+- name: size
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: timestamp1
+  data_type: float64
+- name: timestamp2
+  data_type: float64
+- name: unknown2
+  data_type: uint32
+- name: unknown3
+  data_type: uint32
+- name: protobuf
+  type: stream
+  element_data_type: byte
+  number_of_elements: segb_record_v1.size
