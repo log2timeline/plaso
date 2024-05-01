@@ -6,6 +6,7 @@ parsers:
 - android_app_usage
 - chrome_cache
 - filestat
+- sqlite/android_app_usage
 - sqlite/android_calls
 - sqlite/android_sms
 - sqlite/android_webview
