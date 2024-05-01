@@ -12,6 +12,17 @@ short_source: 'LOG'
 source: 'Android App Usage'
 ---
 type: 'conditional'
+data_type: 'android:event:battery'
+message:
+- 'Battery level: {battery_level}'
+- 'Battery saver: {battery_saver}'
+- 'Charge type: {charge_type}'
+short_message:
+- 'Battery level: {battery_level}'
+short_source: 'LOG'
+source: 'Android Turbo Battery Events'
+---
+type: 'conditional'
 data_type: 'android:event:call'
 enumeration_helpers:
 - input_attribute: 'call_type'
