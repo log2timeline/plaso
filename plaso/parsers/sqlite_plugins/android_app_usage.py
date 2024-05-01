@@ -10,6 +10,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 class AndroidAppUsage(events.EventData):
   """Android app usage event data.
+
   Attributes:
     package_name (str): Name of the launched package.
     start_time (dfdatetime.DateTimeValues): date and time when the application
