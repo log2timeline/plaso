@@ -33,7 +33,7 @@ class AndroidTurboPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Android's turbo.db database files."""
 
   NAME = 'android_turbo'
-  DATA_FORMAT = 'Android turbo SQLite databse (turbo.db) file'
+  DATA_FORMAT = 'Android turbo SQLite database (turbo.db) file'
 
   REQUIRED_STRUCTURE = {
       'battery_event': frozenset([

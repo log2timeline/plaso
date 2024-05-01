@@ -8,7 +8,7 @@ place_holder_event: true
 ---
 data_type: 'android:event:battery'
 attribute_mappings:
-- name: 'crete_time'
+- name: 'create_time'
   description: 'Create Time'
 place_holder_event: true
 ---
