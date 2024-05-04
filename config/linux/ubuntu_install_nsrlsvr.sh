@@ -38,7 +38,7 @@ then
 		then
 			# Download the minimum RDS hash set.
 			# Note that rds_modernm.zip is approximate 2 GiB in size.
-			curl -o rds_modernm.zip https://s3.amazonaws.com/rds.nsrl.nist.gov/RDS/current/rds_modernm.zip
+			curl -o rds_modernm.zip https://s3.amazonaws.com/rds.nsrl.nist.gov/RDS/rds_2024.03.1/RDS_2024.03.1_modern_minimal.zip
 		fi
 		# Note that NSRLFile.txt is approximate 4 GiB in size.
 		unzip -x rds_modernm.zip rds_modernm/NSRLFile.txt
