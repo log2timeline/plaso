@@ -40,13 +40,30 @@ then
 			# Note that rds_modernm.zip is approximate 2 GiB in size.
 			curl -o rds_modernm.zip https://s3.amazonaws.com/rds.nsrl.nist.gov/RDS/rds_2024.03.1/RDS_2024.03.1_modern_minimal.zip
 		fi
+
+		if [ ! -f rds_modernm.zip ];
+		then
+			echo "Missing: rds_modernm.zip";
+
+			exit 1
+		fi
 		# Note that NSRLFile.txt is approximate 4 GiB in size.
 		unzip -x rds_modernm.zip rds_modernm/NSRLFile.txt
+
+		mv rds_modernm/NSRLFile.txt .
 	fi
+
+	if [ ! -f NSRLFile.txt ];
+	then
+		echo "Missing: NSRLFile.txt";
+
+		exit 1
+	fi
+
 	# Build the nsrlsvr hashes.txt file
 	sudo mkdir -p /usr/share/nsrlsvr
 	sudo touch /usr/share/nsrlsvr/hashes.txt
-	sudo /usr/bin/python3 /usr/bin/nsrlupdate rds_modernm/NSRLFile.txt
+	sudo /usr/bin/python3 /usr/bin/nsrlupdate NSRLFile.txt
 fi
 
 # For the sake of verbosity have nsrlsvr test its set up first
