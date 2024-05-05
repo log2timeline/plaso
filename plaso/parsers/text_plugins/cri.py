@@ -21,9 +21,9 @@ class CRIEventData(events.EventData):
   """CRI log event data.
 
   Attributes:
+    body (str): the log message body.
     event_datetime (time_elements.TimeElementsInNanoseconds): the datetime of
         the log message.
-    body (str): the log message body.
     stream (str): the log stream.  Currently only 'stdout' and 'stderr' are
         supported.
     tag (str): the log tag.  Currently only 'P' (partial) and 'F' (full) are
@@ -34,8 +34,8 @@ class CRIEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(CRIEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.event_datetime = None
     self.body = None
+    self.event_datetime = None
     self.stream = None
     self.tag = None
 
