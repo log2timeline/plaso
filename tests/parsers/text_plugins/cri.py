@@ -62,5 +62,6 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
     self.CheckEventData(event_data, expected_event_values)
 
+
 if __name__ == '__main__':
   unittest.main()
