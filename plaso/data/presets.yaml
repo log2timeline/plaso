@@ -19,8 +19,8 @@ parsers:
 name: ios
 description: Preset for iOS.
 parsers:
-- biome/app_install
-- biome/app_launch
+- biome/application_install_biome
+- biome/application_launch_biome
 - jsonl/ios_application_privacy
 - plist/ios_identityservices
 - sqlite/imessage
@@ -72,8 +72,8 @@ operating_systems:
 - {family: MacOS}
 parsers:
 - asl_log
-- biome/app_install
-- biome/app_launch
+- biome/application_install_biome
+- biome/application_launch_biome
 - bencode
 - bsm_log
 - cups_ipp

@@ -39,7 +39,7 @@ class ApplicationInstallAppleBiomeEvent(events.EventData):
 class ApplicationInstallBiomePlugin(interface.AppleBiomePlugin):
   """Parses an Application Install Apple biome file."""
 
-  NAME = 'application_launcher_biome'
+  NAME = 'application_install_biome'
   DATA_FORMAT = 'Biome application install'
 
   REQUIRED_SCHEMA = {
