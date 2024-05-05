@@ -9,6 +9,8 @@ set -e
 
 sudo apt-get install -y curl unzip
 
+cd config/end_to_end;
+
 if [ -f "${AUXILIARY_DATA_PATH}/nsrlsvr/NSRLFile.txt" ];
 then
 	# Note that NSRLFile.txt is approximate 4 GiB in size.
