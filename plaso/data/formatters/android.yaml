@@ -13,10 +13,25 @@ source: 'Android App Usage'
 ---
 type: 'conditional'
 data_type: 'android:event:battery'
+enumeration_helpers:
+- input_attribute: 'charge_type'
+  output_attribute: 'charge_type_string'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'not charging'
+    1: 'rapid charging'
+    2: 'slow charging'
+    3: 'wireless charging'
+- input_attribute: 'battery_saver'
+  output_attribute: 'battery_saver_string'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'on'
+    2: 'off'
 message:
 - 'Battery level: {battery_level}'
-- 'Battery saver: {battery_saver}'
-- 'Charge type: {charge_type}'
+- 'Battery saver: {battery_saver_string}'
+- 'Charge type: {charge_type_string}'
 short_message:
 - 'Battery level: {battery_level}'
 short_source: 'LOG'

@@ -15,7 +15,8 @@ class AndroidTurboBatteryEvent(events.EventData):
     battery_level (int): Remaining battery level, expressed as a percentage.
     battery_saver (int): Indicates if battery saver is turn on.
     charge_type (int): Indicates that the device is charging.
-    create_time (dfdatetime.DateTimeValues): date and time of the battery event.
+    recorded_time (dfdatetime.DateTimeValues): date and time the battery event
+        was recorded.
   """
 
   DATA_TYPE = 'android:event:battery'
@@ -26,7 +27,7 @@ class AndroidTurboBatteryEvent(events.EventData):
     self.battery_level = None
     self.battery_saver = None
     self.charge_type = None
-    self.create_time = None
+    self.recorded_time = None
 
 
 class AndroidTurboPlugin(interface.SQLitePlugin):
@@ -75,7 +76,7 @@ class AndroidTurboPlugin(interface.SQLitePlugin):
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp_millis')
 
-    event_data.create_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+    event_data.recorded_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
         timestamp=timestamp)
 
     parser_mediator.ProduceEventData(event_data)
