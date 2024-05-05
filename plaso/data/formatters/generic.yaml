@@ -145,12 +145,12 @@ data_type: 'cri:container:log:entry'
 message:
 - 'Stream: {stream}'
 - 'Tag: {tag}'
-- 'Message: {message}'
+- 'Body: {body}'
 short_message:
 - 'Stream: {stream}'
-- 'Message: {message}'
+- 'Body: {body}'
 short_source: 'CRI'
-source: 'CRI Container Log'
+source: 'Container Runtime Interface Container Log'
 ---
 type: 'conditional'
 data_type: 'cups:ipp:event'
