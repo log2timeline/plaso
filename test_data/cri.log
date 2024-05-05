@@ -3,13 +3,13 @@
 2024-04-16T06:21:30.494902976Z stderr F 2024/04/16 06:21:30 Starting server...
 2024-04-16T06:21:30.49495227Z stderr F 2024/04/16 06:21:30 Health service listening on 0.0.0.0:81
 2024-04-16T06:21:30.494958332Z stderr F 2024/04/16 06:21:30 HTTP service listening on 0.0.0.0:80
-2024-04-16T06:21:39.094699845Z stdout F 10.0.2.1:59838 - - [Tue, 16 Apr 2024 06:21:39 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
-2024-04-16T06:21:44.098809138Z stdout F 10.0.2.1:57922 - - [Tue, 16 Apr 2024 06:21:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
-2024-04-16T06:23:05.887551546Z stdout F 10.0.2.15:37674 - - [Tue, 16 Apr 2024 06:23:05 UTC] "GET / HTTP/1.0" Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
-2024-04-16T06:23:44.09529022Z stdout F 10.0.2.1:47888 - - [Tue, 16 Apr 2024 06:23:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
-2024-04-16T06:24:29.094662096Z stdout F 10.0.2.1:36006 - - [Tue, 16 Apr 2024 06:24:29 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
-2024-04-16T06:24:39.09511647Z stdout F 10.0.2.1:50862 - - [Tue, 16 Apr 2024 06:24:39 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
-2024-04-16T06:24:44.094754735Z stdout F 10.0.2.1:34564 - - [Tue, 16 Apr 2024 06:24:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
+2024-04-16T06:21:39.0Z stdout F 10.0.2.1:59838 - - [Tue, 16 Apr 2024 06:21:39 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
+2024-04-16T06:21:44.09Z stdout F 10.0.2.1:57922 - - [Tue, 16 Apr 2024 06:21:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
+2024-04-16T06:23:05.887Z stdout F 10.0.2.15:37674 - - [Tue, 16 Apr 2024 06:23:05 UTC] "GET / HTTP/1.0" Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
+2024-04-16T06:23:44.0952Z stdout F 10.0.2.1:47888 - - [Tue, 16 Apr 2024 06:23:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
+2024-04-16T06:24:29.09466Z stdout F 10.0.2.1:36006 - - [Tue, 16 Apr 2024 06:24:29 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
+2024-04-16T06:24:39.095116Z stdout F 10.0.2.1:50862 - - [Tue, 16 Apr 2024 06:24:39 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
+2024-04-16T06:24:44.09475473Z stdout F 10.0.2.1:34564 - - [Tue, 16 Apr 2024 06:24:44 UTC] "GET /healthz HTTP/1.1" kube-probe/1.27
 2024-04-16T06:24:49.09457166Z stdout F 10.0.2.1:34574 - - [Tue, 16 Apr 2024 06:24:49 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
 2024-04-16T06:24:59.094443628Z stdout F 10.0.2.1:48854 - - [Tue, 16 Apr 2024 06:24:59 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27
 2024-04-16T06:25:29.09520786Z stdout F 10.0.2.1:39914 - - [Tue, 16 Apr 2024 06:25:29 UTC] "GET /readiness HTTP/1.1" kube-probe/1.27

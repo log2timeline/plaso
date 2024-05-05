@@ -9,7 +9,7 @@ Also see:
 
 import pyparsing
 
-from dfdatetime import golang_time
+from dfdatetime import time_elements
 
 from plaso.containers import events
 from plaso.lib import errors
@@ -21,8 +21,9 @@ class CRIEventData(events.EventData):
   """CRI log event data.
 
   Attributes:
-    event_datetime (dfdatetime.Golangtime): the datetime of the log message.
-    message (str): the log message.
+    event_datetime (time_elements.TimeElementsInNanoseconds): the datetime of
+        the log message.
+    body (str): the log message body.
     stream (str): the log stream.  Currently only 'stdout' and 'stderr' are
         supported.
     tag (str): the log tag.  Currently only 'P' (partial) and 'F' (full) are
@@ -34,7 +35,7 @@ class CRIEventData(events.EventData):
     """Initializes event data."""
     super(CRIEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_datetime = None
-    self.message = None
+    self.body = None
     self.stream = None
     self.tag = None
 
@@ -47,26 +48,13 @@ class CRITextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2)
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4)
-
-  _NINE_DIGITS = pyparsing.Word(pyparsing.nums, exact=9)
-
   # Date and time values are formatted as: 2016-10-06T00:17:09.669794202Z
-  _DATE_AND_TIME = pyparsing.Combine(
-      _FOUR_DIGITS + pyparsing.Literal('-') +
-      _TWO_DIGITS + pyparsing.Literal('-') +
-      _TWO_DIGITS + pyparsing.Literal('T').setParseAction(
-          pyparsing.replace_with(' ')) +
-      _TWO_DIGITS + pyparsing.Literal(':') +
-      _TWO_DIGITS + pyparsing.Literal(':') +
-      _TWO_DIGITS + pyparsing.Literal('.') +
-      _NINE_DIGITS + pyparsing.Suppress(pyparsing.Literal('Z'))
+  _DATE_AND_TIME = (
+      pyparsing.Regex(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{1,9}Z')
   ).setResultsName('date_time')
 
   _STREAM = (
-      pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
+    pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
   ).setResultsName('stream')
 
   # P indicates a partial log,
@@ -75,7 +63,7 @@ class CRITextPlugin(interface.TextPlugin):
 
   _LOG = (
       pyparsing.restOfLine() + pyparsing.Suppress(pyparsing.LineEnd())
-  ).setResultsName('message')
+  ).setResultsName('body')
 
   _LOG_LINE = _DATE_AND_TIME + _STREAM + _TAG + _LOG
   _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
@@ -95,14 +83,13 @@ class CRITextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key == 'log_line':
-      golang_time_object = golang_time.GolangTime()
-      golang_time_string = self._GetValueFromStructure(structure, 'date_time')
-      golang_time_object.CopyFromDateTimeString(golang_time_string)
-
+      date_time = time_elements.TimeElementsInNanoseconds()
+      date_time.CopyFromStringISO8601(self._GetValueFromStructure(
+          structure, 'date_time'))
       event_data = CRIEventData()
-      event_data.event_datetime = golang_time_object
-      event_data.message = self._GetValueFromStructure(
-          structure, 'message')[0]
+      event_data.event_datetime = date_time
+      event_data.body = self._GetValueFromStructure(
+          structure, 'body')[0]
       event_data.stream = self._GetValueFromStructure(structure, 'stream')
       event_data.tag = self._GetValueFromStructure(structure, 'tag')
       parser_mediator.ProduceEventData(event_data)

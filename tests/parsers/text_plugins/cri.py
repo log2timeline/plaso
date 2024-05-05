@@ -20,7 +20,7 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 2)
+    self.assertEqual(number_of_event_data, 17)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -33,7 +33,7 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'data_type': 'cri:container:log:entry',
         'event_datetime': '2016-10-06T00:17:09.669794202+00:00',
-        'message': ' log content 1',
+        'body': ' log content 1',
         'stream': 'stdout',
         'tag': 'P'}
 
@@ -43,13 +43,24 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'data_type': 'cri:container:log:entry',
         'event_datetime': '2016-10-06T00:17:09.669794203+00:00',
-        'message': ' log content 2',
+        'body': ' log content 2',
         'stream': 'stderr',
         'tag': 'F'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)
 
+    expected_event_values = {
+        'data_type': 'cri:container:log:entry',
+        'event_datetime': '2024-04-16T06:25:29.095207860+00:00',
+        'body': (
+            ' 10.0.2.1:39914 - - [Tue, 16 Apr 2024 06:25:29 UTC] '
+            '"GET /readiness HTTP/1.1" kube-probe/1.27'),
+        'stream': 'stdout',
+        'tag': 'F'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 14)
+    self.CheckEventData(event_data, expected_event_values)
 
 if __name__ == '__main__':
   unittest.main()
