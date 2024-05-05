@@ -29,7 +29,7 @@ class AndroidAppUsage(events.EventData):
 class AndroidSQLiteAppUsage(interface.SQLitePlugin):
   """SQLite parser plugin for Android application usage database files."""
 
-  NAME = 'android_sqlite_app_usage'
+  NAME = 'android_app_usage'
   DATA_FORMAT = 'Android app_usage SQLite database (app_usage) file'
 
   REQUIRED_STRUCTURE = {
