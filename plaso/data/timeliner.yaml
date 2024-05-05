@@ -102,7 +102,7 @@ attribute_mappings:
 - name: 'launcher'
   description: 'process that launched the application'
 - name: 'launched application'
-  description': 'name of the launched application'
+  description: 'name of the launched application'
 place_holder_event: true
 ---
 data_type: 'apple:biome:app_linstall'
