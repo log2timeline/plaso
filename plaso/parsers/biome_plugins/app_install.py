@@ -74,7 +74,6 @@ class ApplicationInstallBiomePlugin(interface.AppleBiomePlugin):
                               '1': {'type': 'int'},
                               '2': {'type': 'int'}},
                           'field_order': ['1', '2']},
-                      '3': {'type': 'string'},
                       '4': {'type': 'int'}},
                   'field_order': ['1', '4']},
               '3': {'type': 'int'}},
