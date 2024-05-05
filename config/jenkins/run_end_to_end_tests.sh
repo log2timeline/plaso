@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Script to run end-to-end tests on a Linux Jenkins instance with Docker.
+# Script to run end-to-end tests on an Ubuntu Jenkins instance with Docker.
 
 # Fail on error.
 set -e
@@ -33,7 +33,11 @@ docker run log2timeline/plaso ./utils/check_dependencies.py;
 
 COMMAND="./tests/end-to-end.py --config /config/${CONFIGURATION_NAME}.ini --references-directory test_data/end_to_end --results-directory /home/test/plaso/plaso-out --sources-directory /sources --scripts-directory plaso/scripts";
 
-if test ${CONFIGURATION_NAME} = "output_opensearch";
+if test ${CONFIGURATION_NAME} = "psort-studentpc1-nsrlsvr";
+then
+	DOCKER_NETWORK="--network=nsrlsvr-network";
+
+elif test ${CONFIGURATION_NAME} = "output_opensearch" || test ${CONFIGURATION_NAME} = "output_opensearch_ts";
 then
 	DOCKER_NETWORK="--network=opensearch-network";
 
