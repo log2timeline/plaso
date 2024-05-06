@@ -6,6 +6,12 @@ attribute_mappings:
   description: 'Last Resume Time'
 place_holder_event: true
 ---
+data_type: 'android:event:battery'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'android:event:call'
 attribute_mappings:
 - name: 'end_time'

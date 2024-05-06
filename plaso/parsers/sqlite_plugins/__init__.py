@@ -5,6 +5,7 @@ from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_hangouts
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_tango
+from plaso.parsers.sqlite_plugins import android_turbo
 from plaso.parsers.sqlite_plugins import android_twitter
 from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache

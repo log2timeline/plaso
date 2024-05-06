@@ -8,6 +8,7 @@ parsers:
 - filestat
 - sqlite/android_calls
 - sqlite/android_sms
+- sqlite/android_turbo
 - sqlite/android_webview
 - sqlite/android_webviewcache
 - sqlite/chrome_8_history
