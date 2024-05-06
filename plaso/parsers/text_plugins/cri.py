@@ -54,7 +54,7 @@ class CRITextPlugin(interface.TextPlugin):
   ).setResultsName('date_time')
 
   _STREAM = (
-    pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
+      pyparsing.Literal('stderr') ^ pyparsing.Literal('stdout')
   ).setResultsName('stream')
 
   # P indicates a partial log,
