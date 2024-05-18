@@ -30,4 +30,4 @@ strongly encourage to ensure you are running the latest version of Plaso when
 using SIFT.
 
 If you are using SIFT and you have a deployment problem please report that
-directory to the [SIFT project](https://github.com/teamdfir/sift).
+directly to the [SIFT project](https://github.com/teamdfir/sift).
