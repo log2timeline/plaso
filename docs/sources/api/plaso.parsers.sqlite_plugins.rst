@@ -36,6 +36,14 @@ plaso.parsers.sqlite\_plugins.android\_tango module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.sqlite\_plugins.android\_turbo module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_turbo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.android\_twitter module
 -----------------------------------------------------
 
