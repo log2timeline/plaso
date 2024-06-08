@@ -2,7 +2,7 @@
 """A parser for Portable Executable (PE) files.
 
 Also see:
-  https://www.mandiant.com/resources/blog/tracking-malware-import-hashing
+  https://cloud.google.com/blog/topics/threat-intelligence/tracking-malware-import-hashing/
 """
 
 import os
