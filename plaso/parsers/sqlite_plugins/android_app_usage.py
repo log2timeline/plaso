@@ -43,11 +43,12 @@ class AndroidSQLiteAppUsage(interface.SQLitePlugin):
 
   SCHEMAS = [{
       'events': (
-          'CREATE TABLE "events" (_id INTEGER PRIMARY KEY,timestamp INTEGER NOT '
-          'NULL,type INTEGER NOT NULL,package_id INTEGER NOT NULL REFERENCES '
-          'packages(_id) ON UPDATE CASCADE ON DELETE CASCADE ,instance_id '
-          'INTEGER DEFAULT NULL, task_root_package_id INTEGER DEFAULT NULL '
-          'REFERENCES packages(_id) ON UPDATE CASCADE ON DELETE CASCADE)'),
+          'CREATE TABLE "events" (_id INTEGER PRIMARY KEY,timestamp INTEGER '
+          'NOT NULL,type INTEGER NOT NULL,package_id INTEGER NOT NULL '
+          'REFERENCES packages(_id) ON UPDATE CASCADE ON DELETE CASCADE, '
+          'instance_id INTEGER DEFAULT NULL, task_root_package_id INTEGER '
+          'DEFAULT NULL REFERENCES packages(_id) ON UPDATE CASCADE ON DELETE '
+          'CASCADE)'),
       'packages': (
           'CREATE TABLE packages (_id INTEGER PRIMARY KEY,package_name TEXT, '
           'UNIQUE(package_name) ON CONFLICT ABORT)')}]
