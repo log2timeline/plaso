@@ -121,6 +121,15 @@ short_source: 'LOG'
 source: 'Android SMS messages'
 ---
 type: 'conditional'
+data_type: 'android:sqlite:app_usage'
+message:
+- 'Package Name: {package_name}'
+short_message:
+- 'Package Name: {package_name}'
+short_source: 'Android app usage'
+source: 'Android SQLite App Usage'
+---
+type: 'conditional'
 data_type: 'android:tango:contact'
 message:
 - '{first_name}'
