@@ -281,6 +281,12 @@ attribute_mappings:
   description: 'Last Visited Time'
 place_holder_event: true
 ---
+data_type: 'cri:container:log:entry'
+attribute_mappings:
+- name: 'event_datetime'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'cups:ipp:event'
 attribute_mappings:
 - name: 'creation_time'

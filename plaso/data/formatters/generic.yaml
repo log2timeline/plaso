@@ -141,6 +141,18 @@ short_source: 'LOG'
 source: 'Confluence access log'
 ---
 type: 'conditional'
+data_type: 'cri:container:log:entry'
+message:
+- 'Stream: {stream}'
+- 'Tag: {tag}'
+- 'Body: {body}'
+short_message:
+- 'Stream: {stream}'
+- 'Body: {body}'
+short_source: 'CRI'
+source: 'Container Runtime Interface Container Log'
+---
+type: 'conditional'
 data_type: 'cups:ipp:event'
 message:
 - 'Status: {status}'
