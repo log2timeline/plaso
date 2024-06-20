@@ -197,7 +197,8 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
         analysis_mediator)
 
   def ExamineEvent(
-      self, analysis_mediator, event, event_data, event_data_stream):
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
@@ -206,6 +207,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     if (not self._lookup_hash or not event_data_stream or
         event_data.data_type not in self.DATA_TYPES):
