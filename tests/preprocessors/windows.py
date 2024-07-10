@@ -713,8 +713,9 @@ class WindowsUserAccountsPluginTest(
     user_account = storage_writer.GetAttributeContainerByIndex(
        'user_account', 9)
 
-    expected_sid = 'S-1-5-21-2036804247-3058324640-2116585241-1114'
-    self.assertEqual(user_account.identifier, expected_sid)
+    self.assertEqual(
+        user_account.identifier,
+        'S-1-5-21-2036804247-3058324640-2116585241-1114')
     self.assertEqual(user_account.username, 'rsydow')
     self.assertEqual(user_account.user_directory, 'C:\\Users\\rsydow')
 

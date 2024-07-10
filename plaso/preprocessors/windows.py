@@ -902,10 +902,13 @@ class WindowsUserAccountsPlugin(
     user_account = artifacts.UserAccountArtifact(
         identifier=registry_key.name, path_separator='\\')
 
+    # It has been observed that Azure Entra ID useraccount entries do not
+    # contain ProfileImagePath value.
+
+    username = None
+
     registry_value = registry_key.GetValueByName('ProfileImagePath')
-    if not registry_value:
-      username = 'N/A'
-    else:
+    if registry_value:
       profile_path = registry_value.GetDataAsObject()
       username = self._GetUsernameFromProfilePath(profile_path)
 
