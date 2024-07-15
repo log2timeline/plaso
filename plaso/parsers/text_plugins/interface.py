@@ -266,7 +266,7 @@ class TextPlugin(plugins.BasePlugin):
       raise errors.ParseError('No match found.')
 
     if start > 0 and '\n' in string[:start + 1]:
-      raise errors.ParseError('Found a line preceeding match.')
+      raise errors.ParseError('Found a line preceding match.')
 
     # Unwrap the line structure and retrieve its name (key).
     keys = list(structure.keys())
