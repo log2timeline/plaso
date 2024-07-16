@@ -67,6 +67,9 @@ class WindowsEventLogProvidersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(normalized_path, (
         '%SystemRoot%\\immersivecontrolpanel\\systemsettings.exe'))
 
+    normalized_path = test_helper._GetNormalizedPath('\\eventlogmessages.dll')
+    self.assertEqual(normalized_path, '\\eventlogmessages.dll')
+
     # TODO: add tests for Merge
     # TODO: add tests for NormalizeMessageFiles
 
