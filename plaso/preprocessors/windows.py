@@ -903,11 +903,14 @@ class WindowsUserAccountsPlugin(
         identifier=registry_key.name, path_separator='\\')
 
     registry_value = registry_key.GetValueByName('ProfileImagePath')
-    if not registry_value:
-      username = 'N/A'
-    else:
+    if registry_value:
       profile_path = registry_value.GetDataAsObject()
+
       username = self._GetUsernameFromProfilePath(profile_path)
+      if profile_path and not username:
+        mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+            f'Unable to determine username from profile path: '
+            f'"{profile_path!s}"'))
 
       user_account.user_directory = profile_path or None
       user_account.username = username or None
@@ -915,9 +918,9 @@ class WindowsUserAccountsPlugin(
     try:
       mediator.AddUserAccount(user_account)
     except KeyError:
-      mediator.ProducePreprocessingWarning(
-          self.ARTIFACT_DEFINITION_NAME,
-          f'Unable to add user account: "{username!s}" to knowledge base')
+      mediator.ProducePreprocessingWarning(self.ARTIFACT_DEFINITION_NAME, (
+          f'Unable to add user account: "{user_account.identifier:s}" to '
+          f'knowledge base'))
 
 
 class WindowsWinDirEnvironmentVariablePlugin(
