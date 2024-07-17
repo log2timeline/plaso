@@ -33,8 +33,8 @@ class WindowsEventLogProvidersHelper(object):
       path_segments = ['%SystemRoot%', 'System32']
 
     elif path_segments_lower[0] in ('system32', '$(runtime.system32)'):
-        # Note that the path can be relative so if it starts with "System32"
-        # asume this represents "%SystemRoot%\System32".
+      # Note that the path can be relative so if it starts with "System32"
+      # asume this represents "%SystemRoot%\System32".
       path_segments = ['%SystemRoot%', 'System32'] + path_segments[1:]
 
     elif path_segments_lower[0] in (
@@ -43,8 +43,8 @@ class WindowsEventLogProvidersHelper(object):
 
     # Check if path starts with "\SystemRoot\", "\Windows\" or "\WinNT\" for
     # example: "\SystemRoot\system32\drivers\SerCx.sys"
-    elif not path_segments_lower[0] and path_segments_lower[1] in (
-        'systemroot', 'windows', 'winnt'):
+    elif (len(path_segments_lower) > 1 and not path_segments_lower[0] and
+          path_segments_lower[1] in ('systemroot', 'windows', 'winnt')):
       path_segments = ['%SystemRoot%'] + path_segments[2:]
 
     path_segments.append(filename)
