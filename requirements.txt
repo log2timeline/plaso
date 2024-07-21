@@ -2,6 +2,7 @@ PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 acstore >= 20240407
 artifacts >= 20220219
+bbpb >= 1.1
 bencode.py
 certifi >= 2016.9.26
 cffi >= 1.9.1

@@ -2,6 +2,7 @@
 """This file imports Python modules that register parsers."""
 
 from plaso.parsers import android_app_usage
+from plaso.parsers import apple_biome
 from plaso.parsers import asl
 from plaso.parsers import bencode_parser
 from plaso.parsers import bodyfile
@@ -53,6 +54,7 @@ from plaso.parsers import winreg_parser
 from plaso.parsers import winrestore
 
 # Register parser plugins.
+from plaso.parsers import biome_plugins
 from plaso.parsers import bencode_plugins
 from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
