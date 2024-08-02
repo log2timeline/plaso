@@ -24,6 +24,7 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         '_event_data_stream_identifier',
         '_event_values_hash',
+        '_event_values_identifier',
         '_parser_chain',
         'build_number',
         'data_type',
