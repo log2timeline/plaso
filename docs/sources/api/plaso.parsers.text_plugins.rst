@@ -52,6 +52,14 @@ plaso.parsers.text\_plugins.confluence\_access module
    :undoc-members:
    :show-inheritance:
 
+plaso.parsers.text\_plugins.cri module
+--------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.cri
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.text\_plugins.dpkg module
 ---------------------------------------
 
