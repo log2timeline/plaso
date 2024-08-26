@@ -4,6 +4,14 @@ plaso.parsers.sqlite\_plugins package
 Submodules
 ----------
 
+plaso.parsers.sqlite\_plugins.android\_app\_usage module
+--------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_app_usage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 plaso.parsers.sqlite\_plugins.android\_calls module
 ---------------------------------------------------
 
