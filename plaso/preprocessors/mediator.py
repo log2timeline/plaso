@@ -113,11 +113,12 @@ class PreprocessMediator(object):
       KeyError: if the user account already exists.
     """
     if not user_account.username:
-      logger.debug(f'adding user account: {user_account.identifier:s}')
+      logger.debug('adding user account: {0!s}'.format(user_account.username))
     else:
-      logger.debug(
-          f'adding user account: {user_account.username:s} '
-          f'({user_account.identifier:s})')
+      logger.debug('adding user account: {0!s} ({1!s})'.format(
+        user_account.username,
+        user_account.identifier
+      ))
 
     if self._storage_writer:
       self._storage_writer.AddAttributeContainer(user_account)
