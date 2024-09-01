@@ -2,7 +2,7 @@
   - `./utils/update_release.sh`
 - [ ] Create GitHub release and tag
 - [ ] Upload source package and signature to Github release page as pre-release
-  - `./setup.py sdist_test_data`
+  - `python -m build --sdist`
   - `gpg --armor --detach-sign dist/plaso-$VERSION.tar.gz > dist/plaso-$VERSION.tar.gz.asc`
 - [ ] [Update GIFT PPA](https://github.com/log2timeline/l2tdocs/blob/main/process/GIFT%20PPA.md) staging
   - Build Ubuntu source debs: `PYTHONPATH=. ./tools/build.py --preset plaso dpkg-source`
