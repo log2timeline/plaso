@@ -7,12 +7,122 @@ import unittest
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfwinreg import fake as dfwinreg_fake
+from dfwinreg import regf as dfwinreg_regf
+from dfwinreg import registry as dfwinreg_registry
+from dfwinreg import registry_searcher
 
 from plaso.containers import artifacts
+from plaso.preprocessors import manager
 from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
 
 from tests.preprocessors import test_lib
+
+
+class WindowsArtifactPreprocessorPluginTestCase(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Windows artifact preprocessor plugin test case."""
+
+  def _GetWinRegistryFromFileEntry(self, file_entry):
+    """Retrieves a Windows Registry from a file entry.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry that references a test file.
+
+    Returns:
+      dfwinreg.WinRegistry: Windows Registry or None.
+    """
+    file_object = file_entry.GetFileObject()
+    if not file_object:
+      return None
+
+    registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
+    registry_file.Open(file_object)
+
+    win_registry = dfwinreg_registry.WinRegistry()
+    key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
+    win_registry.MapFile(key_path_prefix, registry_file)
+
+    return win_registry
+
+  def _RunPreprocessorPluginOnWindowsRegistryValue(
+      self, file_system, mount_point, storage_writer, plugin):
+    """Runs a preprocessor plugin on a Windows Registry value.
+
+    Args:
+      file_system (dfvfs.FileSystem): file system to be preprocessed.
+      mount_point (dfvfs.PathSpec): mount point path specification that refers
+          to the base location of the file system.
+      storage_writer (StorageWriter): storage writer.
+      plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
+
+    Return:
+      PreprocessMediator: preprocess mediator.
+    """
+    artifact_definition = self._artifacts_registry.GetDefinitionByName(
+        plugin.ARTIFACT_DEFINITION_NAME)
+    self.assertIsNotNone(artifact_definition)
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
+
+    registry_file_reader = manager.FileSystemWinRegistryFileReader(
+        file_system, mount_point, environment_variables=[environment_variable])
+    win_registry = dfwinreg_registry.WinRegistry(
+        registry_file_reader=registry_file_reader)
+
+    test_mediator = mediator.PreprocessMediator(storage_writer)
+
+    searcher = registry_searcher.WinRegistrySearcher(win_registry)
+
+    plugin.Collect(test_mediator, artifact_definition, searcher)
+
+    return test_mediator
+
+  def _RunPreprocessorPluginOnWindowsRegistryValueSoftware(
+      self, storage_writer, plugin):
+    """Runs a preprocessor plugin on a Windows Registry value in SOFTWARE.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
+
+    Return:
+      PreprocessMediator: preprocess mediator.
+    """
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    file_system_builder.AddFileReadData(
+        '/Windows/System32/config/SOFTWARE', test_file_path)
+
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
+
+    return self._RunPreprocessorPluginOnWindowsRegistryValue(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
+
+  def _RunPreprocessorPluginOnWindowsRegistryValueSystem(
+      self, storage_writer, plugin):
+    """Runs a preprocessor plugin on a Windows Registry value in SYSTEM.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      plugin (ArtifactPreprocessorPlugin): preprocessor plugin.
+
+    Return:
+      PreprocessMediator: preprocess mediator.
+    """
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
+    file_system_builder.AddFileReadData(
+        '/Windows/System32/config/SYSTEM', test_file_path)
+
+    mount_point = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
+
+    return self._RunPreprocessorPluginOnWindowsRegistryValue(
+        file_system_builder.file_system, mount_point, storage_writer, plugin)
 
 
 class WindowsAllUsersAppDataKnowledgeBasePluginTest(
@@ -105,7 +215,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
 
 
 class WindowsAllUsersProfileEnvironmentVariablePluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the %AllUsersProfile% environment variable plugin."""
 
   def testParseValueData(self):
@@ -210,7 +320,7 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 
 
 class WindowsAvailableTimeZonesPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows available time zones plugin."""
 
   def testParseKey(self):
@@ -238,7 +348,7 @@ class WindowsAvailableTimeZonesPluginTest(
     self.assertEqual(available_time_zone.name, 'AUS Central Standard Time')
 
 
-class WindowsCodePagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsCodePagePluginTest(WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows code page plugin."""
 
   def testParseValueData(self):
@@ -260,7 +370,7 @@ class WindowsCodePagePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
 
 class WindowsEventLogPublishersPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows Event Log publishers plugin."""
 
   def testParseValueData(self):
@@ -284,7 +394,7 @@ class WindowsEventLogPublishersPluginTest(
 
 
 class WindowsEventLogSourcesPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows Event Log sources plugin."""
 
   def testParseValueData(self):
@@ -307,7 +417,7 @@ class WindowsEventLogSourcesPluginTest(
     self.assertEqual(number_of_artifacts, 374)
 
 
-class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsHostnamePluginTest(WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows hostname plugin."""
 
   # pylint: disable=protected-access
@@ -333,7 +443,7 @@ class WindowsHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     plugin._ParseValueData(test_mediator, value_data)
 
 
-class WindowsLanguagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsLanguagePlugin(WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows language plugin."""
 
   def testParseValueData(self):
@@ -355,7 +465,7 @@ class WindowsLanguagePlugin(test_lib.ArtifactPreprocessorPluginTestCase):
 
 
 class WindowsMountedDevicesPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows mounted devices plugin."""
 
   # pylint: disable=protected-access
@@ -390,7 +500,7 @@ class WindowsMountedDevicesPluginTest(
 
 
 class WindowsProgramDataEnvironmentVariablePluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramData% environment variable plugin."""
 
   def testParseValueData(self):
@@ -502,7 +612,7 @@ class WindowsProgramDataKnowledgeBasePluginTest(
 
 
 class WindowsProgramFilesEnvironmentVariablePluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramFiles% environment variable plugin."""
 
   def testParseValueData(self):
@@ -532,7 +642,7 @@ class WindowsProgramFilesEnvironmentVariablePluginTest(
 
 
 class WindowsProgramFilesX86EnvironmentVariablePluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the %ProgramFilesX86% environment variable plugin."""
 
   def testParseValueData(self):
@@ -593,7 +703,7 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
 
 
 class WindowsServicesAndDriversPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows service (and driver) configurations plugin."""
 
   def testParseValueData(self):
@@ -617,7 +727,7 @@ class WindowsServicesAndDriversPluginTest(
 
 
 class WindowsSystemProductPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the system product information plugin."""
 
   def testParseValueData(self):
@@ -640,7 +750,7 @@ class WindowsSystemProductPluginTest(
 
 
 class WindowsSystemVersionPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+    WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the system version information plugin."""
 
   def testParseValueData(self):
@@ -662,7 +772,7 @@ class WindowsSystemVersionPluginTest(
     self.assertEqual(system_version, '6.1')
 
 
-class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsTimeZonePluginTest(WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the time zone plugin."""
 
   def testParseValueData(self):
@@ -685,22 +795,47 @@ class WindowsTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(test_mediator.time_zone.zone, 'America/New_York')
 
 
-class WindowsUserAccountsPluginTest(
-    test_lib.ArtifactPreprocessorPluginTestCase):
+class WindowsUserAccountsPluginTest(WindowsArtifactPreprocessorPluginTestCase):
   """Tests for the Windows user accounts artifacts mapping."""
 
   # pylint: disable=protected-access
 
+  def _CreateTestKey(self):
+    """Creates Registry keys and values for testing.
+
+    Returns:
+      dfwinreg.WinRegistryKey: a Windows Registry key.
+    """
+    key_path_prefix = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+        'CurrentVersion')
+    relative_key_path = 'Microsoft\\Windows NT\\CurrentVersion'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'ProfileList', key_path_prefix=key_path_prefix,
+        relative_key_path=relative_key_path)
+
+    # Setup user profile sub key.
+
+    profile_key_name = 'S-1-5-21-2036804247-3058324640-2116585241-1114'
+    profile_key = dfwinreg_fake.FakeWinRegistryKey(profile_key_name)
+    registry_key.AddSubkey(profile_key_name, profile_key)
+
+    return profile_key
+
   def testParseKey(self):
     """Tests the _ParseKey function."""
-    test_file_path = self._GetTestFilePath(['SOFTWARE'])
-    self._SkipIfPathNotExists(test_file_path)
+    test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
 
-    storage_writer = self._CreateTestStorageWriter()
+    registry_key = win_registry.GetKeyByPath((
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\'
+        'ProfileList\\S-1-5-21-2036804247-3058324640-2116585241-1114'))
 
     plugin = windows.WindowsUserAccountsPlugin()
-    self._RunPreprocessorPluginOnWindowsRegistryValueSoftware(
-        storage_writer, plugin)
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_mediator = mediator.PreprocessMediator(storage_writer)
+    plugin._ParseKey(test_mediator, registry_key, 'ProfileImagePath')
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'preprocessing_warning')
@@ -708,16 +843,40 @@ class WindowsUserAccountsPluginTest(
 
     number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
         'user_account')
-    self.assertEqual(number_of_artifacts, 11)
+    self.assertEqual(number_of_artifacts, 1)
 
     user_account = storage_writer.GetAttributeContainerByIndex(
-       'user_account', 9)
+       'user_account', 0)
 
     self.assertEqual(
         user_account.identifier,
         'S-1-5-21-2036804247-3058324640-2116585241-1114')
     self.assertEqual(user_account.username, 'rsydow')
     self.assertEqual(user_account.user_directory, 'C:\\Users\\rsydow')
+
+    # Test key with empty ProfileImagePath value.
+    registry_key = self._CreateTestKey()
+
+    storage_writer = self._CreateTestStorageWriter()
+    test_mediator = mediator.PreprocessMediator(storage_writer)
+    plugin._ParseKey(test_mediator, registry_key, 'ProfileImagePath')
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'preprocessing_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+        'user_account')
+    self.assertEqual(number_of_artifacts, 1)
+
+    user_account = storage_writer.GetAttributeContainerByIndex(
+       'user_account', 0)
+
+    self.assertEqual(
+        user_account.identifier,
+        'S-1-5-21-2036804247-3058324640-2116585241-1114')
+    self.assertIsNone(user_account.username)
+    self.assertIsNone(user_account.user_directory)
 
 
 class WindowsWinDirEnvironmentVariablePluginTest(
