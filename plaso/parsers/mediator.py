@@ -522,6 +522,25 @@ class ParserMediator(object):
 
     self.last_activity_timestamp = time.time()
 
+  def ProduceEventDataFromAttributeContainer(self, data_type, event_values):
+    """Produces event data from an attribute container.
+
+    Args:
+      data_type (str): event data type indicator.
+      event_values (acstore.AttributeContainer): event values attribute
+          container.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    event_data = events.EventData(data_type=data_type)
+
+    event_values_identifier = event_values.GetIdentifier()
+    event_data.SetEventValuesIdentifier(event_values_identifier)
+
+    self._storage_writer.AddAttributeContainer(event_values)
+    self.ProduceEventData(event_data)
+
   def ProduceEventSource(self, event_source):
     """Produces an event source.
 

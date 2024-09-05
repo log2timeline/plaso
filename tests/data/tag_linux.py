@@ -302,27 +302,27 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data.terminal = 'tty1'
     event_data.pid = 1
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event_data.type = 8
     event_data.terminal = ''
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event_data.terminal = 'tty1'
     event_data.pid = 0
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event_data.pid = 1
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['logout'])
 
