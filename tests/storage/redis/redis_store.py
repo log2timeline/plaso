@@ -28,7 +28,7 @@ class RedisStoreTest(test_lib.StorageTestCase):
     """Creates a Redis client for testing.
 
     This method will attempt to use a Redis server listening on localhost and
-    fallback to a fake Redis client if no server is availble or the connection
+    fallback to a fake Redis client if no server is available or the connection
     timed out.
 
     Returns:

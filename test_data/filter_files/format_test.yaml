@@ -11,7 +11,7 @@ path_separator: '\'
 paths:
 - '\\Windows\\System32'
 ---
-description: Exlcude filter with Windows paths.
+description: Exclude filter with Windows paths.
 type: exclude
 path_separator: '\'
 paths:

@@ -185,7 +185,7 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     if hash_information:
       return [self._label]
 
-    # TODO: Renable when tagging is removed from the analysis report.
+    # TODO: Re-enable when tagging is removed from the analysis report.
     # return ['nsrl_not_present']
     return []
 

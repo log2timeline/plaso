@@ -35,7 +35,7 @@ class ViperAnalyzer(hash_tagging.HTTPHashAnalyzer):
     self._url = None
 
   def _QueryHash(self, digest):
-    """Queries the Viper Server for a specfic hash.
+    """Queries the Viper Server for a specific hash.
 
     Args:
       digest (str): hash to look up.

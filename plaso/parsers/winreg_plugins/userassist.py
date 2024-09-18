@@ -26,7 +26,7 @@ class UserAssistWindowsRegistryEventData(events.EventData):
     application_focus_duration (int): application focus duration.
     entry_index (int): entry index.
     key_path (str): Windows Registry key path.
-    number_of_executions (int): nubmer of executions.
+    number_of_executions (int): number of executions.
     value_name (str): name of the Windows Registry value.
   """
 

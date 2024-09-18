@@ -65,7 +65,7 @@ session_reconnection
 shell_start
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TerminalServices-LocalSessionManager' AND (event_identifier is 22 OR event_identifier is 1102)
 
-# Tags sheduled task creation events.
+# Tags scheduled task creation events.
 task_schedule
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 602
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4698

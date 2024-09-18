@@ -20,7 +20,7 @@ name: LinuxPasswdFile
 doc: |
   Linux passwd file.
 
-  A passwd file consist of colon seperated values in the format:
+  A passwd file consist of colon separated values in the format:
   username:password:uid:gid:full name:home directory:shell
 sources:
 - type: FILE
@@ -162,7 +162,7 @@ provides: [hostname]
 supported_os: [Windows]
 ---
 name: WindowsCurrentVersion
-doc: The Windows current verson
+doc: The Windows current version
 sources:
 - type: REGISTRY_VALUE
   attributes: {key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'CurrentVersion'}]}

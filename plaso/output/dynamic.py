@@ -97,7 +97,7 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Formats the filename.
 
     The filename field can be set as an attribute to event_data otherwise
-    it is derived from the path specificiation.
+    it is derived from the path specification.
 
     Args:
       event (EventObject): event.

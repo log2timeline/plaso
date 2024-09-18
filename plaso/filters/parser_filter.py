@@ -219,12 +219,12 @@ class ParserFilterExpressionHelper(object):
         excludes (dict[str, set[str]]): excluded presets, plugins and presets.
             Dictionary keys are preset and/or parser names, and values are
             sets containing plugin names to enable for a parser or an asterisk
-            character ('*') to represet all plugins, or that no specific
+            character ('*') to represent all plugins, or that no specific
             plugins were specified.
         includes (dict[str, set[str]]): included presets, parsers and plugins.
             Dictionary keys are preset and/or parser names, and values are
             sets containing plugin names to enable for a parser or an asterisk
-            character ('*') to represet all plugins, or that no specific
+            character ('*') to represent all plugins, or that no specific
             plugins were specified.
     """
     if not expression:

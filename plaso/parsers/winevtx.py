@@ -61,7 +61,7 @@ class WinEvtxParser(interface.FileObjectParser):
 
   def _GetCreationTimeFromXMLString(
       self, parser_mediator, record_index, xml_string):
-    """Retrieves the creationg time from the XML string.
+    """Retrieves the creation time from the XML string.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

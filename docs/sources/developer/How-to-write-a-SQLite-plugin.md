@@ -2,7 +2,7 @@
 
 To write a SQLite plugin it is best to use [l2t_scaffolder](https://github.com/log2timeline/l2tscaffolder).
 The scaffolder will ask you questions and guide you through setting up the
-necesary files needed for the plugin.
+necessary files needed for the plugin.
 
 ## Locate/create test data
 

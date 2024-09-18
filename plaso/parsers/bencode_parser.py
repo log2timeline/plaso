@@ -41,7 +41,7 @@ class BencodeValues(object):
       value = self._decoded_values.get(name_as_byte_stream, None)
 
     if isinstance(value, bytes):
-      # Work-around for issue in bencode 3.0.1 where string valuse are bytes.
+      # Work-around for issue in bencode 3.0.1 where string values are bytes.
       value = value.decode('utf-8')
 
     return value

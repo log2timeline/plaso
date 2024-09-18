@@ -54,7 +54,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         registry, knowledge_base)
 
   def _CreateTestKnowledgeBaseWindows(self):
-    """Creates a knowlege base for testing Windows paths.
+    """Creates a knowledge base for testing Windows paths.
 
     Creates a knowledge base with 2 user accounts.
 

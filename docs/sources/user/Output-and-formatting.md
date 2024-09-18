@@ -38,7 +38,7 @@ display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
 host | The hostname derived by pre-processing
 hostname | The hostname derived by pre-processing
-inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifer (such as inode, mft entry) in the path specification
+inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, mft entry) in the path specification
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter
 message_short | The short event message string as defined by the message formatter
