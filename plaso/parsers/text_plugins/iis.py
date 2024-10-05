@@ -101,8 +101,8 @@ class WinIISTextPlugin(interface.TextPlugin):
       lambda tokens: int(tokens[0], 10)) | _BLANK
 
   # Username can consist of: "domain.username", "domain\username",
-  # "domain\user$" or "-" for an anonymous user.
-  _USERNAME = pyparsing.Word(pyparsing.alphanums + '-.\\$') | _BLANK
+  # "domain\user$", "domain/user", "user@domain" or "-" for an anonymous user.
+  _USERNAME = pyparsing.Word(pyparsing.alphanums + '-.\\$@/') | _BLANK
 
   _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
 
