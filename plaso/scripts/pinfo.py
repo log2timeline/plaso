@@ -85,8 +85,6 @@ def Main():
 
 
 if __name__ == '__main__':
-  # For PyInstaller sake we need to define this directly after "__main__".
-  # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
   multiprocessing.freeze_support()
 
   sys.exit(Main())

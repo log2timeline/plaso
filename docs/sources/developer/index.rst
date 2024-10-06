@@ -12,4 +12,3 @@ Developer documentation
    How to write an analysis plugin <How-to-write-an-analysis-plugin>
    How to write an output module <How-to-write-an-output-module>
    Packaging with Docker <Packaging-with-docker>
-   Packaging with PyInstaller <Packaging-with-pyinstaller>
