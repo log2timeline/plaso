@@ -14,3 +14,5 @@
 2022-01-01 18:42:36 ::1 POST /ews/exchange.asmx &request_id=GHJGJYHG-ea2f-4e0f-894c-tdtyd667tyftyf 444 RaDomain\RandomMailbox3242354 ::1 Ews_Probe/Local+(ExchangeServicesClient/15.01.25965.004) - 200 0 0 102
 2022-01-01 18:42:37 ::1 POST /mapi/emdata/ useMailboxOfAuthenticatedUser=true 444 RaDomain\RandomMailbox3242354 ::1 MapiHttpClient - 200 0 0 4
 2022-01-01 18:42:55 ::1 GET /rancertloc/logoff.aspx ActID=werwer-3e02-56456-ererere545-sdf8798798dfh 444 RaDomain\RandomMailbox3242354 ::1 Mozilla/4.0+(compatible;+MSIE+12.0;+Trident/7.0;+rv:12.0;+Windows+NT+6.1;+MSEXCHMON;+ACTIVEMONITORING;+BACKLOOK) - 302 0 0 5
+2022-01-01 00:01:24 ::1 POST /powershell clientApplication=ActiveMonitor;PSVersion=5.1.14393.4467 444  random/ranuser1 ::1 Microsoft+WinRM+Client - 200 0 0 15
+2022-01-01 00:01:24 ::1 POST /powershell clientApplication=ActiveMonitor;PSVersion=5.1.14393.4467 444  ranuser1@random ::1 Microsoft+WinRM+Client - 200 0 0 15
