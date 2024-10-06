@@ -340,6 +340,7 @@ class ProcessingStatus(object):
     process_status.pid = pid
     process_status.status = status
 
+    # pylint: disable=consider-using-min-builtin
     if used_memory > 0:
       process_status.used_memory = used_memory
 

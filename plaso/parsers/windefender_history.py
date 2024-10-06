@@ -121,8 +121,8 @@ class WinDefenderHistoryParser(
     else:
       header = self._ReadThreatTrackingHeader(threat_tracking_data)
 
-    values_data_offset = header.header_size + 4
-    values_data_end_offset = header.total_data_size
+      values_data_offset = header.header_size + 4
+      values_data_end_offset = header.total_data_size
 
     while values_data_offset < values_data_end_offset:
       threat_value, data_size = self._ReadThreatTrackingValue(

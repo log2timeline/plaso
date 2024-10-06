@@ -334,8 +334,7 @@ class CLITool(object):
     """Lists the time zones."""
     max_length = 0
     for time_zone_name in pytz.all_timezones:
-      if len(time_zone_name) > max_length:
-        max_length = len(time_zone_name)
+      max_length = max(max_length, len(time_zone_name))
 
     utc_date_time = datetime.datetime.utcnow()
 

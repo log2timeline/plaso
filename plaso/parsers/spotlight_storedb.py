@@ -1097,6 +1097,9 @@ class SpotlightStoreDatabaseParser(
       data_type_map = self._GetDataTypeMap(
           'spotlight_store_db_property_value21')
 
+    else:
+      data_type_map = None
+
     page_data_offset = 12
     page_data_size = page_header.used_page_size - 20
     page_value_index = 0
@@ -1242,12 +1245,11 @@ class SpotlightStoreDatabaseParser(
     stream_values = self._ReadStreamsMap(parent_file_entry, streams_map_number)
 
     if streams_map_number == 1:
-      data_type_map = self._GetDataTypeMap(
-          'spotlight_metadata_attribute_type')
-
+      data_type_map = self._GetDataTypeMap('spotlight_metadata_attribute_type')
     elif streams_map_number == 2:
-      data_type_map = self._GetDataTypeMap(
-          'spotlight_metadata_attribute_value')
+      data_type_map = self._GetDataTypeMap('spotlight_metadata_attribute_value')
+    else:
+      data_type_map = None
 
     for index, stream_value in enumerate(stream_values):
       if index == 0:

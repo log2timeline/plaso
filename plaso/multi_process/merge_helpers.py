@@ -43,9 +43,7 @@ class BaseTaskMergeHelper(object):
       AttributeContainer: attribute container.
     """
     for container_type in self._CONTAINER_TYPES:
-      for container in task_storage_reader.GetAttributeContainers(
-          container_type):
-        yield container
+      yield from task_storage_reader.GetAttributeContainers(container_type)
 
     self.fully_merged = True
 

@@ -218,6 +218,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not destination_path.endswith(os.path.sep):
       destination_path = destination_path + os.path.sep
 
+    # TODO: refactor
+    path = None
+
     target_path = os.path.join(target_directory, target_filename)
     if target_path.startswith(destination_path):
       path = target_path[len(destination_path):]

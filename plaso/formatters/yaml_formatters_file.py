@@ -232,6 +232,8 @@ class YAMLFormattersFile(object):
           'Invalid event formatter definition: {0:s} missing source.'.format(
               data_type))
 
+    formatter = None
+
     if formatter_type == 'basic':
       formatter = interface.BasicEventFormatter(
           data_type=data_type, format_string=message,
@@ -286,5 +288,4 @@ class YAMLFormattersFile(object):
       EventFormatter: an event formatter.
     """
     with open(path, 'r', encoding='utf-8') as file_object:
-      for yaml_definition in self._ReadFromFileObject(file_object):
-        yield yaml_definition
+      yield from self._ReadFromFileObject(file_object)

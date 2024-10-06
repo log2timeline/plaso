@@ -55,8 +55,7 @@ class CircularBuffer(object):
 
   def Flush(self):
     """Returns a generator for all items and clear the buffer."""
-    for item in self:
-      yield item
+    yield from self
     self.Clear()
 
   def GetCurrent(self):

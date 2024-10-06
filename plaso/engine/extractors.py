@@ -391,14 +391,12 @@ class PathSpecExtractor(object):
       if sub_file_entry.IsDirectory():
         sub_directories.append(sub_file_entry)
 
-      for path_spec in self._ExtractPathSpecsFromFile(sub_file_entry):
-        yield path_spec
+      yield from self._ExtractPathSpecsFromFile(sub_file_entry)
 
     for sub_file_entry in sub_directories:
       try:
-        for path_spec in self._ExtractPathSpecsFromDirectory(
-            sub_file_entry, depth=depth + 1):
-          yield path_spec
+        yield from self._ExtractPathSpecsFromDirectory(
+            sub_file_entry, depth=depth + 1)
 
       except (
           IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
@@ -463,15 +461,12 @@ class PathSpecExtractor(object):
         if find_specs:
           searcher = file_system_searcher.FileSystemSearcher(
               file_system, path_spec)
-          for extracted_path_spec in searcher.Find(find_specs=find_specs):
-            yield extracted_path_spec
+          yield from searcher.Find(find_specs=find_specs)
 
         elif recurse_file_system:
           file_entry = file_system.GetFileEntryByPathSpec(path_spec)
           if file_entry:
-            for extracted_path_spec in self._ExtractPathSpecsFromDirectory(
-                file_entry):
-              yield extracted_path_spec
+            yield from self._ExtractPathSpecsFromDirectory(file_entry)
 
         else:
           yield path_spec
@@ -535,8 +530,7 @@ class PathSpecExtractor(object):
       yield path_spec
 
     else:
-      for extracted_path_spec in self._ExtractPathSpecsFromFileSystem(
+      yield from self._ExtractPathSpecsFromFileSystem(
           path_spec, find_specs=find_specs,
           recurse_file_system=recurse_file_system,
-          resolver_context=resolver_context):
-        yield extracted_path_spec
+          resolver_context=resolver_context)

@@ -238,6 +238,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       floating_point_map = self._GetDataTypeMap('float32le')
     elif value_length == 8:
       floating_point_map = self._GetDataTypeMap('float64le')
+    else:
+      floating_point_map = None
 
     try:
       return self._ReadStructureFromByteStream(value, 0, floating_point_map)

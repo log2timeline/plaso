@@ -87,11 +87,6 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
           f'unable to parse header value with error: {exception!s}')
       return
 
-    if header.format_version not in (1, 9, 12, 19):
-      parser_mediator.ProduceExtractionWarning(
-          f'unsupported format version: {header.format_version:d}')
-      return
-
     known_folder_identifier = None
     if header.format_version == 1:
       value_data_offset = 8
@@ -102,6 +97,11 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
     elif header.format_version in (12, 19):
       known_folder_identifier = uuid.UUID(bytes_le=value_data[4:20])
       value_data_offset = 20
+
+    else:
+      parser_mediator.ProduceExtractionWarning(
+          f'unsupported format version: {header.format_version:d}')
+      return
 
     entry_header_map = self._GetDataTypeMap('programscache_entry_header')
     entry_footer_map = self._GetDataTypeMap('programscache_entry_footer')

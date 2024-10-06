@@ -45,11 +45,7 @@ def Main():
   options = argument_parser.parse_args()
 
   if not os.path.isdir(options.profile_path):
-    print('No such directory: {0:s}'.format(options.profile_path))
-    return False
-
-  if options.profiler not in ('analyzers', 'parsers', 'processing'):
-    print('Unsupported profiler: {0:s}'.format(options.profiler))
+    print(f'No such directory: {options.profile_path:s}')
     return False
 
   processes = []
@@ -68,16 +64,18 @@ def Main():
     name_prefix = 'processing'
     name_suffix = 'processing'
 
+  else:
+    print(f'Unsupported profiler: {options.profiler:s}')
+    return False
+
   names = ['time', 'name', 'cpu']
 
-  glob_pattern = '{0:s}-*-{1:s}.csv.gz'.format(name_prefix, name_suffix)
-  glob_expression = os.path.join(options.profile_path, glob_pattern)
+  glob_expression = os.path.join(
+      options.profile_path, f'{name_prefix:s}-*-{name_suffix:s}.csv.gz')
   for csv_file_name in glob.glob(glob_expression):
     process_name = os.path.basename(csv_file_name)
-    process_name_prefix = '{0:s}-'.format(name_prefix)
-    process_name_suffix = '-{0:s}.csv.gz'.format(name_suffix)
-    process_name = process_name.replace(process_name_prefix, '').replace(
-        process_name_suffix, '')
+    process_name = process_name.replace(f'{name_prefix:s}-', '')
+    process_name = process_name.replace(f'-{name_suffix:s}.csv.gz', '')
     if processes and process_name not in processes:
       continue
 
