@@ -5,6 +5,9 @@ import collections
 import os
 import sqlite3
 
+from acstore import sqlite_store
+from acstore.containers import interface as containers_interface
+
 from plaso.engine import path_helper
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
@@ -242,7 +245,7 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     """Retrieves a specific message for a specific EventLog source.
 
     Args:
-      log_source (str): EventLog source.
+      log_source (str): EventLog source, such as "Application Error".
       lcid (int): language code identifier (LCID).
       message_identifier (int): message identifier.
 
@@ -335,6 +338,299 @@ class WinevtResourcesSqlite3DatabaseReader(object):
     return True
 
 
+class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
+  """Windows Event Log provider.
+
+  Attributes:
+    additional_identifier (str): additional identifier of the provider,
+        contains a GUID.
+    category_message_files (set[str]): paths of the category message files.
+    event_message_files (set[str]): paths of the event message files.
+    identifier (str): identifier of the provider, contains a GUID.
+    log_sources (list[str]): names of the corresponding Event Log sources.
+    log_types (list[str]): Windows Event Log types.
+    name (str): name of the provider.
+    parameter_message_files (set[str]): paths of the parameter message
+        files.
+    windows_version (str): Windows version.
+  """
+
+  CONTAINER_TYPE = 'winevtrc_eventlog_provider'
+
+  SCHEMA = {
+      'additional_identifier': 'str',
+      'category_message_files': 'List[str]',
+      'event_message_files': 'List[str]',
+      'identifier': 'str',
+      'log_sources': 'List[str]',
+      'log_types': 'List[str]',
+      'name': 'str',
+      'parameter_message_files': 'List[str]',
+      'windows_version': 'str'}
+
+  def __init__(self):
+    """Initializes the Windows Event Log provider."""
+    super(WinevtResourcesEventLogProvider, self).__init__()
+    self.additional_identifier = None
+    self.category_message_files = set()
+    self.event_message_files = set()
+    self.identifier = None
+    self.log_sources = []
+    self.log_types = []
+    self.name = None
+    self.parameter_message_files = set()
+    self.windows_version = None
+
+
+class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
+  """Windows Event Log message file.
+
+  Attributes:
+    file_version (str): file version.
+    product_version (str): product version.
+    windows_path (str): path as defined by the Window Event Log provider.
+    windows_version (str): Windows version.
+  """
+
+  CONTAINER_TYPE = 'winevtrc_message_file'
+
+  SCHEMA = {
+      'file_version': 'str',
+      'product_version': 'str',
+      'windows_path': 'str',
+      'windows_version': 'str'}
+
+  def __init__(
+      self, file_version=None, product_version=None, windows_path=None,
+      windows_version=None):
+    """Initializes a Windows Event Log message file.
+
+    Args:
+      file_version (Optional[str]): file version.
+      product_version (Optional[str]): product version.
+      windows_path (Optional[str]): path as defined by the Window Event Log
+          provider.
+      windows_version (Optional[str]): Windows version.
+    """
+    super(WinevtResourcesMessageFile, self).__init__()
+    self.file_version = file_version
+    self.product_version = product_version
+    self.windows_path = windows_path
+    self.windows_version = windows_version
+
+
+class WinevtResourcesMessageString(containers_interface.AttributeContainer):
+  """Windows Event Log message string.
+
+  Attributes:
+    identifier (int): message identifier.
+    text (str): message text.
+  """
+
+  CONTAINER_TYPE = 'winevtrc_message_string'
+
+  SCHEMA = {
+      '_message_table_identifier': 'AttributeContainerIdentifier',
+      'language_identifier': 'str',
+      'message_identifier': 'int',
+      'text': 'str'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_table_identifier']
+
+  def __init__(self, message_identifier=None, text=None):
+    """Initializes a Windows Event Log message string.
+
+    Args:
+      message_identifier (Optional[int]): message identifier.
+      text (Optional[int]): message text.
+    """
+    super(WinevtResourcesMessageString, self).__init__()
+    self._message_table_identifier = None
+    self.message_identifier = message_identifier
+    self.text = text
+
+  def GetMessageTableIdentifier(self):
+    """Retrieves the identifier of the associated message table.
+
+    Returns:
+      AttributeContainerIdentifier: message table identifier or None when not
+          set.
+    """
+    return self._message_table_identifier
+
+  def SetMessageTableIdentifier(self, message_table_identifier):
+    """Sets the identifier of the associated message table.
+
+    Args:
+      message_table_identifier (AttributeContainerIdentifier): message table
+          identifier.
+    """
+    self._message_table_identifier = message_table_identifier
+
+
+class WinevtResourcesMessageStringMapping(
+    containers_interface.AttributeContainer):
+  """Windows Event Log message string mapping.
+
+  Attributes:
+    event_identifier (int): event identifier.
+    event_version (int): event version.
+    message_identifier (int): message identifier.
+    provider_identifier (str): Event Log provider identifier.
+  """
+
+  CONTAINER_TYPE = 'winevtrc_message_string_mapping'
+
+  SCHEMA = {
+      '_message_file_identifier': 'AttributeContainerIdentifier',
+      'event_identifier': 'int',
+      'event_version': 'int',
+      'message_identifier': 'int',
+      'provider_identifier': 'str'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_file_identifier']
+
+  def __init__(
+      self, event_identifier=None, event_version=None, message_identifier=None,
+      provider_identifier=None):
+    """Initializes a Windows Event Log message string mapping.
+
+    Args:
+      event_identifier (Optional[int]): event identifier.
+      event_version (Optional[int]): event version.
+      message_identifier (Optional[int]): message identifier.
+      provider_identifier (Optional[str]): Event Log provider identifier.
+    """
+    super(WinevtResourcesMessageStringMapping, self).__init__()
+    self._message_file_identifier = None
+    self.event_identifier = event_identifier
+    self.event_version = event_version
+    self.message_identifier = message_identifier
+    self.provider_identifier = provider_identifier
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when
+          not set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
+
+
+class WinevtResourcesMessageTable(containers_interface.AttributeContainer):
+  """Windows Event Log message table.
+
+  Attributes:
+    language_identifier (int): language identifier (LCID).
+  """
+
+  CONTAINER_TYPE = 'winevtrc_message_table'
+
+  SCHEMA = {
+      '_message_file_identifier': 'AttributeContainerIdentifier',
+      'language_identifier': 'int'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_file_identifier']
+
+  def __init__(self, language_identifier=None):
+    """Initializes a Windows Event Log message table descriptor.
+
+    Args:
+      language_identifier (Optional[int]): language identifier (LCID).
+    """
+    super(WinevtResourcesMessageTable, self).__init__()
+    self._message_file_identifier = None
+    self.language_identifier = language_identifier
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when not
+          set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
+
+
+class WinevtResourcesAttributeContainerStore(
+    sqlite_store.SQLiteAttributeContainerStore):
+  """Windows EventLog resources attribute container store.
+
+  Attributes:
+    format_version (int): storage format version.
+    serialization_format (str): serialization format.
+    string_format (str): string format.
+  """
+
+  _FORMAT_VERSION = 20240929
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20240929
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20240929
+  _READ_COMPATIBLE_FORMAT_VERSION = 20240929
+
+  def __init__(self, string_format='wrc'):
+    """Initializes a message resource attribute container store.
+
+    Args:
+      string_format (Optional[str]): string format. The default is the Windows
+          Resource (wrc) format.
+    """
+    super(WinevtResourcesAttributeContainerStore, self).__init__()
+    self.string_format = string_format
+
+    self._containers_manager.RegisterAttributeContainers([
+        WinevtResourcesEventLogProvider, WinevtResourcesMessageFile,
+        WinevtResourcesMessageString, WinevtResourcesMessageStringMapping,
+        WinevtResourcesMessageTable])
+
+  def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
+    """Reads storage metadata and checks that the values are valid.
+
+    Args:
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
+
+    Raises:
+      IOError: when there is an error querying the attribute container store.
+      OSError: when there is an error querying the attribute container store.
+    """
+    metadata_values = self._ReadMetadata()
+
+    self._CheckStorageMetadata(
+        metadata_values, check_readable_only=check_readable_only)
+
+    string_format = metadata_values.get('string_format', None)
+
+    if string_format not in ('pep3101', 'wrc'):
+      raise IOError(f'Unsupported string format: {string_format:s}')
+
+    self.format_version = metadata_values['format_version']
+    self.serialization_format = metadata_values['serialization_format']
+    self.string_format = metadata_values['string_format']
+
+
 class WinevtResourcesHelper(object):
   """Windows EventLog resources helper."""
 
@@ -367,10 +663,15 @@ class WinevtResourcesHelper(object):
     self._language_tag = language_tag.lower()
     self._lcid = lcid or self.DEFAULT_LCID
     self._message_string_cache = collections.OrderedDict()
-    self._storage_reader = storage_reader
+    self._resouce_file_helper = resource_files.WindowsResourceFileHelper
+    self._storage_reader = None
     self._windows_eventlog_message_files = None
     self._windows_eventlog_providers = None
     self._winevt_database_reader = None
+
+    if storage_reader and storage_reader.HasAttributeContainers(
+        'windows_eventlog_provider'):
+      self._storage_reader = storage_reader
 
   def _CacheMessageString(
       self, provider_identifier, log_source, message_identifier,
@@ -522,12 +823,51 @@ class WinevtResourcesHelper(object):
         f'message_identifier == {message_identifier:d}')
 
     for message_string in storage_reader.GetAttributeContainers(
-        'windows_eventlog_message_string',
-        filter_expression=filter_expression):
+        'windows_eventlog_message_string', filter_expression=filter_expression):
       identifier = message_string.GetMessageFileIdentifier()
       identifier = identifier.CopyToString()
       if identifier in message_file_identifiers:
         message_strings.append(message_string)
+
+    return message_strings
+
+  def _GetMessageStringsWithMessageTable(
+      self, storage_reader, message_file_identifiers, message_identifier):
+    """Retrieves message strings.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      message_file_identifiers (list[str]): message file identifiers.
+      message_identifier (int): message identifier.
+
+    Returns:
+      list[str]: message strings.
+    """
+    message_strings = []
+
+    for message_file_identifier in message_file_identifiers:
+      filter_expression = (
+          f'_message_file_identifier == "{message_file_identifier:s}" and '
+          f'language_identifier == {self._lcid:d}')
+      for message_table in storage_reader.GetAttributeContainers(
+          'winevtrc_message_table', filter_expression=filter_expression):
+        if not message_table:
+          continue
+
+        identifier = message_table.GetIdentifier()
+        message_table_identifier = identifier.CopyToString()
+
+        filter_expression = (
+            f'_message_table_identifier == "{message_table_identifier:s}" and '
+            f'message_identifier == {message_identifier:d}')
+
+        identifier = message_table.GetMessageFileIdentifier()
+        message_file_identifier = identifier.CopyToString()
+
+        for message_string in storage_reader.GetAttributeContainers(
+            'winevtrc_message_string', filter_expression=filter_expression):
+          if message_file_identifier in message_file_identifiers:
+            message_strings.append(message_string)
 
     return message_strings
 
@@ -572,18 +912,35 @@ class WinevtResourcesHelper(object):
       if not os.path.isfile(database_path):
         return None
 
-      self._winevt_database_reader = WinevtResourcesSqlite3DatabaseReader()
-      if not self._winevt_database_reader.Open(database_path):
+      try:
+        self._winevt_database_reader = WinevtResourcesSqlite3DatabaseReader()
+        result = self._winevt_database_reader.Open(database_path)
+      except sqlite3.OperationalError:
+        result = False
+
+      if not result:
+        try:
+          self._winevt_database_reader = (
+              WinevtResourcesAttributeContainerStore())
+          self._winevt_database_reader.Open(path=database_path, read_only=True)  # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+          result = True
+        except IOError:
+          result = False
+
+      if not result:
         self._winevt_database_reader = None
 
     return self._winevt_database_reader
 
-  def _GetWinevtRcDatabaseMessageString(self, log_source, message_identifier):
+  def _GetWinevtRcDatabaseMessageString(
+      self, provider_identifier, log_source, message_identifier, event_version):
     """Retrieves a specific Windows EventLog resource database message string.
 
     Args:
+      provider_identifier (str): EventLog provider identifier.
       log_source (str): EventLog source, such as "Application Error".
       message_identifier (int): message identifier.
+      event_version (int): event version or None if not set.
 
     Returns:
       str: message string or None if not available.
@@ -592,14 +949,54 @@ class WinevtResourcesHelper(object):
     if not database_reader:
       return None
 
-    if self._lcid != self.DEFAULT_LCID:
-      message_string = database_reader.GetMessage(
+    if isinstance(database_reader, WinevtResourcesSqlite3DatabaseReader):
+      return database_reader.GetMessage(
           log_source, self._lcid, message_identifier)
-      if message_string:
-        return message_string
 
-    return database_reader.GetMessage(
-        log_source, self.DEFAULT_LCID, message_identifier)
+    if self._windows_eventlog_providers is None:
+      self._ReadWindowsEventLogProviders(
+          database_reader, container_type='winevtrc_eventlog_provider')
+
+    if self._windows_eventlog_message_files is None:
+      self._ReadWindowsEventLogMessageFiles(
+          database_reader, container_type='winevtrc_message_file',
+          path_attribute='windows_path')
+
+    provider, provider_lookup_key = self._GetWindowsEventLogProvider(
+        provider_identifier, log_source)
+    if not provider:
+      return None
+
+    original_message_identifier = message_identifier
+
+    # TODO: pass message_file_identifiers
+    message_identifier = self._GetMappedMessageIdentifier(
+        database_reader, provider_identifier, message_identifier, event_version)
+
+    message_file_identifiers = self._GetEventMessageFileIdentifiers(
+        provider.event_message_files)
+    if not message_file_identifiers:
+      logger.warning((
+          f'No event message file for identifier: 0x{message_identifier:08x} '
+          f'(original: 0x{original_message_identifier:08x}) '
+          f'of provider: {provider_lookup_key:s}'))
+      return None
+
+    message_strings = self._GetMessageStringsWithMessageTable(
+        database_reader, message_file_identifiers, message_identifier)
+    if not message_strings:
+      logger.warning((
+          f'No message string for identifier: 0x{message_identifier:08x} '
+          f'(original: 0x{original_message_identifier:08x}) '
+          f'of provider: {provider_lookup_key:s}'))
+      return None
+
+    message_string = message_strings[0].text
+    if database_reader.string_format == 'wrc':
+      message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
+          message_string)
+
+    return message_string
 
   def _ReadEnvironmentVariables(self, storage_reader):
     """Reads the environment variables.
@@ -610,25 +1007,6 @@ class WinevtResourcesHelper(object):
     # TODO: get environment variables related to the source.
     self._environment_variables = list(storage_reader.GetAttributeContainers(
         'environment_variable'))
-
-  def _ReadWindowsEventLogMessageFiles(self, storage_reader):
-    """Reads the Windows EventLog message files.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    # TODO: get windows eventlog message files related to the source.
-    self._windows_eventlog_message_files = {}
-    if storage_reader.HasAttributeContainers('windows_eventlog_message_file'):
-      for message_file in storage_reader.GetAttributeContainers(
-          'windows_eventlog_message_file'):
-        path, filename = path_helper.PathHelper.GetWindowsSystemPath(
-            message_file.path, self._environment_variables)
-
-        lookup_path = '\\'.join([path, filename]).lower()
-        message_file_identifier = message_file.GetIdentifier()
-        self._windows_eventlog_message_files[lookup_path] = (
-            message_file_identifier)
 
   def _ReadEventMessageString(
       self, storage_reader, provider_identifier, log_source,
@@ -746,17 +1124,41 @@ class WinevtResourcesHelper(object):
 
     return message_strings[0].string
 
-  def _ReadWindowsEventLogProviders(self, storage_reader):
-    """Reads the Windows EventLog providers.
+  def _ReadWindowsEventLogMessageFiles(
+      self, attribute_store, container_type='windows_eventlog_message_file',
+      path_attribute='path'):
+    """Reads the Windows EventLog message files.
 
     Args:
-      storage_reader (StorageReader): storage reader.
+      attribute_store (AttributeContainerStore): attribute container store.
+      container_type (Optional[str]): attribute container type.
+      path_attribute (Optional[str]): name of the attribute containing the path.
+    """
+    # TODO: get windows eventlog message files related to the source.
+    self._windows_eventlog_message_files = {}
+    if attribute_store.HasAttributeContainers(container_type):
+      for message_file in attribute_store.GetAttributeContainers(
+          container_type):
+        message_file_path = getattr(message_file, path_attribute, None)
+        path, filename = path_helper.PathHelper.GetWindowsSystemPath(
+            message_file_path, self._environment_variables)
+
+        lookup_path = '\\'.join([path, filename]).lower()
+        message_file_identifier = message_file.GetIdentifier()
+        self._windows_eventlog_message_files[lookup_path] = (
+            message_file_identifier)
+
+  def _ReadWindowsEventLogProviders(
+      self, attribute_store, container_type='windows_eventlog_provider'):
+    """Reads Windows EventLog provider attribute containers.
+
+    Args:
+      attribute_store (AttributeContainerStore): attribute container store.
+      container_type (Optional[str]): attribute container type.
     """
     self._windows_eventlog_providers = {}
-    if storage_reader.HasAttributeContainers('windows_eventlog_provider'):
-      for provider in storage_reader.GetAttributeContainers(
-          'windows_eventlog_provider'):
-
+    if attribute_store.HasAttributeContainers(container_type):
+      for provider in attribute_store.GetAttributeContainers(container_type):
         if provider.identifier:
           self._windows_eventlog_providers[provider.identifier] = provider
 
@@ -780,15 +1182,13 @@ class WinevtResourcesHelper(object):
     message_string = self._GetCachedMessageString(
         provider_identifier, log_source, message_identifier, event_version)
     if not message_string:
-      # TODO: change this logic.
-      if self._storage_reader and self._storage_reader.HasAttributeContainers(
-          'windows_eventlog_provider'):
+      if self._storage_reader:
         message_string = self._ReadEventMessageString(
             self._storage_reader, provider_identifier, log_source,
             message_identifier, event_version)
       else:
         message_string = self._GetWinevtRcDatabaseMessageString(
-            log_source, message_identifier)
+            provider_identifier, log_source, message_identifier, event_version)
 
       if message_string:
         self._CacheMessageString(
