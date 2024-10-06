@@ -106,6 +106,8 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
     if method_upper not in ('GET', 'POST'):
       raise ValueError('Method {0:s} is not supported')
 
+    response = None
+
     try:
       if method_upper == 'GET':
         response = requests.get(url, timeout=self._REQUEST_TIMEOUT, **kwargs)

@@ -100,6 +100,8 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section1_map = self._GetDataTypeMap('java_idx_603_section1')
     elif file_header.format_version == 605:
       section1_map = self._GetDataTypeMap('java_idx_605_section1')
+    else:
+      section1_map = None
 
     try:
       section1, data_size = self._ReadStructureFromFileObject(
@@ -116,6 +118,8 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     elif file_header.format_version in (603, 604, 605):
       file_offset = 128
       section2_map = self._GetDataTypeMap('java_idx_603_section2')
+    else:
+      section2_map = None
 
     try:
       section2, data_size = self._ReadStructureFromFileObject(

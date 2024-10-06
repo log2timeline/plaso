@@ -264,15 +264,14 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
     key = keys[0]
     structure = structure[0]
 
-    if key not in ('failed_connection', 'login', 'opened_connection'):
-      return None
-
     if key == 'failed_connection':
       event_data = SyslogSSHFailedConnectionEventData()
     elif key == 'login':
       event_data = SyslogSSHLoginEventData()
     elif key == 'opened_connection':
       event_data = SyslogSSHOpenedConnectionEventData()
+    else:
+      return None
 
     event_data.authentication_method = structure.get(
         'authentication_method', None)

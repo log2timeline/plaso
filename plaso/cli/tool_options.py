@@ -53,8 +53,7 @@ class AnalysisPluginOptions(object):
 
     column_width = 10
     for name, _, _ in analysis_plugin_info:
-      if len(name) > column_width:
-        column_width = len(name)
+      column_width = max(column_width, len(name))
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Name', 'Description'],

@@ -177,6 +177,11 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
 
       number_of_sessions = self._ParseIntegerValue(fields[5])
 
+    else:
+      domain_hash = None
+      number_of_sessions = None
+      visitor_identifier = None
+
     event_data = GoogleAnalyticsUtmaEventData()
     event_data.cookie_name = self.COOKIE_NAME
     event_data.domain_hash = domain_hash
@@ -244,6 +249,11 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         date_time = self._ParsePosixTimeInMilliseconds(fields[3])
       else:
         date_time = self._ParsePosixTime(fields[3])
+
+    else:
+      date_time = None
+      domain_hash = None
+      number_of_pages_viewed = None
 
     event_data = GoogleAnalyticsUtmbEventData()
     event_data.cookie_name = self.COOKIE_NAME
@@ -365,6 +375,12 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       for variable in extra_variables:
         key, _, value = variable.partition('=')
         extra_attributes[key] = urlparse.unquote(value)
+
+    else:
+      date_time = None
+      domain_hash = None
+      number_of_sessions = None
+      number_of_sources = None
 
     event_data = GoogleAnalyticsUtmzEventData()
     event_data.cookie_name = self.COOKIE_NAME

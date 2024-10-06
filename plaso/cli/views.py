@@ -164,9 +164,7 @@ class CLITableView(BaseTableView):
     """
     super(CLITableView, self).AddRow(values)
 
-    value_length = len(values[0])
-    if value_length > self._column_width:
-      self._column_width = value_length
+    self._column_width = max(self._column_width, len(values[0]))
 
   def Write(self, output_writer):
     """Writes the table to the output writer.

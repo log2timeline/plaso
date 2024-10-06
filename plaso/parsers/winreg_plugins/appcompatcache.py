@@ -333,6 +333,7 @@ class AppCompatCacheWindowsRegistryPlugin(
     maximum_path_size = cached_entry.maximum_path_size
     path_offset = cached_entry.path_offset
 
+    path = None
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
       maximum_path_size += path_offset
@@ -379,6 +380,7 @@ class AppCompatCacheWindowsRegistryPlugin(
     maximum_path_size = cached_entry.maximum_path_size
     path_offset = cached_entry.path_offset
 
+    path = None
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
       maximum_path_size += path_offset
@@ -426,6 +428,7 @@ class AppCompatCacheWindowsRegistryPlugin(
     maximum_path_size = cached_entry.maximum_path_size
     path_offset = cached_entry.path_offset
 
+    path = None
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
       maximum_path_size += path_offset
@@ -483,6 +486,8 @@ class AppCompatCacheWindowsRegistryPlugin(
       data_type_map_name = 'appcompatcache_cached_entry_body_8_0'
     elif cached_entry.signature == self._CACHED_ENTRY_SIGNATURE_8_1:
       data_type_map_name = 'appcompatcache_cached_entry_body_8_1'
+    else:
+      data_type_map_name = None
 
     data_type_map = self._GetDataTypeMap(data_type_map_name)
     context = dtfabric_data_maps.DataTypeMapContext()

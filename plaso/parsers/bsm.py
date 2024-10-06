@@ -438,10 +438,14 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       dict[str, str]: token values.
     """
     protocol = self._NETWORK_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
+
     if token_data.net_type == 4:
       ip_address = self._FormatPackedIPv6Address(token_data.ip_address[:4])
     elif token_data.net_type == 16:
       ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
+    else:
+      ip_address = None
+
     return {
         'protocols': protocol,
         'net_type': token_data.net_type,

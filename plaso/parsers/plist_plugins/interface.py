@@ -803,9 +803,8 @@ class PlistPlugin(plugins.BasePlugin):
 
     elif isinstance(plist_item, (list, tuple)):
       for sub_plist_item in plist_item:
-        for subkey_values in self._RecurseKey(
-            sub_plist_item, depth=depth - 1, key_path=key_path):
-          yield subkey_values
+        yield from self._RecurseKey(
+            sub_plist_item, depth=depth - 1, key_path=key_path)
 
     elif hasattr(plist_item, 'items'):
       for subkey_name, value in plist_item.items():
@@ -818,10 +817,9 @@ class PlistPlugin(plugins.BasePlugin):
 
         for sub_plist_item in value:
           if isinstance(sub_plist_item, dict):
-            subkey_path = '{0:s}/{1:s}'.format(key_path, subkey_name)
-            for subkey_values in self._RecurseKey(
-                sub_plist_item, depth=depth - 1, key_path=subkey_path):
-              yield subkey_values
+            subkey_path = '/'.join([key_path, subkey_name])
+            yield from self._RecurseKey(
+                sub_plist_item, depth=depth - 1, key_path=subkey_path)
 
   # pylint: disable=arguments-differ
   @abc.abstractmethod
