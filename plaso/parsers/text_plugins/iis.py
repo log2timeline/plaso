@@ -111,6 +111,8 @@ class WinIISTextPlugin(interface.TextPlugin):
   _URI_STEM = (pyparsing.Word(
       pyparsing.alphanums + _URI_SAFE_CHARACTERS + '$') | _BLANK)
 
+  _UA = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS + '[]') | _BLANK
+
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
   # IIS does not require that a query comply with RFC1738 restrictions on valid
   # URI characters
@@ -157,7 +159,7 @@ class WinIISTextPlugin(interface.TextPlugin):
       PORT.set_results_name('dest_port') +
       _USERNAME.set_results_name('cs_username') +
       _IP_ADDRESS.set_results_name('source_ip') +
-      _URI.set_results_name('user_agent') +
+      _UA.set_results_name('user_agent') +
       _INTEGER.set_results_name('sc_status') +
       _INTEGER.set_results_name('sc_substatus') +
       _INTEGER.set_results_name('sc_win32_status') +
@@ -185,7 +187,7 @@ class WinIISTextPlugin(interface.TextPlugin):
   _LOG_LINE_STRUCTURES['cs-username'] = _USERNAME.set_results_name(
       'cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = _IP_ADDRESS.set_results_name('source_ip')
-  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _URI.set_results_name('user_agent')
+  _LOG_LINE_STRUCTURES['cs(User-Agent)'] = _UA.set_results_name('user_agent')
   _LOG_LINE_STRUCTURES['sc-status'] = _INTEGER.set_results_name('http_status')
   _LOG_LINE_STRUCTURES['sc-substatus'] = _INTEGER.set_results_name(
       'sc_substatus')

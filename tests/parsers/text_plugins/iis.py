@@ -176,7 +176,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 14)
+    self.assertEqual(number_of_event_data, 15)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
