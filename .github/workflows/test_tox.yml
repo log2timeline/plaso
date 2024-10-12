@@ -24,6 +24,8 @@ jobs:
           toxenv: 'py311,wheel'
         - python-version: '3.12'
           toxenv: 'py312,wheel'
+        - python-version: '3.13'
+          toxenv: 'py313,wheel'
     container:
       image: ubuntu:22.04
     steps:
