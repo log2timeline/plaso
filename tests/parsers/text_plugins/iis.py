@@ -187,7 +187,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
   def testProcessWithIIS10LogAndCookieField(self):
-    """Tests the Process function with an IIS 10 log file with cs(Cookie) field."""
+    """Tests the Process function with an IIS 10 log file and cs(Cookie)."""
     plugin = iis.WinIISTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
         ['iis10_cookies.log'], plugin)
