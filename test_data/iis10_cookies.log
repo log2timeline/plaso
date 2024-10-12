@@ -1,0 +1,7 @@
+#Date: 2021-04-01 00:00:21
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Cookie) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+2021-04-01 00:00:21 111.111.111.111 GET /foo/bar/baz.asp - 80 - 222.222.222.222 Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/35.0.2309.372+Safari/537.36 OutlookSession="{AAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}" http://111.111.111.111/ 200 0 0 65
+2021-04-01 00:00:21 111.111.111.111 GET /foo/bar/baz.asp - 80 - 222.222.222.222 Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/35.0.2309.372+Safari/537.36 username=realm\user http://111.111.111.111/ 200 0 0 65
+2021-04-01 00:00:21 111.111.111.111 GET /foo/bar/baz.asp - 80 - 222.222.222.222 Mozilla/5.0+(Windows+NT+5.1)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/35.0.2309.372+Safari/537.36 username=realm@user http://111.111.111.111/ 200 0 0 65
