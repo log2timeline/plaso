@@ -5,7 +5,7 @@ User Access Logging (UAL) is present in Windows Server editions starting with
 Window Server 2012.
 
 Also see:
-  https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
+  https://www.crowdstrike.com/en-us/blog/user-access-logging-ual-overview
 """
 
 import ipaddress
