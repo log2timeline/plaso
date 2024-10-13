@@ -3,6 +3,7 @@
 """Tests for the tagging analysis plugin CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.analysis import tagging
@@ -19,7 +20,21 @@ class TaggingAnalysisArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--tagging-file TAGGING_FILE]
+
+Test argument parser.
+
+{0:s}:
+  --tagging-file, --tagging_file TAGGING_FILE
+                        Specify a file to read tagging criteria from.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--tagging-file TAGGING_FILE]
 
 Test argument parser.

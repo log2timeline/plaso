@@ -3,6 +3,7 @@
 """Tests for the output modules CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,25 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
+
+Test argument parser.
+
+{0:s}:
+  --fields FIELDS       Defines which fields should be included in the output.
+  -o, --output_format, --output-format FORMAT
+                        The output format. Use "-o list" to see a list of
+                        available output formats.
+  -w, --write OUTPUT_FILE
+                        Output filename.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.

@@ -3,6 +3,7 @@
 """Tests for the bloom database analysis plugin CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 try:
@@ -25,7 +26,31 @@ class BloomAnalysisArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
+                     [--bloom-label LABEL]
+
+Test argument parser.
+
+{0:s}:
+  --bloom-file, --bloom_file PATH
+                        Path to the bloom database file, the default is:
+                        hashlookup-full.bloom
+  --bloom-hash, --bloom_hash HASH
+                        Type of hash to use to query the bloom database file
+                        (note that hash values must be stored in upper case),
+                        the default is: sha1. Supported options: md5, sha1,
+                        sha256.
+  --bloom-label, --bloom_label LABEL
+                        Label to apply to events, the default is:
+                        bloom_present.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
                      [--bloom-label LABEL]
 

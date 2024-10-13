@@ -5,6 +5,7 @@
 import argparse
 import io
 import os
+import sys
 import unittest
 
 try:
@@ -1155,6 +1156,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool."""
 
   # pylint: disable=protected-access
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   _APFS_PASSWORD = 'apfs-TEST'
   _BDE_PASSWORD = 'bde-TEST'
@@ -1177,7 +1179,31 @@ Test argument parser.
                         with care.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
-  _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
+usage: storage_media_tool_test.py [--partitions PARTITIONS]
+                                  [--volumes VOLUMES]
+
+Test argument parser.
+
+{0:s}:
+  --partitions, --partition PARTITIONS
+                        Define partitions to be processed. A range of
+                        partitions can be defined as: "3..5". Multiple
+                        partitions can be defined as: "1,3,5" (a list of comma
+                        separated values). Ranges and lists can also be
+                        combined as: "1,3..5". The first partition is 1. All
+                        partitions can be specified with: "all".
+  --volumes, --volume VOLUMES
+                        Define volumes to be processed. A range of volumes can
+                        be defined as: "3..5". Multiple volumes can be defined
+                        as: "1,3,5" (a list of comma separated values). Ranges
+                        and lists can also be combined as: "1,3..5". The first
+                        volume is 1. All volumes can be specified with: "all".
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
                                   [--volumes VOLUMES]
 
@@ -1199,7 +1225,33 @@ Test argument parser.
                         volume is 1. All volumes can be specified with: "all".
 """.format(test_lib.ARGPARSE_OPTIONS)
 
-  _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
+usage: storage_media_tool_test.py [--no_vss] [--vss_only]
+                                  [--vss_stores VSS_STORES]
+
+Test argument parser.
+
+{0:s}:
+  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
+                        means that Volume Shadow Snapshots (VSS) are not
+                        processed. WARNING: this option is deprecated use
+                        --vss_stores=none instead.
+  --vss_only, --vss-only
+                        Do not process the current volume if Volume Shadow
+                        Snapshots (VSS) have been selected.
+  --vss_stores, --vss-stores VSS_STORES
+                        Define Volume Shadow Snapshots (VSS) (or stores) that
+                        need to be processed. A range of snapshots can be
+                        defined as: "3..5". Multiple snapshots can be defined
+                        as: "1,3,5" (a list of comma separated values). Ranges
+                        and lists can also be combined as: "1,3..5". The first
+                        snapshot is 1. All snapshots can be defined as: "all"
+                        and no snapshots as: "none".
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
 usage: storage_media_tool_test.py [--no_vss] [--vss_only]
                                   [--vss_stores VSS_STORES]
 

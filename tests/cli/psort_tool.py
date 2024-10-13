@@ -5,6 +5,7 @@
 import argparse
 import io
 import os
+import sys
 import unittest
 
 try:
@@ -94,9 +95,36 @@ class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
   # pylint: disable=protected-access
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if resource is None:
-    _EXPECTED_PROCESSING_OPTIONS = """\
+    if _PYTHON3_13_OR_LATER:
+      _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--temporary_directory DIRECTORY]
+                     [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
+
+Test argument parser.
+
+{0:s}:
+  --temporary_directory, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker_memory_limit, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+    else:
+      _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--temporary_directory DIRECTORY]
                      [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
 
@@ -121,7 +149,42 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   else:
-    _EXPECTED_PROCESSING_OPTIONS = """\
+    if _PYTHON3_13_OR_LATER:
+      _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--process_memory_limit SIZE]
+                     [--temporary_directory DIRECTORY]
+                     [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
+
+Test argument parser.
+
+{0:s}:
+  --process_memory_limit, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+  --temporary_directory, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker_memory_limit, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+    else:
+      _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--process_memory_limit SIZE]
                      [--temporary_directory DIRECTORY]
                      [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
