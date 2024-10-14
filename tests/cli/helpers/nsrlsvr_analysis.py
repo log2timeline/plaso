@@ -3,6 +3,7 @@
 """Tests for the nsrlsvr analysis plugin CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.analysis import nsrlsvr
@@ -19,7 +20,32 @@ class NsrlsvrAnalysisArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
+                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]
+
+Test argument parser.
+
+{0:s}:
+  --nsrlsvr-hash, --nsrlsvr_hash HASH
+                        Type of hash to use to query nsrlsvr instance, the
+                        default is: md5. Supported options: md5, sha1
+  --nsrlsvr-host, --nsrlsvr_host HOST
+                        Hostname or IP address of the nsrlsvr instance to
+                        query, the default is: localhost
+  --nsrlsvr-label, --nsrlsvr_label LABEL
+                        Label to apply to events, the default is:
+                        nsrl_present.
+  --nsrlsvr-port, --nsrlsvr_port PORT
+                        Port number of the nsrlsvr instance to query, the
+                        default is: 9120.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
                      [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]
 

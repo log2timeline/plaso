@@ -3,6 +3,7 @@
 """Tests for the sessionize analysis plugin CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.analysis import sessionize
@@ -19,7 +20,22 @@ class SessionizeAnalysisArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--maximum-pause MINUTES]
+
+Test argument parser.
+
+{0:s}:
+  --maximum-pause, --maximum_pause MINUTES
+                        Specify the maximum delay in minutes between events in
+                        the session.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--maximum-pause MINUTES]
 
 Test argument parser.

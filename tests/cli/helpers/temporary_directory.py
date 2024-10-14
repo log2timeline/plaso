@@ -3,6 +3,7 @@
 """Tests for the temporary directory CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,22 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--temporary_directory DIRECTORY]
+
+Test argument parser.
+
+{0:s}:
+  --temporary_directory, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--temporary_directory DIRECTORY]
 
 Test argument parser.
