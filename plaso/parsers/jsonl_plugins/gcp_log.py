@@ -58,8 +58,8 @@ class GCPLogEventData(events.EventData):
     source_images (list[str]): source images of disks attached to a compute
         engine instance.
     status_code (str): operation success or failure code.
-    status_message (str); operation success or failure message.
-    status_reasons (list[str]): reasons for operation failure.
+    status_message (str): operation success or failure message.
+    status_reasons ([str]): reasons for operation failure.
     text_payload (str): text payload for logs not using a JSON or proto payload.
     user_agent (str): user agent used in the request.
   """
