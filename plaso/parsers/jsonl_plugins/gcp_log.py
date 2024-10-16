@@ -35,6 +35,8 @@ class GCPLogEventData(events.EventData):
     resource_name (str): name of the resource.
     service_account_display_name (str): display name of the service account.
     service_name (str): name of the servie.
+    status_message (str): the status message of the event
+    status_reason (str): the reason behind the status message
     severity (str): log entry severity.
     text_payload (str): text payload for logs not using a JSON or proto payload.
     user (str): user principal performing the logged action.
@@ -68,6 +70,8 @@ class GCPLogEventData(events.EventData):
     self.service_account_display_name = None
     self.service_name = None
     self.severity = None
+    self.status_message = None
+    self.status_reason = None
     self.text_payload = None
     self.user = None
 
@@ -128,6 +132,17 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     method_name = self._GetJSONValue(proto_payload, 'methodName')
     if method_name and not event_data.event_subtype:
       event_data.event_subtype = method_name
+
+    status = self._GetJSONValue(proto_payload, 'status')
+    if status:
+      event_data.status_message = self._GetJSONValue(status,'message')
+      status_details = self._GetJSONValue(status,'details')
+      if status_details:
+        temp_reason = []
+        for theDetail in status_details:
+          temp_reason.append(self._GetJSONValue(theDetail,'reason'))
+        if temp_reason:
+          event_data.status_reason = ";".join(temp_reason)
 
     self._ParseProtoPayloadRequest(proto_payload, event_data)
     self._ParseProtoPayloadServiceData(proto_payload, event_data)
