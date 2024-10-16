@@ -4,8 +4,8 @@
 The plist contains history of opened applications in the Mobile Backup.
 """
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 import datetime
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.lib import definitions
@@ -49,7 +49,6 @@ class IOSMobileBackupPlistPlugin(interface.PlistPlugin):
     timestamp = int(timestamp * definitions.NANOSECONDS_PER_SECOND)
     event_data.activity_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=timestamp)
-    
     return event_data
 
   # pylint: disable=arguments-differ
@@ -63,15 +62,24 @@ class IOSMobileBackupPlistPlugin(interface.PlistPlugin):
     """
 
     datetime_value = match.get('AccountEnabledDate', {})
-    parser_mediator.ProduceEventData(self._getEventData("AccountEnabledDate", datetime_value))
+    parser_mediator.ProduceEventData(
+      self._getEventData("AccountEnabledDate", datetime_value)
+    )
 
     plist_key = match.get('BackupStateInfo', {})
     for key, value in plist_key.items():
       if key == "date":
-        parser_mediator.ProduceEventData(self._getEventData(f"BackupStateInfo - date", value))
+        parser_mediator.ProduceEventData(
+          self._getEventData("BackupStateInfo - date", value)
+        )
 
       elif key == "errors":
         for val in value:
-          parser_mediator.ProduceEventData(self._getEventData(f"BackupStateInfo - {val['localizedDescription']}", val['date']))
+          parser_mediator.ProduceEventData(
+            self._getEventData(
+              f"BackupStateInfo - {val['localizedDescription']}",
+              val['date']
+            )
+          )
 
 plist.PlistParser.RegisterPlugin(IOSMobileBackupPlistPlugin)
