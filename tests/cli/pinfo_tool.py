@@ -660,6 +660,7 @@ Storage files are different.
         'plist/airport',
         'plist/apple_id',
         'plist/ios_carplay',
+        'plist/ios_mobilebackup',
         'plist/ipod_device',
         'plist/launchd_plist',
         'plist/macos_bluetooth',

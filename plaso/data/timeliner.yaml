@@ -1795,3 +1795,9 @@ attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
+---
+data_type: 'ios:mobile:backup:entry'
+attribute_mappings:
+- name: 'activity_time'
+  description: 'Activity Time'
+place_holder_event: false

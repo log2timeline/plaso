@@ -233,3 +233,12 @@ short_message:
 - 'Message: {text}'
 short_source: 'Twitter iOS'
 source: 'Twitter iOS Status'
+---
+type: 'conditional'
+data_type: 'ios:mobile:backup:entry'
+message:
+- 'Activity description: {activity_description}'
+short_message:
+- 'Activity description: {activity_description}'
+short_source: 'PLIST'
+source: 'Apple iOS Mobile Backup application plist'
