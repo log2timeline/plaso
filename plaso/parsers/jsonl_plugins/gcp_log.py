@@ -139,8 +139,8 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       status_details = self._GetJSONValue(status,'details')
       if status_details:
         temp_reason = []
-        for theDetail in status_details:
-          temp_reason.append(self._GetJSONValue(theDetail,'reason'))
+        for status_detail in status_details:
+          temp_reason.append(self._GetJSONValue(status_detail,'reason'))
         if temp_reason:
           event_data.status_reason = ";".join(temp_reason)
 
