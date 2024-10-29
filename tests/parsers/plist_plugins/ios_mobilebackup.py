@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Apple iOS Car Play application plist plugin."""
+"""Tests for the Apple iOS Mobile Backup plist plugin."""
 
 import unittest
 
@@ -10,7 +10,7 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class IOSMobileBackupPlistPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the Apple iOS Car Play application plist plugin."""
+  """Tests for the Apple iOS Mobile Backup plist plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
