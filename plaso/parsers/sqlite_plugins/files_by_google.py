@@ -62,7 +62,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
   DATA_FORMAT = 'Files by Google SQLite database (files_master_database) file'
 
   REQUIRED_STRUCTURE = {
-      'autofill': frozenset([
+      'files_master_table': frozenset([
           'file_date_modified_ms', 'root_path', 'root_relative_file_path', 'file_name', 'size', 'mime_type',
           'media_type', 'uri', 'is_hidden', 'title', 'parent_folder_name'])}
 
