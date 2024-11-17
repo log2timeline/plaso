@@ -1,0 +1,8 @@
+type: 'conditional'
+data_type: 'ios:wifi:known_networks:entry'
+message:
+  - 'SSID: {ssid}, BSSID: {bssid}, Channel: {channel}, Last Associated: {last_associated}'
+short_message:
+  - '{ssid} ({bssid})'
+short_source: 'PLIST'
+source: 'iOS WiFi Known Networks'
