@@ -48,7 +48,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-artifacts
                       python3-bencode
                       python3-certifi
-                      python3-cffi
                       python3-chardet
                       python3-dateutil
                       python3-defusedxml
@@ -57,7 +56,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-dfwinreg
                       python3-dtfabric
                       python3-flor
-                      python3-idna
                       python3-lz4
                       python3-opensearch
                       python3-pefile
