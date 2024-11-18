@@ -3,7 +3,7 @@
 
 import re
 
-from typing import Any
+from typing import Dict, Any
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -141,7 +141,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.user = self._GetJSONValue(actor_json, 'user')
 
   def _ParseAuthenticationInfo(
-      self, proto_payload: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, proto_payload: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extract information from `protoPayload.authenticationInfo`.
 
     Args:
@@ -195,7 +195,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.delegation_chain = '->'.join(delegations)
 
   def _ParseAuthorizationInfo(
-      self, proto_payload: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, proto_payload: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extracts information from `protoPayload.authorizationInfo`.
 
     Args:
@@ -218,7 +218,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.permissions = permissions
 
   def _ParseRequestMetadata(
-      self, proto_payload: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, proto_payload: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extracts information from `protoPayload.requestMetadata`.
 
     Args:
@@ -258,7 +258,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
           event_data.gcloud_command_id = invocation_id
 
   def _ParseProtoPayloadStatus(
-      self, proto_payload: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, proto_payload: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extracts information from `protoPayload.status`.
 
     Args:
@@ -286,7 +286,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     event_data.status_message = status_message
 
   def _ParseComputeInstancesInsert(
-      self, request: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, request: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extracts compute.instances.insert information.
 
     Args:
@@ -331,7 +331,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.dcsa_scopes = dcsa_scopes
 
   def _ParseComputeProtoPayload(
-      self, proto_payload: dict[str, Any], event_data: GCPLogEventData) -> None:
+      self, proto_payload: Dict[str, Any], event_data: GCPLogEventData) -> None:
     """Extracts compute.googleapis.com information.
 
     Args:
