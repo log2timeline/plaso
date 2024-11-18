@@ -2,6 +2,7 @@
 """JSON-L parser plugin for Google Cloud (GCP) log files."""
 
 import re
+
 from typing import Any
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -17,6 +18,10 @@ class GCPLogEventData(events.EventData):
   Attributes:
     caller_ip (str): IP address of the client that requested the operation.
     container (str): TODO
+    dcsa_email (list[str]): default compute service account attached to a GCE
+        instance.
+    dcsa_scopes (list[str]): OAuth scopes granted to the default compute service
+        account. T
     delegation_chain (str): service account delegation chain.
     event_subtype (str): JSON event sub type or protocol buffer method.
     event_type (str): TODO
@@ -49,10 +54,12 @@ class GCPLogEventData(events.EventData):
     service_account_display_name (str): display name of the service account.
     service_account_key_name (str): service account key name used in
         authentication.
-    service_name (str): name of the servie.
+    service_name (str): name of the service.
     severity (str): log entry severity.
+    source_images (list[str]): source images of disks attached to a compute
+        engine instance.
     status_code (str): operation success or failure code.
-    status_message (str); operation sucess or failure message.
+    status_message (str); operation success or failure message.
     text_payload (str): text payload for logs not using a JSON or proto payload.
     user (str): user principal performing the logged action.
     user_agent (str): user agent used in the request.
@@ -65,7 +72,7 @@ class GCPLogEventData(events.EventData):
     super(GCPLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.caller_ip = None
     self.container = None
-    self.dcsa_emails = None
+    self.dcsa_email = None
     self.dcsa_scopes = None
     self.delegation_chain = None
     self.event_subtype = None
@@ -73,6 +80,8 @@ class GCPLogEventData(events.EventData):
     self.filename = None
     self.firewall_rules = None
     self.firewall_source_ranges = None
+    self.gcloud_command_id = None
+    self.gcloud_command_partial = None
     self.log_name = None
     self.method_name = None
     self.message = None
@@ -292,9 +301,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
     disks = self._GetJSONValue(request, 'disks', [])
     for disk in disks:
-      initialize_params = self._GetJSONValue(disk, 'initializeParams')
-      if not initialize_params:
-        continue
+      initialize_params = self._GetJSONValue(disk, 'initializeParams', {})
 
       source_image = self._GetJSONValue(initialize_params, 'sourceImage')
       if source_image:
@@ -343,7 +350,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       return
 
     if request_type == 'type.googleapis.com/compute.instances.insert':
-      self._ParseComputeInstancesInsert(proto_payload, event_data)
+      self._ParseComputeInstancesInsert(request, event_data)
 
   def _ParseProtoPayload(self, json_dict, event_data):
     """Extracts information from a protoPayload value.
