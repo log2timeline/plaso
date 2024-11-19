@@ -35,9 +35,9 @@ class GCPLogEventData(events.EventData):
     resource_name (str): name of the resource.
     service_account_display_name (str): display name of the service account.
     service_name (str): name of the servie.
+    severity (str): log entry severity.
     status_message (str): the status message of the request.
     status_reason (str): the reason behind the status message.
-    severity (str): log entry severity.
     text_payload (str): text payload for logs not using a JSON or proto payload.
     user (str): user principal performing the logged action.
   """
