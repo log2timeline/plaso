@@ -56,7 +56,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'service_name': 'compute.googleapis.com',
         'severity': 'NOTICE',
         'text_payload': None,
-        'user': 'fakeemailxyz@gmail.com',
         'user_agent': 'UserAgent'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -72,7 +71,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     expected_event_values = {
         'caller_ip': '1.1.1.1',
         'container': None,
-        'dcsa_email': ['fake-service-account@fake-project.com'],
+        'dcsa_emails': ['fake-service-account@fake-project.com'],
         'dcsa_scopes': ['https://www.googleapis.com/auth/cloud-platform'],
         'delegation_chain': (
             'service-account-one@fake-project.com->'
@@ -127,7 +126,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'status_code': '',
         'status_message': '',
         'text_payload': None,
-        'user': 'fake-account@fake-project.com',
         'user_agent': (
             'fake-user-agent-string command/gcloud.compute.instances.insert'
             ' invocation-id/a1b2c3d4e5f6 environment/GCE')}
