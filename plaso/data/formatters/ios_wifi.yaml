@@ -1,0 +1,13 @@
+type: 'conditional'
+data_type: 'ios:wifi:known_networks:knowing'
+message:
+  - 'SSID={ssid}'
+  - 'BSSID={bssid}'
+  - 'Channel={channel}'
+  - 'Added At={added_at_time_str}'
+  - 'Last Associated={last_associated_time_str}'
+short_message:
+  - 'SSID={ssid}'
+short_source: 'PLIST'
+source: 'Apple iOS WiFi Known Networks plist file'
+
