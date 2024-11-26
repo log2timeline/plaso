@@ -87,7 +87,7 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
     def ParseAccountRow(
         self, parser_mediator, query, row, **unused_kwargs):
         """Parses an account row.
-        
+
         Args:
             parser_mediator (ParserMediator): mediates interactions between parsers and other components, such as storage and dfVFS.
             query (str): query that created the row.
