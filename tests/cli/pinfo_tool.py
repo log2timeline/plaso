@@ -696,6 +696,7 @@ Storage files are different.
         'sqlite/google_drive',
         'sqlite/hangouts_messages',
         'sqlite/imessage',
+        'sqlite/ios_accounts',
         'sqlite/ios_netusage',
         'sqlite/ios_powerlog',
         'sqlite/ios_screentime',
