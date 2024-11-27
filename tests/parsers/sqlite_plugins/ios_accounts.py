@@ -16,7 +16,7 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
         plugin = ios_accounts.IOSAccountsPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ['Accounts3.sqlite'], plugin)
-        
+
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             'event_data')
         self.assertEqual(number_of_event_data, 18)
@@ -33,7 +33,8 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
             'username': 'thisisdfir@gmail.com'
         }
 
-        event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
+        event_data = storage_writer.GetAttributeContainerByIndex(
+            'event_data', 3)
         self.CheckEventData(event_data, expected_event_values)
 
 
