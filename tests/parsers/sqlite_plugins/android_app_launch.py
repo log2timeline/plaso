@@ -9,7 +9,7 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
-    """Tests for the SQLite parser plugin for iOS accounts database files."""
+    """Tests for the SQLite parser plugin for Android App Launch database files."""
 
     def testParse(self):
         """Tests the ParseAccountRow method."""
