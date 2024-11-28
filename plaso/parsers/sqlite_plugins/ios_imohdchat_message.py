@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for MacOS application usage database files."""
+"""SQLite parser plugin for IMO HD chat message database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -7,13 +7,11 @@ from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
-
-class MacOSApplicationUsageEventData(events.EventData):
-  """MacOS application usage event data.
+class IMOHDChatMessageEventData(events.EventData):
+  """IMO HD chat message event data.
 
   Attributes:
     application (str): name of the application.
-    application_version (str): version of the application.
     bundle_identifier (str): bundle identifier of the application.
     count (int): number of occurances of the event.
     event (str): event.
@@ -22,25 +20,23 @@ class MacOSApplicationUsageEventData(events.EventData):
     query (str): SQL query that was used to obtain the event data.
   """
 
-  DATA_TYPE = 'macos:application_usage:entry'
+  DATA_TYPE = 'ios:imohdchat_message:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSApplicationUsageEventData, self).__init__(
+    super(IMOHDChatMessageEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.application = None
-    self.application_version = None
-    self.bundle_identifier = None
-    self.count = None
-    self.event = None
-    self.last_used_time = None
+    self.zalias = None
+    self.ztext = None
+    self.zissent = None
+    self.zts = None
     self.query = None
 
 
-class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for MacOS application usage database files.
+class IMOHDChatMessagePlugin(interface.SQLitePlugin):
+  """SQLite parser plugin for IMO HD chat message database files.
 
-  The MacOS application usage database is typically stored in:
+  The IMO HD chat message database is typically stored in:
   /var/db/application_usage.sqlite
 
   Application usage is a SQLite database that logs down entries triggered by
@@ -52,25 +48,25 @@ class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
   https://github.com/google/macops/blob/master/crankd/ApplicationUsage.py
   """
 
-  NAME = 'appusage'
+  NAME = 'ios_imohdchat_message'
   DATA_FORMAT = (
-      'MacOS application usage SQLite database (application_usage.sqlite) file')
+      'IMO HD chat message SQLite database (IMODb2.sqlite) file')
 
   REQUIRED_STRUCTURE = {
-      'application_usage': frozenset([
-          'last_time', 'event', 'bundle_id', 'app_version', 'app_path',
-          'number_times'])}
+      'ZIMOCHATMSG': frozenset([
+          'Z_PK', 'ZALIAS', 'ZTEXT', 'ZISSENT',
+          'ZTS'])}
 
   QUERIES = [(
-      ('SELECT last_time, event, bundle_id, app_version, app_path, '
-       'number_times FROM application_usage ORDER BY last_time'),
+      ('SELECT ZTS/1000000000, ZALIAS, ZTEXT, ZISSENT '
+       'FROM ZIMOCHATMSG ORDER BY ZTS'),
       'ParseApplicationUsageRow')]
 
   SCHEMAS = [{
       'application_usage': (
-          'CREATE TABLE application_usage (event TEXT, bundle_id TEXT, '
-          'app_version TEXT, app_path TEXT, last_time INTEGER DEFAULT 0, '
-          'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
+          'CREATE TABLE ZIMOCHATMSG (Z_PK INTEGER, ZALIAS TEXT, ZTEXT TEXT, ZISSENT INTEGER '
+          'ZTS INTEGER, '
+          'PRIMARY KEY (Z_PK))')}]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
@@ -102,19 +98,15 @@ class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = MacOSApplicationUsageEventData()
-    event_data.application = self._GetRowValue(query_hash, row, 'app_path')
-    event_data.application_version = self._GetRowValue(
-        query_hash, row, 'app_version')
-    event_data.bundle_identifier = self._GetRowValue(
-        query_hash, row, 'bundle_id')
-    event_data.count = self._GetRowValue(query_hash, row, 'number_times')
-    event_data.event = self._GetRowValue(query_hash, row, 'event')
-    event_data.last_used_time = self._GetDateTimeRowValue(
-        query_hash, row, 'last_time')
+    event_data = IMOHDChatMessageEventData()
+    event_data.zalias = self._GetRowValue(query_hash, row, 'ZALIAS')
+    event_data.ztext = self._GetRowValue(query_hash, row, 'ZTEXT')
+    event_data.zissent = self._GetRowValue(query_hash, row, 'ZISSENT')
+    event_data.zts = self._GetDateTimeRowValue(
+        query_hash, row, 'ZTS/1000000000')
     event_data.query = query
 
     parser_mediator.ProduceEventData(event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(MacOSApplicationUsagePlugin)
+sqlite.SQLiteParser.RegisterPlugin(IMOHDChatMessagePlugin)

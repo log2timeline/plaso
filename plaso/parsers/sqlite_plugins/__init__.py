@@ -42,3 +42,4 @@ from plaso.parsers.sqlite_plugins import windows_eventtranscript
 from plaso.parsers.sqlite_plugins import windows_push_notification
 from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.sqlite_plugins import zeitgeist
+from plaso.parsers.sqlite_plugins import ios_imohdchat_message
