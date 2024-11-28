@@ -8,7 +8,7 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 class AndroidAppLaunch(events.EventData):
- """Android App Launch event data.
+    """Android App Launch event data.
     Attributes:
         date (dfdatetime.DateTimeValues): date and time the app was launch.
         package_name (str): The unique package identifier of the app.
@@ -16,7 +16,7 @@ class AndroidAppLaunch(events.EventData):
         id (int): identifier
     """
 
-    DATA_TYPE = 'android:sqlite:app_launch'
+    DATA_TYPE = 'android:event:app_launch'
 
     def __init__(self):
         """Initializes event data."""
