@@ -22,6 +22,11 @@ attribute_mappings:
   description: 'Expiration Time'
 - name: 'last_updated_time'
   description: 'Last Updated Time'
+---
+data_type: 'android:event:app_launch'
+attribute_mappings:
+- name: 'date'
+  description: 'App Launch Time'
 place_holder_event: true
 ---
 data_type: 'android:event:battery'
