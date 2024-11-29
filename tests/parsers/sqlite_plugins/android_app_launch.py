@@ -19,19 +19,20 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             'event_data')
-        self.assertEqual(number_of_event_data, 411)
+        self.assertEqual(number_of_event_data, 438)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             'extraction_warning')
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            'date': '2022-12-04T19:03:23.097+00:00', 
-            'package_name': 'ws.coverme.im',
-            'launch_location_id': '1000'
+            'launch_time': '2022-12-04T16:59:28.297+00:00', 
+            'package_name': 'com.android.settings',
+            'launch_location_id': 4,
+            'id': 2980
         }
 
-        event_data = storage_writer.GetAttributeContainerByIndex('event_data', 69)
+        event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
         self.CheckEventData(event_data, expected_event_values)
 
 

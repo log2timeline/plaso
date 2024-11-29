@@ -6,12 +6,6 @@ attribute_mappings:
   description: 'Last Resume Time'
 place_holder_event: true
 ---
-data_type: 'android:event:app_launch'
-attribute_mappings:
-- name: 'date'
-  description: 'App Launch Time'
-place_holder_event: true
----
 data_type: 'android:event:battery'
 attribute_mappings:
 - name: 'recorded_time'
@@ -53,6 +47,12 @@ attribute_mappings:
 - name: 'last_active_time'
   description: 'Last Active Time'
 place_holder_event: false
+---
+data_type: 'android:sqlite:app_launch'
+attribute_mappings:
+- name: 'launch_time'
+  description: 'App Launch Time'
+place_holder_event: true
 ---
 data_type: 'android:sqlite:app_usage'
 attribute_mappings:
