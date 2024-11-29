@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """SQLite parser plugin for Android App Launch (SimpleStorage) database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
 from plaso.parsers import sqlite
@@ -16,12 +16,12 @@ class AndroidAppLaunch(events.EventData):
         id (int): identifier
     """
 
-    DATA_TYPE = 'android:event:app_launch'
+    DATA_TYPE = 'android:sqlite:app_launch'
 
     def __init__(self):
         """Initializes event data."""
         super(AndroidAppLaunch, self).__init__(data_type=self.DATA_TYPE)
-        self.date = None
+        self.launch_time = None
         self.package_name = None
         self.launch_location_id = None
         self.id = None
@@ -34,40 +34,47 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
 
     REQUIRED_STRUCTURE = {
         'EchoAppLaunchMetricsEvents': frozenset([
-            'timestampMillis', 'packageName', 'launchLoactionId', 'id'])
+            'timestampMillis', 'packageName', 'launchLocationId', 'id'])
     }
 
     QUERIES = [((
-        'SELECT EchoAppLaunchMetricsEvents.timestampMillis, EchoAppLaunchMetricsEvents.packageName, '
-        'EchoAppLaunchMetricsEvents.launchLoactionId, EchoAppLaunchMetricsEvents.id '
+        'SELECT timestampMillis, packageName, launchLocationId, id '
         'FROM EchoAppLaunchMetricsEvents'),
         'ParseAppLaunchRow')]
     
     SCHEMAS = {
         'EchoAppLaunchMetricsEvents': (
-            'CREATE TABLE EchoAppLaunchMetricsEvents (timestampMillis INTEGER, packageName TEXT, '
-            'launchLocationId INTEGER, predictionUiSurfaceId INTEGER, predictionSourceId INTEGER, '
-            'predictionRank INTEGER, id INTEGER PRIMARY KEY ')
+            'CREATE TABLE `EchoAppLaunchMetricsEvents` (`timestampMillis` INTEGER NOT NULL, `packageName` TEXT NOT NULL, `launchLocationId` INTEGER NOT NULL, `predictionUiSurfaceId` INTEGER NOT NULL, `predictionSourceId` INTEGER NOT NULL, `predictionRank` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`packageName`) REFERENCES `Packages`(`packageName`) ON UPDATE CASCADE ON DELETE CASCADE )'
+        ),
+        'Packages': (
+            'CREATE TABLE `Packages` (`packageName` TEXT NOT NULL, `loggablePackageName` TEXT NOT NULL, PRIMARY KEY(`packageName`))'
+        )
     }
+
+    # SCHEMAS = {
+    #     'EchoAppLaunchMetricsEvents': (
+    #         'CREATE TABLE EchoAppLaunchMetricsEvents (timestampMillis INTEGER, packageName TEXT, '
+    #         'launchLocationId INTEGER, predictionUiSurfaceId INTEGER, predictionSourceId INTEGER, '
+    #         'predictionRank INTEGER, id INTEGER PRIMARY KEY ')
+    # }
     
-    REQUIRES_SCHEMA_MATCH = False
 
     def _GetTimeRowValue(self, query_hash, row, value_name):
         """Retrieves a date and time value from the row.
         Args:
             query_hash (int): hash of the query, that uniquely identifies the query that produced the row.
             row (sqlite3.Row): row.
-            value_name (str): name of the value.
-        Returns:
-            dfdatetime.Posixtime: date and time value or None if not available.
+            Returns:
+        dfdatetime.JavaTime: date and time value or None if not available.
         """
         timestamp = self._GetRowValue(query_hash, row, value_name)
         if timestamp is None:
             return None
 
-        return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
+        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
 
-        # pylint: disable=unused-argument
+
+    # pylint: disable=unused-argument
     def ParseAppLaunchRow(
         self, parser_mediator, query, row, **unused_kwargs):
         """Parses an account row.
@@ -80,7 +87,7 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
         query_hash = hash(query)    
 
         event_data = AndroidAppLaunch()
-        event_data.date = self._GetTimeRowValue(query_hash, row, 'timestampMillis')
+        event_data.launch_time = self._GetTimeRowValue(query_hash, row, 'timestampMillis')
         event_data.package_name = self._GetRowValue(query_hash, row, 'packageName')
         event_data.launch_location_id = self._GetRowValue(query_hash, row, 'launchLocationId')
         event_data.id = self._GetRowValue(query_hash, row, 'id')
