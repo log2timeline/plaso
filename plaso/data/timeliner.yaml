@@ -505,6 +505,12 @@ attribute_mappings:
   description: 'Last Time Executed'
 place_holder_event: false
 ---
+data_type: 'ios:routined:entry'
+attribute_mappings:
+- name: 'last_run_time'
+  description: 'Last Time Executed'
+place_holder_event: false
+---
 data_type: 'ios:idstatuscache:lookup'
 attribute_mappings:
 - name: 'lookup_time'
