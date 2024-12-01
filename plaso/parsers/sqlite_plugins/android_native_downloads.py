@@ -2,6 +2,7 @@
 """SQLite parser plugin for Android Native Downloads (DownloadManager API) database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
+
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
