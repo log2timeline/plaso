@@ -54,6 +54,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: false
 ---
+data_type: 'android:sqlite:downloads'
+attribute_mappings:
+- name: 'lastmod'
+  description: 'Last Modified Time'
+place_holder_event: true
+---
 data_type: 'android:tango:conversation'
 place_holder_event: true
 ---
