@@ -54,6 +54,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: false
 ---
+data_type: 'android:burners'
+attribute_mappings: 
+- name: 'date_created'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'android:tango:conversation'
 place_holder_event: true
 ---
