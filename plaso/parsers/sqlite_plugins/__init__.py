@@ -8,6 +8,7 @@ from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_tango
 from plaso.parsers.sqlite_plugins import android_turbo
 from plaso.parsers.sqlite_plugins import android_twitter
+from plaso.parsers.sqlite_plugins import android_viber_call
 from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache
 from plaso.parsers.sqlite_plugins import chrome_autofill
