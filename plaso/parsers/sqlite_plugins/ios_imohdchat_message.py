@@ -35,17 +35,6 @@ class IMOHDChatMessageEventData(events.EventData):
 
 class IMOHDChatMessagePlugin(interface.SQLitePlugin):
   """SQLite parser plugin for IMO HD chat message database files.
-
-  The IMO HD chat message database is typically stored in:
-  /var/db/application_usage.sqlite
-
-  Application usage is a SQLite database that logs down entries triggered by
-  NSWorkspaceWillLaunchApplicationNotification and
-  NSWorkspaceDidTerminateApplicationNotification NSWorkspace notifications by
-  crankd.
-
-  More information can be found here:
-  https://github.com/google/macops/blob/master/crankd/ApplicationUsage.py
   """
 
   NAME = 'ios_imohdchat_message'
