@@ -14,7 +14,7 @@ class IMOHDChatMessagePluginTest(test_lib.SQLitePluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    plugin = ios_imohdchat_message.IMOHDChatMesagePlugin()
+    plugin = ios_imohdchat_message.IMOHDChatMessagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['IMODb2.sqlite'], plugin)
 
