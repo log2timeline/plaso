@@ -19,7 +19,7 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             'event_data')
-        self.assertEqual(number_of_event_data, 438)
+        self.assertEqual(number_of_event_data, 434)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             'extraction_warning')
