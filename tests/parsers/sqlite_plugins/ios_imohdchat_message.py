@@ -9,8 +9,8 @@ from plaso.parsers.sqlite_plugins import ios_imohdchat_message
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class IMOHDChatMesagePluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the IMO HD Chat message activity database plugin."""
+class IMOHDChatMessagePluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the IMO HD Chat message database plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
