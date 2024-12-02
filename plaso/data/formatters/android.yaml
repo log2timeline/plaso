@@ -125,9 +125,16 @@ data_type: 'android:sqlite:app_launch'
 message:
 - 'Package: {package_name}'
 - 'Launch Location Id: {launch_location_id}'
+- 'Prediction Ui Surface Id: {prediction_ui_surface_id}'
+- 'Prediction Source Id: {prediction_source_id}'
+- 'Prediction Rank: {prediction_rank}'
 short_message:
 - 'Package: {package_name}'
-short_source: 'App Launcg'
+- 'Launch Location Id: {launch_location_id}'
+- 'Prediction Ui Surface Id: {prediction_ui_surface_id}'
+- 'Prediction Source Id: {prediction_source_id}'
+- 'Prediction Rank: {prediction_rank}'
+short_source: 'App Launch'
 source: 'Android App launch (Simple Storage)'
 ---
 type: 'conditional'
