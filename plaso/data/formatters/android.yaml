@@ -61,7 +61,6 @@ type: 'conditional'
 data_type: 'android:google:callscreen'
 message:
 - 'Recording File Path: {file_path}'
-- 'timestamp: {timestamp}'
 short_message:
 - '{file_path}'
 short_source: 'Google Call Screen'

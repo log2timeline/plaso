@@ -22,8 +22,8 @@ place_holder_event: true
 ---
 data_type: 'android:google:callscreen'
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+- name: 'timestamp'
+  description: 'Timestamp'
 place_holder_event: true
 ---
 data_type: 'android:logcat'

@@ -3,6 +3,7 @@
 
 from plaso.parsers.sqlite_plugins import android_app_usage
 from plaso.parsers.sqlite_plugins import android_calls
+from plaso.parsers.sqlite_plugins import android_google_callscreen
 from plaso.parsers.sqlite_plugins import android_hangouts
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_tango
@@ -20,7 +21,6 @@ from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
-from plaso.parsers.sqlite_plugins import google_callscreen
 from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_datausage
 from plaso.parsers.sqlite_plugins import ios_kik
