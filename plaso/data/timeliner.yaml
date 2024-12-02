@@ -1801,3 +1801,29 @@ attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
+
+---
+
+# Konfigurasi untuk data type
+data_type: 'ios:sim:info'
+
+attribute_mappings:
+  - name: 'mdn'
+    description: 'Nomor Ponsel SIM'
+  - name: 'sim_type'
+    description: 'Jenis SIM (misalnya, SIM atau USIM)'
+  - name: 'cb_ver'
+    description: 'Versi CB SIM'
+  - name: 'label_id'
+    description: 'ID label untuk SIM'
+  - name: 'timestamp'
+    description: 'Timestamp SIM'
+
+place_holder_event: true
+
+
+
+
+
+
+
