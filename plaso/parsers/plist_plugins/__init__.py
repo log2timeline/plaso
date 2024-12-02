@@ -21,3 +21,6 @@ from plaso.parsers.plist_plugins import software_update
 from plaso.parsers.plist_plugins import spotlight_searched_terms
 from plaso.parsers.plist_plugins import spotlight_volume
 from plaso.parsers.plist_plugins import time_machine
+
+# Impor parser yang baru dibuat
+from plaso.parsers.plist_plugins import ios_siminfo
