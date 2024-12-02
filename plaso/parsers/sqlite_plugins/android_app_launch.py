@@ -12,8 +12,11 @@ class AndroidAppLaunch(events.EventData):
     Attributes:
         date (dfdatetime.DateTimeValues): date and time the app was launch.
         package_name (str): The unique package identifier of the app.
-        launch_location_id (int): id of location where the app was launch.
-        id (int): identifier
+        launch_location_id (int): Id of location where the app was launch.
+        prediction_ui_surface_id (int): Id of UI surface where prediction was made.
+        prediction_source_id (int): Id that indicates the source of prediction.
+        prediction_rank (int): A value that indicates the relevance of the prediction.
+        id (int): An identifier.
     """
 
     DATA_TYPE = 'android:sqlite:app_launch'
@@ -24,6 +27,9 @@ class AndroidAppLaunch(events.EventData):
         self.launch_time = None
         self.package_name = None
         self.launch_location_id = None
+        self.prediction_ui_surface_id = None
+        self.prediction_source_id = None
+        self.prediction_rank = None
         self.id = None
 
 class AndroidAppLaunchPlugin(interface.SQLitePlugin):
@@ -34,11 +40,11 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
 
     REQUIRED_STRUCTURE = {
         'EchoAppLaunchMetricsEvents': frozenset([
-            'timestampMillis', 'packageName', 'launchLocationId', 'id'])
+            'timestampMillis', 'packageName', 'launchLocationId', 'predictionUiSurfaceId', 'predictionSourceId', 'predictionRank', 'id'])
     }
 
     QUERIES = [((
-        'SELECT timestampMillis, packageName, launchLocationId, id '
+        'SELECT timestampMillis, packageName, launchLocationId, predictionUiSurfaceId, predictionSourceId, predictionRank, id '
         'FROM EchoAppLaunchMetricsEvents'),
         'ParseAppLaunchRow')]
     
@@ -90,6 +96,9 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
         event_data.launch_time = self._GetTimeRowValue(query_hash, row, 'timestampMillis')
         event_data.package_name = self._GetRowValue(query_hash, row, 'packageName')
         event_data.launch_location_id = self._GetRowValue(query_hash, row, 'launchLocationId')
+        event_data.prediction_ui_surface_id = self._GetRowValue(query_hash, row, 'predictionUiSurfaceId')
+        event_data.prediction_source_id = self._GetRowValue(query_hash, row, 'predictionSourceId')
+        event_data.prediction_rank = self._GetRowValue(query_hash, row, 'predictionRank')
         event_data.id = self._GetRowValue(query_hash, row, 'id')
 
 
