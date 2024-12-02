@@ -679,7 +679,6 @@ Storage files are different.
         'rplog',
         'spotlight_storedb',
         'sqlite',
-        'sqlite/android_app_launch',
         'sqlite/android_calls',
         'sqlite/android_sms',
         'sqlite/android_webview',

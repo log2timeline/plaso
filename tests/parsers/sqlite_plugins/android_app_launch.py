@@ -29,6 +29,9 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
             'launch_time': '2022-12-04T16:59:28.297+00:00', 
             'package_name': 'com.android.settings',
             'launch_location_id': 4,
+            'prediction_ui_surface_id': 1,
+            'prediction_source_id': 3,
+            'prediction_rank': -1,
             'id': 2980
         }
 
