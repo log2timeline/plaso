@@ -26,7 +26,7 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            'launch_time': '2022-12-04T16:59:28.297+00:00', 
+            'launch_time': '2022-12-04T16:59:28.274+00:00', 
             'package_name': 'com.android.settings',
             'launch_location_id': 4,
             'prediction_ui_surface_id': 1,
