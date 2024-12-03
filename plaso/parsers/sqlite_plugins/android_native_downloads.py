@@ -104,7 +104,7 @@ class AndroidNativeDownloadsPlugin(interface.SQLitePlugin):
         ('SELECT _id, uri, _data, mimetype, destination, '
         'visibility, status, lastmod, notificationpackage, '
         'total_bytes, current_bytes, etag, title, description, '
-        'is_visible_in_downloads_ui, mediaprovider_uri, deleted, errorMsg' 
+        'is_visible_in_downloads_ui, mediaprovider_uri, deleted, errorMsg ' 
         'FROM downloads',
         'ParseDownloadsRow')]
 
