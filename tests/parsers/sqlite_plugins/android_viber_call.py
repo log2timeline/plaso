@@ -4,9 +4,8 @@
 
 import unittest
 
-from plaso.parsers.sqlite_plugins import android_viber_call
-
 from tests.parsers.sqlite_plugins import test_lib
+from plaso.parsers.sqlite_plugins import android_viber_call
 
 
 class AndroidViberCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
