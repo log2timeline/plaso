@@ -120,7 +120,10 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       'ProductVersion': 'file_version',
       'ProgramId': 'program_identifier',
       'Publisher': 'company_name',
-      'Size': 'file_size'}
+      'Size': 'file_size',
+      'FileId': 'sha1',
+      'Language': 'language_code',
+      'Version': 'file_version'}
 
   _FILE_REFERENCE_KEY_VALUES = {
       '0': 'product_name',
@@ -216,6 +219,10 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       if value:
         value_data = self._GetValueDataAsObject(
             parser_mediator, application_sub_key.path, value_name, value)
+
+        if attribute_name == 'sha1' and value_data.startswith('0000'):
+            # Strip off the 4 leading zero's from the sha1 hash.
+            value_data = value_data[4:]
 
         setattr(event_data, attribute_name, value_data)
 
