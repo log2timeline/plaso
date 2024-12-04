@@ -22,7 +22,6 @@ class GoogleCallScreenEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(GoogleCallScreenEventData, self).__init__(data_type=self.DATA_TYPE)
-    # self.creation_time = None
     self.file_path = None
     self.timestamp = None
 
@@ -38,10 +37,10 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
   DATA_FORMAT = 'Google Call Screen SQLite database (callscreen_transcripts) file'
 
   REQUIRED_STRUCTURE = {
-      'Transcript': frozenset(['id', 'lastModifiedMillis', 'audioRecordingFilePath'])}
+      'Transcript': frozenset(['lastModifiedMillis', 'audioRecordingFilePath'])}
 
   QUERIES = [
-      ('SELECT id, lastModifiedMillis, audioRecordingFilePath FROM Transcript',
+      ('SELECT lastModifiedMillis, audioRecordingFilePath FROM Transcript',
        'ParseCallScreenRow')]
 
   SCHEMAS = [{
@@ -68,12 +67,10 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
     
     timestamp = self._GetRowValue(query_hash, row, 'lastModifiedMillis')
-    # creation_time = self._GetRowValue(query_hash, row, 'id')
     
     event_data = GoogleCallScreenEventData()
     event_data.file_path = self._GetRowValue(query_hash, row, 'audioRecordingFilePath')
     event_data.timestamp = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    # event_data.creation_time = dfdatetime_java_time.JavaTime(timestamp=creation_time)
     
     parser_mediator.ProduceEventData(event_data)
     
