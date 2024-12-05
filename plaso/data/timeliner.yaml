@@ -487,6 +487,12 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: false
 ---
+data_type: 'ios:accounts:account'
+attribute_mappings:
+- name: 'date'
+  description: 'Creation Time'
+place_holder_event: true
+---
 data_type: 'ios:app_privacy:access'
 attribute_mappings:
 - name: 'recorded_time'
@@ -539,6 +545,14 @@ data_type: 'ios:netusage:route'
 attribute_mappings:
 - name: 'start_time'
   description: 'Start Time'
+place_holder_event: true
+---
+data_type: 'ios:notes:note'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Modification Time'
 place_holder_event: true
 ---
 data_type: 'ios:powerlog:application_usage'

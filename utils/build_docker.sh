@@ -12,7 +12,7 @@ set -e;
 
 cd config/docker;
 
-docker build --no-cache --force-rm -t log2timeline/plaso . 2>&1 | tee ${LOGFILE};
+docker build --no-cache --force-rm -t log2timeline/plaso-local . 2>&1 | tee ${LOGFILE};
 
 IDENTIFIER=$( grep -e '^Successfully built ' ${LOGFILE} | sed 's/^Successfully built //' );
 
