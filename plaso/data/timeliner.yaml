@@ -20,6 +20,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'android:google:callscreen'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Timestamp'
+place_holder_event: true
+---
 data_type: 'android:logcat'
 attribute_mappings:
 - name: 'recorded_time'

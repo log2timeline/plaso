@@ -3,6 +3,7 @@
 
 from plaso.parsers.sqlite_plugins import android_app_usage
 from plaso.parsers.sqlite_plugins import android_calls
+from plaso.parsers.sqlite_plugins import android_google_callscreen
 from plaso.parsers.sqlite_plugins import android_hangouts
 from plaso.parsers.sqlite_plugins import android_sms
 from plaso.parsers.sqlite_plugins import android_tango
