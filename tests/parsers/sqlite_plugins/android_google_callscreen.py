@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for the Google Callscreen history plugin."""
+"""Tests for the Google Call Screen history plugin."""
 
 import unittest
 

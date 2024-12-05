@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for Android call history database files."""
+"""SQLite parser plugin for Android Google Call Screen history database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -10,11 +10,11 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class GoogleCallScreenEventData(events.EventData):
-  """Android Call event data.
+  """Android Google Call Screen event data.
 
   Attributes:
-    query (str): SQL query that was used to obtain the event data.
-    creation_time (dfdatetime.DateTimeValues): date and time the call was started.
+    file_path (str): path where the recording file is located.
+    timestamp (dfdatetime.DateTimeValues): date and time the log was created.
   """
 
   DATA_TYPE = 'android:google:callscreen'
@@ -27,10 +27,10 @@ class GoogleCallScreenEventData(events.EventData):
 
 
 class GoogleCallScreenPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for Android call history database files.
+  """SQLite parser plugin for Android Google Call Screen history database files.
 
-  The Android call history database file is typically stored in:
-  contacts2.db
+  The Android Google Call Screen history database file is typically stored in:
+  callscreenL_transcripts
   """
 
   NAME = 'google_callscreen'
@@ -56,7 +56,7 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
           'identity_hash TEXT)')}]
 
   def ParseCallScreenRow(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a Call record row.
+    """Parses a Google Callscreen record row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
