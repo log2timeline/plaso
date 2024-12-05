@@ -75,7 +75,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
       'files_master_table.file_name, files_master_table.size,'
       'files_master_table.mime_type, files_master_table.media_type,'
       'files_master_table.uri,files_master_table.is_hidden,'
-      'files_master_table.title, files_master_table.parent_folder_name'
+      'files_master_table.title, files_master_table.parent_folder_name '
       'FROM files_master_table ORDER BY file_date_modified_ms'),
       'ParseFilesByGoogleRow')]
 
@@ -102,8 +102,8 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
        'value BLOB)'),
     'files_master_table':(
        'CREATE TABLE files_master_table(id INTEGER PRIMARY KEY AUTOINCREMENT, '
-       'media_store_id INTEGER, root_path TEXT NOT NULL DEFAULT '', '
-       'root_relative_file_path TEXT NOT NULL DEFAULT '', '
+       'media_store_id INTEGER, root_path TEXT NOT NULL DEFAULT \'\', '
+       'root_relative_file_path TEXT NOT NULL DEFAULT \'\', '
        'file_name TEXT NOT NULL, size INTEGER NOT NULL, '
        'file_date_modified_ms INTEGER NOT NULL, '
        'storage_location INTEGER NOT NULL, mime_type TEXT, '
