@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for Android Google Call Screen history database files."""
+"""SQLite parser plugin for Android Google Call Screen history database file."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -34,7 +34,10 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
   """
 
   NAME = 'google_callscreen'
-  DATA_FORMAT = 'Google Call Screen SQLite database (callscreen_transcripts) file'
+  DATA_FORMAT = (
+    'Google Call Screen SQLite database '
+    '(callscreen_transcripts) file')
+
 
   REQUIRED_STRUCTURE = {
       'Transcript': frozenset(['lastModifiedMillis', 'audioRecordingFilePath'])}
@@ -43,17 +46,22 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
       ('SELECT lastModifiedMillis, audioRecordingFilePath FROM Transcript',
        'ParseCallScreenRow')]
 
-  SCHEMAS = [{
-      'Transcript': (
-          'CREATE TABLE `Transcript` (`id` TEXT NOT NULL, `conversation` BLOB, '
-          '`audioRecordingFilePath` TEXT, `isRated` INTEGER NOT NULL, `revelioCallType` '
-          'INTEGER, `lastModifiedMillis` INTEGER NOT NULL, `callScreenFeedbackData` '
-          'BLOB, PRIMARY KEY(`id`))'),
-      'android_metadata': (
-          'CREATE TABLE android_metadata (locale TEXT)'),
-      'room_master_table': (
-          'CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, '
-          'identity_hash TEXT)')}]
+  SCHEMAS = [
+    {
+        'Transcript': (
+            'CREATE TABLE `Transcript` (`id` TEXT NOT NULL, '
+            '`conversation` BLOB, `audioRecordingFilePath` TEXT, '
+            '`isRated` INTEGER NOT NULL, `revelioCallType` INTEGER, '
+            '`lastModifiedMillis` INTEGER NOT NULL, '
+            '`callScreenFeedbackData` BLOB, PRIMARY KEY(`id`))'),
+        'android_metadata': (
+            'CREATE TABLE android_metadata (locale TEXT)'),
+        'room_master_table': (
+            'CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, '
+            'identity_hash TEXT)')
+    }
+]
+
 
   def ParseCallScreenRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Google Callscreen record row.
@@ -65,7 +73,7 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
-    
+
     timestamp = self._GetRowValue(query_hash, row, 'lastModifiedMillis')
     
     event_data = GoogleCallScreenEventData()
