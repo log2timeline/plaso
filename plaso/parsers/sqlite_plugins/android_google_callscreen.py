@@ -73,13 +73,10 @@ class GoogleCallScreenPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
-
     timestamp = self._GetRowValue(query_hash, row, 'lastModifiedMillis')
-    
     event_data = GoogleCallScreenEventData()
-    event_data.file_path = self._GetRowValue(query_hash, row, 'audioRecordingFilePath')
+    event_data.file_path = self._GetRowValue(
+      query_hash, row, 'audioRecordingFilePath')
     event_data.timestamp = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    
     parser_mediator.ProduceEventData(event_data)
-    
 sqlite.SQLiteParser.RegisterPlugin(GoogleCallScreenPlugin)
