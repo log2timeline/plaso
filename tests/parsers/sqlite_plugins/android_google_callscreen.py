@@ -15,7 +15,8 @@ class AndroidGoogleCallScreenSQLitePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on an Android callscreen_transcripts file."""
     plugin = android_google_callscreen.GoogleCallScreenPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['callscreen_transcripts'], plugin)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+    ['callscreen_transcripts'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -31,7 +32,8 @@ class AndroidGoogleCallScreenSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'data_type': 'android:google:callscreen',
-        'file_path': '/data/user/0/com.google.android.dialer/files/callscreenrecordings/cs-1663338171971.m4a',
+        'file_path': '/data/user/0/com.google.android.dialer/files/callscreenrecordings/'
+                    'cs-1663338171971.m4a',
         'timestamp': '2022-09-16T14:23:03.767+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
