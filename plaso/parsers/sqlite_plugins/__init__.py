@@ -32,6 +32,7 @@ from plaso.parsers.sqlite_plugins import ios_imohdchat
 from plaso.parsers.sqlite_plugins import ios_instagram
 from plaso.parsers.sqlite_plugins import ios_kik
 from plaso.parsers.sqlite_plugins import ios_netusage
+from plaso.parsers.sqlite_plugins import ios_notes
 from plaso.parsers.sqlite_plugins import ios_powerlog
 from plaso.parsers.sqlite_plugins import ios_screentime
 from plaso.parsers.sqlite_plugins import ios_twitter
