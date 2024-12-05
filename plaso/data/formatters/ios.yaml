@@ -233,9 +233,8 @@ short_message:
 - 'Message: {text}'
 short_source: 'Twitter iOS'
 source: 'Twitter iOS Status'
-
 ---
-#tambahan
+#ios_siminfo
 type: 'conditional'
 data_type: 'ios:sim:info'
 message:
@@ -243,12 +242,7 @@ message:
   - 'SIM Type: {sim_type}'
   - 'CB Ver: {cb_ver}'
   - 'Label ID: {label_id}'
-  #- 'Timestamp: {timestamp}'
 short_message:
   - 'SIM MDN: {mdn}'
 short_source: 'IOS'
 source: 'iOS SIM Info'
-
-
-
-
