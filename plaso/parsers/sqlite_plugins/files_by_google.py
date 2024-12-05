@@ -53,24 +53,31 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
   The Files by Google app database file is typically stored in:
   /data/user/0/com.google.android.apps.nbu.files/databases/files_master_database
 
-  This SQLite database is used by the Files by Google app to manage and organize files on Android devices. 
-  The database contains information on file metadata, including file names, paths, sizes, and types, 
-  as well as records of storage locations.
+  This SQLite database is used by the Files by Google app to manage and
+  organize files on Android devices. The database contains information on file
+  metadata, including file names, paths, sizes, and types, as well as records
+  of storage locations.
   """
 
   NAME = 'files_by_google'
   DATA_FORMAT = 'Files by Google SQLite database (files_master_database) file'
 
   REQUIRED_STRUCTURE = {
-      'files_master_table': frozenset([
-          'file_date_modified_ms', 'root_path', 'root_relative_file_path', 'file_name', 'size', 'mime_type',
-          'media_type', 'uri', 'is_hidden', 'title', 'parent_folder_name'])}
+    'files_master_table': frozenset([
+      'file_date_modified_ms', 'root_path', 'root_relative_file_path',
+      'file_name', 'size', 'mime_type', 'media_type', 'uri', 'is_hidden',
+      'title', 'parent_folder_name'])}
 
   QUERIES = [
-      (('SELECT files_master_table.file_date_modified_ms, files_master_table.root_path, files_master_table.root_relative_file_path, '
-        'files_master_table.file_name, files_master_table.size, files_master_table.mime_type, files_master_table.media_type, files_master_table.uri, '
-        'files_master_table.is_hidden, files_master_table.title, files_master_table.parent_folder_name FROM files_master_table ORDER BY file_date_modified_ms '),
-       'ParseFilesByGoogleRow')]
+    (('SELECT files_master_table.file_date_modified_ms,'
+      'files_master_table.root_path,'
+      'files_master_table.root_relative_file_path,'
+      'files_master_table.file_name, files_master_table.size,'
+      'files_master_table.mime_type, files_master_table.media_type,'
+      'files_master_table.uri,files_master_table.is_hidden,'
+      'files_master_table.title, files_master_table.parent_folder_name'
+      'FROM files_master_table ORDER BY file_date_modified_ms'),
+      'ParseFilesByGoogleRow')]
 
   SCHEMAS = [{
     'android_metadata':(
@@ -96,8 +103,9 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
     'files_master_table':(
        'CREATE TABLE files_master_table(id INTEGER PRIMARY KEY AUTOINCREMENT, '
        'media_store_id INTEGER, root_path TEXT NOT NULL DEFAULT '', '
-       'root_relative_file_path TEXT NOT NULL DEFAULT '', file_name TEXT NOT NULL, '
-       'size INTEGER NOT NULL, file_date_modified_ms INTEGER NOT NULL, '
+       'root_relative_file_path TEXT NOT NULL DEFAULT '', '
+       'file_name TEXT NOT NULL, size INTEGER NOT NULL, '
+       'file_date_modified_ms INTEGER NOT NULL, '
        'storage_location INTEGER NOT NULL, mime_type TEXT, '
        'media_type INTEGER, uri TEXT NOT NULL, '
        'is_hidden INTEGER NOT NULL, title TEXT, '
@@ -105,30 +113,31 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
        'parent_folder_name TEXT COLLATE NOCASE, UNIQUE (media_store_id), '
        'UNIQUE (uri))'),
     'media_store_scan_state_table':(
-       'CREATE TABLE media_store_scan_state_table(id INTEGER NOT NULL DEFAULT 0 UNIQUE, '
-       'largest_scanned_date_modified_ms INTEGER NOT NULL, '
+       'CREATE TABLE media_store_scan_state_table(id INTEGER NOT NULL '
+       'DEFAULT 0 UNIQUE, largest_scanned_date_modified_ms INTEGER NOT NULL, '
        'largest_scanned_media_store_id INTEGER NOT NULL)'),
     'post_file_scan_tasks_state_table':(
-       'CREATE TABLE post_file_scan_tasks_state_table(task_type INTEGER NOT NULL UNIQUE, '
-       'largest_processed_file_id INTEGER NOT NULL, '
+       'CREATE TABLE post_file_scan_tasks_state_table(task_type INTEGER NOT '
+       'NULL UNIQUE, largest_processed_file_id INTEGER NOT NULL, '
        'last_processed_timestamp_ms INTEGER NOT NULL)'),
     'scan_log_table':(
        'CREATE TABLE scan_log_table(id INTEGER PRIMARY KEY AUTOINCREMENT, '
        'start_timestamp INTEGER NOT NULL DEFAULT 0, '
        'end_timestamp INTEGER NOT NULL DEFAULT 0, '
-       'updated_items_count INTEGER NOT NULL DEFAULT 0, scan_type INTEGER NOT NULL, '
-       'scan_result INTEGER NOT NULL DEFAULT 0)'),
+       'updated_items_count INTEGER NOT NULL DEFAULT 0, scan_type INTEGER '
+       'NOT NULL, scan_result INTEGER NOT NULL DEFAULT 0)'),
     'file_consumption_data_table':(
-       'CREATE TABLE file_consumption_data_table(id INTEGER PRIMARY KEY AUTOINCREMENT, '
-       'main_file_table_id INTEGER NOT NULL, play_state INTEGER, '
-       'duration INTEGER, play_position INTEGER, '
-       'fully_played_count INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(main_file_table_id) '
+       'CREATE TABLE file_consumption_data_table(id INTEGER PRIMARY KEY '
+       'AUTOINCREMENT, main_file_table_id INTEGER NOT NULL, '
+       'play_state INTEGER, duration INTEGER, play_position INTEGER, '
+       'fully_played_count INTEGER NOT NULL DEFAULT 0, '
+       'FOREIGN KEY(main_file_table_id) '
        'REFERENCES files_master_table(id) ON DELETE CASCADE)'),
     'file_open_info_table':(
        'CREATE TABLE file_open_info_table(file_id INTEGER NOT NULL, '
        'file_open_time_stamp_ms INTEGER NOT NULL,  UNIQUE(file_id, '
-       'file_open_time_stamp_ms), FOREIGN KEY(file_id) REFERENCES files_master_table(id) '
-       'ON DELETE CASCADE)'),
+       'file_open_time_stamp_ms), FOREIGN KEY(file_id) REFERENCES '
+       'files_master_table(id) ON DELETE CASCADE)'),
     'files_classification_table':(
        'CREATE TABLE files_classification_table(file_id INTEGER NOT NULL, '
        'classification INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(file_id) '
@@ -143,17 +152,18 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
        'file_hash TEXT, taken_date_ms INTEGER, '
        'device_description TEXT, aperture DOUBLE, '
        'focal_length DOUBLE, exposure_time DOUBLE, '
-       'iso_speed INTEGER, FOREIGN KEY(file_id) REFERENCES files_master_table(id) '
-       'ON DELETE CASCADE)'),
+       'iso_speed INTEGER, FOREIGN KEY(file_id) REFERENCES '
+       'files_master_table(id) ON DELETE CASCADE)'),
     'nima_score_table':(
        'CREATE TABLE nima_score_table(file_id INTEGER NOT NULL, '
        'vg_score FLOAT NOT NULL, ava_score FLOAT NOT NULL, '
-       'UNIQUE (file_id), FOREIGN KEY(file_id) REFERENCES files_master_table(id) '
-       'ON DELETE CASCADE)'),
+       'UNIQUE (file_id), FOREIGN KEY(file_id) REFERENCES '
+       'files_master_table(id) ON DELETE CASCADE)'),
     'session_scan_log_table':(
        'CREATE TABLE session_scan_log_table(scan_id INTEGER NOT NULL, '
-       'item_id INTEGER NOT NULL, FOREIGN KEY(scan_id) REFERENCES scan_log_table(id), '
-       'FOREIGN KEY(item_id) REFERENCES files_master_table(id))')}]
+       'item_id INTEGER NOT NULL, FOREIGN KEY(scan_id) REFERENCES '
+       'scan_log_table(id), FOREIGN KEY(item_id) REFERENCES '
+       'files_master_table(id))')}]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
@@ -165,7 +175,8 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
       value_name (str): name of the value.
 
     Returns:
-      dfdatetime.PosixTimeInMilliseconds: date and time value or None if not available.
+      dfdatetime.PosixTimeInMilliseconds: date and time value or None if 
+      not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
     if timestamp is None:
@@ -198,7 +209,8 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
     event_data.uri = self._GetRowValue(query_hash, row, 'uri')
     event_data.is_hidden = self._GetRowValue(query_hash, row, 'is_hidden')
     event_data.title = self._GetRowValue(query_hash, row, 'title')
-    event_data.parent_folder = self._GetRowValue(query_hash, row, 'parent_folder_name')
+    event_data.parent_folder = self._GetRowValue(
+        query_hash, row, 'parent_folder_name')
     event_data.query = query
 
     parser_mediator.ProduceEventData(event_data)
