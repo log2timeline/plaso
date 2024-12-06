@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Imports for the SQLite database parser plugins."""
 
-from plaso.parsers.sqlite_plugins import android_communication_information
 from plaso.parsers.sqlite_plugins import android_app_usage
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_hangouts
