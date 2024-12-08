@@ -33,11 +33,12 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
-data_type: 'ios:routined:entry'
+data_type: 'routined:plist:event'
 message:
-- 'Application identifier: {application_identifier}'
+  - 'KEY: {key}'
+  - 'VALUE: {vaue}'
 short_message:
-- 'Application identifier: {application_identifier}'
+  - 'KEY: {key}'
 short_source: 'PLIST'
 source: 'Apple iOS routined application plist file'
 ---

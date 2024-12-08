@@ -1,58 +1,85 @@
+# -*- coding: utf-8 -*-
+"""Plist parser plugin for Apple routined-related plist files."""
 import datetime
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
-class IOSRoutinedEventData(events.EventData):
-    """Event data for com.apple.routined plist.
+
+class RoutinedEventData(events.EventData):
+    """Routined plist event data.
 
     Attributes:
-        key (str): Name of the key.
-        value (str): Value associated with the key.
+      key (str): The name of the plist key.
+      value (str): The value associated with the key.
+      timestamp_description (str): A description of what the timestamp represents.
     """
-    DATA_TYPE = 'ios:routined:entry'
+
+    DATA_TYPE = 'routined:plist:event'
 
     def __init__(self):
         """Initializes event data."""
-        super(IOSRoutinedEventData, self).__init__(data_type=self.DATA_TYPE)
+        super(RoutinedEventData, self).__init__(data_type=self.DATA_TYPE)
         self.key = None
         self.value = None
+        self.timestamp = None
 
-class IOSRoutinedPlistPlugin(interface.PlistPlugin):
-    """Plist parser plugin for com.apple.routined plist."""
 
-    NAME = 'ios_routined'
-    DATA_FORMAT = 'Apple iOS Routined plist file'
+class MyRoutinedPlistPlugin(interface.PlistPlugin):
+    """Plist parser plugin for Apple routined plist files."""
+
+    NAME = 'routined_plist'
+    DATA_FORMAT = 'Apple routined plist file'
 
     PLIST_PATH_FILTERS = frozenset([
         interface.PlistPathFilter('com.apple.routined.plist')
     ])
 
     PLIST_KEYS = frozenset([
+        'LastAssetUpdateDate',
+        'LastExitDate.CoreRoutineHelperService',
+        'LastLaunchDate.CoreRoutineHelperService',
+        'LastLaunchDate.routined',
+        'LastSuccessfulAssetUpdateDate',
+        'LearnedLocationEngineTrainVisitsLastAttemptDate',
+        'RTDefaultsPersistenceMirroringManagerBackgroundLastExportDate',
+        'RTDefaultsPersistenceMirroringManagerBackgroundLastImportDate',
         'XPCActivityLastAttemptDate.com.apple.routined.assets',
+        'XPCActivityLastAttemptDate.com.apple.routined.learnedLocationEngine.train',
+        'XPCActivityLastAttemptDate.com.apple.routined.locationAwareness.heartbeat',
+        'XPCActivityLastAttemptDate.com.apple.routined.locationAwareness.highAccuracyLocationRequest',
+        'XPCActivityLastAttemptDate.com.apple.routined.metrics.daily',
+        'XPCActivityLastAttemptDate.com.apple.routined.persistence.mirroring.background',
+        'XPCActivityLastAttemptDate.com.apple.routined.persistence.mirroring.post-install',
+        'XPCActivityLastAttemptDate.com.apple.routined.purge',
+        'XPCActivityLastCompleteDate.com.apple.routined.assets',
+        'XPCActivityLastCompleteDate.com.apple.routined.learnedLocationEngine.train',
+        'XPCActivityLastCompleteDate.com.apple.routined.locationAwareness.heartbeat',
+        'XPCActivityLastCompleteDate.com.apple.routined.locationAwareness.highAccuracyLocationRequest',
+        'XPCActivityLastCompleteDate.com.apple.routined.metrics.daily',
+        'XPCActivityLastCompleteDate.com.apple.routined.persistence.mirroring.background',
+        'XPCActivityLastCompleteDate.com.apple.routined.persistence.mirroring.post-install',
+        'XPCActivityLastCompleteDate.com.apple.routined.purge',
+        'learnedLocationEngineTrainLocationsOfInterestLastCompletionDate'
     ])
 
     def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
-        """Extract data from the plist.
+        """Extract events from the routined plist.
 
         Args:
-            parser_mediator (ParserMediator): mediates interactions between parsers and other components.
-            match (Optional[dict[str, object]]): keys extracted from PLIST_KEYS.
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components.
+          match (Optional[dict[str, object]]): keys extracted from PLIST_KEYS.
         """
+        # Produce an event for each key-value pair as a string, with no conversions.
         for key, value in match.items():
-            event_data = IOSRoutinedEventData()
+            event_data = RoutinedEventData()
             event_data.key = key
-
-            if isinstance(value, datetime.datetime):
-                timestamp = int(value.timestamp() * definitions.NANOSECONDS_PER_SECOND)
-                event_data.value = dfdatetime_posix_time.PosixTimeInNanoseconds(
-                    timestamp=timestamp)
-            else:
-                event_data.value = value
+            event_data.value = str(value)
+            event_data.timestamp = str(value)
 
             parser_mediator.ProduceEventData(event_data)
 
-plist.PlistParser.RegisterPlugin(IOSRoutinedPlistPlugin)
+
+plist.PlistParser.RegisterPlugin(MyRoutinedPlistPlugin)

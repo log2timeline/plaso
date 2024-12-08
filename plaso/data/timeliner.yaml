@@ -507,9 +507,11 @@ place_holder_event: false
 ---
 data_type: 'ios:routined:entry'
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
-place_holder_event: false
+  - name: 'key'
+    description: 'Event Name'
+  - name: 'value'
+    description: 'Event Value'
+place_holder_event: true
 ---
 data_type: 'ios:idstatuscache:lookup'
 attribute_mappings:
