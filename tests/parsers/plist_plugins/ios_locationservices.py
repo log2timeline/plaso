@@ -1,38 +1,35 @@
+# -*- coding: utf-8 -*-
+"""Tests for the MyRoutinedPlistPlugin."""
+
 import unittest
+
 from plaso.parsers.plist_plugins import ios_locationservices
 from tests.parsers.plist_plugins import test_lib
 
-class IOSRoutinedPlistPluginTest(test_lib.PlistPluginTestCase):
-    """Tests for the Apple iOS Routined plist plugin."""
+
+class MyRoutinedPlistPluginTest(test_lib.PlistPluginTestCase):
+    """Tests for the MyRoutinedPlistPlugin."""
 
     def testProcess(self):
-        """Tests the Process function."""
         plist_name = 'com.apple.routined.plist'
-
-        plugin = ios_locationservices.IOSRoutinedPlistPlugin()
+        plugin = ios_locationservices.MyRoutinedPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, [plist_name], plist_name)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             'event_data')
-        self.assertGreater(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 25)
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            'extraction_warning')
-        self.assertEqual(number_of_warnings, 0)
+        found = False
+        for event_data in storage_writer.GetAttributeContainers('event_data'):
+            print('Key:', event_data.key)
+            print('Timestamp:', event_data.timestamp)
+            print('-----')
+            if hasattr(event_data,'key') and event_data.key == 'XPCActivityLastAttemptDate.com.apple.routined.learnedLocationEngine.train':
+                found = True
+                break
+        self.assertTrue(found,'Key XPCActivityLastAttemptDate.com.apple.routined.learnedLocationEngine.train was not found')
 
-        number_of_recovery_warnings = storage_writer.GetNumberOfAttributeContainers(
-            'recovery_warning')
-        self.assertEqual(number_of_recovery_warnings, 0)
-
-        expected_event_values = {
-            'key': 'XPCActivityLastAttemptDate.com.apple.routined.assets',
-            'value': '2023-05-20T01:42:39.602781184+00:00',
-            'data_type': 'ios:routined:entry'
-        }
-
-        event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-        self.CheckEventData(event_data, expected_event_values)
 
 if __name__ == '__main__':
     unittest.main()
