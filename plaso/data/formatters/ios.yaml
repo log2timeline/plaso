@@ -36,7 +36,8 @@ type: 'conditional'
 data_type: 'routined:plist:event'
 message:
   - 'KEY: {key}'
-  - 'VALUE: {vaue}'
+  - 'VALUE: {value}'
+  - 'TIMESTAMP: {timestamp}'
 short_message:
   - 'KEY: {key}'
 short_source: 'PLIST'

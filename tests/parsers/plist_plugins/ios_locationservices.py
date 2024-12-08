@@ -18,7 +18,7 @@ class MyRoutinedPlistPluginTest(test_lib.PlistPluginTestCase):
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             'event_data')
-        self.assertEqual(number_of_event_data, 25)
+        self.assertEqual(number_of_event_data, 26)
 
         found = False
         for event_data in storage_writer.GetAttributeContainers('event_data'):
