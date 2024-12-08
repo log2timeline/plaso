@@ -1,5 +1,13 @@
 # Plaso timeliner configuration.
 ---
+data_type: 'android:airtag:event'
+attribute_mappings:
+- name: 'first_discovery'
+  description: 'First Discovery'
+- name: 'last_seen'
+  description: 'Last Seen'
+place_holder_event: true
+---
 data_type: 'android:app_usage'
 attribute_mappings:
 - name: 'last_resume_time'
