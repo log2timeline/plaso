@@ -5,6 +5,7 @@ import datetime
 from plaso.containers import events
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 
 class RoutinedEventData(events.EventData):
@@ -37,6 +38,7 @@ class MyRoutinedPlistPlugin(interface.PlistPlugin):
     ])
 
     PLIST_KEYS = frozenset([
+        'CKStartupTime',
         'LastAssetUpdateDate',
         'LastExitDate.CoreRoutineHelperService',
         'LastLaunchDate.CoreRoutineHelperService',
@@ -77,9 +79,32 @@ class MyRoutinedPlistPlugin(interface.PlistPlugin):
             event_data = RoutinedEventData()
             event_data.key = key
             event_data.value = str(value)
-            event_data.timestamp = str(value)
+
+            # Handle Unix timestamp for CKStartupTime
+            if key == 'CKStartupTime' and isinstance(value, (int, float)):
+                date_time = dfdatetime_posix_time.PosixTime(timestamp=value)
+                event_data.timestamp = date_time
+
+            # Handle ISO 8601 strings
+            elif isinstance(value, str):
+                try:
+                    parsed_datetime = datetime.datetime.strptime(
+                        value, "%Y-%m-%d %H:%M:%S %z"
+                    )
+                    event_data.timestamp = parsed_datetime
+                except ValueError:
+                    parser_mediator.ProduceExtractionError(
+                        f"Failed to parse ISO 8601 date: {value} for key: {key}"
+                    )
+                    continue
+
+            # Handle unsupported types
+            else:
+                parser_mediator.ProduceExtractionError(
+                    f"Unsupported timestamp type for key: {key}, value: {value}"
+                )
+                continue
 
             parser_mediator.ProduceEventData(event_data)
-
 
 plist.PlistParser.RegisterPlugin(MyRoutinedPlistPlugin)

@@ -505,12 +505,14 @@ attribute_mappings:
   description: 'Last Time Executed'
 place_holder_event: false
 ---
-data_type: 'ios:routined:entry'
+data_type: 'routined:plist:event'
 attribute_mappings:
   - name: 'key'
     description: 'Event Name'
   - name: 'value'
     description: 'Event Value'
+  - name: 'timestamp'
+    description: 'Event Timestamp'
 place_holder_event: true
 ---
 data_type: 'ios:idstatuscache:lookup'
