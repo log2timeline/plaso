@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""SQLite parser plugin for AirGuard AirTag Tracker on Android database files."""
+"""SQLite parser plugin for 
+AirGuard AirTag Tracker on Android database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -20,7 +21,7 @@ class AirTagEventData(events.EventData):
         first_discovery (str): First time the device was detected.
         last_seen (str): Last time the device was detected.
   """
-  
+
   DATA_TYPE = 'android:airtag:event'
 
   def __init__(self):
@@ -36,7 +37,7 @@ class AirTagEventData(events.EventData):
 
 
 class AirTagPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for for AirGuard AirTag Tracker on Android database files.
+  """SQLite parser plugin for AirGuard AirTag Tracker on Android database files.
 
   The AirTag database file is typically stored in:
   temp/data/data/de.seemoo.at_tracking_detection.release/databases/attd_db
@@ -47,10 +48,11 @@ class AirTagPlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'beacon': frozenset([
-        'beaconId', 'receivedAt', 'rssi', 'deviceAddress', 'latitude', 'longitude']),
+        'beaconId', 'receivedAt', 'rssi', 
+        'deviceAddress', 'latitude', 'longitude']),
       'device': frozenset([
         'deviceId', 'uniqueId', 'address', 'name', 'firstDiscovery', 'lastSeen', 'deviceType'])}
-  
+
   QUERIES = [
       ('SELECT device.address, device.name, beacon.rssi, beacon.latitude, '
        'beacon.longitude, device.firstDiscovery, device.lastSeen '
@@ -62,27 +64,39 @@ class AirTagPlugin(interface.SQLitePlugin):
       'android_metadata': (
           'CREATE TABLE android_metadata (locale TEXT)'),
       'beacon': (
-          'CREATE TABLE beacon (beaconId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
-          'receivedAt TEXT NOT NULL, rssi INTEGER NOT NULL, deviceAddress TEXT NOT NULL, '
+          'CREATE TABLE beacon '
+          '(beaconId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
+          'receivedAt TEXT NOT NULL, rssi INTEGER NOT NULL, '
+          'deviceAddress TEXT NOT NULL, '
           'longitude REAL, latitude REAL, mfg BLOB, serviceUUIDs TEXT)'),
       'device': (
-          'CREATE TABLE device (deviceId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
-          'uniqueId TEXT, address TEXT NOT NULL, name TEXT, ignore INTEGER NOT NULL, '
-          'connectable INTEGER DEFAULT 0, payloadData INTEGER, firstDiscovery TEXT NOT NULL, '
-          'lastSeen TEXT NOT NULL, notificationSent INTEGER NOT NULL, lastNotificationSent TEXT, '
+          'CREATE TABLE device '
+          '(deviceId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
+          'uniqueId TEXT, address TEXT NOT NULL, '
+          'name TEXT, ignore INTEGER NOT NULL, '
+          'connectable INTEGER DEFAULT 0, payloadData INTEGER, '
+          'firstDiscovery TEXT NOT NULL, '
+          'lastSeen TEXT NOT NULL, notificationSent INTEGER NOT NULL, '
+          'lastNotificationSent TEXT, '
           'deviceType TEXT)'),
       'feedback': (
-          'CREATE TABLE feedback (feedbackId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
+          'CREATE TABLE feedback '
+          '(feedbackId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
           'notificationId INTEGER NOT NULL, location TEXT)'),
       'notification': (
-          'CREATE TABLE notification (notificationId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
-          'deviceAddress TEXT NOT NULL, falseAlarm INTEGER NOT NULL, dismissed INTEGER, '
+          'CREATE TABLE notification '
+          '(notificationId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
+          'deviceAddress TEXT NOT NULL, '
+          'falseAlarm INTEGER NOT NULL, dismissed INTEGER, '
           'clicked INTEGER, createdAt TEXT NOT NULL)'),
       'room_master_table': (
-          'CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT)'),
+          'CREATE TABLE room_master_table '
+          '(id INTEGER PRIMARY KEY, identity_hash TEXT)'),
       'scan': (
-          'CREATE TABLE scan (scanId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
-          'endDate TEXT, noDevicesFound INTEGER, duration INTEGER, isManual INTEGER NOT NULL, '
+          'CREATE TABLE scan '
+          '(scanId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
+          'endDate TEXT, noDevicesFound INTEGER, duration INTEGER, '
+          'isManual INTEGER NOT NULL, '
           'scanMode INTEGER NOT NULL, startDate TEXT)')}]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
@@ -120,7 +134,8 @@ class AirTagPlugin(interface.SQLitePlugin):
     event_data.latitude = self._GetRowValue(query_hash, row, 'latitude')
     event_data.longitude = self._GetRowValue(query_hash, row, 'longitude')
     event_data.device_name = self._GetRowValue(query_hash, row, 'name')
-    event_data.first_discovery = self._GetRowValue(query_hash, row, 'firstDiscovery')
+    event_data.first_discovery = self._GetRowValue(query_hash, row, 
+                                                   'firstDiscovery')
     event_data.last_seen = self._GetRowValue(query_hash, row, 'lastSeen')
 
     parser_mediator.ProduceEventData(event_data)
