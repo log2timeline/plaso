@@ -19,7 +19,7 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 254)
+    self.assertEqual(number_of_event_data, 868)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -32,9 +32,9 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'device_address': 'F2:21:EF:BF:DE:58',
         'data_type': 'android:airtag:event',
-        'rssi': 0,
-        'latitude': None,
-        'longitude': None,
+        'rssi': -97,
+        'latitude': -97.7381371,
+        'longitude': 30.2654229,
         'device_name': None,
         'first_discovery': '2022-08-16T18:26:18.159+00:00',
         'last_seen': '2022-08-16T18:26:18.159+00:00'}
