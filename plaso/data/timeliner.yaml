@@ -58,6 +58,14 @@ data_type: 'android:burners'
 attribute_mappings: 
 - name: 'date_created'
   description: 'Creation Time'
+- name: 'expiration_date'
+  description: 'Expiration Date'
+- name: 'date_created' 
+  description: 'Date Created'
+- name: 'last_updated_date'
+  description: 'Last Updated Date'
+- name: 'renewal_date'
+  description: 'Renewal Date'
 place_holder_event: true
 ---
 data_type: 'android:tango:conversation'
