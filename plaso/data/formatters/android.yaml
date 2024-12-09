@@ -10,15 +10,11 @@ message:
 - 'Alias: {alias}'
 - 'Features: {features}'
 - 'Total Minutes: {total_minutes}'
-- 'Expiration Date: {expiration_date}'
-- 'Date Created: {date_created}'
-- 'Last Updated Date: {last_updated_date}'
-- 'Renewal Date: {renewal_date}'
 short_message: 
 - 'Phone Number: {phone_number_id}'
 - 'User: {user_id}'
 short_source: 'SQLITE'
-source: 'android burners database'
+source: 'Android burners database'
 ---
 type: 'conditional'
 data_type: 'android:app_usage'
