@@ -45,3 +45,4 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
 
 if __name__ == '__main__':
   unittest.main()
+  
