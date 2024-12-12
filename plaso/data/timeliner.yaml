@@ -597,6 +597,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'jpeg:exif'
+attribute_mappings:
+- name: 'exif_datetime'
+  description: 'EXIF datetime'
+place_holder_event: true
+---
 data_type: 'kodi:videos:viewing'
 attribute_mappings:
 - name: 'last_played_time'
