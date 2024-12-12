@@ -115,6 +115,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
   # Contains: {value name: attribute name}
   _APPLICATION_SUB_KEY_VALUES = {
+      'FileId': 'sha1',
       'LowerCaseLongPath': 'full_path',
       'ProductName': 'product_name',
       'ProductVersion': 'file_version',
@@ -217,6 +218,10 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         value_data = self._GetValueDataAsObject(
             parser_mediator, application_sub_key.path, value_name, value)
 
+        if attribute_name == 'sha1' and value_data.startswith('0000'):
+          # Strip off the 4 leading zero's from the sha1 hash.
+          value_data = value_data[4:]
+
         setattr(event_data, attribute_name, value_data)
 
     install_date_value = application_sub_key.GetValueByName('InstallDate')
@@ -234,6 +239,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
     if link_date_value:
       event_data.link_time = self._ParseDateStringValue(
           parser_mediator, application_sub_key.path, link_date_value)
+
+    event_data.last_written_time = application_sub_key.last_written_time
 
     parser_mediator.ProduceEventData(event_data)
 

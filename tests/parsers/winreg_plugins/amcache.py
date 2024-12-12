@@ -118,9 +118,10 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'file_modification_time': None,
         'full_path': 'c:\\windows\\system32\\svchost.exe',
         'installation_time': None,
-        'last_written_time': None,
+        'last_written_time': '2019-12-17T05:30:28.2416496+00:00',
         'link_time': '1997-01-10T22:26:24+00:00',
-        'msi_installation_time': None}
+        'msi_installation_time': None,
+        'sha1': '75c5a97f521f760e32a4a9639a653eed862e9c61'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 135)
     self.CheckEventData(event_data, expected_event_values)
