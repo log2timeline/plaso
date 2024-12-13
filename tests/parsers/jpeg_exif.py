@@ -37,8 +37,8 @@ class JpegExifParserTest(test_lib.ParserTestCase):
         "manufacturer": "DJI",
         "model": "FC3582",
         "software": "RawTherapee 5.9",
-        "width": "4024",
-        "height": "3016",
+        "width": 4024,
+        "height": 3016,
         "xres": "300.0",
         "yres": "300.0"}
 
