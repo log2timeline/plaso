@@ -36,8 +36,8 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
         'latitude': -97.7381371,
         'longitude': 30.2654229,
         'device_name': None,
-        'first_discovery': '2022-08-16T18:26:18.159+00:00',
-        'last_seen': '2022-08-16T18:26:18.159+00:00'}
+        'first_discovery': '2022-08-16T18:26:18.159',
+        'last_seen': '2022-08-16T18:26:18.159'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
