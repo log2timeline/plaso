@@ -115,7 +115,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_event_values = {
         'data_type': 'windows:registry:amcache',
         'file_creation_time': None,
-        'file_identifier': '75c5a97f521f760e32a4a9639a653eed862e9c61',
+        'file_identifier': '000075c5a97f521f760e32a4a9639a653eed862e9c61',
         'file_modification_time': None,
         'full_path': 'c:\\windows\\system32\\svchost.exe',
         'installation_time': None,
