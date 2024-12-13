@@ -22,6 +22,8 @@ class AMCacheFileEventData(events.EventData):
     file_creation_time (dfdatetime.DateTimeValues): file entry creation date
         and time.
     file_description (str): description of file.
+    file_identifier (str): identifier of file (SHA-1 of the first 31,457,280 
+        bytes of file, preceded by '0000').
     file_modification_time (dfdatetime.DateTimeValues): file entry last
         modification date and time.
     file_reference (str): file system file reference, for example 9-1 (MFT
@@ -50,6 +52,7 @@ class AMCacheFileEventData(events.EventData):
     self.company_name = None
     self.file_creation_time = None
     self.file_description = None
+    self.file_identifier = None
     self.file_modification_time = None
     self.file_reference = None
     self.file_size = None
@@ -115,7 +118,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
   # Contains: {value name: attribute name}
   _APPLICATION_SUB_KEY_VALUES = {
-      'FileId': 'sha1',
+      'FileId': 'file_identifier',
       'LowerCaseLongPath': 'full_path',
       'ProductName': 'product_name',
       'ProductVersion': 'file_version',
@@ -217,10 +220,6 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       if value:
         value_data = self._GetValueDataAsObject(
             parser_mediator, application_sub_key.path, value_name, value)
-
-        if attribute_name == 'sha1' and value_data.startswith('0000'):
-          # Strip off the 4 leading zero's from the sha1 hash.
-          value_data = value_data[4:]
 
         setattr(event_data, attribute_name, value_data)
 
