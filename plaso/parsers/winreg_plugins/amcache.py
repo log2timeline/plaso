@@ -22,8 +22,8 @@ class AMCacheFileEventData(events.EventData):
     file_creation_time (dfdatetime.DateTimeValues): file entry creation date
         and time.
     file_description (str): description of file.
-    file_identifier (str): identifier of file (SHA-1 of the first 31,457,280 
-        bytes of file, preceded by '0000').
+    file_identifier (str): identifier of file (SHA-1 of the first 30 MiB
+        (31457280 bytes) of file, preceded by "0000").
     file_modification_time (dfdatetime.DateTimeValues): file entry last
         modification date and time.
     file_reference (str): file system file reference, for example 9-1 (MFT
