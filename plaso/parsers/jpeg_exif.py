@@ -210,6 +210,7 @@ class JpegExifEventData(events.EventData):
   DATA_TYPE = 'jpeg:exif'
   
   def __init__(self):
+    """Initializes a JpegExif event data."""
     super(JpegExifEventData, self).__init__(data_type=self.DATA_TYPE)
     self.exif_datetime = None
     self.width = None
@@ -231,12 +232,12 @@ class JpegExifParser(interface.FileObjectParser):
   DATA_FORMAT = 'JPEG file'
 
   def _ExtractExifMetadata(self, file_object):
-    event_data = JpegExifEventData()
+    return parse_exif(file_object)
 
-    ed = annotated_exif(parse_exif(file_object))
-    print(ed)
-    print(type(ed))
-    #print(json.dumps(dict(ed), sort_keys=True, indent=4))
+  def _BuildEventData(self, parsed_jpeg_exif):
+    ed = annotated_exif(parsed_jpeg_exif)
+    event_data = JpegExifEventData()
+    
     key = 'Date and Time'
     if key in ed.keys():
       ts = str(ed.get(key))
@@ -255,7 +256,6 @@ class JpegExifParser(interface.FileObjectParser):
     event_data.latitude = "%2.5f%s"%(ed.get('Latitude', 0.0), ed.get('Latitude Reference',''))
     event_data.longitude = "%2.5f%s"%(ed.get('Longitude', 0.0), ed.get('Longitude Reference', ''))
     return event_data
-    
   
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a JPEG file.
@@ -268,7 +268,8 @@ class JpegExifParser(interface.FileObjectParser):
       WrongParser: ...
     """
 
-    event_data = self._ExtractExifMetadata(file_object)
+    parsed_jpeg_exif = self._ExtractExifMetadata(file_object)
+    event_data = self._BuildEventData(parsed_jpeg_exif)
     parser_mediator.ProduceEventData(event_data)
 
 manager.ParsersManager.RegisterParser(JpegExifParser)
