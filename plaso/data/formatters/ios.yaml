@@ -187,6 +187,17 @@ short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
 type: 'conditional'
+data_type: 'ios:tiktok:contact'
+message:
+- 'Nickname: {nickname}'
+- 'URL: {url}'
+short_message:
+- 'Nickname: {nickname}'
+- 'URL: {url}'
+short_source: 'SQLITE'
+source: 'iOS TikTok contact database'
+---
+type: 'conditional'
 data_type: 'ios:twitter:contact'
 enumeration_helpers:
 - input_attribute: 'following'
