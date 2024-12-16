@@ -3,6 +3,7 @@
 """Tests for the process resources CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,27 @@ class ProcessResourcesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--process_memory_limit SIZE]
+
+Test argument parser.
+
+{0:s}:
+  --process_memory_limit, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--process_memory_limit SIZE]
 
 Test argument parser.

@@ -3,6 +3,7 @@
 """Tests for the Viper analysis plugin CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.analysis import viper
@@ -19,7 +20,32 @@ class ViperAnalysisArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]
+                     [--viper-port PORT] [--viper-protocol PROTOCOL]
+
+Test argument parser.
+
+{0:s}:
+  --viper-hash, --viper_hash HASH
+                        Type of hash to use to query the Viper server, the
+                        default is: sha256. Supported options: md5, sha256
+  --viper-host, --viper_host HOST
+                        Hostname of the Viper server to query, the default is:
+                        localhost
+  --viper-port, --viper_port PORT
+                        Port of the Viper server to query, the default is:
+                        8080.
+  --viper-protocol, --viper_protocol PROTOCOL
+                        Protocol to use to query Viper, the default is: http.
+                        Supported options: http, https
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]
                      [--viper-port PORT] [--viper-protocol PROTOCOL]
 

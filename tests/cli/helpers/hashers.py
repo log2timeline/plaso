@@ -3,6 +3,7 @@
 """Tests for the hashers CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,30 @@ class HashersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
+
+Test argument parser.
+
+{0:s}:
+  --hasher_file_size_limit, --hasher-file-size-limit SIZE
+                        Define the maximum file size in bytes that hashers
+                        should process. Any larger file will be skipped. A
+                        size of 0 represents no limit.
+  --hashers HASHER_LIST
+                        Define a list of hashers to use by the tool. This is a
+                        comma separated list where each entry is the name of a
+                        hasher, such as "md5,sha256". "all" indicates that all
+                        hashers should be enabled. "none" disables all
+                        hashers. Use "--hashers list" or "--info" to list the
+                        available hashers.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
 
 Test argument parser.

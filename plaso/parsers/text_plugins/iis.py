@@ -114,6 +114,9 @@ class WinIISTextPlugin(interface.TextPlugin):
   _UA = pyparsing.Word(
       pyparsing.alphanums + _URI_SAFE_CHARACTERS + '[]') | _BLANK
 
+  _COOKIE = pyparsing.Word(
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '@{}"\\') | _BLANK
+
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
   # IIS does not require that a query comply with RFC1738 restrictions on valid
   # URI characters
@@ -204,7 +207,7 @@ class WinIISTextPlugin(interface.TextPlugin):
   _LOG_LINE_STRUCTURES['time-taken'] = _INTEGER.set_results_name('time_taken')
   _LOG_LINE_STRUCTURES['cs-version'] = _URI.set_results_name('protocol_version')
   _LOG_LINE_STRUCTURES['cs-host'] = _URI.set_results_name('cs_host')
-  _LOG_LINE_STRUCTURES['cs(Cookie)'] = _URI.set_results_name('cs_cookie')
+  _LOG_LINE_STRUCTURES['cs(Cookie)'] = _COOKIE.set_results_name('cs_cookie')
   _LOG_LINE_STRUCTURES['cs(Referrer)'] = _URI.set_results_name('cs_referrer')
   _LOG_LINE_STRUCTURES['cs(Referer)'] = _URI.set_results_name('cs_referrer')
 

@@ -3,6 +3,7 @@
 """Tests for the CLI tool options mix-ins."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tool_options
@@ -133,7 +134,51 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
+                       [--custom_fields CUSTOM_FIELDS]
+                       [--custom_formatter_definitions PATH] [--dynamic_time]
+                       [--output_time_zone TIME_ZONE]
+
+Test argument parser.
+
+{0:s}:
+  --additional_fields, --additional-fields ADDITIONAL_FIELDS
+                        Defines additional fields to be included in the output
+                        besides the default fields. Multiple additional field
+                        names can be defined as a list of comma separated
+                        values. Output formats that support additional fields
+                        are: dynamic, opensearch and xlsx.
+  --custom_fields, --custom-fields CUSTOM_FIELDS
+                        Defines custom fields to be included in the output
+                        besides the default fields. A custom field is defined
+                        as "name:value". Multiple custom field names can be
+                        defined as list of comma separated values. Note that
+                        regular fields will are favoured above custom fields
+                        with same name. Output formats that support this are:
+                        dynamic, opensearch and xlsx.
+  --custom_formatter_definitions, --custom-formatter-definitions PATH
+                        Path to a file containing custom event formatter
+                        definitions, which is a .yaml file. Custom event
+                        formatter definitions can be used to customize event
+                        messages and override the built-in event formatter
+                        definitions.
+  --dynamic_time, --dynamic-time
+                        Indicate that the output should use dynamic time.
+                        Output formats that support dynamic time are: dynamic
+  --output_time_zone, --output-time-zone TIME_ZONE
+                        time zone of date and time values written to the
+                        output, if supported by the output format. Use "list"
+                        to see a list of available time zones. Output formats
+                        that support an output time zone are: dynamic and
+                        l2t_csv.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]

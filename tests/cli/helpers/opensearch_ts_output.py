@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import sys
 import unittest
 
 from plaso.cli.helpers import opensearch_ts_output
@@ -21,7 +22,53 @@ class OpenSearchTimesketchOutputArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
+                     [--opensearch-server HOSTNAME] [--opensearch-port PORT]
+                     [--opensearch-user USERNAME]
+                     [--opensearch-password PASSWORD]
+                     [--opensearch-mappings PATH]
+                     [--opensearch-url-prefix URL_PREFIX] [--use_ssl]
+                     [--ca_certificates_file_path PATH]
+                     [--timeline_identifier IDENTIFIER]
+
+Test argument parser.
+
+{0:s}:
+  --ca_certificates_file_path, --ca-certificates-file-path PATH
+                        Path to a file containing a list of root certificates
+                        to trust.
+  --flush_interval, --flush-interval INTERVAL
+                        Events to queue up before bulk insert to OpenSearch.
+  --index_name, --index-name NAME
+                        Name of the index in OpenSearch.
+  --opensearch-mappings, --opensearch_mappings PATH
+                        Path to a file containing mappings for OpenSearch
+                        indexing.
+  --opensearch-password, --opensearch_password PASSWORD
+                        Password to use for OpenSearch authentication.
+                        WARNING: use with caution since this can expose the
+                        password to other users on the system. The password
+                        can also be set with the environment variable
+                        PLASO_OPENSEARCH_PASSWORD.
+  --opensearch-port, --opensearch_port, --port PORT
+                        Port number of the OpenSearch server.
+  --opensearch-server, --opensearch_server, --server HOSTNAME
+                        Hostname or IP address of the OpenSearch server.
+  --opensearch-url-prefix, --opensearch_url_prefix URL_PREFIX
+                        URL prefix for OpenSearch.
+  --opensearch-user, --opensearch_user USERNAME
+                        Username to use for OpenSearch authentication.
+  --timeline_identifier, --timeline-identifier IDENTIFIER
+                        The identifier of the timeline in Timesketch.
+  --use_ssl, --use-ssl  Enforces use of SSL/TLS.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-server HOSTNAME] [--opensearch-port PORT]
                      [--opensearch-user USERNAME]

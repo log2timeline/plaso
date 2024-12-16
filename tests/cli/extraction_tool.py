@@ -3,6 +3,7 @@
 """Tests for the extraction tool object."""
 
 import argparse
+import sys
 import unittest
 
 try:
@@ -20,7 +21,24 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_PERFORMANCE_OPTIONS = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_PERFORMANCE_OPTIONS = """\
+usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
+                               [--queue_size QUEUE_SIZE]
+
+Test argument parser.
+
+{0:s}:
+  --buffer_size, --buffer-size, --bs BUFFER_SIZE
+                        The buffer size for the output (defaults to 196MiB).
+  --queue_size, --queue-size QUEUE_SIZE
+                        The maximum number of queued items per worker
+                        (defaults to 125000)
+""".format(test_lib.ARGPARSE_OPTIONS)
+  else:
+    _EXPECTED_PERFORMANCE_OPTIONS = """\
 usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
                                [--queue_size QUEUE_SIZE]
 
@@ -35,7 +53,43 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   if resource is None:
-    _EXPECTED_PROCESSING_OPTIONS = """\
+    if _PYTHON3_13_OR_LATER:
+      _EXPECTED_PROCESSING_OPTIONS = """\
+usage: extraction_tool_test.py [--single_process]
+                               [--temporary_directory DIRECTORY]
+                               [--vfs_back_end TYPE]
+                               [--worker_memory_limit SIZE]
+                               [--worker_timeout MINUTES] [--workers WORKERS]
+
+Test argument parser.
+
+{0:s}:
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --vfs_back_end, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto", "fsext",
+                        "fsfat", "fshfs", "fsntfs", "tsk" or "vsgpt".
+  --worker_memory_limit, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
+""".format(test_lib.ARGPARSE_OPTIONS)
+    else:
+      _EXPECTED_PROCESSING_OPTIONS = """\
 usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
@@ -71,7 +125,53 @@ Test argument parser.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
   else:
-    _EXPECTED_PROCESSING_OPTIONS = """\
+    if _PYTHON3_13_OR_LATER:
+      _EXPECTED_PROCESSING_OPTIONS = """\
+usage: extraction_tool_test.py [--single_process]
+                               [--process_memory_limit SIZE]
+                               [--temporary_directory DIRECTORY]
+                               [--vfs_back_end TYPE]
+                               [--worker_memory_limit SIZE]
+                               [--worker_timeout MINUTES] [--workers WORKERS]
+
+Test argument parser.
+
+{0:s}:
+  --process_memory_limit, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --vfs_back_end, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto", "fsext",
+                        "fsfat", "fshfs", "fsntfs", "tsk" or "vsgpt".
+  --worker_memory_limit, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit it is killed by the main (foreman) process.
+  --worker_timeout, --worker-timeout MINUTES
+                        Number of minutes before a worker process that is not
+                        providing status updates is considered inactive. The
+                        default timeout is 15.0 minutes. If a worker process
+                        exceeds this timeout it is killed by the main
+                        (foreman) process.
+  --workers WORKERS     Number of worker processes. The default is the number
+                        of available system CPUs minus one, for the main
+                        (foreman) process.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+    else:
+      _EXPECTED_PROCESSING_OPTIONS = """\
 usage: extraction_tool_test.py [--single_process]
                                [--process_memory_limit SIZE]
                                [--temporary_directory DIRECTORY]
@@ -115,7 +215,40 @@ Test argument parser.
                         (foreman) process.
 """.format(test_lib.ARGPARSE_OPTIONS)
 
-  _EXPECTED_TIME_ZONE_OPTION = """\
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_TIME_ZONE_OPTION = """\
+usage: extraction_tool_test.py [--codepage CODEPAGE] [--language LANGUAGE_TAG]
+                               [--no_extract_winevt_resources] [-z TIME_ZONE]
+
+Test argument parser.
+
+{0:s}:
+  --codepage CODEPAGE   The preferred codepage, which is used for decoding
+                        single-byte or multi-byte character extracted strings.
+  --language LANGUAGE_TAG
+                        The preferred language, which is used for extracting
+                        and formatting Windows EventLog message strings. Use "
+                        --language list" to see a list of supported language
+                        tags. The en-US (LCID 0x0409) language is used as
+                        fallback if preprocessing could not determine the
+                        system language or no language information is
+                        available in the winevt-rc.db database.
+  --no_extract_winevt_resources, --no-extract-winevt-resources
+                        Do not extract Windows EventLog resources such as
+                        event message template strings. By default Windows
+                        EventLog resources will be extracted when a Windows
+                        EventLog parser is enabled.
+  -z, --zone, --timezone TIME_ZONE
+                        preferred time zone of extracted date and time values
+                        that are stored without a time zone indicator. The
+                        time zone is determined based on the source data where
+                        possible otherwise it will default to UTC. Use "list"
+                        to see a list of available time zones.
+""".format(test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_TIME_ZONE_OPTION = """\
 usage: extraction_tool_test.py [--codepage CODEPAGE] [--language LANGUAGE_TAG]
                                [--no_extract_winevt_resources] [-z TIME_ZONE]
 

@@ -3,6 +3,7 @@
 """Tests for the filter file CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,25 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [-f FILE_FILTER]
+
+Test argument parser.
+
+{0:s}:
+  -f, --filter-file, --filter_file, --file-filter, --file_filter FILE_FILTER
+                        List of files to include for targeted collection of
+                        files to parse, one line per file path, setup is
+                        /path|file - where each element can contain either a
+                        variable set in the preprocessing stage or a regular
+                        expression.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.

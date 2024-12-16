@@ -3,6 +3,7 @@
 """Tests for the date filters CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -18,7 +19,38 @@ class DateFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--date-filter TYPE_START_END]
+
+Test argument parser.
+
+{0:s}:
+  --date-filter, --date_filter TYPE_START_END
+                        Filter based on file entry date and time ranges. This
+                        parameter is formatted as
+                        "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where
+                        TIME_VALUE defines which file entry timestamp the
+                        filter applies to e.g. atime, ctime, crtime, bkup,
+                        etc. START_DATE_TIME and END_DATE_TIME define
+                        respectively the start and end of the date time range.
+                        A date time range requires at minimum start or end to
+                        time of the boundary and END defines the end time.
+                        Both timestamps be set. The date time values are
+                        formatted as: YYYY-MM-DD hh:mm:ss.######[+-]##:##
+                        Where # are numeric digits ranging from 0 to 9 and the
+                        seconds fraction can be either 3 or 6 digits. The time
+                        of day, seconds fraction and time zone offset are
+                        optional. The default time zone is UTC. E.g. "atime,
+                        2013-01-01 23:12:14, 2013-02-23". This parameter can
+                        be repeated as needed to add additional date
+                        boundaries, e.g. once for atime, once for crtime, etc.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.

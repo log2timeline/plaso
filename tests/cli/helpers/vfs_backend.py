@@ -3,6 +3,7 @@
 """Tests for the VFS back-end CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,22 @@ class VFSBackEndArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--vfs_back_end TYPE]
+
+Test argument parser.
+
+{0:s}:
+  --vfs_back_end, --vfs-back-end TYPE
+                        The preferred dfVFS back-end: "auto", "fsext",
+                        "fsfat", "fshfs", "fsntfs", "tsk" or "vsgpt".
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--vfs_back_end TYPE]
 
 Test argument parser.

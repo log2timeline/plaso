@@ -3,6 +3,7 @@
 """Tests for the filter file CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -17,7 +18,40 @@ class ArtifactFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
+                     [--artifact_filters_file PATH]
+
+Test argument parser.
+
+{0:s}:
+  --artifact_filters, --artifact-filters ARTIFACT_FILTERS
+                        Names of forensic artifact definitions, provided on
+                        the command command line (comma separated). Forensic
+                        artifacts are stored in .yaml files that are directly
+                        pulled from the artifact definitions project. You can
+                        also specify a custom artifacts yaml file (see
+                        --custom_artifact_definitions). Artifact definitions
+                        can be used to describe and quickly collect data of
+                        interest, such as specific files or Windows Registry
+                        keys.
+  --artifact_filters_file, --artifact-filters_file PATH
+                        Names of forensic artifact definitions, provided in a
+                        file with one artifact name per line. Forensic
+                        artifacts are stored in .yaml files that are directly
+                        pulled from the artifact definitions project. You can
+                        also specify a custom artifacts yaml file (see
+                        --custom_artifact_definitions). Artifact definitions
+                        can be used to describe and quickly collect data of
+                        interest, such as specific files or Windows Registry
+                        keys.
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
                      [--artifact_filters_file PATH]
 

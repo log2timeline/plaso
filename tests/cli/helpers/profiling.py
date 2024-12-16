@@ -3,6 +3,7 @@
 """Tests for the profiling CLI arguments helper."""
 
 import argparse
+import sys
 import unittest
 
 from plaso.cli import tools
@@ -18,7 +19,33 @@ class ProfilingArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+
+  if _PYTHON3_13_OR_LATER:
+    _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--profilers PROFILERS_LIST]
+                     [--profiling_directory DIRECTORY]
+                     [--profiling_sample_rate SAMPLE_RATE]
+
+Test argument parser.
+
+{0:s}:
+  --profilers PROFILERS_LIST
+                        List of profilers to use by the tool. This is a comma
+                        separated list where each entry is the name of a
+                        profiler. Use "--profilers list" to list the available
+                        profilers.
+  --profiling_directory, --profiling-directory DIRECTORY
+                        Path to the directory that should be used to store the
+                        profiling sample files. By default the sample files
+                        are stored in the current working directory.
+  --profiling_sample_rate, --profiling-sample-rate SAMPLE_RATE
+                        Profiling sample rate (defaults to a sample every 1000
+                        files).
+""".format(cli_test_lib.ARGPARSE_OPTIONS)
+
+  else:
+    _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--profilers PROFILERS_LIST]
                      [--profiling_directory DIRECTORY]
                      [--profiling_sample_rate SAMPLE_RATE]
