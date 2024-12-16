@@ -16,7 +16,7 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
     plugin = ios_notes.IOSNotesPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['NotesStore.sqlite'], plugin)
-    
+
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 28)
@@ -34,10 +34,10 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
         'modification_time': '2023-05-10T00:57:01.178374',
         'title': 'iOS 15 Note',
         'snippet': 'Here is the test iOS 15 note.'}
-    
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 25)
     self.CheckEventData(event_data, expected_event_values)
-  
+
 
   if __name__ == '__main__':
     unittest.main()
