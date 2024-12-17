@@ -5,6 +5,8 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.containers import events
 
+from plaso.lib import errors
+
 from datetime import datetime
 from dfdatetime import posix_time as dfdatetime_posix_time
 
