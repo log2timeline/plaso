@@ -271,7 +271,11 @@ class JpegExifParser(interface.FileObjectParser):
       WrongParser: ...
     """
 
-    parsed_jpeg_exif = self._ExtractExifMetadata(file_object)
+    try:
+      parsed_jpeg_exif = self._ExtractExifMetadata(file_object)
+    except ValueError as exception:
+      raise errors.WrongParser(
+        'Unable to parse a JPEG file: {0!s}'.format(exception))
     event_data = self._BuildEventData(parsed_jpeg_exif)
     parser_mediator.ProduceEventData(event_data)
 
