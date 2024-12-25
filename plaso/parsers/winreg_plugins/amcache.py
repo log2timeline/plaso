@@ -18,6 +18,8 @@ class AMCacheFileEventData(events.EventData):
   """AMCache file event data.
 
   Attributes:
+    application_key_last_written_time (dfdatetime.DateTimeValues): last written
+        date and time of the application key.
     company_name (str): company name that created product file belongs to.
     file_creation_time (dfdatetime.DateTimeValues): file entry creation date
         and time.
@@ -49,6 +51,7 @@ class AMCacheFileEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AMCacheFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application_key_last_written_time = None
     self.company_name = None
     self.file_creation_time = None
     self.file_description = None
@@ -239,7 +242,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
       event_data.link_time = self._ParseDateStringValue(
           parser_mediator, application_sub_key.path, link_date_value)
 
-    event_data.last_written_time = application_sub_key.last_written_time
+    event_data.application_key_last_written_time = (
+        application_sub_key.last_written_time)
 
     parser_mediator.ProduceEventData(event_data)
 

@@ -55,6 +55,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'is-f4510.tmp\\idafree50.tmp')
 
     expected_event_values = {
+        'application_key_last_written_time': None,
         'data_type': 'windows:registry:amcache',
         'file_creation_time': '2017-08-01T12:43:35.1772758+00:00',
         'file_modification_time': '2017-08-01T12:43:35.3024523+00:00',
@@ -113,13 +114,14 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
+        'application_key_last_written_time': '2019-12-17T05:30:28.2416496+00:00',
         'data_type': 'windows:registry:amcache',
         'file_creation_time': None,
         'file_identifier': '000075c5a97f521f760e32a4a9639a653eed862e9c61',
         'file_modification_time': None,
         'full_path': 'c:\\windows\\system32\\svchost.exe',
         'installation_time': None,
-        'last_written_time': '2019-12-17T05:30:28.2416496+00:00',
+        'last_written_time': None,
         'link_time': '1997-01-10T22:26:24+00:00',
         'msi_installation_time': None}
 
