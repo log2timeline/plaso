@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for MacOS security daemon (securityd) log files.
-
-Also see:
-  https://opensource.apple.com/source/Security/Security-55471/sec/securityd
-"""
+"""Text parser plugin for MacOS security daemon (securityd) log files."""
 
 import pyparsing
 
