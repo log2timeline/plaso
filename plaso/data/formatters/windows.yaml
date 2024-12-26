@@ -384,6 +384,7 @@ type: 'conditional'
 data_type: 'windows:registry:amcache'
 message:
 - 'path: {full_path}'
+- 'file_identifier: {file_identifier}'
 - 'file_reference: {file_reference}'
 - 'sha1: {sha1}'
 - 'product_name: {product_name}'

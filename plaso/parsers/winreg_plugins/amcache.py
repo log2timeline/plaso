@@ -18,10 +18,14 @@ class AMCacheFileEventData(events.EventData):
   """AMCache file event data.
 
   Attributes:
+    application_key_last_written_time (dfdatetime.DateTimeValues): last written
+        date and time of the application key.
     company_name (str): company name that created product file belongs to.
     file_creation_time (dfdatetime.DateTimeValues): file entry creation date
         and time.
     file_description (str): description of file.
+    file_identifier (str): identifier of file (SHA-1 of the first 30 MiB
+        (31457280 bytes) of file, preceded by "0000").
     file_modification_time (dfdatetime.DateTimeValues): file entry last
         modification date and time.
     file_reference (str): file system file reference, for example 9-1 (MFT
@@ -47,9 +51,11 @@ class AMCacheFileEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(AMCacheFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application_key_last_written_time = None
     self.company_name = None
     self.file_creation_time = None
     self.file_description = None
+    self.file_identifier = None
     self.file_modification_time = None
     self.file_reference = None
     self.file_size = None
@@ -115,6 +121,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
   # Contains: {value name: attribute name}
   _APPLICATION_SUB_KEY_VALUES = {
+      'FileId': 'file_identifier',
       'LowerCaseLongPath': 'full_path',
       'ProductName': 'product_name',
       'ProductVersion': 'file_version',
@@ -234,6 +241,9 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
     if link_date_value:
       event_data.link_time = self._ParseDateStringValue(
           parser_mediator, application_sub_key.path, link_date_value)
+
+    event_data.application_key_last_written_time = (
+        application_sub_key.last_written_time)
 
     parser_mediator.ProduceEventData(event_data)
 
