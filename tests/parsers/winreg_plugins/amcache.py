@@ -114,7 +114,8 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'application_key_last_written_time': '2019-12-17T05:30:28.2416496+00:00',
+        'application_key_last_written_time': (
+            '2019-12-17T05:30:28.2416496+00:00'),
         'data_type': 'windows:registry:amcache',
         'file_creation_time': None,
         'file_identifier': '000075c5a97f521f760e32a4a9639a653eed862e9c61',
