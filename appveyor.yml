@@ -29,7 +29,7 @@ environment:
     L2TBINARIES_TRACK: "dev"
     TARGET: wheel
   - DESCRIPTION: "Run tests on Mac OS with Python 3.13"
-    APPVEYOR_BUILD_WORKER_IMAGE: macos-monterey
+    APPVEYOR_BUILD_WORKER_IMAGE: macos-sonoma
     HOMEBREW_NO_INSTALL_CLEANUP: 1
     TARGET: tests
 
