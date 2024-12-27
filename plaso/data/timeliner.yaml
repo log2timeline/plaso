@@ -581,18 +581,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
-data_type: 'ios:wifi:known_networks:knowing'
+data_type: 'ios:wifi:known_networks:entry'
 attribute_mappings:
-  - name: 'added_at'
-    description: 'Time network was added'
-  - name: 'last_associated'
-    description: 'Last associated time'
-  - name: 'ssid'
-    description: 'SSID of the network'
-  - name: 'bssid'
-    description: 'BSSID of the network'
-  - name: 'channel'
-    description: 'Channel of the network'
+- name: 'added_time'
+  description: 'Time network was added'
+- name: 'last_associated_time'
+  description: 'Last associated time'
 place_holder_event: true
 ---
 data_type: 'ipod:device:entry'
