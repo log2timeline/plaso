@@ -166,7 +166,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     if service_account_key_name:
       event_data.service_account_key_name = service_account_key_name
 
-    # Service account delegation information
     delegations = []
 
     delegation_info_list = self._GetJSONValue(
@@ -219,28 +218,22 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     if not request_metadata:
       return
 
-    caller_ip = self._GetJSONValue(request_metadata, 'callerIp', '')
-    event_data.caller_ip = caller_ip
+    event_data.caller_ip = self._GetJSONValue(request_metadata, 'callerIp')
+    event_data.user_agent = self._GetJSONValue(
+        request_metadata, 'callerSuppliedUserAgent')
 
-    user_agent = self._GetJSONValue(
-        request_metadata, 'callerSuppliedUserAgent', '')
-    event_data.user_agent = user_agent
+    if event_data.user_agent:
+      if 'command/' in event_data.user_agent:
+        matches = self._USER_AGENT_COMMAND_RE.search(event_data.user_agent)
+        if matches:
+          command_string = matches.group(1).replace('.', ' ')
+          event_data.gcloud_command_partial = command_string
 
-    if not user_agent:
-      return
-
-    if 'command/' in user_agent:
-      matches = self._USER_AGENT_COMMAND_RE.search(user_agent)
-      if matches:
-        command_string = str(matches.group(1))
-        command_string = command_string.replace('.', ' ')
-
-        event_data.gcloud_command_partial = command_string
-
-    if 'invocation-id' in user_agent:
-      matches = self._USER_AGENT_INVOCATION_ID_RE.search(user_agent)
-      if matches:
-        event_data.gcloud_command_identity = matches.group(1)
+      if 'invocation-id' in event_data.user_agent:
+        matches = self._USER_AGENT_INVOCATION_ID_RE.search(
+            event_data.user_agent)
+        if matches:
+          event_data.gcloud_command_identity = matches.group(1)
 
   def _ParseProtoPayloadStatus(self, proto_payload, event_data):
     """Extracts information from `protoPayload.status`.
@@ -250,21 +243,14 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data (GCPLogEventData): event data.
     """
     status = self._GetJSONValue(proto_payload, 'status')
-    if not status:
-      event_data.status_code = ''
-      event_data.status_message = ''
+    if status:
+      # Non empty `protoPayload.status` field could have empty
+      # `protoPayload.status.code` field.
+      #
+      # Empty `code` and `message` fields indicate the operation was successful.
 
-      return
-
-    # Non empty `protoPayload.status` field could have empty
-    # `protoPayload.status.code` field.
-    #
-    # Empty `code` and `message` fields indicate the operation was successful.
-    status_code = str(self._GetJSONValue(status, 'code', ''))
-    status_message = str(self._GetJSONValue(status, 'message', ''))
-
-    event_data.status_code = status_code
-    event_data.status_message = status_message
+      event_data.status_code = self._GetJSONValue(status, 'code')
+      event_data.status_message = self._GetJSONValue(status, 'message')
 
   def _ParseComputeInstancesInsert(self, request, event_data):
     """Extracts compute.instances.insert information.
@@ -273,11 +259,9 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       request (dict): JSON dictionary of the `protoPayload.request` field.
       event_data (GCPLogEventData): event data.
     """
-    # Source images are useful for investigation.
     source_images = []
 
-    disks = self._GetJSONValue(request, 'disks', [])
-    for disk in disks:
+    for disk in self._GetJSONValue(request, 'disks', []):
       initialize_params = self._GetJSONValue(disk, 'initializeParams', {})
 
       source_image = self._GetJSONValue(initialize_params, 'sourceImage')
@@ -336,28 +320,23 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     if not proto_payload:
       return
 
-    # Extract common fields
-    service_name = self._GetJSONValue(proto_payload, 'serviceName')
-    event_data.service_name = service_name
-
-    resource_name = self._GetJSONValue(proto_payload, 'resourceName')
-    event_data.resource_name = resource_name
+    event_data.service_name = self._GetJSONValue(proto_payload, 'serviceName')
+    event_data.resource_name = self._GetJSONValue(proto_payload, 'resourceName')
 
     method_name = self._GetJSONValue(proto_payload, 'methodName')
     if method_name and not event_data.event_subtype:
       event_data.event_subtype = method_name
       event_data.method_name = method_name
 
-    if proto_payload:
-      self._ParseAuthenticationInfo(proto_payload, event_data)
-      self._ParseAuthorizationInfo(proto_payload, event_data)
-      self._ParseRequestMetadata(proto_payload, event_data)
-      self._ParseProtoPayloadStatus(proto_payload, event_data)
-      self._ParseProtoPayloadRequest(proto_payload, event_data)
-      self._ParseProtoPayloadServiceData(proto_payload, event_data)
+    self._ParseAuthenticationInfo(proto_payload, event_data)
+    self._ParseAuthorizationInfo(proto_payload, event_data)
+    self._ParseRequestMetadata(proto_payload, event_data)
+    self._ParseProtoPayloadStatus(proto_payload, event_data)
+    self._ParseProtoPayloadRequest(proto_payload, event_data)
+    self._ParseProtoPayloadServiceData(proto_payload, event_data)
 
-      if service_name == 'compute.googleapis.com':
-        self._ParseComputeProtoPayload(proto_payload, event_data)
+    if event_data.service_name == 'compute.googleapis.com':
+      self._ParseComputeProtoPayload(proto_payload, event_data)
 
   def _ParseProtoPayloadRequest(self, proto_payload, event_data):
     """Extracts information from the request field of a protoPayload field.
@@ -429,11 +408,9 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     binding_deltas = self._GetJSONValue(
         policy_delta, 'bindingDeltas', default_value=[])
     for binding_delta_value in binding_deltas:
-      action = self._GetJSONValue(
-          binding_delta_value, 'action', default_value='')
-      member = self._GetJSONValue(
-          binding_delta_value, 'member', default_value='')
-      role = self._GetJSONValue(binding_delta_value, 'role', default_value='')
+      action = self._GetJSONValue(binding_delta_value, 'action') or 'N/A'
+      member = self._GetJSONValue(binding_delta_value, 'member') or 'N/A'
+      role = self._GetJSONValue(binding_delta_value, 'role') or 'N/A'
 
       policy_delta = '{0:s} {1:s} with role {2:s}'.format(action, member, role)
       policy_deltas.append(policy_delta)

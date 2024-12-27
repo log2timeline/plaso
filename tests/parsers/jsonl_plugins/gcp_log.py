@@ -123,8 +123,8 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'severity': 'NOTICE',
         'source_images': [
             'projects/fake-project/global/images/fake-source-image'],
-        'status_code': '',
-        'status_message': '',
+        'status_code': None,
+        'status_message': None,
         'text_payload': None,
         'user_agent': (
             'fake-user-agent-string command/gcloud.compute.instances.insert'
