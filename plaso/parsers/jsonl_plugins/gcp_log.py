@@ -26,7 +26,7 @@ class GCPLogEventData(events.EventData):
     filename (str): TODO
     firewall_rules (list[str]): firewall rules.
     firewall_source_ranges (list[str]): firewall source ranges.
-    gcloud_command_id (str): unique gcloud command identity.
+    gcloud_command_identity (str): unique gcloud command identity.
     gcloud_command_partial (str): partial gcloud command.
     log_name (str): name of the log entry.
     message (str): TODO
@@ -77,7 +77,7 @@ class GCPLogEventData(events.EventData):
     self.filename = None
     self.firewall_rules = None
     self.firewall_source_ranges = None
-    self.gcloud_command_id = None
+    self.gcloud_command_identity = None
     self.gcloud_command_partial = None
     self.log_name = None
     self.method_name = None
@@ -115,6 +115,10 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
   NAME = 'gcp_log'
   DATA_FORMAT = 'Google Cloud (GCP) log'
 
+  _USER_AGENT_COMMAND_RE = re.compile(r'command/([^\s]+)')
+
+  _USER_AGENT_INVOCATION_ID_RE = re.compile(r'invocation-id/([^\s]+)')
+
   def _ParseJSONPayload(self, json_dict, event_data):
     """Extracts information from a jsonPayload value.
 
@@ -143,9 +147,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    if not proto_payload:
-      return
-
     authentication_info = self._GetJSONValue(
         proto_payload, 'authenticationInfo')
     if not authentication_info:
@@ -195,9 +196,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    if not proto_payload:
-      return
-
     permissions = []
 
     authorization_info_list = self._GetJSONValue(
@@ -217,9 +215,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    if not proto_payload:
-      return
-
     request_metadata = self._GetJSONValue(proto_payload, 'requestMetadata')
     if not request_metadata:
       return
@@ -235,21 +230,17 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       return
 
     if 'command/' in user_agent:
-      command_regex = re.search(r'command/([^\s]+)', user_agent)
-
-      if command_regex:
-        command_string = str(command_regex.group(1))
+      matches = self._USER_AGENT_COMMAND_RE.search(user_agent)
+      if matches:
+        command_string = str(matches.group(1))
         command_string = command_string.replace('.', ' ')
 
         event_data.gcloud_command_partial = command_string
 
     if 'invocation-id' in user_agent:
-      invocation_id_regex = re.search(r'invocation-id/([^\s]+)', user_agent)
-
-      if invocation_id_regex:
-        invocation_id = invocation_id_regex.group(1)
-
-        event_data.gcloud_command_id = invocation_id
+      matches = self._USER_AGENT_INVOCATION_ID_RE.search(user_agent)
+      if matches:
+        event_data.gcloud_command_identity = matches.group(1)
 
   def _ParseProtoPayloadStatus(self, proto_payload, event_data):
     """Extracts information from `protoPayload.status`.
@@ -258,9 +249,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    if not proto_payload:
-      return
-
     status = self._GetJSONValue(proto_payload, 'status')
     if not status:
       event_data.status_code = ''
@@ -285,9 +273,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       request (dict): JSON dictionary of the `protoPayload.request` field.
       event_data (GCPLogEventData): event data.
     """
-    if not request:
-      return
-
     # Source images are useful for investigation.
     source_images = []
 
@@ -329,9 +314,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    if not proto_payload:
-      return
-
     request = self._GetJSONValue(proto_payload, 'request')
     if not request:
       return
@@ -366,24 +348,25 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.event_subtype = method_name
       event_data.method_name = method_name
 
-    self._ParseAuthenticationInfo(proto_payload, event_data)
-    self._ParseAuthorizationInfo(proto_payload, event_data)
-    self._ParseRequestMetadata(proto_payload, event_data)
-    self._ParseProtoPayloadStatus(proto_payload, event_data)
-    self._ParseProtoPayloadRequest(proto_payload, event_data)
-    self._ParseProtoPayloadServiceData(proto_payload, event_data)
+    if proto_payload:
+      self._ParseAuthenticationInfo(proto_payload, event_data)
+      self._ParseAuthorizationInfo(proto_payload, event_data)
+      self._ParseRequestMetadata(proto_payload, event_data)
+      self._ParseProtoPayloadStatus(proto_payload, event_data)
+      self._ParseProtoPayloadRequest(proto_payload, event_data)
+      self._ParseProtoPayloadServiceData(proto_payload, event_data)
 
-    if service_name == 'compute.googleapis.com':
-      self._ParseComputeProtoPayload(proto_payload, event_data)
+      if service_name == 'compute.googleapis.com':
+        self._ParseComputeProtoPayload(proto_payload, event_data)
 
-  def _ParseProtoPayloadRequest(self, json_dict, event_data):
+  def _ParseProtoPayloadRequest(self, proto_payload, event_data):
     """Extracts information from the request field of a protoPayload field.
 
     Args:
-      json_dict (dict): JSON dictionary of the protoPayload value.
+      proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    request = self._GetJSONValue(json_dict, 'request')
+    request = self._GetJSONValue(proto_payload, 'request')
     if not request:
       return
 
@@ -426,14 +409,14 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       event_data.service_account_display_name = self._GetJSONValue(
           service_account, 'display_name')
 
-  def _ParseProtoPayloadServiceData(self, json_dict, event_data):
+  def _ParseProtoPayloadServiceData(self, proto_payload, event_data):
     """Extracts information from the serviceData in the protoPayload value.
 
     Args:
-      json_dict (dict): JSON dictionary of the protoPayload value.
+      proto_payload (dict): JSON dictionary of the `protoPayload` value.
       event_data (GCPLogEventData): event data.
     """
-    service_data = self._GetJSONValue(json_dict, 'serviceData')
+    service_data = self._GetJSONValue(proto_payload, 'serviceData')
     if not service_data:
       return
 

@@ -81,7 +81,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         'filename': None,
         'firewall_rules': None,
         'firewall_source_ranges': None,
-        'gcloud_command_id': 'a1b2c3d4e5f6',
+        'gcloud_command_identity': 'a1b2c3d4e5f6',
         'gcloud_command_partial': 'gcloud compute instances insert',
         'log_name': (
             'projects/fake-project/logs/cloudaudit.googleapis.com%2Factivity'),
@@ -132,6 +132,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
