@@ -442,6 +442,26 @@ short_source: 'JAVA_IDX'
 source: 'Java Cache IDX'
 ---
 type: 'conditional'
+data_type: 'jpeg:exif'
+message:
+- 'Width: {image_width}'
+- 'Height: {image_height}'
+- 'Manufacturer: {manufacturer}'
+- 'Model: {model}'
+- 'Serial: {bodyserialnumber}'
+- 'Software: {software}'
+- 'Latitude: {latitude}'
+- 'Longitude: {longitude}'
+short_message:
+- 'Width: {image_width}'
+- 'Height: {image_height}'
+- 'Manufacturer: {manufacturer}'
+- 'Model: {model}'
+- 'Software: {software}'
+short_source: 'JPEG_EXIF'
+source: 'JPEG EXIF Metadata'
+---
+type: 'conditional'
 data_type: 'kodi:videos:viewing'
 message:
 - 'Video: {filename}'
