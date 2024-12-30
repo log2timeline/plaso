@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the path helper."""
 
+import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -175,7 +176,8 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(paths, ['/etc/sysconfig/my**'])
 
     # Test globstar with suffix.
-    paths = path_helper.PathHelper.ExpandGlobStars('/etc/sysconfig/**.exe', '/')
+    paths = path_helper.PathHelper.ExpandGlobStars(
+        '/etc/sysconfig/**.exe', '/')
 
     self.assertEqual(len(paths), 1)
 
@@ -416,6 +418,115 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     display_name = path_helper.PathHelper.GetRelativePathForPathSpec(
         qcow_path_spec)
     self.assertIsNone(display_name)
+
+  def testSanitizePathSegments(self):
+    """Tests the SanitizePathSegments function."""
+    # Test with an empty list of path segments.
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments([])
+    self.assertEqual(sanitized_path_segments, [])
+
+    # Test with clean path segments.
+    path_segments = ['test', 'directory', 'file.txt']
+    expected_sanitized_segments = ['test', 'directory', 'file.txt']
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        path_segments)
+    self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
+
+    # Test with dirty path segments.
+    path_segments = ['test\x00dir', 'fi:le?.txt', 'temp\x1ffile']
+    expected_sanitized_segments = ['test_dir', 'fi_le_.txt', 'temp_file']
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        path_segments)
+    self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
+
+    # Test with a path segment containing the path separator.
+    path_segments = [f'test{os.sep}dir', 'file.txt']
+    expected_sanitized_segments = ['test_dir', 'file.txt']
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        path_segments)
+    self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
+
+    # Test with mixed clean and dirty path segments.
+    path_segments = ['clean', 'dir\x00ty', 'fi:le?.txt']
+    expected_sanitized_segments = ['clean', 'dir_ty', 'fi_le_.txt']
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        path_segments)
+    self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
+
+    # Test with path segments containing only dirty characters.
+    path_segments = ['\x00\x01\x02', '::::', '!!!!']
+    expected_sanitized_segments = ['___', '____', '____']
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        path_segments)
+    self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
+
+  def testGetRelativePath(self):
+    """Tests the GetRelativePath function."""
+    # Test with normal paths.
+    target_directory = '/home/user/output'
+    target_filename = 'file.txt'
+    destination_path = '/home/user/output/'
+    expected_relative_path = 'file.txt'
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
+
+    # Test with subdirectory.
+    target_directory = '/home/user/output/subdir'
+    target_filename = 'image.dd'
+    destination_path = '/home/user/output/'
+    expected_relative_path = os.path.join('subdir', 'image.dd')
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
+
+    # Test with a relative destination path.
+    target_directory = 'output/subdir'
+    target_filename = 'file.txt'
+    destination_path = 'output' + os.sep
+    expected_relative_path = os.path.join('subdir', 'file.txt')
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
+
+    # Test with no match.
+    target_directory = '/home/user/output/subdir'
+    target_filename = 'image.E01'
+    destination_path = '/another/directory/'
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertIsNone(relative_path)
+
+    # Test with empty inputs.
+    relative_path = path_helper.PathHelper.GetRelativePath('', '', '')
+    self.assertIsNone(relative_path)
+
+    # Test with only destination path ending with separator.
+    target_directory = '/home/user/output/subdir'
+    target_filename = 'data.txt'
+    destination_path = '/home/user/output/'
+    expected_relative_path = os.path.join('subdir', 'data.txt')
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
+
+    # Test with only destination path not ending with separator.
+    target_directory = '/home/user/output/subdir'
+    target_filename = 'file.txt'
+    destination_path = '/home/user/output'
+    expected_relative_path = os.path.join('subdir', 'file.txt')
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
+
+    # Test with target directory being root.
+    target_directory = '/'
+    target_filename = 'file.txt'
+    destination_path = '/'
+    expected_relative_path = 'file.txt'
+    relative_path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
+    self.assertEqual(relative_path, expected_relative_path)
 
 
 if __name__ == '__main__':

@@ -25,6 +25,13 @@ class PathHelper(object):
           ['%%users.userprofile%%', 'AppData', 'LocalLow']],
       '%%users.temp%%': [
           ['%%users.localappdata%%', 'Temp']]}
+  _DIRTY_CHARACTERS = frozenset([
+      '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07',
+      '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f',
+      '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17',
+      '\x18', '\x19', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f',
+      os.path.sep, '!', '$', '%', '&', '*', '+', ':', ';', '<', '>',
+      '?', '@', '|', '~', '\x7f'])
 
   @classmethod
   def _ExpandUsersHomeDirectoryPathSegments(
@@ -408,3 +415,47 @@ class PathHelper(object):
     path = cls.ExpandWindowsPath(path, environment_variables)
 
     return path, filename
+
+  @classmethod
+  def SanitizePathSegments(cls, path_segments):
+    """Sanitizes path segments.
+
+    Replaces non-printable and other characters defined in _DIRTY_CHARACTERS
+    with an underscore "_".
+
+    Args:
+      path_segments (list[str]): path segments.
+
+    Returns:
+      list[str]: sanitized path segments.
+    """
+    sanitized_path_segments = []
+    for path_segment in path_segments:
+      sanitized_path_segment = ''.join([
+          character if character not in cls._DIRTY_CHARACTERS else '_'
+          for character in path_segment])
+      sanitized_path_segments.append(sanitized_path_segment)
+    return sanitized_path_segments
+
+  @classmethod
+  def GetRelativePath(
+          cls,
+          target_directory,
+          target_filename,
+          destination_path):
+    """Retrieves the relative path from the destination path.
+
+    Args:
+        target_directory (str): path of the target directory.
+        target_filename (str): name of the target file.
+        destination_path (str): destination path for the collected files.
+    Returns:
+        str: normalized path or None.
+    """
+
+    if not destination_path.endswith(os.path.sep):
+      destination_path = destination_path + os.path.sep
+    target_path = os.path.join(target_directory, target_filename)
+    if target_path.startswith(destination_path):
+      return target_path[len(destination_path):]
+    return None
