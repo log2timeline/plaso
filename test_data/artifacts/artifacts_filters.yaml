@@ -110,3 +110,18 @@ sources:
     separator: '\'
 labels: [System]
 supported_os: [Windows]
+---
+name: WindowsSystemRegistryFiles
+doc: Windows system Registry files.
+sources:
+- type: FILE
+  attributes:
+    paths:
+    - '%%environ_systemdrive%%\System Volume Information\Syscache.hve'
+    - '%%environ_systemroot%%\System32\config\SAM'
+    - '%%environ_systemroot%%\System32\config\SECURITY'
+    - '%%environ_systemroot%%\System32\config\SOFTWARE'
+    - '%%environ_systemroot%%\System32\config\SYSTEM'
+    separator: '\'
+supported_os: [Windows]
+urls: ['https://artifacts-kb.readthedocs.io/en/latest/sources/windows/RegistryFiles.html']

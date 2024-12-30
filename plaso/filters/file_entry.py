@@ -354,6 +354,7 @@ class FileEntryFilterCollection(object):
     """Initializes a file entry filter collection."""
     super(FileEntryFilterCollection, self).__init__()
     self._filters = []
+    self._artifacts_trie = None
 
   def AddFilter(self, file_entry_filter):
     """Adds a file entry filter to the collection.
@@ -401,3 +402,25 @@ class FileEntryFilterCollection(object):
       output_writer.Write('Filters:\n')
       for file_entry_filter in self._filters:
         file_entry_filter.Print(output_writer)
+
+  def SetArtifactsTrie(self, artifacts_trie):
+    """Sets the artifacts trie.
+
+    Args:
+        artifacts_trie (ArtifactsTrie): artifacts trie.
+    """
+    self._artifacts_trie = artifacts_trie
+
+  def GetMatchingArtifacts(self, path, path_separator):
+    """Retrieves the artifacts that match the given path.
+
+    Args:
+        path (str): The path of the extracted file.
+        path_separator (str): The path separator.
+
+    Returns:
+        list[str]: A list of artifact names that match the path.
+    """
+    if self._artifacts_trie:
+      return self._artifacts_trie.GetMatchingArtifacts(path, path_separator)
+    return []
