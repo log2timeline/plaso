@@ -122,9 +122,9 @@ class ArtifactsTrie(object):
               if self._MatchesGlobPattern(
                       artifact_path, current_path, node.path_separator):
                 matching_artifacts.add(artifact_name)
-            elif os.path.normpath(current_path).strip(os.sep).split(
-                os.sep) == os.path.normpath(artifact_path).strip(
-                    node.path_separator).split(node.path_separator):
+            elif self._GetNonEmptyPathSegments(
+                current_path, path_separator) == self._GetNonEmptyPathSegments(
+                    artifact_path, node.path_separator):
               matching_artifacts.add(artifact_name)
 
       if not segments:
@@ -139,17 +139,34 @@ class ArtifactsTrie(object):
         if glob.has_magic(child_segment):
           if self._MatchesGlobPattern(
                   child_segment, segment, child_node.path_separator):
-            _search_trie(child_node, os.path.join(
+            _search_trie(child_node, self._CustomPathJoin(
+                path_separator,
                 current_path, segment), remaining_segments)
-            _search_trie(node, os.path.join(
-                current_path, segment), remaining_segments)
+            _search_trie(
+                node,
+                self._CustomPathJoin(
+                    path_separator,
+                    current_path, segment), remaining_segments)
         elif child_segment == segment:
           # If the child is an exact match, continue traversal.
-          _search_trie(child_node, os.path.join(
+          _search_trie(child_node, self._CustomPathJoin(
+              path_separator,
               current_path, segment), remaining_segments)
 
     _search_trie(sub_root_node, '', path_segments)
     return list(matching_artifacts)
+
+  def _GetNonEmptyPathSegments(self, path, separator):
+    """Splits a path into segments and remove non-empty segments.
+
+    Args:
+        path (str): The path string to be split.
+        separator (str): The path separator.
+
+    Returns:
+        list[str]: A list of non-empty path segments.
+    """
+    return [s for s in path.split(separator) if s]
 
   def _GetArtifactsPaths(self, node):
     """Retrieves a mapping of artifact names to their paths.
@@ -191,6 +208,21 @@ class ArtifactsTrie(object):
     _collect_paths(node, '', artifacts_paths)
     return artifacts_paths
 
+  def _CustomPathJoin(self, separator, current_path, new_segment):
+    """Joins path components using a custom separator, replacing os.sep.
+
+    Args:
+      separator (str): The custom separator to use.
+      current_path (str): The current path.
+      new_segment (str): The new segment to add to it.
+
+    Returns:
+      str: The joined path with the custom separator.
+    """
+    current_path = current_path.replace(separator, os.sep)
+    joined_path = os.path.join(current_path, new_segment)
+    return joined_path.replace(os.sep, separator)
+
   def _MatchesGlobPattern(self, glob_pattern, path, path_separator):
     """Checks if a path matches a given glob pattern.
 
@@ -204,7 +236,7 @@ class ArtifactsTrie(object):
     """
     # Normalize paths using the appropriate separators
     glob_pattern = glob_pattern.strip(path_separator).split(path_separator)
-    path = path.strip(os.sep).split(os.sep)
+    path = path.strip(path_separator).split(path_separator)
 
     i = 0
     j = 0
