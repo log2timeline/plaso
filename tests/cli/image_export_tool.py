@@ -641,8 +641,11 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'hashes.json'),
           os.path.join(temp_directory, 'artifacts_map.json')])
       expected_json_data = {
-          'TestFiles3': ['a_directory/another_file', 'a_directory/a_file'],
-          'TestFiles4': ['a_directory/another_file', 'passwords.txt']
+          'TestFiles3': [
+              f'a_directory{os.sep}another_file',
+              f'a_directory{os.sep}a_file'],
+          'TestFiles4':
+              [f'a_directory{os.sep}another_file', 'passwords.txt']
       }
 
       extracted_files = self._RecursiveList(temp_directory)
@@ -699,7 +702,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       # Verify that no files were extracted.
       # Only artifacts_map.json and hashes.json should exist.
       self.assertEqual(
-          os.listdir(temp_directory), ['hashes.json', 'artifacts_map.json']
+          sorted(os.listdir(temp_directory)), sorted(
+              ['hashes.json', 'artifacts_map.json'])
       )
 
       # Verify that the trie has no matching paths for image.qcow2.

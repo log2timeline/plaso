@@ -440,7 +440,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(sanitized_path_segments, expected_sanitized_segments)
 
     # Test with a path segment containing the path separator.
-    path_segments = [f'test{os.sep}dir', 'file.txt']
+    path_segments = [f'test{os.path.sep}dir', 'file.txt']
     expected_sanitized_segments = ['test_dir', 'file.txt']
     sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
         path_segments)
@@ -463,36 +463,36 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testGetRelativePath(self):
     """Tests the GetRelativePath function."""
     # Test with normal paths.
-    target_directory = '/home/user/output'
+    target_directory = '/home/user/output'.replace('/', os.path.sep)
     target_filename = 'file.txt'
-    destination_path = '/home/user/output/'
+    destination_path = '/home/user/output/'.replace('/', os.path.sep)
     expected_relative_path = 'file.txt'
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertEqual(relative_path, expected_relative_path)
 
     # Test with subdirectory.
-    target_directory = '/home/user/output/subdir'
+    target_directory = '/home/user/output/subdir'.replace('/', os.path.sep)
     target_filename = 'image.dd'
-    destination_path = '/home/user/output/'
+    destination_path = '/home/user/output/'.replace('/', os.path.sep)
     expected_relative_path = os.path.join('subdir', 'image.dd')
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertEqual(relative_path, expected_relative_path)
 
     # Test with a relative destination path.
-    target_directory = 'output/subdir'
+    target_directory = 'output/subdir'.replace('/', os.path.sep)
     target_filename = 'file.txt'
-    destination_path = 'output' + os.sep
+    destination_path = 'output' + os.path.sep
     expected_relative_path = os.path.join('subdir', 'file.txt')
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertEqual(relative_path, expected_relative_path)
 
     # Test with no match.
-    target_directory = '/home/user/output/subdir'
+    target_directory = '/home/user/output/subdir'.replace('/', os.path.sep)
     target_filename = 'image.E01'
-    destination_path = '/another/directory/'
+    destination_path = '/another/directory/'.replace('/', os.path.sep)
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertIsNone(relative_path)
@@ -502,27 +502,27 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(relative_path)
 
     # Test with only destination path ending with separator.
-    target_directory = '/home/user/output/subdir'
+    target_directory = '/home/user/output/subdir'.replace('/', os.path.sep)
     target_filename = 'data.txt'
-    destination_path = '/home/user/output/'
+    destination_path = '/home/user/output/'.replace('/', os.path.sep)
     expected_relative_path = os.path.join('subdir', 'data.txt')
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertEqual(relative_path, expected_relative_path)
 
     # Test with only destination path not ending with separator.
-    target_directory = '/home/user/output/subdir'
+    target_directory = '/home/user/output/subdir'.replace('/', os.path.sep)
     target_filename = 'file.txt'
-    destination_path = '/home/user/output'
+    destination_path = '/home/user/output'.replace('/', os.path.sep)
     expected_relative_path = os.path.join('subdir', 'file.txt')
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)
     self.assertEqual(relative_path, expected_relative_path)
 
     # Test with target directory being root.
-    target_directory = '/'
+    target_directory = '/'.replace('/', os.path.sep)
     target_filename = 'file.txt'
-    destination_path = '/'
+    destination_path = '/'.replace('/', os.path.sep)
     expected_relative_path = 'file.txt'
     relative_path = path_helper.PathHelper.GetRelativePath(
         target_directory, target_filename, destination_path)

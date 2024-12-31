@@ -202,8 +202,9 @@ class ArtifactsTrieTest(unittest.TestCase):
 
   def test_add_path_with_mixed_separators(self):
     """Tests the AddPath function with mixed path separators."""
-    self.trie.AddPath('artifact1', '/mixed/path/style', '/')
-    self.trie.AddPath('artifact2', '\\another\\mixed\\style', '\\')
+    self.trie.AddPath('artifact1', '/mixed/path/style_s', '/')
+    self.trie.AddPath(
+        'artifact2', '\\another\\mixed path\\style to-match_it', '\\')
 
     root = self.trie.root
     self.assertIn('/', root.children)
@@ -214,13 +215,15 @@ class ArtifactsTrieTest(unittest.TestCase):
 
   def test_get_matching_artifacts_mixed_separators(self):
     """Tests GetMatchingArtifacts with mixed path separators."""
-    self.trie.AddPath('artifact1', '/mixed/path/style', '/')
-    self.trie.AddPath('artifact2', '\\another\\mixed\\style', '\\')
+    self.trie.AddPath('artifact1', '/mixed/path/style_s', '/')
+    self.trie.AddPath(
+        'artifact2', '\\another\\mixed path\\style to-match_it', '\\')
 
-    matches = self.trie.GetMatchingArtifacts('/mixed/path/style', '/')
+    matches = self.trie.GetMatchingArtifacts('/mixed/path/style_s', '/')
     self.assertIn('artifact1', matches)
 
-    matches = self.trie.GetMatchingArtifacts('\\another\\mixed\\style', '\\')
+    matches = self.trie.GetMatchingArtifacts(
+        '\\another\\mixed path\\style to-match_it', '\\')
     self.assertIn('artifact2', matches)
 
   def test_get_matching_artifacts_same_path_different_artifacts(self):
