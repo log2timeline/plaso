@@ -391,25 +391,27 @@ class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
     """Tests the GetMatchingArtifacts function."""
     test_filter_collection = file_entry_filters.FileEntryFilterCollection()
     trie = artifacts_trie.ArtifactsTrie()
-    trie.AddPath('artifact1', '/path/to/file.txt', os.sep)
-    trie.AddPath('artifact2', '/path/to/dir/', os.sep)
+    trie.AddPath(
+        'artifact1', f'{os.sep}path{os.sep}to{os.sep}file.txt', os.sep)
+    trie.AddPath(
+        'artifact2', f'{os.sep}path{os.sep}to{os.sep}dir{os.sep}', os.sep)
     test_filter_collection.SetArtifactsTrie(trie)
 
     # Test matching a file.
     matches = test_filter_collection.GetMatchingArtifacts(
-        '/path/to/file.txt', os.sep)
+        f'{os.sep}path{os.sep}to{os.sep}file.txt', os.sep)
     self.assertIn('artifact1', matches)
     self.assertNotIn('artifact2', matches)
 
     # Test matching a directory.
     matches = test_filter_collection.GetMatchingArtifacts(
-        '/path/to/dir', os.sep)
+        f'{os.sep}path{os.sep}to{os.sep}dir', os.sep)
     self.assertIn('artifact2', matches)
     self.assertNotIn('artifact1', matches)
 
     # Test non-matching path.
     matches = test_filter_collection.GetMatchingArtifacts(
-        '/nonexistent/path', os.sep)
+        f'{os.sep}nonexistent{os.sep}path', os.sep)
     self.assertEqual(matches, [])
 
   # TODO: add test for Matches.
