@@ -710,7 +710,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       self.assertIsNotNone(test_tool._filter_collection._artifacts_trie)
       self.assertNotIn('a_directory',
                        test_tool._filter_collection._artifacts_trie.root
-                       .children['/'].children)
+                       .children[os.sep].children)
 
       # Verify that artifacts_map.json is created but empty
       artifacts_map_file_path = os.path.join(
