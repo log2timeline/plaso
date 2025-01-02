@@ -273,6 +273,27 @@ class ArtifactsTrieTest(unittest.TestCase):
     matches = self.trie.GetMatchingArtifacts('/path/to/file.txt', '/')
     self.assertNotIn('artifact1', matches)
 
+  def test_get_matching_artifacts_sanitized_paths(self):
+    """Tests GetMatchingArtifacts with sanitized paths."""
+    self.trie.AddPath('artifact1', '/path/to/file\x00\x01.txt', '/')
+    self.trie.AddPath('artifact2', '/another/path/fo:r?/file.txt', '/')
+
+    # Test path with dirty characters that would be sanitized.
+    matches = self.trie.GetMatchingArtifacts(
+        '/path/to/file__.txt', '/')
+    self.assertIn('artifact1', matches)
+
+    # Test with a different path that sanitizes to the same value.
+    matches = self.trie.GetMatchingArtifacts(
+        '/another/path/fo_r_/file.txt', '/')
+    self.assertIn('artifact2', matches)
+
+    # Negative test with non-matching sanitized path.
+    matches = self.trie.GetMatchingArtifacts(
+        '/nonexistent/path/fo_r_/file.txt', '/')
+    self.assertNotIn('artifact1', matches)
+    self.assertNotIn('artifact2', matches)
+
 
 if __name__ == '__main__':
   unittest.main()

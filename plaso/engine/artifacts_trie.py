@@ -6,6 +6,7 @@ import glob
 import os
 
 from plaso.engine import logger
+from plaso.engine import path_helper
 
 
 class TrieNode(object):
@@ -118,14 +119,16 @@ class ArtifactsTrie(object):
       if node.artifacts_names:
         for artifact_name in node.artifacts_names:
           for artifact_path in self.artifacts_paths.get(artifact_name, []):
-            if glob.has_magic(artifact_path):
+            if self._ComparePathIfSanitized(
+                    current_path,
+                    path_separator,
+                    artifact_path,
+                    node.path_separator):
+              matching_artifacts.add(artifact_name)
+            elif glob.has_magic(artifact_path):
               if self._MatchesGlobPattern(
                       artifact_path, current_path, node.path_separator):
                 matching_artifacts.add(artifact_name)
-            elif self._GetNonEmptyPathSegments(
-                current_path, path_separator) == self._GetNonEmptyPathSegments(
-                    artifact_path, node.path_separator):
-              matching_artifacts.add(artifact_name)
 
       if not segments:
         return
@@ -135,8 +138,20 @@ class ArtifactsTrie(object):
 
       # Handle glob characters in the current segment.
       for child_segment, child_node in node.children.items():
+        if (
+            child_segment == segment or
+            # comapring the sanitized version of the path segment stored in
+            # the tree to the path segment from to the tool output as it
+            # sanitizes path segments before writting data to disk.
+            path_helper.PathHelper.SanitizePathSegments(
+                [child_segment]).pop() == segment
+        ):
+          # If the child is an exact match, continue traversal.
+          _search_trie(child_node, self._CustomPathJoin(
+              path_separator,
+              current_path, child_segment), remaining_segments)
         # If the child is a glob, see if it matches.
-        if glob.has_magic(child_segment):
+        elif glob.has_magic(child_segment):
           if self._MatchesGlobPattern(
                   child_segment, segment, child_node.path_separator):
             _search_trie(child_node, self._CustomPathJoin(
@@ -147,14 +162,39 @@ class ArtifactsTrie(object):
                 self._CustomPathJoin(
                     path_separator,
                     current_path, segment), remaining_segments)
-        elif child_segment == segment:
-          # If the child is an exact match, continue traversal.
-          _search_trie(child_node, self._CustomPathJoin(
-              path_separator,
-              current_path, segment), remaining_segments)
 
     _search_trie(sub_root_node, '', path_segments)
     return list(matching_artifacts)
+
+  def _ComparePathIfSanitized(
+          self,
+          current_path,
+          path_separator,
+          artifact_path,
+          atrifact_path_seperator):
+    """Compares a current path with an artifact path, handling sanitization.
+
+    This method checks if the current_path matches the artifact_path,
+    considering that the artifact_path might have been sanitized.
+
+    Args:
+        current_path (str): The current path being checked.
+        path_separator (str): Path separator for the current path.
+        artifact_path (str): The artifact path to compare against.
+        atrifact_path_seperator (str): Path separator for the artifact path.
+
+    Returns:
+        bool: True if the current path matches the artifact path (or its
+            sanitized version), False otherwise.
+    """
+    atrifact_path_segments = self._GetNonEmptyPathSegments(
+        artifact_path, atrifact_path_seperator)
+    return self._GetNonEmptyPathSegments(
+        current_path, path_separator) in [
+        atrifact_path_segments,
+            path_helper.PathHelper.SanitizePathSegments(
+                atrifact_path_segments)
+    ]
 
   def _GetNonEmptyPathSegments(self, path, separator):
     """Splits a path into segments and remove non-empty segments.
