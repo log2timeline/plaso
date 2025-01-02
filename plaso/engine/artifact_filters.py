@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Helper to create filters based on forensic artifact definitions."""
 
+import os
 from artifacts import definitions as artifact_types
 
 from dfvfs.helpers import file_system_searcher as dfvfs_file_system_searcher
@@ -9,6 +10,7 @@ from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
 from plaso.engine import logger
 from plaso.engine import path_helper
+from plaso.engine import artifacts_trie
 
 
 class ArtifactDefinitionsFiltersHelper(object):
@@ -28,6 +30,10 @@ class ArtifactDefinitionsFiltersHelper(object):
         generated Windows Registry find specifications.
     registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
         specifications.
+    registry_find_specs_artifact_names (list[]str): Windows Registry artifact
+        names corresponding to the find specifications.
+    artifacts_trie (ArtifactsTrie): Trie structure for storing artifact
+        definitionpaths.
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
@@ -52,9 +58,16 @@ class ArtifactDefinitionsFiltersHelper(object):
     self.file_system_find_specs = []
     self.registry_artifact_names = set()
     self.registry_find_specs = []
+    self.registry_find_specs_artifact_names = []
+    self.artifacts_trie = artifacts_trie.ArtifactsTrie()
 
   def _BuildFindSpecsFromArtifact(
-      self, definition, environment_variables, user_accounts):
+          self,
+          definition,
+          environment_variables,
+          user_accounts,
+          enable_artifacts_map=False,
+          original_registery_artifact_filter_names=None):
     """Builds find specifications from an artifact definition.
 
     Args:
@@ -62,6 +75,11 @@ class ArtifactDefinitionsFiltersHelper(object):
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
+      enable_artifacts_map (Optional[bool]): True if the artifacts path map
+          should be generated. Defaults to False.
+      original_registery_artifact_filter_names (Optional[set[str]]): Set of
+          original registery filter names, used in case registery hive files
+          are being requested as a result of a previous filter.
 
     Returns:
       list[dfvfs.FindSpec|dfwinreg.FindSpec]: dfVFS or dfWinReg find
@@ -72,8 +90,14 @@ class ArtifactDefinitionsFiltersHelper(object):
       if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
         for path_entry in set(source.paths):
           specifications = self._BuildFindSpecsFromFileSourcePath(
-              path_entry, source.separator, environment_variables,
-              user_accounts)
+              definition.name,
+              path_entry,
+              source.separator,
+              environment_variables,
+              user_accounts,
+              enable_artifacts_map=enable_artifacts_map,
+              original_registery_artifact_filter_names=(
+                  original_registery_artifact_filter_names))
           find_specs.extend(specifications)
           self.file_system_artifact_names.add(definition.name)
 
@@ -108,7 +132,12 @@ class ArtifactDefinitionsFiltersHelper(object):
             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
         for name in source.names:
           specifications = self._BuildFindSpecsFromGroupName(
-              name, environment_variables, user_accounts)
+              name,
+              environment_variables,
+              user_accounts,
+              enable_artifacts_map=enable_artifacts_map,
+              original_registery_artifact_filter_names=(
+                  original_registery_artifact_filter_names))
           find_specs.extend(specifications)
 
       else:
@@ -119,7 +148,12 @@ class ArtifactDefinitionsFiltersHelper(object):
     return find_specs
 
   def _BuildFindSpecsFromGroupName(
-      self, group_name, environment_variables, user_accounts):
+          self,
+          group_name,
+          environment_variables,
+          user_accounts,
+          enable_artifacts_map=False,
+          original_registery_artifact_filter_names=None):
     """Builds find specifications from a artifact group name.
 
     Args:
@@ -127,6 +161,11 @@ class ArtifactDefinitionsFiltersHelper(object):
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
+      enable_artifacts_map (Optional[bool]): True if the artifacts path map
+          should be generated. Defaults to False.
+      original_registery_artifact_filter_names (Optional[set[str]]): Set of
+          original registery filter names, used in case registery hive files
+          are being requested as a result of a previous filter.
 
     Returns:
       list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications or None if no
@@ -139,7 +178,12 @@ class ArtifactDefinitionsFiltersHelper(object):
       return None
 
     return self._BuildFindSpecsFromArtifact(
-        definition, environment_variables, user_accounts)
+        definition,
+        environment_variables,
+        user_accounts,
+        enable_artifacts_map=enable_artifacts_map,
+        original_registery_artifact_filter_names=(
+            original_registery_artifact_filter_names))
 
   def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
     """Build find specifications from a Windows Registry source type.
@@ -163,7 +207,8 @@ class ArtifactDefinitionsFiltersHelper(object):
             'HKEY_LOCAL_MACHINE\\System\\ControlSet*', key_path_glob[43:]])
 
       elif key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
-        key_path_glob = ''.join(['HKEY_CURRENT_USER', key_path_glob[26:]])
+        # Escaping charachter excluded from string index.
+        key_path_glob = ''.join(['HKEY_CURRENT_USER', key_path_glob[24:]])
 
       find_spec = dfwinreg_registry_searcher.FindSpec(
           key_path_glob=key_path_glob)
@@ -172,15 +217,28 @@ class ArtifactDefinitionsFiltersHelper(object):
     return find_specs
 
   def _BuildFindSpecsFromFileSourcePath(
-      self, source_path, path_separator, environment_variables, user_accounts):
+          self,
+          artifact_name,
+          source_path,
+          path_separator,
+          environment_variables,
+          user_accounts,
+          enable_artifacts_map=False,
+          original_registery_artifact_filter_names=None):
     """Builds find specifications from a file source type.
 
     Args:
+      artifact_name (str): artifact name.
       source_path (str): file system path defined by the source.
       path_separator (str): file system path segment separator.
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variables.
       user_accounts (list[UserAccountArtifact]): user accounts.
+      enable_artifacts_map (Optional[bool]): True if the artifacts path map
+          should be generated. Defaults to False.
+      original_registery_artifact_filter_names (Optional[set[str]]): Set of
+          original registery filter names, used in case registery hive files
+          are being requested as a result of a previous filter.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -194,34 +252,100 @@ class ArtifactDefinitionsFiltersHelper(object):
           path_glob, path_separator, user_accounts):
         logger.debug(f'building find spec from path: {path:s}')
 
-        if '%' in path:
-          path = path_helper.PathHelper.ExpandWindowsPath(
-              path, environment_variables)
-          logger.debug(f'building find spec from expanded path: {path:s}')
-
-        if not path.startswith(path_separator):
-          logger.warning((
-              f'The path filter must be defined as an absolute path: '
-              f'"{path:s}"'))
+        expanded_path = self._ExpandPathVariables(
+            path, environment_variables, path_separator)
+        if expanded_path is None:
           continue
 
-        try:
-          find_spec = dfvfs_file_system_searcher.FindSpec(
-              case_sensitive=False, location_glob=path,
-              location_separator=path_separator)
-        except ValueError as exception:
-          logger.error((
-              f'Unable to build find specification for path: "{path:s}" with '
-              f'error: {exception!s}'))
+        find_spec = self._CreateFindSpec(expanded_path, path_separator)
+        if find_spec is None:
           continue
 
         find_specs.append(find_spec)
 
+        if enable_artifacts_map:
+          self._AddToArtifactsTrie(artifact_name,
+                                   expanded_path,
+                                   original_registery_artifact_filter_names,
+                                   path_separator)
+
     return find_specs
 
+  def _AddToArtifactsTrie(
+          self,
+          artifact_name,
+          path,
+          original_registery_artifact_filter_names,
+          path_separator):
+    """Adds a path to the artifacts trie.
+
+    Args:
+        artifact_name (str): artifact name.
+        path (str): file system path.
+        original_registery_artifact_filter_names (Optional[set[str]]): Set of
+            original registery filter names.
+        path_separator (str): path separator.
+    """
+    normalized_path = path.replace(path_separator, os.sep)
+    self.artifacts_trie.AddPath(artifact_name, normalized_path, os.sep)
+    if original_registery_artifact_filter_names:
+      for name in original_registery_artifact_filter_names:
+        self.artifacts_trie.AddPath(name, normalized_path, os.sep)
+
+  def _ExpandPathVariables(self, path, environment_variables, path_separator):
+    """Expands Windows paths and validates the result.
+
+    Args:
+      path (str): file system path with environment variables
+      environment_variables (list[EnvironmentVariableArtifact]):
+          environment variables.
+      path_separator (str): file system path segment separator.
+
+    Returns:
+      str: expanded path, or None if the path is invalid
+    """
+
+    if '%' in path:
+      path = path_helper.PathHelper.ExpandWindowsPath(
+          path, environment_variables)
+      logger.debug(f'building find spec from expanded path: {path:s}')
+
+    if not path.startswith(path_separator):
+      logger.warning((
+          f'The path filter must be defined as an absolute path: '
+          f'"{path:s}"'))
+      return None
+    return path
+
+  def _CreateFindSpec(self, path, path_separator):
+    """Creates a dfVFS find specification.
+
+    Args:
+      path (str): Path to match.
+      path_separator (str): file system path segment separator.
+
+
+    Returns:
+        dfvfs.FindSpec: a find specification or None if one cannot be created.
+    """
+    try:
+      find_spec = dfvfs_file_system_searcher.FindSpec(
+          case_sensitive=False, location_glob=path,
+          location_separator=path_separator)
+      return find_spec
+    except ValueError as exception:
+      logger.error((
+          f'Unable to build find specification for path: "{path:s}" with '
+          f'error: {exception!s}'))
+      return None
+
   def BuildFindSpecs(
-      self, artifact_filter_names, environment_variables=None,
-      user_accounts=None):
+          self,
+          artifact_filter_names,
+          environment_variables=None,
+          user_accounts=None,
+          enable_artifacts_map=False,
+          original_registery_artifact_filter_names=None):
     """Builds find specifications from artifact definitions.
 
     Args:
@@ -230,8 +354,13 @@ class ArtifactDefinitionsFiltersHelper(object):
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variables.
       user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
+      enable_artifacts_map (Optional[bool]): True if the artifacts path map
+          should be generated. Defaults to False.
+      original_registery_artifact_filter_names (Optional[set[str]]): Set of
+          original registery filter names, used in case registery hive files
+          are being requested as a result of a previous filter.
     """
-    find_specs = []
+    find_specs = {}
     for name in artifact_filter_names:
       definition = self._artifacts_registry.GetDefinitionByName(name)
       if not definition:
@@ -242,19 +371,27 @@ class ArtifactDefinitionsFiltersHelper(object):
 
       logger.debug(f'building find spec from artifact definition: {name:s}')
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
-          definition, environment_variables, user_accounts)
-      find_specs.extend(artifact_find_specs)
+          definition,
+          environment_variables,
+          user_accounts,
+          enable_artifacts_map=enable_artifacts_map,
+          original_registery_artifact_filter_names=(
+              original_registery_artifact_filter_names))
+      find_specs.setdefault(name, []).extend(artifact_find_specs)
 
-    for find_spec in find_specs:
-      if isinstance(find_spec, dfvfs_file_system_searcher.FindSpec):
-        self.file_system_find_specs.append(find_spec)
+    for name, find_spec_values in find_specs.items():
+      for find_spec in find_spec_values:
+        if isinstance(find_spec, dfvfs_file_system_searcher.FindSpec):
+          self.file_system_find_specs.append(find_spec)
 
-      elif isinstance(find_spec, dfwinreg_registry_searcher.FindSpec):
-        self.registry_find_specs.append(find_spec)
-
-      else:
-        type_string = type(find_spec)
-        logger.warning(f'Unsupported find specification type: {type_string!s}')
+        elif isinstance(find_spec, dfwinreg_registry_searcher.FindSpec):
+          self.registry_find_specs.append(find_spec)
+          # Artifact names ordered similar to registery find specs
+          self.registry_find_specs_artifact_names.append(name)
+        else:
+          type_string = type(find_spec)
+          logger.warning(
+              f'Unsupported find specification type: {type_string!s}')
 
   @classmethod
   def CheckKeyCompatibility(cls, key_path):
