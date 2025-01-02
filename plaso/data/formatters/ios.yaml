@@ -233,3 +233,23 @@ short_message:
 - 'Message: {text}'
 short_source: 'Twitter iOS'
 source: 'Twitter iOS Status'
+---
+type: 'conditional'
+data_type: 'ios:imohdchat_message:entry'
+enumeration_helpers:
+- input_attribute: 'zissent'
+  output_attribute: 'zissent'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Received'
+    1: 'Sent'
+message: 
+- 'Sender Name : {zalias}'
+- 'Message : {ztext}'
+- 'Message Status : {zissent}'
+short_message: 
+- 'Sender Name : {zalias}'
+- 'Message : {ztext}'
+- 'Message Status : {zissent}'
+short_source: 'LOG'
+source: 'IMO HD Chat Message Log'
