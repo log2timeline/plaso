@@ -37,7 +37,7 @@ class JSONLParserTest(test_lib.ParserTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 10)
+    self.assertEqual(number_of_event_data, 11)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')

@@ -19,7 +19,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 10)
+    self.assertEqual(number_of_event_data, 11)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -133,6 +133,65 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
 
+  def testServiceAccountCreateFailure(self):
+    """Tests service account creation failure log."""
+    plugin = gcp_log.GCPLogJSONLPlugin()
+    storage_writer = self._ParseJSONLFileWithPlugin(
+        ['gcp_logging.jsonl'], plugin)
+
+    expected_event_values = {
+        'caller_ip': '34.72.217.225',
+        'container': None,
+        'dcsa_emails': None,
+        'dcsa_scopes': None,
+        'delegation_chain': ('service-1234567890@compute-system.iam.'
+            'gserviceaccount.com'),
+        'event_subtype': 'google.iam.admin.v1.CreateServiceAccount',
+        'event_type': None,
+        'filename': None,
+        'firewall_rules': None,
+        'firewall_source_ranges': None,
+        'gcloud_command_identifier': None,
+        'gcloud_command_pattern': None,
+        'log_name': ('projects/ketchup/logs/cloudaudit.googleapis.com%2F'
+            'activity'),
+        'message': None,
+        'method_name': 'google.iam.admin.v1.CreateServiceAccount',
+        'permissions': ['iam.serviceAccounts.create'],
+        'policy_deltas': None,
+        'principal_email': ('dvwa-service-account@ketchup.iam.'
+            'gserviceaccount.com'),
+        'principal_subject': ('serviceAccount:dvwa-service-account@ketchup.'
+            'iam.gserviceaccount.com'),
+        'recorded_time': '2024-12-03T17:58:44.882119+00:00',
+        'request_account_identifier': 'theattacker',
+        'request_address': None,
+        'request_description': None,
+        'request_direction': None,
+        'request_email': None,
+        'request_member': None,
+        'request_metadata': None,
+        'request_name': 'projects/ketchup',
+        'request_target': None,
+        'request_labels': None,
+        'resource_name': 'projects/ketchup',
+        'service_account_delegation': [
+            'service-1234567890@compute-system.iam.gserviceaccount.com'],
+        'service_account_display_name': 'This is the attacker account',
+        'service_account_key_name': None,
+        'service_name': 'iam.googleapis.com',
+        'severity': 'ERROR',
+        'source_images': None,
+        'status_code': '7',
+        'status_message': ('Permission "iam.serviceAccounts.create" denied on'
+            ' resource (or it may not exist).'),
+        'status_reasons': ['IAM_PERMISSION_DENIED'],
+        'text_payload': None,
+        'user_agent': '(gzip),gzip(gfe)',
+    }
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
+    self.CheckEventData(event_data, expected_event_values)
 
 if __name__ == '__main__':
   unittest.main()

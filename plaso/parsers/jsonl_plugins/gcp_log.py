@@ -38,6 +38,8 @@ class GCPLogEventData(events.EventData):
     recorded_time (dfdatetime.DateTimeValues): date and time the log entry
         was recorded.
     request_account_identifier (str): GCP account identifier of the request.
+    request_address (str): IP address assigned to a Google Cloud Engine (GCE)
+        instance.
     request_description (str): description of the request.
     request_direction (str): direction of the request.
     request_email (str): email address of the request.
@@ -58,6 +60,7 @@ class GCPLogEventData(events.EventData):
         engine instance.
     status_code (str): operation success or failure code.
     status_message (str); operation success or failure message.
+    status_reasons (list[str]): reasons for operation failure.
     text_payload (str): text payload for logs not using a JSON or proto payload.
     user_agent (str): user agent used in the request.
   """
@@ -88,6 +91,7 @@ class GCPLogEventData(events.EventData):
     self.principal_subject = None
     self.recorded_time = None
     self.request_account_identifier = None
+    self.request_address = None
     self.request_description = None
     self.request_direction = None
     self.request_email = None
@@ -249,16 +253,30 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       #
       # Empty `code` and `message` fields indicate the operation was successful.
 
-      event_data.status_code = self._GetJSONValue(status, 'code')
+      event_data.status_code = str(self._GetJSONValue(status, 'code', ''))
       event_data.status_message = self._GetJSONValue(status, 'message')
 
-  def _ParseComputeInstancesInsert(self, request, event_data):
+      # `protoPayload.status.details[].reason` contains reason for an operation
+      # failure.
+      status_reasons = []
+
+      for status_detail in self._GetJSONValue(status, 'details', []):
+        status_reason = self._GetJSONValue(status_detail, 'reason')
+        if status_reason:
+          status_reasons.append(status_reason)
+
+      if status_reasons:
+        event_data.status_reasons = status_reasons
+
+  def _ParseComputeInsertRequest(self, request, event_data):
     """Extracts compute.instances.insert information.
 
     Args:
       request (dict): JSON dictionary of the `protoPayload.request` field.
       event_data (GCPLogEventData): event data.
     """
+    # source_images hold Google Cloud source disk path used in creating a GCE
+    # instance.
     source_images = []
 
     for disk in self._GetJSONValue(request, 'disks', []):
@@ -307,7 +325,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       return
 
     if request_type == 'type.googleapis.com/compute.instances.insert':
-      self._ParseComputeInstancesInsert(request, event_data)
+      self._ParseComputeInsertRequest(request, event_data)
 
   def _ParseProtoPayload(self, json_dict, event_data):
     """Extracts information from a protoPayload value.
@@ -351,6 +369,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
     event_data.request_account_identifier = self._GetJSONValue(
         request, 'account_id')
+    event_data.request_address = self._GetJSONValue(request, 'address')
     event_data.request_description = self._GetJSONValue(request, 'description')
     event_data.request_direction = self._GetJSONValue(request, 'direction')
     event_data.request_email = self._GetJSONValue(request, 'email')
